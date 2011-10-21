@@ -82,6 +82,7 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(True)
 
         self.assertEquals('Pure Cu', str(self.m))
+        self.assertEquals('Pure Cu', self.m.name)
 
         self.assertEqual(29, self.m.composition[0][0])
         self.assertAlmostEqual(1.0, self.m.composition[0][1], 4)

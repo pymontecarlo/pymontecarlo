@@ -229,6 +229,13 @@ class Material(XMLObject):
         return cls(name, composition, density, abs_electron, abs_photon)
 
     @property
+    def name(self):
+        """
+        Name of the material.
+        """
+        return self._name
+
+    @property
     def composition(self):
         """
         Composition of this material.
