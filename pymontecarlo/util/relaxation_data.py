@@ -460,3 +460,5 @@ class RelaxationData(object):
                     transitions.append(transition)
 
         return sorted(transitions)
+
+relaxation_data = RelaxationData()

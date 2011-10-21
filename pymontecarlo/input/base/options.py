@@ -69,6 +69,9 @@ class _Detectors(MutableMapping):
     def __iter__(self):
         return self._data.__iter__()
 
+    def matches(self, clasz):
+        return dict([(key, obj) for key, obj in self.iteritems() if isinstance(obj, clasz)])
+
 class _Limits(MutableSet):
     def __init__(self, options):
         self._options = options
@@ -93,7 +96,7 @@ class _Limits(MutableSet):
     def discard(self, item):
         self._data.pop(hash(item.__class__))
 
-    def get(self, clasz, default=None):
+    def match(self, clasz, default=None):
         return self._data.get(hash(clasz), default)
 
 class Options(XMLObject):
