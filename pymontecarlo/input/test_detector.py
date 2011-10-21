@@ -42,6 +42,10 @@ class Test_DelimitedDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
         self.assertAlmostEqual(0.70400115, self.d.solid_angle, 4)
 
+    def test__repr__(self):
+        expected = '<_DelimitedDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad)>'
+        self.assertEquals(expected, repr(self.d))
+
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = _DelimitedDetector.from_xml(element)
@@ -83,6 +87,10 @@ class Test_ChannelsDetector(unittest.TestCase):
         self.assertAlmostEqual(12.34, self.d.limits[0], 4)
         self.assertAlmostEqual(56.78, self.d.limits[1], 4)
         self.assertEqual(1000, self.d.channels)
+
+    def test__repr__(self):
+        expected = '<_ChannelsDetector(limits=12.34 to 56.78, channels=1000)>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -131,6 +139,10 @@ class Test_SpatialDetector(unittest.TestCase):
         self.assertAlmostEqual(34.12, self.d.zlimits[0], 4)
         self.assertAlmostEqual(78.56, self.d.zlimits[1], 4)
         self.assertEqual(4, self.d.zbins)
+
+    def test__repr__(self):
+        expected = '<_SpatialDetector(x=12.34 to 56.78 m (2), y=21.43 to 65.87 m (3), z=34.12 to 78.56 m (4))>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -198,6 +210,10 @@ class Test_TransitionDetector(unittest.TestCase):
     def testskeleton(self):
         self.assertEqual('Cu Ka1', str(self.d.transition))
 
+    def test__repr__(self):
+        expected = '<_TransitionDetector(transition=Cu Ka1)>'
+        self.assertEquals(expected, repr(self.d))
+
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = _TransitionDetector.from_xml(element)
@@ -228,6 +244,10 @@ class Test_EnergyDetector(unittest.TestCase):
         self.assertEqual(1000, self.d.channels)
         self.assertAlmostEqual(0.0, self.d._extremums[0], 4)
         self.assertEqual(float('inf'), self.d._extremums[1], 4)
+
+    def test__repr__(self):
+        expected = '<_EnergyDetector(limits=12.34 to 56.78 eV, channels=1000)>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -263,6 +283,10 @@ class Test_PolarAngularDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(-90), self.d._extremums[0], 4)
         self.assertAlmostEqual(radians(90), self.d._extremums[1], 4)
 
+    def test__repr__(self):
+        expected = '<_PolarAngularDetector(limits=-1.57079632679 to 1.57079632679 rad, channels=50)>'
+        self.assertEquals(expected, repr(self.d))
+
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = _PolarAngularDetector.from_xml(element)
@@ -296,6 +320,10 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         self.assertEqual(50, self.d.channels)
         self.assertAlmostEqual(radians(0), self.d._extremums[0], 4)
         self.assertAlmostEqual(radians(360), self.d._extremums[1], 4)
+
+    def test__repr__(self):
+        expected = '<_AzimuthalAngularDetector(limits=0 to 6.28318530718 rad, channels=50)>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -334,6 +362,10 @@ class TestPhotonSpectrumDetector(unittest.TestCase):
         self.assertAlmostEqual(12.34, self.d.limits[0], 4)
         self.assertAlmostEqual(56.78, self.d.limits[1], 4)
         self.assertEqual(1000, self.d.channels)
+
+    def test__repr__(self):
+        expected = '<PhotonSpectrumDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, limits=12.34 to 56.78 eV, channels=1000)>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -376,6 +408,10 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-12.34, self.d.limits[1], 4)
         self.assertEqual(1000, self.d.channels)
         self.assertEqual('Cu Ka1', str(self.d.transition))
+
+    def test__repr__(self):
+        expected = '<PhiRhoZDetector(limits=-56.78 to -12.34 m, channels=1000, transition=Cu Ka1)>'
+        self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()

@@ -64,6 +64,11 @@ class _DelimitedDetector(XMLObject):
         self.elevation = elevation
         self.azimuth = azimuth
 
+    def __repr__(self):
+        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad)>' % \
+            (self.__class__.__name__, self.elevation[0], self.elevation[1],
+             self.azimuth[0], self.azimuth[1])
+
     @classmethod
     def from_xml(cls, element):
         elevation = (float(element.get('elevation_min')),
@@ -131,6 +136,10 @@ class _ChannelsDetector(XMLObject):
         self.limits = limits
         self.channels = channels
 
+    def __repr__(self):
+        return '<%s(limits=%s to %s, channels=%s)>' % \
+            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+
     @classmethod
     def from_xml(cls, element):
         limits = float(element.get('limit_min')), float(element.get('limit_max'))
@@ -193,6 +202,13 @@ class _SpatialDetector(XMLObject):
         self.xbins = xbins
         self.ybins = ybins
         self.zbins = zbins
+
+    def __repr__(self):
+        return "<%s(x=%s to %s m (%s), y=%s to %s m (%s), z=%s to %s m (%s))>" % \
+            (self.__class__.__name__,
+             self.xlimits[0], self.xlimits[1], self.xbins,
+             self.ylimits[0], self.ylimits[1], self.ybins,
+             self.zlimits[0], self.zlimits[1], self.zbins)
 
     @classmethod
     def from_xml(cls, element):
@@ -314,6 +330,9 @@ class _TransitionDetector(XMLObject):
 
         self.transition = transition
 
+    def __repr__(self):
+        return '<%s(transition=%s)>' % (self.__class__.__name__, str(self.transition))
+
     @classmethod
     def from_xml(cls, element):
         child = list(element.find("transition"))[0]
@@ -342,6 +361,10 @@ class _EnergyDetector(_ChannelsDetector):
     def __init__(self, limits, channels):
         _ChannelsDetector.__init__(self, limits, channels, (0.0, float('inf')))
 
+    def __repr__(self):
+        return "<%s(limits=%s to %s eV, channels=%s)>" % \
+            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+
 class _RangeDetector(object):
     def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
         raise NotImplementedError
@@ -356,6 +379,10 @@ class _PolarAngularDetector(_ChannelsDetector):
     def __init__(self, channels, limits=(-HALFPI, HALFPI)):
         _ChannelsDetector.__init__(self, limits, channels, (-HALFPI, HALFPI))
 
+    def __repr__(self):
+        return "<%s(limits=%s to %s rad, channels=%s)>" % \
+            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+
     @classmethod
     def from_xml(cls, element):
         # Required due to argument inversion
@@ -365,6 +392,10 @@ class _PolarAngularDetector(_ChannelsDetector):
 class _AzimuthalAngularDetector(_ChannelsDetector):
     def __init__(self, channels, limits=(0, TWOPI)):
         _ChannelsDetector.__init__(self, limits, channels, (0, TWOPI))
+
+    def __repr__(self):
+        return "<%s(limits=%s to %s rad, channels=%s)>" % \
+            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
 
     @classmethod
     def from_xml(cls, element):
@@ -413,6 +444,12 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
         _DelimitedDetector.__init__(self, elevation, azimuth)
         _EnergyDetector.__init__(self, limits, channels)
 
+    def __repr__(self):
+        return "<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s eV, channels=%s)>" % \
+            (self.__class__.__name__, self.elevation[0], self.elevation[1],
+             self.azimuth[0], self.azimuth[1], self.limits[0], self.limits[1],
+             self.channels)
+
     @classmethod
     def from_xml(cls, element):
         delimited = _DelimitedDetector.from_xml(element)
@@ -433,6 +470,11 @@ class PhiRhoZDetector(_PhotonRangeDetector, _ChannelsDetector):
     def __init__(self, limits, channels, transition):
         _ChannelsDetector.__init__(self, limits, channels, (float('-inf'), 0))
         _PhotonRangeDetector.__init__(self, transition)
+
+    def __repr__(self):
+        return '<%s(limits=%s to %s m, channels=%s, transition=%s)>' % \
+            (self.__class__.__name__, self.limits[0], self.limits[1],
+             self.channels, self.transition)
 
     @classmethod
     def from_xml(cls, element):
