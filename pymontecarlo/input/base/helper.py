@@ -24,7 +24,7 @@ from operator import itemgetter
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.detector import \
+from pymontecarlo.input.base.detector import \
    (_EnergyDetector, _ElectronRangeDetector, _PhotonRangeDetector,
      _TransitionDetector)
 from pymontecarlo.util.relaxation_data import RelaxationData

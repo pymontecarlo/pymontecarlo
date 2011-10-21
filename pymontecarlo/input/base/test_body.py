@@ -15,8 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.body import Body, Layer
-from pymontecarlo.input.material import pure
+from pymontecarlo.input.base.body import Body, Layer
+from pymontecarlo.input.base.material import pure
 
 # Globals and constants variables.
 

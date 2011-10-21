@@ -15,9 +15,9 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import BackscatteredElectronEnergyDetector
-from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.input.base.options import Options
+from pymontecarlo.input.base.detector import BackscatteredElectronEnergyDetector
+from pymontecarlo.input.base.limit import ShowersLimit
 
 # Globals and constants variables.
 

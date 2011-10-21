@@ -27,8 +27,8 @@ from math import pi
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
-from pymontecarlo.input.body import Body, Layer
-from pymontecarlo.input.material import Material
+from pymontecarlo.input.base.body import Body, Layer
+from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')

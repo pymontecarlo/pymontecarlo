@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
-from pymontecarlo.input.material import Material
+from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 

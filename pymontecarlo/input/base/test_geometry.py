@@ -15,10 +15,10 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.geometry import \
+from pymontecarlo.input.base.geometry import \
     _Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries
-from pymontecarlo.input.material import pure
-from pymontecarlo.input.body import Layer
+from pymontecarlo.input.base.material import pure
+from pymontecarlo.input.base.body import Layer
 
 # Globals and constants variables.
 

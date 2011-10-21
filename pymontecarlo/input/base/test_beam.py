@@ -16,7 +16,7 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.beam import PencilBeam, GaussianBeam
+from pymontecarlo.input.base.beam import PencilBeam, GaussianBeam
 
 # Globals and constants variables.
 

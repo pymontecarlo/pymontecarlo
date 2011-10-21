@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.material import Material, composition_from_formula, pure
+from pymontecarlo.input.base.material import Material, composition_from_formula, pure
 
 # Globals and constants variables.
 

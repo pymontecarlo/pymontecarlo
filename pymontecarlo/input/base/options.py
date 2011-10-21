@@ -24,12 +24,12 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject, from_xml_choices
-from pymontecarlo.input.beam import GaussianBeam, PencilBeam
-from pymontecarlo.input.material import pure
-from pymontecarlo.input.geometry import \
+from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
+from pymontecarlo.input.base.material import pure
+from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries, Inclusion
-from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
+from pymontecarlo.input.base.detector import \
     (BackscatteredElectronAzimuthalAngularDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,

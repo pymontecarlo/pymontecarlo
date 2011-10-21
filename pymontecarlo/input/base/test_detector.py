@@ -17,7 +17,7 @@ from math import radians
 
 # Local modules.
 from pymontecarlo.util.relaxation_data import Transition
-from pymontecarlo.input.detector import \
+from pymontecarlo.input.base.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _TransitionDetector, _EnergyDetector, _PolarAngularDetector,
      _AzimuthalAngularDetector, PhotonSpectrumDetector, PhiRhoZDetector)
