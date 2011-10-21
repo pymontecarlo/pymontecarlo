@@ -30,7 +30,7 @@ class TestOptions(unittest.TestCase):
         self.ops.beam.energy = 1234
 
         self.ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
-        self.ops.limits.append(ShowersLimit(5678))
+        self.ops.limits.add(ShowersLimit(5678))
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -45,14 +45,14 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(self.ops.limits))
-        limit = self.ops.limits[0]
+        limit = self.ops.limits.get(ShowersLimit)
         self.assertEqual(5678, limit.showers)
 
     def testfrom_xml(self):
         element = self.ops.to_xml()
         ops = Options.from_xml(element)
 
-        self.assertAlmostEqual(1234, self.ops.beam.energy, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy, 4)
 
         self.assertEqual(1, len(ops.detectors))
         det = ops.detectors['bse']
@@ -61,8 +61,20 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits[0]
+        limit = ops.limits.get(ShowersLimit)
         self.assertEqual(5678, limit.showers)
+
+    def testdetectors(self):
+        self.assertRaises(ValueError, self.ops.detectors.__setitem__, 'te', None)
+        self.assertRaises(ValueError, self.ops.detectors.update, {'te': None})
+
+    def testlimits(self):
+        self.assertRaises(ValueError, self.ops.limits.add, None)
+
+        self.ops.limits.add(ShowersLimit(1234))
+        self.assertEqual(1, len(self.ops.limits))
+        limit = self.ops.limits.get(ShowersLimit)
+        self.assertEqual(1234, limit.showers)
 
     def testto_xml(self):
         element = self.ops.to_xml()

@@ -19,6 +19,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from xml.etree.ElementTree import Element
+from collections import MutableMapping, MutableSet
 
 # Third party modules.
 
@@ -44,6 +45,56 @@ from pymontecarlo.input.base.detector import \
      TransmittedElectronPolarAngularDetector)
 
 # Globals and constants variables.
+
+class _Detectors(MutableMapping):
+    def __init__(self, options):
+        self._options = options
+        self._data = {}
+
+    def __len__(self):
+        return self._data.__len__()
+
+    def __getitem__(self, key):
+        return self._data.__getitem__(key)
+
+    def __delitem__(self, key):
+        return self._data.__delitem__(key)
+
+    def __setitem__(self, key, value):
+        if value.__class__ not in self._options.DETECTORS:
+            raise ValueError, "Detector type (%s) is not available for %s" % \
+                (value.__class__.__name__, self._options.__class__.__name__)
+        return self._data.__setitem__(key, value)
+
+    def __iter__(self):
+        return self._data.__iter__()
+
+class _Limits(MutableSet):
+    def __init__(self, options):
+        self._options = options
+        self._data = {}
+
+    def __len__(self):
+        return self._data.__len__()
+
+    def __iter__(self):
+        return self._data.values().__iter__()
+
+    def __contains__(self, item):
+        return item in self._data.values()
+
+    def add(self, item):
+        clasz = item.__class__
+        if clasz not in self._options.LIMITS:
+            raise ValueError, "Limit type (%s) is not available for %s" % \
+                (clasz.__name__, self._options.__class__.__name__)
+        self._data[hash(clasz)] = item
+
+    def discard(self, item):
+        self._data.pop(hash(item.__class__))
+
+    def get(self, clasz, default=None):
+        return self._data.get(hash(clasz), default)
 
 class Options(XMLObject):
     BEAMS = [GaussianBeam, PencilBeam]
@@ -71,41 +122,33 @@ class Options(XMLObject):
         self.name = name
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(pure(79)) # Au substrate
-        self._detectors = {}
-        self._limits = []
+        self._detectors = _Detectors(self)
+        self._limits = _Limits(self)
 
     @classmethod
     def from_xml(cls, element):
-        name = element.get('name')
+        options = cls(element.get('name'))
 
         child = list(element.find("beam"))[0]
-        beam = from_xml_choices(child, cls.BEAMS)
+        options.beam = from_xml_choices(child, cls.BEAMS)
 
         child = list(element.find("geometry"))[0]
-        geometry = from_xml_choices(child, cls.GEOMETRIES)
+        options.geometry = from_xml_choices(child, cls.GEOMETRIES)
 
         children = list(element.find("detectors"))
-        detectors = {}
         for child in children:
             key = child.get('_key')
             obj = from_xml_choices(child, cls.DETECTORS)
-            detectors[key] = obj
+            options.detectors[key] = obj
 
         children = list(element.find("limits"))
-        limits = []
         for child in children:
-            limits.append(from_xml_choices(child, cls.LIMITS))
-
-        options = cls(name)
-        options.beam = beam
-        options.geometry = geometry
-        options.detectors.update(detectors)
-        options.limits.extend(limits)
+            options.limits.add(from_xml_choices(child, cls.LIMITS))
 
         return options
 
     def __repr__(self):
-        return '<Options(name=%s)>' % self.name
+        return '<%s(name=%s)>' % (self.__class__.__name__, self.name)
 
     def __str__(self):
         return self.name
@@ -116,6 +159,9 @@ class Options(XMLObject):
 
     @beam.setter
     def beam(self, beam):
+        if beam.__class__ not in self.BEAMS:
+            raise ValueError, "Beam type (%s) is not available for %s" % \
+                (beam.__class__.__name__, self.__class__.__name__)
         self._beam = beam
 
     @property
@@ -124,6 +170,9 @@ class Options(XMLObject):
 
     @geometry.setter
     def geometry(self, geometry):
+        if geometry.__class__ not in self.GEOMETRIES:
+            raise ValueError, "Geometry type (%s) is not available for %s" % \
+                (geometry.__class__.__name__, self.__class__.__name__)
         self._geometry = geometry
 
     @property
