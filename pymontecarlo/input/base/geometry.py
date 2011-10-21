@@ -32,7 +32,6 @@ from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
-SUBSTRATE_THICKNESS = 10 # 10 m
 
 class _Geometry(XMLObject):
 
@@ -81,6 +80,16 @@ class _Geometry(XMLObject):
     def get_bodies(self):
         raise NotImplementedError
 
+    def get_dimensions(self, body):
+        """
+        Returns a tuple of 6 values: (xmin, xmax, ymin, ymax, zmin, zmax) 
+        corresponding to the dimensions of the body inside the geometry.
+        All dimensions are in meters.
+        
+        :arg body: body to get the range for
+        """
+        raise NotImplementedError
+
     def to_xml(self):
         element = XMLObject.to_xml(self)
 
@@ -126,6 +135,15 @@ class Substrate(_Geometry):
 
     def get_bodies(self):
         return [self._body]
+
+    def get_dimensions(self, body):
+        if body is self.body:
+            return (float('-inf'), float('inf'),
+                    float('-inf'), float('inf'),
+                    float('-inf'), 0.0)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
 
     def to_xml(self):
         element = _Geometry.to_xml(self)
@@ -203,6 +221,17 @@ class Inclusion(_Geometry):
     def get_bodies(self):
         return [self._substrate, self._inclusion]
 
+    def get_dimensions(self, body):
+        if body is self.substrate_body:
+            return (float('-inf'), float('inf'),
+                    float('-inf'), float('inf'),
+                    float('-inf'), 0.0)
+        elif body is self.inclusion_body:
+            radius = self.inclusion_diameter / 2.0
+            return (-radius, radius, -radius, radius, -radius, 0.0)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
     def to_xml(self):
         element = _Geometry.to_xml(self)
 
@@ -248,7 +277,9 @@ class _Layered(_Geometry):
         return self._layers
 
     def add_layer(self, mat, thickness):
-        self._layers.append(Layer(mat, thickness))
+        layer = Layer(mat, thickness)
+        self._layers.append(layer)
+        return layer
 
     def get_bodies(self):
         return list(self.layers)
@@ -341,12 +372,27 @@ class MultiLayers(_Layered):
         positions = [0.0]
 
         for layer in self.layers:
-            positions.append(positions[-1] + layer.thickness)
+            positions.append(positions[-1] - layer.thickness)
 
         if self.has_substrate():
-            positions.append(positions[-1] + SUBSTRATE_THICKNESS)
+            positions.append(float('-inf'))
 
         return positions
+
+    def get_dimensions(self, body):
+        if body is self.substrate_body and body is not None:
+            positions = self.get_layer_positions()
+            return (float('-inf'), float('inf'),
+                    float('-inf'), float('inf'),
+                    positions[-1], positions[-2])
+        elif body in self.layers:
+            index = self.layers.index(body)
+            positions = self.get_layer_positions()
+            return (float('-inf'), float('inf'),
+                    float('-inf'), float('inf'),
+                    positions[index + 1], positions[index])
+        else:
+            raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
         element = _Layered.to_xml(self)
@@ -436,7 +482,27 @@ class GrainBoundaries(_Layered):
         else:
             positions.append[0.0]
 
-        return [-SUBSTRATE_THICKNESS] + positions + [SUBSTRATE_THICKNESS]
+        return [float('-inf')] + positions + [float('inf')]
+
+    def get_dimensions(self, body):
+        if body is self.left_body:
+            positions = self.get_layer_positions()
+            return (positions[0], positions[1],
+                    float('-inf'), float('inf'),
+                    float('-inf'), float('inf'))
+        elif body is self.right_body:
+            positions = self.get_layer_positions()
+            return (positions[-2], positions[-1],
+                    float('-inf'), float('inf'),
+                    float('-inf'), float('inf'))
+        elif body in self.layers:
+            index = self.layers.index(body)
+            positions = self.get_layer_positions()
+            return (positions[index + 1], positions[index + 2],
+                    float('-inf'), float('inf'),
+                    float('-inf'), float('inf'))
+        else:
+            raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
         element = _Layered.to_xml(self)
