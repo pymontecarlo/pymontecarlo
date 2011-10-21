@@ -32,6 +32,7 @@ from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
+SUBSTRATE_THICKNESS = 10 # 10 m
 
 class _Geometry(XMLObject):
 
@@ -217,23 +218,11 @@ class Inclusion(_Geometry):
 
         return element
 
-class MultiLayers(_Geometry):
-    def __init__(self, substrate_material=None, layers=[]):
+class _Layered(_Geometry):
+    def __init__(self, layers=[]):
         _Geometry.__init__(self)
 
-        if substrate_material is not None:
-            self._substrate = Body(substrate_material)
-        else:
-            self._substrate = None
-
         self._layers = list(layers) # copy
-
-    def __repr__(self):
-        if self.has_substrate():
-            return '<MultiLayers(substrate_material=%s, layers_count=%i)>' % \
-                (str(self.substrate_material), len(self.layers))
-        else:
-            return '<MultiLayers(No substrate, layers_count=%i)>' % len(self.layers)
 
     @classmethod
     def from_xml(cls, element):
@@ -244,13 +233,66 @@ class MultiLayers(_Geometry):
         for child in children:
             layers.append(Layer.from_xml(child))
 
+        obj = cls(layers)
+        obj.tilt = geometry.tilt
+        obj.rotation = geometry.rotation
+
+        return obj
+
+    @property
+    def layers(self):
+        """
+        Layers from top to bottom (multi-layers) or left to right (grain boundaries).
+        See :class:`Layer`.
+        """
+        return self._layers
+
+    def add_layer(self, mat, thickness):
+        self._layers.append(Layer(mat, thickness))
+
+    def get_bodies(self):
+        return list(self.layers)
+
+    def get_layer_positions(self):
+        raise NotImplementedError
+
+    def to_xml(self):
+        element = _Geometry.to_xml(self)
+
+        child = Element('layers')
+        for layer in self.layers:
+            child.append(layer.to_xml())
+        element.append(child)
+
+        return element
+
+class MultiLayers(_Layered):
+    def __init__(self, substrate_material=None, layers=[]):
+        _Layered.__init__(self, layers)
+
+        if substrate_material is not None:
+            self._substrate = Body(substrate_material)
+        else:
+            self._substrate = None
+
+    def __repr__(self):
+        if self.has_substrate():
+            return '<MultiLayers(substrate_material=%s, layers_count=%i)>' % \
+                (str(self.substrate_material), len(self.layers))
+        else:
+            return '<MultiLayers(No substrate, layers_count=%i)>' % len(self.layers)
+
+    @classmethod
+    def from_xml(cls, element):
+        geometry = _Layered.from_xml(element)
+
         children = list(element.find("substrateMaterial"))
         if children:
             substrate_material = Material.from_xml(children[0])
         else:
             substrate_material = None
 
-        obj = cls(substrate_material, layers)
+        obj = cls(substrate_material, geometry.layers)
         obj.tilt = geometry.tilt
         obj.rotation = geometry.rotation
 
@@ -287,30 +329,27 @@ class MultiLayers(_Geometry):
     def substrate_body(self):
         return self._substrate
 
-    @property
-    def layers(self):
-        """
-        Layers from top to bottom.
-        See :class:`Layer`.
-        """
-        return self._layers
-
     def get_bodies(self):
-        bodies = []
+        bodies = _Layered.get_bodies(self)
 
-        bodies.extend(self.layers)
         if self._substrate is not None:
             bodies.append(self._substrate)
 
         return bodies
 
-    def to_xml(self):
-        element = _Geometry.to_xml(self)
+    def get_layer_positions(self):
+        positions = [0.0]
 
-        child = Element('layers')
         for layer in self.layers:
-            child.append(layer.to_xml())
-        element.append(child)
+            positions.append(positions[-1] + layer.thickness)
+
+        if self.has_substrate():
+            positions.append(positions[-1] + SUBSTRATE_THICKNESS)
+
+        return positions
+
+    def to_xml(self):
+        element = _Layered.to_xml(self)
 
         child = Element('substrateMaterial')
         if self.has_substrate():
@@ -319,14 +358,12 @@ class MultiLayers(_Geometry):
 
         return element
 
-class GrainBoundaries(_Geometry):
+class GrainBoundaries(_Layered):
     def __init__(self, left_material, right_material, layers=[]):
-        _Geometry.__init__(self)
+        _Layered.__init__(self, layers)
 
         self._left = Body(left_material)
         self._right = Body(right_material)
-
-        self._layers = list(layers) # copy
 
     def __repr__(self):
         return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
@@ -334,12 +371,7 @@ class GrainBoundaries(_Geometry):
 
     @classmethod
     def from_xml(cls, element):
-        geometry = _Geometry.from_xml(element)
-
-        children = list(element.find("layers"))
-        layers = []
-        for child in children:
-            layers.append(Layer.from_xml(child))
+        geometry = _Layered.from_xml(element)
 
         child = list(element.find("leftMaterial"))[0]
         left_material = Material.from_xml(child)
@@ -347,7 +379,7 @@ class GrainBoundaries(_Geometry):
         child = list(element.find("rightMaterial"))[0]
         right_material = Material.from_xml(child)
 
-        obj = cls(left_material, right_material, layers)
+        obj = cls(left_material, right_material, geometry.layers)
         obj.tilt = geometry.tilt
         obj.rotation = geometry.rotation
 
@@ -383,30 +415,31 @@ class GrainBoundaries(_Geometry):
     def right_body(self):
         return self._right
 
-    @property
-    def layers(self):
-        """
-        Layers from left to right bottom.
-        See :class:`Layer`.
-        """
-        return self._layers
-
     def get_bodies(self):
         bodies = []
 
         bodies.append(self._left)
-        bodies.extend(self.layers)
+        bodies.extend(_Layered.get_bodies(self))
         bodies.append(self._right)
 
         return bodies
 
-    def to_xml(self):
-        element = _Geometry.to_xml(self)
+    def get_layer_positions(self):
+        thicknesses = map(attrgetter('thickness'), self.layers)
 
-        child = Element('layers')
-        for layer in self.layers:
-            child.append(layer.to_xml())
-        element.append(child)
+        positions = []
+        if thicknesses: # simple couple
+            middle = sum(thicknesses) / 2.0
+            for i in range(len(thicknesses)):
+                positions.append(sum(thicknesses[:i]) - middle)
+            positions.append(positions[-1] + thicknesses[-1])
+        else:
+            positions.append[0.0]
+
+        return [-SUBSTRATE_THICKNESS] + positions + [SUBSTRATE_THICKNESS]
+
+    def to_xml(self):
+        element = _Layered.to_xml(self)
 
         child = Element('leftMaterial')
         child.append(self.left_material.to_xml())

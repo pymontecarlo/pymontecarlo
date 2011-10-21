@@ -215,6 +215,21 @@ class TestMultiLayers(unittest.TestCase):
         self.assertEqual(3, len(self.g1.get_bodies()))
         self.assertEqual(2, len(self.g2.get_bodies()))
 
+    def testget_layer_positions(self):
+        # Multi-layers 1
+        expecteds = [0.0, 123.456, 580.245, 590.245]
+        actuals = self.g1.get_layer_positions()
+        self.assertEqual(len(expecteds), len(actuals))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
+
+        # Multi-layers 2
+        expecteds = [0.0, 123.456, 580.245]
+        actuals = self.g2.get_layer_positions()
+        self.assertEqual(len(expecteds), len(actuals))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
+
     def testto_xml(self):
         # Multi-layers 1
         element = self.g1.to_xml()
@@ -244,23 +259,37 @@ class TestGrainBoundaries(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.g = GrainBoundaries(pure(29), pure(30))
-        self.g.layers.append(Layer(pure(31), 456.789))
+        self.g1 = GrainBoundaries(pure(29), pure(30))
+        self.g1.add_layer(pure(31), 500.0)
+
+        self.g2 = GrainBoundaries(pure(29), pure(30))
+        self.g2.add_layer(pure(31), 100.0)
+        self.g2.add_layer(pure(32), 200.0)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEqual('Copper', str(self.g.left_material))
-        self.assertEqual('Zinc', str(self.g.right_material))
+        # Grain boundaries 1
+        self.assertEqual('Copper', str(self.g1.left_material))
+        self.assertEqual('Zinc', str(self.g1.right_material))
 
-        self.assertEqual(1, len(self.g.layers))
-        self.assertEqual('Gallium', str(self.g.layers[0].material))
+        self.assertEqual(1, len(self.g1.layers))
+        self.assertEqual('Gallium', str(self.g1.layers[0].material))
+
+        # Grain boundaries 2
+        self.assertEqual('Copper', str(self.g2.left_material))
+        self.assertEqual('Zinc', str(self.g2.right_material))
+
+        self.assertEqual(2, len(self.g2.layers))
+        self.assertEqual('Gallium', str(self.g2.layers[0].material))
+        self.assertEqual('Germanium', str(self.g2.layers[1].material))
 
     def testfrom_xml(self):
-        self.g.tilt = 1.1
-        self.g.rotation = 2.2
-        element = self.g.to_xml()
+        # Grain boundaries 1
+        self.g1.tilt = 1.1
+        self.g1.rotation = 2.2
+        element = self.g1.to_xml()
         g = GrainBoundaries.from_xml(element)
 
         self.assertEqual('Copper', str(g.left_material))
@@ -272,18 +301,47 @@ class TestGrainBoundaries(unittest.TestCase):
         self.assertAlmostEqual(1.1, g.tilt, 4)
         self.assertAlmostEqual(2.2, g.rotation, 4)
 
+        # Grain boundaries 2
+        element = self.g2.to_xml()
+        g = GrainBoundaries.from_xml(element)
+
+        self.assertEqual('Copper', str(g.left_material))
+        self.assertEqual('Zinc', str(g.right_material))
+
+        self.assertEqual(2, len(g.layers))
+        self.assertEqual('Gallium', str(g.layers[0].material))
+        self.assertEqual('Germanium', str(g.layers[1].material))
+
+        self.assertAlmostEqual(0.0, g.tilt, 4)
+        self.assertAlmostEqual(0.0, g.rotation, 4)
+
     def testleft_body(self):
-        self.assertEqual(self.g.left_material, self.g.left_body.material)
+        self.assertEqual(self.g1.left_material, self.g1.left_body.material)
 
     def testright_body(self):
-        self.assertEqual(self.g.right_material, self.g.right_body.material)
+        self.assertEqual(self.g1.right_material, self.g1.right_body.material)
 
     def testget_bodies(self):
-        self.assertEqual(3, len(self.g.get_bodies()))
+        self.assertEqual(3, len(self.g1.get_bodies()))
+
+    def testget_layer_positions(self):
+        # Grain boundaries 1
+        expecteds = [-10, -250.0, 250.0, 10]
+        actuals = self.g1.get_layer_positions()
+        self.assertEqual(len(expecteds), len(actuals))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
+
+        # Grain boundaries 2
+        expecteds = [-10, -150.0, -50.0, 150.0, 10]
+        actuals = self.g2.get_layer_positions()
+        self.assertEqual(len(expecteds), len(actuals))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
 
     def testto_xml(self):
-        # Multi-layers 1
-        element = self.g.to_xml()
+        # Grain boundaries 1
+        element = self.g1.to_xml()
 
         self.assertEqual('GrainBoundaries', element.tag)
 
@@ -296,6 +354,13 @@ class TestGrainBoundaries(unittest.TestCase):
         child = list(element.find('rightMaterial'))[0]
         self.assertEqual('Zinc', child.get('name'))
 
+        # Grain boundaries 2
+        element = self.g2.to_xml()
+
+        self.assertEqual('GrainBoundaries', element.tag)
+
+        children = list(element.find('layers'))
+        self.assertEqual(2, len(children))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
