@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 ================================================================================
 :mod:`geometry` -- Base class of all geometries
@@ -32,6 +31,7 @@ from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
+_THICKNESS_GETTER = attrgetter('thickness')
 
 class _Geometry(XMLObject):
 
@@ -86,7 +86,7 @@ class _Geometry(XMLObject):
         corresponding to the dimensions of the body inside the geometry.
         All dimensions are in meters.
         
-        :arg body: body to get the range for
+        :arg body: body to get the dimensions for
         """
         raise NotImplementedError
 
@@ -284,9 +284,6 @@ class _Layered(_Geometry):
     def get_bodies(self):
         return list(self.layers)
 
-    def get_layer_positions(self):
-        raise NotImplementedError
-
     def to_xml(self):
         element = _Geometry.to_xml(self)
 
@@ -299,6 +296,16 @@ class _Layered(_Geometry):
 
 class MultiLayers(_Layered):
     def __init__(self, substrate_material=None, layers=[]):
+        """
+        Creates a multi-layers geometry. 
+        The layers are assumed to be in the x-y plane (normal parallel to z).
+        The first layer starts at ``z = 0`` and extends towards the negative z
+        axis.
+        
+        :arg substrate_material: material of the substrate. 
+            If ``None``, the geometry does not have a substrate, only layers
+        :arg layers: :class:`list` of :class:`.Layer`
+        """
         _Layered.__init__(self, layers)
 
         if substrate_material is not None:
@@ -368,29 +375,19 @@ class MultiLayers(_Layered):
 
         return bodies
 
-    def get_layer_positions(self):
-        positions = [0.0]
-
-        for layer in self.layers:
-            positions.append(positions[-1] - layer.thickness)
-
-        if self.has_substrate():
-            positions.append(float('-inf'))
-
-        return positions
-
     def get_dimensions(self, body):
         if body is self.substrate_body and body is not None:
-            positions = self.get_layer_positions()
+            zmax = -sum(map(_THICKNESS_GETTER, self.layers))
             return (float('-inf'), float('inf'),
                     float('-inf'), float('inf'),
-                    positions[-1], positions[-2])
+                    float('-inf'), zmax)
         elif body in self.layers:
             index = self.layers.index(body)
-            positions = self.get_layer_positions()
+            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:index]))
+            zmin = zmax - body.thickness
             return (float('-inf'), float('inf'),
                     float('-inf'), float('inf'),
-                    positions[index + 1], positions[index])
+                    zmin, zmax)
         else:
             raise ValueError, "Unknown body: %s" % body
 
@@ -406,6 +403,16 @@ class MultiLayers(_Layered):
 
 class GrainBoundaries(_Layered):
     def __init__(self, left_material, right_material, layers=[]):
+        """
+        Creates a grain boundaries geometry.
+        It consists of 0 or many layers in the y-z plane (normal parallel to x)
+        simulating interfaces between different materials.
+        If no layer is defined, the geometry is a couple.
+        
+        :arg left_material: material on the left side
+        :arg right_material: material on the right side
+        :arg layers: :class:`list` of :class:`.Layer`
+        """
         _Layered.__init__(self, layers)
 
         self._left = Body(left_material)
@@ -470,8 +477,8 @@ class GrainBoundaries(_Layered):
 
         return bodies
 
-    def get_layer_positions(self):
-        thicknesses = map(attrgetter('thickness'), self.layers)
+    def get_dimensions(self, body):
+        thicknesses = map(_THICKNESS_GETTER, self.layers)
 
         positions = []
         if thicknesses: # simple couple
@@ -482,23 +489,17 @@ class GrainBoundaries(_Layered):
         else:
             positions.append[0.0]
 
-        return [float('-inf')] + positions + [float('inf')]
-
-    def get_dimensions(self, body):
         if body is self.left_body:
-            positions = self.get_layer_positions()
-            return (positions[0], positions[1],
+            return (float('-inf'), positions[0],
                     float('-inf'), float('inf'),
                     float('-inf'), float('inf'))
         elif body is self.right_body:
-            positions = self.get_layer_positions()
-            return (positions[-2], positions[-1],
+            return (positions[-1], float('inf'),
                     float('-inf'), float('inf'),
                     float('-inf'), float('inf'))
         elif body in self.layers:
             index = self.layers.index(body)
-            positions = self.get_layer_positions()
-            return (positions[index + 1], positions[index + 2],
+            return (positions[index], positions[index + 1],
                     float('-inf'), float('inf'),
                     float('-inf'), float('inf'))
         else:

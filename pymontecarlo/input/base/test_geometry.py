@@ -241,22 +241,6 @@ class TestMultiLayers(unittest.TestCase):
         self.assertEqual(3, len(self.g1.get_bodies()))
         self.assertEqual(2, len(self.g2.get_bodies()))
 
-    def testget_layer_positions(self):
-        # Multi-layers 1
-        expecteds = [0.0, -123.456, -580.245, float('-inf')]
-        actuals = self.g1.get_layer_positions()
-        self.assertEqual(len(expecteds), len(actuals))
-        for expected, actual in zip(expecteds[:-1], actuals[:-1]):
-            self.assertAlmostEqual(expected, actual, 4)
-        self.assertEqual(expecteds[-1], actuals[-1])
-
-        # Multi-layers 2
-        expecteds = [0.0, -123.456, -580.245]
-        actuals = self.g2.get_layer_positions()
-        self.assertEqual(len(expecteds), len(actuals))
-        for expected, actual in zip(expecteds, actuals):
-            self.assertAlmostEqual(expected, actual, 4)
-
     def testget_dimensions(self):
         # Multi-layers 1
         xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.g1.substrate_body)
@@ -395,25 +379,6 @@ class TestGrainBoundaries(unittest.TestCase):
 
     def testget_bodies(self):
         self.assertEqual(3, len(self.g1.get_bodies()))
-
-    def testget_layer_positions(self):
-        # Grain boundaries 1
-        expecteds = [float('-inf'), -250.0, 250.0, float('inf')]
-        actuals = self.g1.get_layer_positions()
-        self.assertEqual(len(expecteds), len(actuals))
-        self.assertEqual(expecteds[0], actuals[0])
-        for expected, actual in zip(expecteds[1:-1], actuals[1:-1]):
-            self.assertAlmostEqual(expected, actual, 4)
-        self.assertEqual(expecteds[-1], actuals[-1])
-
-        # Grain boundaries 2
-        expecteds = [float('-inf'), -150.0, -50.0, 150.0, float('inf')]
-        actuals = self.g2.get_layer_positions()
-        self.assertEqual(len(expecteds), len(actuals))
-        self.assertEqual(expecteds[0], actuals[0])
-        for expected, actual in zip(expecteds[1:-1], actuals[1:-1]):
-            self.assertAlmostEqual(expected, actual, 4)
-        self.assertEqual(expecteds[-1], actuals[-1])
 
     def testget_dimensions(self):
         # Grain boundaries 1
