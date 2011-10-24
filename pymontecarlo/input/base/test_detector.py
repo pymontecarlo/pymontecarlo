@@ -16,11 +16,10 @@ from math import radians
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.relaxation_data import Transition
 from pymontecarlo.input.base.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
-     _TransitionDetector, _EnergyDetector, _PolarAngularDetector,
-     _AzimuthalAngularDetector, PhotonSpectrumDetector, PhiRhoZDetector)
+     _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
+     PhotonSpectrumDetector, PhiRhoZDetector)
 
 # Globals and constants variables.
 
@@ -41,6 +40,7 @@ class Test_DelimitedDetector(unittest.TestCase):
         self.assertAlmostEqual(0, self.d.azimuth[0], 4)
         self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
         self.assertAlmostEqual(0.70400115, self.d.solid_angle, 4)
+        self.assertAlmostEqual(radians(40), self.d.takeoffangle, 4)
 
     def test__repr__(self):
         expected = '<_DelimitedDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad)>'
@@ -195,38 +195,6 @@ class Test_SpatialDetector(unittest.TestCase):
         self.assertAlmostEqual(34.12, float(element.get('zlimit_min')), 4)
         self.assertAlmostEqual(78.56, float(element.get('zlimit_max')), 4)
         self.assertEqual(4, int(element.get('zbins')))
-
-class Test_TransitionDetector(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        transition = Transition(29, siegbahn='Ka1')
-        self.d = _TransitionDetector(transition)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertEqual('Cu Ka1', str(self.d.transition))
-
-    def test__repr__(self):
-        expected = '<_TransitionDetector(transition=Cu Ka1)>'
-        self.assertEquals(expected, repr(self.d))
-
-    def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _TransitionDetector.from_xml(element)
-
-        self.assertEqual('Cu Ka1', str(d.transition))
-
-    def testto_xml(self):
-        element = self.d.to_xml()
-
-        child = list(element.find('transition'))[0]
-        self.assertEqual(29, int(child.get('z')))
-        self.assertEqual(4, int(child.get('src')))
-        self.assertEqual(1, int(child.get('dest')))
 
 class Test_EnergyDetector(unittest.TestCase):
 
@@ -397,8 +365,7 @@ class TestPhiRhoZDetector(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        transition = Transition(29, siegbahn='Ka1')
-        self.d = PhiRhoZDetector((-12.34, -56.78), 1000, transition)
+        self.d = PhiRhoZDetector((-12.34, -56.78), 1000)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -407,10 +374,9 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-56.78, self.d.limits[0], 4)
         self.assertAlmostEqual(-12.34, self.d.limits[1], 4)
         self.assertEqual(1000, self.d.channels)
-        self.assertEqual('Cu Ka1', str(self.d.transition))
 
     def test__repr__(self):
-        expected = '<PhiRhoZDetector(limits=-56.78 to -12.34 m, channels=1000, transition=Cu Ka1)>'
+        expected = '<PhiRhoZDetector(limits=-56.78 to -12.34 m, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
@@ -420,7 +386,6 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-56.78, d.limits[0], 4)
         self.assertAlmostEqual(-12.34, d.limits[1], 4)
         self.assertEqual(1000, d.channels)
-        self.assertEqual('Cu Ka1', str(d.transition))
 
     def testto_xml(self):
         element = self.d.to_xml()
@@ -430,11 +395,6 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-56.78, float(element.get('limit_min')), 4)
         self.assertAlmostEqual(-12.34, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
-
-        child = list(element.find('transition'))[0]
-        self.assertEqual(29, int(child.get('z')))
-        self.assertEqual(4, int(child.get('src')))
-        self.assertEqual(1, int(child.get('dest')))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

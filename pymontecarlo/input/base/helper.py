@@ -19,15 +19,12 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import itemgetter
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.base.detector import \
-   (_EnergyDetector, _ElectronRangeDetector, _PhotonRangeDetector,
-     _TransitionDetector)
-from pymontecarlo.util.relaxation_data import RelaxationData
+   (_EnergyDetector, _ElectronRangeDetector, _PhotonRangeDetector)
 
 # Globals and constants variables.
 
@@ -67,44 +64,10 @@ def ensure_emax(options, emax=None):
 
     options.beam.energy = emax
 
-    for detector in options.detectors.values():
-        if isinstance(detector, _EnergyDetector):
-            detector.limits = (detector.limits[0], emax)
+    for detector in options.detectors.matches(_EnergyDetector).values():
+        detector.limits = (detector.limits[0], emax)
 
     return emax
-
-def check_transitions(options):
-    """
-    Checks that the photon transitions specified in all detectors are valid:
-    
-      * They correspond to a material inside the geometry
-      * Their energy is less than the beam energy
-    
-    :raise: `ValueError` if the two criteria are not met
-    """
-    emax = options.beam.energy
-    relaxation = RelaxationData()
-
-    # Find all possible atomic numbers
-    zs = []
-    for material in options.geometry.get_materials():
-        zs += map(itemgetter[0], material.composition)
-
-    # Check PhotonTransitionDetector
-    for name, detector in options.detectors.iteritems():
-        if isinstance(detector, _TransitionDetector):
-            transition = detector.transion
-
-            if transition.z not in zs:
-                raise ValueError, \
-                    "Detector '%s': No material with atomic number %i." % \
-                        (name, transition.z)
-
-            energy = relaxation.energy(transition=transition)
-            if energy > emax:
-                raise ValueError, \
-                    "Detector '%s': Transition energy (%s) is larger than beam energy (%s)." % \
-                        (name, energy, emax)
 
 def adjust_range(options, safety_factor=1.5):
     """

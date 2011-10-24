@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
-from pymontecarlo.util.relaxation_data import Transition
+from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
 

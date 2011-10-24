@@ -16,7 +16,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.util.relaxation_data import Transition
+from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
 

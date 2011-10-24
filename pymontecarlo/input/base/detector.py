@@ -20,13 +20,11 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import math
-from xml.etree.ElementTree import Element
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
-from pymontecarlo.util.relaxation_data import Transition
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -116,6 +114,10 @@ class _DelimitedDetector(XMLObject):
     def solid_angle(self):
         return abs((self.azimuth[1] - self.azimuth[0]) * \
                    (math.cos(self.elevation[0]) - math.cos(self.elevation[1])))
+
+    @property
+    def takeoffangle(self):
+        return sum(self.elevation) / 2.0
 
     def to_xml(self):
         element = XMLObject.to_xml(self)
@@ -324,39 +326,6 @@ class _SpatialDetector(XMLObject):
 
         return element
 
-class _TransitionDetector(XMLObject):
-    def __init__(self, transition):
-        XMLObject.__init__(self)
-
-        self.transition = transition
-
-    def __repr__(self):
-        return '<%s(transition=%s)>' % (self.__class__.__name__, str(self.transition))
-
-    @classmethod
-    def from_xml(cls, element):
-        child = list(element.find("transition"))[0]
-        material = Transition.from_xml(child)
-
-        return cls(material)
-
-    @property
-    def transition(self):
-        return self._transition
-
-    @transition.setter
-    def transition(self, transition):
-        self._transition = transition
-
-    def to_xml(self):
-        element = XMLObject.to_xml(self)
-
-        child = Element('transition')
-        child.append(self.transition.to_xml())
-        element.append(child)
-
-        return element
-
 class _EnergyDetector(_ChannelsDetector):
     def __init__(self, limits, channels):
         _ChannelsDetector.__init__(self, limits, channels, (0.0, float('inf')))
@@ -372,7 +341,7 @@ class _RangeDetector(object):
 class _ElectronRangeDetector(_RangeDetector):
     pass
 
-class _PhotonRangeDetector(_RangeDetector, _TransitionDetector):
+class _PhotonRangeDetector(_RangeDetector):
     pass
 
 class _PolarAngularDetector(_ChannelsDetector):
@@ -467,33 +436,17 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
         return element
 
 class PhiRhoZDetector(_PhotonRangeDetector, _ChannelsDetector):
-    def __init__(self, limits, channels, transition):
+    def __init__(self, limits, channels):
         _ChannelsDetector.__init__(self, limits, channels, (float('-inf'), 0))
-        _PhotonRangeDetector.__init__(self, transition)
+        _PhotonRangeDetector.__init__(self)
 
     def __repr__(self):
-        return '<%s(limits=%s to %s m, channels=%s, transition=%s)>' % \
-            (self.__class__.__name__, self.limits[0], self.limits[1],
-             self.channels, self.transition)
-
-    @classmethod
-    def from_xml(cls, element):
-        chdet = _ChannelsDetector.from_xml(element)
-        rangedet = _PhotonRangeDetector.from_xml(element)
-
-        return cls(chdet.limits, chdet.channels, rangedet.transition)
+        return '<%s(limits=%s to %s m, channels=%s)>' % \
+            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
 
     def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
         self.limits = (zlow, zhigh)
 
-    def to_xml(self):
-        element = XMLObject.to_xml(self)
-
-        element.attrib.update(_ChannelsDetector.to_xml(self).attrib)
-        element.append(list(_PhotonRangeDetector.to_xml(self))[0])
-
-        return element
-
-class PhotonIntensityDetector(_TransitionDetector):
+class PhotonIntensityDetector(_DelimitedDetector):
     pass
 
