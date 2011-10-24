@@ -435,17 +435,36 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
 
         return element
 
-class PhiRhoZDetector(_PhotonRangeDetector, _ChannelsDetector):
-    def __init__(self, limits, channels):
+class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
+    def __init__(self, elevation, azimuth, limits, channels):
         _ChannelsDetector.__init__(self, limits, channels, (float('-inf'), 0))
+        _DelimitedDetector.__init__(self, elevation, azimuth)
         _PhotonRangeDetector.__init__(self)
 
     def __repr__(self):
-        return '<%s(limits=%s to %s m, channels=%s)>' % \
-            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s m, channels=%s)>' % \
+            (self.__class__.__name__, self.elevation[0], self.elevation[1],
+             self.azimuth[0], self.azimuth[1], self.limits[0], self.limits[1],
+             self.channels)
+
+    @classmethod
+    def from_xml(cls, element):
+        delimited = _DelimitedDetector.from_xml(element)
+        channels = _ChannelsDetector.from_xml(element)
+
+        return cls(delimited.elevation, delimited.azimuth,
+                   channels.limits, channels.channels)
 
     def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
         self.limits = (zlow, zhigh)
+
+    def to_xml(self):
+        element = XMLObject.to_xml(self)
+
+        element.attrib.update(_DelimitedDetector.to_xml(self).attrib)
+        element.attrib.update(_ChannelsDetector.to_xml(self).attrib)
+
+        return element
 
 class PhotonIntensityDetector(_DelimitedDetector):
     pass

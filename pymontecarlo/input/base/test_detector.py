@@ -365,24 +365,34 @@ class TestPhiRhoZDetector(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.d = PhiRhoZDetector((-12.34, -56.78), 1000)
+        self.d = PhiRhoZDetector((radians(35), radians(45)),
+                                 (0, radians(360.0)),
+                                 (-12.34, -56.78), 1000)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
+        self.assertAlmostEqual(radians(35), self.d.elevation[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
         self.assertAlmostEqual(-56.78, self.d.limits[0], 4)
         self.assertAlmostEqual(-12.34, self.d.limits[1], 4)
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhiRhoZDetector(limits=-56.78 to -12.34 m, channels=1000)>'
+        expected = '<PhiRhoZDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, limits=-56.78 to -12.34 m, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = PhiRhoZDetector.from_xml(element)
 
+        self.assertAlmostEqual(radians(35), d.elevation[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation[1], 4)
+        self.assertAlmostEqual(0, d.azimuth[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth[1], 4)
         self.assertAlmostEqual(-56.78, d.limits[0], 4)
         self.assertAlmostEqual(-12.34, d.limits[1], 4)
         self.assertEqual(1000, d.channels)
@@ -392,6 +402,10 @@ class TestPhiRhoZDetector(unittest.TestCase):
 
         self.assertEqual("PhiRhoZDetector", element.tag)
 
+        self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
+        self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
+        self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
+        self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
         self.assertAlmostEqual(-56.78, float(element.get('limit_min')), 4)
         self.assertAlmostEqual(-12.34, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
