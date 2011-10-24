@@ -36,8 +36,8 @@ class ConversionException(Exception):
     pass
 
 class Converter(object):
-    def convert(self, old, newclass):
-        new = self._create_new_instance(old, newclass)
+    def convert(self, old):
+        new = self._create_instance(old)
 
         self._convert_beam(old, new)
         self._convert_geometry(old, new)
@@ -46,8 +46,8 @@ class Converter(object):
 
         return new
 
-    def _create_new_instance(self, old, newclass):
-        return newclass(old.name)
+    def _create_instance(self, old):
+        raise NotImplementedError
 
     def _convert_beam(self, old, new):
         if old.beam.__class__ in new.BEAMS:
