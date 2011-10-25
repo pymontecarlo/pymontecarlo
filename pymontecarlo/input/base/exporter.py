@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`export` -- Base class for exporters
+:mod:`exporter` -- Base class for exporters
 ================================================================================
 
-.. module:: export
+.. module:: exporter
    :synopsis: Base class for exporters
 
-.. inheritance-diagram:: export
+.. inheritance-diagram:: pymontecarlo.input.base.exporter
 
 """
 

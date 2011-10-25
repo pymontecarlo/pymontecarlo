@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`convert` -- Base class for conversion of options
+:mod:`converter` -- Base class for conversion of options
 ================================================================================
 
-.. module:: convert
+.. module:: converter
    :synopsis: Base class for conversion of options
 
-.. inheritance-diagram:: convert
+.. inheritance-diagram:: pymontecarlo.input.base.converter
 
 """
 
