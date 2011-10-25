@@ -23,6 +23,7 @@ import math
 from xml.etree.ElementTree import Element
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
@@ -132,7 +133,7 @@ class PencilBeam(XMLObject):
 class GaussianBeam(PencilBeam):
 
     def __init__(self, energy, diameter, origin=(0, 0, 1),
-                 direction=(0, 0, 0), aperture=0.0):
+                 direction=(0, 0, -1), aperture=0.0):
         PencilBeam.__init__(self, energy, origin, direction, aperture)
 
         self.diameter = diameter
@@ -170,3 +171,27 @@ class GaussianBeam(PencilBeam):
 
         return element
 
+def tilt_beam(angle, axis='y', direction=(0, 0, -1)):
+    """
+    Returns the direction of the beam after being tilted by an *angle* along
+    the specified *axis* of rotation from its original *direction*.
+    
+    :arg angle: angle of rotation in radians
+    :arg axis: axis of rotation, either ``x``, ``y``, ``z``
+    :arg direction: original direction of the beam
+    
+    :return: a 3-length :class:`tuple`
+    """
+    c = math.cos(angle)
+    s = math.sin(angle)
+
+    if axis.lower() == 'x':
+        r = np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+    elif axis.lower() == 'y':
+        r = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+    elif axis.lower() == 'z':
+        r = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+    else:
+        raise ValueError, "Unknown axis: %s" % axis
+
+    return list(np.dot(r, direction))

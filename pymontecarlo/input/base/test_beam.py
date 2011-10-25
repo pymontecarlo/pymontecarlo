@@ -16,9 +16,36 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.beam import PencilBeam, GaussianBeam
+from pymontecarlo.input.base.beam import PencilBeam, GaussianBeam, tilt_beam
 
 # Globals and constants variables.
+
+class TestModule(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testtilt_beam(self):
+        expecteds = [0.0, 1.0, 0.0]
+        actuals = tilt_beam(math.pi / 2, axis='x', direction=(0, 0, -1))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
+
+        expecteds = [-1.0, 0.0, 0.0]
+        actuals = tilt_beam(math.pi / 2, axis='y', direction=(0, 0, -1))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
+
+        expecteds = [0.0, 0.0, -1.0]
+        actuals = tilt_beam(math.pi / 2, axis='z', direction=(0, 0, -1))
+        for expected, actual in zip(expecteds, actuals):
+            self.assertAlmostEqual(expected, actual, 4)
 
 class TestPencilBeam(unittest.TestCase):
 
