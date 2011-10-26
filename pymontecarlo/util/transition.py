@@ -19,7 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import methodcaller
+from operator import methodcaller, attrgetter
 
 # Third party modules.
 
@@ -30,6 +30,7 @@ from pymontecarlo.util.subshell import get_subshell
 from pymontecarlo.util.relaxation_data import relaxation_data
 
 # Globals and constants variables.
+_ZGETTER = attrgetter('z')
 
 """
 Subshells (source -> destination) of all transitions.
@@ -223,6 +224,47 @@ class Transition(XMLObject):
 
         return element
 
+class transitionset(frozenset):
+
+    def __new__(cls, z, name, transitions):
+        # Required
+        # See http://stackoverflow.com/questions/4850370/inheriting-behaviours-for-set-and-frozenset-seem-to-differ
+        return frozenset.__new__(cls, transitions)
+
+    def __init__(self, z, name, transitions):
+        """
+        Creates a frozen set (immutable) of transitions.
+        The atomic number must be the same for all transitions. 
+        
+        :arg z: atomic number of all transitions
+        :arg name: name of the set (e.g. ``Ka``)
+        :arg transitions: transitions in the set
+        """
+        # Common z
+        zs = map(_ZGETTER, transitions)
+        if transitions and len(set(zs)) != 1:
+            raise ValueError, "All transitions in a set must have the same atomic number"
+
+        self._z = z
+        self._name = '%s %s' % (ep.symbol(z), name)
+
+        frozenset.__init__(transitions)
+
+    def __repr__(self):
+        return '<transitionset(%s: %s)>' % (self._name, ', '.join(map(str, sorted(self))))
+
+    def __str__(self):
+        return self._name
+
+    @property
+    def z(self):
+        """
+        Atomic number of this transition set.
+        """
+        return self._z
+
+    atomicnumber = z
+
 def get_transitions(z, energylow=0.0, energyhigh=1e6):
     """
     Returns all the X-ray transitions for the specified atomic number if
@@ -254,7 +296,18 @@ def _group(z, key):
         if siegbahn.startswith(key):
             transitions.append(Transition(z, siegbahn=siegbahn))
 
-    return frozenset(filter(methodcaller('exists'), transitions))
+    return transitionset(z, key, filter(methodcaller('exists'), transitions))
+
+def _shell(z, dest):
+    transitions = []
+
+    for src, ddest in _SUBSHELLS:
+        if ddest != dest: continue
+        transitions.append(Transition(z, src, dest))
+
+    name = get_subshell(dest).siegbahn
+
+    return transitionset(z, name, filter(methodcaller('exists'), transitions))
 
 def K_family(z):
     """
@@ -328,45 +381,50 @@ def Mg(z):
     """
     return _group(z, 'Mg')
 
-def shell_transitions(z, src=[], dest=[]):
+def LI(z):
     """
-    Return all transitions which have the specified source and/or destination 
-    shells.
-    
-    *src* and *dest* can either be:
-        
-        * an :class:`int` representing the index of the shells 
-          (between 1 (K) and 30 (outer))
-        * a subshell object
-        * a :class:`list` of :class:`int`
-        * a :class:`list` of subshell object
-    
-    If a :class:`list` is passed, the transitions matching all these subshells
-    will be returned.
-    
-    :arg src: source shell
-    :arg dest: destination shell
-    
-    :return: set of transitions
+    Returns all transitions ending on the L\ :sub:`I` shell.
     """
-    try:
-        srcs = list(src)
-    except TypeError:
-        srcs = [src]
-    try:
-        dests = list(dest)
-    except TypeError:
-        dests = [dest]
+    return _shell(z, 2)
 
-    srcs = [getattr(src, 'index', src) for src in srcs]
-    dests = [getattr(dest, 'index', dest) for dest in dests]
+def LII(z):
+    """
+    Returns all transitions ending on the L\ :sub:`II` shell.
+    """
+    return _shell(z, 3)
 
-    transitions = []
+def LIII(z):
+    """
+    Returns all transitions ending on the L\ :sub:`III` shell.
+    """
+    return _shell(z, 4)
 
-    for src, dest in _SUBSHELLS:
-        if srcs and src not in srcs: continue
-        if dests and dest not in dests: continue
+def MI(z):
+    """
+    Returns all transitions ending on the M\ :sub:`I` shell.
+    """
+    return _shell(z, 5)
 
-        transitions.append(Transition(z, src, dest))
+def MII(z):
+    """
+    Returns all transitions ending on the M\ :sub:`II` shell.
+    """
+    return _shell(z, 6)
 
-    return frozenset(filter(methodcaller('exists'), transitions))
+def MIII(z):
+    """
+    Returns all transitions ending on the M\ :sub:`III` shell.
+    """
+    return _shell(z, 7)
+
+def MIV(z):
+    """
+    Returns all transitions ending on the M\ :sub:`IV` shell.
+    """
+    return _shell(z, 8)
+
+def MV(z):
+    """
+    Returns all transitions ending on the M\ :sub:`V` shell.
+    """
+    return _shell(z, 9)

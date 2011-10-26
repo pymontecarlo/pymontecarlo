@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ """
 
 # Script information for the file.
@@ -16,8 +15,10 @@ import logging
 
 # Local modules.
 from pymontecarlo.util.transition import \
-    (Transition, get_transitions, K_family, L_family, M_family, N_family,
-     Ka, Kb, La, Lb, Lg, Ma, Mb, Mg, shell_transitions)
+    (Transition, get_transitions, transitionset,
+     K_family, L_family, M_family, N_family,
+     Ka, Kb, La, Lb, Lg, Ma, Mb, Mg,
+     LI, LII, LIII, MI, MII, MIII, MIV, MV)
 from pymontecarlo.util.subshell import get_subshell
 
 # Globals and constants variables.
@@ -111,6 +112,35 @@ class TestTransition(unittest.TestCase):
         self.assertEqual(4, int(element.get('src')))
         self.assertEqual(1, int(element.get('dest')))
 
+class Testtransitionset(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        t1 = Transition(13, 4, 1)
+        t2 = Transition(13, 3, 1)
+        t3 = Transition(13, 3, 1)
+        self.set = transitionset(13, 'G1', [t1, t2, t3])
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual(13, self.set.z)
+        self.assertEqual(2, len(self.set))
+
+    def test__init__(self):
+        t1 = Transition(13, 4, 1)
+        t2 = Transition(14, 3, 1)
+        self.assertRaises(ValueError, transitionset, 13, 'G1', [t1, t2])
+
+    def test__repr__(self):
+        self.assertEqual('<transitionset(Al G1: Al Ka1, Al Ka2)>', repr(self.set))
+
+    def test__contains__(self):
+        self.assertTrue(Transition(13, 4, 1) in self.set)
+        self.assertFalse(Transition(13, 7, 1) in self.set)
+
 class TestModule(unittest.TestCase):
 
     def setUp(self):
@@ -154,7 +184,7 @@ class TestModule(unittest.TestCase):
         for transition in transitions:
             self.assertEqual('N', transition.dest.family)
 
-    def testgroups(self):
+    def testgroup(self):
         # Ka
         transitions = Ka(79)
         self.assertEqual(2, len(transitions))
@@ -187,32 +217,14 @@ class TestModule(unittest.TestCase):
         transitions = Mg(79)
         self.assertEqual(1, len(transitions))
 
-    def testshell_transitions(self):
-        transitions = shell_transitions(79, dest=1)
-        self.assertEqual(K_family(79), transitions)
-
-        transitions = set()
-        transitions |= shell_transitions(79, dest=2)
-        transitions |= shell_transitions(79, dest=3)
-        transitions |= shell_transitions(79, dest=4)
+    def testshell(self):
+        # L
+        transitions = set() | LI(79) | LII(79) | LIII(79)
         self.assertEqual(L_family(79), transitions)
 
-        transitions = shell_transitions(79, dest=[2, 3, 4])
-        self.assertEqual(L_family(79), transitions)
-
-        transitions = set()
-        transitions |= shell_transitions(79, dest=5)
-        transitions |= shell_transitions(79, dest=6)
-        transitions |= shell_transitions(79, dest=7)
-        transitions |= shell_transitions(79, dest=8)
-        transitions |= shell_transitions(79, dest=9)
+        # M
+        transitions = set() | MI(79) | MII(79) | MIII(79) | MIV(79) | MV(79)
         self.assertEqual(M_family(79), transitions)
-
-        transitions = shell_transitions(79, dest=[5, 6, 7, 8, 9])
-        self.assertEqual(M_family(79), transitions)
-
-        transitions = shell_transitions(79, src=4, dest=1)
-        self.assertEqual(1, len(transitions))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
