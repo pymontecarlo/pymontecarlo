@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from collections import Mapping
 
 # Third party modules.
 
@@ -26,11 +27,23 @@ __license__ = "GPL v3"
 
 # Globals and constants variables.
 
-class Results(object):
+class Results(Mapping):
+
+    def __init__(self, options, results={}):
+        self._options = options
+        self._results = dict(results) # copy
 
     @property
     def options(self):
-        pass
+        return self._options
+
+    def __len__(self):
+        return len(self._results)
 
     def __getitem__(self, key):
-        pass
+        return self._results[key]
+
+    def __iter__(self):
+        return iter(self._results)
+
+
