@@ -143,12 +143,31 @@ class Casino2Exporter(Exporter):
             layers = geometry.layers
             assert len(layers) == regionops.getNumberRegions() - 2 # without substrates
 
+            # Left substrate
+            region = regionops.getRegion(0)
+            xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
+                    geometry.get_dimensions(geometry.left_body)
+            parameters = region.getParameters()
+            parameters[1] = xmax * 1e9
+            parameters[2] = parameters[1] - 10.0
+            region.setParameters(parameters)
+
+            # Layers
             for i, layer in enumerate(layers):
                 xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
                     geometry.get_dimensions(layer)
 
                 parameters = [xmin * 1e9, xmax * 1e9, 0.0, 0.0]
                 regionops.getRegion(i + 1).setParameters(parameters)
+
+            # Right substrate
+            region = regionops.getRegion(regionops.getNumberRegions() - 1)
+            xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
+                    geometry.get_dimensions(geometry.right_body)
+            parameters = region.getParameters()
+            parameters[0] = xmin * 1e9
+            parameters[2] = parameters[0] + 10.0
+            region.setParameters(parameters)
 
         # Absorption energy electron
         abs_electron = min(map(attrgetter('absorption_energy_electron'),
