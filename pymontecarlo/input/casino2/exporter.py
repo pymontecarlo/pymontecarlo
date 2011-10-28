@@ -175,6 +175,11 @@ class Casino2Exporter(Exporter):
         simops.setIncidentEnergy_keV(beam.energy / 1000.0) # keV
         simops.POS_Start = beam.origin[0] * 1e9 # nm
         simops.POS_End = beam.origin[0] * 1e9 # nm
+
+        # Beam diameter
+        # d_{CASINO} = 2 d_{FWHM}
+        # but Beam_Diameter variable is actually changing the beam radius
+        # r_{CASINO} = d_{FWHM} 
         simops.Beam_Diameter = beam.diameter * 1e9 # nm
 
         # Beam tilt
