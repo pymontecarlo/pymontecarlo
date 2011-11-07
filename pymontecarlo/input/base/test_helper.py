@@ -28,7 +28,7 @@ class TestModule(unittest.TestCase):
         self.ops = Options(name="Test")
         self.ops.beam.energy = 20e3
 
-        mat = Material('Brass', [(29, 0.5), (30, 0.4), (50, 0.1)],
+        mat = Material('Brass', {29: 0.5, 30: 0.4, 50: 0.1},
                        absorption_energy_electron=1000)
         self.ops.geometry.material = mat
 

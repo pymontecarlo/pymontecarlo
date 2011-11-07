@@ -43,7 +43,7 @@ class TestCasino2Exporter(unittest.TestCase):
         self.assertTrue(True)
 
     def testto_cas_substrate(self):
-        mat = Material('Mat1', [(79, 0.5), (47, 0.5)], absorption_energy_electron=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
         ops = Casino2Options()
         ops.beam.energy = 1234
         ops.beam.diameter = 25e-9
@@ -62,9 +62,9 @@ class TestCasino2Exporter(unittest.TestCase):
         self.e.export(ops).write('/home/ppinard/vboxshare/test.sim')
 
     def testto_cas_grainboundaries(self):
-        mat1 = Material('Mat1', [(79, 0.5), (47, 0.5)], absorption_energy_electron=123)
-        mat2 = Material('Mat2', [(29, 0.5), (30, 0.5)], absorption_energy_electron=89)
-        mat3 = Material('Mat3', [(13, 0.5), (14, 0.5)], absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
         ops = Casino2Options()
         ops.beam.energy = 1234
@@ -79,9 +79,9 @@ class TestCasino2Exporter(unittest.TestCase):
         self.e.export(ops).write('/home/ppinard/vboxshare/test_gb.sim')
 
     def testto_cas_multilayers1(self):
-        mat1 = Material('Mat1', [(79, 0.5), (47, 0.5)], absorption_energy_electron=123)
-        mat2 = Material('Mat2', [(29, 0.5), (30, 0.5)], absorption_energy_electron=89)
-        mat3 = Material('Mat3', [(13, 0.5), (14, 0.5)], absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
         ops = Casino2Options()
         ops.beam.energy = 1234
@@ -97,9 +97,9 @@ class TestCasino2Exporter(unittest.TestCase):
         self.e.export(ops).write('/home/ppinard/vboxshare/test_ml.sim')
 
     def testto_cas_multilayers2(self):
-        mat1 = Material('Mat1', [(79, 0.5), (47, 0.5)], absorption_energy_electron=123)
-        mat2 = Material('Mat2', [(29, 0.5), (30, 0.5)], absorption_energy_electron=89)
-        mat3 = Material('Mat3', [(13, 0.5), (14, 0.5)], absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
         ops = Casino2Options()
         ops.beam.energy = 1234

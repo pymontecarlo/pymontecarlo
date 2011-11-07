@@ -36,32 +36,32 @@ class TestModule(unittest.TestCase):
         weightFractionB = 0.51343270491128157
 
         comp = composition_from_formula('Al2Na3B12')
-        self.assertAlmostEqual(weightFractionAl, comp[0][1], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[1][1], 4)
-        self.assertAlmostEqual(weightFractionB, comp[2][1], 4)
+        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
+        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
+        self.assertAlmostEqual(weightFractionB, comp[5], 4)
 
         comp = composition_from_formula('Al 2 Na 3 B 12')
-        self.assertAlmostEqual(weightFractionAl, comp[0][1], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[1][1], 4)
-        self.assertAlmostEqual(weightFractionB, comp[2][1], 4)
+        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
+        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
+        self.assertAlmostEqual(weightFractionB, comp[5], 4)
 
         comp = composition_from_formula('Al2 Na3 B12')
-        self.assertAlmostEqual(weightFractionAl, comp[0][1], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[1][1], 4)
-        self.assertAlmostEqual(weightFractionB, comp[2][1], 4)
+        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
+        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
+        self.assertAlmostEqual(weightFractionB, comp[5], 4)
 
         self.assertRaises(ValueError, composition_from_formula, 'Aq2 Na3 B12')
 
         comp = composition_from_formula('Al2')
-        self.assertAlmostEqual(1.0, comp[0][1], 4)
+        self.assertAlmostEqual(1.0, comp[13], 4)
 
     def testpure(self):
         m = pure(29)
 
         self.assertEquals('Copper', str(m))
 
-        self.assertEqual(29, m.composition[0][0])
-        self.assertAlmostEqual(1.0, m.composition[0][1], 4)
+        self.assertTrue(m.composition.has_key(29))
+        self.assertAlmostEqual(1.0, m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, m.density, 4)
 
@@ -73,7 +73,7 @@ class TestMaterial(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', [('Cu', '?')], density=None)
+        self.m = Material('Pure Cu', {'Cu': '?'}, density=None)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -84,8 +84,8 @@ class TestMaterial(unittest.TestCase):
         self.assertEquals('Pure Cu', str(self.m))
         self.assertEquals('Pure Cu', self.m.name)
 
-        self.assertEqual(29, self.m.composition[0][0])
-        self.assertAlmostEqual(1.0, self.m.composition[0][1], 4)
+        self.assertTrue(self.m.composition.has_key(29))
+        self.assertAlmostEqual(1.0, self.m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, self.m.density, 4)
 
@@ -98,8 +98,8 @@ class TestMaterial(unittest.TestCase):
 
         self.assertEquals('Pure Cu', str(m))
 
-        self.assertEqual(29, m.composition[0][0])
-        self.assertAlmostEqual(1.0, m.composition[0][1], 4)
+        self.assertTrue(m.composition.has_key(29))
+        self.assertAlmostEqual(1.0, m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, m.density, 4)
 
@@ -108,57 +108,57 @@ class TestMaterial(unittest.TestCase):
 
     def testcomposition(self):
         # Vacuum
-        m = Material('Vacuum', [])
-        self.assertEqual([], m.composition)
+        self.m.composition = {}
+        self.assertEqual({}, self.m.composition)
 
         # Wildcard
-        m = Material('Brass', [(29, 0.7), (30, '?')])
-        self.assertEqual(29, m.composition[0][0])
-        self.assertAlmostEqual(0.7, m.composition[0][1], 4)
-        self.assertEqual(30, m.composition[1][0])
-        self.assertAlmostEqual(0.3, m.composition[1][1], 4)
+        self.m.composition = {29: 0.7, 30: '?'}
+        self.assertTrue(self.m.composition.has_key(29))
+        self.assertAlmostEqual(0.7, self.m.composition[29], 4)
+        self.assertTrue(self.m.composition.has_key(30))
+        self.assertAlmostEqual(0.3, self.m.composition[30], 4)
 
         # Multiple wildcards
-        m = Material('Brass', [(29, '?'), (30, '?')])
-        self.assertEqual(29, m.composition[0][0])
-        self.assertAlmostEqual(0.5, m.composition[0][1], 4)
-        self.assertEqual(30, m.composition[1][0])
-        self.assertAlmostEqual(0.5, m.composition[1][1], 4)
+        self.m.composition = {29: '?', 30: '?'}
+        self.assertTrue(self.m.composition.has_key(29))
+        self.assertAlmostEqual(0.5, self.m.composition[29], 4)
+        self.assertTrue(self.m.composition.has_key(30))
+        self.assertAlmostEqual(0.5, self.m.composition[30], 4)
 
         # ValueError: Incorrect symbol
-        self.assertRaises(ValueError, Material, 'Mat', [('Aa', 1.0)])
+        self.assertRaises(ValueError, self.m.__setattr__, 'composition', {'Aa': 1.0})
 
         # ValueError: Incorrect atomic number
-        self.assertRaises(ValueError, Material, 'Mat', [(-1, 1.0)])
+        self.assertRaises(ValueError, self.m.__setattr__, 'composition', {-1: 1.0})
 
         # ValueError: Incorrect fraction
-        self.assertRaises(ValueError, Material, 'Mat', [('Cu', 10.0)])
+        self.assertRaises(ValueError, self.m.__setattr__, 'composition', {'Cu': 10.0})
 
         # ValueError: Incorrect total fraction
-        self.assertRaises(ValueError, Material, 'Mat', [(29, 0.7), (30, 0.7)])
+        self.assertRaises(ValueError, self.m.__setattr__, 'composition', {29: 0.7, 30: 0.7})
 
     def testdensity(self):
         # Negative density
-        m = Material('Cu', [('Cu', 1.0)], density= -1)
-        self.assertAlmostEqual(8.96, m.density, 4)
+        self.m.density = -1
+        self.assertAlmostEqual(8.96, self.m.density, 4)
 
         # User defined density
-        m = Material('Cu', [('Cu', 1.0)], density=1.0)
-        self.assertAlmostEqual(1.0, m.density, 4)
+        self.m.density = 1.0
+        self.assertAlmostEqual(1.0, self.m.density, 4)
 
     def testabsoprtion_energy_electron(self):
-        m = Material('Cu', [('Cu', 1.0)], absorption_energy_electron=1e3)
-        self.assertAlmostEqual(1e3, m.absorption_energy_electron, 4)
+        self.m.absorption_energy_electron = 1e3
+        self.assertAlmostEqual(1e3, self.m.absorption_energy_electron, 4)
 
         # ValueError: Energy less than 0
-        self.assertRaises(ValueError, Material, 'Cu', [('Cu', 1.0)], 1.0, -1.0)
+        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_electron', -1.0)
 
     def testabsoprtion_energy_photon(self):
-        m = Material('Cu', [('Cu', 1.0)], absorption_energy_photon=1e3)
-        self.assertAlmostEqual(1e3, m.absorption_energy_photon, 4)
+        self.m.absorption_energy_photon = 1e3
+        self.assertAlmostEqual(1e3, self.m.absorption_energy_photon, 4)
 
         # ValueError: Energy less than 0
-        self.assertRaises(ValueError, Material, 'Cu', [('Cu', 1.0)], 1.0, 50.0, -1.0)
+        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_photon', -1.0)
 
     def testto_xml(self):
         element = self.m.to_xml()

@@ -108,7 +108,7 @@ class Casino2Exporter(Exporter):
 
             region.removeAllElements()
 
-            for z, fraction in material.composition:
+            for z, fraction in material.composition.iteritems():
                 region.addElement(ep.symbol(z), weightFraction=fraction)
 
             region.update() # Calculate number of elements, mean atomic number

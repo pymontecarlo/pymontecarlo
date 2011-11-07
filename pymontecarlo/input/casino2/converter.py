@@ -38,7 +38,6 @@ class Casino2Converter(Converter):
         return Casino2Options(old.name)
 
     def _convert_beam(self, old, new):
-        # TODO: Check beam diameter calculations
         try:
             Converter._convert_beam(self, old, new)
         except ConversionException as ex:
