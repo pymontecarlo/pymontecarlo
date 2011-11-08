@@ -281,6 +281,12 @@ class _Layered(_Geometry):
         self._layers.append(layer)
         return layer
 
+    def clear(self):
+        """
+        Removes all layers.
+        """
+        del self._layers[:]
+
     def get_bodies(self):
         return list(self.layers)
 
