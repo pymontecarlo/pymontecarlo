@@ -196,10 +196,11 @@ class Casino2Exporter(Exporter):
         simops.POS_End = beam.origin[0] * 1e9 # nm
 
         # Beam diameter
-        # d_{CASINO} = 2 d_{FWHM}
-        # but Beam_Diameter variable is actually changing the beam radius
-        # r_{CASINO} = d_{FWHM} 
-        simops.Beam_Diameter = beam.diameter * 1e9 # nm
+        # Casino's beam diameter contains 99.9% of the electrons (n=3.290)
+        # d_{CASINO} = 2 (3.2905267 \sigma)
+        # d_{FWHM} = 2 (1.177411 \sigma)
+        # d_{CASINO} = 2.7947137 d_{FWHM}
+        simops.Beam_Diameter = 2.7947137 * beam.diameter * 1e9 # nm
 
         # Beam tilt
         a = np.array(beam.direction)
