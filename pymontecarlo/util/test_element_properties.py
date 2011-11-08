@@ -32,10 +32,10 @@ class TestModule(unittest.TestCase):
         self.assertTrue(True)
 
     def testmass_density(self):
-        self.assertEquals(7.1900, ep.mass_density(24))
+        self.assertAlmostEqual(7.1900, ep.mass_density(24))
 
     def testatomic_mass(self):
-        self.assertEquals(51.996000, ep.atomic_mass(24))
+        self.assertAlmostEqual(51.996000, ep.atomic_mass(24))
 
     def testsymbol(self):
         self.assertEquals('Al', ep.symbol(13))
@@ -46,6 +46,9 @@ class TestModule(unittest.TestCase):
     def testatomic_number(self):
         self.assertEqual(13, ep.atomic_number(symbol='Al'))
         self.assertEqual(13, ep.atomic_number(name='Aluminium'))
+
+    def testexcitation_energy(self):
+        self.assertAlmostEqual(166.0, ep.excitation_energy(13), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
