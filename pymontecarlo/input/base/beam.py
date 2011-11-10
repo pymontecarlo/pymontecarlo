@@ -20,10 +20,10 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import math
+from operator import mul
 from xml.etree.ElementTree import Element
 
 # Third party modules.
-import numpy as np
 
 # Local modules.
 from pymontecarlo.util.xmlobj import XMLObject
@@ -186,12 +186,14 @@ def tilt_beam(angle, axis='y', direction=(0, 0, -1)):
     s = math.sin(angle)
 
     if axis.lower() == 'x':
-        r = np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+        r = [[1, 0, 0], [0, c, -s], [0, s, c]]
     elif axis.lower() == 'y':
-        r = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+        r = [[c, 0, s], [0, 1, 0], [-s, 0, c]]
     elif axis.lower() == 'z':
-        r = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+        r = [[c, -s, 0], [s, c, 0], [0, 0, 1]]
     else:
         raise ValueError, "Unknown axis: %s" % axis
 
-    return list(np.dot(r, direction))
+    return [sum(map(mul, r[0], direction)),
+            sum(map(mul, r[1], direction)),
+            sum(map(mul, r[2], direction))]
