@@ -42,6 +42,8 @@ from casinoTools.FileFormat.casino2.File import File
 from casinoTools.FileFormat.casino2.Element import \
     LINE_K, LINE_L, LINE_M, GENERATED, EMITTED
 
+LINE_LOOKUP = {LINE_K: K_family, LINE_L: LIII, LINE_M: MV}
+
 class Casino2Importer(Importer):
 
     def __init__(self):
@@ -60,28 +62,22 @@ class Casino2Importer(Importer):
         return self._import_results(options, simresults)
 
     def _detector_photon_intensity_detector(self, options, name, detector, simresults):
-        regionops = simresults.getRegionOptions()
-
+        cas_intensities = simresults.getTotalXrayIntensities()
         factor = detector.solid_angle / (0.0025 * 1e9)
 
         intensities = {}
-        for region in regionops._regions:
-            for element in region._elements:
-                z = element.getAtomicNumber()
-                data = element.getTotalXrayIntensities()
+        for z in cas_intensities:
+            for line in cas_intensities[z]:
+                transition = LINE_LOOKUP[line](z)
+                datum = cas_intensities[z][line]
 
-                for line, transitions in [(LINE_K, K_family), (LINE_L, LIII), (LINE_M, MV)]:
-                    if line in data:
-                        transition = transitions(z)
-                        datum = data[line]
+                gt = (datum[GENERATED] * factor, 0.0)
+                et = (datum[EMITTED] * factor, 0.0)
 
-                        gt = (datum[GENERATED] * factor, 0.0)
-                        et = (datum[EMITTED] * factor, 0.0)
-
-                        tmpints = create_intensity_dict(transition,
-                                                        gnf=gt, gt=gt,
-                                                        enf=et, et=et)
-                        intensities.update(tmpints)
+                tmpints = create_intensity_dict(transition,
+                                                gnf=gt, gt=gt,
+                                                enf=et, et=et)
+                intensities.update(tmpints)
 
         return PhotonIntensityResult(detector, intensities)
 

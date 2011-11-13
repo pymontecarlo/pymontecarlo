@@ -168,7 +168,7 @@ class TestPhotonIntensityResult(unittest.TestCase):
         self.assertAlmostEqual(1.0, err, 4)
 
     def testiter_transition(self):
-        self.assertEqual(2, len(list(self.r.iter_transition())))
+        self.assertEqual(2, len(list(self.r.iter_transitions())))
 
 
 if __name__ == '__main__': #pragma: no cover

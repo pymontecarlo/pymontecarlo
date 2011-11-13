@@ -192,8 +192,7 @@ class Casino2Exporter(Exporter):
 
     def _beam_gaussian(self, options, beam, simdata, simops):
         simops.setIncidentEnergy_keV(beam.energy / 1000.0) # keV
-        simops.POS_Start = beam.origin[0] * 1e9 # nm
-        simops.POS_End = beam.origin[0] * 1e9 # nm
+        simops.setPosition(beam.origin[0] * 1e9) # nm
 
         # Beam diameter
         # Casino's beam diameter contains 99.9% of the electrons (n=3.290)

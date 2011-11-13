@@ -111,7 +111,9 @@ class PhotonIntensityResult(_Result):
             If ``True``, intensity with fluorescence is returned, if ``false``
             intensity without fluorescence.
             
-        :rtype: intensity and its uncertainty
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no intensity for the specified
+            transition
         """
         key = TOTAL if fluorescence else NOFLUORESCENCE
         return self._get_intensity(key, transition, absorption)
@@ -127,7 +129,9 @@ class PhotonIntensityResult(_Result):
             If ``True``, emitted intensity is returned, if ``false`` generated
             intensity.
             
-        :rtype: intensity and its uncertainty
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no intensity for the specified
+            transition
         """
         return self._get_intensity(CHARACTERISTIC, transition, absorption)
 
@@ -142,7 +146,9 @@ class PhotonIntensityResult(_Result):
             If ``True``, emitted intensity is returned, if ``false`` generated
             intensity.
             
-        :rtype: intensity and its uncertainty
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no intensity for the specified
+            transition
         """
         return self._get_intensity(BREMSSTRAHLUNG, transition, absorption)
 
@@ -157,7 +163,9 @@ class PhotonIntensityResult(_Result):
             If ``True``, intensity with fluorescence is returned, if ``false``
             intensity without fluorescence.
             
-        :rtype: intensity and its uncertainty
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no intensity for the specified
+            transition
         """
         # Note: TOTAL - FLUORESCENCE should be equal to CHARACTERISTIC + BREMSS
         v1, e1 = self._get_intensity(NOFLUORESCENCE, transition, absorption)
@@ -176,14 +184,16 @@ class PhotonIntensityResult(_Result):
             If ``True``, emitted intensity is returned, if ``false`` generated
             intensity.
             
-        :rtype: intensity and its uncertainty
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no intensity for the specified
+            transition
         """
         v1, e1 = self.intensity(transition, absorption=False, fluorescence=fluorescence)
         v2, e2 = self.intensity(transition, absorption=True, fluorescence=fluorescence)
 
         return v2 - v1, e1 + e2
 
-    def iter_transition(self, absorption=True, fluorescence=True):
+    def iter_transitions(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the transition and intensity.
         
