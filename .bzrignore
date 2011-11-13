@@ -1,1 +1,2 @@
-input/base/foo.py
+*.class
+pymontecarlo/input/base/foo.py
