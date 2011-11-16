@@ -27,7 +27,7 @@ from pkg_resources import resource_stream #@UnresolvedImport
 import numpy as np
 
 # Local modules.
-from pymontecarlo.input.base.exporter import Exporter
+from pymontecarlo.input.base.exporter import Exporter, ExporterException
 from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
@@ -91,10 +91,10 @@ class Casino2Exporter(Exporter):
             try:
                 return resource_stream(__name__, "templates/%s%i.sim" % (geometry_name, regions_count))
             except IOError:
-                raise ValueError, "No template for '%s' with region count: %i" % \
+                raise ExporterException, "No template for '%s' with region count: %i" % \
                     (geometry_name, regions_count)
         else:
-            raise ValueError, "Unknown geometry: %s" % geometry_name
+            raise ExporterException, "Unknown geometry: %s" % geometry_name
 
     def _export_geometry(self, options, simdata, simops):
         geometry = options.geometry
@@ -122,20 +122,16 @@ class Casino2Exporter(Exporter):
             layers = geometry.layers
 
             for i, layer in enumerate(layers):
-                _xmin, _xmax, _ymin, _ymax, zmin, zmax = \
-                    geometry.get_dimensions(layer)
-
-                parameters = [abs(zmax) * 1e9, abs(zmin) * 1e9, 0.0, 0.0]
+                dim = geometry.get_dimensions(layer)
+                parameters = [abs(dim.zmax) * 1e9, abs(dim.zmin) * 1e9, 0.0, 0.0]
                 regionops.getRegion(i).setParameters(parameters)
 
             if geometry.has_substrate():
-                _xmin, _xmax, _ymin, _ymax, zmin, zmax = \
-                    geometry.get_dimensions(geometry.substrate_body)
-
+                dim = geometry.get_dimensions(geometry.substrate_body)
                 region = regionops.getRegion(regionops.getNumberRegions() - 1)
 
                 parameters = region.getParameters()
-                parameters[0] = abs(zmax) * 1e9
+                parameters[0] = abs(dim.zmax) * 1e9
                 parameters[2] = parameters[0] + 10.0
                 region.setParameters(parameters)
 
@@ -145,27 +141,23 @@ class Casino2Exporter(Exporter):
 
             # Left substrate
             region = regionops.getRegion(0)
-            xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
-                    geometry.get_dimensions(geometry.left_body)
+            dim = geometry.get_dimensions(geometry.left_body)
             parameters = region.getParameters()
-            parameters[1] = xmax * 1e9
+            parameters[1] = dim.xmax * 1e9
             parameters[2] = parameters[1] - 10.0
             region.setParameters(parameters)
 
             # Layers
             for i, layer in enumerate(layers):
-                xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
-                    geometry.get_dimensions(layer)
-
-                parameters = [xmin * 1e9, xmax * 1e9, 0.0, 0.0]
+                dim = geometry.get_dimensions(layer)
+                parameters = [dim.xmin * 1e9, dim.xmax * 1e9, 0.0, 0.0]
                 regionops.getRegion(i + 1).setParameters(parameters)
 
             # Right substrate
             region = regionops.getRegion(regionops.getNumberRegions() - 1)
-            xmin, xmax, _ymin, _ymax, _zmin, _zmax = \
-                    geometry.get_dimensions(geometry.right_body)
+            dim = geometry.get_dimensions(geometry.right_body)
             parameters = region.getParameters()
-            parameters[0] = xmin * 1e9
+            parameters[0] = dim. xmin * 1e9
             parameters[2] = parameters[0] + 10.0
             region.setParameters(parameters)
 

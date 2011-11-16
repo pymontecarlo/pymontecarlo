@@ -28,19 +28,28 @@ from xml.etree.ElementTree import Element
 
 # Globals and constants variables.
 
-def from_xml_choices(element, choices):
+def parse_class(element, choices):
     """
-    Loads the element from a list of :class:`XMLObject` classes (with the method 
-    :meth:`from_xml`).
+    Returns the class from which the element should be loaded.
     
-    :return: loaded :class:`XMLObject`
+    :rtype: :class:`XMLObject`
     """
     tags = dict(zip(map(attrgetter("__name__"), choices), choices))
     clasz = tags.get(element.tag)
     if clasz is None:
         raise IOError, "Element '%s' cannot be loaded by this class." % element.tag
 
-    return clasz.from_xml(element)
+    return clasz
+
+def from_xml_choices(element, choices, *args, **kwargs):
+    """
+    Loads the element from a list of :class:`XMLObject` classes (with the method 
+    :meth:`from_xml`).
+    
+    :return: loaded :class:`XMLObject`
+    """
+    clasz = parse_class(element, choices)
+    return clasz.from_xml(element, *args, **kwargs)
 
 class XMLObject(object):
     def to_xml(self):

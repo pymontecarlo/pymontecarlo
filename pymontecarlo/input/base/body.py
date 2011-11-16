@@ -39,9 +39,10 @@ class Body(XMLObject):
         return '<Body(material=%s)>' % str(self.material)
 
     @classmethod
-    def from_xml(cls, element):
-        child = list(element.find("material"))[0]
-        material = Material.from_xml(child)
+    def from_xml(cls, element, material=None):
+        if not material:
+            child = list(element.find("material"))[0]
+            material = Material.from_xml(child)
 
         return cls(material)
 
@@ -72,10 +73,11 @@ class Layer(Body):
         return '<Layer(material=%s, thickness=%s m)>' % (str(self.material), self.thickness)
 
     @classmethod
-    def from_xml(cls, element):
-        body = Body.from_xml(element)
+    def from_xml(cls, element, material=None, thickness=None):
+        body = Body.from_xml(element, material)
 
-        thickness = float(element.get('thickness'))
+        if not thickness:
+            thickness = float(element.get('thickness'))
 
         return cls(body.material, thickness)
 

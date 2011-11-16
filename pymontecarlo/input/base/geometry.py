@@ -25,15 +25,73 @@ from math import pi
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlobj import XMLObject, from_xml_choices
+from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
 from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
 _THICKNESS_GETTER = attrgetter('thickness')
+POSINF = float('inf')
+NEGINF = float('-inf')
+
+class _Dimension(object):
+    """
+    Dimensions in x, y and z of a body.
+    """
+
+    def __init__(self,
+                 xmin=NEGINF, xmax=POSINF,
+                 ymin=NEGINF, ymax=POSINF,
+                 zmin=NEGINF, zmax=POSINF):
+        self._xmin = xmin
+        self._xmax = xmax
+        self._ymin = ymin
+        self._ymax = ymax
+        self._zmin = zmin
+        self._zmax = zmax
+
+    @property
+    def xmin(self):
+        return self._xmin
+
+    @property
+    def xmax(self):
+        return self._xmax
+
+    @property
+    def ymin(self):
+        return self._ymin
+
+    @property
+    def ymax(self):
+        return self._ymax
+
+    @property
+    def zmin(self):
+        return self._zmin
+
+    @property
+    def zmax(self):
+        return self._zmax
+
+    def to_tuple(self):
+        return self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax
 
 class _Geometry(XMLObject):
+    """
+    Base class for all geometry representations.
+    
+    A geometry is composed of bodies (:class:`Body`).
+    Bodies may have some specific properties (e.g. thickness), but they must
+    all be defined with a material.
+    A geometry can only refer to a body once, but bodies can be defined using
+    the same material.
+    """
+
+    BODIES = [Body]
+    MATERIALS = [Material]
 
     def __init__(self, tilt=0, rotation=0):
         XMLObject.__init__(self)
@@ -42,11 +100,25 @@ class _Geometry(XMLObject):
         self.rotation = rotation
 
     @classmethod
-    def from_xml(cls, element):
+    def _parse_xml(cls, element):
+        children = list(element.find('materials'))
+        materials_lookup = {}
+        for child in children:
+            index = int(child.get('index'))
+            materials_lookup[index] = from_xml_choices(child, cls.MATERIALS)
+
+        children = list(element.find('bodies'))
+        bodies_lookup = {}
+        for child in children:
+            index = int(child.get('index'))
+            material = materials_lookup[int(child.get('material'))]
+            bodies_lookup[index] = \
+                from_xml_choices(child, cls.BODIES, material=material)
+
         tilt = float(element.get('tilt'))
         rotation = float(element.get('rotation'))
 
-        return cls(tilt, rotation)
+        return bodies_lookup, tilt, rotation
 
     @property
     def tilt(self):
@@ -75,15 +147,23 @@ class _Geometry(XMLObject):
         self._rotation = rotation
 
     def get_materials(self):
-        return map(_MATERIAL_GETTER, self.get_bodies())
+        """
+        Returns a :class:`set` of all materials inside this geometry.
+        Since a :class:`set` is returned, even if the same material is used 
+        more than once, it will only appear once.
+        """
+        return set(map(_MATERIAL_GETTER, self.get_bodies()))
 
     def get_bodies(self):
+        """
+        Returns a :class:`set` of all bodies inside this geometry.
+        """
         raise NotImplementedError
 
     def get_dimensions(self, body):
         """
-        Returns a tuple of 6 values: (xmin, xmax, ymin, ymax, zmin, zmax) 
-        corresponding to the dimensions of the body inside the geometry.
+        Returns a class:`Dimension <._Dimension>` corresponding to the 
+        dimensions of the body inside the geometry.
         All dimensions are in meters.
         
         :arg body: body to get the dimensions for
@@ -93,10 +173,36 @@ class _Geometry(XMLObject):
     def to_xml(self):
         element = XMLObject.to_xml(self)
 
+        # Materials
+        materials = self.get_materials()
+        materials_lookup = dict(zip(materials, range(len(materials))))
+
+        child = Element('materials')
+        for material, index in materials_lookup.iteritems():
+            grandchild = material.to_xml()
+            grandchild.set('index', str(index))
+            child.append(grandchild)
+        element.append(child)
+
+        # Bodies
+        bodies = self.get_bodies()
+        bodies_lookup = dict(zip(bodies, range(len(bodies))))
+
+        child = Element('bodies')
+        for body, index in bodies_lookup.iteritems():
+            grandchild = body.to_xml()
+            grandchild.set('index', str(index))
+
+            grandchild.remove(grandchild.find('material')) # remove material element
+            grandchild.set('material', str(materials_lookup[body.material]))
+
+            child.append(grandchild)
+        element.append(child)
+
         element.set('tilt', str(self.tilt))
         element.set('rotation', str(self.rotation))
 
-        return element
+        return element, bodies_lookup
 
 class Substrate(_Geometry):
 
@@ -110,14 +216,14 @@ class Substrate(_Geometry):
 
     @classmethod
     def from_xml(cls, element):
-        geometry = _Geometry.from_xml(element)
+        bodies_lookup, tilt, rotation = super(Substrate, cls)._parse_xml(element)
 
-        child = list(element.find("material"))[0]
-        material = Material.from_xml(child)
+        index = int(element.get('substrate'))
+        body = bodies_lookup[index]
 
-        obj = cls(material)
-        obj.tilt = geometry.tilt
-        obj.rotation = geometry.rotation
+        obj = cls(body.material)
+        obj.tilt = tilt
+        obj.rotation = rotation
 
         return obj
 
@@ -134,27 +240,23 @@ class Substrate(_Geometry):
         return self._body
 
     def get_bodies(self):
-        return [self._body]
+        return set([self._body])
 
     def get_dimensions(self, body):
         if body is self.body:
-            return (float('-inf'), float('inf'),
-                    float('-inf'), float('inf'),
-                    float('-inf'), 0.0)
+            return _Dimension(zmax=0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
 
-
     def to_xml(self):
-        element = _Geometry.to_xml(self)
+        element, bodies_lookup = _Geometry.to_xml(self)
 
-        child = Element('material')
-        child.append(self.material.to_xml())
-        element.append(child)
+        element.set('substrate', str(bodies_lookup[self.body]))
 
         return element
 
 class Inclusion(_Geometry):
+
     def __init__(self, substrate_material, inclusion_material, inclusion_diameter):
         _Geometry.__init__(self)
 
@@ -168,19 +270,19 @@ class Inclusion(_Geometry):
 
     @classmethod
     def from_xml(cls, element):
-        geometry = _Geometry.from_xml(element)
+        bodies_lookup, tilt, rotation = super(Inclusion, cls)._parse_xml(element)
 
-        child = list(element.find("substrateMaterial"))[0]
-        substrate_material = Material.from_xml(child)
+        index = int(element.get('substrate'))
+        substrate = bodies_lookup[index]
 
-        child = list(element.find("inclusionMaterial"))[0]
-        inclusion_material = Material.from_xml(child)
+        index = int(element.get('inclusion'))
+        inclusion = bodies_lookup[index]
 
-        inclusion_diameter = float(element.get('inclusionDiameter'))
+        diameter = float(element.get('diameter'))
 
-        obj = cls(substrate_material, inclusion_material, inclusion_diameter)
-        obj.tilt = geometry.tilt
-        obj.rotation = geometry.rotation
+        obj = cls(substrate.material, inclusion.material, diameter)
+        obj.tilt = tilt
+        obj.rotation = rotation
 
         return obj
 
@@ -219,66 +321,56 @@ class Inclusion(_Geometry):
         self._inclusion_diameter = diameter
 
     def get_bodies(self):
-        return [self._substrate, self._inclusion]
+        return set([self._substrate, self._inclusion])
 
     def get_dimensions(self, body):
         if body is self.substrate_body:
-            return (float('-inf'), float('inf'),
-                    float('-inf'), float('inf'),
-                    float('-inf'), 0.0)
+            return _Dimension(zmax=0.0)
         elif body is self.inclusion_body:
             radius = self.inclusion_diameter / 2.0
-            return (-radius, radius, -radius, radius, -radius, 0.0)
+            return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element = _Geometry.to_xml(self)
+        element, bodies_lookup = _Geometry.to_xml(self)
 
-        child = Element('substrateMaterial')
-        child.append(self.substrate_material.to_xml())
-        element.append(child)
-
-        child = Element('inclusionMaterial')
-        child.append(self.inclusion_material.to_xml())
-        element.append(child)
-
-        element.set('inclusionDiameter', str(self.inclusion_diameter))
+        element.set('substrate', str(bodies_lookup[self.substrate_body]))
+        element.set('inclusion', str(bodies_lookup[self.inclusion_body]))
+        element.set('diameter', str(self.inclusion_diameter))
 
         return element
 
 class _Layered(_Geometry):
+    BODIES = [Body, Layer]
+
     def __init__(self, layers=[]):
         _Geometry.__init__(self)
 
-        self._layers = list(layers) # copy
+        self._layers = oset(layers) # copy
 
     @classmethod
-    def from_xml(cls, element):
-        geometry = _Geometry.from_xml(element)
+    def _parse_xml(cls, element):
+        bodies_lookup, tilt, rotation = super(_Layered, cls)._parse_xml(element)
 
-        children = list(element.find("layers"))
-        layers = []
-        for child in children:
-            layers.append(Layer.from_xml(child))
+        layer_indexes = map(int, element.get('layers').split(','))
+        layers = map(bodies_lookup.get, layer_indexes)
 
-        obj = cls(layers)
-        obj.tilt = geometry.tilt
-        obj.rotation = geometry.rotation
-
-        return obj
+        return bodies_lookup, layers, tilt, rotation
 
     @property
     def layers(self):
         """
-        Layers from top to bottom (multi-layers) or left to right (grain boundaries).
-        See :class:`Layer`.
+        Layers from top to bottom (multi-layers) or from left to right 
+        (grain boundaries).
+        Layers are stored inside an ordered set (:class:`oset`) to ensure
+        that a layer (:class:`Layer`) is only added once.
         """
         return self._layers
 
     def add_layer(self, mat, thickness):
         layer = Layer(mat, thickness)
-        self._layers.append(layer)
+        self._layers.add(layer)
         return layer
 
     def clear(self):
@@ -288,17 +380,18 @@ class _Layered(_Geometry):
         del self._layers[:]
 
     def get_bodies(self):
-        return list(self.layers)
+        return oset(self.layers) # copy
 
     def to_xml(self):
-        element = _Geometry.to_xml(self)
+        element, bodies_lookup = _Geometry.to_xml(self)
 
-        child = Element('layers')
+        layer_indexes = []
         for layer in self.layers:
-            child.append(layer.to_xml())
-        element.append(child)
+            layer_indexes.append(bodies_lookup[layer])
 
-        return element
+        element.set('layers', ','.join(map(str, layer_indexes)))
+
+        return element, bodies_lookup
 
 class MultiLayers(_Layered):
     def __init__(self, substrate_material=None, layers=[]):
@@ -328,17 +421,17 @@ class MultiLayers(_Layered):
 
     @classmethod
     def from_xml(cls, element):
-        geometry = _Layered.from_xml(element)
+        bodies_lookup, layers, tilt, rotation = super(MultiLayers, cls)._parse_xml(element)
 
-        children = list(element.find("substrateMaterial"))
-        if children:
-            substrate_material = Material.from_xml(children[0])
+        if element.get('substrate') is not None:
+            index = int(element.get('substrate'))
+            substrate_material = bodies_lookup[index].material
         else:
             substrate_material = None
 
-        obj = cls(substrate_material, geometry.layers)
-        obj.tilt = geometry.tilt
-        obj.rotation = geometry.rotation
+        obj = cls(substrate_material, layers)
+        obj.tilt = tilt
+        obj.rotation = rotation
 
         return obj
 
@@ -377,33 +470,27 @@ class MultiLayers(_Layered):
         bodies = _Layered.get_bodies(self)
 
         if self._substrate is not None:
-            bodies.append(self._substrate)
+            bodies.add(self._substrate)
 
         return bodies
 
     def get_dimensions(self, body):
         if body is self.substrate_body and body is not None:
             zmax = -sum(map(_THICKNESS_GETTER, self.layers))
-            return (float('-inf'), float('inf'),
-                    float('-inf'), float('inf'),
-                    float('-inf'), zmax)
+            return _Dimension(zmax=zmax)
         elif body in self.layers:
             index = self.layers.index(body)
             zmax = -sum(map(_THICKNESS_GETTER, self.layers[:index]))
             zmin = zmax - body.thickness
-            return (float('-inf'), float('inf'),
-                    float('-inf'), float('inf'),
-                    zmin, zmax)
+            return _Dimension(zmin=zmin, zmax=zmax)
         else:
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element = _Layered.to_xml(self)
+        element, bodies_lookup = _Layered.to_xml(self)
 
-        child = Element('substrateMaterial')
         if self.has_substrate():
-            child.append(self.substrate_material.to_xml())
-        element.append(child)
+            element.set('substrate', str(bodies_lookup[self.substrate_body]))
 
         return element
 
@@ -430,17 +517,18 @@ class GrainBoundaries(_Layered):
 
     @classmethod
     def from_xml(cls, element):
-        geometry = _Layered.from_xml(element)
+        bodies_lookup, layers, tilt, rotation = \
+            super(GrainBoundaries, cls)._parse_xml(element)
 
-        child = list(element.find("leftMaterial"))[0]
-        left_material = Material.from_xml(child)
+        index = int(element.get('left_material'))
+        left_material = bodies_lookup[index].material
 
-        child = list(element.find("rightMaterial"))[0]
-        right_material = Material.from_xml(child)
+        index = int(element.get('right_material'))
+        right_material = bodies_lookup[index].material
 
-        obj = cls(left_material, right_material, geometry.layers)
-        obj.tilt = geometry.tilt
-        obj.rotation = geometry.rotation
+        obj = cls(left_material, right_material, layers)
+        obj.tilt = tilt
+        obj.rotation = rotation
 
         return obj
 
@@ -475,10 +563,9 @@ class GrainBoundaries(_Layered):
         return self._right
 
     def get_bodies(self):
-        bodies = []
+        bodies = _Layered.get_bodies(self)
 
-        bodies.append(self._left)
-        bodies.extend(_Layered.get_bodies(self))
+        bodies.insert(0, self._left)
         bodies.append(self._right)
 
         return bodies
@@ -496,30 +583,19 @@ class GrainBoundaries(_Layered):
             positions.append[0.0]
 
         if body is self.left_body:
-            return (float('-inf'), positions[0],
-                    float('-inf'), float('inf'),
-                    float('-inf'), float('inf'))
+            return _Dimension(xmax=positions[0], zmax=0)
         elif body is self.right_body:
-            return (positions[-1], float('inf'),
-                    float('-inf'), float('inf'),
-                    float('-inf'), float('inf'))
+            return _Dimension(xmin=positions[-1], zmax=0)
         elif body in self.layers:
             index = self.layers.index(body)
-            return (positions[index], positions[index + 1],
-                    float('-inf'), float('inf'),
-                    float('-inf'), float('inf'))
+            return _Dimension(xmin=positions[index], xmax=positions[index + 1], zmax=0)
         else:
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element = _Layered.to_xml(self)
+        element, bodies_lookup = _Layered.to_xml(self)
 
-        child = Element('leftMaterial')
-        child.append(self.left_material.to_xml())
-        element.append(child)
-
-        child = Element('rightMaterial')
-        child.append(self.right_material.to_xml())
-        element.append(child)
+        element.set('left_material', str(bodies_lookup[self.left_body]))
+        element.set('right_material', str(bodies_lookup[self.right_body]))
 
         return element

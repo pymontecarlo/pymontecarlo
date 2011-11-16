@@ -36,20 +36,20 @@ class Test_Geometry(unittest.TestCase):
         self.assertAlmostEqual(1.1, self.g.tilt, 4)
         self.assertAlmostEqual(2.2, self.g.rotation, 4)
 
-    def testfrom_xml(self):
-        element = self.g.to_xml()
-        g = _Geometry.from_xml(element)
-
-        self.assertAlmostEqual(1.1, g.tilt, 4)
-        self.assertAlmostEqual(2.2, g.rotation, 4)
-
-    def testto_xml(self):
-        element = self.g.to_xml()
-
-        self.assertEqual('_Geometry', element.tag)
-
-        self.assertAlmostEqual(1.1, float(element.get('tilt')), 4)
-        self.assertAlmostEqual(2.2, float(element.get('rotation')), 4)
+#    def testfrom_xml(self):
+#        element = self.g.to_xml()
+#        g = _Geometry.from_xml(element)
+#
+#        self.assertAlmostEqual(1.1, g.tilt, 4)
+#        self.assertAlmostEqual(2.2, g.rotation, 4)
+#
+#    def testto_xml(self):
+#        element = self.g.to_xml()
+#
+#        self.assertEqual('_Geometry', element.tag)
+#
+#        self.assertAlmostEqual(1.1, float(element.get('tilt')), 4)
+#        self.assertAlmostEqual(2.2, float(element.get('rotation')), 4)
 
 class TestSubstrate(unittest.TestCase):
 
@@ -81,21 +81,23 @@ class TestSubstrate(unittest.TestCase):
         self.assertEqual(1, len(self.g.get_bodies()))
 
     def testget_dimensions(self):
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g.get_dimensions(self.g.body)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertAlmostEqual(0.0, zmax, 4)
+        dim = self.g.get_dimensions(self.g.body)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
     def testto_xml(self):
         element = self.g.to_xml()
 
         self.assertEqual('Substrate', element.tag)
 
-        child = list(element.find('material'))[0]
-        self.assertEqual('Copper', child.get('name'))
+        self.assertEqual(1, len(list(element.find('materials'))))
+        self.assertEqual(1, len(list(element.find('bodies'))))
+
+        self.assertEqual(0, int(element.get('substrate')))
 
 class TestInclusion(unittest.TestCase):
 
@@ -140,34 +142,34 @@ class TestInclusion(unittest.TestCase):
         self.assertEqual(2, len(self.g.get_bodies()))
 
     def testget_dimensions(self):
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g.get_dimensions(self.g.substrate_body)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertAlmostEqual(0.0, zmax, 4)
+        dim = self.g.get_dimensions(self.g.substrate_body)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g.get_dimensions(self.g.inclusion_body)
-        self.assertAlmostEqual(-61.728, xmin, 4)
-        self.assertAlmostEqual(61.728, xmax, 4)
-        self.assertAlmostEqual(-61.728, ymin, 4)
-        self.assertAlmostEqual(61.728, ymax, 4)
-        self.assertAlmostEqual(-61.728, zmin, 4)
-        self.assertAlmostEqual(0.0, zmax, 4)
+        dim = self.g.get_dimensions(self.g.inclusion_body)
+        self.assertAlmostEqual(-61.728, dim.xmin, 4)
+        self.assertAlmostEqual(61.728, dim.xmax, 4)
+        self.assertAlmostEqual(-61.728, dim.ymin, 4)
+        self.assertAlmostEqual(61.728, dim.ymax, 4)
+        self.assertAlmostEqual(-61.728, dim.zmin, 4)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
     def testto_xml(self):
         element = self.g.to_xml()
 
         self.assertEqual('Inclusion', element.tag)
 
-        child = list(element.find('substrateMaterial'))[0]
-        self.assertEqual('Copper', child.get('name'))
+        self.assertEqual(2, len(list(element.find('materials'))))
+        self.assertEqual(2, len(list(element.find('bodies'))))
 
-        child = list(element.find('inclusionMaterial'))[0]
-        self.assertEqual('Zinc', child.get('name'))
+        self.assertTrue(int(element.get('substrate')) in [0, 1])
+        self.assertTrue(int(element.get('inclusion')) in [0, 1])
 
-        self.assertAlmostEqual(123.456, float(element.get('inclusionDiameter')), 4)
+        self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
 
 class TestMultiLayers(unittest.TestCase):
 
@@ -180,8 +182,11 @@ class TestMultiLayers(unittest.TestCase):
         self.l1 = Layer(pure(30), 123.456)
         self.l2 = Layer(pure(31), 456.789)
 
-        self.g1.layers.extend([self.l1, self.l2])
-        self.g2.layers.extend([self.l1, self.l2])
+        self.g1.layers.add(self.l1)
+        self.g1.layers.add(self.l2)
+
+        self.g2.layers.add(self.l1)
+        self.g2.layers.add(self.l2)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -243,48 +248,48 @@ class TestMultiLayers(unittest.TestCase):
 
     def testget_dimensions(self):
         # Multi-layers 1
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.g1.substrate_body)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertAlmostEqual(-580.245, zmax, 4)
+        dim = self.g1.get_dimensions(self.g1.substrate_body)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(-580.245, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.l1)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertAlmostEqual(-123.456, zmin, 4)
-        self.assertAlmostEqual(0.0, zmax, 4)
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertAlmostEqual(-123.456, dim.zmin, 4)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.l2)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertAlmostEqual(-580.245, zmin, 4)
-        self.assertAlmostEqual(-123.456, zmax, 4)
+        dim = self.g1.get_dimensions(self.l2)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertAlmostEqual(-580.245, dim.zmin, 4)
+        self.assertAlmostEqual(-123.456, dim.zmax, 4)
 
         # Multi-layers 2
         self.assertRaises(ValueError, self.g2.get_dimensions, self.g2.substrate_body)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.l1)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertAlmostEqual(-123.456, zmin)
-        self.assertAlmostEqual(0.0, zmax, 4)
+        dim = self.g2.get_dimensions(self.l1)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertAlmostEqual(-123.456, dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.l2)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertAlmostEqual(-580.245, zmin)
-        self.assertAlmostEqual(-123.456, zmax, 4)
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertAlmostEqual(-580.245, dim.zmin)
+        self.assertAlmostEqual(-123.456, dim.zmax, 4)
 
     def testto_xml(self):
         # Multi-layers 1
@@ -292,23 +297,26 @@ class TestMultiLayers(unittest.TestCase):
 
         self.assertEqual('MultiLayers', element.tag)
 
-        children = list(element.find('layers'))
-        self.assertEqual(2, len(children))
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(3, len(list(element.find('bodies'))))
 
-        children = list(element.find('substrateMaterial'))
-        self.assertEqual(1, len(children))
-        self.assertEqual('Copper', children[0].get('name'))
+        layers = element.get('layers').split(',')
+        self.assertEqual(2, len(layers))
+
+        self.assertNotEqual(None, element.get('substrate'))
 
         # Multi-layers 2
         element = self.g2.to_xml()
 
         self.assertEqual('MultiLayers', element.tag)
 
-        children = list(element.find('layers'))
-        self.assertEqual(2, len(children))
+        self.assertEqual(2, len(list(element.find('materials'))))
+        self.assertEqual(2, len(list(element.find('bodies'))))
 
-        children = list(element.find('substrateMaterial'))
-        self.assertEqual(0, len(children))
+        layers = element.get('layers').split(',')
+        self.assertEqual(2, len(layers))
+
+        self.assertEqual(None, element.get('substrate'))
 
 class TestGrainBoundaries(unittest.TestCase):
 
@@ -318,8 +326,9 @@ class TestGrainBoundaries(unittest.TestCase):
         self.g1 = GrainBoundaries(pure(29), pure(30))
         self.l1 = self.g1.add_layer(pure(31), 500.0)
 
-        self.g2 = GrainBoundaries(pure(29), pure(30))
-        self.l2 = self.g2.add_layer(pure(31), 100.0)
+        mat = pure(29)
+        self.g2 = GrainBoundaries(mat, pure(30))
+        self.l2 = self.g2.add_layer(mat, 100.0)
         self.l3 = self.g2.add_layer(pure(32), 200.0)
 
     def tearDown(self):
@@ -338,7 +347,7 @@ class TestGrainBoundaries(unittest.TestCase):
         self.assertEqual('Zinc', str(self.g2.right_material))
 
         self.assertEqual(2, len(self.g2.layers))
-        self.assertEqual('Gallium', str(self.g2.layers[0].material))
+        self.assertEqual('Copper', str(self.g2.layers[0].material))
         self.assertEqual('Germanium', str(self.g2.layers[1].material))
 
     def testfrom_xml(self):
@@ -365,7 +374,7 @@ class TestGrainBoundaries(unittest.TestCase):
         self.assertEqual('Zinc', str(g.right_material))
 
         self.assertEqual(2, len(g.layers))
-        self.assertEqual('Gallium', str(g.layers[0].material))
+        self.assertEqual('Copper', str(g.layers[0].material))
         self.assertEqual('Germanium', str(g.layers[1].material))
 
         self.assertAlmostEqual(0.0, g.tilt, 4)
@@ -382,62 +391,62 @@ class TestGrainBoundaries(unittest.TestCase):
 
     def testget_dimensions(self):
         # Grain boundaries 1
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.g1.left_body)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertAlmostEqual(-250.0, xmax, 4)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g1.get_dimensions(self.g1.left_body)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertAlmostEqual(-250.0, dim.xmax, 4)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.g1.right_body)
-        self.assertAlmostEqual(250.0, xmin, 4)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g1.get_dimensions(self.g1.right_body)
+        self.assertAlmostEqual(250.0, dim.xmin, 4)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g1.get_dimensions(self.l1)
-        self.assertAlmostEqual(-250.0, xmin, 4)
-        self.assertAlmostEqual(250.0, xmax, 4)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertAlmostEqual(-250.0, dim.xmin, 4)
+        self.assertAlmostEqual(250.0, dim.xmax, 4)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
         # Grain boundaries 2
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.g2.left_body)
-        self.assertEqual(float('-inf'), xmin)
-        self.assertAlmostEqual(-150.0, xmax, 4)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g2.get_dimensions(self.g2.left_body)
+        self.assertEqual(float('-inf'), dim.xmin)
+        self.assertAlmostEqual(-150.0, dim.xmax, 4)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.g2.right_body)
-        self.assertAlmostEqual(150.0, xmin, 4)
-        self.assertEqual(float('inf'), xmax)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g2.get_dimensions(self.g2.right_body)
+        self.assertAlmostEqual(150.0, dim.xmin, 4)
+        self.assertEqual(float('inf'), dim.xmax)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.l2)
-        self.assertAlmostEqual(-150.0, xmin, 4)
-        self.assertAlmostEqual(-50.0, xmax, 4)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertAlmostEqual(-150.0, dim.xmin, 4)
+        self.assertAlmostEqual(-50.0, dim.xmax, 4)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
-        xmin, xmax, ymin, ymax, zmin, zmax = self.g2.get_dimensions(self.l3)
-        self.assertAlmostEqual(-50.0, xmin, 4)
-        self.assertAlmostEqual(150.0, xmax, 4)
-        self.assertEqual(float('-inf'), ymin)
-        self.assertEqual(float('inf'), ymax)
-        self.assertEqual(float('-inf'), zmin)
-        self.assertEqual(float('inf'), zmax)
+        dim = self.g2.get_dimensions(self.l3)
+        self.assertAlmostEqual(-50.0, dim.xmin, 4)
+        self.assertAlmostEqual(150.0, dim.xmax, 4)
+        self.assertEqual(float('-inf'), dim.ymin)
+        self.assertEqual(float('inf'), dim.ymax)
+        self.assertEqual(float('-inf'), dim.zmin)
+        self.assertAlmostEqual(0.0, dim.zmax, 4)
 
     def testto_xml(self):
         # Grain boundaries 1
@@ -445,22 +454,22 @@ class TestGrainBoundaries(unittest.TestCase):
 
         self.assertEqual('GrainBoundaries', element.tag)
 
-        children = list(element.find('layers'))
-        self.assertEqual(1, len(children))
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(3, len(list(element.find('bodies'))))
 
-        child = list(element.find('leftMaterial'))[0]
-        self.assertEqual('Copper', child.get('name'))
-
-        child = list(element.find('rightMaterial'))[0]
-        self.assertEqual('Zinc', child.get('name'))
+        layers = element.get('layers').split(',')
+        self.assertEqual(1, len(layers))
 
         # Grain boundaries 2
         element = self.g2.to_xml()
 
         self.assertEqual('GrainBoundaries', element.tag)
 
-        children = list(element.find('layers'))
-        self.assertEqual(2, len(children))
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(4, len(list(element.find('bodies'))))
+
+        layers = element.get('layers').split(',')
+        self.assertEqual(2, len(layers))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
