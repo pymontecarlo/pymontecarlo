@@ -24,15 +24,13 @@ from xml.etree.ElementTree import Element
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 
-class Body(XMLObject):
+class Body(objectxml):
     def __init__(self, material):
-        XMLObject.__init__(self)
-
         self.material = material
 
     def __repr__(self):
@@ -55,7 +53,7 @@ class Body(XMLObject):
         self._material = m
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         child = Element('material')
         child.append(self.material.to_xml())

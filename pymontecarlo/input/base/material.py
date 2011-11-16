@@ -26,7 +26,7 @@ from collections import defaultdict
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
@@ -94,7 +94,7 @@ def pure(z, absorption_energy_electron=50.0, absorption_energy_photon=50.0):
     return Material(name, composition, None,
                     absorption_energy_electron, absorption_energy_photon)
 
-class Material(XMLObject):
+class Material(objectxml):
 
     def __init__(self, name, composition, density=None,
                  absorption_energy_electron=50.0, absorption_energy_photon=50.0):
@@ -128,8 +128,6 @@ class Material(XMLObject):
             this material.
         :type absorption_energy_photon: :class:`float`
         """
-        XMLObject.__init__(self)
-
         self.name = name
         self.composition = composition
         self.density = density
@@ -293,7 +291,7 @@ class Material(XMLObject):
         self._absorption_energy_photon = energy
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('name', self._name)
 

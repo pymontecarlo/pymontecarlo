@@ -25,7 +25,7 @@ from math import pi
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject, from_xml_choices
+from pymontecarlo.util.xmlutil import objectxml, from_xml_choices
 from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
 from pymontecarlo.input.base.material import Material
@@ -79,7 +79,7 @@ class _Dimension(object):
     def to_tuple(self):
         return self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax
 
-class _Geometry(XMLObject):
+class _Geometry(objectxml):
     """
     Base class for all geometry representations.
     
@@ -94,8 +94,6 @@ class _Geometry(XMLObject):
     MATERIALS = [Material]
 
     def __init__(self, tilt=0, rotation=0):
-        XMLObject.__init__(self)
-
         self.tilt = tilt
         self.rotation = rotation
 
@@ -171,7 +169,7 @@ class _Geometry(XMLObject):
         raise NotImplementedError
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         # Materials
         materials = self.get_materials()

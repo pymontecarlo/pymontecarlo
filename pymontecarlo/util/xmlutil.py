@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`option` -- Parent of all options classes
+:mod:`xmlutil` -- XML utilities
 ================================================================================
 
-.. module:: option
-   :synopsis: Parent of all options classes
+.. module:: xmlutil
+   :synopsis: XML utilities
 
-.. inheritance-diagram:: option
+.. inheritance-diagram:: pymontecarlo.util.xmlutil
 
 """
 
@@ -51,6 +51,6 @@ def from_xml_choices(element, choices, *args, **kwargs):
     clasz = parse_class(element, choices)
     return clasz.from_xml(element, *args, **kwargs)
 
-class XMLObject(object):
+class objectxml(object):
     def to_xml(self):
         return Element(self.__class__.__name__)

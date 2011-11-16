@@ -24,7 +24,7 @@ from operator import methodcaller, attrgetter
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.subshell import get_subshell
 from pymontecarlo.util.relaxation_data import relaxation_data
@@ -74,7 +74,7 @@ _SIEGBAHNS_NOGREEK = \
      'Mg', 'M4N3', 'M4O2', 'Mb', 'Mz2', 'M5O3', 'Ma1', 'Ma2', 'Mz1',
      'N4N6', 'N5N6/N5N7']
 
-class Transition(XMLObject):
+class Transition(objectxml):
     def __init__(self, z, src=None, dest=None, siegbahn=None):
         """
         Creates a new transition from a source and destination subshells 
@@ -216,7 +216,7 @@ class Transition(XMLObject):
         return self._exists
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('z', str(self.z))
         element.set('src', str(self.src.index))

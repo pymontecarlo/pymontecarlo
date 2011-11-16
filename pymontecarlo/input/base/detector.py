@@ -24,14 +24,14 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
 TWOPI = math.pi * 2.0
 TOLERANCE = 1e-6
 
-class _DelimitedDetector(XMLObject):
+class _DelimitedDetector(objectxml):
     def __init__(self, elevation, azimuth):
         """
         Creates a new detector.
@@ -57,8 +57,6 @@ class _DelimitedDetector(XMLObject):
         :arg azimuth: azimuth limits
         :type azimuth: :class:`tuple`
         """
-        XMLObject.__init__(self)
-
         self.elevation = elevation
         self.azimuth = azimuth
 
@@ -120,7 +118,7 @@ class _DelimitedDetector(XMLObject):
         return sum(self.elevation) / 2.0
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('elevation_min', str(self.elevation[0]))
         element.set('elevation_max', str(self.elevation[1]))
@@ -130,10 +128,8 @@ class _DelimitedDetector(XMLObject):
 
         return element
 
-class _ChannelsDetector(XMLObject):
+class _ChannelsDetector(objectxml):
     def __init__(self, limits, channels, extremums=(float('-inf'), float('inf'))):
-        XMLObject.__init__(self)
-
         self._extremums = extremums
         self.limits = limits
         self.channels = channels
@@ -178,7 +174,7 @@ class _ChannelsDetector(XMLObject):
         self._channels = int(channels)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('limit_min', str(self.limits[0]))
         element.set('limit_max', str(self.limits[1]))
@@ -186,13 +182,11 @@ class _ChannelsDetector(XMLObject):
 
         return element
 
-class _SpatialDetector(XMLObject):
+class _SpatialDetector(objectxml):
     def __init__(self, xlimits, xbins, ylimits, ybins, zlimits, zbins,
                  xextremums=(float('-inf'), float('inf')),
                  yextremums=(float('-inf'), float('inf')),
                  zextremums=(float('-inf'), float('inf'))):
-        XMLObject.__init__(self)
-
         self._xextremums = xextremums
         self._yextremums = yextremums
         self._zextremums = zextremums
@@ -310,7 +304,7 @@ class _SpatialDetector(XMLObject):
         self._zbins = int(bins)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('xlimit_min', str(self.xlimits[0]))
         element.set('xlimit_max', str(self.xlimits[1]))
@@ -428,7 +422,7 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
                    energy.limits, energy.channels)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.attrib.update(_DelimitedDetector.to_xml(self).attrib)
         element.attrib.update(_EnergyDetector.to_xml(self).attrib)
@@ -459,7 +453,7 @@ class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetecto
         self.limits = (zlow, zhigh)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.attrib.update(_DelimitedDetector.to_xml(self).attrib)
         element.attrib.update(_ChannelsDetector.to_xml(self).attrib)

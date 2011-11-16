@@ -26,16 +26,14 @@ from xml.etree.ElementTree import Element
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 
 # Globals and constants variables.
 
-class PencilBeam(XMLObject):
+class PencilBeam(objectxml):
 
     def __init__(self, energy, origin=(0, 0, 1), direction=(0, 0, -1),
                  aperture=0.0):
-        XMLObject.__init__(self)
-
         self.energy = energy
         self.origin = origin
         self.direction = direction
@@ -116,7 +114,7 @@ class PencilBeam(XMLObject):
         self._aperture = aperture
 
     def to_xml(self):
-        element = Element(self.__class__.__name__)
+        element = objectxml.to_xml(self)
 
         element.set("energy", str(self.energy))
 

@@ -24,15 +24,13 @@ from xml.etree.ElementTree import Element
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject
+from pymontecarlo.util.xmlutil import objectxml
 from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
 
-class _TransitionLimit(XMLObject):
+class _TransitionLimit(objectxml):
     def __init__(self, transition):
-        XMLObject.__init__(self)
-
         self.transition = transition
 
     @classmethod
@@ -51,7 +49,7 @@ class _TransitionLimit(XMLObject):
         self._transition = transition
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         child = Element('transition')
         child.append(self.transition.to_xml())
@@ -59,10 +57,8 @@ class _TransitionLimit(XMLObject):
 
         return element
 
-class TimeLimit(XMLObject):
+class TimeLimit(objectxml):
     def __init__(self, time):
-        XMLObject.__init__(self)
-
         self.time = time
 
     def __repr__(self):
@@ -87,16 +83,14 @@ class TimeLimit(XMLObject):
         self._time = long(time)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('time', str(self.time))
 
         return element
 
-class ShowersLimit(XMLObject):
+class ShowersLimit(objectxml):
     def __init__(self, showers):
-        XMLObject.__init__(self)
-
         self.showers = showers
 
     @classmethod
@@ -121,7 +115,7 @@ class ShowersLimit(XMLObject):
         self._showers = long(showers)
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('showers', str(self.showers))
 

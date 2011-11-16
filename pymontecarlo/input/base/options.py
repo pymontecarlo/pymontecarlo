@@ -24,7 +24,7 @@ from collections import MutableMapping, MutableSet
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlobj import XMLObject, from_xml_choices
+from pymontecarlo.util.xmlutil import objectxml, from_xml_choices
 from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.material import pure
 from pymontecarlo.input.base.geometry import \
@@ -99,7 +99,7 @@ class _Limits(MutableSet):
     def find(self, clasz, default=None):
         return self._data.get(hash(clasz), default)
 
-class Options(XMLObject):
+class Options(objectxml):
     BEAMS = [GaussianBeam, PencilBeam]
     GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion]
     DETECTORS = [BackscatteredElectronAzimuthalAngularDetector,
@@ -120,8 +120,6 @@ class Options(XMLObject):
         """
         
         """
-        XMLObject.__init__(self)
-
         self.name = name
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(pure(79)) # Au substrate
@@ -187,7 +185,7 @@ class Options(XMLObject):
         return self._limits
 
     def to_xml(self):
-        element = XMLObject.to_xml(self)
+        element = objectxml.to_xml(self)
 
         element.set('name', self.name)
 
