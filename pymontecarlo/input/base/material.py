@@ -306,3 +306,9 @@ class Material(objectxml):
         element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon))
 
         return element
+
+class _Vacuum(Material):
+    def __init__(self):
+        Material.__init__(self, "Vacuum", {}, 0.0, 0.0, 0.0)
+
+VACUUM = _Vacuum()

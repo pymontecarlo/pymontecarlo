@@ -17,17 +17,27 @@ import logging
 # Local modules.
 from pymontecarlo.input.base.geometry import \
     _Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries
-from pymontecarlo.input.base.material import pure
-from pymontecarlo.input.base.body import Layer
+from pymontecarlo.input.base.material import pure, VACUUM
+from pymontecarlo.input.base.body import Body, Layer
 
 # Globals and constants variables.
+
+class GeometryMock(_Geometry):
+
+    def __init__(self, tilt, rotation):
+        _Geometry.__init__(self, tilt, rotation)
+
+        self.bodies = [Body(pure(29)), Body(VACUUM)]
+
+    def get_bodies(self):
+        return self.bodies
 
 class Test_Geometry(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.g = _Geometry(1.1, 2.2)
+        self.g = GeometryMock(1.1, 2.2)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -35,21 +45,18 @@ class Test_Geometry(unittest.TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(1.1, self.g.tilt, 4)
         self.assertAlmostEqual(2.2, self.g.rotation, 4)
+        self.assertEqual(2, len(self.g.bodies))
 
-#    def testfrom_xml(self):
-#        element = self.g.to_xml()
-#        g = _Geometry.from_xml(element)
-#
-#        self.assertAlmostEqual(1.1, g.tilt, 4)
-#        self.assertAlmostEqual(2.2, g.rotation, 4)
-#
-#    def testto_xml(self):
-#        element = self.g.to_xml()
-#
-#        self.assertEqual('_Geometry', element.tag)
-#
-#        self.assertAlmostEqual(1.1, float(element.get('tilt')), 4)
-#        self.assertAlmostEqual(2.2, float(element.get('rotation')), 4)
+    def testget_materials(self):
+        materials = self.g.get_materials()
+        self.assertEqual(2, len(materials))
+
+    def test_create_lookups(self):
+        materials_lookup, bodies_lookup = self.g._create_lookups()
+        self.assertEqual(0, materials_lookup[VACUUM])
+        self.assertEqual(1, materials_lookup[self.g.bodies[0].material])
+
+        self.assertEqual(2, len(bodies_lookup))
 
 class TestSubstrate(unittest.TestCase):
 

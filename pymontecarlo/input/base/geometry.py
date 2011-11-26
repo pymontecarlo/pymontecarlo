@@ -28,7 +28,7 @@ from math import pi
 from pymontecarlo.util.xmlutil import objectxml, from_xml_choices
 from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
-from pymontecarlo.input.base.material import Material
+from pymontecarlo.input.base.material import Material, VACUUM
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -51,6 +51,14 @@ class _Dimension(object):
         self._ymax = ymax
         self._zmin = zmin
         self._zmax = zmax
+
+    def __repr__(self):
+        return '<Dimension(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)>' % \
+            (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax)
+
+    def __str__(self):
+        return '(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)' % \
+            (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax)
 
     @property
     def xmin(self):
@@ -98,13 +106,17 @@ class _Geometry(objectxml):
         self.rotation = rotation
 
     @classmethod
-    def _parse_xml(cls, element):
+    def _parse_xml_materials(cls, element):
         children = list(element.find('materials'))
         materials_lookup = {}
         for child in children:
             index = int(child.get('index'))
             materials_lookup[index] = from_xml_choices(child, cls.MATERIALS)
 
+        return materials_lookup
+
+    @classmethod
+    def _parse_xml_bodies(cls, element, materials_lookup):
         children = list(element.find('bodies'))
         bodies_lookup = {}
         for child in children:
@@ -112,6 +124,13 @@ class _Geometry(objectxml):
             material = materials_lookup[int(child.get('material'))]
             bodies_lookup[index] = \
                 from_xml_choices(child, cls.BODIES, material=material)
+
+        return bodies_lookup
+
+    @classmethod
+    def _parse_xml(cls, element):
+        materials_lookup = cls._parse_xml_materials(element)
+        bodies_lookup = cls._parse_xml_bodies(element, materials_lookup)
 
         tilt = float(element.get('tilt'))
         rotation = float(element.get('rotation'))
@@ -121,7 +140,7 @@ class _Geometry(objectxml):
     @property
     def tilt(self):
         """
-        Specimen tilt in radians.
+        Specimen tilt in radians along the x-axis.
         """
         return self._tilt
 
@@ -134,7 +153,7 @@ class _Geometry(objectxml):
     @property
     def rotation(self):
         """
-        Specimen rotation in radians
+        Specimen rotation in radians along the z-axis.
         """
         return self._rotation
 
@@ -170,37 +189,52 @@ class _Geometry(objectxml):
 
     def to_xml(self):
         element = objectxml.to_xml(self)
+        materials_lookup, bodies_lookup = self._create_lookups()
 
-        # Materials
-        materials = self.get_materials()
-        materials_lookup = dict(zip(materials, range(len(materials))))
-
-        child = Element('materials')
-        for material, index in materials_lookup.iteritems():
-            grandchild = material.to_xml()
-            grandchild.set('index', str(index))
-            child.append(grandchild)
-        element.append(child)
-
-        # Bodies
-        bodies = self.get_bodies()
-        bodies_lookup = dict(zip(bodies, range(len(bodies))))
-
-        child = Element('bodies')
-        for body, index in bodies_lookup.iteritems():
-            grandchild = body.to_xml()
-            grandchild.set('index', str(index))
-
-            grandchild.remove(grandchild.find('material')) # remove material element
-            grandchild.set('material', str(materials_lookup[body.material]))
-
-            child.append(grandchild)
-        element.append(child)
+        element.append(self._materials_to_xml(materials_lookup))
+        element.append(self._bodies_to_xml(materials_lookup, bodies_lookup))
 
         element.set('tilt', str(self.tilt))
         element.set('rotation', str(self.rotation))
 
         return element, bodies_lookup
+
+    def _create_lookups(self):
+        materials_lookup = {}
+        count = 1
+        for material in self.get_materials():
+            if isinstance(material, type(VACUUM)):
+                materials_lookup[material] = 0
+            else:
+                materials_lookup[material] = count
+                count += 1
+
+        bodies = self.get_bodies()
+        bodies_lookup = dict(zip(bodies, range(len(bodies))))
+
+        return materials_lookup, bodies_lookup
+
+    def _materials_to_xml(self, materials_lookup):
+        element = Element('materials')
+        for material, index in materials_lookup.iteritems():
+            child = material.to_xml()
+            child.set('index', str(index))
+            element.append(child)
+
+        return element
+
+    def _bodies_to_xml(self, materials_lookup, bodies_lookup):
+        element = Element('bodies')
+        for body, index in bodies_lookup.iteritems():
+            child = body.to_xml()
+            child.set('index', str(index))
+
+            child.remove(child.find('material')) # remove material element
+            child.set('material', str(materials_lookup[body.material]))
+
+            element.append(child)
+
+        return element
 
 class Substrate(_Geometry):
 
@@ -348,11 +382,16 @@ class _Layered(_Geometry):
         self._layers = oset(layers) # copy
 
     @classmethod
-    def _parse_xml(cls, element):
-        bodies_lookup, tilt, rotation = super(_Layered, cls)._parse_xml(element)
-
+    def _parse_xml_layers(cls, element, bodies_lookup):
         layer_indexes = map(int, element.get('layers').split(','))
         layers = map(bodies_lookup.get, layer_indexes)
+
+        return layers
+
+    @classmethod
+    def _parse_xml(cls, element):
+        bodies_lookup, tilt, rotation = super(_Layered, cls)._parse_xml(element)
+        layers = cls._parse_xml_layers(element, bodies_lookup)
 
         return bodies_lookup, layers, tilt, rotation
 
@@ -383,13 +422,17 @@ class _Layered(_Geometry):
     def to_xml(self):
         element, bodies_lookup = _Geometry.to_xml(self)
 
+        layer_indexes = self._layers_to_xml(bodies_lookup)
+        element.set('layers', ','.join(map(str, layer_indexes)))
+
+        return element, bodies_lookup
+
+    def _layers_to_xml(self, bodies_lookup):
         layer_indexes = []
         for layer in self.layers:
             layer_indexes.append(bodies_lookup[layer])
 
-        element.set('layers', ','.join(map(str, layer_indexes)))
-
-        return element, bodies_lookup
+        return layer_indexes
 
 class MultiLayers(_Layered):
     def __init__(self, substrate_material=None, layers=[]):
@@ -578,7 +621,7 @@ class GrainBoundaries(_Layered):
                 positions.append(sum(thicknesses[:i]) - middle)
             positions.append(positions[-1] + thicknesses[-1])
         else:
-            positions.append[0.0]
+            positions.append(0.0)
 
         if body is self.left_body:
             return _Dimension(xmax=positions[0], zmax=0)
