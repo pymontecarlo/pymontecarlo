@@ -310,5 +310,6 @@ class Material(objectxml):
 class _Vacuum(Material):
     def __init__(self):
         Material.__init__(self, "Vacuum", {}, 0.0, 0.0, 0.0)
+        self._index = 0
 
 VACUUM = _Vacuum()

@@ -51,12 +51,10 @@ class Test_Geometry(unittest.TestCase):
         materials = self.g.get_materials()
         self.assertEqual(2, len(materials))
 
-    def test_create_lookups(self):
-        materials_lookup, bodies_lookup = self.g._create_lookups()
-        self.assertEqual(0, materials_lookup[VACUUM])
-        self.assertEqual(1, materials_lookup[self.g.bodies[0].material])
-
-        self.assertEqual(2, len(bodies_lookup))
+    def test_indexify(self):
+        self.g._indexify()
+        self.assertEqual(0, VACUUM._index) #@UndefinedVariable
+        self.assertEqual(1, self.g.bodies[0].material._index)
 
 class TestSubstrate(unittest.TestCase):
 

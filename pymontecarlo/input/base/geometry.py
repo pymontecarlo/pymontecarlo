@@ -173,7 +173,8 @@ class _Geometry(objectxml):
 
     def get_bodies(self):
         """
-        Returns a :class:`set` of all bodies inside this geometry.
+        Returns a :class:`set` of all bodies inside this geometry. 
+        The bodies are returned in no particular order.
         """
         raise NotImplementedError
 
@@ -189,48 +190,45 @@ class _Geometry(objectxml):
 
     def to_xml(self):
         element = objectxml.to_xml(self)
-        materials_lookup, bodies_lookup = self._create_lookups()
+        self._indexify()
 
-        element.append(self._materials_to_xml(materials_lookup))
-        element.append(self._bodies_to_xml(materials_lookup, bodies_lookup))
+        element.append(self._materials_to_xml())
+        element.append(self._bodies_to_xml())
 
         element.set('tilt', str(self.tilt))
         element.set('rotation', str(self.rotation))
 
-        return element, bodies_lookup
+        return element
 
-    def _create_lookups(self):
-        materials_lookup = {}
+    def _indexify(self):
         count = 1
         for material in self.get_materials():
             if isinstance(material, type(VACUUM)):
-                materials_lookup[material] = 0
+                material._index = 0
             else:
-                materials_lookup[material] = count
+                material._index = count
                 count += 1
 
-        bodies = self.get_bodies()
-        bodies_lookup = dict(zip(bodies, range(len(bodies))))
+        for i, body in enumerate(self.get_bodies()):
+            body._index = i
 
-        return materials_lookup, bodies_lookup
-
-    def _materials_to_xml(self, materials_lookup):
+    def _materials_to_xml(self):
         element = Element('materials')
-        for material, index in materials_lookup.iteritems():
+        for material in self.get_materials():
             child = material.to_xml()
-            child.set('index', str(index))
+            child.set('index', str(material._index))
             element.append(child)
 
         return element
 
-    def _bodies_to_xml(self, materials_lookup, bodies_lookup):
+    def _bodies_to_xml(self):
         element = Element('bodies')
-        for body, index in bodies_lookup.iteritems():
+        for body in self.get_bodies():
             child = body.to_xml()
-            child.set('index', str(index))
+            child.set('index', str(body._index))
 
             child.remove(child.find('material')) # remove material element
-            child.set('material', str(materials_lookup[body.material]))
+            child.set('material', str(body.material._index))
 
             element.append(child)
 
@@ -281,9 +279,9 @@ class Substrate(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element, bodies_lookup = _Geometry.to_xml(self)
+        element = _Geometry.to_xml(self)
 
-        element.set('substrate', str(bodies_lookup[self.body]))
+        element.set('substrate', str(self.body._index))
 
         return element
 
@@ -365,10 +363,10 @@ class Inclusion(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element, bodies_lookup = _Geometry.to_xml(self)
+        element = _Geometry.to_xml(self)
 
-        element.set('substrate', str(bodies_lookup[self.substrate_body]))
-        element.set('inclusion', str(bodies_lookup[self.inclusion_body]))
+        element.set('substrate', str(self.substrate_body._index))
+        element.set('inclusion', str(self.inclusion_body._index))
         element.set('diameter', str(self.inclusion_diameter))
 
         return element
@@ -417,22 +415,17 @@ class _Layered(_Geometry):
         del self._layers[:]
 
     def get_bodies(self):
-        return oset(self.layers) # copy
+        return set(self.layers) # copy
 
     def to_xml(self):
-        element, bodies_lookup = _Geometry.to_xml(self)
+        element = _Geometry.to_xml(self)
 
-        layer_indexes = self._layers_to_xml(bodies_lookup)
-        element.set('layers', ','.join(map(str, layer_indexes)))
-
-        return element, bodies_lookup
-
-    def _layers_to_xml(self, bodies_lookup):
         layer_indexes = []
         for layer in self.layers:
-            layer_indexes.append(bodies_lookup[layer])
+            layer_indexes.append(layer._index)
+        element.set('layers', ','.join(map(str, layer_indexes)))
 
-        return layer_indexes
+        return element
 
 class MultiLayers(_Layered):
     def __init__(self, substrate_material=None, layers=[]):
@@ -528,10 +521,10 @@ class MultiLayers(_Layered):
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element, bodies_lookup = _Layered.to_xml(self)
+        element = _Layered.to_xml(self)
 
         if self.has_substrate():
-            element.set('substrate', str(bodies_lookup[self.substrate_body]))
+            element.set('substrate', str(self.substrate_body._index))
 
         return element
 
@@ -606,8 +599,8 @@ class GrainBoundaries(_Layered):
     def get_bodies(self):
         bodies = _Layered.get_bodies(self)
 
-        bodies.insert(0, self._left)
-        bodies.append(self._right)
+        bodies.add(self._left)
+        bodies.add(self._right)
 
         return bodies
 
@@ -634,9 +627,9 @@ class GrainBoundaries(_Layered):
             raise ValueError, "Unknown body: %s" % body
 
     def to_xml(self):
-        element, bodies_lookup = _Layered.to_xml(self)
+        element = _Layered.to_xml(self)
 
-        element.set('left_material', str(bodies_lookup[self.left_body]))
-        element.set('right_material', str(bodies_lookup[self.right_body]))
+        element.set('left_material', str(self.left_body._index))
+        element.set('right_material', str(self.right_body._index))
 
         return element
