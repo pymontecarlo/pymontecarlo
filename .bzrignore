@@ -1,2 +1,3 @@
 *.class
 pymontecarlo/input/base/foo.py
+settings.cfg
