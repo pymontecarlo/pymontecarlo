@@ -97,8 +97,6 @@ class TestSubstrate(unittest.TestCase):
     def testto_xml(self):
         element = self.g.to_xml()
 
-        self.assertEqual('Substrate', element.tag)
-
         self.assertEqual(1, len(list(element.find('materials'))))
         self.assertEqual(1, len(list(element.find('bodies'))))
 
@@ -165,8 +163,6 @@ class TestInclusion(unittest.TestCase):
 
     def testto_xml(self):
         element = self.g.to_xml()
-
-        self.assertEqual('Inclusion', element.tag)
 
         self.assertEqual(2, len(list(element.find('materials'))))
         self.assertEqual(2, len(list(element.find('bodies'))))
@@ -300,8 +296,6 @@ class TestMultiLayers(unittest.TestCase):
         # Multi-layers 1
         element = self.g1.to_xml()
 
-        self.assertEqual('MultiLayers', element.tag)
-
         self.assertEqual(3, len(list(element.find('materials'))))
         self.assertEqual(3, len(list(element.find('bodies'))))
 
@@ -312,8 +306,6 @@ class TestMultiLayers(unittest.TestCase):
 
         # Multi-layers 2
         element = self.g2.to_xml()
-
-        self.assertEqual('MultiLayers', element.tag)
 
         self.assertEqual(2, len(list(element.find('materials'))))
         self.assertEqual(2, len(list(element.find('bodies'))))
@@ -457,8 +449,6 @@ class TestGrainBoundaries(unittest.TestCase):
         # Grain boundaries 1
         element = self.g1.to_xml()
 
-        self.assertEqual('GrainBoundaries', element.tag)
-
         self.assertEqual(3, len(list(element.find('materials'))))
         self.assertEqual(3, len(list(element.find('bodies'))))
 
@@ -467,8 +457,6 @@ class TestGrainBoundaries(unittest.TestCase):
 
         # Grain boundaries 2
         element = self.g2.to_xml()
-
-        self.assertEqual('GrainBoundaries', element.tag)
 
         self.assertEqual(3, len(list(element.find('materials'))))
         self.assertEqual(4, len(list(element.find('bodies'))))

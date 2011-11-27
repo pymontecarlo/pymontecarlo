@@ -350,8 +350,6 @@ class TestPhotonSpectrumDetector(unittest.TestCase):
     def testto_xml(self):
         element = self.d.to_xml()
 
-        self.assertEqual("PhotonSpectrumDetector", element.tag)
-
         self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
         self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
         self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
@@ -399,8 +397,6 @@ class TestPhiRhoZDetector(unittest.TestCase):
 
     def testto_xml(self):
         element = self.d.to_xml()
-
-        self.assertEqual("PhiRhoZDetector", element.tag)
 
         self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
         self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)

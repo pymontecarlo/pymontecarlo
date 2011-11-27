@@ -34,11 +34,16 @@ class _TransitionLimit(objectxml):
         self.transition = transition
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         child = list(element.find("transition"))[0]
-        material = Transition.from_xml(child)
+        transition = Transition.__loadxml__(child, *args, **kwargs)
 
-        return cls(material)
+        return cls(transition)
+
+    def __savexml__(self, element, *args, **kwargs):
+        child = Element('transition')
+        child.append(self.transition.to_xml())
+        element.append(child)
 
     @property
     def transition(self):
@@ -48,15 +53,6 @@ class _TransitionLimit(objectxml):
     def transition(self, transition):
         self._transition = transition
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        child = Element('transition')
-        child.append(self.transition.to_xml())
-        element.append(child)
-
-        return element
-
 class TimeLimit(objectxml):
     def __init__(self, time):
         self.time = time
@@ -65,9 +61,12 @@ class TimeLimit(objectxml):
         return '<TimeLimit(time=%s s)>' % self.time
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         time = long(element.get('time'))
         return cls(time)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('time', str(self.time))
 
     @property
     def time(self):
@@ -82,21 +81,17 @@ class TimeLimit(objectxml):
             raise ValueError, "Time (%s) must be greater than 0." % time
         self._time = long(time)
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('time', str(self.time))
-
-        return element
-
 class ShowersLimit(objectxml):
     def __init__(self, showers):
         self.showers = showers
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         showers = long(element.get('showers'))
         return cls(showers)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('showers', str(self.showers))
 
     def __repr__(self):
         return '<ShowersLimit(showers=%s)>' % self.showers
@@ -114,13 +109,6 @@ class ShowersLimit(objectxml):
             raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
         self._showers = long(showers)
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('showers', str(self.showers))
-
-        return element
-
 class UncertaintyLimit(_TransitionLimit):
     def __init__(self, transition, uncertainty):
         _TransitionLimit.__init__(self, transition)
@@ -132,12 +120,16 @@ class UncertaintyLimit(_TransitionLimit):
             (str(self.transition), self.uncertainty * 100.0)
 
     @classmethod
-    def from_xml(cls, element):
-        transition = _TransitionLimit.from_xml(element).transition
+    def __loadxml__(cls, element, *args, **kwargs):
+        transition = _TransitionLimit.__loadxml__(element, *args, **kwargs).transition
 
         uncertainty = float(element.get('uncertainty'))
 
         return cls(transition, uncertainty)
+
+    def __savexml__(self, element, *args, **kwargs):
+        _TransitionLimit.__savexml__(self, element, *args, **kwargs)
+        element.set('uncertainty', str(self.uncertainty))
 
     @property
     def uncertainty(self):
@@ -149,9 +141,3 @@ class UncertaintyLimit(_TransitionLimit):
             raise ValueError, "Relative uncertainty (%s) must be between [0.0, 1.0]." % unc
         self._uncertainty = unc
 
-    def to_xml(self):
-        element = _TransitionLimit.to_xml(self)
-
-        element.set('uncertainty', str(self.uncertainty))
-
-        return element

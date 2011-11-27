@@ -89,8 +89,6 @@ class TestPencilBeam(unittest.TestCase):
     def testto_xml(self):
         element = self.beam.to_xml()
 
-        self.assertEqual('PencilBeam', element.tag)
-
         self.assertAlmostEqual(15e3, float(element.get('energy')), 4)
 
         child = element.find('origin')
@@ -126,8 +124,6 @@ class TestGaussianBeam(unittest.TestCase):
 
     def testto_xml(self):
         element = self.beam.to_xml()
-
-        self.assertEqual('GaussianBeam', element.tag)
 
         self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
 

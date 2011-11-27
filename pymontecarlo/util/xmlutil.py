@@ -19,7 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import attrgetter
+import sys
 from xml.etree.ElementTree import Element
 
 # Third party modules.
@@ -28,29 +28,32 @@ from xml.etree.ElementTree import Element
 
 # Globals and constants variables.
 
-def parse_class(element, choices):
-    """
-    Returns the class from which the element should be loaded.
-    
-    :rtype: :class:`XMLObject`
-    """
-    tags = dict(zip(map(attrgetter("__name__"), choices), choices))
-    clasz = tags.get(element.tag)
-    if clasz is None:
-        raise IOError, "Element '%s' cannot be loaded by this class." % element.tag
-
-    return clasz
-
-def from_xml_choices(element, choices, *args, **kwargs):
-    """
-    Loads the element from a list of :class:`XMLObject` classes (with the method 
-    :meth:`from_xml`).
-    
-    :return: loaded :class:`XMLObject`
-    """
-    clasz = parse_class(element, choices)
-    return clasz.from_xml(element, *args, **kwargs)
-
 class objectxml(object):
-    def to_xml(self):
-        return Element(self.__class__.__name__)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        return cls()
+
+    def __savexml__(self, element, *args, **kwargs):
+        pass
+
+    @classmethod
+    def from_xml(cls, element, *args, **kwargs):
+        module, name = element.tag.rsplit('.', 1)
+
+        # This import technique is the same as the one used in pickle
+        # See Unpickler.find_class
+        __import__(module)
+        mod = sys.modules[module]
+        klass = getattr(mod, name)
+
+        return klass.__loadxml__(element, *args, **kwargs)
+
+    def to_xml(self, *args, **kwargs):
+        name = self.__class__.__module__ + "." + self.__class__.__name__
+        element = Element(name)
+
+        self.__savexml__(element, *args, **kwargs)
+
+        return element
+

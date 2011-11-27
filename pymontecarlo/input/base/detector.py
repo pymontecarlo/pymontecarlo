@@ -32,6 +32,7 @@ TWOPI = math.pi * 2.0
 TOLERANCE = 1e-6
 
 class _DelimitedDetector(objectxml):
+
     def __init__(self, elevation, azimuth):
         """
         Creates a new detector.
@@ -66,13 +67,20 @@ class _DelimitedDetector(objectxml):
              self.azimuth[0], self.azimuth[1])
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         elevation = (float(element.get('elevation_min')),
                      float(element.get('elevation_max')))
         azimuth = (float(element.get('azimuth_min')),
                    float(element.get('azimuth_max')))
 
         return cls(elevation, azimuth)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('elevation_min', str(self.elevation[0]))
+        element.set('elevation_max', str(self.elevation[1]))
+
+        element.set('azimuth_min', str(self.azimuth[0]))
+        element.set('azimuth_max', str(self.azimuth[1]))
 
     @property
     def elevation(self):
@@ -117,17 +125,6 @@ class _DelimitedDetector(objectxml):
     def takeoffangle(self):
         return sum(self.elevation) / 2.0
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('elevation_min', str(self.elevation[0]))
-        element.set('elevation_max', str(self.elevation[1]))
-
-        element.set('azimuth_min', str(self.azimuth[0]))
-        element.set('azimuth_max', str(self.azimuth[1]))
-
-        return element
-
 class _ChannelsDetector(objectxml):
     def __init__(self, limits, channels, extremums=(float('-inf'), float('inf'))):
         self._extremums = extremums
@@ -139,11 +136,16 @@ class _ChannelsDetector(objectxml):
             (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         limits = float(element.get('limit_min')), float(element.get('limit_max'))
         channels = int(element.get('channels'))
 
         return cls(limits, channels)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('limit_min', str(self.limits[0]))
+        element.set('limit_max', str(self.limits[1]))
+        element.set('channels', str(self.channels))
 
     @property
     def limits(self):
@@ -173,15 +175,6 @@ class _ChannelsDetector(objectxml):
                 "Number of channels (%s) must be greater or equal to 1." % channels
         self._channels = int(channels)
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('limit_min', str(self.limits[0]))
-        element.set('limit_max', str(self.limits[1]))
-        element.set('channels', str(self.channels))
-
-        return element
-
 class _SpatialDetector(objectxml):
     def __init__(self, xlimits, xbins, ylimits, ybins, zlimits, zbins,
                  xextremums=(float('-inf'), float('inf')),
@@ -207,7 +200,7 @@ class _SpatialDetector(objectxml):
              self.zlimits[0], self.zlimits[1], self.zbins)
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         xlimits = float(element.get('xlimit_min')), float(element.get('xlimit_max'))
         xbins = int(element.get('xbins'))
 
@@ -218,6 +211,19 @@ class _SpatialDetector(objectxml):
         zbins = int(element.get('zbins'))
 
         return cls(xlimits, xbins, ylimits, ybins, zlimits, zbins)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('xlimit_min', str(self.xlimits[0]))
+        element.set('xlimit_max', str(self.xlimits[1]))
+        element.set('xbins', str(self.xbins))
+
+        element.set('ylimit_min', str(self.ylimits[0]))
+        element.set('ylimit_max', str(self.ylimits[1]))
+        element.set('ybins', str(self.ybins))
+
+        element.set('zlimit_min', str(self.zlimits[0]))
+        element.set('zlimit_max', str(self.zlimits[1]))
+        element.set('zbins', str(self.zbins))
 
     @property
     def xlimits(self):
@@ -303,23 +309,6 @@ class _SpatialDetector(objectxml):
                 "Number of bins in z (%s) must be greater or equal to 1." % bins
         self._zbins = int(bins)
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('xlimit_min', str(self.xlimits[0]))
-        element.set('xlimit_max', str(self.xlimits[1]))
-        element.set('xbins', str(self.xbins))
-
-        element.set('ylimit_min', str(self.ylimits[0]))
-        element.set('ylimit_max', str(self.ylimits[1]))
-        element.set('ybins', str(self.ybins))
-
-        element.set('zlimit_min', str(self.zlimits[0]))
-        element.set('zlimit_max', str(self.zlimits[1]))
-        element.set('zbins', str(self.zbins))
-
-        return element
-
 class _EnergyDetector(_ChannelsDetector):
     def __init__(self, limits, channels):
         _ChannelsDetector.__init__(self, limits, channels, (0.0, float('inf')))
@@ -347,9 +336,9 @@ class _PolarAngularDetector(_ChannelsDetector):
             (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         # Required due to argument inversion
-        det = _ChannelsDetector.from_xml(element)
+        det = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
         return cls(det.channels, det.limits)
 
 class _AzimuthalAngularDetector(_ChannelsDetector):
@@ -361,9 +350,9 @@ class _AzimuthalAngularDetector(_ChannelsDetector):
             (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         # Required due to argument inversion
-        det = _ChannelsDetector.from_xml(element)
+        det = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
         return cls(det.channels, det.limits)
 
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
@@ -414,20 +403,16 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
              self.channels)
 
     @classmethod
-    def from_xml(cls, element):
-        delimited = _DelimitedDetector.from_xml(element)
-        energy = _EnergyDetector.from_xml(element)
+    def __loadxml__(cls, element, *args, **kwargs):
+        delimited = _DelimitedDetector.__loadxml__(element, *args, **kwargs)
+        energy = _EnergyDetector.__loadxml__(element, *args, **kwargs)
 
         return cls(delimited.elevation, delimited.azimuth,
                    energy.limits, energy.channels)
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.attrib.update(_DelimitedDetector.to_xml(self).attrib)
-        element.attrib.update(_EnergyDetector.to_xml(self).attrib)
-
-        return element
+    def __savexml__(self, element, *args, **kwargs):
+        _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
+        _EnergyDetector.__savexml__(self, element, *args, **kwargs)
 
 class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation, azimuth, limits, channels):
@@ -442,23 +427,19 @@ class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetecto
              self.channels)
 
     @classmethod
-    def from_xml(cls, element):
-        delimited = _DelimitedDetector.from_xml(element)
-        channels = _ChannelsDetector.from_xml(element)
+    def __loadxml__(cls, element, *args, **kwargs):
+        delimited = _DelimitedDetector.__loadxml__(element, *args, **kwargs)
+        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
 
         return cls(delimited.elevation, delimited.azimuth,
                    channels.limits, channels.channels)
 
+    def __savexml__(self, element, *args, **kwargs):
+        _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
+        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
+
     def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
         self.limits = (zlow, zhigh)
-
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.attrib.update(_DelimitedDetector.to_xml(self).attrib)
-        element.attrib.update(_ChannelsDetector.to_xml(self).attrib)
-
-        return element
 
 class PhotonIntensityDetector(_DelimitedDetector):
     pass

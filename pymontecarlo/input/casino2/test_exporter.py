@@ -16,9 +16,9 @@ from math import radians
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.casino2.exporter import Casino2Exporter
-from pymontecarlo.input.casino2.options import Casino2Options
+from pymontecarlo.input.casino2.exporter import Exporter
 
+from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.detector import \
     (BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, PhotonIntensityDetector,
@@ -34,7 +34,7 @@ class TestCasino2Exporter(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.e = Casino2Exporter()
+        self.e = Exporter()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -44,7 +44,7 @@ class TestCasino2Exporter(unittest.TestCase):
 
     def testto_cas_substrate(self):
         mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
-        ops = Casino2Options()
+        ops = Options()
         ops.beam.energy = 1234
         ops.beam.diameter = 25e-9
         ops.beam.origin = (100e-9, 0, 1)
@@ -66,7 +66,7 @@ class TestCasino2Exporter(unittest.TestCase):
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
-        ops = Casino2Options()
+        ops = Options()
         ops.beam.energy = 1234
         ops.beam.diameter = 25e-9
         ops.beam.origin = (100e-9, 0, 1)
@@ -83,7 +83,7 @@ class TestCasino2Exporter(unittest.TestCase):
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
-        ops = Casino2Options()
+        ops = Options()
         ops.beam.energy = 1234
         ops.beam.diameter = 25e-9
         ops.beam.origin = (100e-9, 0, 1)
@@ -101,7 +101,7 @@ class TestCasino2Exporter(unittest.TestCase):
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
 
-        ops = Casino2Options()
+        ops = Options()
         ops.beam.energy = 1234
         ops.beam.diameter = 25e-9
         ops.beam.origin = (100e-9, 0, 1)

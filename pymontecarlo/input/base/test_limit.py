@@ -42,7 +42,6 @@ class TestTimeLimit(unittest.TestCase):
     def testto_xml(self):
         element = self.lim.to_xml()
 
-        self.assertEqual('TimeLimit', element.tag)
         self.assertEqual(123, int(element.get('time')))
 
 class TestShowersLimit(unittest.TestCase):
@@ -67,7 +66,6 @@ class TestShowersLimit(unittest.TestCase):
     def testto_xml(self):
         element = self.lim.to_xml()
 
-        self.assertEqual('ShowersLimit', element.tag)
         self.assertEqual(123, int(element.get('showers')))
 
 class TestUncertaintyLimit(unittest.TestCase):
@@ -94,8 +92,6 @@ class TestUncertaintyLimit(unittest.TestCase):
 
     def testto_xml(self):
         element = self.lim.to_xml()
-
-        self.assertEqual('UncertaintyLimit', element.tag)
 
         child = list(element.find('transition'))[0]
         self.assertEqual(29, int(child.get('z')))

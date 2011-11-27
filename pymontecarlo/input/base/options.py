@@ -24,31 +24,15 @@ from collections import MutableMapping, MutableSet
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml, from_xml_choices
-from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
+from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.material import pure
-from pymontecarlo.input.base.geometry import \
-    Substrate, MultiLayers, GrainBoundaries, Inclusion
-from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.input.base.detector import \
-    (BackscatteredElectronAzimuthalAngularDetector,
-     BackscatteredElectronEnergyDetector,
-     BackscatteredElectronPolarAngularDetector,
-     EnergyDepositedSpatialDetector,
-     PhiRhoZDetector,
-     PhotonAzimuthalAngularDetector,
-     PhotonIntensityDetector,
-     PhotonPolarAngularDetector,
-     PhotonSpectrumDetector,
-     TransmittedElectronAzimuthalAngularDetector,
-     TransmittedElectronEnergyDetector,
-     TransmittedElectronPolarAngularDetector)
+from pymontecarlo.input.base.geometry import Substrate
 
 # Globals and constants variables.
 
 class _Detectors(MutableMapping):
-    def __init__(self, options):
-        self._options = options
+    def __init__(self):
         self._data = {}
 
     def __len__(self):
@@ -61,9 +45,6 @@ class _Detectors(MutableMapping):
         return self._data.__delitem__(key)
 
     def __setitem__(self, key, value):
-        if value.__class__ not in self._options.DETECTORS:
-            raise ValueError, "Detector type (%s) is not available for %s" % \
-                (value.__class__.__name__, self._options.__class__.__name__)
         return self._data.__setitem__(key, value)
 
     def __iter__(self):
@@ -73,8 +54,7 @@ class _Detectors(MutableMapping):
         return dict([(key, obj) for key, obj in self.iteritems() if isinstance(obj, clasz)])
 
 class _Limits(MutableSet):
-    def __init__(self, options):
-        self._options = options
+    def __init__(self):
         self._data = {}
 
     def __len__(self):
@@ -88,9 +68,6 @@ class _Limits(MutableSet):
 
     def add(self, item):
         clasz = item.__class__
-        if clasz not in self._options.LIMITS:
-            raise ValueError, "Limit type (%s) is not available for %s" % \
-                (clasz.__name__, self._options.__class__.__name__)
         self._data[hash(clasz)] = item
 
     def discard(self, item):
@@ -100,21 +77,6 @@ class _Limits(MutableSet):
         return self._data.get(hash(clasz), default)
 
 class Options(objectxml):
-    BEAMS = [GaussianBeam, PencilBeam]
-    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion]
-    DETECTORS = [BackscatteredElectronAzimuthalAngularDetector,
-                 BackscatteredElectronEnergyDetector,
-                 BackscatteredElectronPolarAngularDetector,
-                 EnergyDepositedSpatialDetector,
-                 PhiRhoZDetector,
-                 PhotonAzimuthalAngularDetector,
-                 PhotonIntensityDetector,
-                 PhotonPolarAngularDetector,
-                 PhotonSpectrumDetector,
-                 TransmittedElectronAzimuthalAngularDetector,
-                 TransmittedElectronEnergyDetector,
-                 TransmittedElectronPolarAngularDetector]
-    LIMITS = [TimeLimit, ShowersLimit, UncertaintyLimit]
 
     def __init__(self, name='Untitled'):
         """
@@ -123,30 +85,8 @@ class Options(objectxml):
         self.name = name
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(pure(79)) # Au substrate
-        self._detectors = _Detectors(self)
-        self._limits = _Limits(self)
-
-    @classmethod
-    def from_xml(cls, element):
-        options = cls(element.get('name'))
-
-        child = list(element.find("beam"))[0]
-        options.beam = from_xml_choices(child, cls.BEAMS)
-
-        child = list(element.find("geometry"))[0]
-        options.geometry = from_xml_choices(child, cls.GEOMETRIES)
-
-        children = list(element.find("detectors"))
-        for child in children:
-            key = child.get('_key')
-            obj = from_xml_choices(child, cls.DETECTORS)
-            options.detectors[key] = obj
-
-        children = list(element.find("limits"))
-        for child in children:
-            options.limits.add(from_xml_choices(child, cls.LIMITS))
-
-        return options
+        self._detectors = _Detectors()
+        self._limits = _Limits()
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, self.name)
@@ -154,39 +94,28 @@ class Options(objectxml):
     def __str__(self):
         return self.name
 
-    @property
-    def beam(self):
-        return self._beam
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        options = cls(element.get('name'))
 
-    @beam.setter
-    def beam(self, beam):
-        if beam.__class__ not in self.BEAMS:
-            raise ValueError, "Beam type (%s) is not available for %s" % \
-                (beam.__class__.__name__, self.__class__.__name__)
-        self._beam = beam
+        child = list(element.find("beam"))[0]
+        options.beam = objectxml.from_xml(child, *args, **kwargs)
 
-    @property
-    def geometry(self):
-        return self._geometry
+        child = list(element.find("geometry"))[0]
+        options.geometry = objectxml.from_xml(child, *args, **kwargs)
 
-    @geometry.setter
-    def geometry(self, geometry):
-        if geometry.__class__ not in self.GEOMETRIES:
-            raise ValueError, "Geometry type (%s) is not available for %s" % \
-                (geometry.__class__.__name__, self.__class__.__name__)
-        self._geometry = geometry
+        children = list(element.find("detectors"))
+        for child in children:
+            key = child.get('_key')
+            options.detectors[key] = objectxml.from_xml(child, *args, **kwargs)
 
-    @property
-    def detectors(self):
-        return self._detectors
+        children = list(element.find("limits"))
+        for child in children:
+            options.limits.add(objectxml.from_xml(child, *args, **kwargs))
 
-    @property
-    def limits(self):
-        return self._limits
+        return options
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
+    def __savexml__(self, element, *args, **kwargs):
         element.set('name', self.name)
 
         child = Element('beam')
@@ -209,5 +138,27 @@ class Options(objectxml):
             child.append(limit.to_xml())
         element.append(child)
 
-        return element
+    @property
+    def beam(self):
+        return self._beam
+
+    @beam.setter
+    def beam(self, beam):
+        self._beam = beam
+
+    @property
+    def geometry(self):
+        return self._geometry
+
+    @geometry.setter
+    def geometry(self, geometry):
+        self._geometry = geometry
+
+    @property
+    def detectors(self):
+        return self._detectors
+
+    @property
+    def limits(self):
+        return self._limits
 

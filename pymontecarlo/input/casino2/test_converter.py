@@ -42,13 +42,13 @@ class TestCasino2Converter(unittest.TestCase):
 
     def testconvert1(self):
         # Base options
-        baseops = Options(name="Test")
-        baseops.beam.energy = 1234
-        baseops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
-        baseops.limits.add(ShowersLimit(5678))
+        ops = Options(name="Test")
+        ops.beam.energy = 1234
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.limits.add(ShowersLimit(5678))
 
         # Convert
-        ops = self.converter.convert(baseops)
+        self.converter.convert(ops)
 
         # Test
         self.assertAlmostEqual(1234, ops.beam.energy, 4)
@@ -65,18 +65,18 @@ class TestCasino2Converter(unittest.TestCase):
 
     def testconvert2(self):
         # Base options
-        baseops = Options(name="Test")
-        baseops.beam = PencilBeam(1234)
-        baseops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
-        baseops.detectors['photon'] = \
+        ops = Options(name="Test")
+        ops.beam = PencilBeam(1234)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.detectors['photon'] = \
             PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)),
                                    (12.34, 56.78), 1000)
-        baseops.limits.add(ShowersLimit(5678))
-        baseops.limits.add(TimeLimit(60))
+        ops.limits.add(ShowersLimit(5678))
+        ops.limits.add(TimeLimit(60))
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            ops = self.converter.convert(baseops)
+            self.converter.convert(ops)
 
         # 3 warnings:
         # PencilBeam -> GaussianBeam
@@ -99,33 +99,33 @@ class TestCasino2Converter(unittest.TestCase):
 
     def testconvert3(self):
         # Base options
-        baseops = Options(name="Test")
-        baseops.beam.energy = 100e3
-        baseops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
-        baseops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops = Options(name="Test")
+        ops.beam.energy = 100e3
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
 
         # Two many BackscatteredElectronEnergyDetector
-        self.assertRaises(ConversionException, self.converter.convert, baseops)
+        self.assertRaises(ConversionException, self.converter.convert, ops)
 
     def testconvert4(self):
         # Base options
-        baseops = Options(name="Test")
-        baseops.beam.energy = 100e3
-        baseops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), (0, -10), 1000)
-        baseops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
+        ops = Options(name="Test")
+        ops.beam.energy = 100e3
+        ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), (0, -10), 1000)
+        ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
 
         # Convert
-        ops = self.converter.convert(baseops)
+        self.converter.convert(ops)
 
         self.assertEqual(2, len(ops.detectors))
 
         # Test difference in elevation
-        baseops.detectors['xray'] = PhotonIntensityDetector((0.5, 1), (2, 3))
-        self.assertRaises(ConversionException, self.converter.convert, baseops)
+        ops.detectors['xray'] = PhotonIntensityDetector((0.5, 1), (2, 3))
+        self.assertRaises(ConversionException, self.converter.convert, ops)
 
         # Test difference in azimuth
-        baseops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2.5, 3))
-        self.assertRaises(ConversionException, self.converter.convert, baseops)
+        ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2.5, 3))
+        self.assertRaises(ConversionException, self.converter.convert, ops)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

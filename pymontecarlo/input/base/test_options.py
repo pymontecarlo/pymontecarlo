@@ -65,9 +65,6 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(5678, limit.showers)
 
     def testdetectors(self):
-        self.assertRaises(ValueError, self.ops.detectors.__setitem__, 'te', None)
-        self.assertRaises(ValueError, self.ops.detectors.update, {'te': None})
-
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
         self.assertEqual(1, len(dets))
 
@@ -75,8 +72,6 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(0, len(dets))
 
     def testlimits(self):
-        self.assertRaises(ValueError, self.ops.limits.add, None)
-
         self.ops.limits.add(ShowersLimit(1234))
         self.assertEqual(1, len(self.ops.limits))
         limit = self.ops.limits.find(ShowersLimit)
@@ -84,8 +79,6 @@ class TestOptions(unittest.TestCase):
 
     def testto_xml(self):
         element = self.ops.to_xml()
-
-        self.assertEqual('Options', element.tag)
 
         self.assertEqual('Test', element.get('name'))
 

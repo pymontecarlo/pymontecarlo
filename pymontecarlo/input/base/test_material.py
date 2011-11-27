@@ -172,8 +172,6 @@ class TestMaterial(unittest.TestCase):
     def testto_xml(self):
         element = self.m.to_xml()
 
-        self.assertEquals('Material', element.tag)
-
         self.assertEquals('Pure Cu', element.get('name'))
 
         children = list(element.find('composition'))

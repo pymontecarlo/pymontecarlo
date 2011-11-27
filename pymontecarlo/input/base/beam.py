@@ -44,7 +44,7 @@ class PencilBeam(objectxml):
             (self.energy, self.origin, self.direction, self.aperture)
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         energy = float(element.get("energy"))
 
         attrib = element.find("origin").attrib
@@ -56,6 +56,17 @@ class PencilBeam(objectxml):
         aperture = float(element.get("aperture"))
 
         return cls(energy, origin, direction, aperture)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set("energy", str(self.energy))
+
+        attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin)))
+        element.append(Element("origin", attrib))
+
+        attrib = dict(zip(('x', 'y', 'z'), map(str, self.direction)))
+        element.append(Element("direction", attrib))
+
+        element.set("aperture", str(self.aperture))
 
     @property
     def energy(self):
@@ -113,21 +124,6 @@ class PencilBeam(objectxml):
             raise ValueError, "Aperture (%s) must be between [0, pi/2] rad." % aperture
         self._aperture = aperture
 
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set("energy", str(self.energy))
-
-        attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin)))
-        element.append(Element("origin", attrib))
-
-        attrib = dict(zip(('x', 'y', 'z'), map(str, self.direction)))
-        element.append(Element("direction", attrib))
-
-        element.set("aperture", str(self.aperture))
-
-        return element
-
 class GaussianBeam(PencilBeam):
 
     def __init__(self, energy, diameter, origin=(0, 0, 1),
@@ -141,13 +137,17 @@ class GaussianBeam(PencilBeam):
             (self.energy, self.diameter, self.origin, self.direction, self.aperture)
 
     @classmethod
-    def from_xml(cls, element):
-        pencil = PencilBeam.from_xml(element)
+    def __loadxml__ (cls, element, *args, **kwargs):
+        pencil = PencilBeam.__loadxml__(element, *args, **kwargs)
 
         diameter = float(element.get("diameter"))
 
         return cls(pencil.energy, diameter, pencil.origin,
                    pencil.direction, pencil.aperture)
+
+    def __savexml__(self, element, *args, **kwargs):
+        PencilBeam.__savexml__(self, element, *args, **kwargs)
+        element.set('diameter', str(self.diameter))
 
     @property
     def diameter(self):
@@ -161,13 +161,6 @@ class GaussianBeam(PencilBeam):
         if diameter < 0:
             raise ValueError, "Diameter (%s) must be equal or greater than 0." % diameter
         self._diameter = diameter
-
-    def to_xml(self):
-        element = PencilBeam.to_xml(self)
-
-        element.set('diameter', str(self.diameter))
-
-        return element
 
 def tilt_beam(angle, axis='y', direction=(0, 0, -1)):
     """

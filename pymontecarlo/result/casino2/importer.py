@@ -23,7 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.base.importer import Importer
+from pymontecarlo.result.base.importer import Importer as _Importer
 from pymontecarlo.result.base.result import \
     PhotonIntensityResult, create_intensity_dict
 from pymontecarlo.input.base.detector import \
@@ -44,10 +44,10 @@ from casinoTools.FileFormat.casino2.Element import \
 
 LINE_LOOKUP = {LINE_K: K_family, LINE_L: LIII, LINE_M: MV}
 
-class Casino2Importer(Importer):
+class Importer(_Importer):
 
     def __init__(self):
-        Importer.__init__(self)
+        _Importer.__init__(self)
 
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity_detector

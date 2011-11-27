@@ -143,6 +143,34 @@ class Material(objectxml):
     def __str__(self):
         return self._name
 
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        name = element.get('name')
+
+        composition = {}
+        for child in iter(element.find('composition')):
+            composition[int(child.get('z'))] = float(child.get('weightFraction'))
+
+        density = float(element.get('density'))
+
+        abs_electron = float(element.get('absorptionEnergyElectron'))
+        abs_photon = float(element.get('absorptionEnergyPhoton'))
+
+        return cls(name, composition, density, abs_electron, abs_photon)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('name', self._name)
+
+        child = Element('composition')
+        for z, fraction in self.composition.iteritems():
+            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
+        element.append(child)
+
+        element.set('density', str(self.density))
+
+        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron))
+        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon))
+
     def __calculate_composition(self, composition):
         composition2 = {}
         for element, fraction in composition.iteritems():
@@ -196,21 +224,6 @@ class Material(objectxml):
             density += ep.mass_density(z) * fraction
 
         return density
-
-    @classmethod
-    def from_xml(cls, element):
-        name = element.get('name')
-
-        composition = {}
-        for child in iter(element.find('composition')):
-            composition[int(child.get('z'))] = float(child.get('weightFraction'))
-
-        density = float(element.get('density'))
-
-        abs_electron = float(element.get('absorptionEnergyElectron'))
-        abs_photon = float(element.get('absorptionEnergyPhoton'))
-
-        return cls(name, composition, density, abs_electron, abs_photon)
 
     @property
     def name(self):
@@ -289,23 +302,6 @@ class Material(objectxml):
             raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
                     % energy
         self._absorption_energy_photon = energy
-
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('name', self._name)
-
-        child = Element('composition')
-        for z, fraction in self.composition.iteritems():
-            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
-        element.append(child)
-
-        element.set('density', str(self.density))
-
-        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron))
-        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon))
-
-        return element
 
 class _Vacuum(Material):
     def __init__(self):

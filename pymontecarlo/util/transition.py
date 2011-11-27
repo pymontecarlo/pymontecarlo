@@ -154,12 +154,17 @@ class Transition(objectxml):
         return hash(('Transition', self._z, self._index))
 
     @classmethod
-    def from_xml(cls, element):
+    def __loadxml__(cls, element, *args, **kwargs):
         z = int(element.get('z'))
         src = int(element.get('src'))
         dest = int(element.get('dest'))
 
         return cls(z, src, dest)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('z', str(self.z))
+        element.set('src', str(self.src.index))
+        element.set('dest', str(self.dest.index))
 
     @property
     def z(self):
@@ -214,15 +219,6 @@ class Transition(objectxml):
 
     def exists(self):
         return self._exists
-
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        element.set('z', str(self.z))
-        element.set('src', str(self.src.index))
-        element.set('dest', str(self.dest.index))
-
-        return element
 
 class transitionset(frozenset):
 

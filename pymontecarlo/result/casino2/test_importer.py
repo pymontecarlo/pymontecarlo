@@ -15,8 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.casino2.importer import Casino2Importer
-from pymontecarlo.input.casino2.options import Casino2Options
+from pymontecarlo.result.casino2.importer import Importer
+from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.detector import PhotonIntensityDetector
 
 import DrixUtilities.Files as Files
@@ -28,11 +28,11 @@ class TestCasino2Importer(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.ops = Casino2Options()
+        self.ops = Options()
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
 
         filepath = Files.getCurrentModulePath(__file__, '../../testdata/casino2/result1.cas')
-        imp = Casino2Importer()
+        imp = Importer()
         self.results = imp.import_from_cas(self.ops, filepath)
 
     def tearDown(self):

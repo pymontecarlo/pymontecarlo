@@ -19,7 +19,6 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import copy
 import warnings
 
 # Third party modules.
@@ -27,7 +26,6 @@ import warnings
 # Local modules.
 
 # Globals and constants variables.
-dc = copy.deepcopy
 
 class ConversionWarning(Warning):
     pass
@@ -36,45 +34,64 @@ class ConversionException(Exception):
     pass
 
 class Converter(object):
-    def convert(self, old):
-        new = self._create_instance(old)
+    """
+    Base class of all converters.
+    
+    Derived class shall modify the following class variables to specify
+    the allowable classes for each of these parameters:
+    
+        * :var:`BEAM`
+        * :var:`GEOMETRIES`
+        * :var:`DETECTORS`
+        * :var:`LIMITS`
+    """
 
-        self._convert_beam(old, new)
-        self._convert_geometry(old, new)
-        self._convert_detectors(old, new)
-        self._convert_limits(old, new)
+    BEAMS = []
+    GEOMETRIES = []
+    DETECTORS = []
+    LIMITS = []
 
-        return new
+    def convert(self, options):
+        """
+        Converts the beam, geometry, detectors and limits to be compatible
+        with Casino2.
+        This method may raise :exc:`ConversionException` if some parameters
+        cannot be converted.
+        If a parameter is modified or removed during the conversion, a
+        :class:`ConversionWarning` is issued.
+        If no conversion is required, the parameter (and its object) are left
+        intact.
+        
+        :arg options: options
+        """
+        self._convert_beam(options)
+        self._convert_geometry(options)
+        self._convert_detectors(options)
+        self._convert_limits(options)
 
-    def _create_instance(self, old):
-        raise NotImplementedError
-
-    def _convert_beam(self, old, new):
-        if old.beam.__class__ in new.BEAMS:
-            new.beam = dc(old.beam)
-        else:
+    def _convert_beam(self, options):
+        if options.beam.__class__ not in self.BEAMS:
             raise ConversionException, "Cannot convert beam"
 
-    def _convert_geometry(self, old, new):
-        if old.geometry.__class__ in new.GEOMETRIES:
-            new.geometry = dc(old.geometry)
-        else:
+    def _convert_geometry(self, options):
+        if options.geometry.__class__ not in self.GEOMETRIES:
             raise ConversionException, "Cannot convert geometry"
 
-    def _convert_detectors(self, old, new):
-        for key, detector in old.detectors.iteritems():
-            if detector.__class__ in new.DETECTORS:
-                new.detectors[key] = dc(detector)
-            else:
-                message = "Detector '%s' of type '%s' was removed" % \
+    def _convert_detectors(self, options):
+        for key in options.detectors.keys():
+            detector = options.detectors[key]
+            if detector.__class__ not in self.DETECTORS:
+                options.detectors.pop(key)
+
+                message = "Detector '%s' of type '%s' cannot be converted. It was removed" % \
                     (key, detector.__class__.__name__)
                 warnings.warn(message, ConversionWarning)
 
-    def _convert_limits(self, old, new):
-        for limit in old.limits:
-            if limit.__class__ in new.LIMITS:
-                new.limits.add(limit)
-            else:
-                message = "Limit of type '%s' was removed" % \
+    def _convert_limits(self, options):
+        for limit in list(options.limits):
+            if limit.__class__ not in self.LIMITS:
+                options.limits.discard(limit)
+
+                message = "Limit of type '%s' cannot be converted. It was removed" % \
                     (limit.__class__.__name__)
                 warnings.warn(message, ConversionWarning)

@@ -25,7 +25,6 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml
-from pymontecarlo.input.base.material import Material
 
 # Globals and constants variables.
 
@@ -37,12 +36,17 @@ class Body(objectxml):
         return '<Body(material=%s)>' % str(self.material)
 
     @classmethod
-    def from_xml(cls, element, material=None):
-        if not material:
+    def __loadxml__(cls, element, material=None, *args, **kwargs):
+        if material is None:
             child = list(element.find("material"))[0]
-            material = Material.from_xml(child)
+            material = objectxml.from_xml(child)
 
         return cls(material)
+
+    def __savexml__(self, element, *args, **kwargs):
+        child = Element('material')
+        child.append(self.material.to_xml())
+        element.append(child)
 
     @property
     def material(self):
@@ -51,15 +55,6 @@ class Body(objectxml):
     @material.setter
     def material(self, m):
         self._material = m
-
-    def to_xml(self):
-        element = objectxml.to_xml(self)
-
-        child = Element('material')
-        child.append(self.material.to_xml())
-        element.append(child)
-
-        return element
 
 class Layer(Body):
     def __init__(self, material, thickness):
@@ -71,13 +66,17 @@ class Layer(Body):
         return '<Layer(material=%s, thickness=%s m)>' % (str(self.material), self.thickness)
 
     @classmethod
-    def from_xml(cls, element, material=None, thickness=None):
-        body = Body.from_xml(element, material)
+    def __loadxml__(cls, element, material=None, thickness=None, *args, **kwargs):
+        body = Body.__loadxml__(element, material, *args, **kwargs)
 
-        if not thickness:
+        if thickness is None:
             thickness = float(element.get('thickness'))
 
         return cls(body.material, thickness)
+
+    def __savexml__(self, element, *args, **kwargs):
+        Body.__savexml__(self, element, *args, **kwargs)
+        element.set('thickness', str(self.thickness))
 
     @property
     def thickness(self):
@@ -92,9 +91,3 @@ class Layer(Body):
             raise ValueError, "Thickness (%s) must be greater than 0." % thickness
         self._thickness = thickness
 
-    def to_xml(self):
-        element = Body.to_xml(self)
-
-        element.set('thickness', str(self.thickness))
-
-        return element

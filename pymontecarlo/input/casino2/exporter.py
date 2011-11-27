@@ -27,7 +27,7 @@ from pkg_resources import resource_stream #@UnresolvedImport
 import numpy as np
 
 # Local modules.
-from pymontecarlo.input.base.exporter import Exporter, ExporterException
+from pymontecarlo.input.base.exporter import Exporter as _Exporter, ExporterException
 from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
@@ -45,10 +45,10 @@ from casinoTools.FileFormat.casino2.File import File
 
 # Globals and constants variables.
 
-class Casino2Exporter(Exporter):
+class Exporter(_Exporter):
 
     def __init__(self):
-        Exporter.__init__(self)
+        _Exporter.__init__(self)
 
         self._beam_exporters[GaussianBeam] = self._beam_gaussian
 
@@ -170,7 +170,7 @@ class Casino2Exporter(Exporter):
         simops.RangeFinder = 3 # Fixed range
         simops.FEmissionRX = 0 # Do not simulate x-rays
 
-        Exporter._export_detectors(self, options, simdata, simops)
+        _Exporter._export_detectors(self, options, simdata, simops)
 
         # Detector position
         dets = {}

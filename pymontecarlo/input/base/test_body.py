@@ -42,8 +42,6 @@ class TestBody(unittest.TestCase):
     def testto_xml(self):
         element = self.body.to_xml()
 
-        self.assertEqual('Body', element.tag)
-
         children = list(element.find('material'))
         self.assertEqual(1, len(children))
         self.assertEqual('Copper', children[0].get('name'))
@@ -69,8 +67,6 @@ class TestLayer(unittest.TestCase):
 
     def testto_xml(self):
         element = self.layer.to_xml()
-
-        self.assertEqual('Layer', element.tag)
 
         self.assertAlmostEqual(123.456, float(element.get('thickness')), 4)
 
