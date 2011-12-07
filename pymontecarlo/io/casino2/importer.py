@@ -52,10 +52,10 @@ class Importer(_Importer):
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity_detector
 
-    def import_from_cas(self, options, filepath):
+    def import_from_cas(self, options, fileobj):
         # Read cas
         casfile = File()
-        casfile.readFromFilepath(filepath)
+        casfile.readFromFileObject(fileobj)
 
         simresults = casfile.getResultsFirstSimulation()
 

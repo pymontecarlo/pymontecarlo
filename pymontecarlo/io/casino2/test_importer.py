@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.casino2.importer import Importer
+from pymontecarlo.io.casino2.importer import Importer
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.detector import PhotonIntensityDetector
 
@@ -33,7 +33,8 @@ class TestCasino2Importer(unittest.TestCase):
 
         filepath = Files.getCurrentModulePath(__file__, '../../testdata/casino2/result1.cas')
         imp = Importer()
-        self.results = imp.import_from_cas(self.ops, filepath)
+        with open(filepath, 'rb') as f:
+            self.results = imp.import_from_cas(self.ops, f)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

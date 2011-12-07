@@ -22,10 +22,9 @@ import pypenelope.lib.penelope as penelope
 from pymontecarlo import settings
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.geometry import Substrate, Inclusion, MultiLayers, GrainBoundaries
-from pymontecarlo.input.penelope.exporter import Exporter
 from pymontecarlo.input.penelope.converter import Converter
 from pymontecarlo.input.penelope.material import Material
-
+from pymontecarlo.io.penelope.exporter import Exporter
 
 # Globals and constants variables.
 

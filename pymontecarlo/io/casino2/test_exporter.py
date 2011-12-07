@@ -16,7 +16,7 @@ from math import radians
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.casino2.exporter import Exporter
+from pymontecarlo.io.casino2.exporter import Exporter
 
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.detector import \
