@@ -25,7 +25,7 @@ import warnings
 
 # Local modules.
 from pymontecarlo.input.base.converter import \
-    Converter, ConversionWarning, ConversionException
+    Converter as _Converter, ConversionWarning, ConversionException
 from pymontecarlo.input.base.beam import PencilBeam, GaussianBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
@@ -40,7 +40,7 @@ from pymontecarlo.input.base.detector import \
 
 # Globals and constants variables.
 
-class Casino2Converter(Converter):
+class Converter(_Converter):
     BEAMS = [GaussianBeam]
     GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries]
     DETECTORS = [BackscatteredElectronEnergyDetector,
@@ -52,7 +52,7 @@ class Casino2Converter(Converter):
 
     def _convert_beam(self, options):
         try:
-            Converter._convert_beam(self, options)
+            _Converter._convert_beam(self, options)
         except ConversionException as ex:
             if isinstance(options.beam, PencilBeam):
                 old = options.beam
@@ -65,7 +65,7 @@ class Casino2Converter(Converter):
                 raise ex
 
     def _convert_geometry(self, options):
-        Converter._convert_geometry(self, options)
+        _Converter._convert_geometry(self, options)
 
         if options.geometry.tilt != 0.0:
             options.geometry.tilt = 0.0
@@ -73,7 +73,7 @@ class Casino2Converter(Converter):
             warnings.warn(message, ConversionWarning)
 
     def _convert_detectors(self, options):
-        Converter._convert_detectors(self, options)
+        _Converter._convert_detectors(self, options)
 
         # There can be only one detector of each type
         for clasz in self.DETECTORS:

@@ -17,7 +17,7 @@ from math import radians
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.casino2.converter import Casino2Converter, ConversionException
+from pymontecarlo.input.casino2.converter import Converter, ConversionException
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.beam import PencilBeam
 from pymontecarlo.input.base.detector import \
@@ -32,7 +32,7 @@ class TestCasino2Converter(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.converter = Casino2Converter()
+        self.converter = Converter()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
