@@ -99,7 +99,7 @@ class Exporter(_Exporter):
         cwd = os.getcwd()
         os.chdir(self._pendbase_dir)
 
-        matfilepaths = []
+        matinfos = []
         for material in pengeom.get_materials():
             index = material._index
             if index == 0: continue
@@ -108,11 +108,11 @@ class Exporter(_Exporter):
             penelope.create_material(material.composition, material.density,
                                      material.name, filepath)
 
-            matfilepaths.append((material, matfilepaths))
+            matinfos.append((material, filepath))
 
         os.chdir(cwd)
 
-        return (pengeom, geofilepath), matfilepaths
+        return (pengeom, geofilepath), matinfos
 
     def _export_geometry_substrate(self, options, geometry, pengeom):
         surface_cylinder = cylinder(0.1) # 10 cm radius
