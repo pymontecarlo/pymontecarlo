@@ -71,7 +71,7 @@ static int _close_fortran_file(int unit)
 ///////////////////////////////////////////////////////////////////////////////
 
 static PyObject * TRAJECTORY_END;
-static PyObject * KNOCK;
+static char * KNOCK;
 
 static PyObject * BACKSCATTERED_ELECTRON;
 static PyObject * TRANSMITTED_ELECTRON;
@@ -135,27 +135,26 @@ static int _call_trajectory_end_callbacks(PyObject * callbacks, PyObject* args)
     return 0; // True
 }
 
-static void _call_knock(PyObject * callbacks, int n, int icol, double de)
+static void _call_knock(PyObject * callbacks, long unsigned n, int icol,
+                        double de)
 {
 
     PyObject * result;
     PyObject * callback;
-    PyObject * args = Py_BuildValue("iid", n, icol, de);
 
     int i = 0;
     int size = PyList_Size(callbacks);
     while (i < size) {
         callback = PyList_GetItem(callbacks, i);
 
-        result = PyObject_CallMethodObjArgs(callback, KNOCK, args, NULL);
+        result = PyObject_CallMethod(callback, KNOCK, "kid", n, icol, de,
+                                     NULL);
         if (result != NULL) {
             Py_DECREF(result);
         }
 
         i++;
     }
-
-    Py_DECREF(args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +208,8 @@ static int Track_set_energy(wrapper_TrackObject *self, PyObject *value,
 static PyObject*
 Track_get_position(wrapper_TrackObject* self, void *closure)
 {
-    PyObject * ret = Py_BuildValue("ddd", track_.x, track_.y, track_.z);
+    PyObject * ret = Py_BuildValue("ddd", track_.x / 100.0, track_.y / 100.0,
+                                   track_.z / 100.0);
     Py_INCREF(ret);
     return ret;
 }
@@ -225,9 +225,9 @@ static int Track_set_position(wrapper_TrackObject *self, PyObject *value,
         return -1;
     }
 
-    track_.x = x;
-    track_.y = y;
-    track_.z = z;
+    track_.x = x * 100.0;
+    track_.y = y * 100.0;
+    track_.z = z * 100.0;
 
     return 0;
 }
@@ -540,7 +540,7 @@ static PyGetSetDef Track_getseters[] =
                                                 "Particle's energy in eV", NULL },
                                 { "position", (getter) Track_get_position,
                                                 (setter) Track_set_position,
-                                                "Particle's position in cm",
+                                                "Particle's position in meters",
                                                 NULL },
                                 {
                                                 "direction",
@@ -895,6 +895,7 @@ create_material(PyObject* self, PyObject* args)
     Py_RETURN_NONE;
 }
 
+
 static PyObject*
 run(PyObject* self, PyObject* args)
 {
@@ -902,16 +903,16 @@ run(PyObject* self, PyObject* args)
     // Parse arguments from Python
     ////////////////////////////////////////////////////////////////////////////
 
-    double ntot;
+    unsigned long ntot;
     double emax;
-    int x0, y0, z0, u0, v0, w0;
+    double x0, y0, z0, u0, v0, w0;
     double diameter, aperture;
     PyObject * pydsmaxs;
     PyObject * wghts;
     int seed1, seed2;
     PyObject * callbacks;
 
-    if (!PyArg_ParseTuple(args, "ddddddddddO!O!ii|O!", &ntot, &emax, &x0, &y0,
+    if (!PyArg_ParseTuple(args, "kdddddddddO!O!ii|O!", &ntot, &emax, &x0, &y0,
                           &z0, &u0, &v0, &w0, &diameter, &aperture,
                           &PyList_Type, &pydsmaxs, &PyList_Type, &wghts,
                           &seed1, &seed2, &PyList_Type, &callbacks))
@@ -974,7 +975,7 @@ run(PyObject* self, PyObject* args)
     // Initialize simulation variables
     ////////////////////////////////////////////////////////////////////////////
 
-    double n = -1.0;
+    unsigned long n = 0;
     PyObject * callback_args;
     double ds, dsmax, dsef, de;
     int ncross, icol, left;
@@ -988,8 +989,8 @@ run(PyObject* self, PyObject* args)
 
     while (n < ntot) {
         // New shower
-        n = n + 1.0;
-        callback_args = Py_BuildValue("i", n);
+        n++;
+        callback_args = Py_BuildValue("k", n);
 
         // Shower simulation starts here.
         cleans_();
@@ -1015,8 +1016,10 @@ run(PyObject* self, PyObject* args)
             ds = 1.0e30;
             step_(&ds, &dsef, &ncross);
 
-            if (track_.mat == 0) // The particle does not enter the system.
+            if (track_.mat == 0) { // The particle does not enter the system.
+                printf("ERROR: Particle does not enter the system\n");
                 goto l104;
+            }
 
             first_surface = qtrack_.kslast;
         }
@@ -1137,7 +1140,7 @@ run(PyObject* self, PyObject* args)
     ////////////////////////////////////////////////////////////////////////////
 
     free(dsmaxs);
-//
+    //
     i = 0;
     while (i < bodyCount) {
         free(forcing[i]);
@@ -1149,7 +1152,7 @@ run(PyObject* self, PyObject* args)
     free(wghtlow);
     free(wghthigh);
 
-    return Py_BuildValue("d", n + 1);
+    return Py_BuildValue("k", n);
 }
 
 static PyObject*
@@ -1159,16 +1162,16 @@ run_advanced(PyObject* self, PyObject* args)
     // Parse arguments from Python
     ////////////////////////////////////////////////////////////////////////////
 
-    double ntot;
+    unsigned long ntot;
     double emax;
-    int x0, y0, z0, u0, v0, w0;
+    double x0, y0, z0, u0, v0, w0;
     double diameter, aperture;
     PyObject * pydsmaxs;
     PyObject * wghts;
     int seed1, seed2;
     PyObject * callbacks;
 
-    if (!PyArg_ParseTuple(args, "ddddddddddO!O!ii|O!", &ntot, &emax, &x0, &y0,
+    if (!PyArg_ParseTuple(args, "kdddddddddO!O!ii|O!", &ntot, &emax, &x0, &y0,
                           &z0, &u0, &v0, &w0, &diameter, &aperture,
                           &PyList_Type, &pydsmaxs, &PyList_Type, &wghts,
                           &seed1, &seed2, &PyList_Type, &callbacks))
@@ -1231,7 +1234,7 @@ run_advanced(PyObject* self, PyObject* args)
     // Initialize simulation variables
     ////////////////////////////////////////////////////////////////////////////
 
-    double n = -1.0;
+    unsigned long n = 0;
     PyObject * callback_args;
     double ds, dsmax, dsef, de;
     int ncross, icol, left;
@@ -1245,8 +1248,8 @@ run_advanced(PyObject* self, PyObject* args)
 
     while (n < ntot) {
         // New shower
-        n = n + 1.0;
-        callback_args = Py_BuildValue("i", n);
+        n++;
+        callback_args = Py_BuildValue("k", n);
 
         // Shower simulation starts here.
         cleans_();
@@ -1272,8 +1275,10 @@ run_advanced(PyObject* self, PyObject* args)
             ds = 1.0e30;
             step_(&ds, &dsef, &ncross);
 
-            if (track_.mat == 0) // The particle does not enter the system.
+            if (track_.mat == 0) { // The particle does not enter the system.
+                printf("ERROR: Particle does not enter the system\n");
                 goto l104;
+            }
 
             first_surface = qtrack_.kslast;
         }
@@ -1409,7 +1414,7 @@ run_advanced(PyObject* self, PyObject* args)
     free(wghtlow);
     free(wghthigh);
 
-    return Py_BuildValue("d", n + 1);
+    return Py_BuildValue("k", n);
 }
 
 static PyObject*
@@ -1488,8 +1493,7 @@ PyMODINIT_FUNC initwrapper(void)
     // Initialize callbacks constants
     TRAJECTORY_END = PyString_FromString("trajectory_end");
     Py_INCREF(TRAJECTORY_END);
-    KNOCK = PyString_FromString("knock");
-    Py_INCREF(KNOCK);
+    KNOCK = "knock";
 
     BACKSCATTERED_ELECTRON = PyString_FromString("backscattered_electron");
     Py_INCREF(BACKSCATTERED_ELECTRON);
