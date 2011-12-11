@@ -1,3 +1,6 @@
 *.class
 pymontecarlo/input/base/foo.py
 settings.cfg
+src/python/pymontecarlo/input/base/foo.py
+bin
+.sconsign.dblite

@@ -1,0 +1,17 @@
+import os
+import platform
+
+# Common options.
+optimization = ['-Os', '-g', '-Wall']
+commonEnv = Environment(ENV=os.environ,
+#                        FORTRAN=compiler,
+#                        LINK=compiler,
+                        FORTRANFLAGS=optimization,
+                        LINKFLAGS=optimization,
+                        FORTRANPATH=['src'])
+
+penepmaPrg = commonEnv.Program(target='bin/penepma', source='src/c/penelope/penepma.f')
+commonEnv.Default(penepmaPrg)
+
+convolgPrg = commonEnv.Program(target='bin/convolg', source='src/c/penelope/convolg.f')
+commonEnv.Default(convolgPrg)
