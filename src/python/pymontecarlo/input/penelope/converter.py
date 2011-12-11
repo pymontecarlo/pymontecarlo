@@ -104,45 +104,48 @@ class Converter(_Converter):
 
         geometry = options.geometry
 
+        materials_lookup = self._create_penelope_materials(geometry.get_materials())
+
         if isinstance(geometry, Substrate):
-            geometry._body = self._create_penelope_body(geometry.body)
+            geometry._body = \
+                self._create_penelope_body(geometry.body, materials_lookup)
+
         elif isinstance(geometry, Inclusion):
-            geometry._substrate = self._create_penelope_body(geometry.substrate_body)
-            geometry._inclusion = self._create_penelope_body(geometry.inclusion_body)
+            geometry._substrate = \
+                self._create_penelope_body(geometry.substrate_body, materials_lookup)
+            geometry._inclusion = \
+                self._create_penelope_body(geometry.inclusion_body, materials_lookup)
+
         elif isinstance(geometry, MultiLayers):
             if geometry.has_substrate():
-                geometry._substrate = self._create_penelope_body(geometry.substrate_body)
+                geometry._substrate = \
+                    self._create_penelope_body(geometry.substrate_body, materials_lookup)
 
-            newlayers = self._create_penelope_layers(geometry.layers)
+            newlayers = \
+                self._create_penelope_layers(geometry.layers, materials_lookup)
             geometry.clear()
             geometry.layers.extend(newlayers)
-        elif isinstance(geometry, GrainBoundaries):
-            geometry._left = self._create_penelope_body(geometry.left_body)
-            geometry._right = self._create_penelope_body(geometry.right_body)
 
-            newlayers = self._create_penelope_layers(geometry.layers)
+        elif isinstance(geometry, GrainBoundaries):
+            geometry._left = \
+                self._create_penelope_body(geometry.left_body, materials_lookup)
+            geometry._right = \
+                self._create_penelope_body(geometry.right_body, materials_lookup)
+
+            newlayers = \
+                self._create_penelope_layers(geometry.layers, materials_lookup)
             geometry.clear()
             geometry.layers.extend(newlayers)
         else:
             raise ConversionException, "Cannot convert geometry"
 
-    def _create_penelope_body(self, old):
-        material = self._create_penelope_material(old.material)
-        return Body(material)
+    def _create_penelope_materials(self, oldmaterials):
+        materials_lookup = {}
 
-    def _create_penelope_layers(self, layers):
-        newlayers = []
+        for oldmaterial in oldmaterials:
+            materials_lookup[oldmaterial] = self._create_penelope_material(oldmaterial)
 
-        for layer in layers:
-            material = self._create_penelope_material(layer.material)
-
-            # By default, the maximum step length in a layer is equal to 1/10 of 
-            # the layer thickness
-            maximum_step_length = layer.thickness / 10.0
-
-            newlayers.append(Layer(material, layer.thickness, maximum_step_length))
-
-        return newlayers
+        return materials_lookup
 
     def _create_penelope_material(self, old):
         if old is VACUUM:
@@ -152,4 +155,24 @@ class Converter(_Converter):
                         old.absorption_energy_electron, old.absorption_energy_photon,
                         self._elastic_scattering,
                         self._cutoff_energy_inelastic, self._cutoff_energy_bremsstrahlung)
+
+    def _create_penelope_body(self, old, materials_lookup):
+        material = materials_lookup[old.material]
+        return Body(material)
+
+    def _create_penelope_layers(self, layers, materials_lookup):
+        newlayers = []
+
+        for layer in layers:
+            material = materials_lookup[layer.material]
+
+            # By default, the maximum step length in a layer is equal to 1/10 of 
+            # the layer thickness
+            maximum_step_length = layer.thickness / 10.0
+
+            newlayers.append(Layer(material, layer.thickness, maximum_step_length))
+
+        return newlayers
+
+
 
