@@ -22,7 +22,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.exe.debug.451521061." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.2017188973" name="GCC Tool Chain" resourceTypeBasedDiscovery="true" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="photran.managedbuild.target.gnu.platform.exe.debug.1709087895" name="Debug Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder arguments="--file=${ProjDirPath}/src/c/penelope/SConstruct --directory=${ProjDirPath}" buildPath="${workspace_loc:/pyMonteCarlo/bin}" cleanBuildTarget="--clean" command="scons" id="photran.managedbuild.target.gnu.builder.exe.debug.1254361294" incrementalBuildTarget="" keepEnvironmentInBuildfile="true" managedBuildOn="false" name="Gnu Make Builder" superClass="photran.managedbuild.target.gnu.builder.exe.debug"/>
+							<builder arguments="-f ${ProjDirPath}/src/c/pymontecarlo/lib/penelope/build.xml -Dbuild.dir=${ProjDirPath}/src/python" buildPath="${workspace_loc:/pyMonteCarlo/bin}" cleanBuildTarget="clean" command="ant" enabledIncrementalBuild="true" id="photran.managedbuild.target.gnu.builder.exe.debug.1254361294" incrementalBuildTarget="compile" keepEnvironmentInBuildfile="true" managedBuildOn="false" name="Gnu Make Builder" superClass="photran.managedbuild.target.gnu.builder.exe.debug"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.debug.1833885073" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option id="gnu.c.compiler.option.include.paths.1238774631" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/python2.6"/>
@@ -53,7 +53,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/c/penelope"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/c/pymontecarlo/lib/penelope"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -64,8 +64,11 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="penepma2011.photran.managedbuild.target.gnu.fortran.exe.2043186798" name="Executable (Gnu Fortran on Linux/*nix)" projectType="photran.managedbuild.target.gnu.fortran.exe"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope" versionNumber="1"/>
+	<storageModule moduleId="refreshScope" versionNumber="1">
+		<resource resourceType="PROJECT" workspacePath="/pyMonteCarlo"/>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.pathentry"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.exe.debug.451521061;photran.managedbuild.config.gnu.fortran.exe.debug.451521061.;photran.managedbuild.tool.gnu.c.compiler.exe.debug.1833885073;cdt.managedbuild.tool.gnu.c.compiler.input.513406438">
@@ -78,5 +81,4 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

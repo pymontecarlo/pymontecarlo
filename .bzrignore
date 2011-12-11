@@ -4,3 +4,5 @@ settings.cfg
 src/python/pymontecarlo/input/base/foo.py
 bin
 .sconsign.dblite
+src/python/pymontecarlo/lib/penelope.def
+src/python/pymontecarlo/lib/penelope.so
