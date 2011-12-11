@@ -165,36 +165,36 @@ static void _call_knock(PyObject * callbacks, int n, int icol, double de)
 typedef struct
 {
     PyObject_HEAD
-} penelope_TrackObject;
+} wrapper_TrackObject;
 
 typedef struct
 {
     PyObject_HEAD
-} penelope_RSeedObject;
+} wrapper_RSeedObject;
 
 typedef struct
 {
     PyObject_HEAD
-} penelope_SimParObject;
+} wrapper_SimParObject;
 
 typedef struct
 {
     PyObject_HEAD
-} penelope_IntForcingObject;
+} wrapper_IntForcingObject;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Type methods
 ////////////////////////////////////////////////////////////////////////////////
 
 static PyObject *
-Track_get_energy(penelope_TrackObject *self, void *closure)
+Track_get_energy(wrapper_TrackObject *self, void *closure)
 {
     PyObject * ret = Py_BuildValue("d", track_.e);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_energy(penelope_TrackObject *self, PyObject *value,
+static int Track_set_energy(wrapper_TrackObject *self, PyObject *value,
                             void *closure)
 {
     if (!PyFloat_Check(value)) {
@@ -207,14 +207,14 @@ static int Track_set_energy(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_position(penelope_TrackObject* self, void *closure)
+Track_get_position(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("ddd", track_.x, track_.y, track_.z);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_position(penelope_TrackObject *self, PyObject *value,
+static int Track_set_position(wrapper_TrackObject *self, PyObject *value,
                               void *closure)
 {
     double x, y, z;
@@ -233,14 +233,14 @@ static int Track_set_position(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_direction(penelope_TrackObject* self, void *closure)
+Track_get_direction(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("ddd", track_.u, track_.v, track_.w);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_direction(penelope_TrackObject *self, PyObject *value,
+static int Track_set_direction(wrapper_TrackObject *self, PyObject *value,
                                void *closure)
 {
     double u, v, w;
@@ -259,14 +259,14 @@ static int Track_set_direction(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_weight(penelope_TrackObject* self, void *closure)
+Track_get_weight(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("d", track_.wght);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_weight(penelope_TrackObject *self, PyObject *value,
+static int Track_set_weight(wrapper_TrackObject *self, PyObject *value,
                             void *closure)
 {
 
@@ -280,14 +280,14 @@ static int Track_set_weight(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_particle(penelope_TrackObject* self, void *closure)
+Track_get_particle(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("i", track_.kpar);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_particle(penelope_TrackObject *self, PyObject *value,
+static int Track_set_particle(wrapper_TrackObject *self, PyObject *value,
                               void *closure)
 {
     if (!PyInt_Check(value)) {
@@ -300,14 +300,14 @@ static int Track_set_particle(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_body(penelope_TrackObject* self, void *closure)
+Track_get_body(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("i", track_.ibody);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_body(penelope_TrackObject *self, PyObject *value,
+static int Track_set_body(wrapper_TrackObject *self, PyObject *value,
                           void *closure)
 {
     if (!PyInt_Check(value)) {
@@ -320,14 +320,14 @@ static int Track_set_body(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_material(penelope_TrackObject* self, void *closure)
+Track_get_material(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("i", track_.mat);
     Py_INCREF(ret);
     return ret;
 }
 
-static int Track_set_material(penelope_TrackObject *self, PyObject *value,
+static int Track_set_material(wrapper_TrackObject *self, PyObject *value,
                               void *closure)
 {
     if (!PyInt_Check(value)) {
@@ -340,7 +340,7 @@ static int Track_set_material(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-Track_get_labels(penelope_TrackObject* self, void *closure)
+Track_get_labels(wrapper_TrackObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("iiiii", track_.ilb[0], track_.ilb[1],
                                    track_.ilb[2], track_.ilb[3],
@@ -348,7 +348,7 @@ Track_get_labels(penelope_TrackObject* self, void *closure)
     Py_INCREF(ret);
     return ret;
 }
-static int Track_set_labels(penelope_TrackObject *self, PyObject *value,
+static int Track_set_labels(wrapper_TrackObject *self, PyObject *value,
                             void *closure)
 {
     int ilb0, ilb1, ilb2, ilb3, ilb4;
@@ -368,13 +368,13 @@ static int Track_set_labels(penelope_TrackObject *self, PyObject *value,
 }
 
 static PyObject*
-RSeed_get_seed1(penelope_RSeedObject* self, void *closure)
+RSeed_get_seed1(wrapper_RSeedObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("i", rseed_.seed1);
     Py_INCREF(ret);
     return ret;
 }
-static int RSeed_set_seed1(penelope_RSeedObject *self, PyObject *value,
+static int RSeed_set_seed1(wrapper_RSeedObject *self, PyObject *value,
                            void *closure)
 {
     if (!PyInt_Check(value)) {
@@ -387,13 +387,13 @@ static int RSeed_set_seed1(penelope_RSeedObject *self, PyObject *value,
 }
 
 static PyObject*
-RSeed_get_seed2(penelope_RSeedObject* self, void *closure)
+RSeed_get_seed2(wrapper_RSeedObject* self, void *closure)
 {
     PyObject * ret = Py_BuildValue("i", rseed_.seed2);
     Py_INCREF(ret);
     return ret;
 }
-static int RSeed_set_seed2(penelope_RSeedObject *self, PyObject *value,
+static int RSeed_set_seed2(wrapper_RSeedObject *self, PyObject *value,
                            void *closure)
 {
     if (!PyInt_Check(value)) {
@@ -406,7 +406,7 @@ static int RSeed_set_seed2(penelope_RSeedObject *self, PyObject *value,
 }
 
 static PyObject*
-SimPar_get_absorption_energies(penelope_SimParObject* self, PyObject* args)
+SimPar_get_absorption_energies(wrapper_SimParObject* self, PyObject* args)
 {
     int mat;
 
@@ -418,7 +418,7 @@ SimPar_get_absorption_energies(penelope_SimParObject* self, PyObject* args)
 }
 
 static PyObject*
-SimPar_set_absorption_energies(penelope_SimParObject *self, PyObject *args,
+SimPar_set_absorption_energies(wrapper_SimParObject *self, PyObject *args,
                                PyObject *kw)
 {
     int mat;
@@ -442,7 +442,7 @@ SimPar_set_absorption_energies(penelope_SimParObject *self, PyObject *args,
 }
 
 static PyObject*
-SimPar_get_constants(penelope_SimParObject* self, PyObject* args)
+SimPar_get_constants(wrapper_SimParObject* self, PyObject* args)
 {
     int mat;
 
@@ -453,7 +453,7 @@ SimPar_get_constants(penelope_SimParObject* self, PyObject* args)
 }
 
 static PyObject*
-SimPar_set_constants(penelope_SimParObject *self, PyObject *args, PyObject *kw)
+SimPar_set_constants(wrapper_SimParObject *self, PyObject *args, PyObject *kw)
 {
     int mat;
     double c1, c2 = -1.0;
@@ -473,7 +473,7 @@ SimPar_set_constants(penelope_SimParObject *self, PyObject *args, PyObject *kw)
 }
 
 static PyObject*
-SimPar_get_cutoffs(penelope_SimParObject* self, PyObject* args)
+SimPar_get_cutoffs(wrapper_SimParObject* self, PyObject* args)
 {
     int mat;
 
@@ -484,7 +484,7 @@ SimPar_get_cutoffs(penelope_SimParObject* self, PyObject* args)
 }
 
 static PyObject*
-SimPar_set_cutoffs(penelope_SimParObject *self, PyObject *args, PyObject *kw)
+SimPar_set_cutoffs(wrapper_SimParObject *self, PyObject *args, PyObject *kw)
 {
     int mat;
     double wcc, wcr = -1.0;
@@ -505,7 +505,7 @@ SimPar_set_cutoffs(penelope_SimParObject *self, PyObject *args, PyObject *kw)
 }
 
 static PyObject*
-IntForcing_get_force(penelope_IntForcingObject* self, PyObject* args)
+IntForcing_get_force(wrapper_IntForcingObject* self, PyObject* args)
 {
     int body, par, col;
 
@@ -516,7 +516,7 @@ IntForcing_get_force(penelope_IntForcingObject* self, PyObject* args)
 }
 
 static PyObject*
-IntForcing_set_force(penelope_IntForcingObject* self, PyObject* args)
+IntForcing_set_force(wrapper_IntForcingObject* self, PyObject* args)
 {
     int body, par, col;
     double force;
@@ -641,10 +641,10 @@ static PyMethodDef IntForcing_methods[] =
 // Type definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-static PyTypeObject penelope_TrackType =
+static PyTypeObject wrapper_TrackType =
 { PyObject_HEAD_INIT(NULL) 0, /*ob_size*/
-"penelope.Track", /*tp_name*/
-sizeof(penelope_TrackObject), /*tp_basicsize*/
+"wrapper.track", /*tp_name*/
+sizeof(wrapper_TrackObject), /*tp_basicsize*/
 0, /*tp_itemsize*/
 0, /*tp_dealloc*/
 0, /*tp_print*/
@@ -674,10 +674,10 @@ Py_TPFLAGS_DEFAULT, /*tp_flags*/
 Track_getseters, /* tp_getset */
 };
 
-static PyTypeObject penelope_RSeedType =
+static PyTypeObject wrapper_RSeedType =
 { PyObject_HEAD_INIT(NULL) 0, /*ob_size*/
-"penelope.RSeed", /*tp_name*/
-sizeof(penelope_RSeedObject), /*tp_basicsize*/
+"wrapper.rseed", /*tp_name*/
+sizeof(wrapper_RSeedObject), /*tp_basicsize*/
 0, /*tp_itemsize*/
 0, /*tp_dealloc*/
 0, /*tp_print*/
@@ -707,10 +707,10 @@ Py_TPFLAGS_DEFAULT, /*tp_flags*/
 RSeed_getseters, /* tp_getset */
 };
 
-static PyTypeObject penelope_SimParType =
+static PyTypeObject wrapper_SimParType =
 { PyObject_HEAD_INIT(NULL) 0, /*ob_size*/
-"penelope.SimPar", /*tp_name*/
-sizeof(penelope_SimParObject), /*tp_basicsize*/
+"wrapper.simpar", /*tp_name*/
+sizeof(wrapper_SimParObject), /*tp_basicsize*/
 0, /*tp_itemsize*/
 0, /*tp_dealloc*/
 0, /*tp_print*/
@@ -740,10 +740,10 @@ SimPar_methods, /* tp_methods */
 0, /* tp_getset */
 };
 
-static PyTypeObject penelope_IntForcingType =
+static PyTypeObject wrapper_IntForcingType =
 { PyObject_HEAD_INIT(NULL) 0, /*ob_size*/
-"penelope.InteractionForcing", /*tp_name*/
-sizeof(penelope_IntForcingObject), /*tp_basicsize*/
+"wrapper.intforce", /*tp_name*/
+sizeof(wrapper_IntForcingObject), /*tp_basicsize*/
 0, /*tp_itemsize*/
 0, /*tp_dealloc*/
 0, /*tp_print*/
@@ -1436,7 +1436,7 @@ phmfp(PyObject* self, PyObject* args)
     return Py_BuildValue("d", phmfp_(&e, &kpar, &mat, &icol));
 }
 
-static PyMethodDef penelope_methods[] =
+static PyMethodDef wrapper_methods[] =
                 {
                                 {
                                                 "peinit",
@@ -1483,7 +1483,7 @@ static PyMethodDef penelope_methods[] =
 #ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
 #endif
-PyMODINIT_FUNC initpenelope(void)
+PyMODINIT_FUNC initwrapper(void)
 {
     // Initialize callbacks constants
     TRAJECTORY_END = PyString_FromString("trajectory_end");
@@ -1508,47 +1508,47 @@ PyMODINIT_FUNC initpenelope(void)
     Py_INCREF(GENERATED_PHOTON);
 
     // Initialize types
-    penelope_TrackType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&penelope_TrackType) < 0)
+    wrapper_TrackType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&wrapper_TrackType) < 0)
         return;
 
-    penelope_RSeedType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&penelope_RSeedType) < 0)
+    wrapper_RSeedType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&wrapper_RSeedType) < 0)
         return;
 
-    penelope_SimParType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&penelope_SimParType) < 0)
+    wrapper_SimParType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&wrapper_SimParType) < 0)
         return;
 
-    penelope_IntForcingType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&penelope_IntForcingType) < 0)
+    wrapper_IntForcingType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&wrapper_IntForcingType) < 0)
         return;
 
     // Initialize module
     PyObject* m;
-    m = Py_InitModule3("penelope", penelope_methods,
-                    "Example module that creates an extension type.");
+    m = Py_InitModule3("wrapper", wrapper_methods,
+                    "Wrapper of PENELOPE functions.");
     if (m == NULL)
         return;
 
     // Create object for types
-    PyObject *track = PyObject_CallObject((PyObject *) &penelope_TrackType,
+    PyObject *track = PyObject_CallObject((PyObject *) &wrapper_TrackType,
                                           NULL);
     Py_INCREF(track);
     PyModule_AddObject(m, "track", track);
 
-    PyObject *rseed = PyObject_CallObject((PyObject *) &penelope_RSeedType,
+    PyObject *rseed = PyObject_CallObject((PyObject *) &wrapper_RSeedType,
                                           NULL);
     Py_INCREF(rseed);
     PyModule_AddObject(m, "rseed", rseed);
 
-    PyObject *simpar = PyObject_CallObject((PyObject *) &penelope_SimParType,
+    PyObject *simpar = PyObject_CallObject((PyObject *) &wrapper_SimParType,
                                            NULL);
     Py_INCREF(simpar);
     PyModule_AddObject(m, "simpar", simpar);
 
     PyObject *intforce = PyObject_CallObject(
-                    (PyObject *) &penelope_IntForcingType, NULL);
+                    (PyObject *) &wrapper_IntForcingType, NULL);
     Py_INCREF(intforce);
     PyModule_AddObject(m, "intforce", intforce);
 }

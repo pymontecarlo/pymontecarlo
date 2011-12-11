@@ -6,3 +6,4 @@ bin
 .sconsign.dblite
 src/python/pymontecarlo/lib/penelope.def
 src/python/pymontecarlo/lib/penelope.so
+src/python/pymontecarlo/lib/penelope/wrapper.def

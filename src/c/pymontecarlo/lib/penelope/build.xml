@@ -9,7 +9,7 @@
     <property name="build.dir" location="${java.io.tmpdir}/build" />
     <echo message="build.dir = ${build.dir}" />
 
-    <property name="output.dir" location="${build.dir}/pymontecarlo/lib" />
+    <property name="output.dir" location="${build.dir}/pymontecarlo/lib/penelope" />
     <echo message="output.dir = ${output.dir}" />
 
     <!-- ===================================================== -->
@@ -28,7 +28,7 @@
         </condition>
 
         <!-- If penelope.def is present in output.dir, compile will be skipped -->
-        <available file="${output.dir}/penelope.def" property="def.present" />
+        <available file="${output.dir}/wrapper.def" property="def.present" />
     </target>
 
     <!-- ===================================================== -->
@@ -149,7 +149,7 @@
 
     <target name="-compile-linux" if="isLinux">
         <!-- c objects -->
-        <echo message="Compiling penelope.c" />
+        <echo message="Compiling wrapper.c" />
         <exec executable="gcc" dir="${src.dir}">
             <arg value="-DNDEBUG" />
             <arg value="-g" />
@@ -163,15 +163,15 @@
             <arg value="-I/usr/include/python2.6" />
             <arg value="-c" />
             <arg value="-o" />
-            <arg value="penelopemodule.o" />
-            <arg value="penelope.c" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.c" />
         </exec>
 
         <!-- Link to shared library -->
         <echo message="Linking" />
         <exec executable="gfortran" dir="${src.dir}">
             <arg value="-shared" />
-            <arg value="penelopemodule.o" />
+            <arg value="wrapper.o" />
             <arg value="penelope.o" />
             <arg value="pengeom.o" />
             <arg value="penvared.o" />
@@ -180,13 +180,13 @@
             <arg value="utils.o" />
             <arg value="-L/usr/local/lib" />
             <arg value="-o" />
-            <arg value="penelope.so" />
+            <arg value="wrapper.so" />
         </exec>
     </target>
 
     <target name="-compile-windows" if="isWindows">
         <!-- c objects -->
-        <echo message="Compiling penelope.c" />
+        <echo message="Compiling wrapper.c" />
         <exec executable="gcc" dir="${src.dir}">
             <arg value="-mno-cygwin" />
             <arg value="-mdll" />
@@ -196,16 +196,16 @@
             <arg value="-IC:\Python26\PC" />
             <arg value="-c" />
             <arg value="-o" />
-            <arg value="penelopemodule.o" />
-            <arg value="penelope.c" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.c" />
         </exec>
 
         <!-- Link to shared library -->
         <echo message="Linking" />
         <exec executable="gfortran" dir="${src.dir}">
             <arg value="-shared" />
-            <arg value="penelopemodule.o" />
-            <arg value="penelope.def" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.def" />
             <arg value="penelope.o" />
             <arg value="pengeom.o" />
             <arg value="penvared.o" />
@@ -217,7 +217,7 @@
             <arg value="-lpython26" />
             <arg value="-lmsvcr90" />
             <arg value="-o" />
-            <arg value="penelope.pyd" />
+            <arg value="wrapper.pyd" />
         </exec>
     </target>
 
