@@ -30,6 +30,12 @@ from pymontecarlo.util.xmlutil import objectxml
 
 class Body(objectxml):
     def __init__(self, material):
+        """
+        Body of a geometry.
+        
+        :arg material: material of the layer
+        :type material: :class:`Material`
+        """
         self.material = material
 
     def __repr__(self):
@@ -58,6 +64,14 @@ class Body(objectxml):
 
 class Layer(Body):
     def __init__(self, material, thickness):
+        """
+        Layer of a geometry.
+        
+        :arg material: material of the layer
+        :type material: :class:`Material`
+        
+        :arg thickness: thickness of the layer in meters
+        """
         Body.__init__(self, material)
 
         self.thickness = thickness

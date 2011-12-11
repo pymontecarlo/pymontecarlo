@@ -397,8 +397,21 @@ class _Layered(_Geometry):
         """
         return self._layers
 
-    def add_layer(self, mat, thickness):
-        layer = Layer(mat, thickness)
+    def add_layer(self, material, thickness):
+        """
+        Adds a layer to the geometry.
+        The layer is added after the previous layers.
+        
+        This method is equivalent to::
+        
+            geometry.layers.add(Layer(material, thickness))
+        
+        :arg material: material of the layer
+        :type material: :class:`Material`
+        
+        :arg thickness: thickness of the layer in meters
+        """
+        layer = Layer(material, thickness)
         self._layers.add(layer)
         return layer
 

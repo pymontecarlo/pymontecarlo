@@ -33,8 +33,8 @@ import pymontecarlo.util.element_properties as ep
 
 def composition_from_formula(formula):
     """
-    Returns a list of tuples (atomic number, weight fraction) from the
-    specified chemical formula.
+    Returns a dictionary when the keys are the atomic numbers and the values 
+    the weight fraction from the specified chemical formula.
     
     :arg formula: chemical formula (e.g. ``'AlB2Zr5'``).
     """
