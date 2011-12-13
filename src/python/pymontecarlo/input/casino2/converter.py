@@ -37,6 +37,10 @@ from pymontecarlo.input.base.detector import \
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      )
+from pymontecarlo.input.base.model import \
+    (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
+     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS,
+     MASS_ABSORPTION_COEFFICIENT)
 
 # Globals and constants variables.
 
@@ -49,6 +53,32 @@ class Converter(_Converter):
                  PhiRhoZDetector,
                  PhotonIntensityDetector]
     LIMITS = [ShowersLimit]
+    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski,
+                                           ELASTIC_CROSS_SECTION.mott_drouin,
+                                           ELASTIC_CROSS_SECTION.mott_browning,
+                                           ELASTIC_CROSS_SECTION.rutherford],
+              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.gauvin,
+                                              IONIZATION_CROSS_SECTION.pouchou,
+                                              IONIZATION_CROSS_SECTION.brown_powell,
+                                              IONIZATION_CROSS_SECTION.casnati,
+                                              IONIZATION_CROSS_SECTION.gryzinsky,
+                                              IONIZATION_CROSS_SECTION.jakoby],
+              IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.joy_luo,
+                                          IONIZATION_POTENTIAL.berger_seltzer,
+                                          IONIZATION_POTENTIAL.hovington],
+              RANDOM_NUMBER_GENERATOR.type: [RANDOM_NUMBER_GENERATOR.press_rand1,
+                                             RANDOM_NUMBER_GENERATOR.mersenne],
+              DIRECTION_COSINE.type: [DIRECTION_COSINE.soum,
+                                      DIRECTION_COSINE.drouin],
+              ENERGY_LOSS.type: [ENERGY_LOSS.joy_luo],
+              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11]}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.mott_czyzewski,
+                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.casnati,
+                      IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.joy_luo,
+                      RANDOM_NUMBER_GENERATOR.type: RANDOM_NUMBER_GENERATOR.press_rand1,
+                      DIRECTION_COSINE.type: DIRECTION_COSINE.drouin,
+                      ENERGY_LOSS.type: ENERGY_LOSS.joy_luo,
+                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11}
 
     def _convert_beam(self, options):
         try:
