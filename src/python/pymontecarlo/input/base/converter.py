@@ -40,16 +40,27 @@ class Converter(object):
     Derived class shall modify the following class variables to specify
     the allowable classes for each of these parameters:
     
-        * :var:`BEAM`
-        * :var:`GEOMETRIES`
-        * :var:`DETECTORS`
-        * :var:`LIMITS`
+        * :var:`BEAM`: list of allowable beam classes
+        * :var:`GEOMETRIES`: list of allowable geometry classes
+        * :var:`DETECTORS`: list of allowable detector classes
+        * :var:`LIMITS`: list of allowable limit classes
+        * :var:`MODELS: dictionary of allowable models 
+            (key: model type, value: list of allowable models)
+        * :var:`DEFAULT_MODELS:` dictionary of default models
+            (key: model type, value: default model)
+            
+    .. note::
+    
+       The keys for :var:`MODELS` and :var:`DEFAULT_MODELS` have to be the same.
     """
 
     BEAMS = []
     GEOMETRIES = []
     DETECTORS = []
     LIMITS = []
+    MODELS = {}
+    DEFAULT_MODELS = {}
+
 
     def convert(self, options):
         """
@@ -68,6 +79,7 @@ class Converter(object):
         self._convert_geometry(options)
         self._convert_detectors(options)
         self._convert_limits(options)
+        self._convert_models(options)
 
     def _convert_beam(self, options):
         if options.beam.__class__ not in self.BEAMS:
@@ -94,4 +106,35 @@ class Converter(object):
 
                 message = "Limit of type '%s' cannot be converted. It was removed" % \
                     (limit.__class__.__name__)
+                warnings.warn(message, ConversionWarning)
+
+    def _convert_models(self, options):
+        for model_type, default_model in self.DEFAULT_MODELS.iteritems():
+            model = options.models.find(model_type)
+
+            # Add default model if model type is missing
+            if model is None:
+                options.models.add(default_model)
+
+                message = "Set default model (%s) for model type '%s'" % \
+                    (default_model, model_type)
+                warnings.warn(message, ConversionWarning)
+
+            # Check if model is allowable
+            else:
+                if model not in self.MODELS[model_type]:
+                    options.models.discard(model) # not required
+                    options.models.add(default_model)
+
+                    message = "Model (%s) is not allowable. It is replaced by the default model (%s)." % \
+                        (model, default_model)
+                    raise ConversionException, message
+
+        # Remove extra model types
+        for model_type, model in options.models.items():
+            if model_type not in self.DEFAULT_MODELS:
+                options.models.discard(model)
+
+                message = "Unknown model type (%s) for this converter. Model (%s) is removed." % \
+                    (model_type, model)
                 warnings.warn(message, ConversionWarning)

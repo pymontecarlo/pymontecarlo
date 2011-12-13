@@ -99,6 +99,9 @@ class _Models(MutableSet):
     def find(self, type, default=None):
         return self._data.get(type, default)
 
+    def items(self):
+        return self._data.items()
+
 class Options(objectxml):
 
     def __init__(self, name='Untitled'):

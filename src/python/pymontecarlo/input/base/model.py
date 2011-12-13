@@ -84,6 +84,9 @@ class __NoModelType(ModelType):
     def __nonzero__(self):
         return False
 
+    def register(self, model):
+        raise ValueError, 'Cannot register model to the NO_MODEL_TYPE'
+
 NO_MODEL_TYPE = __NoModelType()
 
 class Model(objectxml):
