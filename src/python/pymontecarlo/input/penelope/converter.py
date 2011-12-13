@@ -47,7 +47,10 @@ from pymontecarlo.input.base.detector import \
      TransmittedElectronAzimuthalAngularDetector,
      TransmittedElectronEnergyDetector,
      TransmittedElectronPolarAngularDetector)
-
+from pymontecarlo.input.base.model import \
+    (ELASTIC_CROSS_SECTION, INELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION,
+     BREMSSTRAHLUNG_EMISSION, PHOTON_SCATTERING_CROSS_SECTION,
+     MASS_ABSORPTION_COEFFICIENT)
 
 # Globals and constants variables.
 
@@ -67,6 +70,18 @@ class Converter(_Converter):
                  TransmittedElectronEnergyDetector,
                  TransmittedElectronPolarAngularDetector]
     LIMITS = [TimeLimit, ShowersLimit, UncertaintyLimit]
+    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.elsepa],
+              INELASTIC_CROSS_SECTION.type: [INELASTIC_CROSS_SECTION.sternheimer_liljequist],
+              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.bote_salvat],
+              BREMSSTRAHLUNG_EMISSION.type: [BREMSSTRAHLUNG_EMISSION.seltzer_berger],
+              PHOTON_SCATTERING_CROSS_SECTION.type: [PHOTON_SCATTERING_CROSS_SECTION.brusa],
+              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.llnl]}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.elsepa,
+                      INELASTIC_CROSS_SECTION.type: INELASTIC_CROSS_SECTION.sternheimer_liljequist,
+                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.bote_salvat,
+                      BREMSSTRAHLUNG_EMISSION.type: BREMSSTRAHLUNG_EMISSION.seltzer_berger,
+                      PHOTON_SCATTERING_CROSS_SECTION.type: PHOTON_SCATTERING_CROSS_SECTION.brusa,
+                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.llnl}
 
 
     def __init__(self, elastic_scattering=(0.0, 0.0),

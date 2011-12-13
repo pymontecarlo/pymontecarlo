@@ -189,6 +189,15 @@ ELASTIC_CROSS_SECTION.mott_drouin = \
 ELASTIC_CROSS_SECTION.mott_browning = \
     Model('Mott by equation (Browning)', 'Browning (1994)')
 ELASTIC_CROSS_SECTION.rutherford = Model('Rutherford')
+ELASTIC_CROSS_SECTION.elsepa = Model('ELSEPA', 'Salvat, F., Jablonski, A., & Powell, C. (2005). ELSEPA - Dirac partial-wave calculation of elastic scattering of electrons and positrons by atoms, positive ions and molecules. Comput. Phys. Commun., 165, 157-190.')
+
+#-------------------------------------------------------------------------------
+
+INELASTIC_CROSS_SECTION_TYPE = ModelType('inelastic cross section')
+
+INELASTIC_CROSS_SECTION = ModelCategory(INELASTIC_CROSS_SECTION_TYPE)
+INELASTIC_CROSS_SECTION.sternheimer_liljequist = \
+    Model('Sternheimer-Liljequist generalised oscillator strength', 'Sternheimer, R. (1952). The density effect for the ionization loss in various materials. Phys. Rev., 88, 851-859. AND Liljequist, D. (1983). A simple calculation of inelastic mean free path and stopping power for 50 eV --50 keV electrons in solids. J. Phys. D: Appl. Phys., 16, 1567-1582.')
 
 #-------------------------------------------------------------------------------
 
@@ -203,6 +212,14 @@ IONIZATION_CROSS_SECTION.gryzinsky = Model('Gryzinsky')
 IONIZATION_CROSS_SECTION.jakoby = Model('Jakoby')
 IONIZATION_CROSS_SECTION.bote_salvat = \
     Model('Bote and Salvat', 'Bote and Salvat (2008)')
+
+#-------------------------------------------------------------------------------
+
+BREMSSTRAHLUNG_EMISSION_TYPE = ModelType('Bremsstrahlung emission')
+
+BREMSSTRAHLUNG_EMISSION = ModelCategory(BREMSSTRAHLUNG_EMISSION_TYPE)
+BREMSSTRAHLUNG_EMISSION.seltzer_berger = \
+    Model('Seltzer and Berger', 'Seltzer, S., & Berger, M. (1985). Bremsstrahlung spectra from electron interactions with screened atomic nuclei and orbital electrons. Nucl. Instrum. Meth. B, 12, 95-134.')
 
 #-------------------------------------------------------------------------------
 
@@ -240,6 +257,14 @@ DIRECTION_COSINE.demers = Model('Demers - Matrices rotation', 'Demers (2000)')
 
 #-------------------------------------------------------------------------------
 
+PHOTON_SCATTERING_CROSS_SECTION_TYPE = ModelType('photon scattering cross section')
+
+PHOTON_SCATTERING_CROSS_SECTION = ModelCategory(PHOTON_SCATTERING_CROSS_SECTION_TYPE)
+PHOTON_SCATTERING_CROSS_SECTION.brusa = \
+    Model('Brusa et al. photon compton scattering', 'Brusa, D., Stutz, G., Riveros, J., Fernandez-Vera, J., & Salvat, F. (1996). Fast sampling algorithm for the simulation of photon compton scattering. Nucl. Instrum. Meth. A, 379, 167-175.')
+
+#-------------------------------------------------------------------------------
+
 ENERGY_LOSS_TYPE = ModelType('energy loss')
 
 ENERGY_LOSS = ModelCategory(ENERGY_LOSS_TYPE)
@@ -273,3 +298,5 @@ MASS_ABSORPTION_COEFFICIENT.dtsa_citzaf = \
     Model('DSTA CitZAF', "DTSA at http://www.cstl.nist.gov/div837/Division/outputs/DTSA/DTSA.htm")
 MASS_ABSORPTION_COEFFICIENT.thinh_leroux = \
     Model('Thinh and Leroux' , 'Thinh and Leroux (1979)')
+MASS_ABSORPTION_COEFFICIENT.llnl = \
+    Model('LLNL Evaluated Photon Data Library', 'Lawrence Livermore National Laboratory. (1989). Tables and graphs of photon-interaction cross sections from 10 eV to 100 GeV derived from the LLNL evaluated photon data library EPDL. Livermore, CA: Cullen, D., Chen, M., Hubbell, J., Perkins, S., Plechaty, E., Rathkopf, J., & Scofield, J..')

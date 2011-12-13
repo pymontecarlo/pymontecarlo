@@ -24,6 +24,7 @@ from pymontecarlo.input.base.body import Layer
 from pymontecarlo.input.base.material import pure
 
 # Globals and constants variables.
+warnings.simplefilter("always")
 
 class TestPenelopeConverter(unittest.TestCase):
 
@@ -49,7 +50,8 @@ class TestPenelopeConverter(unittest.TestCase):
 
         # 1 warning:
         # PencilBeam -> GaussianBeam
-        self.assertEqual(1, len(ws))
+        # Set default models (6)
+        self.assertEqual(7, len(ws))
 
         # Test
         self.assertAlmostEqual(1234, ops.beam.energy, 4)
@@ -63,6 +65,8 @@ class TestPenelopeConverter(unittest.TestCase):
 
         for body in ops.geometry.get_bodies():
             self.assertAlmostEqual(1e20, body.maximum_step_length, 4)
+
+        self.assertEqual(6, len(ops.models))
 
     def testconvert2(self):
         # Base options
@@ -83,6 +87,8 @@ class TestPenelopeConverter(unittest.TestCase):
 
         for body in ops.geometry.get_bodies():
             self.assertAlmostEqual(1e20, body.maximum_step_length, 4)
+
+        self.assertEqual(6, len(ops.models))
 
     def testconvert3(self):
         # Base options
@@ -107,6 +113,8 @@ class TestPenelopeConverter(unittest.TestCase):
         for layer in ops.geometry.layers:
             self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length, 4)
 
+        self.assertEqual(6, len(ops.models))
+
     def testconvert4(self):
         # Base options
         ops = Options(name="Test")
@@ -130,6 +138,8 @@ class TestPenelopeConverter(unittest.TestCase):
 
         for layer in ops.geometry.layers:
             self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length, 4)
+
+        self.assertEqual(6, len(ops.models))
 
 
 if __name__ == '__main__': #pragma: no cover
