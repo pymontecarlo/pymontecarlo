@@ -147,7 +147,7 @@ class TestCasino2Converter(unittest.TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy = 100e3
-        ops.models.add(IONIZATION_CROSS_SECTION.bote_salvat)
+        ops.models.add(IONIZATION_CROSS_SECTION.bote_salvat2008)
 
         # Not allowable model
         self.assertRaises(ConversionException, self.converter.convert, ops)

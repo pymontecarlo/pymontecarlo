@@ -88,10 +88,10 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(1234, limit.showers)
 
     def testmodels(self):
-        self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin)
+        self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
         self.assertEqual(1, len(self.ops.models))
         model = self.ops.models.find(ELASTIC_CROSS_SECTION_TYPE)
-        self.assertEqual(ELASTIC_CROSS_SECTION.mott_drouin, model)
+        self.assertEqual(ELASTIC_CROSS_SECTION.mott_drouin1993, model)
 
     def testto_xml(self):
         element = self.ops.to_xml()
