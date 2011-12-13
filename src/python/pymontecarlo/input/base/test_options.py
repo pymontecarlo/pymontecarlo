@@ -18,6 +18,7 @@ import logging
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.detector import BackscatteredElectronEnergyDetector
 from pymontecarlo.input.base.limit import ShowersLimit
+from pymontecarlo.input.base.model import ELASTIC_CROSS_SECTION, ELASTIC_CROSS_SECTION_TYPE
 
 # Globals and constants variables.
 
@@ -31,6 +32,7 @@ class TestOptions(unittest.TestCase):
 
         self.ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         self.ops.limits.add(ShowersLimit(5678))
+        self.ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -48,6 +50,10 @@ class TestOptions(unittest.TestCase):
         limit = self.ops.limits.find(ShowersLimit)
         self.assertEqual(5678, limit.showers)
 
+        self.assertEqual(1, len(self.ops.models))
+        model = self.ops.models.find(ELASTIC_CROSS_SECTION_TYPE)
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
+
     def testfrom_xml(self):
         element = self.ops.to_xml()
         ops = Options.from_xml(element)
@@ -64,6 +70,10 @@ class TestOptions(unittest.TestCase):
         limit = ops.limits.find(ShowersLimit)
         self.assertEqual(5678, limit.showers)
 
+        self.assertEqual(1, len(ops.models))
+        model = ops.models.find(ELASTIC_CROSS_SECTION_TYPE)
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
+
     def testdetectors(self):
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
         self.assertEqual(1, len(dets))
@@ -76,6 +86,12 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(1, len(self.ops.limits))
         limit = self.ops.limits.find(ShowersLimit)
         self.assertEqual(1234, limit.showers)
+
+    def testmodels(self):
+        self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin)
+        self.assertEqual(1, len(self.ops.models))
+        model = self.ops.models.find(ELASTIC_CROSS_SECTION_TYPE)
+        self.assertEqual(ELASTIC_CROSS_SECTION.mott_drouin, model)
 
     def testto_xml(self):
         element = self.ops.to_xml()
@@ -93,6 +109,9 @@ class TestOptions(unittest.TestCase):
         self.assertEqual('bse', children[0].get('_key'))
 
         children = list(element.find('limits'))
+        self.assertEqual(1, len(children))
+
+        children = list(element.find('models'))
         self.assertEqual(1, len(children))
 
 

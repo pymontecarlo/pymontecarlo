@@ -67,8 +67,8 @@ class _Limits(MutableSet):
         return item in self._data.values()
 
     def add(self, item):
-        clasz = item.__class__
-        self._data[hash(clasz)] = item
+        key = hash(item.__class__)
+        self._data[key] = item
 
     def discard(self, item):
         self._data.pop(hash(item.__class__))
@@ -76,17 +76,56 @@ class _Limits(MutableSet):
     def find(self, clasz, default=None):
         return self._data.get(hash(clasz), default)
 
+class _Models(MutableSet):
+    def __init__(self):
+        self._data = {}
+
+    def __len__(self):
+        return self._data.__len__()
+
+    def __iter__(self):
+        return self._data.values().__iter__()
+
+    def __contains__(self, item):
+        return item in self._data.values()
+
+    def add(self, item):
+        key = item.type
+        self._data[key] = item
+
+    def discard(self, item):
+        self._data.pop(item.type)
+
+    def find(self, type, default=None):
+        return self._data.get(type, default)
+
 class Options(objectxml):
 
     def __init__(self, name='Untitled'):
         """
+        Options for a simulation.
         
+        The options of a simulation are grouped in 5 sub-properties:
+        
+          * :attr:`beam`: beam related options
+          * :attr:`geometry`: geometry related options
+          * :attr:`detectors`: detector(s) about what should be measured
+          * :attr:`limits`: limit(s) when to stop the simulation
+          * :attr:`models`: simulation models/algorithms
+        
+        :arg name: name of the simulation
+        
+        By default, the beam is set to a Gaussian beam of 10 nm with an incident
+        energy of 1 keV.
+        The geometry is a Au substrate.
+        No detectors, limits or models are defined.
         """
         self.name = name
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(pure(79)) # Au substrate
         self._detectors = _Detectors()
         self._limits = _Limits()
+        self._models = _Models()
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, self.name)
@@ -104,14 +143,18 @@ class Options(objectxml):
         child = list(element.find("geometry"))[0]
         options.geometry = objectxml.from_xml(child, *args, **kwargs)
 
-        children = list(element.find("detectors"))
+        children = list(element.find("detectors") or [])
         for child in children:
             key = child.get('_key')
             options.detectors[key] = objectxml.from_xml(child, *args, **kwargs)
 
-        children = list(element.find("limits"))
+        children = list(element.find("limits") or [])
         for child in children:
             options.limits.add(objectxml.from_xml(child, *args, **kwargs))
+
+        children = list(element.find("models") or [])
+        for child in children:
+            options.models.add(objectxml.from_xml(child, *args, **kwargs))
 
         return options
 
@@ -138,8 +181,16 @@ class Options(objectxml):
             child.append(limit.to_xml())
         element.append(child)
 
+        child = Element('models')
+        for model in self.models:
+            child.append(model.to_xml())
+        element.append(child)
+
     @property
     def beam(self):
+        """
+        Options about the beam.
+        """
         return self._beam
 
     @beam.setter
@@ -148,6 +199,16 @@ class Options(objectxml):
 
     @property
     def geometry(self):
+        """
+        Options about the geometry.
+        
+        .. warning:: 
+        
+           Some geometries may not be available for all simulation programs.
+           The converter of a program will raise an exception about 
+           incompatible geometries.
+           
+        """
         return self._geometry
 
     @geometry.setter
@@ -156,9 +217,64 @@ class Options(objectxml):
 
     @property
     def detectors(self):
+        """
+        Options about the detectors.
+        Detectors define what should be measured during the simulation.
+        
+        This is a read-only property.
+        This property is a :class:`dict` where the keys are the name of 
+        detectors and the values are the detector object. 
+        
+        .. warning:: 
+        
+           Some detectors may not be available for all simulation programs.
+           The converter of a program will warn you and remove incompatible 
+           detectors.
+        
+        """
         return self._detectors
 
     @property
     def limits(self):
+        """
+        Options about the limits.
+        Limits define when a simulation should halt.
+        
+        This is a read-only property.
+        This property is a :class:`set` to prevent multiple limits of the 
+        same type.
+        A limit can be added using the method :meth:`add`.
+        
+        .. note::
+        
+           It is advisable to have at least one limit. 
+           If not, the simulation may never end depending on the simulation
+           program.
+        
+        .. warning:: 
+        
+           Some limits may not be available for all simulation programs.
+           The converter of a program will warn you and remove incompatible 
+           limits.
+        """
         return self._limits
 
+    @property
+    def models(self):
+        """
+        Options about simulation models/algorithms.
+        
+        This is a read-only property.
+        This property is a class:`set` to prevent multiple models of the 
+        same type.
+        A model can be added using the method :meth:`add`.
+        
+        .. warning:: 
+        
+           Some models may not be available for all simulation programs.
+           The converter of a program will warn you and remove incompatible 
+           models.
+           The converter will also add missing default models for the simulation 
+           program.
+        """
+        return self._models
