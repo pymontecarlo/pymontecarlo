@@ -1,4 +1,4 @@
-package pymontecarlo.runner.nistmonte;
+package pymontecarlo.io.nistmonte;
 
 import gov.nist.microanalysis.EPQLibrary.Strategy;
 

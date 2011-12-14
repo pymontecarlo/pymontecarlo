@@ -1,34 +1,29 @@
-package pymontecarlo.runner.nistmonte;
+package pymontecarlo.io.nistmonte;
 
 import gov.nist.microanalysis.EPQLibrary.EPQException;
-import gov.nist.microanalysis.NISTMonte.GaussianFWHMBeam;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS.ElectronGun;
+import gov.nist.microanalysis.NISTMonte.PencilBeam;
 
 import java.io.IOException;
 
 import org.jdom.Element;
 
-import ptpshared.jdom.JDomUtils;
-
 /**
- * Extractor for a <code>GaussianFWHMBeam</code>.
+ * Extractor for a <code>PencilBeam</code>.
  * 
  * @author ppinard
  */
-public class GaussianFWHMBeamExtractor extends AbstractBeamExtractor {
+public class PencilBeamExtractor extends AbstractBeamExtractor {
 
     /** XML Tag. */
-    private static final String TAG =
-            "pymontecarlo.input.base.beam.GaussianBeam";
+    private static final String TAG = "pymontecarlo.input.base.beam.PencilBeam";
 
 
 
     @Override
     public ElectronGun extract(Element beamImplElement) throws IOException,
             EPQException {
-        double diameter =
-                JDomUtils.getDoubleFromAttribute(beamImplElement, "diameter");
-        GaussianFWHMBeam beam = new GaussianFWHMBeam(diameter);
+        PencilBeam beam = new PencilBeam();
 
         extractBeamEnergy(beamImplElement, beam);
         extractCenter(beamImplElement, beam);
