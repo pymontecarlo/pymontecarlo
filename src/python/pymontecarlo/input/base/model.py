@@ -206,14 +206,14 @@ IONIZATION_CROSS_SECTION_TYPE = ModelType('ionization cross section')
 IONIZATION_CROSS_SECTION = ModelCategory(IONIZATION_CROSS_SECTION_TYPE)
 IONIZATION_CROSS_SECTION.gauvin = Model('Gauvin')
 IONIZATION_CROSS_SECTION.pouchou1986 = \
-    Model('Pouchou', "Pochou & Pichoir in the proceedings from IXCOM 11 (1986)")
+    Model('Pouchou 1986', "Pochou & Pichoir in the proceedings from IXCOM 11 (1986)")
 IONIZATION_CROSS_SECTION.brown_powell = Model('Brown Powell')
 IONIZATION_CROSS_SECTION.casnati1982 = \
-    Model('Casnati', "Casnati82 - E. Casnati, A. Tartari & C. Baraldi, J Phys B15 (1982) 155 as quoted by C. Powell in Ultramicroscopy 28 (1989) 24-31")
+    Model('Casnati 1982', "Casnati82 - E. Casnati, A. Tartari & C. Baraldi, J Phys B15 (1982) 155 as quoted by C. Powell in Ultramicroscopy 28 (1989) 24-31")
 IONIZATION_CROSS_SECTION.gryzinsky = Model('Gryzinsky')
 IONIZATION_CROSS_SECTION.jakoby = Model('Jakoby')
 IONIZATION_CROSS_SECTION.bote_salvat2008 = \
-    Model('Bote and Salvat', 'Bote and Salvat (2008)')
+    Model('Bote and Salvat 2008', 'Bote and Salvat (2008)')
 IONIZATION_CROSS_SECTION.dijkstra_heijliger1998 = \
     Model("Dijkstra and Heijliger 1998 (PROZA96)", "G.F. Bastin, J. M. Dijkstra and H.J.M. Heijligers (1998). X-Ray Spectrometry, 27, pp. 3-10")
 
@@ -288,11 +288,11 @@ PHOTON_SCATTERING_CROSS_SECTION.brusa1996 = \
 ENERGY_LOSS_TYPE = ModelType('energy loss')
 
 ENERGY_LOSS = ModelCategory(ENERGY_LOSS_TYPE)
-ENERGY_LOSS.joy_luo1989 = Model('Joy and Luo', 'Joy and Luo (1989)')
+ENERGY_LOSS.joy_luo1989 = Model('Joy and Luo 1989', 'Joy and Luo (1989)')
 ENERGY_LOSS.bethe1930 = \
     Model("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.bether1930mod = \
-    Model("Modified Bether 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
+    Model("Modified Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 
 #-------------------------------------------------------------------------------
 
@@ -305,7 +305,7 @@ MASS_ABSORPTION_COEFFICIENT.ruste1979 = \
 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991 = \
     Model('Pouchou and Pichoir 1991', 'Pouchou & Pichoir in Electron Probe Quantitation, Eds Heinrich and Newbury')
 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1988 = \
-    Model('Pouchou adbd Pichoir 1988', "J. L. Pouchou and F. M. A. Pichoir, 'Determination of Mass Absorption Coefficients for Soft X-Rays by use of the Electron Microprobe' Microbeam Analysis, Ed. D. E. Newbury, San Francisco Press, 1988, p. 319-324")
+    Model('Pouchou and Pichoir 1988', "J. L. Pouchou and F. M. A. Pichoir, 'Determination of Mass Absorption Coefficients for Soft X-Rays by use of the Electron Microprobe' Microbeam Analysis, Ed. D. E. Newbury, San Francisco Press, 1988, p. 319-324")
 MASS_ABSORPTION_COEFFICIENT.henke1982 = \
     Model('Henke 1982', "B. L. Henke, P. Lee, T. J. Tanaka, R. L. Shimabukuro and B. K. Fijikawa, Atomic Data Nucl. Data Tables 27, 1 (1982)")
 MASS_ABSORPTION_COEFFICIENT.henke1993 = \
@@ -319,7 +319,7 @@ MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11 = \
 MASS_ABSORPTION_COEFFICIENT.chantler2005 = \
     Model('NIST-Chantler 2005', "See http://physics.nist.gov/ffast")
 MASS_ABSORPTION_COEFFICIENT.dtsa_citzaf = \
-    Model('DSTA CitZAF', "DTSA at http://www.cstl.nist.gov/div837/Division/outputs/DTSA/DTSA.htm")
+    Model('DTSA CitZAF', "DTSA at http://www.cstl.nist.gov/div837/Division/outputs/DTSA/DTSA.htm")
 MASS_ABSORPTION_COEFFICIENT.thinh_leroux1979 = \
     Model('Thinh and Leroux' , 'Thinh and Leroux (1979)')
 MASS_ABSORPTION_COEFFICIENT.llnl1989 = \
