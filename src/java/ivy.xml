@@ -1,0 +1,25 @@
+<ivy-module version="2.0">
+    <info organisation="pymontecarlo" module="pyMonteCarlo" revision="0.1">
+        <license name="GPLv3" />
+    </info>
+    
+    <configurations>
+        <conf name="default" description="binary" />
+        <conf name="test" description="test" extends="default" />
+    </configurations>
+    
+    <publications>
+        <artifact name="pymontecarlo" type="jar" conf="default" ext="jar"/>
+    </publications>
+    
+    <dependencies>
+        <dependency org="org.jdom" name="jdom" rev="1.1">
+            <exclude name="xercesImpl" />
+            <exclude name="saxpath" />
+            <exclude name="xalan" />
+            <exclude name="xmlParserAPIs" />
+            <exclude name="jaxen-core" />
+            <exclude name="jaxen-jdom" />
+        </dependency>
+    </dependencies>
+</ivy-module>
