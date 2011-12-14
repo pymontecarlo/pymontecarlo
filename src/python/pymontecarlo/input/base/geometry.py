@@ -548,10 +548,10 @@ class GrainBoundaries(_Layered):
     def __loadxml__(cls, element):
         bodies_lookup, layers, tilt, rotation = _Layered._parse_xml(element)
 
-        index = int(element.get('left_material'))
+        index = int(element.get('left_substrate'))
         left_material = bodies_lookup[index].material
 
-        index = int(element.get('right_material'))
+        index = int(element.get('right_substrate'))
         right_material = bodies_lookup[index].material
 
         obj = cls(left_material, right_material, layers)
@@ -563,8 +563,8 @@ class GrainBoundaries(_Layered):
     def __savexml__(self, element, *args, **kwargs):
         _Layered.__savexml__(self, element, *args, **kwargs)
 
-        element.set('left_material', str(self.left_body._index))
-        element.set('right_material', str(self.right_body._index))
+        element.set('left_substrate', str(self.left_body._index))
+        element.set('right_substrate', str(self.right_body._index))
 
     @property
     def left_material(self):
