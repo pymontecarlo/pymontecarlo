@@ -4,7 +4,8 @@
   <fileset name="all" enabled="true" check-config-name="PTP Checks" local="false">
     <file-match-pattern match-pattern="." include-pattern="true"/>
   </fileset>
-  <filter name="FilesFromPackage" enabled="true">
+  <filter name="UnOpenedFiles" enabled="true"/>
+  <filter name="FilesFromPackage" enabled="false">
     <filter-data value="test"/>
   </filter>
 </fileset-config>
