@@ -51,7 +51,7 @@ public class PhotonIntensityDetectorTest extends NistMonteTestCase {
         List<String[]> rows = reader.readAll();
 
         assertEquals(6, rows.get(0).length); // header
-        assertEquals(61, rows.size() - 1); // x-ray transitions
+        assertEquals(62, rows.size() - 1); // x-ray transitions
 
         reader.close();
     }
