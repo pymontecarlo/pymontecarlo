@@ -22,7 +22,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.exe.debug.451521061." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.2017188973" name="GCC Tool Chain" resourceTypeBasedDiscovery="true" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="photran.managedbuild.target.gnu.platform.exe.debug.1709087895" name="Debug Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder arguments="-f ${ProjDirPath}/src/c/pymontecarlo/lib/penelope/build.xml -Dbuild.dir=${ProjDirPath}/src/python" buildPath="${workspace_loc:/pyMonteCarlo/bin}" cleanBuildTarget="clean" command="ant" enabledIncrementalBuild="true" id="photran.managedbuild.target.gnu.builder.exe.debug.1254361294" incrementalBuildTarget="compile" keepEnvironmentInBuildfile="true" managedBuildOn="false" name="Gnu Make Builder" superClass="photran.managedbuild.target.gnu.builder.exe.debug"/>
+							<builder arguments="-f ${ProjDirPath}/code/c/pymontecarlo/lib/penelope/build.xml -Dbuild.dir=${ProjDirPath}/code/python" buildPath="${workspace_loc:/pyMonteCarlo/bin}" cleanBuildTarget="clean" command="ant" enabledIncrementalBuild="true" id="photran.managedbuild.target.gnu.builder.exe.debug.1254361294" incrementalBuildTarget="compile" keepEnvironmentInBuildfile="true" managedBuildOn="false" name="Gnu Make Builder" superClass="photran.managedbuild.target.gnu.builder.exe.debug"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.debug.1833885073" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option id="gnu.c.compiler.option.include.paths.1238774631" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/python2.6"/>
@@ -53,7 +53,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src/c/pymontecarlo/lib/penelope"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

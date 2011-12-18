@@ -28,7 +28,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value>-f ${ProjDirPath}/src/c/pymontecarlo/lib/penelope/build.xml -Dbuild.dir=${ProjDirPath}/src/python</value>
+					<value>-f ${ProjDirPath}/code/c/pymontecarlo/lib/penelope/build.xml -Dbuild.dir=${ProjDirPath}/code/python</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>

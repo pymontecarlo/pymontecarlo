@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<project name="pyMonteCarlo-penelope" basedir="../../../../../">
+<project name="pyMonteCarlo-penelope" basedir=".">
 
     <!-- Directories -->
-    <property name="src.dir"
-              location="${basedir}/src/c/pymontecarlo/lib/penelope" />
+    <property name="src.dir" location="${basedir}" />
     <echo message="src.dir = ${src.dir}" />
 
     <property name="build.dir" location="${java.io.tmpdir}/build" />
     <echo message="build.dir = ${build.dir}" />
 
-    <property name="output.dir" location="${build.dir}/pymontecarlo/lib/penelope" />
+    <property name="output.dir"
+              location="${build.dir}/pymontecarlo/lib/penelope" />
     <echo message="output.dir = ${output.dir}" />
 
     <!-- ===================================================== -->

@@ -538,7 +538,9 @@ static PyGetSetDef Track_getseters[] =
                                 { "energy", (getter) Track_get_energy,
                                                 (setter) Track_set_energy,
                                                 "Particle's energy in eV", NULL },
-                                { "position", (getter) Track_get_position,
+                                {
+                                                "position",
+                                                (getter) Track_get_position,
                                                 (setter) Track_set_position,
                                                 "Particle's position in meters",
                                                 NULL },
@@ -894,7 +896,6 @@ create_material(PyObject* self, PyObject* args)
 
     Py_RETURN_NONE;
 }
-
 
 static PyObject*
 run(PyObject* self, PyObject* args)
@@ -1267,8 +1268,11 @@ run_advanced(PyObject* self, PyObject* args)
         track_.ilb[1] = 0;
         track_.ilb[2] = 0;
         track_.ilb[3] = 0;
-        track_.ilb[4] = 1;
-
+        track_.ilb[4] = 1; // Used to track the origin of photons:
+                           // 1: primary electron
+                           // 2: secondary electron
+                           // 3: characteristic photon (fluorescence)
+                           // 4: Bremsstrahlung photon (fluorescence)
         locate_();
 
         if (track_.mat == 0) {
@@ -1365,15 +1369,19 @@ run_advanced(PyObject* self, PyObject* args)
                 goto l104;
             }
 
+            // Set ILB(5) for secondary electrons
+            if (track_.kpar == 1 && track_.ilb[2] == 3)
+                track_.ilb[4] = 2;
+
             // Set ILB(5) for 2nd-generation photons, to separate fluorescence
             // from characteristic x rays and from the bremss continuum.
-            if (track_.kpar == 2 && track_.ilb[4] == 1) {
+            if (track_.kpar == 2 && track_.ilb[4] <= 2) {
                 switch (track_.ilb[2]) {
                 case 5: // Characteristic x-ray from a shell ionisation.
-                    track_.ilb[4] = 2;
+                    track_.ilb[4] = 3;
                     break;
                 case 4: // Bremsstrahlung photon.
-                    track_.ilb[4] = 3;
+                    track_.ilb[4] = 4;
                     break;
                 }
             }
