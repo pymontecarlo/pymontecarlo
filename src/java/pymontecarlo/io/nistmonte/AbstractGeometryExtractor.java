@@ -26,14 +26,8 @@ import ptpshared.jdom.JDomUtils;
  * 
  * @author ppinard
  */
-public abstract class AbstractGeometryExtractor implements GeometryExtractor {
-
-    /** XML tag for a body. */
-    private static final String TAG_BODY = "pymontecarlo.input.base.body.Body";
-
-    /** XML tag for a layer. */
-    private static final String TAG_LAYER =
-            "pymontecarlo.input.base.body.Layer";
+public abstract class AbstractGeometryExtractor extends AbstractExtractor
+        implements GeometryExtractor {
 
     /**
      * Stores body information.
@@ -86,93 +80,23 @@ public abstract class AbstractGeometryExtractor implements GeometryExtractor {
         }
     }
 
+    /** XML tag for a body. */
+    private static final String TAG_BODY = "pymontecarlo.input.base.body.Body";
 
-
-    /**
-     * Extracts the materials from a geometry XML element and returns a map
-     * where the keys are the index of each material and the values are the
-     * material scatter model of each material. The material scatter model
-     * interface is used as the absorption energy of electron is automatically
-     * set from the one specified in the material XML element.
-     * 
-     * @param geometryImplElement
-     *            geometry XML element
-     * @return map of material index and material scatter model
-     * @throws EPQException
-     *             if an exception occurs while creating the material scatter
-     *             model
-     */
-    protected Map<Integer, IMaterialScatterModel> extractMaterials(
-            Element geometryImplElement) throws EPQException {
-        Map<Integer, IMaterialScatterModel> materials =
-                new HashMap<Integer, IMaterialScatterModel>();
-
-        Element materialsElement =
-                JDomUtils.getChild(geometryImplElement, "materials");
-
-        Element materialElement;
-        int index;
-        double density, absorptionEnergyElectron;
-        Composition composition;
-        Material material;
-        IMaterialScatterModel scatterModel;
-        for (Object obj : materialsElement.getChildren()) {
-            materialElement = (Element) obj;
-
-            index = JDomUtils.getIntegerFromAttribute(materialElement, "index");
-            density =
-                    JDomUtils
-                            .getDoubleFromAttribute(materialElement, "density");
-            absorptionEnergyElectron =
-                    ToSI.eV(JDomUtils.getDoubleFromAttribute(materialElement,
-                            "absorptionEnergyElectron"));
-
-            composition = extractComposition(materialElement);
-            material = new Material(composition, density);
-            scatterModel = new BasicMaterialModel(material);
-            scatterModel.setMinEforTracking(absorptionEnergyElectron);
-
-            materials.put(index, scatterModel);
-        }
-
-        return materials;
-    }
+    /** XML tag for a layer. */
+    private static final String TAG_LAYER =
+            "pymontecarlo.input.base.body.Layer";
 
 
 
     /**
-     * Extracts the composition from a material XML element.
+     * Creates a new <code>AbstractGeometryExtractor</code>.
      * 
-     * @param materialElement
-     *            material XML element
-     * @return composition
+     * @param tag
+     *            required XML tag
      */
-    protected Composition extractComposition(Element materialElement) {
-        Element compositionElement =
-                JDomUtils.getChild(materialElement, "composition");
-        List<?> children = compositionElement.getChildren();
-
-        gov.nist.microanalysis.EPQLibrary.Element[] elements =
-                new gov.nist.microanalysis.EPQLibrary.Element[children.size()];
-        double[] weightFractions = new double[children.size()];
-
-        Element elementElement;
-        int z;
-        double weightFraction;
-        for (int i = 0; i < children.size(); i++) {
-            elementElement = (Element) children.get(i);
-
-            z = JDomUtils.getIntegerFromAttribute(elementElement, "z");
-            elements[i] =
-                    gov.nist.microanalysis.EPQLibrary.Element.byAtomicNumber(z);
-
-            weightFraction =
-                    JDomUtils.getDoubleFromAttribute(elementElement,
-                            "weightFraction");
-            weightFractions[i] = weightFraction;
-        }
-
-        return new Composition(elements, weightFractions);
+    public AbstractGeometryExtractor(String tag) {
+        super(tag);
     }
 
 
@@ -184,8 +108,9 @@ public abstract class AbstractGeometryExtractor implements GeometryExtractor {
      *            XML element
      * @param chamber
      *            region of the chamber as defined in <code>MonteCarloSS</code>
+     * @return surface plane normal
      */
-    protected void extractAndApplyRotationTilt(Element geometryImplElement,
+    protected double[] extractAndApplyRotationTilt(Element geometryImplElement,
             Region chamber) {
         double[] pivot = Math2.ORIGIN_3D;
         double rotation =
@@ -202,6 +127,10 @@ public abstract class AbstractGeometryExtractor implements GeometryExtractor {
         for (final RegionBase r : chamber.getSubRegions())
             if (r instanceof TransformableRegion)
                 ((TransformableRegion) r).rotate(pivot, phi, theta, psi);
+
+        return Math2.normalize(new double[] {
+                Math.cos(tilt) * Math.cos(rotation),
+                Math.cos(tilt) * Math.sin(rotation), Math.sin(tilt) });
     }
 
 
@@ -254,6 +183,100 @@ public abstract class AbstractGeometryExtractor implements GeometryExtractor {
         }
 
         return bodies;
+    }
+
+
+
+    /**
+     * Extracts the composition from a material XML element.
+     * 
+     * @param materialElement
+     *            material XML element
+     * @return composition
+     */
+    protected Composition extractComposition(Element materialElement) {
+        Element compositionElement =
+                JDomUtils.getChild(materialElement, "composition");
+        List<?> children = compositionElement.getChildren();
+
+        gov.nist.microanalysis.EPQLibrary.Element[] elements =
+                new gov.nist.microanalysis.EPQLibrary.Element[children.size()];
+        double[] weightFractions = new double[children.size()];
+
+        Element elementElement;
+        int z;
+        double weightFraction;
+        for (int i = 0; i < children.size(); i++) {
+            elementElement = (Element) children.get(i);
+
+            z = JDomUtils.getIntegerFromAttribute(elementElement, "z");
+            elements[i] =
+                    gov.nist.microanalysis.EPQLibrary.Element.byAtomicNumber(z);
+
+            weightFraction =
+                    JDomUtils.getDoubleFromAttribute(elementElement,
+                            "weightFraction");
+            weightFractions[i] = weightFraction;
+        }
+
+        return new Composition(elements, weightFractions);
+    }
+
+
+
+    /**
+     * Extracts the materials from a geometry XML element and returns a map
+     * where the keys are the index of each material and the values are the
+     * material scatter model of each material. The material scatter model
+     * interface is used as the absorption energy of electron is automatically
+     * set from the one specified in the material XML element.
+     * 
+     * @param geometryImplElement
+     *            geometry XML element
+     * @return map of material index and material scatter model
+     * @throws EPQException
+     *             if an exception occurs while creating the material scatter
+     *             model
+     */
+    protected Map<Integer, IMaterialScatterModel> extractMaterials(
+            Element geometryImplElement) throws EPQException {
+        Map<Integer, IMaterialScatterModel> materials =
+                new HashMap<Integer, IMaterialScatterModel>();
+
+        Element materialsElement =
+                JDomUtils.getChild(geometryImplElement, "materials");
+
+        Element materialElement;
+        int index;
+        String name;
+        double density, absorptionEnergyElectron;
+        Composition composition;
+        Material material;
+        IMaterialScatterModel scatterModel;
+        for (Object obj : materialsElement.getChildren()) {
+            materialElement = (Element) obj;
+
+            index = JDomUtils.getIntegerFromAttribute(materialElement, "index");
+            name = JDomUtils.getStringFromAttribute(materialElement, "name");
+            density =
+                    JDomUtils
+                            .getDoubleFromAttribute(materialElement, "density");
+            absorptionEnergyElectron =
+                    ToSI.eV(JDomUtils.getDoubleFromAttribute(materialElement,
+                            "absorptionEnergyElectron"));
+
+            composition = extractComposition(materialElement);
+
+            material = new Material(composition, density);
+            material.setName(name);
+
+            scatterModel = new BasicMaterialModel(material);
+            scatterModel.setMinEforTracking(absorptionEnergyElectron);
+
+            materials.put(index, scatterModel);
+        }
+
+        return materials;
     }
 
 }

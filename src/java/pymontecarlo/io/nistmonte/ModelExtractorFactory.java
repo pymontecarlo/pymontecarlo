@@ -30,7 +30,7 @@ import ptpshared.jdom.JDomUtils;
  * 
  * @author ppinard
  */
-public class ModelExtractorFactory {
+public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
 
     /**
      * Implementation of the <code>ModelExtractor</code> interface.
@@ -120,12 +120,8 @@ public class ModelExtractorFactory {
 
 
 
-    /**
-     * Returns a list of all model extractors.
-     * 
-     * @return list of all model extractors
-     */
-    public static List<ModelExtractor> getAllExtractors() {
+    @Override
+    public List<ModelExtractor> getAllExtractors() {
         List<ModelExtractor> extractors = new ArrayList<ModelExtractor>();
 
         extractors.add(ELASTIC_CROSS_SECTION);

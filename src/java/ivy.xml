@@ -21,5 +21,7 @@
             <exclude name="jaxen-core" />
             <exclude name="jaxen-jdom" />
         </dependency>
+        <dependency org="net.sf.opencsv" name="opencsv" rev="2.3" />
+        <dependency org="com.martiansoftware" name="jsap" rev="2.1"/>
     </dependencies>
 </ivy-module>

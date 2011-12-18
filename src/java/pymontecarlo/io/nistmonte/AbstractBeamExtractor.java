@@ -14,7 +14,20 @@ import ptpshared.jdom.JDomUtils;
  * 
  * @author ppinard
  */
-public abstract class AbstractBeamExtractor implements BeamExtractor {
+public abstract class AbstractBeamExtractor extends AbstractExtractor implements
+        BeamExtractor {
+
+    /**
+     * Creates a new <code>AbstractBeamExtractor</code>.
+     * 
+     * @param tag
+     *            required XML tag
+     */
+    public AbstractBeamExtractor(String tag) {
+        super(tag);
+    }
+
+
 
     /**
      * Extracts the beam position position from the XML element and sets it for

@@ -27,7 +27,8 @@ public interface GeometryExtractor extends Extractor {
      *             if an error occurs while reading the options
      * @throws EPQException
      *             if an error occurs while setting up the geometry
+     * @return surface plane normal
      */
-    public void extract(Element geometryImplElement, Region chamber,
+    public double[] extract(Element geometryImplElement, Region chamber,
             double beamEnergy) throws IOException, EPQException;
 }
