@@ -29,16 +29,13 @@ from pymontecarlo.input.base.converter import \
 from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
-from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
+from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit
 from pymontecarlo.input.base.detector import \
-    (BackscatteredElectronAzimuthalAngularDetector,
+    (_DelimitedDetector,
+     BackscatteredElectronAzimuthalAngularDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
-     EnergyDepositedSpatialDetector,
-     PhiRhoZDetector,
-     PhotonAzimuthalAngularDetector,
      PhotonIntensityDetector,
-     PhotonPolarAngularDetector,
      PhotonSpectrumDetector,
      TransmittedElectronAzimuthalAngularDetector,
      TransmittedElectronEnergyDetector,
@@ -55,16 +52,14 @@ class Converter(_Converter):
     DETECTORS = [BackscatteredElectronAzimuthalAngularDetector,
                  BackscatteredElectronEnergyDetector,
                  BackscatteredElectronPolarAngularDetector,
-                 EnergyDepositedSpatialDetector,
-                 PhiRhoZDetector,
-                 PhotonAzimuthalAngularDetector,
+                 #EnergyDepositedSpatialDetector,
+                 #PhiRhoZDetector,
                  PhotonIntensityDetector,
-                 PhotonPolarAngularDetector,
                  PhotonSpectrumDetector,
                  TransmittedElectronAzimuthalAngularDetector,
                  TransmittedElectronEnergyDetector,
                  TransmittedElectronPolarAngularDetector]
-    LIMITS = [TimeLimit, ShowersLimit, UncertaintyLimit]
+    LIMITS = [TimeLimit, ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_browning1994,
                                            ELASTIC_CROSS_SECTION.elsepa2005],
@@ -107,6 +102,30 @@ class Converter(_Converter):
         Converter from base options for NistMonte simulation.
         """
         _Converter.__init__(self)
+
+    def _convert_detectors(self, options):
+        _Converter._convert_detectors(self, options)
+
+        # Assert delimited detector have the same elevation and azimuth angles
+        detectors = options.detectors.findall(_DelimitedDetector).items()
+        if len(detectors) <= 1:
+            return
+
+        elevation = detectors[0][1].elevation
+        azimuth = detectors[0][1].azimuth
+
+        for key, detector in detectors[1:]:
+            if abs(detector.elevation[0] - elevation[0]) > 1e-6 or \
+                    abs(detector.elevation[1] - elevation[1]) > 1e-6:
+                raise ConversionException, \
+                    "The elevation of the detector '%s' (%s) should be the same as the others (%s)" % \
+                    (key, str(detector.elevation), str(elevation))
+
+            if abs(detector.azimuth[0] - azimuth[0]) > 1e-6 or \
+                    abs(detector.azimuth[1] - azimuth[1]) > 1e-6:
+                raise ConversionException, \
+                    "The azimuth of the detector '%s' (%s) should be the same as the others (%s)" % \
+                    (key, str(detector.azimuth), str(azimuth))
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
