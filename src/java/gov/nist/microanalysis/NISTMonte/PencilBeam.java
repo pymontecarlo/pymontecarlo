@@ -105,11 +105,15 @@ public class PencilBeam implements ElectronGun {
 
 
     @Override
-    public void setCenter(double[] center) {
-        if (center.length != 3)
+    public void setCenter(double[] c) {
+        if (c.length != 3)
             throw new IllegalArgumentException(
                     "The position must be an array of length 3.");
-        this.center = center.clone();
+        if (Math2.dot(c, c) >= Math.pow(MonteCarloSS.ChamberRadius, 2.0))
+            throw new IllegalArgumentException(
+                    "Center position is outside the chamber. The chamber has a maximum radius of "
+                            + MonteCarloSS.ChamberRadius + " m");
+        this.center = c.clone();
     }
 
 

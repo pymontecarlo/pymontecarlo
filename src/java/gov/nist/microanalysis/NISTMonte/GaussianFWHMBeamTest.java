@@ -16,7 +16,7 @@ public class GaussianFWHMBeamTest {
     @Before
     public void setUp() throws Exception {
         beam = new GaussianFWHMBeam(10e-9);
-        beam.setCenter(new double[] { 1.0, 2.0, 3.0 });
+        beam.setCenter(new double[] { 0.01, 0.02, 0.03 });
         beam.setBeamEnergy(ToSI.keV(5.0));
     }
 
@@ -33,9 +33,9 @@ public class GaussianFWHMBeamTest {
     @Test
     public void testFWHMBeam() {
         assertEquals(10.0, beam.getDiameter() * 1e9, 1e-4);
-        assertEquals(1.0, beam.getCenter()[0], 1e-4);
-        assertEquals(2.0, beam.getCenter()[1], 1e-4);
-        assertEquals(3.0, beam.getCenter()[2], 1e-4);
+        assertEquals(0.01, beam.getCenter()[0], 1e-4);
+        assertEquals(0.02, beam.getCenter()[1], 1e-4);
+        assertEquals(0.03, beam.getCenter()[2], 1e-4);
         assertEquals(5.0, FromSI.keV(beam.getBeamEnergy()), 1e-4);
     }
 

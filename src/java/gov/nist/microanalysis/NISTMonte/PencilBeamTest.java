@@ -16,7 +16,7 @@ public class PencilBeamTest {
     @Before
     public void setUp() throws Exception {
         beam = new PencilBeam();
-        beam.setCenter(new double[] { 1.0, 2.0, 3.0 });
+        beam.setCenter(new double[] { 0.01, 0.02, 0.03 });
         beam.setDirection(new double[] { 1.0, 2.0, 3.0 });
         beam.setBeamEnergy(ToSI.keV(5.0));
     }
@@ -33,9 +33,9 @@ public class PencilBeamTest {
 
     @Test
     public void testPencilBeam() {
-        assertEquals(1.0, beam.getCenter()[0], 1e-4);
-        assertEquals(2.0, beam.getCenter()[1], 1e-4);
-        assertEquals(3.0, beam.getCenter()[2], 1e-4);
+        assertEquals(0.01, beam.getCenter()[0], 1e-4);
+        assertEquals(0.02, beam.getCenter()[1], 1e-4);
+        assertEquals(0.03, beam.getCenter()[2], 1e-4);
 
         assertEquals(1.0, beam.getDirection()[0], 1e-4);
         assertEquals(2.0, beam.getDirection()[1], 1e-4);
@@ -54,8 +54,16 @@ public class PencilBeamTest {
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSetCenterException() {
+    public void testSetCenterException1() {
         beam.setCenter(new double[] { 0.0, 0.0 });
+    }
+
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetCenterException2() {
+        double r = MonteCarloSS.ChamberRadius;
+        beam.setCenter(new double[] { r, r, r });
     }
 
 
