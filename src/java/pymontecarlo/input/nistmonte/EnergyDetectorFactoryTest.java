@@ -27,7 +27,7 @@ public class EnergyDetectorFactoryTest extends NistMonteTestCase {
 
     @Before
     public void setUp() throws Exception {
-        resultsDir = new File("/tmp"); // createTempDir();
+        resultsDir = createTempDir();
 
         double emax = getBeamEnergy();
         detBSE =

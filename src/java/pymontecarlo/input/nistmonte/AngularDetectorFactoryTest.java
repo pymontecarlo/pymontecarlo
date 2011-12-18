@@ -31,7 +31,7 @@ public class AngularDetectorFactoryTest extends NistMonteTestCase {
 
     @Before
     public void setUp() throws Exception {
-        resultsDir = new File("/tmp"); // createTempDir();
+        resultsDir = createTempDir();
 
         detBSEElevation =
                 AngularDetectorFactory.createBackscatteredElevationAngular(0,
