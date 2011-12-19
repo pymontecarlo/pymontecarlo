@@ -76,8 +76,6 @@ public class OptionsExtractorTest {
         Element limitsElement = new Element("limits");
         limitsElement.addContent(LimitExtractorFactoryTest
                 .createShowersLimitElement());
-        limitsElement.addContent(LimitExtractorFactoryTest
-                .createTimeLimitElement());
         element.addContent(limitsElement);
 
         Element modelsElement = new Element("models");
@@ -196,7 +194,7 @@ public class OptionsExtractorTest {
     @Test
     public void testGetLimits() {
         Set<Limit> limits = extractor.getLimits();
-        assertEquals(2, limits.size());
+        assertEquals(1, limits.size());
     }
 
 

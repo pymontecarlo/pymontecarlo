@@ -38,15 +38,4 @@ public class LimitExtractorFactoryTest {
         assertEquals(1234, limit.getMaximumShowers());
     }
 
-
-
-    public static Element createTimeLimitElement() {
-        Element element =
-                new Element("pymontecarlo.input.base.limit.TimeLimit");
-
-        element.setAttribute("time", "1234");
-
-        return element;
-    }
-
 }

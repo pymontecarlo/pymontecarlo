@@ -3,11 +3,9 @@ package pymontecarlo.io.nistmonte;
 import gov.nist.microanalysis.EPQLibrary.AlgorithmUser;
 import gov.nist.microanalysis.EPQLibrary.EPQException;
 import gov.nist.microanalysis.EPQLibrary.Strategy;
-import gov.nist.microanalysis.NISTMonte.BremsstrahlungEventListener;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS.ElectronGun;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS.Region;
-import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 import gov.nist.microanalysis.Utility.Math2;
 
 import java.io.File;
@@ -25,7 +23,6 @@ import org.jdom.Element;
 import ptpshared.jdom.JDomUtils;
 import pymontecarlo.input.nistmonte.Detector;
 import pymontecarlo.input.nistmonte.Limit;
-import pymontecarlo.input.nistmonte.PhotonDetector;
 import pymontecarlo.input.nistmonte.ScatteringDetector;
 
 /**
@@ -224,43 +221,10 @@ public class OptionsExtractor implements Extractor {
             }
         }
 
-        // Detector position
-        double[] detectorPosition = null;
-        boolean requiresBremsstrahlung = false;
-        for (Detector detector : detectors.values()) {
-            if (detector instanceof PhotonDetector) {
-                detectorPosition =
-                        ((PhotonDetector) detector).getDetectorPosition();
-                requiresBremsstrahlung =
-                        requiresBremsstrahlung
-                                || ((PhotonDetector) detector)
-                                        .requiresBremsstrahlung();
-            }
-        }
-
-        // X-ray event listener
-        XRayEventListener2 xrel = null;
-        if (detectorPosition != null) {
-            xrel = new XRayEventListener2(mcss, detectorPosition);
-            mcss.addActionListener(xrel);
-        }
-
-        BremsstrahlungEventListener bel = null;
-        if (detectorPosition != null && requiresBremsstrahlung) {
-            bel = new BremsstrahlungEventListener(mcss, detectorPosition);
-            mcss.addActionListener(bel);
-        }
-
-        // Setup
-        for (Detector detector : detectors.values())
-            detector.setup(mcss, xrel, bel);
-
         // /////////
         // Limits //
         // /////////
         limits = extractLimits(root, mcss);
-        for (Limit limit : limits)
-            limit.setup(mcss, xrel, bel);
 
         // /////////
         // Models //

@@ -5,11 +5,13 @@ import gov.nist.microanalysis.EPQLibrary.EPQException;
 import gov.nist.microanalysis.EPQLibrary.FromSI;
 import gov.nist.microanalysis.EPQLibrary.Material;
 import gov.nist.microanalysis.EPQLibrary.Strategy;
+import gov.nist.microanalysis.NISTMonte.BremsstrahlungEventListener;
 import gov.nist.microanalysis.NISTMonte.IMaterialScatterModel;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS.ElectronGun;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS.RegionBase;
 import gov.nist.microanalysis.NISTMonte.PencilBeam;
+import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +27,7 @@ import org.jdom.Element;
 import ptpshared.jdom.JDomUtils;
 import pymontecarlo.input.nistmonte.Detector;
 import pymontecarlo.input.nistmonte.Limit;
+import pymontecarlo.input.nistmonte.PhotonDetector;
 import pymontecarlo.input.nistmonte.ShowersLimit;
 import pymontecarlo.io.nistmonte.OptionsExtractor;
 
@@ -109,11 +112,27 @@ public class Process {
         Map<String, Detector> detectors = extractor.getDetectors();
         Set<Limit> limits = extractor.getLimits();
 
-        // Get the number of showers
+        // Create listeners
+        XRayEventListener2 xrel = getXRayEventListener(mcss, detectors);
+        if (xrel != null)
+            mcss.addActionListener(xrel);
+
+        BremsstrahlungEventListener bel =
+                getBremsstrahlungEventListener(mcss, detectors);
+        if (bel != null)
+            mcss.addActionListener(bel);
+
+        // Register detectors
+        for (Detector detector : detectors.values())
+            detector.setup(mcss, xrel, bel);
+
+        // Register limits and get the number of showers
         int showers = 0;
         for (Limit limit : limits) {
             if (limit instanceof ShowersLimit) {
                 showers = ((ShowersLimit) limit).getMaximumShowers();
+            } else {
+                limit.setup(mcss, xrel, bel);
             }
         }
 
@@ -137,6 +156,74 @@ public class Process {
         saveLog(resultsDir, name, mcss);
 
         return showers;
+    }
+
+
+
+    /**
+     * Checks the detector and returns the x-ray event listener. The listener
+     * will be <code>null</code> if there is no photon detector.
+     * 
+     * @param mcss
+     *            MonteCarloSS
+     * @param detectors
+     *            detectors
+     * @return x-ray event listener or <code>null</code>
+     * @throws EPQException
+     *             if an error occurs while creating the listener
+     */
+    private XRayEventListener2 getXRayEventListener(MonteCarloSS mcss,
+            Map<String, Detector> detectors) throws EPQException {
+        double[] detectorPosition = null;
+        for (Detector detector : detectors.values()) {
+            if (detector instanceof PhotonDetector) {
+                detectorPosition =
+                        ((PhotonDetector) detector).getDetectorPosition();
+            }
+        }
+
+        if (detectorPosition != null) {
+            return new XRayEventListener2(mcss, detectorPosition);
+        } else {
+            return null;
+        }
+    }
+
+
+
+    /**
+     * Checks the detector and returns the Bremsstrahlung event listener. The
+     * listener will be <code>null</code> if there is no photon detector.
+     * 
+     * @param mcss
+     *            MonteCarloSS
+     * @param detectors
+     *            detectors
+     * @return Bremsstrahlung event listener or <code>null</code>
+     * @throws EPQException
+     *             if an error occurs while creating the listener
+     */
+    private BremsstrahlungEventListener getBremsstrahlungEventListener(
+            MonteCarloSS mcss, Map<String, Detector> detectors)
+            throws EPQException {
+        double[] detectorPosition = null;
+        boolean requiresBremsstrahlung = false;
+        for (Detector detector : detectors.values()) {
+            if (detector instanceof PhotonDetector) {
+                detectorPosition =
+                        ((PhotonDetector) detector).getDetectorPosition();
+                requiresBremsstrahlung =
+                        requiresBremsstrahlung
+                                || ((PhotonDetector) detector)
+                                        .requiresBremsstrahlung();
+            }
+        }
+
+        if (detectorPosition != null && requiresBremsstrahlung) {
+            return new BremsstrahlungEventListener(mcss, detectorPosition);
+        } else {
+            return null;
+        }
     }
 
 
