@@ -17,9 +17,6 @@ public class ShowersLimit implements Limit, ActionListener {
     /** Maximum number of trajectories. */
     private final int maxShowers;
 
-    /** Number of simulated trajectories. */
-    private long showers;
-
 
 
     /**
@@ -51,7 +48,7 @@ public class ShowersLimit implements Limit, ActionListener {
     @Override
     public void setup(MonteCarloSS mcss, XRayEventListener2 xrel,
             BremsstrahlungEventListener bel) {
-        mcss.addActionListener(this);
+        throw new RuntimeException("Should not be added");
     }
 
 
@@ -59,20 +56,5 @@ public class ShowersLimit implements Limit, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        switch (e.getID()) {
-        case MonteCarloSS.FirstTrajectoryEvent:
-            showers = 0;
-            break;
-
-        case MonteCarloSS.TrajectoryEndEvent:
-            showers += 1;
-
-            if (showers >= maxShowers)
-                ((MonteCarloSS) e.getSource()).requestInterruption();
-
-            break;
-        default:
-            break;
-        }
     }
 }
