@@ -1,12 +1,23 @@
 package pymontecarlo.runner.nistmonte;
 
+import gov.nist.microanalysis.EPQLibrary.AlgorithmUser;
 import gov.nist.microanalysis.EPQLibrary.EPQException;
+import gov.nist.microanalysis.EPQLibrary.FromSI;
+import gov.nist.microanalysis.EPQLibrary.Material;
+import gov.nist.microanalysis.EPQLibrary.Strategy;
+import gov.nist.microanalysis.NISTMonte.IMaterialScatterModel;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
+import gov.nist.microanalysis.NISTMonte.MonteCarloSS.ElectronGun;
+import gov.nist.microanalysis.NISTMonte.MonteCarloSS.RegionBase;
+import gov.nist.microanalysis.NISTMonte.PencilBeam;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import org.jdom.Element;
@@ -123,6 +134,74 @@ public class Process {
             detector.saveLog(resultsDir, baseName);
         }
 
+        saveLog(resultsDir, name, mcss);
+
         return showers;
+    }
+
+
+
+    /**
+     * Saves the parameters of the simulation.
+     * 
+     * @param resultsDir
+     *            results directory
+     * @param baseName
+     *            name of the simulation
+     * @param mcss
+     *            MonteCarloSS
+     * @throws IOException
+     *             if an error occurs while saving the log file
+     */
+    protected void saveLog(File resultsDir, String baseName, MonteCarloSS mcss)
+            throws IOException {
+        File logFile = new File(resultsDir, baseName + ".log");
+
+        Properties props = new Properties();
+
+        // Beam
+        ElectronGun beam = mcss.getElectronGun();
+        props.setProperty("beam.energy",
+                Double.toString(FromSI.eV(beam.getBeamEnergy())));
+        props.setProperty("beam.center.x", Double.toString(beam.getCenter()[0]));
+        props.setProperty("beam.center.y", Double.toString(beam.getCenter()[1]));
+        props.setProperty("beam.center.z", Double.toString(beam.getCenter()[2]));
+
+        if (beam instanceof PencilBeam) {
+            props.setProperty("beam.direction.x",
+                    Double.toString(((PencilBeam) beam).getDirection()[0]));
+            props.setProperty("beam.direction.y",
+                    Double.toString(((PencilBeam) beam).getDirection()[1]));
+            props.setProperty("beam.direction.z",
+                    Double.toString(((PencilBeam) beam).getDirection()[2]));
+        }
+
+        // Geometry
+        List<RegionBase> regions = mcss.getChamber().getSubRegions();
+        RegionBase region;
+        Material material;
+        IMaterialScatterModel model;
+        String key;
+        for (int i = 0; i < regions.size(); i++) {
+            key = "geometry.region." + i + ".";
+            region = regions.get(i);
+            material = region.getMaterial();
+            model = region.getScatterModel();
+
+            props.setProperty(key + "material.name", material.getName());
+            props.setProperty(key + "material.density",
+                    Double.toString(material.getDensity()));
+            props.setProperty(key + "model.absorptionEnergy",
+                    Double.toString(FromSI.eV(model.getMinEforTracking())));
+        }
+
+        // Model
+        Strategy strategy = AlgorithmUser.getGlobalStrategy();
+        for (String algClass : strategy.listAlgorithmClasses()) {
+            props.setProperty("model." + algClass,
+                    strategy.getAlgorithm(algClass).toString());
+        }
+
+        props.store(new FileOutputStream(logFile), "");
     }
 }
