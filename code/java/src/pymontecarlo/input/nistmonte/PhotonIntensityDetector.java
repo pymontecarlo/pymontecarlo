@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import ptpshared.io.CSVWriter;
+import ptpshared.opencsv.CSVWriter;
 
 /**
  * Detector to record intensity of photons.

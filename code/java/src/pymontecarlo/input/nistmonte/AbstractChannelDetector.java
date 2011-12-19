@@ -9,7 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
 
-import ptpshared.io.CSVWriter;
+import ptpshared.opencsv.CSVWriter;
 
 /**
  * Abstract detector to collect data in a number of channels between two limits.

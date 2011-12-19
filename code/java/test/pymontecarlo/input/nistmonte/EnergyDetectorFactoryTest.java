@@ -12,7 +12,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import ptpshared.io.CSVReader;
+import ptpshared.opencsv.CSVReader;
 import pymontecarlo.util.NistMonteTestCase;
 
 public class EnergyDetectorFactoryTest extends NistMonteTestCase {

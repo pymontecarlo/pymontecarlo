@@ -15,7 +15,7 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-import ptpshared.io.CSVReader;
+import ptpshared.opencsv.CSVReader;
 import pymontecarlo.util.NistMonteTestCase;
 
 public class PhotonIntensityDetectorTest extends NistMonteTestCase {
