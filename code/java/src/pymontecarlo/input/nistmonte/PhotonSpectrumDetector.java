@@ -139,6 +139,14 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
 
 
     @Override
+    public void reset() {
+        super.reset();
+        detector.reset();
+    }
+
+
+
+    @Override
     protected void saveAsProperties(Properties props) {
         super.saveAsProperties(props);
 

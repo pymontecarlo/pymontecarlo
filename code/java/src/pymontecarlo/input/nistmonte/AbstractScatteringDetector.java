@@ -50,6 +50,8 @@ public abstract class AbstractScatteringDetector extends ElectronDetector
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        super.actionPerformed(e);
+
         switch (e.getID()) {
         case MonteCarloSS.BackscatterEvent:
             Electron electron = ((MonteCarloSS) e.getSource()).getElectron();

@@ -24,6 +24,14 @@ public abstract class AbstractChannelDetector extends
 
 
 
+    @Override
+    public void reset() {
+        super.reset();
+        histogram.clear();
+    }
+
+
+
     /**
      * Creates a new <code>AbstractChannelDetector</code>.
      * 

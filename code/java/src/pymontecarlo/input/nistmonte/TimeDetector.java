@@ -6,7 +6,6 @@ import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.io.IOException;
  * 
  * @author ppinard
  */
-public class TimeDetector extends AbstractDetector implements ActionListener {
+public class TimeDetector extends AbstractDetector {
 
     /** System time when the simulation started. */
     private long startSimulationTime;
@@ -39,16 +38,23 @@ public class TimeDetector extends AbstractDetector implements ActionListener {
 
 
     @Override
-    public void actionPerformed(ActionEvent ae) {
-        switch (ae.getID()) {
-        case MonteCarloSS.FirstTrajectoryEvent:
-            startSimulationTime = System.currentTimeMillis();
-            elapsedTime = 0;
+    public void reset() {
+        super.reset();
 
-            sum = 0;
-            sumSquare = 0;
-            count = 0;
-            break;
+        startSimulationTime = System.currentTimeMillis();
+        elapsedTime = 0;
+        sum = 0;
+        sumSquare = 0;
+        count = 0;
+    }
+
+
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        super.actionPerformed(ae);
+
+        switch (ae.getID()) {
         case MonteCarloSS.LastTrajectoryEvent:
             elapsedTime = System.currentTimeMillis() - startSimulationTime;
             break;

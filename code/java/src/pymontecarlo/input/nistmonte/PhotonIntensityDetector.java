@@ -147,4 +147,11 @@ public class PhotonIntensityDetector extends PhotonDetector {
         return false;
     }
 
+
+
+    @Override
+    public void reset() {
+        xrayAccumulator.clear();
+    }
+
 }

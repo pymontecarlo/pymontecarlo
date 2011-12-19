@@ -5,6 +5,7 @@ import gov.nist.microanalysis.NISTMonte.BremsstrahlungEventListener;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,7 +14,7 @@ import java.io.IOException;
  * 
  * @author ppinard
  */
-public interface Detector {
+public interface Detector extends ActionListener {
 
     /**
      * Setups the simulation and other listeners. This typically involves adding
@@ -65,4 +66,10 @@ public interface Detector {
      */
     public void saveLog(File resultsDir, String baseName) throws IOException;
 
+
+
+    /**
+     * Method called at the start of a new simulation.
+     */
+    public void reset();
 }
