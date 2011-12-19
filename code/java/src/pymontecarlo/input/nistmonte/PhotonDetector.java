@@ -101,4 +101,15 @@ public abstract class PhotonDetector extends AbstractDetector {
         props.setProperty("takeOffAngle", Double.toString(getTakeOffAngle()));
         props.setProperty("azimuthAngle", Double.toString(getAzimuthAngle()));
     }
+
+
+
+    /**
+     * Returns whether the detector requires generation of Bremsstrahlung
+     * x-rays.
+     * 
+     * @return <code>true</code> if Bremstrahlung x-rays should be generated,
+     *         <code>false</code> otherwise
+     */
+    public abstract boolean requiresBremsstrahlung();
 }

@@ -140,4 +140,11 @@ public class PhotonIntensityDetector extends PhotonDetector {
         writer.close();
     }
 
+
+
+    @Override
+    public boolean requiresBremsstrahlung() {
+        return false;
+    }
+
 }

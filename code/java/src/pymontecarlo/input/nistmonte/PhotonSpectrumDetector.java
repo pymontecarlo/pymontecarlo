@@ -174,4 +174,11 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
     public double getChannelWidth() {
         return detector.getChannelWidth();
     }
+
+
+
+    @Override
+    public boolean requiresBremsstrahlung() {
+        return true;
+    }
 }

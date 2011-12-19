@@ -45,6 +45,13 @@ public class PhotonDetectorTest extends TestCase {
                 throws IOException {
         }
 
+
+
+        @Override
+        public boolean requiresBremsstrahlung() {
+            return false;
+        }
+
     }
 
     private PhotonDetector det;

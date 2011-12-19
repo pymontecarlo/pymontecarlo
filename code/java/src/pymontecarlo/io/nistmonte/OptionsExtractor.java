@@ -226,20 +226,29 @@ public class OptionsExtractor implements Extractor {
 
         // Detector position
         double[] detectorPosition = null;
+        boolean requiresBremsstrahlung = false;
         for (Detector detector : detectors.values()) {
             if (detector instanceof PhotonDetector) {
                 detectorPosition =
                         ((PhotonDetector) detector).getDetectorPosition();
-                break;
+                requiresBremsstrahlung =
+                        requiresBremsstrahlung
+                                || ((PhotonDetector) detector)
+                                        .requiresBremsstrahlung();
             }
         }
 
         // X-ray event listener
         XRayEventListener2 xrel = null;
-        BremsstrahlungEventListener bel = null;
         if (detectorPosition != null) {
             xrel = new XRayEventListener2(mcss, detectorPosition);
+            mcss.addActionListener(xrel);
+        }
+
+        BremsstrahlungEventListener bel = null;
+        if (detectorPosition != null && requiresBremsstrahlung) {
             bel = new BremsstrahlungEventListener(mcss, detectorPosition);
+            mcss.addActionListener(bel);
         }
 
         // Setup
