@@ -14,6 +14,7 @@ import pymontecarlo.input.nistmonte.Detector;
 import pymontecarlo.input.nistmonte.EnergyDetectorFactory;
 import pymontecarlo.input.nistmonte.PhotonIntensityDetector;
 import pymontecarlo.input.nistmonte.PhotonSpectrumDetector;
+import pymontecarlo.input.nistmonte.TimeDetector;
 
 /**
  * Factory of detector extractors.
@@ -159,6 +160,17 @@ public class DetectorExtractorFactory implements
                 }
             };
 
+    /** Time detector extractor. */
+    public static final DetectorExtractor TIME = new AbstractDetectorExtractor(
+            "pymontecarlo.input.base.detector.TimeDetector") {
+
+        @Override
+        public Detector extract(Element detectorElement) throws IOException,
+                EPQException {
+            return new TimeDetector();
+        }
+    };
+
 
 
     @Override
@@ -173,6 +185,7 @@ public class DetectorExtractorFactory implements
         extractors.add(BACKSCATTERED_ELECTRON_AZIMUTHAL_ANGULAR);
         extractors.add(TRANSMITTED_ELECTRON_AZIMUTHAL_ANGULAR);
         extractors.add(PHOTON_SPECTRUM);
+        extractors.add(TIME);
 
         return Collections.unmodifiableList(extractors);
     }

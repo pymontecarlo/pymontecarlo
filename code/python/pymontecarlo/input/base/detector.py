@@ -444,3 +444,8 @@ class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetecto
 class PhotonIntensityDetector(_DelimitedDetector):
     pass
 
+class TimeDetector(objectxml):
+    """
+    Records simulation time and speed (electron simulated /s).
+    """
+    pass

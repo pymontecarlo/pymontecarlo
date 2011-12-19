@@ -19,7 +19,7 @@ from math import radians
 from pymontecarlo.input.base.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
-     PhotonSpectrumDetector, PhiRhoZDetector)
+     PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector)
 
 # Globals and constants variables.
 
@@ -405,6 +405,23 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-56.78, float(element.get('limit_min')), 4)
         self.assertAlmostEqual(-12.34, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
+
+class TestTimeDetector(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.d = TimeDetector()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testfrom_xml(self):
+        element = self.d.to_xml()
+        TimeDetector.from_xml(element)
+
+    def testto_xml(self):
+        self.d.to_xml()
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

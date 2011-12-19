@@ -39,7 +39,8 @@ from pymontecarlo.input.base.detector import \
      PhotonSpectrumDetector,
      TransmittedElectronAzimuthalAngularDetector,
      TransmittedElectronEnergyDetector,
-     TransmittedElectronPolarAngularDetector)
+     TransmittedElectronPolarAngularDetector,
+     TimeDetector)
 from pymontecarlo.input.base.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
@@ -58,7 +59,8 @@ class Converter(_Converter):
                  PhotonSpectrumDetector,
                  TransmittedElectronAzimuthalAngularDetector,
                  TransmittedElectronEnergyDetector,
-                 TransmittedElectronPolarAngularDetector]
+                 TransmittedElectronPolarAngularDetector,
+                 TimeDetector]
     LIMITS = [TimeLimit, ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_browning1994,
