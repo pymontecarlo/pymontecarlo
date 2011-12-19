@@ -10,7 +10,6 @@ import org.jdom.Element;
 import org.junit.Test;
 
 import pymontecarlo.input.nistmonte.ShowersLimit;
-import pymontecarlo.input.nistmonte.TimeLimit;
 
 public class LimitExtractorFactoryTest {
 
@@ -48,22 +47,6 @@ public class LimitExtractorFactoryTest {
         element.setAttribute("time", "1234");
 
         return element;
-    }
-
-
-
-    @Test
-    public void testTIME() throws IOException, EPQException {
-        // XML element
-        Element element = createTimeLimitElement();
-
-        // Extract
-        LimitExtractor extractor = LimitExtractorFactory.TIME;
-        TimeLimit limit = (TimeLimit) extractor.extract(element);
-
-        // Test
-        assertTrue(extractor.canExtract(element));
-        assertEquals(1234, limit.getMaximumTime());
     }
 
 }

@@ -12,7 +12,6 @@ import org.jdom.Element;
 import ptpshared.jdom.JDomUtils;
 import pymontecarlo.input.nistmonte.Limit;
 import pymontecarlo.input.nistmonte.ShowersLimit;
-import pymontecarlo.input.nistmonte.TimeLimit;
 
 /**
  * Factory of limit extractors.
@@ -34,25 +33,12 @@ public class LimitExtractorFactory implements ExtractorFactory<LimitExtractor> {
         }
     };
 
-    /** Time limit extractor. */
-    public static final LimitExtractor TIME = new AbstractLimitExtractor(
-            "pymontecarlo.input.base.limit.TimeLimit") {
-
-        @Override
-        public Limit extract(Element limitElement) throws IOException,
-                EPQException {
-            long time = JDomUtils.getLongFromAttribute(limitElement, "time");
-            return new TimeLimit(time);
-        }
-    };
-
 
 
     @Override
     public List<LimitExtractor> getAllExtractors() {
         List<LimitExtractor> extractors = new ArrayList<LimitExtractor>();
 
-        extractors.add(TIME);
         extractors.add(SHOWERS);
 
         return Collections.unmodifiableList(extractors);
