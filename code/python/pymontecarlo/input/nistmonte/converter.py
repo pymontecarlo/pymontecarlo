@@ -29,7 +29,7 @@ from pymontecarlo.input.base.converter import \
 from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
-from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit
+from pymontecarlo.input.base.limit import ShowersLimit
 from pymontecarlo.input.base.detector import \
     (_DelimitedDetector,
      BackscatteredElectronAzimuthalAngularDetector,
@@ -63,7 +63,7 @@ class Converter(_Converter):
                  TransmittedElectronPolarAngularDetector,
                  TimeDetector,
                  ElectronFractionDetector]
-    LIMITS = [TimeLimit, ShowersLimit]
+    LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_browning1994,
                                            ELASTIC_CROSS_SECTION.elsepa2005],
@@ -83,17 +83,12 @@ class Converter(_Converter):
               ENERGY_LOSS.type: [ENERGY_LOSS.joy_luo1989,
                                  ENERGY_LOSS.bethe1930,
                                  ENERGY_LOSS.bether1930mod],
-              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989,
-                                                 MASS_ABSORPTION_COEFFICIENT.chantler2005,
-                                                 MASS_ABSORPTION_COEFFICIENT.dtsa_citzaf,
+              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.chantler2005,
                                                  MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11,
                                                  MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11_dtsa,
-                                                 MASS_ABSORPTION_COEFFICIENT.henke1982,
                                                  MASS_ABSORPTION_COEFFICIENT.henke1993,
                                                  MASS_ABSORPTION_COEFFICIENT.none,
-                                                 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1988,
-                                                 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991,
-                                                 MASS_ABSORPTION_COEFFICIENT.ruste1979]}
+                                                 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991]}
     DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.elsepa2005,
                       IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.bote_salvat2008,
                       IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.berger_seltzer1983,
