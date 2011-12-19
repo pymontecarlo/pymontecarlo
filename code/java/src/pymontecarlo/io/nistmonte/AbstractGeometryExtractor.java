@@ -129,8 +129,8 @@ public abstract class AbstractGeometryExtractor extends AbstractExtractor
                 ((TransformableRegion) r).rotate(pivot, phi, theta, psi);
 
         return Math2.normalize(new double[] {
-                Math.cos(tilt) * Math.cos(rotation),
-                Math.cos(tilt) * Math.sin(rotation), Math.sin(tilt) });
+                Math.sin(tilt) * Math.cos(rotation),
+                Math.sin(tilt) * Math.sin(rotation), Math.cos(tilt) });
     }
 
 

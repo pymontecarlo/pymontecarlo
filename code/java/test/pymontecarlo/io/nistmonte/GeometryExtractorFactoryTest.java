@@ -146,10 +146,10 @@ public class GeometryExtractorFactoryTest {
         // Test
         assertTrue(extractor.canExtract(element));
 
-        assertEquals(0.866025404, n[0], 1e-4);
+        assertEquals(0.5, n[0], 1e-4);
         assertEquals(0.0, n[1], 1e-4);
-        assertEquals(0.5, n[2], 1e-4);
-        assertEquals(Math.toRadians(30.0), Math.atan2(n[2], n[0]), 1e-4);
+        assertEquals(0.866025404, n[2], 1e-4);
+        assertEquals(Math.toRadians(60.0), Math.atan2(n[2], n[0]), 1e-4);
 
         assertEquals(1, chamber.getSubRegions().size());
         RegionBase region = chamber.getSubRegions().get(0);
@@ -199,10 +199,10 @@ public class GeometryExtractorFactoryTest {
         // Tests
         assertTrue(extractor.canExtract(element));
 
-        assertEquals(-0.866025404, n[0], 1e-4);
+        assertEquals(-0.5, n[0], 1e-4);
         assertEquals(0.0, n[1], 1e-4);
-        assertEquals(0.5, n[2], 1e-4);
-        assertEquals(Math.toRadians(30.0), Math.atan2(n[2], -n[0]), 1e-4);
+        assertEquals(0.866025404, n[2], 1e-4);
+        assertEquals(Math.toRadians(60.0), Math.atan2(n[2], -n[0]), 1e-4);
 
         assertEquals(3, chamber.getSubRegions().size());
 
@@ -287,10 +287,10 @@ public class GeometryExtractorFactoryTest {
         // Test
         assertTrue(extractor.canExtract(element));
 
-        assertEquals(0.866025404, n[0], 1e-4);
+        assertEquals(0.5, n[0], 1e-4);
         assertEquals(0.0, n[1], 1e-4);
-        assertEquals(0.5, n[2], 1e-4);
-        assertEquals(Math.toRadians(30.0), Math.atan2(n[2], n[0]), 1e-4);
+        assertEquals(0.866025404, n[2], 1e-4);
+        assertEquals(Math.toRadians(60.0), Math.atan2(n[2], n[0]), 1e-4);
 
         assertEquals(3, chamber.getSubRegions().size());
 
