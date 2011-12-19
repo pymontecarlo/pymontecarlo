@@ -19,7 +19,8 @@ from math import radians
 from pymontecarlo.input.base.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
-     PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector)
+     PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
+     ElectronFractionDetector)
 
 # Globals and constants variables.
 
@@ -419,6 +420,23 @@ class TestTimeDetector(unittest.TestCase):
     def testfrom_xml(self):
         element = self.d.to_xml()
         TimeDetector.from_xml(element)
+
+    def testto_xml(self):
+        self.d.to_xml()
+
+class TestElectronFractionDetector(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.d = ElectronFractionDetector()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testfrom_xml(self):
+        element = self.d.to_xml()
+        ElectronFractionDetector.from_xml(element)
 
     def testto_xml(self):
         self.d.to_xml()

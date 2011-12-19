@@ -11,6 +11,7 @@ import org.jdom.Element;
 
 import pymontecarlo.input.nistmonte.AngularDetectorFactory;
 import pymontecarlo.input.nistmonte.Detector;
+import pymontecarlo.input.nistmonte.ElectronFractionDetector;
 import pymontecarlo.input.nistmonte.EnergyDetectorFactory;
 import pymontecarlo.input.nistmonte.PhotonIntensityDetector;
 import pymontecarlo.input.nistmonte.PhotonSpectrumDetector;
@@ -171,6 +172,18 @@ public class DetectorExtractorFactory implements
         }
     };
 
+    /** Electron fraction detector extractor. */
+    public static final DetectorExtractor ELECTRON_FRACTION =
+            new AbstractDetectorExtractor(
+                    "pymontecarlo.input.base.detector.ElectronFractionDetector") {
+
+                @Override
+                public Detector extract(Element detectorElement)
+                        throws IOException, EPQException {
+                    return new ElectronFractionDetector();
+                }
+            };
+
 
 
     @Override
@@ -186,6 +199,7 @@ public class DetectorExtractorFactory implements
         extractors.add(TRANSMITTED_ELECTRON_AZIMUTHAL_ANGULAR);
         extractors.add(PHOTON_SPECTRUM);
         extractors.add(TIME);
+        extractors.add(ELECTRON_FRACTION);
 
         return Collections.unmodifiableList(extractors);
     }

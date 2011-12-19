@@ -449,3 +449,9 @@ class TimeDetector(objectxml):
     Records simulation time and speed (electron simulated /s).
     """
     pass
+
+class ElectronFractionDetector(objectxml):
+    """
+    Records backscattered, transmitted and absorbed fraction of primary electrons.
+    """
+    pass
