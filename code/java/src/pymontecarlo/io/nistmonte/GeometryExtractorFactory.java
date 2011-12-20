@@ -45,15 +45,10 @@ public class GeometryExtractorFactory implements
                     IMaterialScatterModel material =
                             bodies.get(substrate).material;
 
-                    double sc =
-                            ElectronRange.KanayaAndOkayama1972.compute(
-                                    material.getMaterial(), beamEnergy)
-                                    / material.getMaterial().getDensity();
-                    double dim = Math.max(10.0 * sc, 1.0e-4);
-                    double[] dims = new double[] { dim, dim, dim };
-                    double[] pos = new double[] { 0.0, 0.0, -dim / 2.0 };
+                    double[] normal = Math2.Z_AXIS;
+                    double[] pt = Math2.ORIGIN_3D;
                     MultiPlaneShape shape =
-                            MultiPlaneShape.createBlock(dims, pos, 0, 0, 0);
+                            MultiPlaneShape.createSubstrate(normal, pt);
 
                     new Region(chamber, material, shape); // add shape to
                                                           // chamber

@@ -80,18 +80,13 @@ public class PhotonIntensityDetector extends PhotonDetector {
         double e0 = ToSI.eV(50);
         double emax = mcss.getBeamEnergy();
 
-        XRayTransitionSet xrayTransitions = new XRayTransitionSet();
-
-        XRayTransitionSet elementXrayTransitions;
+        List<XRayTransition> xrayTransitions = new ArrayList<XRayTransition>();
         for (Element element : mcss.getElementSet()) {
-            elementXrayTransitions = new XRayTransitionSet(element, e0, emax);
-
-            xrayTransitions =
-                    XRayTransitionSet.union(xrayTransitions,
-                            elementXrayTransitions);
+            xrayTransitions.addAll(new XRayTransitionSet(element, e0, emax)
+                    .getTransitions());
         }
 
-        xrayAccumulator = new XRayAccumulator(xrayTransitions.getTransitions());
+        xrayAccumulator = new XRayAccumulator(xrayTransitions);
         xrel.addActionListener(xrayAccumulator);
     }
 
