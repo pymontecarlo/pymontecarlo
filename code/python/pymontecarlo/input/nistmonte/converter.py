@@ -65,7 +65,7 @@ class Converter(_Converter):
                  ElectronFractionDetector]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
-                                           ELASTIC_CROSS_SECTION.mott_browning1994,
+                                           ELASTIC_CROSS_SECTION.rutherford,
                                            ELASTIC_CROSS_SECTION.elsepa2005],
               IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.bote_salvat2008,
                                               IONIZATION_CROSS_SECTION.casnati1982,
