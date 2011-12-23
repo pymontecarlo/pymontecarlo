@@ -1,0 +1,11 @@
+# Input directories
+src.dir=${basedir}/src
+test.dir=${basedir}/test
+
+# Output directories
+tmp.dir=
+lib.dir=${tmp.dir}/lib
+build.dir=${tmp.dir}/build
+dist.dir=${tmp.dir}/dist
+doc.dir=${tmp.dir}/doc
+test.report.dir=${tmp.dir}/test/report

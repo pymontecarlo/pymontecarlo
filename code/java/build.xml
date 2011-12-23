@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+   pyMonteCarlo
+   Copyright (C) 2011 Philippe T. Pinard and Hendrix Demers;
+  
+   This library is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU Lesser General Public License
+   along with this library.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+         basedir="."
+         name="pyMonteCarlo"
+         default="help">
+
+    <!-- Read the local properties (if present) -->
+    <property name="property.file" location="build.prop" />
+    <property file="${property.file}" />
+
+    <!-- Set default values to properties -->
+    <echo message="===&gt; Input directories" />
+
+    <property name="src.dir" location="${basedir}/src" />
+    <echo message="  src.dir = ${src.dir}" />
+
+    <property name="test.dir" location="${basedir}/test" />
+    <echo message="  test.dir = ${test.dir}" />
+
+    <echo message="===&gt; Output directories" />
+
+    <property name="tmp.dir" location="${java.io.tmpdir}" />
+    <echo message="  tmp.dir = ${tmp.dir}" />
+
+    <property name="lib.dir" location="${tmp.dir}/lib" />
+    <echo message="  lib.dir = ${lib.dir}" />
+
+    <property name="build.dir" location="${tmp.dir}/build" />
+    <echo message="  build.dir = ${build.dir}" />
+
+    <property name="dist.dir" location="${tmp.dir}/dist" />
+    <echo message="  dist.dir = ${dist.dir}" />
+
+    <property name="doc.dir" location="${tmp.dir}/doc" />
+    <echo message="  doc.dir = ${doc.dir}" />
+
+    <property name="test.report.dir" location="${tmp.dir}/test/report" />
+    <echo message="  test.report.dir = ${test.report.dir}" />
+
+
+
+    <target name="clean"
+            description="Removes all temporary files and directories">
+        <delete dir="${lib.dir}" />
+        <delete dir="${build.dir}" />
+        <delete dir="${test.report.dir}" />
+    </target>
+
+
+
+    <target name="clean-all"
+            description="Remove all created files and directories"
+            depends="clean">
+        <delete dir="${dist.dir}" />
+        <delete dir="${doc.dir}" />
+    </target>
+
+
+
+    <target name="compile"
+            depends="-init"
+            description="Compiles source classes">
+        <ivy:retrieve conf="default" />
+
+        <javac srcdir="${src.dir}"
+               destdir="${build.dir}"
+               source="1.6"
+               target="1.6"
+               classpathref="libraries"
+               failonerror="true"
+               debug="true"
+               deprecation="true"
+               includeAntRuntime="false">
+        </javac>
+    </target>
+
+
+
+    <target name="dist" depends="compile"
+            description="Create distributions">
+        <jar destfile="${dist.dir}/${ivy.module}-${ivy.revision}.jar">
+            <fileset dir="${build.dir}" includes="**" />
+            <fileset dir="${src.dir}" includes="**/*.java" />
+        </jar>
+    </target>
+
+
+
+    <target name="help">
+        <echo>Use ant -p to get a listing of all the available targets.
+      </echo>
+    </target>
+
+
+
+
+    <target name="-init" description="Create all directories for build">
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${lib.dir}" />
+        <property name="ivy.lib.dir" location="${lib.dir}" />
+        <path id="libraries">
+            <fileset dir="${ivy.lib.dir}" includes="*.jar" />
+        </path>
+    </target>
+
+
+
+    <target name="test"
+            depends="compile"
+            description="Builds and runs the tests">
+        <mkdir dir="${test.report.dir}" />
+
+        <!-- Compile tests -->
+        <ivy:retrieve conf="test" />
+
+        <javac srcdir="${test.dir}"
+               destdir="${build.dir}"
+               source="1.6"
+               classpathref="libraries"
+               failonerror="true"
+               debug="true"
+               deprecation="true"
+               includeAntRuntime="false">
+        </javac>
+
+        <!-- Copy support files -->
+
+        <!-- Run junit -->
+        <junit failureproperty="test.failure">
+            <formatter type="brief" usefile="false" />
+            <formatter type="xml" />
+            <batchtest todir="${test.report.dir}">
+                <fileset dir="${build.dir}">
+                    <include name="**/*Test.class" />
+                </fileset>
+            </batchtest>
+            <classpath refid="libraries" />
+            <classpath path="${build.dir}" />
+        </junit>
+
+        <fail message="Some tests failed!!!" if="test.failure" />
+    </target>
+
+</project>

@@ -13,15 +13,8 @@
     </publications>
     
     <dependencies>
-        <dependency org="org.jdom" name="jdom" rev="1.1">
-            <exclude name="xercesImpl" />
-            <exclude name="saxpath" />
-            <exclude name="xalan" />
-            <exclude name="xmlParserAPIs" />
-            <exclude name="jaxen-core" />
-            <exclude name="jaxen-jdom" />
-        </dependency>
-        <dependency org="net.sf.opencsv" name="opencsv" rev="2.3" />
-        <dependency org="com.martiansoftware" name="jsap" rev="2.1"/>
+        <dependency org="ptp" name="ptpshared" rev="0.1" 
+                conf="default->jdom;default->opencsv;default->jsap" />
+        <dependency org="gov.nist.microanalysis" name="epq" rev="0.1" />
     </dependencies>
 </ivy-module>
