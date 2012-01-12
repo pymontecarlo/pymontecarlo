@@ -27,9 +27,11 @@ from itertools import tee, izip
 import pypenelope.lib.penelope as penelope
 
 # Local modules.
-from pymontecarlo.input.base.exporter import Exporter as _Exporter
-from pymontecarlo.input.base.geometry import Substrate, Inclusion, MultiLayers, GrainBoundaries
-from pymontecarlo.input.penelope.geometry import PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
+from pymontecarlo.input.base.geometry import \
+    Substrate, Inclusion, MultiLayers, GrainBoundaries
+from pymontecarlo.input.penelope.geometry import \
+    PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
+from pymontecarlo.io.base.exporter import Exporter as _Exporter
 
 # Globals and constants variables.
 from pymontecarlo.input.penelope.material import VACUUM

@@ -27,7 +27,6 @@ from pkg_resources import resource_stream #@UnresolvedImport
 import numpy as np
 
 # Local modules.
-from pymontecarlo.input.base.exporter import Exporter as _Exporter, ExporterException
 from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
@@ -39,6 +38,7 @@ from pymontecarlo.input.base.detector import \
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      )
+from pymontecarlo.io.base.exporter import Exporter as _Exporter, ExporterException
 import pymontecarlo.util.element_properties as ep
 
 from casinoTools.FileFormat.casino2.File import File

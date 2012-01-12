@@ -23,7 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.base.importer import Importer as _Importer
+from pymontecarlo.io.base.importer import Importer as _Importer
 from pymontecarlo.result.base.result import \
     PhotonIntensityResult, create_intensity_dict
 from pymontecarlo.input.base.detector import \

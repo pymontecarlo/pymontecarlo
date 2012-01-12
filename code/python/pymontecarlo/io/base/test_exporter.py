@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.exporter import Exporter #@UnusedImport
+from pymontecarlo.io.base.exporter import Exporter #@UnusedImport
 
 # Globals and constants variables.
 
