@@ -19,10 +19,13 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from math import sqrt
+from collections import Iterable
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.transition import from_string
 
 # Globals and constants variables.
 GENERATED = "g"
@@ -71,22 +74,42 @@ class PhotonIntensityResult(_Result):
 
         self._intensities = intensities
 
-        transitions = intensities.keys()
-        self._transitions = dict(zip(map(str, transitions), transitions))
-
     def _get_intensity(self, key, transition, absorption=True):
         if isinstance(transition, basestring):
+            transition = from_string(transition)
+
+        # Get intensity data
+        data = []
+        if isinstance(transition, Iterable): # transitionset
+            if transition in self._intensities:
+                data.append(self._intensities[transition])
+            else:
+                for t in transition:
+                    if t in self._intensities: # Add only known transitions
+                        data.append(self._intensities[t])
+
+            if not data:
+                raise ValueError, "No intensity for transition(s): %s" % transition
+        else: # single transition
             try:
-                transition = self._transitions[transition]
-            except:
+                data.append(self._intensities[transition])
+            except KeyError:
                 raise ValueError, "No intensity for transition(s): %s" % transition
 
-        try:
-            data = self._intensities[transition]
-        except KeyError:
-            raise ValueError, "No intensity for transition(s): %s" % transition
+        # Retrieve intensity (and its uncertainty)
+        absorption_key = EMITTED if absorption else GENERATED
+        total_val = 0.0; total_err = 0.0
+        for datum in data:
+            val, err = datum[absorption_key][key]
+            total_val += val
+            try:
+                total_err += (err / val) ** 2
+            except ZeroDivisionError: # if val == 0.0
+                pass
 
-        return data[EMITTED if absorption else GENERATED][key]
+        total_err = sqrt(total_err) * total_val
+
+        return total_val, total_err
 
     def intensity(self, transition, absorption=True, fluorescence=True):
         """
@@ -101,6 +124,16 @@ class PhotonIntensityResult(_Result):
         
             >>> result.intensity(K_family(13))
             >>> result.intensity('Al K')
+            
+        Note that in the case of a set of transitions (e.g. family, shell),
+        the intensity of each transition in the set is added. 
+        For instance, the following lines will yield the same result::
+        
+            >>> result.intensity('Al Ka1')[0] + result.intensity('Al Ka2')[0]
+            >>> result.intensity('Al K')[0]
+            
+        Note that the ``[0]`` is to return the intensity part of the 
+        intensity/uncertainty tuple.
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)

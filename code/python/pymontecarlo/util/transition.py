@@ -285,6 +285,39 @@ def get_transitions(z, energylow=0.0, energyhigh=1e6):
 
     return sorted(transitions)
 
+def from_string(s):
+    """
+    Returns a :class:`Transition` or :class:`transitionset` from the given
+    string. 
+    The first word must be the symbol of the element followed by either the
+    Siegbahn (e.g. ``Al Ka1``) or IUPAC (``Al K-L3``) notation of the 
+    transition.
+    The second word can also represent transition family (e.g. ``Al K``) or 
+    shell (``Al LIII``).
+    
+    :arg s: string representing the transition
+    
+    :return: transition or set of transitions
+    """
+    words = s.split(" ")
+    if len(words) != 2:
+        raise ValueError, "The transition string must have 2 words: " + \
+            "1. the symbol of the element and 2. the transition notation"
+
+    z = ep.atomic_number(symbol=words[0])
+    notation = words[1]
+
+    if notation in _SIEGBAHNS_NOGREEK: # Transition with Siegbahn notation
+        return Transition(z, siegbahn=notation)
+    elif '-' in notation: # Transition with IUPAC notation
+        dest, src = notation.split('-')
+        return Transition(z, src=get_subshell(iupac=src),
+                          dest=get_subshell(iupac=dest))
+    elif notation in _TRANSITIONSETS: # transitionset from Family, group or shell
+        return _TRANSITIONSETS[notation](z)
+    else:
+        raise ValueError, "Cannot parse transition string: %s" % s
+
 def _group(z, key):
     transitions = []
 
@@ -424,3 +457,9 @@ def MV(z):
     Returns all transitions ending on the M\ :sub:`V` shell.
     """
     return _shell(z, 9)
+
+_TRANSITIONSETS = {'K': K_family, 'L': L_family, 'M': M_family,
+                   'Ka': Ka, 'Kb': Kb, 'La': La, 'Lb': Lb, 'Lg':Lg,
+                   'Ma': Ma, 'Mb': Mb, 'Mg': Mg,
+                   'LI': LI, 'LII': LII, 'LIII': LIII,
+                   'MI': MI, 'MII': MII, 'MIII': MIII, 'MIV': MIV, 'MV': MV}

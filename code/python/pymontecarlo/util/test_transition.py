@@ -15,7 +15,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.util.transition import \
-    (Transition, get_transitions, transitionset,
+    (Transition, get_transitions, transitionset, from_string,
      K_family, L_family, M_family, N_family,
      Ka, Kb, La, Lb, Lg, Ma, Mb, Mg,
      LI, LII, LIII, MI, MII, MIII, MIV, MV)
@@ -158,6 +158,15 @@ class TestModule(unittest.TestCase):
 
         transitions = get_transitions(13, 1e3, 2e3)
         self.assertEqual(4, len(transitions))
+
+    def testfrom_string(self):
+        self.assertEqual(from_string('Al Ka1'), Transition(13, siegbahn='Ka1'))
+        self.assertEqual(from_string('Al K-L3'), Transition(13, siegbahn='Ka1'))
+        self.assertEqual(from_string('Al Ka'), Ka(13))
+        self.assertEqual(from_string('Al K'), K_family(13))
+
+        self.assertRaises(ValueError, from_string, 'Al K a1')
+        self.assertRaises(ValueError, from_string, 'Al Kc1')
 
     def testfamily(self):
         # K
