@@ -14,6 +14,7 @@ import logging
 from math import radians
 import tempfile
 from zipfile import ZipFile
+import os
 
 # Third party modules.
 
@@ -56,6 +57,8 @@ class TestResults(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
+        os.remove(self.tmpzip)
+
     def testskeleton(self):
         self.assertTrue(True)
 
@@ -71,7 +74,6 @@ class TestResults(unittest.TestCase):
             self.assertTrue('det1.csv' in namelist)
 
             zipfile.close()
-
 
     def testload(self):
         with open(self.results_zip, 'r') as fp:
