@@ -319,4 +319,49 @@ class PhotonIntensityResult(_Result):
         for transition in self._intensities:
             yield transition, self.intensity(transition, absorption, fluorescence)
 
+class TimeResult(_Result):
 
+    def __init__(self, detector, simulation_time=0.0, simulation_speed=(0.0, 0.0)):
+        """
+        Creates a new result to store simulation time and speed.
+        
+        :arg detector: time detector
+        :arg simulation_time: total time of the simulation (in seconds)
+        :arg simulation_speed: time to simulation one electron (in seconds) and
+            its uncertainty
+        """
+        _Result.__init__(self, detector)
+
+        self._simulation_time = simulation_time
+        self._simulation_speed = simulation_speed
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key, detector):
+        fp = zipfile.open(key + '.txt', 'r')
+        lines = fp.readlines()
+
+        if len(lines) != 2:
+            raise IOError, '"%s.txt" should contain 2 lines' % key
+
+        _desc, simulation_time = lines[0].split('=')
+        _desc, value = lines[1].split('=')
+        val, err = value.split('+-')
+
+        return cls(detector, float(simulation_time),
+                   (float(val), float(err)))
+
+    def __savezip__(self, zipfile, key):
+        fp = StringIO()
+
+        fp.write('Simulation time (s) = %s\n' % self.simulation_time)
+        fp.write('Simulation speed (s/electron) = %s +- %s' % self.simulation_speed)
+
+        zipfile.writestr(key + '.txt', fp.getvalue())
+
+    @property
+    def simulation_time(self):
+        return self._simulation_time
+
+    @property
+    def simulation_speed(self):
+        return self._simulation_speed

@@ -20,9 +20,9 @@ from math import radians
 
 # Local modules.
 from pymontecarlo.result.base.result import \
-    PhotonIntensityResult, create_intensity_dict
+    PhotonIntensityResult, TimeResult, create_intensity_dict
 from pymontecarlo.util.transition import Transition, K_family
-from pymontecarlo.input.base.detector import PhotonIntensityDetector
+from pymontecarlo.input.base.detector import PhotonIntensityDetector, TimeDetector
 
 import DrixUtilities.Files as Files
 
@@ -229,6 +229,46 @@ class TestPhotonIntensityResult(unittest.TestCase):
     def testiter_transition(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))
 
+class TestTimeResult(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.det = TimeDetector()
+        self.r = TimeResult(self.det, 5.0, (1.0, 0.5))
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../../testdata/results.zip')
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(5.0, self.r.simulation_time, 4)
+        self.assertAlmostEqual(1.0, self.r.simulation_speed[0], 4)
+        self.assertAlmostEqual(0.5, self.r.simulation_speed[1], 4)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det2')
+
+        reader = zipfile.open('det2.txt', 'r')
+        lines = reader.readlines()
+
+        self.assertEqual(2, len(lines))
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = TimeResult.__loadzip__(zipfile, 'det2', self.det)
+
+        self.assertAlmostEqual(5.0, r.simulation_time, 4)
+        self.assertAlmostEqual(1.0, r.simulation_speed[0], 4)
+        self.assertAlmostEqual(0.5, r.simulation_speed[1], 4)
+
+        zipfile.close()
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
