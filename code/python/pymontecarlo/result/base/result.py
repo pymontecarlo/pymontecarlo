@@ -19,8 +19,10 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import csv
 from math import sqrt
 from collections import Iterable
+from StringIO import StringIO
 
 # Third party modules.
 
@@ -40,8 +42,18 @@ class _Result(object):
     def __init__(self, detector):
         self._detector = detector
 
+    @classmethod
+    def __loadzip__(cls, zipfile, key, detector):
+        return cls(detector)
+
+    def __savezip__(self, zipfile, key):
+        pass
+
     @property
     def detector(self):
+        """
+        Detector associated to this result.
+        """
         return self._detector
 
 def create_intensity_dict(transition,
@@ -62,6 +74,16 @@ def create_intensity_dict(transition,
             }
 
 class PhotonIntensityResult(_Result):
+    _COLUMNS = ['transition', 'energy (eV)',
+                'generated characteristic', 'generated characteristic unc',
+                'generated bremsstrahlung', 'generated bremsstrahlung unc',
+                'generated no fluorescence', 'generated no fluorescence unc',
+                'generated total', 'generated total unc',
+                'emitted characteristic', 'emitted characteristic unc',
+                'emitted bremsstrahlung', 'emitted bremsstrahlung unc',
+                'emitted no fluorescence', 'emitted no fluorescence unc',
+                'emitted total', 'emitted total unc']
+
     def __init__(self, detector, intensities={}):
         """
         Creates a new result to store photon intensities.
@@ -73,6 +95,63 @@ class PhotonIntensityResult(_Result):
         _Result.__init__(self, detector)
 
         self._intensities = intensities
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key, detector):
+        reader = csv.reader(zipfile.open(key + '.csv', 'r'))
+
+        header = reader.next()
+        if header != cls._COLUMNS:
+            raise IOError, 'Header of "%s.csv" is invalid' % key
+
+        intensities = {}
+        for row in reader:
+            transition = from_string(row[0])
+            # skip row[1] (energy) 
+
+            gcf = float(row[2]), float(row[3])
+            gbf = float(row[4]), float(row[5])
+            gnf = float(row[6]), float(row[7])
+            gt = float(row[8]), float(row[9])
+
+            ecf = float(row[10]), float(row[11])
+            ebf = float(row[12]), float(row[13])
+            enf = float(row[14]), float(row[15])
+            et = float(row[16]), float(row[17])
+
+            intensities.update(create_intensity_dict(transition,
+                                                     gcf, gbf, gnf, gt,
+                                                     ecf, ebf, enf, et))
+
+        return cls(detector, intensities)
+
+    def __savezip__(self, zipfile, key):
+        fp = StringIO()
+        writer = csv.writer(fp)
+
+        writer.writerow(self._COLUMNS)
+
+        for transition, intensities in self._intensities.iteritems():
+            row = []
+            row.append(str(transition))
+            if hasattr(transition, 'energy'):
+                row.append(transition.energy)
+            else:
+                row.append(0.0)
+
+            row.extend(intensities[GENERATED][CHARACTERISTIC])
+            row.extend(intensities[GENERATED][BREMSSTRAHLUNG])
+            row.extend(intensities[GENERATED][NOFLUORESCENCE])
+            row.extend(intensities[GENERATED][TOTAL])
+
+            row.extend(intensities[EMITTED][CHARACTERISTIC])
+            row.extend(intensities[EMITTED][BREMSSTRAHLUNG])
+            row.extend(intensities[EMITTED][NOFLUORESCENCE])
+            row.extend(intensities[EMITTED][TOTAL])
+
+            writer.writerow(row)
+
+        zipfile.writestr(key + '.csv', fp.getvalue())
 
     def _get_intensity(self, key, transition, absorption=True):
         if isinstance(transition, basestring):

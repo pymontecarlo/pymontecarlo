@@ -11,6 +11,10 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+from StringIO import StringIO
+from zipfile import ZipFile
+import csv
+from math import radians
 
 # Third party modules.
 
@@ -18,6 +22,9 @@ import logging
 from pymontecarlo.result.base.result import \
     PhotonIntensityResult, create_intensity_dict
 from pymontecarlo.util.transition import Transition, K_family
+from pymontecarlo.input.base.detector import PhotonIntensityDetector
+
+import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
@@ -46,14 +53,54 @@ class TestPhotonIntensityResult(unittest.TestCase):
                                      ecf=(25.0, 0.5), ebf=(26.0, 0.6), enf=(27.0, 0.7), et=(78.0, 0.8))
         intensities.update(ints)
 
-        detector = None
-        self.r = PhotonIntensityResult(detector, intensities)
+        self.det = PhotonIntensityDetector((radians(35), radians(45)),
+                                           (0, radians(360.0)))
+        self.r = PhotonIntensityResult(self.det, intensities)
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../../testdata/results.zip')
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det1')
+
+        reader = csv.reader(zipfile.open('det1.csv', 'r'))
+        lines = list(reader)
+
+        self.assertEqual(4, len(lines))
+        self.assertEqual(18, len(lines[0]))
+        self.assertEqual(18, len(lines[1]))
+        self.assertEqual(18, len(lines[2]))
+        self.assertEqual(18, len(lines[3]))
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = PhotonIntensityResult.__loadzip__(zipfile, 'det1', self.det)
+
+        self.assertEqual(3, len(r._intensities))
+
+        val, err = r.intensity(self.t1)
+        self.assertAlmostEqual(18.0, val, 4)
+        self.assertAlmostEqual(0.8, err, 4)
+
+        val, err = r.intensity(self.t2)
+        self.assertAlmostEqual(48.0, val, 4)
+        self.assertAlmostEqual(0.8, err, 4)
+
+        val, err = r.intensity('Cu La')
+        self.assertAlmostEqual(78.0 + 18.0, val, 4)
+        self.assertAlmostEqual(4.378803, err, 4)
+
+        zipfile.close()
 
     def testintensity(self):
         # Transition 1
@@ -77,10 +124,6 @@ class TestPhotonIntensityResult(unittest.TestCase):
         self.assertAlmostEqual(3.0, val, 4)
         self.assertAlmostEqual(0.3, err, 4)
 
-        val, err = self.r.intensity('Cu La')
-        self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(4.378803, err, 4)
-
         # Transition 2
         val, err = self.r.intensity(self.t2)
         self.assertAlmostEqual(48.0, val, 4)
@@ -101,6 +144,11 @@ class TestPhotonIntensityResult(unittest.TestCase):
         val, err = self.r.intensity(self.t2, absorption=False, fluorescence=False)
         self.assertAlmostEqual(13.0, val, 4)
         self.assertAlmostEqual(0.3, err, 4)
+
+        # Transition 1 + 3
+        val, err = self.r.intensity('Cu La')
+        self.assertAlmostEqual(78.0 + 18.0, val, 4)
+        self.assertAlmostEqual(4.378803, err, 4)
 
     def testcharacteristic_fluorescence(self):
         # Transition 1
