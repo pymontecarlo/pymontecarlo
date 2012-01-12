@@ -23,6 +23,7 @@ import csv
 from math import sqrt
 from collections import Iterable
 from StringIO import StringIO
+from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Third party modules.
 
@@ -337,26 +338,28 @@ class TimeResult(_Result):
 
     @classmethod
     def __loadzip__(cls, zipfile, key, detector):
-        fp = zipfile.open(key + '.txt', 'r')
-        lines = fp.readlines()
+        element = fromstring(zipfile.open(key + '.xml', 'r').read())
 
-        if len(lines) != 2:
-            raise IOError, '"%s.txt" should contain 2 lines' % key
+        child = element.find('time')
+        simulation_time = float(child.get('val', 0.0))
 
-        _desc, simulation_time = lines[0].split('=')
-        _desc, value = lines[1].split('=')
-        val, err = value.split('+-')
+        child = element.find('speed')
+        simulation_speed = float(child.get('val', 0.0)), float(child.get('err', 0.0))
 
-        return cls(detector, float(simulation_time),
-                   (float(val), float(err)))
+        return cls(detector, simulation_time, simulation_speed)
 
     def __savezip__(self, zipfile, key):
-        fp = StringIO()
+        element = Element('result')
 
-        fp.write('Simulation time (s) = %s\n' % self.simulation_time)
-        fp.write('Simulation speed (s/electron) = %s +- %s' % self.simulation_speed)
+        attr = {'val': str(self.simulation_time)}
+        child = Element('time', attr)
+        element.append(child)
 
-        zipfile.writestr(key + '.txt', fp.getvalue())
+        attr = dict(zip(['val', 'err'], map(str, self.simulation_speed)))
+        child = Element('speed', attr)
+        element.append(child)
+
+        zipfile.writestr(key + '.xml', tostring(element))
 
     @property
     def simulation_time(self):
@@ -365,3 +368,60 @@ class TimeResult(_Result):
     @property
     def simulation_speed(self):
         return self._simulation_speed
+
+class ElectronFractionResult(_Result):
+
+    def __init__(self, detector,
+                 absorbed=(0.0, 0.0),
+                 backscattered=(0.0, 0.0),
+                 transmitted=(0.0, 0.0)):
+        _Result.__init__(self, detector)
+
+        self._absorbed = absorbed
+        self._backscattered = backscattered
+        self._transmitted = transmitted
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key, detector):
+        element = fromstring(zipfile.open(key + '.xml', 'r').read())
+
+        child = element.find('absorbed')
+        absorbed = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+
+        child = element.find('backscattered')
+        backscattered = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+
+        child = element.find('transmitted')
+        transmitted = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+
+        return cls(detector, absorbed, backscattered, transmitted)
+
+    def __savezip__(self, zipfile, key):
+        element = Element('result')
+
+        attr = dict(zip(['val', 'err'], map(str, self.absorbed)))
+        child = Element('absorbed', attr)
+        element.append(child)
+
+        attr = dict(zip(['val', 'err'], map(str, self.backscattered)))
+        child = Element('backscattered', attr)
+        element.append(child)
+
+        attr = dict(zip(['val', 'err'], map(str, self.transmitted)))
+        child = Element('transmitted', attr)
+        element.append(child)
+
+        zipfile.writestr(key + '.xml', tostring(element))
+
+    @property
+    def absorbed(self):
+        return self._absorbed
+
+    @property
+    def backscattered(self):
+        return self._backscattered
+
+    @property
+    def transmitted(self):
+        return self._transmitted
+

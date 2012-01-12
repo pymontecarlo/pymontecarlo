@@ -15,14 +15,16 @@ from StringIO import StringIO
 from zipfile import ZipFile
 import csv
 from math import radians
+from xml.etree.ElementTree import fromstring
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.result.base.result import \
-    PhotonIntensityResult, TimeResult, create_intensity_dict
+    PhotonIntensityResult, TimeResult, ElectronFractionResult, create_intensity_dict
 from pymontecarlo.util.transition import Transition, K_family
-from pymontecarlo.input.base.detector import PhotonIntensityDetector, TimeDetector
+from pymontecarlo.input.base.detector import \
+    PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 
 import DrixUtilities.Files as Files
 
@@ -253,10 +255,9 @@ class TestTimeResult(unittest.TestCase):
         zipfile = ZipFile(fp, 'w')
         self.r.__savezip__(zipfile, 'det2')
 
-        reader = zipfile.open('det2.txt', 'r')
-        lines = reader.readlines()
+        element = fromstring(zipfile.open('det2.xml', 'r').read())
 
-        self.assertEqual(2, len(lines))
+        self.assertEqual(2, len(element))
 
         zipfile.close()
 
@@ -267,6 +268,52 @@ class TestTimeResult(unittest.TestCase):
         self.assertAlmostEqual(5.0, r.simulation_time, 4)
         self.assertAlmostEqual(1.0, r.simulation_speed[0], 4)
         self.assertAlmostEqual(0.5, r.simulation_speed[1], 4)
+
+        zipfile.close()
+
+class TestElectronFractionResult(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.det = ElectronFractionDetector()
+        self.r = ElectronFractionResult(self.det, (1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../../testdata/results.zip')
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(1.0, self.r.absorbed[0], 4)
+        self.assertAlmostEqual(0.1, self.r.absorbed[1], 4)
+        self.assertAlmostEqual(2.0, self.r.backscattered[0], 4)
+        self.assertAlmostEqual(0.2, self.r.backscattered[1], 4)
+        self.assertAlmostEqual(3.0, self.r.transmitted[0], 4)
+        self.assertAlmostEqual(0.3, self.r.transmitted[1], 4)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det3')
+
+        element = fromstring(zipfile.open('det3.xml', 'r').read())
+
+        self.assertEqual(3, len(element))
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = ElectronFractionResult.__loadzip__(zipfile, 'det3', self.det)
+
+        self.assertAlmostEqual(1.0, r.absorbed[0], 4)
+        self.assertAlmostEqual(0.1, r.absorbed[1], 4)
+        self.assertAlmostEqual(2.0, r.backscattered[0], 4)
+        self.assertAlmostEqual(0.2, r.backscattered[1], 4)
+        self.assertAlmostEqual(3.0, r.transmitted[0], 4)
+        self.assertAlmostEqual(0.3, r.transmitted[1], 4)
 
         zipfile.close()
 
