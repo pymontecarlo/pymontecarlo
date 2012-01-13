@@ -25,13 +25,18 @@ __license__ = "GPL v3"
 # Local modules.
 from pymontecarlo.io.base.importer import Importer as _Importer
 from pymontecarlo.result.base.result import \
-    PhotonIntensityResult, create_intensity_dict
+    (
+    PhotonIntensityResult,
+    ElectronFractionResult,
+    create_intensity_dict,
+    )
 from pymontecarlo.input.base.detector import \
     (
 #     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
 #     PhiRhoZDetector,
      PhotonIntensityDetector,
+     ElectronFractionDetector,
 #     TransmittedElectronEnergyDetector,
      )
 from pymontecarlo.util.transition import K_family, LIII, MV
@@ -50,19 +55,21 @@ class Importer(_Importer):
         _Importer.__init__(self)
 
         self._detector_importers[PhotonIntensityDetector] = \
-            self._detector_photon_intensity_detector
+            self._detector_photon_intensity
+        self._detector_importers[ElectronFractionDetector] = \
+            self._detector_electron_fraction
 
     def import_from_cas(self, options, fileobj):
         # Read cas
         casfile = File()
         casfile.readFromFileObject(fileobj)
 
-        simresults = casfile.getResultsFirstSimulation()
+        simdata = casfile.getResultsFirstSimulation()
 
-        return self._import_results(options, simresults)
+        return self._import_results(options, simdata)
 
-    def _detector_photon_intensity_detector(self, options, name, detector, simresults):
-        cas_intensities = simresults.getTotalXrayIntensities()
+    def _detector_photon_intensity(self, options, name, detector, simdata):
+        cas_intensities = simdata.getTotalXrayIntensities()
         factor = detector.solid_angle / (0.0025 * 1e9)
 
         intensities = {}
@@ -80,6 +87,10 @@ class Importer(_Importer):
                 intensities.update(tmpints)
 
         return PhotonIntensityResult(detector, intensities)
+
+    def _detector_electron_fraction(self, options, name, detector, simdata):
+        bse_intensity = simdata.getSimulationResults().BE_Intensity[0]
+        return ElectronFractionResult(detector, backscattered=(bse_intensity, 0.0))
 
 
 
