@@ -178,18 +178,18 @@ class PhotonIntensityResult(_Result):
 
         # Retrieve intensity (and its uncertainty)
         absorption_key = EMITTED if absorption else GENERATED
-        total_val = 0.0; total_err = 0.0
+        total_val = 0.0; total_unc = 0.0
         for datum in data:
-            val, err = datum[absorption_key][key]
+            val, unc = datum[absorption_key][key]
             total_val += val
             try:
-                total_err += (err / val) ** 2
+                total_unc += (unc / val) ** 2
             except ZeroDivisionError: # if val == 0.0
                 pass
 
-        total_err = sqrt(total_err) * total_val
+        total_unc = sqrt(total_unc) * total_val
 
-        return total_val, total_err
+        return total_val, total_unc
 
     def intensity(self, transition, absorption=True, fluorescence=True):
         """
@@ -341,10 +341,17 @@ class TimeResult(_Result):
         element = fromstring(zipfile.open(key + '.xml', 'r').read())
 
         child = element.find('time')
-        simulation_time = float(child.get('val', 0.0))
+        if child is not None:
+            simulation_time = float(child.get('val', 0.0))
+        else:
+            simulation_time = 0.0
 
         child = element.find('speed')
-        simulation_speed = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+        if child is not None:
+            simulation_speed = \
+                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
+        else:
+            simulation_speed = (0.0, 0.0)
 
         return cls(detector, simulation_time, simulation_speed)
 
@@ -355,7 +362,7 @@ class TimeResult(_Result):
         child = Element('time', attr)
         element.append(child)
 
-        attr = dict(zip(['val', 'err'], map(str, self.simulation_speed)))
+        attr = dict(zip(['val', 'unc'], map(str, self.simulation_speed)))
         child = Element('speed', attr)
         element.append(child)
 
@@ -386,28 +393,40 @@ class ElectronFractionResult(_Result):
         element = fromstring(zipfile.open(key + '.xml', 'r').read())
 
         child = element.find('absorbed')
-        absorbed = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+        if child is not None:
+            absorbed = \
+                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
+        else:
+            absorbed = (0.0, 0.0)
 
         child = element.find('backscattered')
-        backscattered = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+        if child is not None:
+            backscattered = \
+                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
+        else:
+            backscattered = (0.0, 0.0)
 
         child = element.find('transmitted')
-        transmitted = float(child.get('val', 0.0)), float(child.get('err', 0.0))
+        if child is not None:
+            transmitted = \
+                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
+        else:
+            transmitted = (0.0, 0.0)
 
         return cls(detector, absorbed, backscattered, transmitted)
 
     def __savezip__(self, zipfile, key):
         element = Element('result')
 
-        attr = dict(zip(['val', 'err'], map(str, self.absorbed)))
+        attr = dict(zip(['val', 'unc'], map(str, self.absorbed)))
         child = Element('absorbed', attr)
         element.append(child)
 
-        attr = dict(zip(['val', 'err'], map(str, self.backscattered)))
+        attr = dict(zip(['val', 'unc'], map(str, self.backscattered)))
         child = Element('backscattered', attr)
         element.append(child)
 
-        attr = dict(zip(['val', 'err'], map(str, self.transmitted)))
+        attr = dict(zip(['val', 'unc'], map(str, self.transmitted)))
         child = Element('transmitted', attr)
         element.append(child)
 
