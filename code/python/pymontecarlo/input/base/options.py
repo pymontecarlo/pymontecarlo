@@ -18,7 +18,8 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from xml.etree.ElementTree import Element
+from xml.dom import minidom
+from xml.etree.ElementTree import Element, parse, tostring
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
@@ -281,3 +282,29 @@ class Options(objectxml):
            program.
         """
         return self._models
+
+    @classmethod
+    def load(cls, fileobj):
+        """
+        Loads the options from a file-object.
+        The file-object must correspond to a XML file where the options were 
+        saved.
+        
+        :arg fileobj: file-object
+        
+        :return: loaded options
+        """
+        element = parse(fileobj).getroot()
+        return cls.from_xml(element)
+
+    def save(self, fileobj):
+        """
+        Saves the options to a file-object.
+        The file-object must correspond to a XML file where the options will 
+        be saved.
+        
+        :arg fileobj: file-object
+        """
+        element = self.to_xml()
+        output = minidom.parseString(tostring(element)).toprettyxml()
+        fileobj.write(output)
