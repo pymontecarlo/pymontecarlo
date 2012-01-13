@@ -1,13 +1,18 @@
 package pymontecarlo.input.nistmonte;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,13 +26,13 @@ public class EnergyDetectorFactoryTest extends NistMonteTestCase {
 
     private ElectronDetector detTE;
 
-    private File resultsDir;
+    private File resultFile;
 
 
 
     @Before
     public void setUp() throws Exception {
-        resultsDir = createTempDir();
+        resultFile = createTempFile("zip");
 
         double emax = getBeamEnergy();
         detBSE =
@@ -45,36 +50,48 @@ public class EnergyDetectorFactoryTest extends NistMonteTestCase {
 
     @Test
     public void testCreateBackscatteredElectron() throws IOException {
-        detBSE.saveResults(resultsDir, "test");
+        ZipOutputStream zipOutput =
+                new ZipOutputStream(new FileOutputStream(resultFile));
+        detBSE.saveResults(zipOutput, "test");
+        zipOutput.close();
 
-        File csvFile = new File(resultsDir, "test.csv");
-        assertTrue(csvFile.exists());
+        ZipFile zipFile = new ZipFile(resultFile);
+        ZipEntry zipEntry = zipFile.getEntry("test.csv");
+        assertNotNull(zipEntry);
 
-        CSVReader reader = new CSVReader(new FileReader(csvFile));
+        Reader buf = new InputStreamReader(zipFile.getInputStream(zipEntry));
+        CSVReader reader = new CSVReader(buf);
         List<String[]> rows = reader.readAll();
 
         assertEquals(2, rows.get(0).length); // header
         assertEquals(100, rows.size() - 1); // bins
 
         reader.close();
+        zipFile.close();
     }
 
 
 
     @Test
     public void testCreateTransmittedElectron() throws IOException {
-        detTE.saveResults(resultsDir, "test");
+        ZipOutputStream zipOutput =
+                new ZipOutputStream(new FileOutputStream(resultFile));
+        detTE.saveResults(zipOutput, "test");
+        zipOutput.close();
 
-        File csvFile = new File(resultsDir, "test.csv");
-        assertTrue(csvFile.exists());
+        ZipFile zipFile = new ZipFile(resultFile);
+        ZipEntry zipEntry = zipFile.getEntry("test.csv");
+        assertNotNull(zipEntry);
 
-        CSVReader reader = new CSVReader(new FileReader(csvFile));
+        Reader buf = new InputStreamReader(zipFile.getInputStream(zipEntry));
+        CSVReader reader = new CSVReader(buf);
         List<String[]> rows = reader.readAll();
 
         assertEquals(2, rows.get(0).length); // header
         assertEquals(100, rows.size() - 1); // bins
 
         reader.close();
+        zipFile.close();
     }
 
 }

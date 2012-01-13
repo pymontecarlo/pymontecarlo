@@ -4,9 +4,12 @@ import gov.nist.microanalysis.NISTMonte.Electron;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.zip.ZipOutputStream;
+
+import org.jdom.Element;
+
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Detector to count backscatter and transmitted electrons.
@@ -42,16 +45,21 @@ public class ElectronFractionDetector extends AbstractScatteringDetector {
 
 
     @Override
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException {
-        File resultsFile = new File(resultsDir, baseName + ".txt");
-        FileWriter writer = new FileWriter(resultsFile);
-        String eol = System.getProperty("line.separator");
+        // Create XML
+        Element element = new Element("result");
 
-        writer.append("Backscatter fraction: " + getBackscatterFraction() + eol);
-        writer.append("Transmitted fraction: " + getTransmittedFraction() + eol);
+        Element child = new Element("backscattered");
+        child.setAttribute("val", Double.toString(getBackscatterFraction()));
+        element.addContent(child);
 
-        writer.close();
+        child = new Element("transmitted");
+        child.setAttribute("val", Double.toString(getTransmittedFraction()));
+        element.addContent(child);
+
+        // Save CSV in ZIP
+        ZipUtil.saveElement(zipOutput, key + ".xml", element);
     }
 
 
@@ -98,6 +106,13 @@ public class ElectronFractionDetector extends AbstractScatteringDetector {
 
         backscatterCount = 0;
         transmittedCount = 0;
+    }
+
+
+
+    @Override
+    public String getPythonEquivalent() {
+        return "pymontecarlo.result.base.result.ElectronFractionResult";
     }
 
 }

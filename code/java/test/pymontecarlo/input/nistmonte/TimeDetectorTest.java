@@ -2,29 +2,27 @@ package pymontecarlo.input.nistmonte;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
-import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import org.jdom.Element;
 import org.junit.Before;
 import org.junit.Test;
 
-import ptpshared.opencsv.CSVReader;
+import ptpshared.jdom.JDomUtils;
 import pymontecarlo.util.NistMonteTestCase;
 
-public class PhotonIntensityDetectorTest extends NistMonteTestCase {
+public class TimeDetectorTest extends NistMonteTestCase {
 
-    private PhotonIntensityDetector det;
+    private TimeDetector det;
 
     private File resultFile;
 
@@ -32,12 +30,11 @@ public class PhotonIntensityDetectorTest extends NistMonteTestCase {
 
     @Before
     public void setUp() throws Exception {
-        det = new PhotonIntensityDetector(getDetectorPosition());
+        det = new TimeDetector();
         resultFile = createTempFile("zip");
 
         MonteCarloSS mcss = getMonteCarloSS();
-        XRayEventListener2 xrel = getXRayEventListener(mcss);
-        det.setup(mcss, xrel, null);
+        det.setup(mcss, null, null);
 
         mcss.runTrajectory();
     }
@@ -52,17 +49,20 @@ public class PhotonIntensityDetectorTest extends NistMonteTestCase {
         zipOutput.close();
 
         ZipFile zipFile = new ZipFile(resultFile);
-        ZipEntry zipEntry = zipFile.getEntry("test.csv");
+        ZipEntry zipEntry = zipFile.getEntry("test.xml");
         assertNotNull(zipEntry);
 
-        Reader buf = new InputStreamReader(zipFile.getInputStream(zipEntry));
-        CSVReader reader = new CSVReader(buf);
-        List<String[]> rows = reader.readAll();
+        Element element =
+                JDomUtils.loadXML(zipFile.getInputStream(zipEntry))
+                        .getRootElement();
 
-        assertEquals(18, rows.get(0).length); // header
-        assertEquals(62, rows.size() - 1); // x-ray transitions
+        assertTrue(JDomUtils.hasChild(element, "time"));
+        assertTrue(JDomUtils.hasAttribute(element, "time", "val"));
 
-        reader.close();
+        assertTrue(JDomUtils.hasChild(element, "speed"));
+        assertTrue(JDomUtils.hasAttribute(element, "speed", "val"));
+        assertTrue(JDomUtils.hasAttribute(element, "speed", "unc"));
+
         zipFile.close();
     }
 
@@ -81,6 +81,9 @@ public class PhotonIntensityDetectorTest extends NistMonteTestCase {
 
         Properties props = new Properties();
         props.load(zipFile.getInputStream(zipEntry));
-        assertEquals(6, props.size());
+        assertEquals(0, props.size());
+
+        zipFile.close();
     }
+
 }

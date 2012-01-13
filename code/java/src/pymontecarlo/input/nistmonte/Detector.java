@@ -6,8 +6,8 @@ import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Interface for all detectors.
@@ -37,34 +37,32 @@ public interface Detector extends ActionListener {
 
 
     /**
-     * Saves the data collected by the detector inside a directory. If the data
-     * is saved in one file, the base name can be the name of the file. If the
-     * data is saved in multiple files, the base name can be the prefix of all
-     * the files.
+     * Saves the data collected by the detector inside a ZIP.
      * 
-     * @param resultsDir
-     *            directory where to save the results
-     * @param baseName
-     *            base name of the result file(s)
+     * @param zipOutput
+     *            ZIP output stream where to save the results
+     * @param key
+     *            key of the detector
      * @throws IOException
      *             if an error occurs while saving the results
      */
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException;
 
 
 
     /**
-     * Saves a log of the detector parameters.
+     * Saves a log of the detector parameters inside a ZIP.
      * 
-     * @param resultsDir
-     *            directory where to save the log
-     * @param baseName
-     *            base name of the log file(s)
+     * @param zipOutput
+     *            ZIP output stream where to save the results
+     * @param key
+     *            key of the detector
      * @throws IOException
      *             if an error occurs while saving the log
      */
-    public void saveLog(File resultsDir, String baseName) throws IOException;
+    public void saveLog(ZipOutputStream zipOutput, String key)
+            throws IOException;
 
 
 
@@ -72,4 +70,13 @@ public interface Detector extends ActionListener {
      * Method called at the start of a new simulation.
      */
     public void reset();
+
+
+
+    /**
+     * Returns the module and name of equivalent result class of this detector.
+     * 
+     * @return equivalent Python result class for this detector
+     */
+    public String getPythonEquivalent();
 }

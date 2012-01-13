@@ -37,6 +37,13 @@ public class AngularDetectorFactory {
             histogram.add(elevation);
         }
 
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.BackscatteredElevationAngularResult";
+        }
+
     }
 
     /**
@@ -67,6 +74,13 @@ public class AngularDetectorFactory {
         @Override
         public void backscatterEvent(double elevation, double azimuth) {
             histogram.add(azimuth);
+        }
+
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.BackscatteredAzimuthalAngularResult";
         }
 
     }
@@ -101,6 +115,13 @@ public class AngularDetectorFactory {
             histogram.add(elevation);
         }
 
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.TransmittedElevationAngularResult";
+        }
+
     }
 
     /**
@@ -131,6 +152,13 @@ public class AngularDetectorFactory {
         @Override
         public void transmittedEvent(double elevation, double azimuth) {
             histogram.add(azimuth);
+        }
+
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.TransmittedAzimuthalAngularResult";
         }
 
     }

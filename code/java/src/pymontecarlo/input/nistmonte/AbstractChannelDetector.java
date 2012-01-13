@@ -4,12 +4,13 @@ import gov.nist.microanalysis.EPQLibrary.EPQException;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.Utility.Histogram;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Properties;
+import java.util.zip.ZipOutputStream;
 
 import ptpshared.opencsv.CSVWriter;
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Abstract detector to collect data in a number of channels between two limits.
@@ -82,11 +83,11 @@ public abstract class AbstractChannelDetector extends
 
 
     @Override
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException {
-        File resultsFile = new File(resultsDir, baseName + ".csv");
-
-        CSVWriter writer = new CSVWriter(new FileWriter(resultsFile));
+        // Create CSV
+        StringWriter sw = new StringWriter();
+        CSVWriter writer = new CSVWriter(sw);
 
         writer.writeNext(getBinsHeader(), getCountsHeader());
 
@@ -99,6 +100,9 @@ public abstract class AbstractChannelDetector extends
         }
 
         writer.close();
+
+        // Save CSV in ZIP
+        ZipUtil.saveStringBuffer(zipOutput, key + ".csv", sw.getBuffer());
     }
 
 

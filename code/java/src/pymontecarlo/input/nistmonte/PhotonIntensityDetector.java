@@ -10,17 +10,18 @@ import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayAccumulator;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipOutputStream;
 
 import ptpshared.opencsv.CSVWriter;
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Detector to record intensity of photons.
@@ -93,46 +94,54 @@ public class PhotonIntensityDetector extends PhotonDetector {
 
 
     @Override
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException {
-        File resultsFile = new File(resultsDir, baseName + ".csv");
-        CSVWriter writer = new CSVWriter(new FileWriter(resultsFile));
+        // Create CSV
+        StringWriter sw = new StringWriter();
+        CSVWriter writer = new CSVWriter(sw);
 
-        writer.writeNext("Element", "Atomic number", "Transition",
-                "Energy (eV)", "Emitted", "Generated");
+        writer.writeNext("transition", "energy (eV)",
+                "generated characteristic", "generated characteristic unc",
+                "generated bremsstrahlung", "generated bremsstrahlung unc",
+                "generated no fluorescence", "generated no fluorescence unc",
+                "generated total", "generated total unc",
+                "emitted characteristic", "emitted characteristic unc",
+                "emitted bremsstrahlung", "emitted bremsstrahlung unc",
+                "emitted no fluorescence", "emitted no fluorescence unc",
+                "emitted total", "emitted total unc");
 
         List<XRayTransition> xrayTransitions = new ArrayList<XRayTransition>();
         xrayTransitions.addAll(xrayAccumulator.getTransitions());
         Collections.sort(xrayTransitions);
 
-        Element element;
-        String elementName;
-        int atomicNumber;
         String xrayTransitionName;
         double emittedIntensity;
         double generatedIntensity;
         double xrayTransitionEnergy;
         for (XRayTransition xrayTransition : xrayTransitions) {
-            element = xrayTransition.getElement();
-            elementName = element.toString();
-            atomicNumber = element.getAtomicNumber();
-
-            xrayTransitionName = xrayTransition.getIUPACName();
+            xrayTransitionName =
+                    xrayTransition.getElement().toAbbrev() + " "
+                            + xrayTransition.getIUPACName();
 
             try {
                 xrayTransitionEnergy = xrayTransition.getEnergy_eV();
             } catch (EPQException e) {
-                xrayTransitionEnergy = Double.NaN;
+                xrayTransitionEnergy = 0.0;
             }
 
             emittedIntensity = xrayAccumulator.getEmitted(xrayTransition);
             generatedIntensity = xrayAccumulator.getGenerated(xrayTransition);
 
-            writer.writeNext(elementName, atomicNumber, xrayTransitionName,
-                    xrayTransitionEnergy, emittedIntensity, generatedIntensity);
+            writer.writeNext(xrayTransitionName, xrayTransitionEnergy, 0.0,
+                    0.0, 0.0, 0.0, generatedIntensity, 0.0, generatedIntensity,
+                    0.0, 0.0, 0.0, 0.0, 0.0, emittedIntensity, 0.0,
+                    emittedIntensity, 0.0);
         }
 
         writer.close();
+
+        // Save CSV in ZIP
+        ZipUtil.saveStringBuffer(zipOutput, key + ".csv", sw.getBuffer());
     }
 
 
@@ -140,6 +149,13 @@ public class PhotonIntensityDetector extends PhotonDetector {
     @Override
     public boolean requiresBremsstrahlung() {
         return false;
+    }
+
+
+
+    @Override
+    public String getPythonEquivalent() {
+        return "pymontecarlo.result.base.result.PhotonIntensityResult";
     }
 
 

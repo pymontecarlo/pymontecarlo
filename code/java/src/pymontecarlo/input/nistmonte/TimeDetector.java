@@ -6,9 +6,12 @@ import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.zip.ZipOutputStream;
+
+import org.jdom.Element;
+
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Listener to record the time elapsed of a simulation.
@@ -118,18 +121,30 @@ public class TimeDetector extends AbstractDetector {
 
 
     @Override
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException {
-        File resultsFile = new File(resultsDir, baseName + ".txt");
-        FileWriter writer = new FileWriter(resultsFile);
-        String eol = System.getProperty("line.separator");
+        // Create XML
+        Element element = new Element("result");
 
-        writer.append("Simulation time: " + getElapsedtime() / 1000.0 + " s"
-                + eol);
+        Element child = new Element("time");
+        child.setAttribute("val", Double.toString(getElapsedtime() / 1000.0));
+        element.addContent(child);
 
-        writer.append("Average trajectory time: " + getTrajectoryTimeAverage()
-                + " +- " + Math.sqrt(getTrajectoryTimeVariance()) + " ms");
+        child = new Element("speed");
+        child.setAttribute("val",
+                Double.toString(getTrajectoryTimeAverage() / 1000.0));
+        child.setAttribute("unc",
+                Double.toString(getTrajectoryTimeVariance() / 1000.0));
+        element.addContent(child);
 
-        writer.close();
+        // Save XML in ZIP
+        ZipUtil.saveElement(zipOutput, key + ".xml", element);
+    }
+
+
+
+    @Override
+    public String getPythonEquivalent() {
+        return "pymontecarlo.result.base.result.TimeResult";
     }
 }

@@ -37,6 +37,13 @@ public class EnergyDetectorFactory {
             histogram.add(energy);
         }
 
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.BackscatteredElectronEnergyResult";
+        }
+
     }
 
     /**
@@ -67,6 +74,13 @@ public class EnergyDetectorFactory {
         @Override
         public void transmittedEvent(double energy) {
             histogram.add(energy);
+        }
+
+
+
+        @Override
+        public String getPythonEquivalent() {
+            return "pymontecarlo.result.base.result.TransmittedElectronEnergyResult";
         }
     }
 

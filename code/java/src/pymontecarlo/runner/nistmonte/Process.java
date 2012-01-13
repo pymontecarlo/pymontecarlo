@@ -13,14 +13,17 @@ import gov.nist.microanalysis.NISTMonte.MonteCarloSS.RegionBase;
 import gov.nist.microanalysis.NISTMonte.PencilBeam;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipOutputStream;
 
 import org.jdom.Element;
 
@@ -30,6 +33,7 @@ import pymontecarlo.input.nistmonte.Limit;
 import pymontecarlo.input.nistmonte.PhotonDetector;
 import pymontecarlo.input.nistmonte.ShowersLimit;
 import pymontecarlo.io.nistmonte.OptionsExtractor;
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Runner for NistMonte.
@@ -142,17 +146,37 @@ public class Process {
         // Run
         mcss.runMultipleTrajectories(showers);
 
+        // Create ZIP
+        File resultsZip = new File(resultsDir, name + ".zip");
+        OutputStream out =
+                new BufferedOutputStream(new FileOutputStream(resultsZip));
+        ZipOutputStream zipOutput = new ZipOutputStream(out);
+
         // Save results and log
-        String baseName;
+        String key;
         Detector detector;
         for (Entry<String, Detector> entry : detectors.entrySet()) {
-            baseName = name + "_" + entry.getKey();
+            key = entry.getKey();
             detector = entry.getValue();
 
-            detector.saveResults(resultsDir, baseName);
-            detector.saveLog(resultsDir, baseName);
+            detector.saveResults(zipOutput, key);
+            detector.saveLog(zipOutput, key);
         }
 
+        // Create keys.ini
+        StringBuffer buf = new StringBuffer();
+        buf.append("[keys]\n");
+
+        for (Entry<String, Detector> entry : detectors.entrySet())
+            buf.append(entry.getKey() + " = "
+                    + entry.getValue().getPythonEquivalent() + "\n");
+
+        ZipUtil.saveStringBuffer(zipOutput, "keys.ini", buf);
+
+        zipOutput.close();
+        out.close();
+
+        // Save overall log
         saveLog(resultsDir, name, mcss);
 
         return showers;

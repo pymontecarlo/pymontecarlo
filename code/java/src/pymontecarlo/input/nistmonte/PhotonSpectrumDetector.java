@@ -11,10 +11,12 @@ import gov.nist.microanalysis.NISTMonte.GaussianFWHMBeam;
 import gov.nist.microanalysis.NISTMonte.MonteCarloSS;
 import gov.nist.microanalysis.NISTMonte.XRayEventListener2;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.zip.ZipOutputStream;
+
+import pymontecarlo.util.ZipUtil;
 
 /**
  * Detector for a photon spectrum.
@@ -99,10 +101,10 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
 
 
     @Override
-    public void saveResults(File resultsDir, String baseName)
+    public void saveResults(ZipOutputStream zipOutput, String key)
             throws IOException {
-        File resultsFile = new File(resultsDir, baseName + ".emsa");
-        FileOutputStream ostream = new FileOutputStream(resultsFile);
+        // Create EMSA
+        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
 
         ISpectrumData spectrum = detector.getSpectrum(1.0);
 
@@ -112,6 +114,9 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
         } catch (EPQException e) {
             throw new IOException(e);
         }
+
+        // Save EMSA in ZIP
+        ZipUtil.saveByteArray(zipOutput, key + ".emsa", ostream.toByteArray());
     }
 
 
@@ -188,5 +193,12 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
     @Override
     public boolean requiresBremsstrahlung() {
         return true;
+    }
+
+
+
+    @Override
+    public String getPythonEquivalent() {
+        return "pymontecarlo.result.base.result.PhotonSpectrumResult";
     }
 }
