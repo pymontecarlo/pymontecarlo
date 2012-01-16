@@ -16,7 +16,6 @@ import tempfile
 import shutil
 
 # Third party modules.
-import pypenelope.lib.penelope as penelope
 
 # Local modules.
 from pymontecarlo import settings
@@ -25,6 +24,7 @@ from pymontecarlo.input.base.geometry import Substrate, Inclusion, MultiLayers, 
 from pymontecarlo.input.penelope.converter import Converter
 from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.io.penelope.exporter import Exporter
+import pymontecarlo.lib.penelope.wrapper as wrapper
 
 # Globals and constants variables.
 
@@ -58,7 +58,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'substrate.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = penelope.geomin(geofilepath, repfilepath)
+        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
 
         self.assertEqual(1, nmat)
         self.assertEqual(2, nbody)
@@ -80,7 +80,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'inclusion.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = penelope.geomin(geofilepath, repfilepath)
+        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
 
         self.assertEqual(2, nmat)
         self.assertEqual(3, nbody)
@@ -112,7 +112,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'multilayers.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = penelope.geomin(geofilepath, repfilepath)
+        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(6, nbody)
@@ -146,7 +146,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'grainboundaries.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = penelope.geomin(geofilepath, repfilepath)
+        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(4, nbody)

@@ -24,7 +24,6 @@ from operator import attrgetter
 from itertools import tee, izip
 
 # Third party modules.
-import pypenelope.lib.penelope as penelope
 
 # Local modules.
 from pymontecarlo.input.base.geometry import \
@@ -32,6 +31,7 @@ from pymontecarlo.input.base.geometry import \
 from pymontecarlo.input.penelope.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
 from pymontecarlo.io.base.exporter import Exporter as _Exporter
+from pymontecarlo.lib.penelope.wrapper import create_material
 
 # Globals and constants variables.
 from pymontecarlo.input.penelope.material import VACUUM
@@ -95,7 +95,7 @@ class Exporter(_Exporter):
         geofilepath = os.path.join(dirpath, title + ".geo")
         with open(geofilepath, 'w') as f:
             for line in lines:
-                f.write(line + os.linesep)
+                f.write(line + '\n')
 
         # Save materials
         cwd = os.getcwd()
@@ -107,8 +107,8 @@ class Exporter(_Exporter):
             if index == 0: continue
 
             filepath = os.path.join(dirpath, 'mat%i.mat' % index)
-            penelope.create_material(material.composition, material.density,
-                                     material.name, filepath)
+            create_material(material.composition, material.density,
+                            material.name, filepath)
 
             matinfos.append((material, filepath))
 
