@@ -5,20 +5,19 @@
     <property name="src.dir" location="${basedir}" />
     <echo message="src.dir = ${src.dir}" />
 
-    <property name="build.dir" location="${java.io.tmpdir}/build" />
+    <property name="tmp.dir" location="${java.io.tmpdir}" />
+
+    <property name="build.dir" location="${tmp.dir}/build" />
     <echo message="build.dir = ${build.dir}" />
 
-    <property name="output.dir"
-              location="${build.dir}/pymontecarlo/lib/penelope" />
-    <echo message="output.dir = ${output.dir}" />
+    <property name="dest.dir" location="${tmp.dir}/dest" />
+    <echo message="dest.dir = ${dest.dir}" />
 
     <!-- ===================================================== -->
     <!-- Init targets                                          -->
     <!-- ===================================================== -->
 
     <target name="-init" description="Creates build directory">
-        <mkdir dir="${output.dir}" />
-
         <condition property="isWindows">
             <os family="windows" />
         </condition>
@@ -27,8 +26,8 @@
             <os family="unix" />
         </condition>
 
-        <!-- If penelope.def is present in output.dir, compile will be skipped -->
-        <available file="${output.dir}/wrapper.def" property="def.present" />
+        <!-- If wrapper.def is present in dest.dir, compile will be skipped -->
+        <available file="${dest.dir}/wrapper.def" property="def.present" />
     </target>
 
     <!-- ===================================================== -->
@@ -36,8 +35,9 @@
     <!-- ===================================================== -->
 
     <target name="clean" description="Delete binaries files in build dir">
-        <delete>
-            <fileset dir="${output.dir}">
+        <delete dir="${build.dir}" />
+        <delete failonerror="false">
+            <fileset dir="${dest.dir}">
                 <include name="*.so" />
                 <include name="*.pyd" />
                 <include name="*.def" />
@@ -49,8 +49,21 @@
     <!-- Compile targets                                       -->
     <!-- ===================================================== -->
 
+    <target name="-copy-src" depends="-init">
+        <mkdir dir="${build.dir}" />
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <include name="*.f" />
+                <include name="*.c" />
+                <include name="*.h" />
+                <include name="*.def" />
+            </fileset>
+        </copy>
+    </target>
+
+
     <target name="compile"
-            depends="-init"
+            depends="-copy-src"
             description="Compile PENELOPE as a python shared library"
             unless="def.present">
         <!-- Compile operating system specific -->
@@ -59,8 +72,9 @@
         <antcall target="-compile-windows" />
 
         <!-- Copy output -->
-        <copy todir="${output.dir}">
-            <fileset dir="${src.dir}">
+        <mkdir dir="${dest.dir}" />
+        <copy todir="${dest.dir}">
+            <fileset dir="${build.dir}">
                 <include name="*.so" />
                 <include name="*.pyd" />
                 <include name="*.def" />
@@ -68,20 +82,14 @@
         </copy>
 
         <!-- Clean source dir -->
-        <delete>
-            <fileset dir="${src.dir}">
-                <include name="*.o" />
-                <include name="*.so" />
-                <include name="*.pyd" />
-            </fileset>
-        </delete>
+        <delete dir="${build.dir}" />
     </target>
 
     <target name="-compile-common">
         <!-- NOTE: optimize="full" == -O2 -->
 
         <echo message="Compiling penelope.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -92,7 +100,7 @@
         </exec>
 
         <echo message="Compiling pengeom.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -103,7 +111,7 @@
         </exec>
 
         <echo message="Compiling penvared.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -114,7 +122,7 @@
         </exec>
 
         <echo message="Compiling rita.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -125,7 +133,7 @@
         </exec>
 
         <echo message="Compiling timer.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -136,7 +144,7 @@
         </exec>
 
         <echo message="Compiling utils.f" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-O2" />
             <arg value="-g" />
             <arg value="-Wall" />
@@ -150,7 +158,7 @@
     <target name="-compile-linux" if="isLinux">
         <!-- c objects -->
         <echo message="Compiling wrapper.c" />
-        <exec executable="gcc" dir="${src.dir}">
+        <exec executable="gcc" dir="${build.dir}">
             <arg value="-DNDEBUG" />
             <arg value="-g" />
             <arg value="-O2" />
@@ -169,7 +177,7 @@
 
         <!-- Link to shared library -->
         <echo message="Linking" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-shared" />
             <arg value="wrapper.o" />
             <arg value="penelope.o" />
@@ -187,7 +195,7 @@
     <target name="-compile-windows" if="isWindows">
         <!-- c objects -->
         <echo message="Compiling wrapper.c" />
-        <exec executable="gcc" dir="${src.dir}">
+        <exec executable="gcc" dir="${build.dir}">
             <arg value="-mno-cygwin" />
             <arg value="-mdll" />
             <arg value="-O2" />
@@ -202,7 +210,7 @@
 
         <!-- Link to shared library -->
         <echo message="Linking" />
-        <exec executable="gfortran" dir="${src.dir}">
+        <exec executable="gfortran" dir="${build.dir}">
             <arg value="-shared" />
             <arg value="wrapper.o" />
             <arg value="wrapper.def" />
