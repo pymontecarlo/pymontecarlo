@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import logging
 
 # Third party modules.
 
@@ -30,7 +31,19 @@ from pymontecarlo.util.config import ConfigReader
 
 settings = ConfigReader()
 
-__filepath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
-if os.path.exists(__filepath):
-    with open(__filepath, 'r') as f:
-        settings.read(f)
+def __load_settings():
+    filepaths = []
+    filepaths.append(os.path.join(os.path.dirname(__file__), 'settings.cfg'))
+    filepaths.append(os.path.join(os.path.expanduser('~'), '.pymontecarlo',
+                                  'settings.cfg'))
+
+    for filepath in filepaths:
+        if os.path.exists(filepath):
+            logging.debug('Loading settings from: %s', filepath)
+
+            with open(filepath, 'r') as f:
+                settings.read(f)
+
+            break
+
+__load_settings()
