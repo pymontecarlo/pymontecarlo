@@ -13,7 +13,7 @@
     </publications>
     
     <dependencies>
-        <dependency org="ptp" name="ptpshared" rev="0.1" 
+        <dependency org="ptp" name="ptpshared" rev="latest.integration" 
                 conf="default->jdom;default->opencsv;default->jsap" />
         <dependency org="gov.nist.microanalysis" name="epq" rev="0.1" />
     </dependencies>

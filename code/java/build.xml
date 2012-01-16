@@ -20,7 +20,7 @@
 
 <project xmlns:ivy="antlib:org.apache.ivy.ant"
          basedir="."
-         name="pyMonteCarlo"
+         name="pyMonteCarlo-java"
          default="help">
 
     <!-- Read the local properties (if present) -->
