@@ -20,9 +20,11 @@ import os
 
 # Local modules.
 from pymontecarlo.input.base.options import Options
-from pymontecarlo.input.base.detector import PhotonIntensityDetector
+from pymontecarlo.input.base.detector import \
+    PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 from pymontecarlo.result.base.results import Results
-from pymontecarlo.result.base.result import PhotonIntensityResult
+from pymontecarlo.result.base.result import \
+    PhotonIntensityResult, TimeResult, ElectronFractionResult
 
 import DrixUtilities.Files as Files
 
@@ -39,15 +41,21 @@ class TestResults(unittest.TestCase):
         # Detectors
         det1 = PhotonIntensityDetector((radians(35), radians(45)),
                                        (0, radians(360.0)))
+        det2 = TimeDetector()
+        det3 = ElectronFractionDetector()
 
         # Options
         self.ops = Options()
         self.ops.beam.energy = 1234
         self.ops.detectors['det1'] = det1
+        self.ops.detectors['det2'] = det2
+        self.ops.detectors['det3'] = det3
 
         # Results
         results = {}
         results['det1'] = PhotonIntensityResult(det1)
+        results['det2'] = TimeResult(det2)
+        results['det3'] = ElectronFractionResult(det3)
 
         self.results = Results(self.ops, results)
 
@@ -72,6 +80,8 @@ class TestResults(unittest.TestCase):
             namelist = zipfile.namelist()
             self.assertTrue('keys.ini' in namelist)
             self.assertTrue('det1.csv' in namelist)
+            self.assertTrue('det2.xml' in namelist)
+            self.assertTrue('det3.xml' in namelist)
 
             zipfile.close()
 
@@ -79,7 +89,7 @@ class TestResults(unittest.TestCase):
         with open(self.results_zip, 'r') as fp:
             results = Results.load(fp, self.ops)
 
-        self.assertEqual(1, len(results))
+        self.assertEqual(3, len(results))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
