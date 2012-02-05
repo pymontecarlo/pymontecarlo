@@ -28,7 +28,7 @@ class TestOptions(unittest.TestCase):
         unittest.TestCase.setUp(self)
 
         self.ops = Options(name="Test")
-        self.ops.beam.energy = 1234
+        self.ops.beam.energy_eV = 1234
 
         self.ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         self.ops.limits.add(ShowersLimit(5678))
@@ -38,12 +38,12 @@ class TestOptions(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(1234, self.ops.beam.energy, 4)
+        self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
 
         self.assertEqual(1, len(self.ops.detectors))
         det = self.ops.detectors['bse']
-        self.assertAlmostEqual(0, det.limits[0], 4)
-        self.assertAlmostEqual(1234, det.limits[1], 4)
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(self.ops.limits))
@@ -58,12 +58,12 @@ class TestOptions(unittest.TestCase):
         element = self.ops.to_xml()
         ops = Options.from_xml(element)
 
-        self.assertAlmostEqual(1234, ops.beam.energy, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
 
         self.assertEqual(1, len(ops.detectors))
         det = ops.detectors['bse']
-        self.assertAlmostEqual(0, det.limits[0], 4)
-        self.assertAlmostEqual(1234, det.limits[1], 4)
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))

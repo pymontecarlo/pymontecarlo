@@ -98,9 +98,9 @@ class TestPenelopeExporter(unittest.TestCase):
         mat3 = Material('mat3', {13: 0.5, 14: 0.5})
 
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
 
         ops.geometry = MultiLayers(mat1)
         ops.geometry.add_layer(mat2, 52e-9)
@@ -133,9 +133,9 @@ class TestPenelopeExporter(unittest.TestCase):
         mat3 = Material('mat3', {13: 0.5, 14: 0.5})
 
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
 
         ops.geometry = GrainBoundaries(mat1, mat2)
         ops.geometry.add_layer(mat3, 5e-3)

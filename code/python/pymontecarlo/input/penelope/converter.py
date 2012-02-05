@@ -97,8 +97,8 @@ class Converter(_Converter):
         _Converter.__init__(self)
 
         self._elastic_scattering = elastic_scattering
-        self._cutoff_energy_inelastic = cutoff_energy_inelastic
-        self._cutoff_energy_bremsstrahlung = cutoff_energy_bremsstrahlung
+        self._cutoff_energy_inelastic_eV = cutoff_energy_inelastic
+        self._cutoff_energy_bremsstrahlung_eV = cutoff_energy_bremsstrahlung
 
     def _convert_beam(self, options):
         try:
@@ -106,8 +106,8 @@ class Converter(_Converter):
         except ConversionException as ex:
             if isinstance(options.beam, PencilBeam):
                 old = options.beam
-                options.beam = GaussianBeam(old.energy, 0.0, old.origin,
-                                            old.direction, old.aperture)
+                options.beam = GaussianBeam(old.energy_eV, 0.0, old.origin_m,
+                                            old.direction, old.aperture_rad)
 
                 message = "Pencil beam converted to Gaussian beam with 0 m diameter"
                 warnings.warn(message, ConversionWarning)
@@ -122,18 +122,18 @@ class Converter(_Converter):
         materials_lookup = self._create_penelope_materials(geometry.get_materials())
 
         if isinstance(geometry, Substrate):
-            geometry._body = \
+            geometry._props['body'] = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
         elif isinstance(geometry, Inclusion):
-            geometry._substrate = \
+            geometry._props['substrate'] = \
                 self._create_penelope_body(geometry.substrate_body, materials_lookup)
-            geometry._inclusion = \
+            geometry._props['inclusion'] = \
                 self._create_penelope_body(geometry.inclusion_body, materials_lookup)
 
         elif isinstance(geometry, MultiLayers):
             if geometry.has_substrate():
-                geometry._substrate = \
+                geometry._props['substrate'] = \
                     self._create_penelope_body(geometry.substrate_body, materials_lookup)
 
             newlayers = \
@@ -142,9 +142,9 @@ class Converter(_Converter):
             geometry.layers.extend(newlayers)
 
         elif isinstance(geometry, GrainBoundaries):
-            geometry._left = \
+            geometry._props['left'] = \
                 self._create_penelope_body(geometry.left_body, materials_lookup)
-            geometry._right = \
+            geometry._props['right'] = \
                 self._create_penelope_body(geometry.right_body, materials_lookup)
 
             newlayers = \
@@ -166,10 +166,10 @@ class Converter(_Converter):
         if old is VACUUM:
             return PenelopeVACUUM
 
-        return Material(old.name, old.composition, old.density,
-                        old.absorption_energy_electron, old.absorption_energy_photon,
+        return Material(old.name, old.composition, old.density_kg_m3,
+                        old.absorption_energy_electron_eV, old.absorption_energy_photon_eV,
                         self._elastic_scattering,
-                        self._cutoff_energy_inelastic, self._cutoff_energy_bremsstrahlung)
+                        self._cutoff_energy_inelastic_eV, self._cutoff_energy_bremsstrahlung_eV)
 
     def _create_penelope_body(self, old, materials_lookup):
         material = materials_lookup[old.material]
@@ -183,9 +183,9 @@ class Converter(_Converter):
 
             # By default, the maximum step length in a layer is equal to 1/10 of 
             # the layer thickness
-            maximum_step_length = layer.thickness / 10.0
+            maximum_step_length = layer.thickness_m / 10.0
 
-            newlayers.append(Layer(material, layer.thickness, maximum_step_length))
+            newlayers.append(Layer(material, layer.thickness_m, maximum_step_length))
 
         return newlayers
 

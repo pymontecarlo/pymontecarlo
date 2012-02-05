@@ -26,13 +26,14 @@ from math import pi
 
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
 from pymontecarlo.input.base.material import VACUUM
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
-_THICKNESS_GETTER = attrgetter('thickness')
+_THICKNESS_GETTER = attrgetter('thickness_m')
 POSINF = float('inf')
 NEGINF = float('-inf')
 
@@ -54,40 +55,42 @@ class _Dimension(object):
 
     def __repr__(self):
         return '<Dimension(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)>' % \
-            (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax)
+            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
 
     def __str__(self):
         return '(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)' % \
-            (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax)
+            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
 
     @property
-    def xmin(self):
+    def xmin_m(self):
         return self._xmin
 
     @property
-    def xmax(self):
+    def xmax_m(self):
         return self._xmax
 
     @property
-    def ymin(self):
+    def ymin_m(self):
         return self._ymin
 
     @property
-    def ymax(self):
+    def ymax_m(self):
         return self._ymax
 
     @property
-    def zmin(self):
+    def zmin_m(self):
         return self._zmin
 
     @property
-    def zmax(self):
+    def zmax_m(self):
         return self._zmax
 
     def to_tuple(self):
-        return self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax
+        return self.xmin_m, self.xmax_m, \
+               self.ymin_m, self.ymax_m, \
+               self.zmin_m, self.zmax_m
 
-class _Geometry(objectxml):
+class _Geometry(Option):
     """
     Base class for all geometry representations.
     
@@ -98,9 +101,11 @@ class _Geometry(objectxml):
     the same material.
     """
 
-    def __init__(self, tilt=0, rotation=0):
-        self.tilt = tilt
-        self.rotation = rotation
+    def __init__(self, tilt_rad=0, rotation_rad=0):
+        Option.__init__(self)
+
+        self.tilt_rad = tilt_rad
+        self.rotation_rad = rotation_rad
 
     @classmethod
     def _parse_xml_materials(cls, element):
@@ -128,10 +133,10 @@ class _Geometry(objectxml):
         materials_lookup = cls._parse_xml_materials(element)
         bodies_lookup = cls._parse_xml_bodies(element, materials_lookup)
 
-        tilt = float(element.get('tilt'))
-        rotation = float(element.get('rotation'))
+        tilt_rad = float(element.get('tilt'))
+        rotation_rad = float(element.get('rotation'))
 
-        return bodies_lookup, tilt, rotation
+        return bodies_lookup, tilt_rad, rotation_rad
 
     def _indexify(self):
         count = 1
@@ -173,34 +178,34 @@ class _Geometry(objectxml):
         element.append(self._materials_to_xml())
         element.append(self._bodies_to_xml())
 
-        element.set('tilt', str(self.tilt))
-        element.set('rotation', str(self.rotation))
+        element.set('tilt', str(self.tilt_rad))
+        element.set('rotation', str(self.rotation_rad))
 
     @property
-    def tilt(self):
+    def tilt_rad(self):
         """
         Specimen tilt in radians along the x-axis.
         """
-        return self._tilt
+        return self._props['tilt']
 
-    @tilt.setter
-    def tilt(self, tilt):
+    @tilt_rad.setter
+    def tilt_rad(self, tilt):
         if tilt < -pi or tilt > pi:
             raise ValueError, "Tilt (%s) must be between [-pi, pi]." % tilt
-        self._tilt = tilt
+        self._props['tilt'] = tilt
 
     @property
-    def rotation(self):
+    def rotation_rad(self):
         """
         Specimen rotation in radians along the z-axis.
         """
-        return self._rotation
+        return self._props['rotation']
 
-    @rotation.setter
-    def rotation(self, rotation):
+    @rotation_rad.setter
+    def rotation_rad(self, rotation):
         if rotation < -pi or rotation > pi:
             raise ValueError, "Rotation (%s) must be between [-pi, pi]." % rotation
-        self._rotation = rotation
+        self._props['rotation'] = rotation
 
     def get_materials(self):
         """
@@ -228,25 +233,24 @@ class _Geometry(objectxml):
         raise NotImplementedError
 
 class Substrate(_Geometry):
-
     def __init__(self, material):
         _Geometry.__init__(self)
 
-        self._body = Body(material)
+        self._props['body'] = Body(material)
 
     def __repr__(self):
         return '<Substrate(material=%s)>' % str(self.material)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        bodies_lookup, tilt, rotation = _Geometry._parse_xml(element)
+        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
 
         index = int(element.get('substrate'))
         body = bodies_lookup[index]
 
         obj = cls(body.material)
-        obj.tilt = tilt
-        obj.rotation = rotation
+        obj.tilt_rad = tilt_rad
+        obj.rotation_rad = rotation_rad
 
         return obj
 
@@ -256,18 +260,18 @@ class Substrate(_Geometry):
 
     @property
     def material(self):
-        return self._body.material
+        return self.body.material
 
     @material.setter
     def material(self, m):
-        self._body.material = m
+        self.body.material = m
 
     @property
     def body(self):
-        return self._body
+        return self._props['body']
 
     def get_bodies(self):
-        return set([self._body])
+        return set([self.body])
 
     def get_dimensions(self, body):
         if body is self.body:
@@ -276,17 +280,16 @@ class Substrate(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
 class Inclusion(_Geometry):
-
-    def __init__(self, substrate_material, inclusion_material, inclusion_diameter):
+    def __init__(self, substrate_material, inclusion_material, inclusion_diameter_m):
         _Geometry.__init__(self)
 
-        self._substrate = Body(substrate_material)
-        self._inclusion = Body(inclusion_material)
-        self.inclusion_diameter = inclusion_diameter
+        self._props['substrate'] = Body(substrate_material)
+        self._props['inclusion'] = Body(inclusion_material)
+        self.inclusion_diameter_m = inclusion_diameter_m
 
     def __repr__(self):
         return '<Inclusion(substrate_material=%s, inclusion_material=%s, inclusion_diameter=%s m)>' % \
-            (str(self.substrate_material), str(self.inclusion_material), self.inclusion_diameter)
+            (str(self.substrate_material), str(self.inclusion_material), self.inclusion_diameter_m)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -301,8 +304,8 @@ class Inclusion(_Geometry):
         diameter = float(element.get('diameter'))
 
         obj = cls(substrate.material, inclusion.material, diameter)
-        obj.tilt = tilt
-        obj.rotation = rotation
+        obj.tilt_rad = tilt
+        obj.rotation_rad = rotation
 
         return obj
 
@@ -310,60 +313,59 @@ class Inclusion(_Geometry):
         _Geometry.__savexml__(self, element, *args, **kwargs)
         element.set('substrate', str(self.substrate_body._index))
         element.set('inclusion', str(self.inclusion_body._index))
-        element.set('diameter', str(self.inclusion_diameter))
+        element.set('diameter', str(self.inclusion_diameter_m))
 
     @property
     def substrate_material(self):
-        return self._substrate.material
+        return self.substrate_body.material
 
     @substrate_material.setter
     def substrate_material(self, m):
-        self._substrate.material = m
+        self.substrate_body.material = m
 
     @property
     def substrate_body(self):
-        return self._substrate
+        return self._props['substrate']
 
     @property
     def inclusion_material(self):
-        return self._inclusion.material
+        return self.inclusion_body.material
 
     @inclusion_material.setter
     def inclusion_material(self, m):
-        self._inclusion.material = m
+        self.inclusion_body.material = m
 
     @property
     def inclusion_body(self):
-        return self._inclusion
+        return self._props['inclusion']
 
     @property
-    def inclusion_diameter(self):
-        return self._inclusion_diameter
+    def inclusion_diameter_m(self):
+        return self._props['inclusion diameter']
 
-    @inclusion_diameter.setter
-    def inclusion_diameter(self, diameter):
+    @inclusion_diameter_m.setter
+    def inclusion_diameter_m(self, diameter):
         if diameter <= 0:
             raise ValueError, "Diameter (%s) must be greater than 0.0." % diameter
-        self._inclusion_diameter = diameter
+        self._props['inclusion diameter'] = diameter
 
     def get_bodies(self):
-        return set([self._substrate, self._inclusion])
+        return set([self.substrate_body, self.inclusion_body])
 
     def get_dimensions(self, body):
         if body is self.substrate_body:
             return _Dimension(zmax=0.0)
         elif body is self.inclusion_body:
-            radius = self.inclusion_diameter / 2.0
+            radius = self.inclusion_diameter_m / 2.0
             return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
 
 class _Layered(_Geometry):
-
     def __init__(self, layers=[]):
         _Geometry.__init__(self)
 
-        self._layers = oset(layers) # copy
+        self._props['layers'] = oset(layers) # copy
 
     @classmethod
     def _parse_xml_layers(cls, element, bodies_lookup):
@@ -374,10 +376,10 @@ class _Layered(_Geometry):
 
     @classmethod
     def _parse_xml(cls, element):
-        bodies_lookup, tilt, rotation = _Geometry._parse_xml(element)
+        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
         layers = cls._parse_xml_layers(element, bodies_lookup)
 
-        return bodies_lookup, layers, tilt, rotation
+        return bodies_lookup, layers, tilt_rad, rotation_rad
 
     def __savexml__(self, element, *args, **kwargs):
         _Geometry.__savexml__(self, element, *args, **kwargs)
@@ -395,7 +397,7 @@ class _Layered(_Geometry):
         Layers are stored inside an ordered set (:class:`oset`) to ensure
         that a layer (:class:`Layer`) is only added once.
         """
-        return self._layers
+        return self._props['layers']
 
     def add_layer(self, material, thickness):
         """
@@ -412,14 +414,14 @@ class _Layered(_Geometry):
         :arg thickness: thickness of the layer in meters
         """
         layer = Layer(material, thickness)
-        self._layers.add(layer)
+        self.layers.add(layer)
         return layer
 
     def clear(self):
         """
         Removes all layers.
         """
-        del self._layers[:]
+        del self.layers[:]
 
     def get_bodies(self):
         return set(self.layers) # copy
@@ -439,9 +441,9 @@ class MultiLayers(_Layered):
         _Layered.__init__(self, layers)
 
         if substrate_material is not None:
-            self._substrate = Body(substrate_material)
+            self._props['substrate'] = Body(substrate_material)
         else:
-            self._substrate = None
+            self._props['substrate'] = None
 
     def __repr__(self):
         if self.has_substrate():
@@ -452,7 +454,7 @@ class MultiLayers(_Layered):
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        bodies_lookup, layers, tilt, rotation = _Layered._parse_xml(element)
+        bodies_lookup, layers, tilt_rad, rotation_rad = _Layered._parse_xml(element)
 
         if element.get('substrate') is not None:
             index = int(element.get('substrate'))
@@ -461,8 +463,8 @@ class MultiLayers(_Layered):
             substrate_material = None
 
         obj = cls(substrate_material, layers)
-        obj.tilt = tilt
-        obj.rotation = rotation
+        obj.tilt_rad = tilt_rad
+        obj.rotation_rad = rotation_rad
 
         return obj
 
@@ -479,35 +481,35 @@ class MultiLayers(_Layered):
         Raises ``RuntimeError` if the multi-layers does not have a substrate.
         To remove the substrate, set the material to ``None``.
         """
-        if self._substrate is None:
+        if not self.has_substrate():
             raise RuntimeError, "Multi-layers does not have a substrate"
-        return self._substrate.material
+        return self.substrate_body.material
 
     @substrate_material.setter
     def substrate_material(self, m):
         if m is None:
-            self._substrate = None
+            self._props['substrate'] = None
         else:
-            if self._substrate is None:
-                self._substrate = Body(m)
+            if self._props['substrate'] is None:
+                self._props['substrate'] = Body(m)
             else:
-                self._substrate.material = m
+                self._props['substrate'].material = m
 
     def has_substrate(self):
         """
         Returns ``True`` if a substrate material has been defined.
         """
-        return self._substrate is not None
+        return self.substrate_body is not None
 
     @property
     def substrate_body(self):
-        return self._substrate
+        return self._props['substrate']
 
     def get_bodies(self):
         bodies = _Layered.get_bodies(self)
 
-        if self._substrate is not None:
-            bodies.add(self._substrate)
+        if self.has_substrate():
+            bodies.add(self.substrate_body)
 
         return bodies
 
@@ -518,7 +520,7 @@ class MultiLayers(_Layered):
         elif body in self.layers:
             index = self.layers.index(body)
             zmax = -sum(map(_THICKNESS_GETTER, self.layers[:index]))
-            zmin = zmax - body.thickness
+            zmin = zmax - body.thickness_m
             return _Dimension(zmin=zmin, zmax=zmax)
         else:
             raise ValueError, "Unknown body: %s" % body
@@ -537,8 +539,8 @@ class GrainBoundaries(_Layered):
         """
         _Layered.__init__(self, layers)
 
-        self._left = Body(left_material)
-        self._right = Body(right_material)
+        self._props['left'] = Body(left_material)
+        self._props['right'] = Body(right_material)
 
     def __repr__(self):
         return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
@@ -546,7 +548,7 @@ class GrainBoundaries(_Layered):
 
     @classmethod
     def __loadxml__(cls, element):
-        bodies_lookup, layers, tilt, rotation = _Layered._parse_xml(element)
+        bodies_lookup, layers, tilt_rad, rotation_rad = _Layered._parse_xml(element)
 
         index = int(element.get('left_substrate'))
         left_material = bodies_lookup[index].material
@@ -555,8 +557,8 @@ class GrainBoundaries(_Layered):
         right_material = bodies_lookup[index].material
 
         obj = cls(left_material, right_material, layers)
-        obj.tilt = tilt
-        obj.rotation = rotation
+        obj.tilt_rad = tilt_rad
+        obj.rotation_rad = rotation_rad
 
         return obj
 
@@ -571,36 +573,36 @@ class GrainBoundaries(_Layered):
         """
         Material of the left substrate. 
         """
-        return self._left.material
+        return self.left_body.material
 
     @left_material.setter
     def left_material(self, m):
-        self._left.material = m
+        self.left_body.material = m
 
     @property
     def left_body(self):
-        return self._left
+        return self._props['left']
 
     @property
     def right_material(self):
         """
         Material of the right substrate. 
         """
-        return self._right.material
+        return self.right_body.material
 
     @right_material.setter
     def right_material(self, m):
-        self._right.material = m
+        self.right_body.material = m
 
     @property
     def right_body(self):
-        return self._right
+        return self._props['right']
 
     def get_bodies(self):
         bodies = _Layered.get_bodies(self)
 
-        bodies.add(self._left)
-        bodies.add(self._right)
+        bodies.add(self.left_body)
+        bodies.add(self.right_body)
 
         return bodies
 

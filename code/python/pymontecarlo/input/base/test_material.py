@@ -63,26 +63,26 @@ class TestModule(unittest.TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
     def testVACUUM(self):
         self.assertEquals('Vacuum', str(VACUUM))
 
         self.assertEqual({}, VACUUM.composition)
-        self.assertAlmostEqual(0.0, VACUUM.density, 4)
+        self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
 
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_electron, 4)
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_photon, 4)
+        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_photon_eV, 4)
 
 class TestMaterial(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', {'Cu': '?'}, density=None)
+        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -96,10 +96,10 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(self.m.composition.has_key(29))
         self.assertAlmostEqual(1.0, self.m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, self.m.density, 4)
+        self.assertAlmostEqual(8.96, self.m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, self.m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
 
     def testfrom_xml(self):
         element = self.m.to_xml()
@@ -110,10 +110,10 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
     def testcomposition(self):
         # Vacuum
@@ -146,28 +146,28 @@ class TestMaterial(unittest.TestCase):
         # ValueError: Incorrect total fraction
         self.assertRaises(ValueError, self.m.__setattr__, 'composition', {29: 0.7, 30: 0.7})
 
-    def testdensity(self):
+    def testdensity_kg_m3(self):
         # Negative density
-        self.m.density = -1
-        self.assertAlmostEqual(8.96, self.m.density, 4)
+        self.m.density_kg_m3 = -1
+        self.assertAlmostEqual(8.96, self.m.density_kg_m3, 4)
 
         # User defined density
-        self.m.density = 1.0
-        self.assertAlmostEqual(1.0, self.m.density, 4)
+        self.m.density_kg_m3 = 1.0
+        self.assertAlmostEqual(1.0, self.m.density_kg_m3, 4)
 
-    def testabsoprtion_energy_electron(self):
-        self.m.absorption_energy_electron = 1e3
-        self.assertAlmostEqual(1e3, self.m.absorption_energy_electron, 4)
-
-        # ValueError: Energy less than 0
-        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_electron', -1.0)
-
-    def testabsoprtion_energy_photon(self):
-        self.m.absorption_energy_photon = 1e3
-        self.assertAlmostEqual(1e3, self.m.absorption_energy_photon, 4)
+    def testabsoprtion_energy_electron_eV(self):
+        self.m.absorption_energy_electron_eV = 1e3
+        self.assertAlmostEqual(1e3, self.m.absorption_energy_electron_eV, 4)
 
         # ValueError: Energy less than 0
-        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_photon', -1.0)
+        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_electron_eV', -1.0)
+
+    def testabsoprtion_energy_photon_eV(self):
+        self.m.absorption_energy_photon_eV = 1e3
+        self.assertAlmostEqual(1e3, self.m.absorption_energy_photon_eV, 4)
+
+        # ValueError: Energy less than 0
+        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_photon_eV', -1.0)
 
     def testto_xml(self):
         element = self.m.to_xml()

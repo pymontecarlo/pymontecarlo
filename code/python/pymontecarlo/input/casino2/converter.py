@@ -86,8 +86,8 @@ class Converter(_Converter):
         except ConversionException as ex:
             if isinstance(options.beam, PencilBeam):
                 old = options.beam
-                options.beam = GaussianBeam(old.energy, 0.0, old.origin,
-                                            old.direction, old.aperture)
+                options.beam = GaussianBeam(old.energy_eV, 0.0, old.origin_m,
+                                            old.direction, old.aperture_rad)
 
                 message = "Pencil beam converted to Gaussian beam with 0 m diameter"
                 warnings.warn(message, ConversionWarning)
@@ -97,8 +97,8 @@ class Converter(_Converter):
     def _convert_geometry(self, options):
         _Converter._convert_geometry(self, options)
 
-        if options.geometry.tilt != 0.0:
-            options.geometry.tilt = 0.0
+        if options.geometry.tilt_rad != 0.0:
+            options.geometry.tilt_rad = 0.0
             message = "Geometry cannot be tilted in Casino, only the beam direction. Tilt set to 0.0 deg."
             warnings.warn(message, ConversionWarning)
 
@@ -119,14 +119,14 @@ class Converter(_Converter):
             intensity = intensities.values()[0]
             phirhoz = phirhozs.values()[0]
 
-            if abs(intensity.elevation[0] - phirhoz.elevation[0]) > 1e-6 or \
-                    abs(intensity.elevation[1] - phirhoz.elevation[1]) > 1e-6:
+            if abs(intensity.elevation_rad[0] - phirhoz.elevation_rad[0]) > 1e-6 or \
+                    abs(intensity.elevation_rad[1] - phirhoz.elevation_rad[1]) > 1e-6:
                 raise ConversionException, \
                     "The elevation of the 'PhotonIntensityDetector' (%s) should be the same as the one of the 'PhiRhoZDetector' (%s)" % \
-                    (str(intensity.elevation), str(phirhoz.elevation))
+                    (str(intensity.elevation_rad), str(phirhoz.elevation_rad))
 
-            if abs(intensity.azimuth[0] - phirhoz.azimuth[0]) > 1e-6 or \
-                    abs(intensity.azimuth[1] - phirhoz.azimuth[1]) > 1e-6:
+            if abs(intensity.azimuth_rad[0] - phirhoz.azimuth_rad[0]) > 1e-6 or \
+                    abs(intensity.azimuth_rad[1] - phirhoz.azimuth_rad[1]) > 1e-6:
                 raise ConversionException, \
                     "The azimuth of the 'PhotonIntensityDetector' (%s) should be the same as the one of the 'PhiRhoZDetector' (%s)" % \
-                    (str(intensity.azimuth), str(phirhoz.azimuth))
+                    (str(intensity.azimuth_rad), str(phirhoz.azimuth_rad))

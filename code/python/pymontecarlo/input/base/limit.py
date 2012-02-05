@@ -24,13 +24,15 @@ from xml.etree.ElementTree import Element
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
 
-class _TransitionLimit(objectxml):
+class _TransitionLimit(Option):
     def __init__(self, transition):
+        Option.__init__(self)
+
         self.transition = transition
 
     @classmethod
@@ -47,18 +49,20 @@ class _TransitionLimit(objectxml):
 
     @property
     def transition(self):
-        return self._transition
+        return self._props['transition']
 
     @transition.setter
     def transition(self, transition):
-        self._transition = transition
+        self._props['transition'] = transition
 
-class TimeLimit(objectxml):
+class TimeLimit(Option):
     def __init__(self, time):
-        self.time = time
+        Option.__init__(self)
+
+        self.time_s = time
 
     def __repr__(self):
-        return '<TimeLimit(time=%s s)>' % self.time
+        return '<TimeLimit(time=%s s)>' % self.time_s
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -66,23 +70,25 @@ class TimeLimit(objectxml):
         return cls(time)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('time', str(self.time))
+        element.set('time', str(self.time_s))
 
     @property
-    def time(self):
+    def time_s(self):
         """
         Simulation time in seconds.
         """
-        return self._time
+        return self._props['time']
 
-    @time.setter
-    def time(self, time):
+    @time_s.setter
+    def time_s(self, time):
         if time <= 0:
             raise ValueError, "Time (%s) must be greater than 0." % time
-        self._time = long(time)
+        self._props['time'] = long(time)
 
-class ShowersLimit(objectxml):
+class ShowersLimit(Option):
     def __init__(self, showers):
+        Option.__init__(self)
+
         self.showers = showers
 
     @classmethod
@@ -101,13 +107,13 @@ class ShowersLimit(objectxml):
         """
         Number of electron showers.
         """
-        return self._showers
+        return self._props['showers']
 
     @showers.setter
     def showers(self, showers):
         if showers < 1:
             raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
-        self._showers = long(showers)
+        self._props['showers'] = long(showers)
 
 class UncertaintyLimit(_TransitionLimit):
     def __init__(self, transition, uncertainty):
@@ -133,11 +139,11 @@ class UncertaintyLimit(_TransitionLimit):
 
     @property
     def uncertainty(self):
-        return self._uncertainty
+        return self._props['uncertainty']
 
     @uncertainty.setter
     def uncertainty(self, unc):
         if unc < 0 or unc > 1:
             raise ValueError, "Relative uncertainty (%s) must be between [0.0, 1.0]." % unc
-        self._uncertainty = unc
+        self._props['uncertainty'] = unc
 

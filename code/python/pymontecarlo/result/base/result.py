@@ -322,19 +322,19 @@ class PhotonIntensityResult(_Result):
 
 class TimeResult(_Result):
 
-    def __init__(self, detector, simulation_time=0.0, simulation_speed=(0.0, 0.0)):
+    def __init__(self, detector, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
         """
         Creates a new result to store simulation time and speed.
         
         :arg detector: time detector
-        :arg simulation_time: total time of the simulation (in seconds)
-        :arg simulation_speed: time to simulation one electron (in seconds) and
+        :arg simulation_time_s: total time of the simulation (in seconds)
+        :arg simulation_speed_s: time to simulation one electron (in seconds) and
             its uncertainty
         """
         _Result.__init__(self, detector)
 
-        self._simulation_time = simulation_time
-        self._simulation_speed = simulation_speed
+        self._simulation_time_s = simulation_time_s
+        self._simulation_speed_s = simulation_speed_s
 
     @classmethod
     def __loadzip__(cls, zipfile, key, detector):
@@ -358,23 +358,23 @@ class TimeResult(_Result):
     def __savezip__(self, zipfile, key):
         element = Element('result')
 
-        attr = {'val': str(self.simulation_time)}
+        attr = {'val': str(self.simulation_time_s)}
         child = Element('time', attr)
         element.append(child)
 
-        attr = dict(zip(['val', 'unc'], map(str, self.simulation_speed)))
+        attr = dict(zip(['val', 'unc'], map(str, self.simulation_speed_s)))
         child = Element('speed', attr)
         element.append(child)
 
         zipfile.writestr(key + '.xml', tostring(element))
 
     @property
-    def simulation_time(self):
-        return self._simulation_time
+    def simulation_time_s(self):
+        return self._simulation_time_s
 
     @property
-    def simulation_speed(self):
-        return self._simulation_speed
+    def simulation_speed_s(self):
+        return self._simulation_speed_s
 
 class ElectronFractionResult(_Result):
 

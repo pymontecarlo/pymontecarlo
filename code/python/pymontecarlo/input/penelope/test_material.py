@@ -38,26 +38,26 @@ class TestModule(unittest.TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
         self.assertAlmostEqual(0.0, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.0, m.elastic_scattering[1], 4)
 
-        self.assertAlmostEqual(50.0, m.cutoff_energy_inelastic, 4)
-        self.assertAlmostEqual(50.0, m.cutoff_energy_bremsstrahlung, 4)
+        self.assertAlmostEqual(50.0, m.cutoff_energy_inelastic_eV, 4)
+        self.assertAlmostEqual(50.0, m.cutoff_energy_bremsstrahlung_eV, 4)
 
 class TestMaterial(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', {'Cu': '?'}, density=None,
+        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None,
                           elastic_scattering=(0.1, 0.2),
-                          cutoff_energy_inelastic=51.2,
-                          cutoff_energy_bremsstrahlung=53.4)
+                          cutoff_energy_inelastic_eV=51.2,
+                          cutoff_energy_bremsstrahlung_eV=53.4)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -71,16 +71,16 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(self.m.composition.has_key(29))
         self.assertAlmostEqual(1.0, self.m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, self.m.density, 4)
+        self.assertAlmostEqual(8.96, self.m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, self.m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
 
         self.assertAlmostEqual(0.1, self.m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, self.m.elastic_scattering[1], 4)
 
-        self.assertAlmostEqual(51.2, self.m.cutoff_energy_inelastic, 4)
-        self.assertAlmostEqual(53.4, self.m.cutoff_energy_bremsstrahlung, 4)
+        self.assertAlmostEqual(51.2, self.m.cutoff_energy_inelastic_eV, 4)
+        self.assertAlmostEqual(53.4, self.m.cutoff_energy_bremsstrahlung_eV, 4)
 
     def testfrom_xml(self):
         element = self.m.to_xml()
@@ -91,16 +91,16 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
         self.assertAlmostEqual(0.1, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, m.elastic_scattering[1], 4)
 
-        self.assertAlmostEqual(51.2, m.cutoff_energy_inelastic, 4)
-        self.assertAlmostEqual(53.4, m.cutoff_energy_bremsstrahlung, 4)
+        self.assertAlmostEqual(51.2, m.cutoff_energy_inelastic_eV, 4)
+        self.assertAlmostEqual(53.4, m.cutoff_energy_bremsstrahlung_eV, 4)
 
     def testelastic_scattering(self):
         self.m.elastic_scattering = 0.05, 0.06
@@ -112,17 +112,17 @@ class TestMaterial(unittest.TestCase):
         self.assertRaises(ValueError, self.m.__setattr__, 'elastic_scattering', (0.3, 0.1))
         self.assertRaises(ValueError, self.m.__setattr__, 'elastic_scattering', (0.1, 0.3))
 
-    def testcutoff_energy_inelastic(self):
-        self.m.cutoff_energy_inelastic = 123.45
-        self.assertAlmostEqual(123.45, self.m.cutoff_energy_inelastic, 4)
+    def testcutoff_energy_inelastic_eV(self):
+        self.m.cutoff_energy_inelastic_eV = 123.45
+        self.assertAlmostEqual(123.45, self.m.cutoff_energy_inelastic_eV, 4)
 
-        self.assertRaises(ValueError, self.m.__setattr__, 'cutoff_energy_inelastic', -1.0)
+        self.assertRaises(ValueError, self.m.__setattr__, 'cutoff_energy_inelastic_eV', -1.0)
 
-    def testcutoff_energy_bremsstrahlung(self):
-        self.m.cutoff_energy_bremsstrahlung = 123.45
-        self.assertAlmostEqual(123.45, self.m.cutoff_energy_bremsstrahlung, 4)
+    def testcutoff_energy_bremsstrahlung_eV(self):
+        self.m.cutoff_energy_bremsstrahlung_eV = 123.45
+        self.assertAlmostEqual(123.45, self.m.cutoff_energy_bremsstrahlung_eV, 4)
 
-        self.assertRaises(ValueError, self.m.__setattr__, 'cutoff_energy_bremsstrahlung', -1.0)
+        self.assertRaises(ValueError, self.m.__setattr__, 'cutoff_energy_bremsstrahlung_eV', -1.0)
 
     def testto_xml(self):
         element = self.m.to_xml()

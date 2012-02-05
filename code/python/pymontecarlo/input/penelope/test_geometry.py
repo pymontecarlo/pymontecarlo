@@ -39,9 +39,9 @@ class TestRotation(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(1.0), self.rotation.omega, 4)
-        self.assertAlmostEqual(radians(2.0), self.rotation.theta, 4)
-        self.assertAlmostEqual(radians(3.0), self.rotation.phi, 4)
+        self.assertAlmostEqual(radians(1.0), self.rotation.omega_rad, 4)
+        self.assertAlmostEqual(radians(2.0), self.rotation.theta_rad, 4)
+        self.assertAlmostEqual(radians(3.0), self.rotation.phi_rad, 4)
 
     def testto_xml(self):
         element = self.rotation.to_xml()
@@ -54,9 +54,9 @@ class TestRotation(unittest.TestCase):
         element = self.rotation.to_xml()
         rotation = Rotation.from_xml(element)
 
-        self.assertAlmostEqual(radians(1.0), rotation.omega, 4)
-        self.assertAlmostEqual(radians(2.0), rotation.theta, 4)
-        self.assertAlmostEqual(radians(3.0), rotation.phi, 4)
+        self.assertAlmostEqual(radians(1.0), rotation.omega_rad, 4)
+        self.assertAlmostEqual(radians(2.0), rotation.theta_rad, 4)
+        self.assertAlmostEqual(radians(3.0), rotation.phi_rad, 4)
 
     def testto_geo(self):
         lines = self.rotation.to_geo()
@@ -77,9 +77,9 @@ class TestShift(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(0.01, self.shift.x, 4)
-        self.assertAlmostEqual(0.02, self.shift.y, 4)
-        self.assertAlmostEqual(0.03, self.shift.z, 4)
+        self.assertAlmostEqual(0.01, self.shift.x_m, 4)
+        self.assertAlmostEqual(0.02, self.shift.y_m, 4)
+        self.assertAlmostEqual(0.03, self.shift.z_m, 4)
 
     def testto_xml(self):
         element = self.shift.to_xml()
@@ -92,9 +92,9 @@ class TestShift(unittest.TestCase):
         element = self.shift.to_xml()
         shift = Shift.from_xml(element)
 
-        self.assertAlmostEqual(0.01, shift.x, 4)
-        self.assertAlmostEqual(0.02, shift.y, 4)
-        self.assertAlmostEqual(0.03, shift.z, 4)
+        self.assertAlmostEqual(0.01, shift.x_m, 4)
+        self.assertAlmostEqual(0.02, shift.y_m, 4)
+        self.assertAlmostEqual(0.03, shift.z_m, 4)
 
     def testto_geo(self):
         lines = self.shift.to_geo()
@@ -166,8 +166,8 @@ class TestSurfaceImplicit(unittest.TestCase):
         self.surface = SurfaceImplicit(description='surface')
         self.surface.coefficients['xx'] = 1e3
         self.surface.coefficients['y'] = 1e9
-        self.surface.rotation.phi = radians(180)
-        self.surface.shift.z = -1e3
+        self.surface.rotation.phi_rad = radians(180)
+        self.surface.shift.z_m = -1e3
         self.surface._index = 0
 
     def tearDown(self):
@@ -175,8 +175,8 @@ class TestSurfaceImplicit(unittest.TestCase):
 
     def testskeleton(self):
         self.assertEqual('surface', self.surface.description)
-        self.assertAlmostEqual(radians(180), self.surface.rotation.phi, 4)
-        self.assertAlmostEqual(-1e3, self.surface.shift.z, 4)
+        self.assertAlmostEqual(radians(180), self.surface.rotation.phi_rad, 4)
+        self.assertAlmostEqual(-1e3, self.surface.shift.z_m, 4)
         self.assertAlmostEqual(1e3, self.surface.coefficients['xx'], 4)
         self.assertAlmostEqual(0.0, self.surface.coefficients['xy'], 4)
         self.assertAlmostEqual(0.0, self.surface.coefficients['xz'], 4)
@@ -216,8 +216,8 @@ class TestSurfaceImplicit(unittest.TestCase):
         surface = SurfaceImplicit.from_xml(element)
 
         self.assertEqual('surface', surface.description)
-        self.assertAlmostEqual(radians(180), surface.rotation.phi, 4)
-        self.assertAlmostEqual(-1e3, surface.shift.z, 4)
+        self.assertAlmostEqual(radians(180), surface.rotation.phi_rad, 4)
+        self.assertAlmostEqual(-1e3, surface.shift.z_m, 4)
         self.assertAlmostEqual(1e3, surface.coefficients['xx'], 4)
         self.assertAlmostEqual(0.0, surface.coefficients['xy'], 4)
         self.assertAlmostEqual(0.0, surface.coefficients['xz'], 4)
@@ -326,7 +326,7 @@ class TestModule(unittest.TestCase):
         surface2._index = 1
 
         self.module2 = Module(mat2)
-        self.module2.maximum_step_length = 1e4
+        self.module2.maximum_step_length_m = 1e4
         self.module2.interaction_forcings.add(InteractionForcing(1, 1, -4))
         self.module2._index = 1
 
@@ -334,8 +334,8 @@ class TestModule(unittest.TestCase):
         self.module1.add_surface(surface1, -1)
         self.module1.add_surface(surface2, 1)
         self.module1.add_module(self.module2)
-        self.module1.rotation.phi = radians(180)
-        self.module1.shift.z = -1e3
+        self.module1.rotation.phi_rad = radians(180)
+        self.module1.shift.z_m = -1e3
         self.module1._index = 0
 
         self.materials_lookup = {0: mat2, 1: mat1}
@@ -349,8 +349,8 @@ class TestModule(unittest.TestCase):
         # Module 1
         self.assertEqual('Copper', str(self.module1.material))
         self.assertEqual('Test', self.module1.description)
-        self.assertAlmostEqual(radians(180), self.module1.rotation.phi, 4)
-        self.assertAlmostEqual(-1e3, self.module1.shift.z, 4)
+        self.assertAlmostEqual(radians(180), self.module1.rotation.phi_rad, 4)
+        self.assertAlmostEqual(-1e3, self.module1.shift.z_m, 4)
         self.assertEqual(2, len(self.module1.get_surfaces()))
         self.assertEqual(1, len(self.module1.get_modules()))
 
@@ -358,7 +358,7 @@ class TestModule(unittest.TestCase):
         self.assertEqual(str(VACUUM), str(self.module2.material))
         self.assertEqual(0, len(self.module2.get_surfaces()))
         self.assertEqual(0, len(self.module2.get_modules()))
-        self.assertAlmostEqual(1e4, self.module2.maximum_step_length, 4)
+        self.assertAlmostEqual(1e4, self.module2.maximum_step_length_m, 4)
         self.assertEqual(1, len(self.module2.interaction_forcings))
 
     def testto_xml(self):
@@ -398,8 +398,8 @@ class TestModule(unittest.TestCase):
 
         self.assertEqual('Copper', str(module.material))
         self.assertEqual('Test', module.description)
-        self.assertAlmostEqual(radians(180), module.rotation.phi, 4)
-        self.assertAlmostEqual(-1e3, module.shift.z, 4)
+        self.assertAlmostEqual(radians(180), module.rotation.phi_rad, 4)
+        self.assertAlmostEqual(-1e3, module.shift.z_m, 4)
         self.assertEqual(2, len(module.get_surfaces()))
         self.assertEqual(1, len(module.get_modules()))
 
@@ -411,7 +411,7 @@ class TestModule(unittest.TestCase):
         self.assertEqual(str(VACUUM), str(module.material))
         self.assertEqual(0, len(module.get_surfaces()))
         self.assertEqual(0, len(module.get_modules()))
-        self.assertAlmostEqual(1e4, module.maximum_step_length, 4)
+        self.assertAlmostEqual(1e4, module.maximum_step_length_m, 4)
         self.assertEqual(1, len(module.interaction_forcings))
 
     def testto_geo(self):
@@ -424,7 +424,6 @@ class TestModule(unittest.TestCase):
         lines = self.module2.to_geo()
         self.assertEqual(9, len(lines))
         self.assertEqual(self.GEO2, lines)
-
 
 class TestPenelopeGeometry(unittest.TestCase):
     GEOFILE = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
@@ -545,15 +544,15 @@ class TestPenelopeGeometry(unittest.TestCase):
         self.module2.add_module(self.module1)
         self.geo.modules.add(self.module2)
 
-        self.geo.tilt = radians(45)
+        self.geo.tilt_rad = radians(45)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Test Geometry', self.geo.title)
-        self.assertAlmostEqual(radians(45), self.geo.tilt, 4)
-        self.assertAlmostEqual(0.0, self.geo.rotation, 4)
+        self.assertAlmostEqual(radians(45), self.geo.tilt_rad, 4)
+        self.assertAlmostEqual(0.0, self.geo.rotation_rad, 4)
         self.assertEqual(2, len(self.geo.get_bodies()))
         self.assertEqual(2, len(self.geo.modules))
         self.assertEqual(4, len(self.geo.get_surfaces()))
@@ -564,8 +563,8 @@ class TestPenelopeGeometry(unittest.TestCase):
         geo = PenelopeGeometry.from_xml(element)
 
         self.assertEqual('Test Geometry', geo.title)
-        self.assertAlmostEqual(radians(45), geo.tilt, 4)
-        self.assertAlmostEqual(0.0, geo.rotation, 4)
+        self.assertAlmostEqual(radians(45), geo.tilt_rad, 4)
+        self.assertAlmostEqual(0.0, geo.rotation_rad, 4)
         self.assertEqual(2, len(geo.get_bodies()))
         self.assertEqual(2, len(geo.modules))
         self.assertEqual(4, len(geo.get_surfaces()))

@@ -246,9 +246,9 @@ class TestTimeResult(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(5.0, self.r.simulation_time, 4)
-        self.assertAlmostEqual(1.0, self.r.simulation_speed[0], 4)
-        self.assertAlmostEqual(0.5, self.r.simulation_speed[1], 4)
+        self.assertAlmostEqual(5.0, self.r.simulation_time_s, 4)
+        self.assertAlmostEqual(1.0, self.r.simulation_speed_s[0], 4)
+        self.assertAlmostEqual(0.5, self.r.simulation_speed_s[1], 4)
 
     def test__savezip__(self):
         fp = StringIO()
@@ -265,9 +265,9 @@ class TestTimeResult(unittest.TestCase):
         zipfile = ZipFile(self.results_zip, 'r')
         r = TimeResult.__loadzip__(zipfile, 'det2', self.det)
 
-        self.assertAlmostEqual(5.0, r.simulation_time, 4)
-        self.assertAlmostEqual(1.0, r.simulation_speed[0], 4)
-        self.assertAlmostEqual(0.5, r.simulation_speed[1], 4)
+        self.assertAlmostEqual(5.0, r.simulation_time_s, 4)
+        self.assertAlmostEqual(1.0, r.simulation_speed_s[0], 4)
+        self.assertAlmostEqual(0.5, r.simulation_speed_s[1], 4)
 
         zipfile.close()
 

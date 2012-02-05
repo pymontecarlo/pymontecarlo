@@ -26,75 +26,76 @@ from xml.etree.ElementTree import Element
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 
 # Globals and constants variables.
 
-class PencilBeam(objectxml):
+class PencilBeam(Option):
+    def __init__(self, energy_eV, origin_m=(0, 0, 1), direction=(0, 0, -1),
+                 aperture_rad=0.0):
+        Option.__init__(self)
 
-    def __init__(self, energy, origin=(0, 0, 1), direction=(0, 0, -1),
-                 aperture=0.0):
-        self.energy = energy
-        self.origin = origin
+        self.energy_eV = energy_eV
+        self.origin_m = origin_m
         self.direction = direction
-        self.aperture = aperture
+        self.aperture_rad = aperture_rad
 
     def __repr__(self):
         return '<PencilBeam(energy=%s eV, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.energy, self.origin, self.direction, self.aperture)
+            (self.energy_eV, self.origin_m, self.direction, self.aperture_rad)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        energy = float(element.get("energy"))
+        energy = float(element.get('energy'))
 
-        attrib = element.find("origin").attrib
+        attrib = element.find('origin').attrib
         origin = map(float, map(attrib.get, ('x', 'y', 'z')))
 
-        attrib = element.find("direction").attrib
+        attrib = element.find('direction').attrib
         direction = map(float, map(attrib.get, ('x', 'y', 'z')))
 
-        aperture = float(element.get("aperture"))
+        aperture = float(element.get('aperture'))
 
         return cls(energy, origin, direction, aperture)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set("energy", str(self.energy))
+        element.set('energy', str(self.energy_eV))
 
-        attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin)))
-        element.append(Element("origin", attrib))
+        attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin_m)))
+        element.append(Element('origin', attrib))
 
         attrib = dict(zip(('x', 'y', 'z'), map(str, self.direction)))
-        element.append(Element("direction", attrib))
+        element.append(Element('direction', attrib))
 
-        element.set("aperture", str(self.aperture))
+        element.set('aperture', str(self.aperture_rad))
 
     @property
-    def energy(self):
+    def energy_eV(self):
         """
         Energy of this electron beam (in eV).
         """
-        return self._energy
+        return self._props['energy']
 
-    @energy.setter
-    def energy(self, energy):
+    @energy_eV.setter
+    def energy_eV(self, energy):
         if energy <= 0:
-            raise ValueError, "Energy (%s) must be greater than 0." % energy
-        self._energy = energy
+            raise ValueError, "Energy (%s) must be greater than 0 eV." % energy
+        self._props['energy'] = energy
 
     @property
-    def origin(self):
+    def origin_m(self):
         """
         Starting location of this electron beam.
         Location saved in a tuple of length 3 for the x, y and z coordinates.
         All coordinates are expressed in meters.
         """
-        return self._origin
+        return self._props['origin']
 
-    @origin.setter
-    def origin(self, origin):
+    @origin_m.setter
+    def origin_m(self, origin):
         if len(origin) != 3:
             raise ValueError, "Origin must be a tuple of length 3."
-        self._origin = tuple(origin)
+        self._props['origin'] = tuple(origin)
 
     @property
     def direction(self):
@@ -103,78 +104,77 @@ class PencilBeam(objectxml):
         Direction is represented by a tuple of length 3 for the x, y and z 
         coordinates.
         """
-        return self._direction
+        return self._props['direction']
 
     @direction.setter
     def direction(self, direction):
         if len(direction) != 3:
             raise ValueError, "Direction must be a tuple of length 3."
-        self._direction = tuple(direction)
+        self._props['direction'] = tuple(direction)
 
     @property
-    def aperture(self):
+    def aperture_rad(self):
         """
         Angular aperture of the electron beam (in radians).
         """
-        return self._aperture
+        return self._props['aperture']
 
-    @aperture.setter
-    def aperture(self, aperture):
+    @aperture_rad.setter
+    def aperture_rad(self, aperture):
         if aperture < 0.0 or aperture > math.pi / 2:
             raise ValueError, "Aperture (%s) must be between [0, pi/2] rad." % aperture
-        self._aperture = aperture
+        self._props['aperture'] = aperture
 
 class GaussianBeam(PencilBeam):
+    def __init__(self, energy_eV, diameter_m, origin_m=(0, 0, 1),
+                 direction=(0, 0, -1), aperture_rad=0.0):
+        PencilBeam.__init__(self, energy_eV, origin_m, direction, aperture_rad)
 
-    def __init__(self, energy, diameter, origin=(0, 0, 1),
-                 direction=(0, 0, -1), aperture=0.0):
-        PencilBeam.__init__(self, energy, origin, direction, aperture)
-
-        self.diameter = diameter
+        self.diameter_m = diameter_m
 
     def __repr__(self):
         return '<GaussianBeam(energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.energy, self.diameter, self.origin, self.direction, self.aperture)
+            (self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
 
     @classmethod
     def __loadxml__ (cls, element, *args, **kwargs):
         pencil = PencilBeam.__loadxml__(element, *args, **kwargs)
 
-        diameter = float(element.get("diameter"))
+        diameter_m = float(element.get('diameter'))
 
-        return cls(pencil.energy, diameter, pencil.origin,
-                   pencil.direction, pencil.aperture)
+        return cls(pencil.energy_eV, diameter_m, pencil.origin_m,
+                   pencil.direction, pencil.aperture_rad)
 
     def __savexml__(self, element, *args, **kwargs):
         PencilBeam.__savexml__(self, element, *args, **kwargs)
-        element.set('diameter', str(self.diameter))
+        element.set('diameter', str(self.diameter_m))
 
     @property
-    def diameter(self):
+    def diameter_m(self):
         """
         Diameter of this electron beam (in meters).
         """
-        return self._diameter
+        return self._props['diameter']
 
-    @diameter.setter
-    def diameter(self, diameter):
+    @diameter_m.setter
+    def diameter_m(self, diameter):
         if diameter < 0:
             raise ValueError, "Diameter (%s) must be equal or greater than 0." % diameter
-        self._diameter = diameter
+        self._props['diameter'] = diameter
 
-def tilt_beam(angle, axis='y', direction=(0, 0, -1)):
+def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """
     Returns the direction of the beam after being tilted by an *angle* along
     the specified *axis* of rotation from its original *direction*.
     
-    :arg angle: angle of rotation in radians
+    :arg angle_rad: angle of rotation in radians
     :arg axis: axis of rotation, either ``x``, ``y``, ``z``
     :arg direction: original direction of the beam
     
     :return: a 3-length :class:`tuple`
     """
-    c = math.cos(angle)
-    s = math.sin(angle)
+    c = math.cos(angle_rad)
+    s = math.sin(angle_rad)
 
     if axis.lower() == 'x':
         r = [[1, 0, 0], [0, c, -s], [0, s, c]]

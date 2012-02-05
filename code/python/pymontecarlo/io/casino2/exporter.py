@@ -114,7 +114,7 @@ class Exporter(_Exporter):
             region.update() # Calculate number of elements, mean atomic number
 
             region.User_Density = True
-            region.Rho = material.density
+            region.Rho = material.density_kg_m3
             region.Name = material.name
 
         # Thickness
@@ -123,7 +123,7 @@ class Exporter(_Exporter):
 
             for i, layer in enumerate(layers):
                 dim = geometry.get_dimensions(layer)
-                parameters = [abs(dim.zmax) * 1e9, abs(dim.zmin) * 1e9, 0.0, 0.0]
+                parameters = [abs(dim.zmax_m) * 1e9, abs(dim.zmin_m) * 1e9, 0.0, 0.0]
                 regionops.getRegion(i).setParameters(parameters)
 
             if geometry.has_substrate():
@@ -131,7 +131,7 @@ class Exporter(_Exporter):
                 region = regionops.getRegion(regionops.getNumberRegions() - 1)
 
                 parameters = region.getParameters()
-                parameters[0] = abs(dim.zmax) * 1e9
+                parameters[0] = abs(dim.zmax_m) * 1e9
                 parameters[2] = parameters[0] + 10.0
                 region.setParameters(parameters)
 
@@ -143,28 +143,28 @@ class Exporter(_Exporter):
             region = regionops.getRegion(0)
             dim = geometry.get_dimensions(geometry.left_body)
             parameters = region.getParameters()
-            parameters[1] = dim.xmax * 1e9
+            parameters[1] = dim.xmax_m * 1e9
             parameters[2] = parameters[1] - 10.0
             region.setParameters(parameters)
 
             # Layers
             for i, layer in enumerate(layers):
                 dim = geometry.get_dimensions(layer)
-                parameters = [dim.xmin * 1e9, dim.xmax * 1e9, 0.0, 0.0]
+                parameters = [dim.xmin_m * 1e9, dim.xmax_m * 1e9, 0.0, 0.0]
                 regionops.getRegion(i + 1).setParameters(parameters)
 
             # Right substrate
             region = regionops.getRegion(regionops.getNumberRegions() - 1)
             dim = geometry.get_dimensions(geometry.right_body)
             parameters = region.getParameters()
-            parameters[0] = dim. xmin * 1e9
+            parameters[0] = dim.xmin_m * 1e9
             parameters[2] = parameters[0] + 10.0
             region.setParameters(parameters)
 
         # Absorption energy electron
-        abs_electron = min(map(attrgetter('absorption_energy_electron'),
+        abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
                                geometry.get_materials()))
-        simops.Eminimum = abs_electron / 1000.0 # keV
+        simops.Eminimum = abs_electron_eV / 1000.0 # keV
 
     def _export_detectors(self, options, simdata, simops):
         simops.RangeFinder = 3 # Fixed range
@@ -179,19 +179,19 @@ class Exporter(_Exporter):
         if dets:
             detector = dets.values()[0] # There should be at least one
 
-            simops.TOA = math.degrees(detector.takeoffangle) # deg
-            simops.PhieRX = math.degrees(sum(detector.azimuth) / 2.0) # deg
+            simops.TOA = math.degrees(detector.takeoffangle_rad) # deg
+            simops.PhieRX = math.degrees(sum(detector.azimuth_rad) / 2.0) # deg
 
     def _beam_gaussian(self, options, beam, simdata, simops):
-        simops.setIncidentEnergy_keV(beam.energy / 1000.0) # keV
-        simops.setPosition(beam.origin[0] * 1e9) # nm
+        simops.setIncidentEnergy_keV(beam.energy_eV / 1000.0) # keV
+        simops.setPosition(beam.origin_m[0] * 1e9) # nm
 
         # Beam diameter
         # Casino's beam diameter contains 99.9% of the electrons (n=3.290)
         # d_{CASINO} = 2 (3.2905267 \sigma)
         # d_{FWHM} = 2 (1.177411 \sigma)
         # d_{CASINO} = 2.7947137 d_{FWHM}
-        simops.Beam_Diameter = 2.7947137 * beam.diameter * 1e9 # nm
+        simops.Beam_Diameter = 2.7947137 * beam.diameter_m * 1e9 # nm
 
         # Beam tilt
         a = np.array(beam.direction)
@@ -204,24 +204,24 @@ class Exporter(_Exporter):
         simops.FDenr = 1
         simops.FDenrLog = 0
         simops.NbPointDENR = detector.channels
-        simops.DenrMin = detector.limits[0] / 1000.0 # keV
-        simops.DenrMax = detector.limits[1] / 1000.0 # keV
+        simops.DenrMin = detector.limits_eV[0] / 1000.0 # keV
+        simops.DenrMax = detector.limits_eV[1] / 1000.0 # keV
 
     def _detector_transmitted_electron_energy(self, options, name,
                                               detector, simdata, simops):
         simops.FDent = 1
         simops.FDentLog = 0
         simops.NbPointDENT = detector.channels
-        simops.DentMin = detector.limits[0] / 1000.0 # keV
-        simops.DentMax = detector.limits[1] / 1000.0 # keV
+        simops.DentMin = detector.limits_eV[0] / 1000.0 # keV
+        simops.DentMax = detector.limits_eV[1] / 1000.0 # keV
 
     def _detector_backscattered_electron_polar_angular(self, options, name,
                                                        detector, simdata, simops):
         simops.FDbang = 1
         simops.FDbangLog = 0
         simops.NbPointDBANG = detector.channels
-        simops.DbangMin = math.degrees(detector.limits[0]) # deg
-        simops.DbangMax = math.degrees(detector.limits[1]) # deg
+        simops.DbangMin = math.degrees(detector.limits_rad[0]) # deg
+        simops.DbangMax = math.degrees(detector.limits_rad[1]) # deg
 
     def _detector_phirhoz(self, options, name, detector, simdata, simops):
         # FIXME: Casino freezes when this value is set

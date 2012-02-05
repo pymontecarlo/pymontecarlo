@@ -23,7 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 
 # Globals and constants variables.
 ELECTRON = 1
@@ -81,8 +81,7 @@ class Collisions(object):
         variables = vars(self).copy()
         return variables
 
-class InteractionForcing(objectxml):
-
+class InteractionForcing(Option):
     def __init__(self, particle, collision, forcer= -1, weight=(0.1, 1.0)):
         """
         Creates a new interaction forcing.
@@ -100,6 +99,8 @@ class InteractionForcing(objectxml):
             The weight is a :class:`tuple` of the low and high limits 
             (``default=(0.1, 1.0)``)
         """
+        Option.__init__(self)
+
         self.particle = particle
         self.collision = collision
         self.forcer = forcer
@@ -152,13 +153,13 @@ class InteractionForcing(objectxml):
         The particle can either be a :const:`ELECTRON`, :const:`PHOTON` 
         or :const:`POSITRON`.
         """
-        return self._particle
+        return self._props['particle']
 
     @particle.setter
     def particle(self, particle):
         if not particle in [ELECTRON, PHOTON, POSITRON]:
             raise ValueError, "Incorrect particle type (%s)." % particle
-        self._particle = particle
+        self._props['particle'] = particle
 
     @property
     def collision(self):
@@ -167,13 +168,13 @@ class InteractionForcing(objectxml):
         A value between 1 and 8.
         See :class:`.Collisions` for the definitions.
         """
-        return self._collision
+        return self._props['collision']
 
     @collision.setter
     def collision(self, collision):
         if collision < 1 or collision > 8:
             raise ValueError, "Incorrect collision type (%s)." % collision
-        self._collision = collision
+        self._props['collision'] = collision
 
     @property
     def forcer(self):
@@ -181,13 +182,13 @@ class InteractionForcing(objectxml):
         Forcing value.
         If negative the forcing value is adjusted based on the interaction volume.
         """
-        return self._forcer
+        return self._props['forcer']
 
     @forcer.setter
     def forcer(self, forcer):
         if forcer == 0.0:
             raise ValueError, "Forcer (%s) cannot be equal to zero." % forcer
-        self._forcer = forcer
+        self._props['forcer'] = forcer
 
     @property
     def weight(self):
@@ -195,7 +196,7 @@ class InteractionForcing(objectxml):
         The weight window where interaction is applied.
         The low and upper limits must be between 0.0 and 1.0.
         """
-        return self._weight
+        return self._props['weight']
 
     @weight.setter
     def weight(self, weight):
@@ -206,4 +207,4 @@ class InteractionForcing(objectxml):
         if high < 0 or high > 1:
             raise ValueError, "Weight upper limit (%s) must be between [0, 1]." % high
 
-        self._weight = min(low, high), max(low, high)
+        self._props['weight'] = min(low, high), max(low, high)

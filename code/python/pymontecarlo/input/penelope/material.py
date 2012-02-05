@@ -28,22 +28,22 @@ import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 
-def pure(z, absorption_energy_electron=50.0, absorption_energy_photon=50.0,
+def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
          elastic_scattering=(0.0, 0.0),
-         cutoff_energy_inelastic=50.0, cutoff_energy_bremsstrahlung=50.0):
+         cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
     """
     Returns the material for the specified pure element.
     
     :arg z: atomic number
     :type z: :class:`int`
     
-    :arg absorption_energy_electron: absorption energy of the electrons in
+    :arg absorption_energy_electron_eV: absorption energy of the electrons in
             this material.
-    :type absorption_energy_electron: :class:`float`
+    :type absorption_energy_electron_eV: :class:`float`
     
-    :arg absorption_energy_photon: absorption energy of the photons in
+    :arg absorption_energy_photon_eV: absorption energy of the photons in
         this material.
-    :type absorption_energy_photon: :class:`float`
+    :type absorption_energy_photon_eV: :class:`float`
     
     :arg elastic_scattering: elastic scattering coefficients. 
         They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
@@ -51,25 +51,25 @@ def pure(z, absorption_energy_electron=50.0, absorption_energy_photon=50.0,
         The value of C1 or C2 must be between 0.0 and 0.2 inclusively.
     :type elastic_scattering: :class:`tuple` or :class:`float`
     
-    :arg cutoff_energy_inelastic: cutoff energy for inelastic collisions
+    :arg cutoff_energy_inelastic_eV: cutoff energy for inelastic collisions
         (in eV).
     
-    :arg cutoff_energy_bremsstrahlung: cutoff energy for Bremsstrahlung
+    :arg cutoff_energy_bremsstrahlung_eV: cutoff energy for Bremsstrahlung
         emission (in eV).
     """
     name = ep.name(z)
     composition = {z: '?'}
 
     return Material(name, composition, None,
-                    absorption_energy_electron, absorption_energy_photon,
+                    absorption_energy_electron_eV, absorption_energy_photon_eV,
                     elastic_scattering,
-                    cutoff_energy_inelastic, cutoff_energy_bremsstrahlung)
+                    cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
 
 class Material(_Material):
-    def __init__(self, name, composition, density=None,
-                 absorption_energy_electron=50.0, absorption_energy_photon=50.0,
+    def __init__(self, name, composition, density_kg_m3=None,
+                 absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
                  elastic_scattering=(0.0, 0.0),
-                 cutoff_energy_inelastic=50.0, cutoff_energy_bremsstrahlung=50.0):
+                 cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
         """
         Creates a new material.
         
@@ -87,19 +87,19 @@ class Material(_Material):
             to 1.0. 
         :type composition: :class:`list`
         
-        :arg density: material's density in kg/m3.
+        :arg density_kg_m3: material's density in kg/m3.
             If the density is ``None`` or less than 0 (default), it will be 
             automatically calculated based on the density of the elements and 
             their weight fraction.
-        :type density: :class:`float`
+        :type density_kg_m3: :class:`float`
         
-        :arg absorption_energy_electron: absorption energy of the electrons in
-            this material.
-        :type absorption_energy_electron: :class:`float`
+        :arg absorption_energy_electron_eV: absorption energy of the electrons 
+            in this material.
+        :type absorption_energy_electron_eV: :class:`float`
         
-        :arg absorption_energy_photon: absorption energy of the photons in
+        :arg absorption_energy_photon_eV: absorption energy of the photons in
             this material.
-        :type absorption_energy_photon: :class:`float`
+        :type absorption_energy_photon_eV: :class:`float`
         
         :arg elastic_scattering: elastic scattering coefficients. 
             They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
@@ -107,25 +107,25 @@ class Material(_Material):
             The value of C1 or C2 must be between 0.0 and 0.2 inclusively.
         :type elastic_scattering: :class:`tuple` or :class:`float`
         
-        :arg cutoff_energy_inelastic: cutoff energy for inelastic collisions
+        :arg cutoff_energy_inelastic_eV: cutoff energy for inelastic collisions
             (in eV).
         
-        :arg cutoff_energy_bremsstrahlung: cutoff energy for Bremsstrahlung
+        :arg cutoff_energy_bremsstrahlung_eV: cutoff energy for Bremsstrahlung
             emission (in eV).
         """
-        _Material.__init__(self, name, composition, density,
-                           absorption_energy_electron, absorption_energy_photon)
+        _Material.__init__(self, name, composition, density_kg_m3,
+                           absorption_energy_electron_eV, absorption_energy_photon_eV)
 
         self.elastic_scattering = elastic_scattering
-        self.cutoff_energy_inelastic = cutoff_energy_inelastic
-        self.cutoff_energy_bremsstrahlung = cutoff_energy_bremsstrahlung
+        self.cutoff_energy_inelastic_eV = cutoff_energy_inelastic_eV
+        self.cutoff_energy_bremsstrahlung_eV = cutoff_energy_bremsstrahlung_eV
 
     def __repr__(self):
         return '<PenelopeMaterial(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, elastic_scattering=%s, cutoff_inelastic=%s eV, cutoff_bremsstrahlung=%s eV)>' % \
-            (self._name, self.composition, self.density,
-             self.absorption_energy_electron, self.absorption_energy_photon,
+            (self.name, self.composition, self.density_kg_m3,
+             self.absorption_energy_electron_eV, self.absorption_energy_photon_eV,
              self.elastic_scattering,
-             self.cutoff_energy_inelastic, self.cutoff_energy_bremsstrahlung)
+             self.cutoff_energy_inelastic_eV, self.cutoff_energy_bremsstrahlung_eV)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -135,8 +135,8 @@ class Material(_Material):
         cutoff_energy_inelastic = float(element.get('wcc'))
         cutoff_energy_bremsstrahlung = float(element.get('wcr'))
 
-        return cls(material.name, material.composition, material.density,
-                   material.absorption_energy_electron, material.absorption_energy_photon,
+        return cls(material.name, material.composition, material.density_kg_m3,
+                   material.absorption_energy_electron_eV, material.absorption_energy_photon_eV,
                    elastic_scattering,
                    cutoff_energy_inelastic, cutoff_energy_bremsstrahlung)
 
@@ -145,8 +145,8 @@ class Material(_Material):
 
         element.set('c1', str(self.elastic_scattering[0]))
         element.set('c2', str(self.elastic_scattering[1]))
-        element.set('wcc', str(self.cutoff_energy_inelastic))
-        element.set('wcr', str(self.cutoff_energy_bremsstrahlung))
+        element.set('wcc', str(self.cutoff_energy_inelastic_eV))
+        element.set('wcr', str(self.cutoff_energy_bremsstrahlung_eV))
 
     @property
     def elastic_scattering(self):
@@ -154,7 +154,7 @@ class Material(_Material):
         Elastic scattering coefficients.
         :rtype: :class:`tuple` 
         """
-        return self._elastic_scattering
+        return self._props['elastic scattering']
 
     @elastic_scattering.setter
     def elastic_scattering(self, coeffs):
@@ -168,35 +168,35 @@ class Material(_Material):
         if c2 < 0.0 or c2 > 0.2:
             raise ValueError, "C2 elastic scattering coefficient (%s) must be between [0.0, 0.2]" % c2
 
-        self._elastic_scattering = (c1, c2)
+        self._props['elastic scattering'] = (c1, c2)
 
     @property
-    def cutoff_energy_inelastic(self):
+    def cutoff_energy_inelastic_eV(self):
         """
         Cutoff energy for inelastic collisions (in eV).
         """
-        return self._cutoff_energy_inelastic
+        return self._props['cutoff energy inelastic']
 
-    @cutoff_energy_inelastic.setter
-    def cutoff_energy_inelastic(self, energy):
+    @cutoff_energy_inelastic_eV.setter
+    def cutoff_energy_inelastic_eV(self, energy):
         if energy < 0.0:
             raise ValueError, "Cutoff energy inelastic (%s) must be greater or equal to 0.0" \
                     % energy
-        self._cutoff_energy_inelastic = energy
+        self._props['cutoff energy inelastic'] = energy
 
     @property
-    def cutoff_energy_bremsstrahlung(self):
+    def cutoff_energy_bremsstrahlung_eV(self):
         """
         Cutoff energy for Bremsstrahlung emission (in eV).
         """
-        return self._cutoff_energy_bremsstrahlung
+        return self._props['cutoff energy bremsstrahlung']
 
-    @cutoff_energy_bremsstrahlung.setter
-    def cutoff_energy_bremsstrahlung(self, energy):
+    @cutoff_energy_bremsstrahlung_eV.setter
+    def cutoff_energy_bremsstrahlung_eV(self, energy):
         if energy < 0.0:
             raise ValueError, "Cutoff energy Bremsstrahlung (%s) must be greater or equal to 0.0" \
                     % energy
-        self._cutoff_energy_bremsstrahlung = energy
+        self._props['cutoff energy bremsstrahlung'] = energy
 
 class _PenelopeVacuum(_Vacuum, Material):
     def __init__(self):

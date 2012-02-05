@@ -57,13 +57,13 @@ class TestLayer(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(123.456, self.layer.thickness, 4)
+        self.assertAlmostEqual(123.456, self.layer.thickness_m, 4)
 
     def testfrom_xml(self):
         element = self.layer.to_xml()
         layer = Layer.from_xml(element)
 
-        self.assertAlmostEqual(123.456, layer.thickness, 4)
+        self.assertAlmostEqual(123.456, layer.thickness_m, 4)
 
     def testto_xml(self):
         element = self.layer.to_xml()

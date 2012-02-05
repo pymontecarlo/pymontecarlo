@@ -26,7 +26,7 @@ from collections import defaultdict
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
@@ -94,10 +94,9 @@ def pure(z, absorption_energy_electron=50.0, absorption_energy_photon=50.0):
     return Material(name, composition, None,
                     absorption_energy_electron, absorption_energy_photon)
 
-class Material(objectxml):
-
-    def __init__(self, name, composition, density=None,
-                 absorption_energy_electron=50.0, absorption_energy_photon=50.0):
+class Material(Option):
+    def __init__(self, name, composition, density_kg_m3=None,
+                 absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0):
         """
         Creates a new material.
         
@@ -114,34 +113,36 @@ class Material(objectxml):
             to 1.0. 
         :type composition: :class:`dict`
         
-        :arg density: material's density in kg/m3.
+        :arg density_kg_m3: material's density in kg/m3.
             If the density is ``None`` or less than 0 (default), it will be 
             automatically calculated based on the density of the elements and 
             their weight fraction.
-        :type density: :class:`float`
+        :type density_kg_m3: :class:`float`
         
-        :arg absorption_energy_electron: absorption energy of the electrons in
-            this material.
-        :type absorption_energy_electron: :class:`float`
+        :arg absorption_energy_electron_eV: absorption energy of the electrons 
+            in this material.
+        :type absorption_energy_electron_eV: :class:`float`
         
-        :arg absorption_energy_photon: absorption energy of the photons in
+        :arg absorption_energy_photon_eV: absorption energy of the photons in
             this material.
-        :type absorption_energy_photon: :class:`float`
+        :type absorption_energy_photon_eV: :class:`float`
         """
+        Option.__init__(self)
+
         self.name = name
         self.composition = composition
-        self.density = density
+        self.density_kg_m3 = density_kg_m3
 
-        self.absorption_energy_electron = absorption_energy_electron
-        self.absorption_energy_photon = absorption_energy_photon
+        self.absorption_energy_electron_eV = absorption_energy_electron_eV
+        self.absorption_energy_photon_eV = absorption_energy_photon_eV
 
     def __repr__(self):
         return '<Material(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV)>' % \
-            (self._name, self.composition, self.density,
-             self.absorption_energy_electron, self.absorption_energy_photon)
+            (self.name, self.composition, self.density_kg_m3,
+             self.absorption_energy_electron_eV, self.absorption_energy_photon_eV)
 
     def __str__(self):
-        return self._name
+        return self.name
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -151,25 +152,25 @@ class Material(objectxml):
         for child in iter(element.find('composition')):
             composition[int(child.get('z'))] = float(child.get('weightFraction'))
 
-        density = float(element.get('density'))
+        density_kg_m3 = float(element.get('density'))
 
-        abs_electron = float(element.get('absorptionEnergyElectron'))
-        abs_photon = float(element.get('absorptionEnergyPhoton'))
+        abs_electron_eV = float(element.get('absorptionEnergyElectron'))
+        abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
 
-        return cls(name, composition, density, abs_electron, abs_photon)
+        return cls(name, composition, density_kg_m3, abs_electron_eV, abs_photon_eV)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('name', self._name)
+        element.set('name', self.name)
 
         child = Element('composition')
         for z, fraction in self.composition.iteritems():
             child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
         element.append(child)
 
-        element.set('density', str(self.density))
+        element.set('density', str(self.density_kg_m3))
 
-        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron))
-        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon))
+        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
+        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
 
     def __calculate_composition(self, composition):
         composition2 = {}
@@ -230,11 +231,11 @@ class Material(objectxml):
         """
         Name of the material.
         """
-        return self._name
+        return self._props['name']
 
     @name.setter
     def name(self, name):
-        self._name = name
+        self._props['name'] = name
 
     @property
     def composition(self):
@@ -244,64 +245,65 @@ class Material(objectxml):
         The first element of each tuple is the atomic number and the second
         is the weight fraction.
         """
-        return dict(self._composition) # copy
+        return dict(self._props['composition']) # copy
 
     @composition.setter
     def composition(self, composition):
-        self._composition = self.__calculate_composition(composition)
+        self._props['composition'] = self.__calculate_composition(composition)
 
     @property
-    def density(self):
+    def density_kg_m3(self):
         """
         Density of this material in kg/m3.
         """
         if self.has_density_defined():
-            return self._density
+            return self._props['density']
         else:
             return self.__calculate_density()
 
-    @density.setter
-    def density(self, density):
-        self._density = density
+    @density_kg_m3.setter
+    def density_kg_m3(self, density):
+        self._props['density'] = density
 
-    @density.deleter
-    def density(self):
-        self._density = None
+    @density_kg_m3.deleter
+    def density_kg_m3(self):
+        self._props['density'] = None
 
     def has_density_defined(self):
         """
         Returns ``True`` if the density was specified by the user, ``False`` if
         it is automatically calculated from the composition.
         """
-        return self._density is not None and self._density >= 0.0
+        density = self._props['density']
+        return density is not None and density >= 0.0
 
     @property
-    def absorption_energy_electron(self):
+    def absorption_energy_electron_eV(self):
         """
         Absorption energy of the electrons in this material.
         """
-        return self._absorption_energy_electron
+        return self._props['absorption energy electron']
 
-    @absorption_energy_electron.setter
-    def absorption_energy_electron(self, energy):
+    @absorption_energy_electron_eV.setter
+    def absorption_energy_electron_eV(self, energy):
         if energy < 0.0:
             raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
                     % energy
-        self._absorption_energy_electron = energy
+        self._props['absorption energy electron'] = energy
 
     @property
-    def absorption_energy_photon(self):
+    def absorption_energy_photon_eV(self):
         """
         Absorption energy of the photons in this material.
         """
-        return self._absorption_energy_photon
+        return self._props['absorption energy photon']
 
-    @absorption_energy_photon.setter
-    def absorption_energy_photon(self, energy):
+    @absorption_energy_photon_eV.setter
+    def absorption_energy_photon_eV(self, energy):
         if energy < 0.0:
             raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
                     % energy
-        self._absorption_energy_photon = energy
+        self._props['absorption energy photon'] = energy
 
 class _Vacuum(Material):
     def __init__(self):

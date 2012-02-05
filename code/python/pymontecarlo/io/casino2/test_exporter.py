@@ -43,11 +43,11 @@ class TestCasino2Exporter(unittest.TestCase):
         self.assertTrue(True)
 
     def testto_cas_substrate(self):
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
         ops.geometry.material = mat
         ops.limits.add(ShowersLimit(5678))
         ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 567), 123)
@@ -59,34 +59,38 @@ class TestCasino2Exporter(unittest.TestCase):
             PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)),
                             (-12.34, -56.78), 750)
 
-        self.e.export(ops).write('/home/ppinard/vboxshare/test.sim')
+        self.e.export(ops)
+
+        #TODO: Test cas for substrate
 
     def testto_cas_grainboundaries(self):
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
 
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
 
         ops.geometry = GrainBoundaries(mat1, mat2)
         ops.geometry.add_layer(mat3, 25e-9)
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops).write('/home/ppinard/vboxshare/test_gb.sim')
+        self.e.export(ops)
+
+        #TODO: Test cas for grain boundaries
 
     def testto_cas_multilayers1(self):
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
 
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
 
         ops.geometry = MultiLayers(mat1)
         ops.geometry.add_layer(mat2, 25e-9)
@@ -94,17 +98,19 @@ class TestCasino2Exporter(unittest.TestCase):
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops).write('/home/ppinard/vboxshare/test_ml.sim')
+        self.e.export(ops)
+
+        #TODO: Test cas for multi-layers
 
     def testto_cas_multilayers2(self):
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
 
         ops = Options()
-        ops.beam.energy = 1234
-        ops.beam.diameter = 25e-9
-        ops.beam.origin = (100e-9, 0, 1)
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
 
         ops.geometry = MultiLayers(None)
         ops.geometry.add_layer(mat1, 15e-9)
@@ -113,7 +119,9 @@ class TestCasino2Exporter(unittest.TestCase):
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops).write('/home/ppinard/vboxshare/test_ml.sim')
+        self.e.export(ops)
+
+        #TODO: Test cas for multi-layers
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

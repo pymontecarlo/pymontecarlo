@@ -26,6 +26,7 @@ from collections import MutableMapping, MutableSet
 
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.material import pure
 from pymontecarlo.input.base.geometry import Substrate
@@ -103,8 +104,7 @@ class _Models(MutableSet):
     def items(self):
         return self._data.items()
 
-class Options(objectxml):
-
+class Options(Option):
     def __init__(self, name='Untitled'):
         """
         Options for a simulation.
@@ -124,12 +124,14 @@ class Options(objectxml):
         The geometry is a Au substrate.
         No detectors, limits or models are defined.
         """
+        Option.__init__(self)
+
         self.name = name
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(pure(79)) # Au substrate
-        self._detectors = _Detectors()
-        self._limits = _Limits()
-        self._models = _Models()
+        self._props['detectors'] = _Detectors()
+        self._props['limits'] = _Limits()
+        self._props['models'] = _Models()
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, self.name)
@@ -195,11 +197,11 @@ class Options(objectxml):
         """
         Options about the beam.
         """
-        return self._beam
+        return self._props['beam']
 
     @beam.setter
     def beam(self, beam):
-        self._beam = beam
+        self._props['beam'] = beam
 
     @property
     def geometry(self):
@@ -213,11 +215,11 @@ class Options(objectxml):
            incompatible geometries.
            
         """
-        return self._geometry
+        return self._props['geometry']
 
     @geometry.setter
     def geometry(self, geometry):
-        self._geometry = geometry
+        self._props['geometry'] = geometry
 
     @property
     def detectors(self):
@@ -236,7 +238,7 @@ class Options(objectxml):
            detectors.
         
         """
-        return self._detectors
+        return self._props['detectors']
 
     @property
     def limits(self):
@@ -261,7 +263,7 @@ class Options(objectxml):
            The converter of a program will warn you and remove incompatible 
            limits.
         """
-        return self._limits
+        return self._props['limits']
 
     @property
     def models(self):
@@ -281,7 +283,7 @@ class Options(objectxml):
            The converter will also add missing default models for the simulation 
            program.
         """
-        return self._models
+        return self._props['models']
 
     @classmethod
     def load(cls, fileobj):

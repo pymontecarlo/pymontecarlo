@@ -54,17 +54,17 @@ class TestPenelopeConverter(unittest.TestCase):
         self.assertEqual(7, len(ws))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy, 4)
-        self.assertAlmostEqual(0.0, ops.beam.diameter, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(0.0, ops.beam.diameter_m, 4)
 
         for material in ops.geometry.get_materials():
             self.assertAlmostEqual(0.1, material.elastic_scattering[0], 4)
             self.assertAlmostEqual(0.2, material.elastic_scattering[1], 4)
-            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic, 4)
-            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung, 4)
+            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic_eV, 4)
+            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung_eV, 4)
 
         for body in ops.geometry.get_bodies():
-            self.assertAlmostEqual(1e20, body.maximum_step_length, 4)
+            self.assertAlmostEqual(1e20, body.maximum_step_length_m, 4)
 
         self.assertEqual(6, len(ops.models))
 
@@ -82,11 +82,11 @@ class TestPenelopeConverter(unittest.TestCase):
         for material in ops.geometry.get_materials():
             self.assertAlmostEqual(0.1, material.elastic_scattering[0], 4)
             self.assertAlmostEqual(0.2, material.elastic_scattering[1], 4)
-            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic, 4)
-            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung, 4)
+            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic_eV, 4)
+            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung_eV, 4)
 
         for body in ops.geometry.get_bodies():
-            self.assertAlmostEqual(1e20, body.maximum_step_length, 4)
+            self.assertAlmostEqual(1e20, body.maximum_step_length_m, 4)
 
         self.assertEqual(6, len(ops.models))
 
@@ -102,16 +102,16 @@ class TestPenelopeConverter(unittest.TestCase):
         # Test
         self.assertEqual('Copper', str(ops.geometry.substrate_material))
         self.assertEqual('Zinc', str(ops.geometry.layers[0].material))
-        self.assertAlmostEqual(12.34, ops.geometry.layers[0].thickness, 4)
+        self.assertAlmostEqual(12.34, ops.geometry.layers[0].thickness_m, 4)
 
         for material in ops.geometry.get_materials():
             self.assertAlmostEqual(0.1, material.elastic_scattering[0], 4)
             self.assertAlmostEqual(0.2, material.elastic_scattering[1], 4)
-            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic, 4)
-            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung, 4)
+            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic_eV, 4)
+            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung_eV, 4)
 
         for layer in ops.geometry.layers:
-            self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length, 4)
+            self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length_m, 4)
 
         self.assertEqual(6, len(ops.models))
 
@@ -128,16 +128,16 @@ class TestPenelopeConverter(unittest.TestCase):
         self.assertEqual('Copper', str(ops.geometry.left_material))
         self.assertEqual('Gallium', str(ops.geometry.right_material))
         self.assertEqual('Zinc', str(ops.geometry.layers[0].material))
-        self.assertAlmostEqual(12.34, ops.geometry.layers[0].thickness, 4)
+        self.assertAlmostEqual(12.34, ops.geometry.layers[0].thickness_m, 4)
 
         for material in ops.geometry.get_materials():
             self.assertAlmostEqual(0.1, material.elastic_scattering[0], 4)
             self.assertAlmostEqual(0.2, material.elastic_scattering[1], 4)
-            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic, 4)
-            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung, 4)
+            self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic_eV, 4)
+            self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung_eV, 4)
 
         for layer in ops.geometry.layers:
-            self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length, 4)
+            self.assertAlmostEqual(12.34 / 10.0, layer.maximum_step_length_m, 4)
 
         self.assertEqual(6, len(ops.models))
 

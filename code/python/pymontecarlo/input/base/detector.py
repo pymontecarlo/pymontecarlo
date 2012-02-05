@@ -24,16 +24,15 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.input.base.option import Option
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
 TWOPI = math.pi * 2.0
 TOLERANCE = 1e-6
 
-class _DelimitedDetector(objectxml):
-
-    def __init__(self, elevation, azimuth):
+class _DelimitedDetector(Option):
+    def __init__(self, elevation_rad, azimuth_rad):
         """
         Creates a new detector.
         
@@ -48,23 +47,21 @@ class _DelimitedDetector(objectxml):
         the x-y plane.
         It can vary between [0, 2pi] rad.
         
-        .. note::
+        :arg elevation_rad: elevation limits
+        :type elevation_rad: :class:`tuple`
         
-           A detector is immutable.
-           
-        :arg elevation: elevation limits
-        :type elevation: :class:`tuple`
-        
-        :arg azimuth: azimuth limits
-        :type azimuth: :class:`tuple`
+        :arg azimuth_rad: azimuth limits
+        :type azimuth_rad: :class:`tuple`
         """
-        self.elevation = elevation
-        self.azimuth = azimuth
+        Option.__init__(self)
+
+        self.elevation_rad = elevation_rad
+        self.azimuth_rad = azimuth_rad
 
     def __repr__(self):
         return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad)>' % \
-            (self.__class__.__name__, self.elevation[0], self.elevation[1],
-             self.azimuth[0], self.azimuth[1])
+            (self.__class__.__name__, self.elevation_rad[0], self.elevation_rad[1],
+             self.azimuth_rad[0], self.azimuth_rad[1])
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -76,18 +73,18 @@ class _DelimitedDetector(objectxml):
         return cls(elevation, azimuth)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('elevation_min', str(self.elevation[0]))
-        element.set('elevation_max', str(self.elevation[1]))
+        element.set('elevation_min', str(self.elevation_rad[0]))
+        element.set('elevation_max', str(self.elevation_rad[1]))
 
-        element.set('azimuth_min', str(self.azimuth[0]))
-        element.set('azimuth_max', str(self.azimuth[1]))
+        element.set('azimuth_min', str(self.azimuth_rad[0]))
+        element.set('azimuth_max', str(self.azimuth_rad[1]))
 
     @property
-    def elevation(self):
-        return self._elevation
+    def elevation_rad(self):
+        return self._props['elevation']
 
-    @elevation.setter
-    def elevation(self, elevation):
+    @elevation_rad.setter
+    def elevation_rad(self, elevation):
         low, high = elevation
 
         if abs(low) - HALFPI > TOLERANCE:
@@ -97,14 +94,14 @@ class _DelimitedDetector(objectxml):
             raise ValueError, \
                 "Maximum elevation (%s) must be between [-pi/2, pi/2] rad." % high
 
-        self._elevation = min(low, high), max(low, high)
+        self._props['elevation'] = min(low, high), max(low, high)
 
     @property
-    def azimuth(self):
-        return self._azimuth
+    def azimuth_rad(self):
+        return self._props['azimuth']
 
-    @azimuth.setter
-    def azimuth(self, azimuth):
+    @azimuth_rad.setter
+    def azimuth_rad(self, azimuth):
         low, high = azimuth
 
         if low < 0 or low > TWOPI + TOLERANCE:
@@ -114,26 +111,27 @@ class _DelimitedDetector(objectxml):
             raise ValueError, \
                 "Maximum azimuth (%s) must be between [0, 2pi] rad." % high
 
-        self._azimuth = min(low, high), max(low, high)
+        self._props['azimuth'] = min(low, high), max(low, high)
 
     @property
-    def solid_angle(self):
-        return abs((self.azimuth[1] - self.azimuth[0]) * \
-                   (math.cos(self.elevation[0]) - math.cos(self.elevation[1])))
+    def solidangle_sr(self):
+        return abs((self.azimuth_rad[1] - self.azimuth_rad[0]) * \
+                   (math.cos(self.elevation_rad[0]) - math.cos(self.elevation_rad[1])))
 
     @property
-    def takeoffangle(self):
-        return sum(self.elevation) / 2.0
+    def takeoffangle_rad(self):
+        return sum(self.elevation_rad) / 2.0
 
-class _ChannelsDetector(objectxml):
-    def __init__(self, limits, channels, extremums=(float('-inf'), float('inf'))):
+class _ChannelsDetector(Option):
+    def __init__(self, extremums=(float('-inf'), float('inf'))):
+        Option.__init__(self)
+
         self._extremums = extremums
-        self.limits = limits
-        self.channels = channels
 
     def __repr__(self):
+        limits = self._props['limits']
         return '<%s(limits=%s to %s, channels=%s)>' % \
-            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+            (self.__class__.__name__, limits[0], limits[1], self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -143,16 +141,13 @@ class _ChannelsDetector(objectxml):
         return cls(limits, channels)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('limit_min', str(self.limits[0]))
-        element.set('limit_max', str(self.limits[1]))
+        limits = self._props['limits']
+
+        element.set('limit_min', str(limits[0]))
+        element.set('limit_max', str(limits[1]))
         element.set('channels', str(self.channels))
 
-    @property
-    def limits(self):
-        return self._limits
-
-    @limits.setter
-    def limits(self, limits):
+    def _set_limits(self, limits):
         low, high = limits
 
         if low < self._extremums[0] - TOLERANCE or low > self._extremums[1] + TOLERANCE:
@@ -162,31 +157,33 @@ class _ChannelsDetector(objectxml):
             raise ValueError, "Upper limit (%s) must be between [%s, %s]." % \
                 (high, self._extremums[0], self._extremums[1])
 
-        self._limits = min(low, high), max(low, high)
+        self._props['limits'] = min(low, high), max(low, high)
 
     @property
     def channels(self):
-        return self._channels
+        return self._props['channels']
 
     @channels.setter
     def channels(self, channels):
         if channels < 1:
             raise ValueError, \
                 "Number of channels (%s) must be greater or equal to 1." % channels
-        self._channels = int(channels)
+        self._props['channels'] = int(channels)
 
-class _SpatialDetector(objectxml):
-    def __init__(self, xlimits, xbins, ylimits, ybins, zlimits, zbins,
+class _SpatialDetector(Option):
+    def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins,
                  xextremums=(float('-inf'), float('inf')),
                  yextremums=(float('-inf'), float('inf')),
                  zextremums=(float('-inf'), float('inf'))):
+        Option.__init__(self)
+
         self._xextremums = xextremums
         self._yextremums = yextremums
         self._zextremums = zextremums
 
-        self.xlimits = xlimits
-        self.ylimits = ylimits
-        self.zlimits = zlimits
+        self.xlimits_m = xlimits_m
+        self.ylimits_m = ylimits_m
+        self.zlimits_m = zlimits_m
 
         self.xbins = xbins
         self.ybins = ybins
@@ -195,9 +192,9 @@ class _SpatialDetector(objectxml):
     def __repr__(self):
         return "<%s(x=%s to %s m (%s), y=%s to %s m (%s), z=%s to %s m (%s))>" % \
             (self.__class__.__name__,
-             self.xlimits[0], self.xlimits[1], self.xbins,
-             self.ylimits[0], self.ylimits[1], self.ybins,
-             self.zlimits[0], self.zlimits[1], self.zbins)
+             self.xlimits_m[0], self.xlimits_m[1], self.xbins,
+             self.ylimits_m[0], self.ylimits_m[1], self.ybins,
+             self.zlimits_m[0], self.zlimits_m[1], self.zbins)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -213,24 +210,24 @@ class _SpatialDetector(objectxml):
         return cls(xlimits, xbins, ylimits, ybins, zlimits, zbins)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('xlimit_min', str(self.xlimits[0]))
-        element.set('xlimit_max', str(self.xlimits[1]))
+        element.set('xlimit_min', str(self.xlimits_m[0]))
+        element.set('xlimit_max', str(self.xlimits_m[1]))
         element.set('xbins', str(self.xbins))
 
-        element.set('ylimit_min', str(self.ylimits[0]))
-        element.set('ylimit_max', str(self.ylimits[1]))
+        element.set('ylimit_min', str(self.ylimits_m[0]))
+        element.set('ylimit_max', str(self.ylimits_m[1]))
         element.set('ybins', str(self.ybins))
 
-        element.set('zlimit_min', str(self.zlimits[0]))
-        element.set('zlimit_max', str(self.zlimits[1]))
+        element.set('zlimit_min', str(self.zlimits_m[0]))
+        element.set('zlimit_max', str(self.zlimits_m[1]))
         element.set('zbins', str(self.zbins))
 
     @property
-    def xlimits(self):
-        return self._xlimits
+    def xlimits_m(self):
+        return self._props['xlimits']
 
-    @xlimits.setter
-    def xlimits(self, limits):
+    @xlimits_m.setter
+    def xlimits_m(self, limits):
         low, high = limits
 
         if low < self._xextremums[0] or low > self._xextremums[1]:
@@ -240,14 +237,14 @@ class _SpatialDetector(objectxml):
             raise ValueError, "Upper x limit (%s) must be between [%s, %s]." % \
                 (high, self._xextremums[0], self._xextremums[1])
 
-        self._xlimits = min(low, high), max(low, high)
+        self._props['xlimits'] = min(low, high), max(low, high)
 
     @property
-    def ylimits(self):
-        return self._ylimits
+    def ylimits_m(self):
+        return self._props['ylimits']
 
-    @ylimits.setter
-    def ylimits(self, limits):
+    @ylimits_m.setter
+    def ylimits_m(self, limits):
         low, high = limits
 
         if low < self._yextremums[0] or low > self._yextremums[1]:
@@ -257,14 +254,14 @@ class _SpatialDetector(objectxml):
             raise ValueError, "Upper y limit (%s) must be between [%s, %s]." % \
                 (high, self._yextremums[0], self._yextremums[1])
 
-        self._ylimits = min(low, high), max(low, high)
+        self._props['ylimits'] = min(low, high), max(low, high)
 
     @property
-    def zlimits(self):
-        return self._zlimits
+    def zlimits_m(self):
+        return self._props['zlimits']
 
-    @zlimits.setter
-    def zlimits(self, limits):
+    @zlimits_m.setter
+    def zlimits_m(self, limits):
         low, high = limits
 
         if low < self._zextremums[0] or low > self._zextremums[1]:
@@ -274,51 +271,62 @@ class _SpatialDetector(objectxml):
             raise ValueError, "Upper z limit (%s) must be between [%s, %s]." % \
                 (high, self._zextremums[0], self._zextremums[1])
 
-        self._zlimits = min(low, high), max(low, high)
+        self._props['zlimits'] = min(low, high), max(low, high)
 
     @property
     def xbins(self):
-        return self._xbins
+        return self._props['xbins']
 
     @xbins.setter
     def xbins(self, bins):
         if bins < 1:
             raise ValueError, \
                 "Number of bins in x (%s) must be greater or equal to 1." % bins
-        self._xbins = int(bins)
+        self._props['xbins'] = int(bins)
 
     @property
     def ybins(self):
-        return self._ybins
+        return self._props['ybins']
 
     @ybins.setter
     def ybins(self, bins):
         if bins < 1:
             raise ValueError, \
                 "Number of bins in y (%s) must be greater or equal to 1." % bins
-        self._ybins = int(bins)
+        self._props['ybins'] = int(bins)
 
     @property
     def zbins(self):
-        return self._zbins
+        return self._props['zbins']
 
     @zbins.setter
     def zbins(self, bins):
         if bins < 1:
             raise ValueError, \
                 "Number of bins in z (%s) must be greater or equal to 1." % bins
-        self._zbins = int(bins)
+        self._props['zbins'] = int(bins)
 
 class _EnergyDetector(_ChannelsDetector):
-    def __init__(self, limits, channels):
-        _ChannelsDetector.__init__(self, limits, channels, (0.0, float('inf')))
+    def __init__(self, limits_eV, channels):
+        _ChannelsDetector.__init__(self, (0.0, float('inf')))
+
+        self.limits_eV = limits_eV
+        self.channels = channels
 
     def __repr__(self):
         return "<%s(limits=%s to %s eV, channels=%s)>" % \
-            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+            (self.__class__.__name__, self.limits_eV[0], self.limits_eV[1], self.channels)
+
+    @property
+    def limits_eV(self):
+        return self._props['limits']
+
+    @limits_eV.setter
+    def limits_eV(self, limits):
+        self._set_limits(limits)
 
 class _RangeDetector(object):
-    def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
+    def _set_range(self, xlow_m, xhigh_m, ylow_m, yhigh_m, zlow_m, zhigh_m):
         raise NotImplementedError
 
 class _ElectronRangeDetector(_RangeDetector):
@@ -327,33 +335,42 @@ class _ElectronRangeDetector(_RangeDetector):
 class _PhotonRangeDetector(_RangeDetector):
     pass
 
-class _PolarAngularDetector(_ChannelsDetector):
-    def __init__(self, channels, limits=(-HALFPI, HALFPI)):
-        _ChannelsDetector.__init__(self, limits, channels, (-HALFPI, HALFPI))
+class _AngularDetector(_ChannelsDetector):
+    def __init__(self, channels, limits_rad, extremums):
+        _ChannelsDetector.__init__(self, extremums)
+
+        self.limits_rad = limits_rad
+        self.channels = channels
 
     def __repr__(self):
         return "<%s(limits=%s to %s rad, channels=%s)>" % \
-            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+            (self.__class__.__name__, self.limits_rad[0], self.limits_rad[1], self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         # Required due to argument inversion
-        det = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
-        return cls(det.channels, det.limits)
+        limits = float(element.get('limit_min')), float(element.get('limit_max'))
+        channels = int(element.get('channels'))
 
-class _AzimuthalAngularDetector(_ChannelsDetector):
-    def __init__(self, channels, limits=(0, TWOPI)):
-        _ChannelsDetector.__init__(self, limits, channels, (0, TWOPI))
+        return cls(channels, limits)
 
-    def __repr__(self):
-        return "<%s(limits=%s to %s rad, channels=%s)>" % \
-            (self.__class__.__name__, self.limits[0], self.limits[1], self.channels)
+    @property
+    def limits_rad(self):
+        return self._props['limits']
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        # Required due to argument inversion
-        det = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
-        return cls(det.channels, det.limits)
+    @limits_rad.setter
+    def limits_rad(self, limits):
+        self._set_limits(limits)
+
+class _PolarAngularDetector(_AngularDetector):
+    def __init__(self, channels, limits_rad=(-HALFPI, HALFPI)):
+        _AngularDetector.__init__(self, channels, limits_rad,
+                                  extremums=(-HALFPI, HALFPI))
+
+class _AzimuthalAngularDetector(_AngularDetector):
+    def __init__(self, channels, limits_rad=(0, TWOPI)):
+        _AngularDetector.__init__(self, channels, limits_rad,
+                                  extremums=(0, TWOPI))
 
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
@@ -380,26 +397,28 @@ class PhotonAzimuthalAngularDetector(_PolarAngularDetector):
     pass
 
 class EnergyDepositedSpatialDetector(_ElectronRangeDetector, _SpatialDetector):
-    def __init__(self, xlimits, xbins, ylimits, ybins, zlimits, zbins):
+    def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
         _ElectronRangeDetector.__init__(self)
-        _SpatialDetector.__init__(self, xlimits, xbins,
-                                        ylimits, ybins,
-                                        zlimits, zbins)
+        _SpatialDetector.__init__(self, xlimits_m, xbins,
+                                        ylimits_m, ybins,
+                                        zlimits_m, zbins)
 
-    def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
-        self.xlimits = (xlow, xhigh)
-        self.ylimits = (ylow, yhigh)
-        self.zlimits = (zlow, zhigh)
+    def _set_range(self, xlow_m, xhigh_m, ylow_m, yhigh_m, zlow_m, zhigh_m):
+        self.xlimits_m = (xlow_m, xhigh_m)
+        self.ylimits_m = (ylow_m, yhigh_m)
+        self.zlimits_m = (zlow_m, zhigh_m)
 
 class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
-    def __init__(self, elevation, azimuth, limits, channels):
-        _DelimitedDetector.__init__(self, elevation, azimuth)
-        _EnergyDetector.__init__(self, limits, channels)
+    def __init__(self, elevation_rad, azimuth_rad, limits_eV, channels):
+        _DelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+        _EnergyDetector.__init__(self, limits_eV, channels)
 
     def __repr__(self):
         return "<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s eV, channels=%s)>" % \
-            (self.__class__.__name__, self.elevation[0], self.elevation[1],
-             self.azimuth[0], self.azimuth[1], self.limits[0], self.limits[1],
+            (self.__class__.__name__,
+             self.elevation_rad[0], self.elevation_rad[1],
+             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.limits_eV[0], self.limits_eV[1],
              self.channels)
 
     @classmethod
@@ -407,50 +426,65 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
         delimited = _DelimitedDetector.__loadxml__(element, *args, **kwargs)
         energy = _EnergyDetector.__loadxml__(element, *args, **kwargs)
 
-        return cls(delimited.elevation, delimited.azimuth,
-                   energy.limits, energy.channels)
+        return cls(delimited.elevation_rad, delimited.azimuth_rad,
+                   energy.limits_eV, energy.channels)
 
     def __savexml__(self, element, *args, **kwargs):
         _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
         _EnergyDetector.__savexml__(self, element, *args, **kwargs)
 
 class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
-    def __init__(self, elevation, azimuth, limits, channels):
-        _ChannelsDetector.__init__(self, limits, channels, (float('-inf'), 0))
-        _DelimitedDetector.__init__(self, elevation, azimuth)
+    def __init__(self, elevation_rad, azimuth_rad, limits_m, channels):
+        _ChannelsDetector.__init__(self, (float('-inf'), 0))
+        _DelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
         _PhotonRangeDetector.__init__(self)
+
+        self.limits_m = limits_m
+        self.channels = channels
 
     def __repr__(self):
         return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s m, channels=%s)>' % \
-            (self.__class__.__name__, self.elevation[0], self.elevation[1],
-             self.azimuth[0], self.azimuth[1], self.limits[0], self.limits[1],
+            (self.__class__.__name__,
+             self.elevation_rad[0], self.elevation_rad[1],
+             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.limits_m[0], self.limits_m[1],
              self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         delimited = _DelimitedDetector.__loadxml__(element, *args, **kwargs)
-        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
 
-        return cls(delimited.elevation, delimited.azimuth,
-                   channels.limits, channels.channels)
+        limits = float(element.get('limit_min')), float(element.get('limit_max'))
+        channels = int(element.get('channels'))
+
+        return cls(delimited.elevation_rad, delimited.azimuth_rad,
+                   limits, channels)
 
     def __savexml__(self, element, *args, **kwargs):
         _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
         _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
 
     def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
-        self.limits = (zlow, zhigh)
+        self.limits_m = (zlow, zhigh)
+
+    @property
+    def limits_m(self):
+        return self._props['limits']
+
+    @limits_m.setter
+    def limits_m(self, limits):
+        self._set_limits(limits)
 
 class PhotonIntensityDetector(_DelimitedDetector):
     pass
 
-class TimeDetector(objectxml):
+class TimeDetector(Option):
     """
     Records simulation time and speed (electron simulated /s).
     """
     pass
 
-class ElectronFractionDetector(objectxml):
+class ElectronFractionDetector(Option):
     """
     Records backscattered, transmitted and absorbed fraction of primary electrons.
     """

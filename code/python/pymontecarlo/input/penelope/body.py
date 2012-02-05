@@ -30,15 +30,15 @@ from pymontecarlo.input.penelope.interactionforcing import InteractionForcing
 # Globals and constants variables.
 
 class Body(_Body):
-    def __init__(self, material, maximum_step_length=1e20):
+    def __init__(self, material, maximum_step_length_m=1e20):
         _Body.__init__(self, material)
 
-        self._interaction_forcings = set()
-        self.maximum_step_length = maximum_step_length
+        self._props['interaction forcings'] = set()
+        self.maximum_step_length_m = maximum_step_length_m
 
     def __repr__(self):
         return '<Body(material=%s, %i interaction forcing(s), dsmax=%s m)>' % \
-            (str(self.material), len(self.interaction_forcings), self.maximum_step_length)
+            (str(self.material), len(self.interaction_forcings), self.maximum_step_length_m)
 
     @classmethod
     def __loadxml__(cls, element, material=None, *args, **kwargs):
@@ -61,7 +61,7 @@ class Body(_Body):
             child.append(intforce.to_xml())
         element.append(child)
 
-        element.set('maximumStepLength', str(self.maximum_step_length))
+        element.set('maximumStepLength', str(self.maximum_step_length_m))
 
     @property
     def interaction_forcings(self):
@@ -69,36 +69,35 @@ class Body(_Body):
         Set of interaction forcings.
         Use :meth:`add` to add an interaction forcing to this body.
         """
-        return self._interaction_forcings
+        return self._props['interaction forcings']
 
     @property
-    def maximum_step_length(self):
+    def maximum_step_length_m(self):
         """
         Maximum length of an electron trajectory in this body (in meters).
         """
-        return self._maximum_step_length
+        return self._props['maximum step length']
 
-    @maximum_step_length.setter
-    def maximum_step_length(self, length):
+    @maximum_step_length_m.setter
+    def maximum_step_length_m(self, length):
         if length < 0 or length > 1e20:
             raise ValueError, "Length (%s) must be between [0, 1e20]." % length
-
-        self._maximum_step_length = length
+        self._props['maximum step length'] = length
 
 class Layer(Body, _Layer):
-    def __init__(self, material, thickness, maximum_step_length=None):
+    def __init__(self, material, thickness, maximum_step_length_m=None):
         _Layer.__init__(self, material, thickness)
 
-        if maximum_step_length is None:
-            maximum_step_length = thickness / 10.0
-        Body.__init__(self, material, maximum_step_length)
+        if maximum_step_length_m is None:
+            maximum_step_length_m = thickness / 10.0
+        Body.__init__(self, material, maximum_step_length_m)
 
     @classmethod
     def __loadxml__(cls, element, material=None, thickness=None, *args, **kwargs):
         layer = _Layer.__loadxml__(element, material, thickness, *args, **kwargs)
         body = Body.__loadxml__(element, material, *args, **kwargs)
 
-        return cls(layer.material, layer.thickness, body.maximum_step_length)
+        return cls(layer.material, layer.thickness_m, body.maximum_step_length_m)
 
     def __savexml__(self, element, *args, **kwargs):
         Body.__savexml__(self, element, *args, **kwargs)

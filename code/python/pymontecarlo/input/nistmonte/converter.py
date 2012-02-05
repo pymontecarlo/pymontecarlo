@@ -110,21 +110,21 @@ class Converter(_Converter):
         if len(detectors) <= 1:
             return
 
-        elevation = detectors[0][1].elevation
-        azimuth = detectors[0][1].azimuth
+        elevation = detectors[0][1].elevation_rad
+        azimuth = detectors[0][1].azimuth_rad
 
         for key, detector in detectors[1:]:
-            if abs(detector.elevation[0] - elevation[0]) > 1e-6 or \
-                    abs(detector.elevation[1] - elevation[1]) > 1e-6:
+            if abs(detector.elevation_rad[0] - elevation[0]) > 1e-6 or \
+                    abs(detector.elevation_rad[1] - elevation[1]) > 1e-6:
                 raise ConversionException, \
                     "The elevation of the detector '%s' (%s) should be the same as the others (%s)" % \
-                    (key, str(detector.elevation), str(elevation))
+                    (key, str(detector.elevation_rad), str(elevation))
 
-            if abs(detector.azimuth[0] - azimuth[0]) > 1e-6 or \
-                    abs(detector.azimuth[1] - azimuth[1]) > 1e-6:
+            if abs(detector.azimuth_rad[0] - azimuth[0]) > 1e-6 or \
+                    abs(detector.azimuth_rad[1] - azimuth[1]) > 1e-6:
                 raise ConversionException, \
                     "The azimuth of the detector '%s' (%s) should be the same as the others (%s)" % \
-                    (key, str(detector.azimuth), str(azimuth))
+                    (key, str(detector.azimuth_rad), str(azimuth))
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)

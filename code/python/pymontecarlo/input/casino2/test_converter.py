@@ -46,7 +46,7 @@ class TestCasino2Converter(unittest.TestCase):
     def testconvert1(self):
         # Base options
         ops = Options(name="Test")
-        ops.beam.energy = 1234
+        ops.beam.energy_eV = 1234
         ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         ops.limits.add(ShowersLimit(5678))
         ops.models.add(IONIZATION_CROSS_SECTION.jakoby)
@@ -59,12 +59,12 @@ class TestCasino2Converter(unittest.TestCase):
         self.assertEqual(6, len(ws))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
 
         self.assertEqual(1, len(ops.detectors))
         det = ops.detectors['bse']
-        self.assertAlmostEqual(0, det.limits[0], 4)
-        self.assertAlmostEqual(1234, det.limits[1], 4)
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
@@ -98,12 +98,12 @@ class TestCasino2Converter(unittest.TestCase):
         self.assertEqual(10, len(ws))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
 
         self.assertEqual(1, len(ops.detectors))
         det = ops.detectors['bse']
-        self.assertAlmostEqual(0, det.limits[0], 4)
-        self.assertAlmostEqual(1234, det.limits[1], 4)
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
@@ -115,7 +115,7 @@ class TestCasino2Converter(unittest.TestCase):
     def testconvert3(self):
         # Base options
         ops = Options(name="Test")
-        ops.beam.energy = 100e3
+        ops.beam.energy_eV = 100e3
         ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         ops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
 
@@ -146,7 +146,7 @@ class TestCasino2Converter(unittest.TestCase):
     def testconvert5(self):
         # Base options
         ops = Options(name="Test")
-        ops.beam.energy = 100e3
+        ops.beam.energy_eV = 100e3
         ops.models.add(IONIZATION_CROSS_SECTION.bote_salvat2008)
 
         # Not allowable model
@@ -159,7 +159,7 @@ class TestCasino2Converter(unittest.TestCase):
 
         # Base options
         ops = Options(name="Test")
-        ops.beam.energy = 100e3
+        ops.beam.energy_eV = 100e3
         ops.models.add(NEW_MODEL_CATEGORY.test)
 
         with warnings.catch_warnings(record=True) as ws:

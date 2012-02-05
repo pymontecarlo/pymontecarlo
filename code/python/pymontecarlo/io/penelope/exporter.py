@@ -86,8 +86,7 @@ class Exporter(_Exporter):
         # Save geometry
         title = options.geometry.__class__.__name__.lower()
         pengeom = PenelopeGeometry(title)
-        pengeom.tilt = options.geometry.tilt
-        pengeom.rotation = options.geometry.rotation
+        pengeom._props.update(options.geometry._props) # tilt and rotation
 
         self._export_geometry(options, pengeom)
 
@@ -107,7 +106,7 @@ class Exporter(_Exporter):
             if index == 0: continue
 
             filepath = os.path.join(dirpath, 'mat%i.mat' % index)
-            create_material(material.composition, material.density,
+            create_material(material.composition, material.density_kg_m3,
                             material.name, filepath)
 
             matinfos.append((material, filepath))
@@ -132,7 +131,7 @@ class Exporter(_Exporter):
         surface_cylinder = cylinder(0.1) # 10 cm radius
         surface_top = zplane(0.0) # z = 0
         surface_bottom = zplane(-0.1) # z = -10 cm
-        surface_sphere = sphere(geometry.inclusion_diameter / 2.0)
+        surface_sphere = sphere(geometry.inclusion_diameter_m / 2.0)
 
         module_inclusion = Module.from_body(geometry.inclusion_body, 'Inclusion')
         module_inclusion.add_surface(surface_top, -1)
@@ -154,7 +153,7 @@ class Exporter(_Exporter):
         surface_layers = [zplane(0.0)]
         for layer in geometry.layers:
             dim = geometry.get_dimensions(layer)
-            surface_layers.append(zplane(dim.zmin))
+            surface_layers.append(zplane(dim.zmin_m))
 
         # Modules
         tmpgrouping = []
@@ -172,7 +171,7 @@ class Exporter(_Exporter):
 
         if geometry.has_substrate():
             surface_top = surface_layers[-1]
-            surface_bottom = zplane(surface_top.shift.z - 0.1) # 10 cm below last layer
+            surface_bottom = zplane(surface_top.shift.z_m - 0.1) # 10 cm below last layer
 
             module = Module.from_body(geometry.substrate_body, 'Substrate')
             module.add_surface(surface_cylinder, -1)
@@ -222,11 +221,11 @@ class Exporter(_Exporter):
         surface_layers = []
         for layer in geometry.layers:
             dim = geometry.get_dimensions(layer)
-            surface_layers.append(xplane(dim.xmin))
-        surface_layers.append(xplane(dim.xmax))
+            surface_layers.append(xplane(dim.xmin_m))
+        surface_layers.append(xplane(dim.xmax_m))
 
-        diameter = sum(map(attrgetter('thickness'), geometry.layers))
-        surface_cylinder = cylinder(0.1 + 3.0 * diameter) # 10 cm radius
+        diameter_m = sum(map(attrgetter('thickness_m'), geometry.layers))
+        surface_cylinder = cylinder(0.1 + 3.0 * diameter_m) # 10 cm radius
 
         # Modules
         ## Left substrate

@@ -31,13 +31,13 @@ class TestTimeLimit(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEqual(123, self.lim.time)
+        self.assertEqual(123, self.lim.time_s)
 
     def testfrom_xml(self):
         element = self.lim.to_xml()
         lim = TimeLimit.from_xml(element)
 
-        self.assertEqual(123, lim.time)
+        self.assertEqual(123, lim.time_s)
 
     def testto_xml(self):
         element = self.lim.to_xml()

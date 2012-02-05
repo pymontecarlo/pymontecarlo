@@ -36,12 +36,12 @@ class Test_DelimitedDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(35), self.d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), self.d.elevation[1], 4)
-        self.assertAlmostEqual(0, self.d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
-        self.assertAlmostEqual(0.70400115, self.d.solid_angle, 4)
-        self.assertAlmostEqual(radians(40), self.d.takeoffangle, 4)
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertAlmostEqual(0.70400115, self.d.solidangle_sr, 4)
+        self.assertAlmostEqual(radians(40), self.d.takeoffangle_rad, 4)
 
     def test__repr__(self):
         expected = '<_DelimitedDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad)>'
@@ -51,20 +51,20 @@ class Test_DelimitedDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = _DelimitedDetector.from_xml(element)
 
-        self.assertAlmostEqual(radians(35), d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation[1], 4)
-        self.assertAlmostEqual(0, d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth[1], 4)
+        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
 
-    def testelevation(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'elevation', (-4, 0))
-        self.assertRaises(ValueError, self.d.__setattr__, 'elevation', (0, 4))
-        self.assertRaises(TypeError, self.d.__setattr__, 'elevation', 0)
+    def testelevation_rad(self):
+        self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (-4, 0))
+        self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (0, 4))
+        self.assertRaises(TypeError, self.d.__setattr__, 'elevation_rad', 0)
 
-    def testazimuth(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth', (-1, 0))
-        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth', (0, 7))
-        self.assertRaises(TypeError, self.d.__setattr__, 'azimuth', 0)
+    def testazimuth_rad(self):
+        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (-1, 0))
+        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (0, 7))
+        self.assertRaises(TypeError, self.d.__setattr__, 'azimuth_rad', 0)
 
     def testto_xml(self):
         element = self.d.to_xml()
@@ -79,41 +79,20 @@ class Test_ChannelsDetector(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.d = _ChannelsDetector((12.34, 56.78), 1000, (10, 60))
+        self.d = _ChannelsDetector((10, 60))
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(12.34, self.d.limits[0], 4)
-        self.assertAlmostEqual(56.78, self.d.limits[1], 4)
-        self.assertEqual(1000, self.d.channels)
+        self.assertTrue(True)
 
-    def test__repr__(self):
-        expected = '<_ChannelsDetector(limits=12.34 to 56.78, channels=1000)>'
-        self.assertEquals(expected, repr(self.d))
-
-    def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _ChannelsDetector.from_xml(element)
-
-        self.assertAlmostEqual(12.34, d.limits[0], 4)
-        self.assertAlmostEqual(56.78, d.limits[1], 4)
-        self.assertEqual(1000, d.channels)
-
-    def testlimits(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'limits', (8, 56.78))
-        self.assertRaises(ValueError, self.d.__setattr__, 'limits', (12.34, 62))
+    def test_set_limits(self):
+        self.assertRaises(ValueError, self.d._set_limits, (8, 56.78))
+        self.assertRaises(ValueError, self.d._set_limits, (12.34, 62))
 
     def testchannels(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
-
-    def testto_xml(self):
-        element = self.d.to_xml()
-
-        self.assertAlmostEqual(12.34, float(element.get('limit_min')), 4)
-        self.assertAlmostEqual(56.78, float(element.get('limit_max')), 4)
-        self.assertEqual(1000, int(element.get('channels')))
 
 class Test_SpatialDetector(unittest.TestCase):
 
@@ -129,16 +108,16 @@ class Test_SpatialDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(12.34, self.d.xlimits[0], 4)
-        self.assertAlmostEqual(56.78, self.d.xlimits[1], 4)
+        self.assertAlmostEqual(12.34, self.d.xlimits_m[0], 4)
+        self.assertAlmostEqual(56.78, self.d.xlimits_m[1], 4)
         self.assertEqual(2, self.d.xbins)
 
-        self.assertAlmostEqual(21.43, self.d.ylimits[0], 4)
-        self.assertAlmostEqual(65.87, self.d.ylimits[1], 4)
+        self.assertAlmostEqual(21.43, self.d.ylimits_m[0], 4)
+        self.assertAlmostEqual(65.87, self.d.ylimits_m[1], 4)
         self.assertEqual(3, self.d.ybins)
 
-        self.assertAlmostEqual(34.12, self.d.zlimits[0], 4)
-        self.assertAlmostEqual(78.56, self.d.zlimits[1], 4)
+        self.assertAlmostEqual(34.12, self.d.zlimits_m[0], 4)
+        self.assertAlmostEqual(78.56, self.d.zlimits_m[1], 4)
         self.assertEqual(4, self.d.zbins)
 
     def test__repr__(self):
@@ -149,29 +128,29 @@ class Test_SpatialDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = _SpatialDetector.from_xml(element)
 
-        self.assertAlmostEqual(12.34, d.xlimits[0], 4)
-        self.assertAlmostEqual(56.78, d.xlimits[1], 4)
+        self.assertAlmostEqual(12.34, d.xlimits_m[0], 4)
+        self.assertAlmostEqual(56.78, d.xlimits_m[1], 4)
         self.assertEqual(2, d.xbins)
 
-        self.assertAlmostEqual(21.43, d.ylimits[0], 4)
-        self.assertAlmostEqual(65.87, d.ylimits[1], 4)
+        self.assertAlmostEqual(21.43, d.ylimits_m[0], 4)
+        self.assertAlmostEqual(65.87, d.ylimits_m[1], 4)
         self.assertEqual(3, d.ybins)
 
-        self.assertAlmostEqual(34.12, d.zlimits[0], 4)
-        self.assertAlmostEqual(78.56, d.zlimits[1], 4)
+        self.assertAlmostEqual(34.12, d.zlimits_m[0], 4)
+        self.assertAlmostEqual(78.56, d.zlimits_m[1], 4)
         self.assertEqual(4, d.zbins)
 
     def testxlimits(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'xlimits', (9, 56.78))
-        self.assertRaises(ValueError, self.d.__setattr__, 'xlimits', (12.34, 61))
+        self.assertRaises(ValueError, self.d.__setattr__, 'xlimits_m', (9, 56.78))
+        self.assertRaises(ValueError, self.d.__setattr__, 'xlimits_m', (12.34, 61))
 
     def testylimits(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'ylimits', (19, 65.87))
-        self.assertRaises(ValueError, self.d.__setattr__, 'ylimits', (21.34, 71))
+        self.assertRaises(ValueError, self.d.__setattr__, 'ylimits_m', (19, 65.87))
+        self.assertRaises(ValueError, self.d.__setattr__, 'ylimits_m', (21.34, 71))
 
     def testzlimits(self):
-        self.assertRaises(ValueError, self.d.__setattr__, 'zlimits', (29, 78.56))
-        self.assertRaises(ValueError, self.d.__setattr__, 'zlimits', (34.12, 81))
+        self.assertRaises(ValueError, self.d.__setattr__, 'zlimits_m', (29, 78.56))
+        self.assertRaises(ValueError, self.d.__setattr__, 'zlimits_m', (34.12, 81))
 
     def testxbins(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'xbins', 0)
@@ -208,8 +187,8 @@ class Test_EnergyDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(12.34, self.d.limits[0], 4)
-        self.assertAlmostEqual(56.78, self.d.limits[1], 4)
+        self.assertAlmostEqual(12.34, self.d.limits_eV[0], 4)
+        self.assertAlmostEqual(56.78, self.d.limits_eV[1], 4)
         self.assertEqual(1000, self.d.channels)
         self.assertAlmostEqual(0.0, self.d._extremums[0], 4)
         self.assertEqual(float('inf'), self.d._extremums[1], 4)
@@ -222,8 +201,8 @@ class Test_EnergyDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = _EnergyDetector.from_xml(element)
 
-        self.assertAlmostEqual(12.34, d.limits[0], 4)
-        self.assertAlmostEqual(56.78, d.limits[1], 4)
+        self.assertAlmostEqual(12.34, d.limits_eV[0], 4)
+        self.assertAlmostEqual(56.78, d.limits_eV[1], 4)
         self.assertEqual(1000, d.channels)
         self.assertAlmostEqual(0.0, d._extremums[0], 4)
         self.assertEqual(float('inf'), d._extremums[1], 4)
@@ -246,8 +225,8 @@ class Test_PolarAngularDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(-90), self.d.limits[0], 4)
-        self.assertAlmostEqual(radians(90), self.d.limits[1], 4)
+        self.assertAlmostEqual(radians(-90), self.d.limits_rad[0], 4)
+        self.assertAlmostEqual(radians(90), self.d.limits_rad[1], 4)
         self.assertEqual(50, self.d.channels)
         self.assertAlmostEqual(radians(-90), self.d._extremums[0], 4)
         self.assertAlmostEqual(radians(90), self.d._extremums[1], 4)
@@ -260,8 +239,8 @@ class Test_PolarAngularDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = _PolarAngularDetector.from_xml(element)
 
-        self.assertAlmostEqual(radians(-90), d.limits[0], 4)
-        self.assertAlmostEqual(radians(90), d.limits[1], 4)
+        self.assertAlmostEqual(radians(-90), d.limits_rad[0], 4)
+        self.assertAlmostEqual(radians(90), d.limits_rad[1], 4)
         self.assertEqual(50, d.channels)
         self.assertAlmostEqual(radians(-90), d._extremums[0], 4)
         self.assertAlmostEqual(radians(90), d._extremums[1], 4)
@@ -284,8 +263,8 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(0), self.d.limits[0], 4)
-        self.assertAlmostEqual(radians(360), self.d.limits[1], 4)
+        self.assertAlmostEqual(radians(0), self.d.limits_rad[0], 4)
+        self.assertAlmostEqual(radians(360), self.d.limits_rad[1], 4)
         self.assertEqual(50, self.d.channels)
         self.assertAlmostEqual(radians(0), self.d._extremums[0], 4)
         self.assertAlmostEqual(radians(360), self.d._extremums[1], 4)
@@ -298,8 +277,8 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = _AzimuthalAngularDetector.from_xml(element)
 
-        self.assertAlmostEqual(radians(0), d.limits[0], 4)
-        self.assertAlmostEqual(radians(360), d.limits[1], 4)
+        self.assertAlmostEqual(radians(0), d.limits_rad[0], 4)
+        self.assertAlmostEqual(radians(360), d.limits_rad[1], 4)
         self.assertEqual(50, self.d.channels)
         self.assertAlmostEqual(radians(0), d._extremums[0], 4)
         self.assertAlmostEqual(radians(360), d._extremums[1], 4)
@@ -324,12 +303,12 @@ class TestPhotonSpectrumDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(35), self.d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), self.d.elevation[1], 4)
-        self.assertAlmostEqual(0, self.d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
-        self.assertAlmostEqual(12.34, self.d.limits[0], 4)
-        self.assertAlmostEqual(56.78, self.d.limits[1], 4)
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertAlmostEqual(12.34, self.d.limits_eV[0], 4)
+        self.assertAlmostEqual(56.78, self.d.limits_eV[1], 4)
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
@@ -340,12 +319,12 @@ class TestPhotonSpectrumDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = PhotonSpectrumDetector.from_xml(element)
 
-        self.assertAlmostEqual(radians(35), d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation[1], 4)
-        self.assertAlmostEqual(0, d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth[1], 4)
-        self.assertAlmostEqual(12.34, d.limits[0], 4)
-        self.assertAlmostEqual(56.78, d.limits[1], 4)
+        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
+        self.assertAlmostEqual(12.34, d.limits_eV[0], 4)
+        self.assertAlmostEqual(56.78, d.limits_eV[1], 4)
         self.assertEqual(1000, d.channels)
 
     def testto_xml(self):
@@ -372,12 +351,12 @@ class TestPhiRhoZDetector(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(radians(35), self.d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), self.d.elevation[1], 4)
-        self.assertAlmostEqual(0, self.d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), self.d.azimuth[1], 4)
-        self.assertAlmostEqual(-56.78, self.d.limits[0], 4)
-        self.assertAlmostEqual(-12.34, self.d.limits[1], 4)
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertAlmostEqual(-56.78, self.d.limits_m[0], 4)
+        self.assertAlmostEqual(-12.34, self.d.limits_m[1], 4)
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
@@ -388,12 +367,12 @@ class TestPhiRhoZDetector(unittest.TestCase):
         element = self.d.to_xml()
         d = PhiRhoZDetector.from_xml(element)
 
-        self.assertAlmostEqual(radians(35), d.elevation[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation[1], 4)
-        self.assertAlmostEqual(0, d.azimuth[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth[1], 4)
-        self.assertAlmostEqual(-56.78, d.limits[0], 4)
-        self.assertAlmostEqual(-12.34, d.limits[1], 4)
+        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
+        self.assertAlmostEqual(-56.78, d.limits_m[0], 4)
+        self.assertAlmostEqual(-12.34, d.limits_m[1], 4)
         self.assertEqual(1000, d.channels)
 
     def testto_xml(self):

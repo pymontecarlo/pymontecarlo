@@ -32,14 +32,14 @@ class TestPenelopeBody(unittest.TestCase):
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.body.material))
-        self.assertAlmostEqual(123.45, self.body.maximum_step_length, 4)
+        self.assertAlmostEqual(123.45, self.body.maximum_step_length_m, 4)
 
     def testfrom_xml(self):
         element = self.body.to_xml()
         body = Body.from_xml(element)
 
         self.assertEqual('Copper', str(body.material))
-        self.assertAlmostEqual(123.45, body.maximum_step_length, 4)
+        self.assertAlmostEqual(123.45, body.maximum_step_length_m, 4)
 
     def testto_xml(self):
         element = self.body.to_xml()
@@ -62,16 +62,16 @@ class TestPenelopeLayer(unittest.TestCase):
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.layer.material))
-        self.assertAlmostEqual(56.78, self.layer.thickness, 4)
-        self.assertAlmostEqual(123.45, self.layer.maximum_step_length, 4)
+        self.assertAlmostEqual(56.78, self.layer.thickness_m, 4)
+        self.assertAlmostEqual(123.45, self.layer.maximum_step_length_m, 4)
 
     def testfrom_xml(self):
         element = self.layer.to_xml()
         layer = Layer.from_xml(element)
 
         self.assertEqual('Copper', str(layer.material))
-        self.assertAlmostEqual(56.78, layer.thickness, 4)
-        self.assertAlmostEqual(123.45, layer.maximum_step_length, 4)
+        self.assertAlmostEqual(56.78, layer.thickness_m, 4)
+        self.assertAlmostEqual(123.45, layer.maximum_step_length_m, 4)
 
     def testto_xml(self):
         element = self.layer.to_xml()

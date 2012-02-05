@@ -33,6 +33,7 @@ from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
 from pymontecarlo.input.base.geometry import _Geometry
 from pymontecarlo.input.penelope.material import VACUUM
 from pymontecarlo.input.penelope.body import Body
+from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.xmlutil import objectxml
 from pymontecarlo.util.sort import topological_sort
 
@@ -242,86 +243,89 @@ class _Keyword(object):
 
         return line
 
-class Rotation(objectxml):
-    KEYWORD_OMEGA = _Keyword('OMEGA=', ' DEG          (DEFAULT=0.0)')
-    KEYWORD_THETA = _Keyword('THETA=', ' DEG          (DEFAULT=0.0)')
-    KEYWORD_PHI = _Keyword('PHI=', ' DEG          (DEFAULT=0.0)')
+class Rotation(Option):
+    _KEYWORD_OMEGA = _Keyword('OMEGA=', ' DEG          (DEFAULT=0.0)')
+    _KEYWORD_THETA = _Keyword('THETA=', ' DEG          (DEFAULT=0.0)')
+    _KEYWORD_PHI = _Keyword('PHI=', ' DEG          (DEFAULT=0.0)')
 
-    def __init__(self, omega=0.0, theta=0.0, phi=0.0):
+    def __init__(self, omega_rad=0.0, theta_rad=0.0, phi_rad=0.0):
         """
         Represents a rotation using 3 Euler angles (YZY).
         
-        :arg omega: rotation around the z-axis (rad)
-        :arg theta: rotation around the y-axis (rad)
-        :arg phi: rotation around the new z-axis (rad)
+        :arg omega_rad: rotation around the z-axis (rad)
+        :arg theta_rad: rotation around the y-axis (rad)
+        :arg phi_rad: rotation around the new z-axis (rad)
         """
-        self.omega = omega
-        self.theta = theta
-        self.phi = phi
+        Option.__init__(self)
+
+        self.omega_rad = omega_rad
+        self.theta_rad = theta_rad
+        self.phi_rad = phi_rad
 
     def __repr__(self):
         return "<Rotation(omega=%s, theta=%s, phi=%s)>" % \
-                    (self.omega, self.theta, self.phi)
+                    (self.omega_rad, self.theta_rad, self.phi_rad)
 
     def __str__(self):
-        return '(omega=%s, theta=%s, phi=%s)' % (self.omega, self.theta, self.phi)
+        return '(omega=%s, theta=%s, phi=%s)' % \
+                    (self.omega_rad, self.theta_rad, self.phi_rad)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        omega = float(element.get('omega'))
-        theta = float(element.get('theta'))
-        phi = float(element.get('phi'))
+        omega_rad = float(element.get('omega'))
+        theta_rad = float(element.get('theta'))
+        phi_rad = float(element.get('phi'))
 
-        return cls(omega, theta, phi)
+        return cls(omega_rad, theta_rad, phi_rad)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('omega', str(self.omega))
-        element.set('theta', str(self.theta))
-        element.set('phi', str(self.phi))
+        element.set('omega', str(self.omega_rad))
+        element.set('theta', str(self.theta_rad))
+        element.set('phi', str(self.phi_rad))
 
     @property
-    def omega(self):
+    def omega_rad(self):
         """
         Rotation around the z-axis (rad).
         The value must be between 0 and 2pi.
         """
-        return self._omega
+        return self._props['omega']
 
-    @omega.setter
-    def omega(self, angle):
+    @omega_rad.setter
+    def omega_rad(self, angle):
         if angle < 0 or angle > 2 * math.pi:
             raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._omega = angle
+        self._props['omega'] = angle
 
     @property
-    def theta(self):
+    def theta_rad(self):
         """
         Rotation around the y-axis (rad).
         The value must be between 0 and 2pi.
         """
-        return self._theta
+        return self._props['theta']
 
-    @theta.setter
-    def theta(self, angle):
+    @theta_rad.setter
+    def theta_rad(self, angle):
         if angle < 0 or angle > 2 * math.pi:
             raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._theta = angle
+        self._props['theta'] = angle
 
     @property
-    def phi(self):
+    def phi_rad(self):
         """
         Rotation around the new z-axis (rad).
         The new z-axis refer to the axis after the omega and theta rotation were
         applied on the original coordinate system.
         The value must be between 0 and 2pi.
         """
-        return self._phi
+        return self._props['phi']
 
-    @phi.setter
-    def phi(self, angle):
+    @phi_rad.setter
+    def phi_rad(self, angle):
         if angle < 0 or angle > 2 * math.pi:
             raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._phi = angle
+        self._props['phi'] = angle
 
     def to_geo(self):
         """
@@ -329,52 +333,87 @@ class Rotation(objectxml):
         """
         lines = []
 
-        line = self.KEYWORD_OMEGA.create_expline(math.degrees(self.omega))
+        line = self._KEYWORD_OMEGA.create_expline(math.degrees(self.omega_rad))
         lines.append(line)
 
-        line = self.KEYWORD_THETA.create_expline(math.degrees(self.theta))
+        line = self._KEYWORD_THETA.create_expline(math.degrees(self.theta_rad))
         lines.append(line)
 
-        line = self.KEYWORD_PHI.create_expline(math.degrees(self.phi))
+        line = self._KEYWORD_PHI.create_expline(math.degrees(self.phi_rad))
         lines.append(line)
 
         return lines
 
-class Shift(objectxml):
-    KEYWORD_X = _Keyword('X-SHIFT=', '              (DEFAULT=0.0)')
-    KEYWORD_Y = _Keyword('Y-SHIFT=', '              (DEFAULT=0.0)')
-    KEYWORD_Z = _Keyword('Z-SHIFT=', '              (DEFAULT=0.0)')
+class Shift(Option):
+    _KEYWORD_X = _Keyword('X-SHIFT=', '              (DEFAULT=0.0)')
+    _KEYWORD_Y = _Keyword('Y-SHIFT=', '              (DEFAULT=0.0)')
+    _KEYWORD_Z = _Keyword('Z-SHIFT=', '              (DEFAULT=0.0)')
 
-    def __init__(self, x=0.0, y=0.0, z=0.0):
+    def __init__(self, x_m=0.0, y_m=0.0, z_m=0.0):
         """
         Represents a translation in space.
         
-        :arg x: translation along the x direction (m)
-        :arg y: translation along the y direction (m)
-        :arg z: translation along the z direction (m)
+        :arg x_m: translation along the x direction (m)
+        :arg y_m: translation along the y direction (m)
+        :arg z_m: translation along the z direction (m)
         """
-        self.x = x
-        self.y = y
-        self.z = z
+        Option.__init__(self)
+
+        self.x_m = x_m
+        self.y_m = y_m
+        self.z_m = z_m
 
     def __repr__(self):
-        return "<Shift(x=%s, y=%s, z=%s)>" % (self.x, self.y, self.z)
+        return "<Shift(x=%s, y=%s, z=%s)>" % (self.x_m, self.y_m, self.z_m)
 
     def __str__(self):
-        return "(x=%s, y=%s, z=%s)" % (self.x, self.y, self.z)
+        return "(x=%s, y=%s, z=%s)" % (self.x_m, self.y_m, self.z_m)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        x = float(element.get('x'))
-        y = float(element.get('y'))
-        z = float(element.get('z'))
+        x_m = float(element.get('x'))
+        y_m = float(element.get('y'))
+        z_m = float(element.get('z'))
 
-        return cls(x, y, z)
+        return cls(x_m, y_m, z_m)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('x', str(self.x))
-        element.set('y', str(self.y))
-        element.set('z', str(self.z))
+        element.set('x', str(self.x_m))
+        element.set('y', str(self.y_m))
+        element.set('z', str(self.z_m))
+
+    @property
+    def x_m(self):
+        """
+        Translation along the x direction (m).
+        """
+        return self._props['x']
+
+    @x_m.setter
+    def x_m(self, shift):
+        self._props['x'] = shift
+
+    @property
+    def y_m(self):
+        """
+        Translation along the y direction (m).
+        """
+        return self._props['y']
+
+    @y_m.setter
+    def y_m(self, shift):
+        self._props['y'] = shift
+
+    @property
+    def z_m(self):
+        """
+        Translation along the z direction (m).
+        """
+        return self._props['z']
+
+    @z_m.setter
+    def z_m(self, shift):
+        self._props['z'] = shift
 
     def to_geo(self):
         """
@@ -382,21 +421,21 @@ class Shift(objectxml):
         """
         lines = []
 
-        line = self.KEYWORD_X.create_expline(self.x * 100.0)
+        line = self._KEYWORD_X.create_expline(self.x_m * 100.0)
         lines.append(line)
 
-        line = self.KEYWORD_Y.create_expline(self.y * 100.0)
+        line = self._KEYWORD_Y.create_expline(self.y_m * 100.0)
         lines.append(line)
 
-        line = self.KEYWORD_Z.create_expline(self.z * 100.0)
+        line = self._KEYWORD_Z.create_expline(self.z_m * 100.0)
         lines.append(line)
 
         return lines
 
-class Scale(objectxml):
-    KEYWORD_X = _Keyword('X-SCALE=', '              (DEFAULT=1.0)')
-    KEYWORD_Y = _Keyword('Y-SCALE=', '              (DEFAULT=1.0)')
-    KEYWORD_Z = _Keyword('Z-SCALE=', '              (DEFAULT=1.0)')
+class Scale(Option):
+    _KEYWORD_X = _Keyword('X-SCALE=', '              (DEFAULT=1.0)')
+    _KEYWORD_Y = _Keyword('Y-SCALE=', '              (DEFAULT=1.0)')
+    _KEYWORD_Z = _Keyword('Z-SCALE=', '              (DEFAULT=1.0)')
 
     def __init__(self, x=1.0, y=1.0, z=1.0):
         """
@@ -406,6 +445,8 @@ class Scale(objectxml):
         :arg y: scaling along the y direction
         :arg z: scaling along the z direction
         """
+        Option.__init__(self)
+
         self.x = x
         self.y = y
         self.z = z
@@ -435,14 +476,13 @@ class Scale(objectxml):
         Scaling along the x direction.
         The value cannot be 0.
         """
-        return self._x
+        return self._props['x']
 
     @x.setter
     def x(self, scale):
         if scale == 0.0:
             raise ValueError, "X scale cannot be equal to 0."
-
-        self._x = scale
+        self._props['x'] = scale
 
     @property
     def y(self):
@@ -450,14 +490,13 @@ class Scale(objectxml):
         Scaling along the y direction.
         The value cannot be 0.
         """
-        return self._y
+        return self._props['y']
 
     @y.setter
     def y(self, scale):
         if scale == 0.0:
             raise ValueError, "Y scale cannot be equal to 0."
-
-        self._y = scale
+        self._props['y'] = scale
 
     @property
     def z(self):
@@ -465,14 +504,13 @@ class Scale(objectxml):
         Scaling along the z direction.
         The value cannot be 0.
         """
-        return self._z
+        return self._props['z']
 
     @z.setter
     def z(self, scale):
         if scale == 0.0:
             raise ValueError, "Z scale cannot be equal to 0."
-
-        self._z = scale
+        self._props['z'] = scale
 
     def to_geo(self):
         """
@@ -480,26 +518,28 @@ class Scale(objectxml):
         """
         lines = []
 
-        line = self.KEYWORD_X.create_expline(self.x)
+        line = self._KEYWORD_X.create_expline(self.x)
         lines.append(line)
 
-        line = self.KEYWORD_Y.create_expline(self.y)
+        line = self._KEYWORD_Y.create_expline(self.y)
         lines.append(line)
 
-        line = self.KEYWORD_Z.create_expline(self.z)
+        line = self._KEYWORD_Z.create_expline(self.z)
         lines.append(line)
 
         return lines
 
-class _Surface(objectxml):
-    KEYWORD_SURFACE = _Keyword("SURFACE")
-    KEYWORD_INDICES = _Keyword('INDICES=')
+class _Surface(Option):
+    _KEYWORD_SURFACE = _Keyword("SURFACE")
+    _KEYWORD_INDICES = _Keyword('INDICES=')
 
     def __init__(self, description=''):
+        Option.__init__(self)
+
         self.description = description
 
-        self._rotation = Rotation()
-        self._shift = Shift()
+        self._props['rotation'] = Rotation()
+        self._props['shift'] = Shift()
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -507,10 +547,10 @@ class _Surface(objectxml):
         obj = cls(description)
 
         child = list(element.find("rotation"))[0]
-        obj._rotation = Rotation.from_xml(child, *args, **kwargs)
+        obj._props['rotation'] = Rotation.from_xml(child, *args, **kwargs)
 
         child = list(element.find("shift"))[0]
-        obj._shift = Shift.from_xml(child, *args, **kwargs)
+        obj._props['shift'] = Shift.from_xml(child, *args, **kwargs)
 
         return obj
 
@@ -531,11 +571,11 @@ class _Surface(objectxml):
         """
         Description of the surface.
         """
-        return self._description
+        return self._props['description']
 
     @description.setter
     def description(self, desc):
-        self._description = desc
+        self._props['description'] = desc
 
     @property
     def rotation(self):
@@ -543,7 +583,7 @@ class _Surface(objectxml):
         Rotation of the surface.
         The rotation is defined by a :class:`.Rotation`.
         """
-        return self._rotation
+        return self._props['rotation']
 
     @property
     def shift(self):
@@ -551,14 +591,14 @@ class _Surface(objectxml):
         Shift/translation of the surface.
         The shift is defined by a :class:`.Shift`.
         """
-        return self._shift
+        return self._props['shift']
 
     def to_geo(self):
         lines = []
 
         text = "%4i" % (self._index + 1,)
         comment = " %s" % self.description
-        line = self.KEYWORD_SURFACE.create_line(text, comment)
+        line = self._KEYWORD_SURFACE.create_line(text, comment)
         lines.append(line)
 
         lines.extend(self.rotation.to_geo())
@@ -567,16 +607,16 @@ class _Surface(objectxml):
         return lines
 
 class SurfaceImplicit(_Surface):
-    KEYWORD_AXX = _Keyword('AXX=', '              (DEFAULT=0.0)')
-    KEYWORD_AXY = _Keyword('AXY=', '              (DEFAULT=0.0)')
-    KEYWORD_AXZ = _Keyword('AXZ=', '              (DEFAULT=0.0)')
-    KEYWORD_AYY = _Keyword('AYY=', '              (DEFAULT=0.0)')
-    KEYWORD_AYZ = _Keyword('AYZ=', '              (DEFAULT=0.0)')
-    KEYWORD_AZZ = _Keyword('AZZ=', '              (DEFAULT=0.0)')
-    KEYWORD_AX = _Keyword('AX=', '              (DEFAULT=0.0)')
-    KEYWORD_AY = _Keyword('AY=', '              (DEFAULT=0.0)')
-    KEYWORD_AZ = _Keyword('AZ=', '              (DEFAULT=0.0)')
-    KEYWORD_A0 = _Keyword('A0=', '              (DEFAULT=0.0)')
+    _KEYWORD_AXX = _Keyword('AXX=', '              (DEFAULT=0.0)')
+    _KEYWORD_AXY = _Keyword('AXY=', '              (DEFAULT=0.0)')
+    _KEYWORD_AXZ = _Keyword('AXZ=', '              (DEFAULT=0.0)')
+    _KEYWORD_AYY = _Keyword('AYY=', '              (DEFAULT=0.0)')
+    _KEYWORD_AYZ = _Keyword('AYZ=', '              (DEFAULT=0.0)')
+    _KEYWORD_AZZ = _Keyword('AZZ=', '              (DEFAULT=0.0)')
+    _KEYWORD_AX = _Keyword('AX=', '              (DEFAULT=0.0)')
+    _KEYWORD_AY = _Keyword('AY=', '              (DEFAULT=0.0)')
+    _KEYWORD_AZ = _Keyword('AZ=', '              (DEFAULT=0.0)')
+    _KEYWORD_A0 = _Keyword('A0=', '              (DEFAULT=0.0)')
 
     def __init__(self, coefficients=[0.0] * 10, description=''):
         _Surface.__init__(self, description)
@@ -597,8 +637,8 @@ class SurfaceImplicit(_Surface):
         coefficients = dict(zip(keys, values))
 
         obj = cls(coefficients, surface.description)
-        obj._rotation = surface.rotation
-        obj._shift = surface.shift
+        obj._props['rotation'] = surface.rotation
+        obj._props['shift'] = surface.shift
 
         return obj
 
@@ -623,23 +663,23 @@ class SurfaceImplicit(_Surface):
           >>> s.coefficients = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
           >>> s.coefficients = {'xx': 1.0, 'xy': 1.0}
         """
-        return self._coefficients
+        return self._props['coefficients']
 
     @coefficients.setter
     def coefficients(self, coefficients):
         if isinstance(coefficients, dict):
-            self._coefficients = {'xx': 0.0, 'xy': 0.0, 'xz': 0.0,
-                                  'yy': 0.0, 'yz': 0.0,
-                                  'zz': 0.0,
-                                  'x': 0.0, 'y': 0.0, 'z': 0.0, '0': 0.0}
+            self._props['coefficients'] = {'xx': 0.0, 'xy': 0.0, 'xz': 0.0,
+                                           'yy': 0.0, 'yz': 0.0,
+                                           'zz': 0.0,
+                                           'x': 0.0, 'y': 0.0, 'z': 0.0, '0': 0.0}
 
             for key in coefficients:
-                assert key in self._coefficients
-                self._coefficients[key] = coefficients[key]
+                assert key in self._props['coefficients']
+                self._props['coefficients'][key] = coefficients[key]
         else:
             assert len(coefficients) == 10
 
-            self._coefficients = \
+            self._props['coefficients'] = \
                 {'xx': coefficients[0], 'xy': coefficients[1], 'xz': coefficients[2],
                  'yy': coefficients[3], 'yz': coefficients[4],
                  'zz': coefficients[5],
@@ -649,14 +689,14 @@ class SurfaceImplicit(_Surface):
     def to_geo(self):
         def create_coefficient_line(key):
             value = self.coefficients[key]
-            keyword = getattr(self, "KEYWORD_A" + key.upper())
+            keyword = getattr(self, "_KEYWORD_A" + key.upper())
             return keyword.create_expline(value)
 
         lines = _Surface.to_geo(self)
 
         # Indices
         text = "%2i,%2i,%2i,%2i,%2i" % (0, 0, 0, 0, 0)
-        line = self.KEYWORD_INDICES.create_line(text)
+        line = self._KEYWORD_INDICES.create_line(text)
         lines.insert(1, line)
 
         # Coefficients
@@ -680,7 +720,7 @@ class SurfaceReduced(_Surface):
         _Surface.__init__(self, description)
 
         self.indices = indices
-        self._scale = Scale()
+        self._props['scale'] = Scale()
 
     def __repr__(self):
         return '<Surface(description=%s, indices=%s, scale=%s, rotation=%s, shift=%s)>' % \
@@ -697,9 +737,9 @@ class SurfaceReduced(_Surface):
         scale = Scale.from_xml(child)
 
         obj = cls(indices, surface.description)
-        obj._scale = scale
-        obj._rotation = surface.rotation
-        obj._shift = surface.shift
+        obj._props['scale'] = scale
+        obj._props['rotation'] = surface.rotation
+        obj._props['shift'] = surface.shift
 
         return obj
 
@@ -720,7 +760,7 @@ class SurfaceReduced(_Surface):
         The indices are defined by a :class:`tuple` containing 5 indices (-1, 0 or 1).
         If the attribute is deleted, all the indices are set to 0.
         """
-        return self._indices
+        return self._props['indices']
 
     @indices.setter
     def indices(self, indices):
@@ -731,7 +771,7 @@ class SurfaceReduced(_Surface):
             if not indice in [-1, 0, 1]:
                 raise ValueError, "Index (%s) must be either -1, 0 or 1." % indice
 
-        self._indices = tuple(indices)
+        self._props['indices'] = tuple(indices)
 
     @property
     def scale(self):
@@ -739,14 +779,14 @@ class SurfaceReduced(_Surface):
         Scaling of the surface.
         The scaling is defined by a :class:`.Scale`.
         """
-        return self._scale
+        return self._props['scale']
 
     def to_geo(self):
         lines = _Surface.to_geo(self)
 
         # Indices
         text = "%2i,%2i,%2i,%2i,%2i" % self.indices
-        line = self.KEYWORD_INDICES.create_line(text)
+        line = self._KEYWORD_INDICES.create_line(text)
         lines.insert(1, line)
 
         for i, line in enumerate(self.scale.to_geo()):
@@ -754,109 +794,110 @@ class SurfaceReduced(_Surface):
 
         return lines
 
-def zplane(z):
+def zplane(z_m):
     """
     Returns a surface for a plane Z=z
     
-    :arg z: intercept on the z-axis (in m)
+    :arg z_m: intercept on the z-axis (in m)
     
     :rtype: :class:`.Surface`
     """
-    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Z=%4.2f m' % z)
-    s.shift.z = z
+    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Z=%4.2f m' % z_m)
+    s.shift.z_m = z_m
     return s
 
-def xplane(x):
+def xplane(x_m):
     """
     Returns a surface for a plane X=x
     
-    :arg z: intercept on the x-axis (in m)
+    :arg z_m: intercept on the x-axis (in m)
     
     :rtype: :class:`.Surface`
     """
-    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane X=%4.2f m' % x)
-    s.shift.x = x
-    s.rotation.theta = math.pi / 2.0
+    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane X=%4.2f m' % x_m)
+    s.shift.x_m = x_m
+    s.rotation.theta_rad = math.pi / 2.0
     return s
 
-def yplane(y):
+def yplane(y_m):
     """
     Returns a surface for a plane Y=y
     
-    :arg z: intercept on the y-axis (in m)
+    :arg y_m: intercept on the y-axis (in m)
     
     :rtype: :class:`.Surface`
     """
-    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Y=%4.2f m' % y)
-    s.shift.y = y
-    s.rotation.theta = math.pi / 2.0
-    s.rotation.phi = math.pi / 2.0
+    s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Y=%4.2f m' % y_m)
+    s.shift.y_m = y_m
+    s.rotation.theta_rad = math.pi / 2.0
+    s.rotation.phi_rad = math.pi / 2.0
     return s
 
-def cylinder(radius, axis=AXIS_Z):
+def cylinder(radius_m, axis=AXIS_Z):
     """
     Returns a surface for a cylinder along *axis* with *radius*
     
-    :arg radius: radius of the cylinder (in m)
+    :arg radius_m: radius of the cylinder (in m)
     :arg axis: axis of the cylinder (:const:`AXIS_X`, :const:`AXIS_Y` or :const:`AXIS_Z`)
     
     :rtype: :class:`.Surface`
     """
-    description = 'Cylinder of radius %4.2f m along %s-axis' % (radius, axis)
+    axis = axis.lower()
+    description = 'Cylinder of radius %4.2f m along %s-axis' % (radius_m, axis)
     s = SurfaceReduced((1, 1, 0, 0, -1), description)
 
-    s.scale.x = radius * 100
-    s.scale.y = radius * 100
+    s.scale.x = radius_m * 100
+    s.scale.y = radius_m * 100
 
-    if axis.lower() == 'z':
+    if axis == 'z':
         pass
-    elif axis.lower() == 'x':
-        s.rotation.theta = math.pi / 2.0
-    elif axis.lower() == 'y':
-        s.rotation.theta = math.pi / 2.0
-        s.rotation.phi = math.pi / 2.0
+    elif axis == 'x':
+        s.rotation.theta_rad = math.pi / 2.0
+    elif axis == 'y':
+        s.rotation.theta_rad = math.pi / 2.0
+        s.rotation.phi_rad = math.pi / 2.0
 
     return s
 
-def sphere(radius):
+def sphere(radius_m):
     """
     Returns a surface for a sphere or *radius*
     
-    :arg radius: radius of the cylinder (in m)
+    :arg radius_m: radius of the cylinder (in m)
     
     :rtype: :class:`.Surface`
     """
-    description = 'Sphere of radius %4.2f m' % radius
+    description = 'Sphere of radius %4.2f m' % radius_m
     s = SurfaceReduced((1, 1, 1, 0, -1), description)
 
-    s.scale.x = radius * 100
-    s.scale.y = radius * 100
-    s.scale.z = radius * 100
+    s.scale.x = radius_m * 100
+    s.scale.y = radius_m * 100
+    s.scale.z = radius_m * 100
 
     return s
 
 class Module(Body):
-    KEYWORD_MODULE = _Keyword("MODULE")
-    KEYWORD_MATERIAL = _Keyword('MATERIAL')
-    KEYWORD_SURFACE = _Keyword("SURFACE")
-    KEYWORD_SIDEPOINTER = ', SIDE POINTER='
-    KEYWORD_MODULE = _Keyword('MODULE')
+    _KEYWORD_MODULE = _Keyword("MODULE")
+    _KEYWORD_MATERIAL = _Keyword('MATERIAL')
+    _KEYWORD_SURFACE = _Keyword("SURFACE")
+    _KEYWORD_SIDEPOINTER = ', SIDE POINTER='
+    _KEYWORD_MODULE = _Keyword('MODULE')
 
     def __init__(self, material, description=''):
         Body.__init__(self, material)
 
         self.description = description
 
-        self._surfaces = {}
-        self._modules = set()
+        self._props['surfaces'] = {}
+        self._props['modules'] = set()
 
-        self._rotation = Rotation()
-        self._shift = Shift()
+        self._props['rotation'] = Rotation()
+        self._props['shift'] = Shift()
 
     def __repr__(self):
         return '<Module(description=%s, material=%s, %i interaction forcing(s), dsmax=%s m, surfaces_count=%i, modules_count=%i, rotation=%s, shift=%s)>' % \
             (self.description, self.material, len(self.interaction_forcings),
-             self.maximum_step_length, len(self._surfaces), len(self._modules),
+             self.maximum_step_length_m, len(self._surfaces), len(self._modules),
              str(self.rotation), str(self.shift))
 
     @classmethod
@@ -869,8 +910,8 @@ class Module(Body):
 
         description = str(element.get('description'))
         obj = cls(body.material, description)
-        obj._interaction_forcings |= body.interaction_forcings
-        obj.maximum_step_length = body.maximum_step_length
+        obj._props['interaction forcings'] |= body.interaction_forcings
+        obj.maximum_step_length_m = body.maximum_step_length_m
 
         children = list(element.find('surfaces'))
         for child in children:
@@ -884,10 +925,10 @@ class Module(Body):
             obj.add_module(modules_lookup[index])
 
         child = list(element.find("rotation"))[0]
-        obj._rotation = Rotation.from_xml(child, *args, **kwargs)
+        obj._props['rotation'] = Rotation.from_xml(child, *args, **kwargs)
 
         child = list(element.find("shift"))[0]
-        obj._shift = Shift.from_xml(child, *args, **kwargs)
+        obj._props['shift'] = Shift.from_xml(child, *args, **kwargs)
 
         return obj
 
@@ -903,13 +944,15 @@ class Module(Body):
         element.append(Element('material', attrib))
 
         child = Element('surfaces')
-        for surface, pointer in self._surfaces.iteritems():
+        surfaces = self._props['surfaces']
+        for surface, pointer in surfaces.iteritems():
             attrib = {'index': str(surface._index), 'pointer': str(pointer)}
             child.append(Element('surface', attrib))
         element.append(child)
 
         child = Element('modules')
-        for module in self._modules:
+        modules = self._props['modules']
+        for module in modules:
             attrib = {'index': str(module._index)}
             child.append(Element('module', attrib))
         element.append(child)
@@ -931,8 +974,7 @@ class Module(Body):
         """
         module = cls(body.material, description)
 
-        module.maximum_step_length = body.maximum_step_length
-        module._interaction_forcings = body._interaction_forcings
+        module._props.update(body._props)
 
         return module
 
@@ -941,47 +983,47 @@ class Module(Body):
         """
         Description of the module.
         """
-        return self._description
+        return self._props['description']
 
     @description.setter
     def description(self, desc):
-        self._description = desc
+        self._props['description'] = desc
 
     def add_module(self, module):
         if module == self:
             raise ValueError, "Cannot add this module to this module."
-        self._modules.add(module)
+        self._props['modules'].add(module)
 
     def pop_module(self, module):
-        self._modules.discard(module)
+        self._props['modules'].discard(module)
 
     def clear_modules(self):
-        self._modules.clear()
+        self._props['modules'].clear()
 
     def get_modules(self):
-        return list(self._modules)
+        return list(self._props['modules'])
 
     def add_surface(self, surface, pointer):
         if pointer not in [-1, 1]:
             raise ValueError, "Pointer (%s) must be either -1 or 1." % pointer
-        if surface in self._surfaces:
+        if surface in self._props['surfaces']:
             raise ValueError, "Module already contains this surface."
-        self._surfaces[surface] = pointer
+        self._props['surfaces'][surface] = pointer
 
     def pop_surface(self, surface):
-        self._surfaces.pop(surface)
+        self._props['surfaces'].pop(surface)
 
     def clear_surfaces(self):
-        self._surfaces.clear()
+        self._props['surfaces'].clear()
 
     def get_surface_pointer(self, surface):
         """
         Returns the surface pointer for the specified surface.
         """
-        return self._surfaces[surface]
+        return self._props['surfaces'][surface]
 
     def get_surfaces(self):
-        return self._surfaces.keys()
+        return self._props['surfaces'].keys()
 
     @property
     def rotation(self):
@@ -989,7 +1031,7 @@ class Module(Body):
         Rotation of the surface.
         The rotation is defined by a :class:`.Rotation`.
         """
-        return self._rotation
+        return self._props['rotation']
 
     @property
     def shift(self):
@@ -997,7 +1039,7 @@ class Module(Body):
         Shift/translation of the surface.
         The shift is defined by a :class:`.Shift`.
         """
-        return self._shift
+        return self._props['shift']
 
     def to_geo(self):
         """
@@ -1007,12 +1049,12 @@ class Module(Body):
 
         text = "%4i" % (self._index + 1,)
         comment = " %s" % self.description
-        line = self.KEYWORD_MODULE.create_line(text, comment)
+        line = self._KEYWORD_MODULE.create_line(text, comment)
         lines.append(line)
 
         # Material index
         text = "%4i" % self.material._index
-        line = self.KEYWORD_MATERIAL.create_line(text)
+        line = self._KEYWORD_MATERIAL.create_line(text)
         lines.append(line)
 
         # Surface pointers
@@ -1020,8 +1062,8 @@ class Module(Body):
 
         for surface in surfaces:
             text = "%4i" % (surface._index + 1,)
-            comment = "%s(%2i)" % (self.KEYWORD_SIDEPOINTER, self.get_surface_pointer(surface))
-            line = self.KEYWORD_SURFACE.create_line(text, comment)
+            comment = "%s(%2i)" % (self._KEYWORD_SIDEPOINTER, self.get_surface_pointer(surface))
+            line = self._KEYWORD_SURFACE.create_line(text, comment)
             lines.append(line)
 
         # Module indexes
@@ -1029,7 +1071,7 @@ class Module(Body):
 
         for module in modules:
             text = "%4i" % (module._index + 1,)
-            line = self.KEYWORD_MODULE.create_line(text)
+            line = self._KEYWORD_MODULE.create_line(text)
             lines.append(line)
 
         # Seperator
@@ -1051,8 +1093,8 @@ class PenelopeGeometry(_Geometry):
         """
         _Geometry.__init__(self)
 
-        self._title = title
-        self._modules = set()
+        self.title = title
+        self._props['modules'] = set()
 
     @classmethod
     def _parse_xml_surfaces(cls, element):
@@ -1098,10 +1140,10 @@ class PenelopeGeometry(_Geometry):
         title = str(element.get('title'))
         obj = cls(title)
 
-        obj._modules |= set(modules_lookup.values())
+        obj._props['modules'] |= set(modules_lookup.values())
 
-        obj.tilt = float(element.get('tilt'))
-        obj.rotation = float(element.get('rotation'))
+        obj.tilt_rad = float(element.get('tilt'))
+        obj.rotation_rad = float(element.get('rotation'))
 
         return obj
 
@@ -1123,8 +1165,8 @@ class PenelopeGeometry(_Geometry):
         self._indexify()
 
         element.set('title', self.title)
-        element.set('tilt', str(self.tilt))
-        element.set('rotation', str(self.rotation))
+        element.set('tilt', str(self.tilt_rad))
+        element.set('rotation', str(self.rotation_rad))
 
         element.append(self._materials_to_xml())
         element.append(self._surfaces_to_xml())
@@ -1136,24 +1178,24 @@ class PenelopeGeometry(_Geometry):
         Title of the geometry.
         The title must have less than 61 charaters.
         """
-        return self._title
+        return self._props['title']
 
     @title.setter
     def title(self, title):
         if len(title) > LINE_SIZE - 3:
             raise ValueError, "The length of the title (%i) must be less than %i." % \
                 (len(title), LINE_SIZE - 3)
-        self._title = title
+        self._props['title'] = title
 
     def get_bodies(self):
-        return set(self._modules) # copy
+        return set(self._props['modules']) # copy
 
     def get_surfaces(self):
-        return set(chain(*map(_SURFACES_GETTER, self._modules)))
+        return set(chain(*map(_SURFACES_GETTER, self.modules)))
 
     @property
     def modules(self):
-        return self._modules
+        return self._props['modules']
 
     def _indexify(self):
         _Geometry._indexify(self)
@@ -1210,9 +1252,9 @@ class PenelopeGeometry(_Geometry):
             extra.add_module(module)
 
         ## Change of Euler angles convention from ZXZ to ZYZ
-        extra.rotation.omega = (self.rotation - math.pi / 2.0) % (2 * math.pi)
-        extra.rotation.theta = self.tilt
-        extra.rotation.phi = math.pi / 2.0
+        extra.rotation.omega_rad = (self.rotation_rad - math.pi / 2.0) % (2 * math.pi)
+        extra.rotation.theta_rad = self.tilt_rad
+        extra.rotation.phi_rad = math.pi / 2.0
 
         # Write module
         extra._index = len(self.modules)

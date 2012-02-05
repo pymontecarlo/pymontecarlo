@@ -58,33 +58,33 @@ class TestPencilBeam(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(15e3, self.beam.energy, 4)
+        self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
 
-        self.assertAlmostEqual(1.0, self.beam.origin[0], 4)
-        self.assertAlmostEqual(2.0, self.beam.origin[1], 4)
-        self.assertAlmostEqual(3.0, self.beam.origin[2], 4)
+        self.assertAlmostEqual(1.0, self.beam.origin_m[0], 4)
+        self.assertAlmostEqual(2.0, self.beam.origin_m[1], 4)
+        self.assertAlmostEqual(3.0, self.beam.origin_m[2], 4)
 
         self.assertAlmostEqual(4.0, self.beam.direction[0], 4)
         self.assertAlmostEqual(5.0, self.beam.direction[1], 4)
         self.assertAlmostEqual(6.0, self.beam.direction[2], 4)
 
-        self.assertAlmostEqual(math.radians(3.5), self.beam.aperture, 4)
+        self.assertAlmostEqual(math.radians(3.5), self.beam.aperture_rad, 4)
 
     def testfrom_xml(self):
         element = self.beam.to_xml()
         beam = PencilBeam.from_xml(element)
 
-        self.assertAlmostEqual(15e3, beam.energy, 4)
+        self.assertAlmostEqual(15e3, beam.energy_eV, 4)
 
-        self.assertAlmostEqual(1.0, beam.origin[0], 4)
-        self.assertAlmostEqual(2.0, beam.origin[1], 4)
-        self.assertAlmostEqual(3.0, beam.origin[2], 4)
+        self.assertAlmostEqual(1.0, beam.origin_m[0], 4)
+        self.assertAlmostEqual(2.0, beam.origin_m[1], 4)
+        self.assertAlmostEqual(3.0, beam.origin_m[2], 4)
 
         self.assertAlmostEqual(4.0, beam.direction[0], 4)
         self.assertAlmostEqual(5.0, beam.direction[1], 4)
         self.assertAlmostEqual(6.0, beam.direction[2], 4)
 
-        self.assertAlmostEqual(math.radians(3.5), beam.aperture, 4)
+        self.assertAlmostEqual(math.radians(3.5), beam.aperture_rad, 4)
 
     def testto_xml(self):
         element = self.beam.to_xml()
@@ -114,13 +114,13 @@ class TestGaussianBeam(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertAlmostEqual(123.456, self.beam.diameter, 4)
+        self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)
 
     def testfrom_xml(self):
         element = self.beam.to_xml()
         beam = GaussianBeam.from_xml(element)
 
-        self.assertAlmostEqual(123.456, beam.diameter, 4)
+        self.assertAlmostEqual(123.456, beam.diameter_m, 4)
 
     def testto_xml(self):
         element = self.beam.to_xml()
