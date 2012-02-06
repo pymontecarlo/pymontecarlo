@@ -27,6 +27,14 @@ from pymontecarlo.input.base.detector import \
 from pymontecarlo.input.base.limit import ShowersLimit
 from pymontecarlo.input.base.material import Material
 from pymontecarlo.input.base.geometry import GrainBoundaries, MultiLayers
+from pymontecarlo.input.base.model import \
+    (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
+     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE)
+
+from casinoTools.FileFormat.casino2.SimulationOptions import \
+    (DIRECTION_COSINES_SOUM, CROSS_SECTION_MOTT_EQUATION,
+     IONIZATION_CROSS_SECTION_GRYZINSKI, IONIZATION_POTENTIAL_HOVINGTON,
+     RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER, ENERGY_LOSS_JOY_LUO)
 
 # Globals and constants variables.
 
@@ -43,7 +51,7 @@ class TestCasino2Exporter(unittest.TestCase):
     def testskeleton(self):
         self.assertTrue(True)
 
-    def testto_cas_substrate(self):
+    def testexport_substrate(self):
         # Create options
         mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         ops = Options()
@@ -105,7 +113,7 @@ class TestCasino2Exporter(unittest.TestCase):
 
         self.assertTrue(simops.FEmissionRX)
 
-    def testto_cas_grainboundaries(self):
+    def testexport_grainboundaries(self):
         # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
@@ -165,7 +173,7 @@ class TestCasino2Exporter(unittest.TestCase):
 
         self.assertFalse(simops.FEmissionRX)
 
-    def testto_cas_multilayers1(self):
+    def testexport_multilayers1(self):
         # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
@@ -226,7 +234,7 @@ class TestCasino2Exporter(unittest.TestCase):
 
         self.assertFalse(simops.FEmissionRX)
 
-    def testto_cas_multilayers2(self):
+    def testexport_multilayers2(self):
         # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
@@ -287,6 +295,43 @@ class TestCasino2Exporter(unittest.TestCase):
         self.assertEqual(5678, simops.getNumberElectrons())
 
         self.assertFalse(simops.FEmissionRX)
+
+    def testexport_models(self):
+        # Create options
+        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        ops = Options()
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
+        ops.geometry.material = mat
+        ops.limits.add(ShowersLimit(5678))
+
+        ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
+        ops.models.add(IONIZATION_CROSS_SECTION.gryzinsky)
+        ops.models.add(IONIZATION_POTENTIAL.hovington)
+        ops.models.add(RANDOM_NUMBER_GENERATOR.mersenne)
+        ops.models.add(DIRECTION_COSINE.soum1979)
+
+        # Export to CAS
+        casfile = self.e.export(ops)
+
+        # Test
+        simdata = casfile.getOptionSimulationData()
+        simops = simdata.getSimulationOptions()
+
+        self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
+        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
+
+        self.assertEqual(5678, simops.getNumberElectrons())
+
+        self.assertEqual(CROSS_SECTION_MOTT_EQUATION, simops.getTotalElectronElasticCrossSection())
+        self.assertEqual(CROSS_SECTION_MOTT_EQUATION, simops.getPartialElectronElasticCrossSection())
+        self.assertEqual(IONIZATION_CROSS_SECTION_GRYZINSKI, simops.getIonizationCrossSectionType())
+        self.assertEqual(IONIZATION_POTENTIAL_HOVINGTON, simops.getIonizationPotentialType())
+        self.assertEqual(DIRECTION_COSINES_SOUM, simops.getDirectionCosines())
+        self.assertEqual(ENERGY_LOSS_JOY_LUO, simops.getEnergyLossType())
+        self.assertEqual(RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER, simops.getRandomNumberGeneratorType())
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -41,7 +41,7 @@ from pymontecarlo.input.base.detector import \
      )
 from pymontecarlo.input.base.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
-     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS)
+     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
 from pymontecarlo.io.base.exporter import Exporter as _Exporter, ExporterException
 import pymontecarlo.util.element_properties as ep
 
@@ -108,6 +108,8 @@ class Exporter(_Exporter):
             self._model_direction_cosine
         self._model_exporters[ENERGY_LOSS.type] = \
             self._model_energy_loss
+        self._model_exporters[MASS_ABSORPTION_COEFFICIENT.type] = \
+            self._model_mass_absorption_coefficient
 
     def export(self, options):
         casfile = File()
@@ -310,5 +312,6 @@ class Exporter(_Exporter):
         types = {ENERGY_LOSS.joy_luo1989: ENERGY_LOSS_JOY_LUO}
         simops.setEnergyLossType(types[model])
 
-
+    def _model_mass_absorption_coefficient(self, options, model, simdata, simops):
+        pass
 
