@@ -39,15 +39,14 @@ class Exporter(object):
         self._geometry_exporters = {}
         self._detector_exporters = {}
         self._limit_exporters = {}
-
-    def export(self, options):
-        self._export(options)
+        self._model_exporters = {}
 
     def _export(self, options, *args):
         self._export_beam(options, *args)
         self._export_geometry(options, *args)
         self._export_detectors(options, *args)
         self._export_limits(options, *args)
+        self._export_models(options, *args)
 
     def _export_beam(self, options, *args):
         clasz = options.beam.__class__
@@ -88,3 +87,14 @@ class Exporter(object):
             else:
                 raise ExporterException, \
                     "Could not export limit '%s'" % clasz.__name__
+
+    def _export_models(self, options, *args):
+        for model in options.models:
+            type = model.type
+            method = self._model_exporters.get(type)
+
+            if method:
+                method(options, model, *args)
+            else:
+                raise ExporterException, \
+                    "Could not export model of type '%s'" % type.name

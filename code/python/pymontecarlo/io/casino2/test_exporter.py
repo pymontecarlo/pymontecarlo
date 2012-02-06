@@ -12,6 +12,7 @@ __license__ = "GPL v3"
 import unittest
 import logging
 from math import radians
+from operator import attrgetter
 
 # Third party modules.
 
@@ -43,6 +44,7 @@ class TestCasino2Exporter(unittest.TestCase):
         self.assertTrue(True)
 
     def testto_cas_substrate(self):
+        # Create options
         mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -59,11 +61,52 @@ class TestCasino2Exporter(unittest.TestCase):
             PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)),
                             (-12.34, -56.78), 750)
 
-        self.e.export(ops)
+        # Export to CAS
+        casfile = self.e.export(ops)
 
-        #TODO: Test cas for substrate
+        # Test
+        simdata = casfile.getOptionSimulationData()
+        simops = simdata.getSimulationOptions()
+        regionops = simdata.getRegionOptions()
+
+        self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
+        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
+
+        self.assertEqual(1, regionops.getNumberRegions())
+        region = regionops.getRegion(0)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat1', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(79 in elements)
+        self.assertTrue(47 in elements)
+        self.assertAlmostEqual(0.123, simops.Eminimum, 3)
+
+        self.assertEqual(5678, simops.getNumberElectrons())
+
+        self.assertTrue(simops.FDenr)
+        self.assertFalse(simops.FDenrLog)
+        self.assertEqual(123, simops.NbPointDENR)
+        self.assertAlmostEqual(0.0, simops.DenrMin, 3)
+        self.assertAlmostEqual(0.567, simops.DenrMax, 3)
+
+        self.assertTrue(simops.FDent)
+        self.assertFalse(simops.FDentLog)
+        self.assertEqual(124, simops.NbPointDENT)
+        self.assertAlmostEqual(0.001, simops.DentMin, 3)
+        self.assertAlmostEqual(0.568, simops.DentMax, 3)
+
+        self.assertTrue(simops.FDbang)
+        self.assertFalse(simops.FDbangLog)
+        self.assertEqual(125, simops.NbPointDBANG)
+        self.assertAlmostEqual(-90.0, simops.DbangMin, 4)
+        self.assertAlmostEqual(90.0, simops.DbangMax, 4)
+
+        self.assertTrue(simops.FEmissionRX)
 
     def testto_cas_grainboundaries(self):
+        # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
@@ -78,11 +121,52 @@ class TestCasino2Exporter(unittest.TestCase):
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops)
+        # Export to CAS
+        casfile = self.e.export(ops)
 
-        #TODO: Test cas for grain boundaries
+        # Test
+        simdata = casfile.getOptionSimulationData()
+        simops = simdata.getSimulationOptions()
+        regionops = simdata.getRegionOptions()
+
+        self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
+        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
+
+        self.assertEqual(3, regionops.getNumberRegions())
+
+        region = regionops.getRegion(0)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat1', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(79 in elements)
+        self.assertTrue(47 in elements)
+
+        region = regionops.getRegion(1)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat3', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(13 in elements)
+        self.assertTrue(14 in elements)
+
+        region = regionops.getRegion(2)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat2', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(29 in elements)
+        self.assertTrue(30 in elements)
+
+        self.assertAlmostEqual(0.089, simops.Eminimum, 3)
+
+        self.assertEqual(5678, simops.getNumberElectrons())
+
+        self.assertFalse(simops.FEmissionRX)
 
     def testto_cas_multilayers1(self):
+        # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
@@ -98,11 +182,52 @@ class TestCasino2Exporter(unittest.TestCase):
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops)
+        # Export to CAS
+        casfile = self.e.export(ops)
 
-        #TODO: Test cas for multi-layers
+        # Test
+        simdata = casfile.getOptionSimulationData()
+        simops = simdata.getSimulationOptions()
+        regionops = simdata.getRegionOptions()
+
+        self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
+        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
+
+        self.assertEqual(3, regionops.getNumberRegions())
+
+        region = regionops.getRegion(0)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat2', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(29 in elements)
+        self.assertTrue(30 in elements)
+
+        region = regionops.getRegion(1)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat3', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(13 in elements)
+        self.assertTrue(14 in elements)
+
+        region = regionops.getRegion(2)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat1', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(79 in elements)
+        self.assertTrue(47 in elements)
+
+        self.assertAlmostEqual(0.089, simops.Eminimum, 3)
+
+        self.assertEqual(5678, simops.getNumberElectrons())
+
+        self.assertFalse(simops.FEmissionRX)
 
     def testto_cas_multilayers2(self):
+        # Create options
         mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
         mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
         mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
@@ -119,9 +244,49 @@ class TestCasino2Exporter(unittest.TestCase):
 
         ops.limits.add(ShowersLimit(5678))
 
-        self.e.export(ops)
+        # Export to CAS
+        casfile = self.e.export(ops)
 
-        #TODO: Test cas for multi-layers
+        # Test
+        simdata = casfile.getOptionSimulationData()
+        simops = simdata.getSimulationOptions()
+        regionops = simdata.getRegionOptions()
+
+        self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
+        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
+
+        self.assertEqual(3, regionops.getNumberRegions())
+
+        region = regionops.getRegion(0)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat1', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(79 in elements)
+        self.assertTrue(47 in elements)
+
+        region = regionops.getRegion(1)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat2', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(29 in elements)
+        self.assertTrue(30 in elements)
+
+        region = regionops.getRegion(2)
+        elements = map(attrgetter('Z'), region.getElements())
+        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertEqual('Mat3', region.Name)
+        self.assertEqual(2, len(elements))
+        self.assertTrue(13 in elements)
+        self.assertTrue(14 in elements)
+
+        self.assertAlmostEqual(0.089, simops.Eminimum, 3)
+
+        self.assertEqual(5678, simops.getNumberElectrons())
+
+        self.assertFalse(simops.FEmissionRX)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

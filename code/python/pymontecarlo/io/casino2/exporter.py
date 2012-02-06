@@ -32,18 +32,45 @@ from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
 from pymontecarlo.input.base.limit import ShowersLimit
 from pymontecarlo.input.base.detector import \
-    (BackscatteredElectronEnergyDetector,
+    (_DelimitedDetector,
+     BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      PhiRhoZDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      )
+from pymontecarlo.input.base.model import \
+    (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
+     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS)
 from pymontecarlo.io.base.exporter import Exporter as _Exporter, ExporterException
 import pymontecarlo.util.element_properties as ep
 
 from casinoTools.FileFormat.casino2.File import File
+from casinoTools.FileFormat.casino2.SimulationOptions import \
+    (DIRECTION_COSINES_SOUM, DIRECTION_COSINES_DROUIN,
+     CROSS_SECTION_MOTT_JOY, CROSS_SECTION_MOTT_EQUATION,
+     CROSS_SECTION_MOTT_BROWNING, CROSS_SECTION_MOTT_RUTHERFORD,
+     IONIZATION_CROSS_SECTION_GAUVIN, IONIZATION_CROSS_SECTION_POUCHOU,
+     IONIZATION_CROSS_SECTION_BROWN_POWELL, IONIZATION_CROSS_SECTION_CASNATI,
+     IONIZATION_CROSS_SECTION_GRYZINSKI, IONIZATION_CROSS_SECTION_JAKOBY,
+     IONIZATION_POTENTIAL_JOY, IONIZATION_POTENTIAL_BERGER,
+     IONIZATION_POTENTIAL_HOVINGTON,
+     RANDOM_NUMBER_GENERATOR_PRESS_ET_AL, RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER,
+     ENERGY_LOSS_JOY_LUO)
 
 # Globals and constants variables.
+
+def _setup_region_material(region, material):
+    region.removeAllElements()
+
+    for z, fraction in material.composition.iteritems():
+        region.addElement(ep.symbol(z), weightFraction=fraction)
+
+    region.update() # Calculate number of elements, mean atomic number
+
+    region.User_Density = True
+    region.Rho = material.density_kg_m3
+    region.Name = material.name
 
 class Exporter(_Exporter):
 
@@ -51,6 +78,10 @@ class Exporter(_Exporter):
         _Exporter.__init__(self)
 
         self._beam_exporters[GaussianBeam] = self._beam_gaussian
+
+        self._geometry_exporters[Substrate] = self._geometry_substrate
+        self._geometry_exporters[MultiLayers] = self._geometry_multilayers
+        self._geometry_exporters[GrainBoundaries] = self._geometry_grainboundaries
 
         self._detector_exporters[BackscatteredElectronEnergyDetector] = \
             self._detector_backscattered_electron_energy
@@ -64,6 +95,19 @@ class Exporter(_Exporter):
             self._detector_photon_intensity
 
         self._limit_exporters[ShowersLimit] = self._limit_showers
+
+        self._model_exporters[ELASTIC_CROSS_SECTION.type] = \
+            self._model_elastic_cross_section
+        self._model_exporters[IONIZATION_CROSS_SECTION.type] = \
+            self._model_ionization_cross_section
+        self._model_exporters[IONIZATION_POTENTIAL.type] = \
+            self._model_ionization_potential
+        self._model_exporters[RANDOM_NUMBER_GENERATOR.type] = \
+            self._model_random_number_generator
+        self._model_exporters[DIRECTION_COSINE.type] = \
+            self._model_direction_cosine
+        self._model_exporters[ENERGY_LOSS.type] = \
+            self._model_energy_loss
 
     def export(self, options):
         casfile = File()
@@ -97,74 +141,74 @@ class Exporter(_Exporter):
             raise ExporterException, "Unknown geometry: %s" % geometry_name
 
     def _export_geometry(self, options, simdata, simops):
-        geometry = options.geometry
-
-        regionops = simdata.getRegionOptions()
-
-        # Material composition and density
-        for i, body in enumerate(geometry.get_bodies()):
-            material = body.material
-            region = regionops.getRegion(i)
-
-            region.removeAllElements()
-
-            for z, fraction in material.composition.iteritems():
-                region.addElement(ep.symbol(z), weightFraction=fraction)
-
-            region.update() # Calculate number of elements, mean atomic number
-
-            region.User_Density = True
-            region.Rho = material.density_kg_m3
-            region.Name = material.name
-
-        # Thickness
-        if isinstance(geometry, MultiLayers):
-            layers = geometry.layers
-
-            for i, layer in enumerate(layers):
-                dim = geometry.get_dimensions(layer)
-                parameters = [abs(dim.zmax_m) * 1e9, abs(dim.zmin_m) * 1e9, 0.0, 0.0]
-                regionops.getRegion(i).setParameters(parameters)
-
-            if geometry.has_substrate():
-                dim = geometry.get_dimensions(geometry.substrate_body)
-                region = regionops.getRegion(regionops.getNumberRegions() - 1)
-
-                parameters = region.getParameters()
-                parameters[0] = abs(dim.zmax_m) * 1e9
-                parameters[2] = parameters[0] + 10.0
-                region.setParameters(parameters)
-
-        elif isinstance(geometry, GrainBoundaries):
-            layers = geometry.layers
-            assert len(layers) == regionops.getNumberRegions() - 2 # without substrates
-
-            # Left substrate
-            region = regionops.getRegion(0)
-            dim = geometry.get_dimensions(geometry.left_body)
-            parameters = region.getParameters()
-            parameters[1] = dim.xmax_m * 1e9
-            parameters[2] = parameters[1] - 10.0
-            region.setParameters(parameters)
-
-            # Layers
-            for i, layer in enumerate(layers):
-                dim = geometry.get_dimensions(layer)
-                parameters = [dim.xmin_m * 1e9, dim.xmax_m * 1e9, 0.0, 0.0]
-                regionops.getRegion(i + 1).setParameters(parameters)
-
-            # Right substrate
-            region = regionops.getRegion(regionops.getNumberRegions() - 1)
-            dim = geometry.get_dimensions(geometry.right_body)
-            parameters = region.getParameters()
-            parameters[0] = dim.xmin_m * 1e9
-            parameters[2] = parameters[0] + 10.0
-            region.setParameters(parameters)
+        _Exporter._export_geometry(self, options, simdata, simops)
 
         # Absorption energy electron
         abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
-                               geometry.get_materials()))
+                               options.geometry.get_materials()))
         simops.Eminimum = abs_electron_eV / 1000.0 # keV
+
+    def _geometry_substrate(self, options, geometry, simdata, simops):
+        regionops = simdata.getRegionOptions()
+
+        region = regionops.getRegion(0)
+        _setup_region_material(region, geometry.material)
+
+    def _geometry_multilayers(self, options, geometry, simdata, simops):
+        regionops = simdata.getRegionOptions()
+        layers = geometry.layers
+
+        for i, layer in enumerate(layers):
+            region = regionops.getRegion(i)
+            _setup_region_material(region, layer.material)
+
+            dim = geometry.get_dimensions(layer)
+            parameters = [abs(dim.zmax_m) * 1e9, abs(dim.zmin_m) * 1e9, 0.0, 0.0]
+            region.setParameters(parameters)
+
+        if geometry.has_substrate():
+            region = regionops.getRegion(regionops.getNumberRegions() - 1)
+            _setup_region_material(region, geometry.substrate_material)
+
+            dim = geometry.get_dimensions(geometry.substrate_body)
+            parameters = region.getParameters()
+            parameters[0] = abs(dim.zmax_m) * 1e9
+            parameters[2] = parameters[0] + 10.0
+            region.setParameters(parameters)
+
+    def _geometry_grainboundaries(self, options, geometry, simdata, simops):
+        regionops = simdata.getRegionOptions()
+        layers = geometry.layers
+        assert len(layers) == regionops.getNumberRegions() - 2 # without substrates
+
+        # Left substrate
+        region = regionops.getRegion(0)
+        _setup_region_material(region, geometry.left_material)
+
+        dim = geometry.get_dimensions(geometry.left_body)
+        parameters = region.getParameters()
+        parameters[1] = dim.xmax_m * 1e9
+        parameters[2] = parameters[1] - 10.0
+        region.setParameters(parameters)
+
+        # Layers
+        for i, layer in enumerate(layers):
+            region = regionops.getRegion(i + 1)
+            _setup_region_material(region, layer.material)
+
+            dim = geometry.get_dimensions(layer)
+            parameters = [dim.xmin_m * 1e9, dim.xmax_m * 1e9, 0.0, 0.0]
+            region.setParameters(parameters)
+
+        # Right substrate
+        region = regionops.getRegion(regionops.getNumberRegions() - 1)
+        _setup_region_material(region, geometry.right_material)
+
+        dim = geometry.get_dimensions(geometry.right_body)
+        parameters = region.getParameters()
+        parameters[0] = dim.xmin_m * 1e9
+        parameters[2] = parameters[0] + 10.0
+        region.setParameters(parameters)
 
     def _export_detectors(self, options, simdata, simops):
         simops.RangeFinder = 3 # Fixed range
@@ -173,14 +217,10 @@ class Exporter(_Exporter):
         _Exporter._export_detectors(self, options, simdata, simops)
 
         # Detector position
-        dets = {}
-        dets.update(options.detectors.findall(PhotonIntensityDetector))
-        dets.update(options.detectors.findall(PhiRhoZDetector))
+        dets = options.detectors.findall(_DelimitedDetector).values()
         if dets:
-            detector = dets.values()[0] # There should be at least one
-
-            simops.TOA = math.degrees(detector.takeoffangle_rad) # deg
-            simops.PhieRX = math.degrees(sum(detector.azimuth_rad) / 2.0) # deg
+            simops.TOA = math.degrees(dets[0].takeoffangle_rad) # deg
+            simops.PhieRX = math.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg
 
     def _beam_gaussian(self, options, beam, simdata, simops):
         simops.setIncidentEnergy_keV(beam.energy_eV / 1000.0) # keV
@@ -233,4 +273,42 @@ class Exporter(_Exporter):
 
     def _limit_showers(self, options, limit, simdata, simops):
         simops.setNumberElectrons(limit.showers)
+
+    def _model_elastic_cross_section(self, options, model, simdata, simops):
+        types = {ELASTIC_CROSS_SECTION.mott_czyzewski1990: CROSS_SECTION_MOTT_JOY,
+                 ELASTIC_CROSS_SECTION.mott_drouin1993: CROSS_SECTION_MOTT_EQUATION,
+                 ELASTIC_CROSS_SECTION.mott_browning1994: CROSS_SECTION_MOTT_BROWNING,
+                 ELASTIC_CROSS_SECTION.rutherford: CROSS_SECTION_MOTT_RUTHERFORD}
+        simops.setElasticCrossSectionType(types[model])
+
+    def _model_ionization_cross_section(self, options, model, simdata, simops):
+        types = {IONIZATION_CROSS_SECTION.gauvin: IONIZATION_CROSS_SECTION_GAUVIN,
+                 IONIZATION_CROSS_SECTION.pouchou1986: IONIZATION_CROSS_SECTION_POUCHOU,
+                 IONIZATION_CROSS_SECTION.brown_powell: IONIZATION_CROSS_SECTION_BROWN_POWELL,
+                 IONIZATION_CROSS_SECTION.casnati1982: IONIZATION_CROSS_SECTION_CASNATI,
+                 IONIZATION_CROSS_SECTION.gryzinsky: IONIZATION_CROSS_SECTION_GRYZINSKI,
+                 IONIZATION_CROSS_SECTION.jakoby: IONIZATION_CROSS_SECTION_JAKOBY}
+        simops.setIonizationCrossSectionType(types[model])
+
+    def _model_ionization_potential(self, options, model, simdata, simops):
+        types = {IONIZATION_POTENTIAL.joy_luo1989: IONIZATION_POTENTIAL_JOY,
+                 IONIZATION_POTENTIAL.berger_seltzer1964: IONIZATION_POTENTIAL_BERGER,
+                 IONIZATION_POTENTIAL.hovington: IONIZATION_POTENTIAL_HOVINGTON}
+        simops.setIonizationPotentialType(types[model])
+
+    def _model_random_number_generator(self, options, model, simdata, simops):
+        types = {RANDOM_NUMBER_GENERATOR.press1966_rand1: RANDOM_NUMBER_GENERATOR_PRESS_ET_AL,
+                 RANDOM_NUMBER_GENERATOR.mersenne: RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER}
+        simops.setRandomNumberGeneratorType(types[model])
+
+    def _model_direction_cosine(self, options, model, simdata, simops):
+        types = {DIRECTION_COSINE.soum1979: DIRECTION_COSINES_SOUM,
+               DIRECTION_COSINE.drouin1996: DIRECTION_COSINES_DROUIN}
+        simops.setDirectionCosines(types[model])
+
+    def _model_energy_loss(self, options, model, simdata, simops):
+        types = {ENERGY_LOSS.joy_luo1989: ENERGY_LOSS_JOY_LUO}
+        simops.setEnergyLossType(types[model])
+
+
 
