@@ -31,7 +31,8 @@ from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries
 from pymontecarlo.input.base.limit import ShowersLimit
 from pymontecarlo.input.base.detector import \
-    (BackscatteredElectronEnergyDetector,
+    (_DelimitedDetector,
+     BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      PhiRhoZDetector,
      PhotonIntensityDetector,
@@ -110,23 +111,26 @@ class Converter(_Converter):
             if len(options.detectors.findall(clasz)) > 1:
                 raise ConversionException, "There can only one '%s' detector" % clasz.__name__
 
-        # Assert delimited detector of the PhotonIntensityDetector and
-        # PhiRhoZDetector are equal
-        intensities = options.detectors.findall(PhotonIntensityDetector)
-        phirhozs = options.detectors.findall(PhiRhoZDetector)
+        # Assert elevation and azimuth of delimited detectors are equal
+        detectors = options.detectors.findall(_DelimitedDetector).values()
+        if not detectors:
+            return
 
-        if intensities and phirhozs:
-            intensity = intensities.values()[0]
-            phirhoz = phirhozs.values()[0]
+        detector_class = detectors[0].__class__.__name__
+        elevation_rad = detectors[0].elevation_rad
+        azimuth_rad = detectors[0].azimuth_rad
 
-            if abs(intensity.elevation_rad[0] - phirhoz.elevation_rad[0]) > 1e-6 or \
-                    abs(intensity.elevation_rad[1] - phirhoz.elevation_rad[1]) > 1e-6:
+        for detector in detectors[1:]:
+            if abs(elevation_rad[0] - detector.elevation_rad[0]) > 1e-6 or \
+                    abs(elevation_rad[1] - detector.elevation_rad[1]) > 1e-6:
                 raise ConversionException, \
-                    "The elevation of the 'PhotonIntensityDetector' (%s) should be the same as the one of the 'PhiRhoZDetector' (%s)" % \
-                    (str(intensity.elevation_rad), str(phirhoz.elevation_rad))
+                    "The elevation of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
+                        (detector_class, str(elevation_rad),
+                         detector.__class__.__name__, str(detector.elevation_rad))
 
-            if abs(intensity.azimuth_rad[0] - phirhoz.azimuth_rad[0]) > 1e-6 or \
-                    abs(intensity.azimuth_rad[1] - phirhoz.azimuth_rad[1]) > 1e-6:
+            if abs(azimuth_rad[0] - detector.azimuth_rad[0]) > 1e-6 or \
+                    abs(azimuth_rad[1] - detector.azimuth_rad[1]) > 1e-6:
                 raise ConversionException, \
-                    "The azimuth of the 'PhotonIntensityDetector' (%s) should be the same as the one of the 'PhiRhoZDetector' (%s)" % \
-                    (str(intensity.azimuth_rad), str(phirhoz.azimuth_rad))
+                    "The azimuth of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
+                        (detector_class, str(elevation_rad),
+                         detector.__class__.__name__, str(detector.elevation_rad))
