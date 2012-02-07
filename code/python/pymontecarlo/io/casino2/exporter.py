@@ -294,7 +294,7 @@ class Exporter(_Exporter):
 
     def _model_ionization_potential(self, options, model, simdata, simops):
         types = {IONIZATION_POTENTIAL.joy_luo1989: IONIZATION_POTENTIAL_JOY,
-                 IONIZATION_POTENTIAL.berger_seltzer1964: IONIZATION_POTENTIAL_BERGER,
+                 IONIZATION_POTENTIAL.berger_seltzer1983: IONIZATION_POTENTIAL_BERGER,
                  IONIZATION_POTENTIAL.hovington: IONIZATION_POTENTIAL_HOVINGTON}
         simops.setIonizationPotentialType(types[model])
 
