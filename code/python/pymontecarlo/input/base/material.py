@@ -241,9 +241,8 @@ class Material(Option):
     def composition(self):
         """
         Composition of this material.
-        The composition is specified by a list of tuple.
-        The first element of each tuple is the atomic number and the second
-        is the weight fraction.
+        The composition is specified by a dictionary.
+        The keys are atomic numbers and values are weight fractions.
         """
         return dict(self._props['composition']) # copy
 
