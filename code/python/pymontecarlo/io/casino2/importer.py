@@ -71,6 +71,7 @@ class Importer(_Importer):
     def _detector_photon_intensity(self, options, name, detector, simdata):
         cas_intensities = simdata.getTotalXrayIntensities()
         factor = detector.solidangle_sr / (0.0025 * 1e9)
+        if factor == 0.0: factor = 1.0
 
         intensities = {}
         for z in cas_intensities:
