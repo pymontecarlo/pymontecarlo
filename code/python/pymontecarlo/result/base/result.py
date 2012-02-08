@@ -191,6 +191,35 @@ class PhotonIntensityResult(_Result):
 
         return total_val, total_unc
 
+    def has_intensity(self, transition):
+        """
+        Returns whether the result contains an intensity for the specified 
+        transition.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples in :meth:`.intensity`)
+        """
+        if isinstance(transition, basestring):
+            transition = from_string(transition)
+
+        # Get intensity data
+        data = []
+        if isinstance(transition, Iterable): # transitionset
+            if transition in self._intensities:
+                data.append(self._intensities[transition])
+            else:
+                for t in transition:
+                    if t in self._intensities: # Add only known transitions
+                        data.append(self._intensities[t])
+
+            if not data:
+                return False
+        else: # single transition
+            if not self._intensities.has_key(transition):
+                return False
+
+        return True
+
     def intensity(self, transition, absorption=True, fluorescence=True):
         """
         Returns the intensity (and its uncertainty) in counts / (sr.A).

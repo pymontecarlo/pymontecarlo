@@ -152,6 +152,12 @@ class TestPhotonIntensityResult(unittest.TestCase):
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
         self.assertAlmostEqual(4.378803, err, 4)
 
+    def testhas_intensity(self):
+        self.assertTrue(self.r.has_intensity(self.t1))
+        self.assertTrue(self.r.has_intensity(self.t2))
+        self.assertTrue(self.r.has_intensity(self.t3))
+        self.assertFalse(self.r.has_intensity('Cu Ma'))
+
     def testcharacteristic_fluorescence(self):
         # Transition 1
         val, err = self.r.characteristic_fluorescence(self.t1)
