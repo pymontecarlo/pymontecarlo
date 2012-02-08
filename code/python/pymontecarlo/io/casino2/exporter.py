@@ -38,6 +38,7 @@ from pymontecarlo.input.base.detector import \
      PhiRhoZDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
+     ElectronFractionDetector,
      )
 from pymontecarlo.input.base.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -93,6 +94,8 @@ class Exporter(_Exporter):
             self._detector_phirhoz
         self._detector_exporters[PhotonIntensityDetector] = \
             self._detector_photon_intensity
+        self._detector_exporters[ElectronFractionDetector] = \
+            self._detector_electron_fraction
 
         self._limit_exporters[ShowersLimit] = self._limit_showers
 
@@ -272,6 +275,9 @@ class Exporter(_Exporter):
 
     def _detector_photon_intensity(self, options, name, detector, simdata, simops):
         simops.FEmissionRX = 1 # Simulate x-rays
+
+    def _detector_electron_fraction(self, options, name, detector, simdata, simops):
+        pass
 
     def _limit_showers(self, options, limit, simdata, simops):
         simops.setNumberElectrons(limit.showers)

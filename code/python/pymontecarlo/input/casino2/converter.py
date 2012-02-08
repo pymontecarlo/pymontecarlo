@@ -37,6 +37,7 @@ from pymontecarlo.input.base.detector import \
      PhiRhoZDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
+     ElectronFractionDetector,
      )
 from pymontecarlo.input.base.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -51,6 +52,7 @@ class Converter(_Converter):
     DETECTORS = [BackscatteredElectronEnergyDetector,
                  TransmittedElectronEnergyDetector,
                  BackscatteredElectronPolarAngularDetector,
+                 ElectronFractionDetector,
                  PhiRhoZDetector,
                  PhotonIntensityDetector]
     LIMITS = [ShowersLimit]
