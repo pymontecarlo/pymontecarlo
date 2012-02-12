@@ -184,11 +184,20 @@ ELASTIC_CROSS_SECTION_TYPE = ModelType('elastic cross section')
 ELASTIC_CROSS_SECTION = ModelCategory(ELASTIC_CROSS_SECTION_TYPE)
 ELASTIC_CROSS_SECTION.mott_czyzewski1990 = \
     Model('Mott by interpolation (Czyzewski)', 'Czyzewski (1990)')
+ELASTIC_CROSS_SECTION.mott_czyzewski1990_linear = \
+    Model('Mott by linear interpolation (Czyzewski)', 'Czyzewski (1990)')
+ELASTIC_CROSS_SECTION.mott_czyzewski1990_powerlaw = \
+    Model('Mott by power law interpolation (Czyzewski)', 'Czyzewski (1990)')
+ELASTIC_CROSS_SECTION.mott_czyzewski1990_cubicspline = \
+    Model('Mott by cubic spline interpolation (Czyzewski)', 'Czyzewski (1990)')
+ELASTIC_CROSS_SECTION.mott_demers = \
+    Model('Mott parametrized (Demers)', 'Demers')
 ELASTIC_CROSS_SECTION.mott_drouin1993 = \
     Model('Mott by equation (Drouin)', 'Drouin and Gauvin (1993)')
 ELASTIC_CROSS_SECTION.mott_browning1994 = \
     Model('Mott by equation (Browning)', 'Browning (1994)')
 ELASTIC_CROSS_SECTION.rutherford = Model('Rutherford')
+ELASTIC_CROSS_SECTION.rutherford_relativistic = Model('Rutherford relativistic')
 ELASTIC_CROSS_SECTION.elsepa2005 = Model('ELSEPA', 'Salvat, F., Jablonski, A., & Powell, C. (2005). ELSEPA - Dirac partial-wave calculation of elastic scattering of electrons and positrons by atoms, positive ions and molecules. Comput. Phys. Commun., 165, 157-190.')
 
 #-------------------------------------------------------------------------------
