@@ -73,6 +73,7 @@ class Converter(_Converter):
                                               IONIZATION_CROSS_SECTION.pouchou1986],
               IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.berger_seltzer1964,
                                           IONIZATION_POTENTIAL.berger_seltzer1983,
+                                          IONIZATION_POTENTIAL.berger_seltzer1983_citzaf,
                                           IONIZATION_POTENTIAL.bloch1933,
                                           IONIZATION_POTENTIAL.duncumb_decasa1969,
                                           IONIZATION_POTENTIAL.heinrich_yakowitz1970,

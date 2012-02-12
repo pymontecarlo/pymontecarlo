@@ -244,6 +244,8 @@ IONIZATION_POTENTIAL.berger_seltzer1964 = \
     Model("Berger & Seltzer 1964", "Berger MJ, Seltzer S. NASA Technical Publication SP-4012 (1964)")
 IONIZATION_POTENTIAL.berger_seltzer1983 = \
     Model("Berger & Seltzer 1983", "Berger MJ, Seltzer S. NBSIR 82-2550-A - US Dept of Commerce, Washington DC (1983)")
+IONIZATION_POTENTIAL.berger_seltzer1983_citzaf = \
+    Model("Berger & Seltzer 1983 (CITZAF)", "Berger and Seltzer as implemented by CITZAF 3.06")
 IONIZATION_POTENTIAL.zeller1975 = \
     Model("Zeller 1975", "Zeller C in Ruste J, Gantois M, J. Phys. D. Appl. Phys 8, 872 (1975)")
 IONIZATION_POTENTIAL.duncumb_decasa1969 = \
