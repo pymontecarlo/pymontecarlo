@@ -173,7 +173,7 @@ public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
         ionizationPotentialLUT.put("Berger & Seltzer 1983",
                 MeanIonizationPotential.Berger83);
         ionizationPotentialLUT.put("Berger & Seltzer 1983 (CITZAF)",
-                MeanIonizationPotential.Berger83);
+                MeanIonizationPotential.BergerAndSeltzerCITZAF);
         ionizationPotentialLUT.put("Zeller 1975",
                 MeanIonizationPotential.Zeller75);
         ionizationPotentialLUT.put("Duncumb & DeCasa 1969",
