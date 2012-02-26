@@ -24,7 +24,7 @@ public class BeamExtractorFactory implements ExtractorFactory<BeamExtractor> {
     /** Extractor for a <code>GaussianFWHMBeam</code>. */
     public static final BeamExtractor GAUSSIAN_FWHM =
             new AbstractBeamExtractor(
-                    "pymontecarlo.input.base.beam.GaussianBeam") {
+                    "pymontecarlo.input.base.beam.GaussianBeam", "gaussianBeam") {
 
                 @Override
                 public ElectronGun extract(Element beamImplElement)
@@ -44,7 +44,7 @@ public class BeamExtractorFactory implements ExtractorFactory<BeamExtractor> {
 
     /** Extractor for a <code>PencilBeam</code>. */
     public static final BeamExtractor PENCIL = new AbstractBeamExtractor(
-            "pymontecarlo.input.base.beam.PencilBeam") {
+            "pymontecarlo.input.base.beam.PencilBeam", "pencilBeam") {
 
         @Override
         public ElectronGun extract(Element beamImplElement) throws IOException,

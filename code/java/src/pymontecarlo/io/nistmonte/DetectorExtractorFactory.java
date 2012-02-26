@@ -28,7 +28,8 @@ public class DetectorExtractorFactory implements
     /** Photon intensity detector extractor. */
     public static final DetectorExtractor PHOTON_INTENSITY =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.PhotonIntensityDetector") {
+                    "pymontecarlo.input.base.detector.PhotonIntensityDetector",
+                    "photonIntensityDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -44,7 +45,8 @@ public class DetectorExtractorFactory implements
     /** Backscattered electron energy detector extractor. */
     public static final DetectorExtractor BACKSCATTERED_ELECTRON_ENERGY =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.BackscatteredElectronEnergyDetector") {
+                    "pymontecarlo.input.base.detector.BackscatteredElectronEnergyDetector",
+                    "backscatteredElectronEnergyDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -60,7 +62,8 @@ public class DetectorExtractorFactory implements
     /** Transmitted electron energy detector extractor. */
     public static final DetectorExtractor TRANSMITTED_ELECTRON_ENERGY =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.TransmittedElectronEnergyDetector") {
+                    "pymontecarlo.input.base.detector.TransmittedElectronEnergyDetector",
+                    "transmittedElectronEnergyDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -76,7 +79,8 @@ public class DetectorExtractorFactory implements
     /** Backscattered electron elevation angular detector extractor. */
     public static final DetectorExtractor BACKSCATTERED_ELECTRON_ELEVATION_ANGULAR =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.BackscatteredElectronPolarAngularDetector") {
+                    "pymontecarlo.input.base.detector.BackscatteredElectronPolarAngularDetector",
+                    "backscatteredElectronPolarAngularDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -93,7 +97,8 @@ public class DetectorExtractorFactory implements
     /** Transmitted electron elevation angular detector extractor. */
     public static final DetectorExtractor TRANSMITTED_ELECTRON_ELEVATION_ANGULAR =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.TransmittedElectronPolarAngularDetector") {
+                    "pymontecarlo.input.base.detector.TransmittedElectronPolarAngularDetector",
+                    "transmittedElectronPolarAngularDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -110,7 +115,8 @@ public class DetectorExtractorFactory implements
     /** Backscattered electron azimuthal angular detector extractor. */
     public static final DetectorExtractor BACKSCATTERED_ELECTRON_AZIMUTHAL_ANGULAR =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.BackscatteredElectronAzimuthalAngularDetector") {
+                    "pymontecarlo.input.base.detector.BackscatteredElectronAzimuthalAngularDetector",
+                    "backscatteredElectronAzimuthalAngularDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -127,7 +133,8 @@ public class DetectorExtractorFactory implements
     /** Transmitted electron azimuthal angular detector extractor. */
     public static final DetectorExtractor TRANSMITTED_ELECTRON_AZIMUTHAL_ANGULAR =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.TransmittedElectronAzimuthalAngularDetector") {
+                    "pymontecarlo.input.base.detector.TransmittedElectronAzimuthalAngularDetector",
+                    "transmittedElectronAzimuthalAngularDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -144,7 +151,8 @@ public class DetectorExtractorFactory implements
     /** Photon spectrum detector extractor. */
     public static final DetectorExtractor PHOTON_SPECTRUM =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.PhotonSpectrumDetector") {
+                    "pymontecarlo.input.base.detector.PhotonSpectrumDetector",
+                    "photonSpectrumDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)
@@ -163,7 +171,8 @@ public class DetectorExtractorFactory implements
 
     /** Time detector extractor. */
     public static final DetectorExtractor TIME = new AbstractDetectorExtractor(
-            "pymontecarlo.input.base.detector.TimeDetector") {
+            "pymontecarlo.input.base.detector.TimeDetector",
+            "timeDetector") {
 
         @Override
         public Detector extract(Element detectorElement) throws IOException,
@@ -175,7 +184,8 @@ public class DetectorExtractorFactory implements
     /** Electron fraction detector extractor. */
     public static final DetectorExtractor ELECTRON_FRACTION =
             new AbstractDetectorExtractor(
-                    "pymontecarlo.input.base.detector.ElectronFractionDetector") {
+                    "pymontecarlo.input.base.detector.ElectronFractionDetector",
+                    "electronFractionDetector") {
 
                 @Override
                 public Detector extract(Element detectorElement)

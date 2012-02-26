@@ -57,8 +57,7 @@ public class GeometryExtractorFactoryTest {
             int index) {
         Material mat = model.getMaterial();
 
-        Element element =
-                new Element("pymontecarlo.input.base.material.Material");
+        Element element = new Element("material");
         element.setAttribute("index", Integer.toString(index));
         element.setAttribute("name", mat.getName());
         element.setAttribute("density", Double.toString(mat.getDensity()));
@@ -85,7 +84,7 @@ public class GeometryExtractorFactoryTest {
 
 
     private static Element createBodyElement(int index, int materialIndex) {
-        Element element = new Element("pymontecarlo.input.base.body.Body");
+        Element element = new Element("body");
 
         element.setAttribute("index", Integer.toString(index));
         element.setAttribute("material", Integer.toString(materialIndex));
@@ -97,7 +96,7 @@ public class GeometryExtractorFactoryTest {
 
     private static Element createLayerElement(int index, int materialIndex,
             double thickness) {
-        Element element = new Element("pymontecarlo.input.base.body.Layer");
+        Element element = new Element("layer");
 
         element.setAttribute("index", Integer.toString(index));
         element.setAttribute("material", Integer.toString(materialIndex));
@@ -110,7 +109,7 @@ public class GeometryExtractorFactoryTest {
 
     public static Element createSubstrateGeometryElement() throws EPQException {
         Element element =
-                new Element("pymontecarlo.input.base.geometry.Substrate");
+                new Element("substrate");
         element.setAttribute("substrate", "0");
         element.setAttribute("rotation", "0.0");
         element.setAttribute("tilt", Double.toString(Math.toRadians(30.0)));
@@ -168,7 +167,7 @@ public class GeometryExtractorFactoryTest {
     public static Element createMultiLayersGeometryElement()
             throws EPQException {
         Element element =
-                new Element("pymontecarlo.input.base.geometry.MultiLayers");
+                new Element("multiLayers");
         element.setAttribute("substrate", "2");
         element.setAttribute("layers", "0,1");
         element.setAttribute("tilt", Double.toString(Math.toRadians(30.0)));
@@ -255,7 +254,7 @@ public class GeometryExtractorFactoryTest {
     public static Element createGrainBoundariesGeometryElement()
             throws EPQException {
         Element element =
-                new Element("pymontecarlo.input.base.geometry.GrainBoundaries");
+                new Element("grainBoundaries");
         element.setAttribute("left_substrate", "0");
         element.setAttribute("right_substrate", "2");
         element.setAttribute("layers", "1");

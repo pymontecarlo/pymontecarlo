@@ -27,6 +27,7 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.input.base.option import Option
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -125,6 +126,9 @@ class PencilBeam(Option):
             raise ValueError, "Aperture (%s) must be between [0, pi/2] rad." % aperture
         self._props['aperture'] = aperture
 
+XMLIO.register('pencilBeam', PencilBeam)
+XMLIO.register_loader('pymontecarlo.input.base.beam.PencilBeam', PencilBeam)
+
 class GaussianBeam(PencilBeam):
     def __init__(self, energy_eV, diameter_m, origin_m=(0, 0, 1),
                  direction=(0, 0, -1), aperture_rad=0.0):
@@ -161,6 +165,9 @@ class GaussianBeam(PencilBeam):
         if diameter < 0:
             raise ValueError, "Diameter (%s) must be equal or greater than 0." % diameter
         self._props['diameter'] = diameter
+
+XMLIO.register('gaussianBeam', GaussianBeam)
+XMLIO.register_loader('pymontecarlo.input.base.beam.GaussianBeam', GaussianBeam)
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """

@@ -13,8 +13,10 @@ import gov.nist.microanalysis.Utility.Math2;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jdom.Element;
 
@@ -81,22 +83,31 @@ public abstract class AbstractGeometryExtractor extends AbstractExtractor
     }
 
     /** XML tag for a body. */
-    private static final String TAG_BODY = "pymontecarlo.input.base.body.Body";
+    private static final Set<String> TAGS_BODY;
 
     /** XML tag for a layer. */
-    private static final String TAG_LAYER =
-            "pymontecarlo.input.base.body.Layer";
+    private static final Set<String> TAGS_LAYER;
+
+    static {
+        TAGS_BODY = new HashSet<String>();
+        TAGS_BODY.add("pymontecarlo.input.base.body.Body");
+        TAGS_BODY.add("body");
+
+        TAGS_LAYER = new HashSet<String>();
+        TAGS_LAYER.add("pymontecarlo.input.base.body.Layer");
+        TAGS_LAYER.add("layer");
+    }
 
 
 
     /**
      * Creates a new <code>AbstractGeometryExtractor</code>.
      * 
-     * @param tag
-     *            required XML tag
+     * @param tags
+     *            required XML tag(s)
      */
-    public AbstractGeometryExtractor(String tag) {
-        super(tag);
+    public AbstractGeometryExtractor(String... tags) {
+        super(tags);
     }
 
 
@@ -167,9 +178,9 @@ public abstract class AbstractGeometryExtractor extends AbstractExtractor
                     JDomUtils.getIntegerFromAttribute(bodyElement, "material");
             material = materials.get(materialIndex);
 
-            if (bodyElement.getName().equals(TAG_BODY)) {
+            if (TAGS_BODY.contains(bodyElement.getName())) {
                 body = new Body(material);
-            } else if (bodyElement.getName().equals(TAG_LAYER)) {
+            } else if (TAGS_LAYER.contains(bodyElement.getName())) {
                 thickness =
                         JDomUtils.getDoubleFromAttribute(bodyElement,
                                 "thickness");

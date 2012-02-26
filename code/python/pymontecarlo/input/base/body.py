@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 # Local modules.
 from pymontecarlo.input.base.option import Option
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -48,7 +48,7 @@ class Body(Option):
     def __loadxml__(cls, element, material=None, *args, **kwargs):
         if material is None:
             child = list(element.find('material'))[0]
-            material = objectxml.from_xml(child)
+            material = XMLIO.from_xml(child)
 
         return cls(material)
 
@@ -64,6 +64,9 @@ class Body(Option):
     @material.setter
     def material(self, m):
         self._props['material'] = m
+
+XMLIO.register('body', Body)
+XMLIO.register_loader('pymontecarlo.input.base.body.Body', Body)
 
 class Layer(Body):
     def __init__(self, material, thickness_m):
@@ -109,3 +112,5 @@ class Layer(Body):
             raise ValueError, "Thickness (%s) must be greater than 0." % thickness
         self._props['thickness'] = thickness
 
+XMLIO.register('layer', Layer)
+XMLIO.register_loader('pymontecarlo.input.base.body.Layer', Layer)

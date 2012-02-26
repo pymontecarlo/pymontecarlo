@@ -1,5 +1,9 @@
 package pymontecarlo.io.nistmonte;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.jdom.Element;
 
 /**
@@ -10,24 +14,25 @@ import org.jdom.Element;
 public abstract class AbstractExtractor implements Extractor {
 
     /** XML tag. */
-    private final String tag;
+    private final Set<String> tags;
 
 
 
     /**
      * Creates a new <code>AbstractExtractor</code>.
      * 
-     * @param tag
-     *            required XML tag
+     * @param tags
+     *            required XML tag(s)
      */
-    public AbstractExtractor(String tag) {
-        this.tag = tag;
+    public AbstractExtractor(String... tags) {
+        this.tags = new HashSet<String>();
+        this.tags.addAll(Arrays.asList(tags));
     }
 
 
 
     @Override
     public boolean canExtract(Element element) {
-        return element.getName().equals(tag);
+        return tags.contains(element.getName());
     }
 }

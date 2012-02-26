@@ -40,7 +40,7 @@ public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
      *            <code>AlgorithmClass</code> corresponding to the model type
      */
     private static class ModelExtractorImpl<T extends AlgorithmClass>
-            implements ModelExtractor {
+            extends AbstractExtractor implements ModelExtractor {
 
         /** Model type. */
         private final String type;
@@ -50,9 +50,6 @@ public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
 
         /** Look-up table for the algorithm class. */
         private final Map<String, T> lut;
-
-        /** XML tag. */
-        private static final String TAG = "pymontecarlo.input.base.model.Model";
 
 
 
@@ -70,6 +67,8 @@ public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
          */
         public ModelExtractorImpl(String type, Class<T> clasz,
                 Map<String, ? extends T> lut) {
+            super("pymontecarlo.input.base.model.Model", "model");
+
             this.type = type;
             this.clasz = clasz;
 
@@ -82,7 +81,7 @@ public class ModelExtractorFactory implements ExtractorFactory<ModelExtractor> {
 
         @Override
         public boolean canExtract(Element element) {
-            return element.getName().equals(TAG)
+            return super.canExtract(element)
                     && JDomUtils.getStringFromAttribute(element, "type")
                             .equals(type);
         }

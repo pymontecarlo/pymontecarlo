@@ -25,7 +25,7 @@ from collections import MutableMapping, MutableSet
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.material import pure
@@ -144,23 +144,23 @@ class Options(Option):
         options = cls(element.get('name'))
 
         child = list(element.find("beam"))[0]
-        options.beam = objectxml.from_xml(child, *args, **kwargs)
+        options.beam = XMLIO.from_xml(child, *args, **kwargs)
 
         child = list(element.find("geometry"))[0]
-        options.geometry = objectxml.from_xml(child, *args, **kwargs)
+        options.geometry = XMLIO.from_xml(child, *args, **kwargs)
 
         children = list(element.find("detectors") or [])
         for child in children:
             key = child.get('_key')
-            options.detectors[key] = objectxml.from_xml(child, *args, **kwargs)
+            options.detectors[key] = XMLIO.from_xml(child, *args, **kwargs)
 
         children = list(element.find("limits") or [])
         for child in children:
-            options.limits.add(objectxml.from_xml(child, *args, **kwargs))
+            options.limits.add(XMLIO.from_xml(child, *args, **kwargs))
 
         children = list(element.find("models") or [])
         for child in children:
-            options.models.add(objectxml.from_xml(child, *args, **kwargs))
+            options.models.add(XMLIO.from_xml(child, *args, **kwargs))
 
         return options
 
@@ -310,3 +310,6 @@ class Options(Option):
         element = self.to_xml()
         output = minidom.parseString(tostring(element)).toprettyxml()
         fileobj.write(output)
+
+XMLIO.register('options', Options)
+XMLIO.register_loader('pymontecarlo.input.base.options.Options', Options)

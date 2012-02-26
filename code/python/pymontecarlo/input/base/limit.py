@@ -26,6 +26,7 @@ from xml.etree.ElementTree import Element
 # Local modules.
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.transition import Transition
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -85,6 +86,9 @@ class TimeLimit(Option):
             raise ValueError, "Time (%s) must be greater than 0." % time
         self._props['time'] = long(time)
 
+XMLIO.register('timeLimit', TimeLimit)
+XMLIO.register_loader('pymontecarlo.input.base.limit.TimeLimit', TimeLimit)
+
 class ShowersLimit(Option):
     def __init__(self, showers):
         Option.__init__(self)
@@ -114,6 +118,9 @@ class ShowersLimit(Option):
         if showers < 1:
             raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
         self._props['showers'] = long(showers)
+
+XMLIO.register('showersLimit', ShowersLimit)
+XMLIO.register_loader('pymontecarlo.input.base.limit.ShowersLimit', ShowersLimit)
 
 class UncertaintyLimit(_TransitionLimit):
     def __init__(self, transition, uncertainty):
@@ -147,3 +154,5 @@ class UncertaintyLimit(_TransitionLimit):
             raise ValueError, "Relative uncertainty (%s) must be between [0.0, 1.0]." % unc
         self._props['uncertainty'] = unc
 
+XMLIO.register('uncertaintyLimit', UncertaintyLimit)
+XMLIO.register_loader('pymontecarlo.input.base.limit.UncertaintyLimit', UncertaintyLimit)

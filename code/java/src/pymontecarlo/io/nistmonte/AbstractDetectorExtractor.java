@@ -15,11 +15,11 @@ public abstract class AbstractDetectorExtractor extends AbstractExtractor
     /**
      * Creates a new <code>AbstractDetectorExtractor</code>.
      * 
-     * @param tag
-     *            required XML tag
+     * @param tags
+     *            required XML tag(s)
      */
-    public AbstractDetectorExtractor(String tag) {
-        super(tag);
+    public AbstractDetectorExtractor(String... tags) {
+        super(tags);
     }
 
 

@@ -16,7 +16,7 @@ public class BeamExtractorFactoryTest {
 
     public static Element createPencilBeamElement() {
         Element element =
-                new Element("pymontecarlo.input.base.beam.PencilBeam");
+                new Element("pencilBeam");
         element.setAttribute("energy", "1234");
 
         Element child = new Element("origin");
@@ -39,7 +39,7 @@ public class BeamExtractorFactoryTest {
     public static Element createGaussianFWHMBeamElement() {
         Element element = createPencilBeamElement();
 
-        element.setName("pymontecarlo.input.base.beam.GaussianBeam");
+        element.setName("gaussianBeam");
         element.setAttribute("diameter", "1e-8");
 
         return element;

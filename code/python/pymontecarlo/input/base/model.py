@@ -24,7 +24,7 @@ import collections
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import XMLIO, objectxml
 
 # Globals and constants variables.
 
@@ -147,6 +147,9 @@ class Model(objectxml):
         if not self._type:
             raise ValueError, "No type. Model is unregistered."
         return self._type
+
+XMLIO.register('model', Model)
+XMLIO.register_loader('pymontecarlo.input.base.model.Model', Model)
 
 class ModelCategory(collections.Set):
 

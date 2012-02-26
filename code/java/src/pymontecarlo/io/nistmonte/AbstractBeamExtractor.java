@@ -20,11 +20,11 @@ public abstract class AbstractBeamExtractor extends AbstractExtractor implements
     /**
      * Creates a new <code>AbstractBeamExtractor</code>.
      * 
-     * @param tag
-     *            required XML tag
+     * @param tags
+     *            required XML tag(s)
      */
-    public AbstractBeamExtractor(String tag) {
-        super(tag);
+    public AbstractBeamExtractor(String... tags) {
+        super(tags);
     }
 
 

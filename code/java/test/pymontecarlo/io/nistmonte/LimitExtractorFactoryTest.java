@@ -15,7 +15,7 @@ public class LimitExtractorFactoryTest {
 
     public static Element createShowersLimitElement() {
         Element element =
-                new Element("pymontecarlo.input.base.limit.ShowersLimit");
+                new Element("showersLimit");
 
         element.setAttribute("showers", "1234");
 

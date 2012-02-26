@@ -28,7 +28,7 @@ public class GeometryExtractorFactory implements
     /** Substrate extractor. */
     public static final GeometryExtractor SUBSTRATE =
             new AbstractGeometryExtractor(
-                    "pymontecarlo.input.base.geometry.Substrate") {
+                    "pymontecarlo.input.base.geometry.Substrate", "substrate") {
 
                 @Override
                 public double[] extract(Element geometryImplElement,
@@ -62,7 +62,8 @@ public class GeometryExtractorFactory implements
     /** Multi-layers extractor. */
     public static final GeometryExtractor MULTI_LAYERS =
             new AbstractGeometryExtractor(
-                    "pymontecarlo.input.base.geometry.MultiLayers") {
+                    "pymontecarlo.input.base.geometry.MultiLayers",
+                    "multiLayers") {
 
                 @Override
                 public double[] extract(Element geometryImplElement,
@@ -134,7 +135,8 @@ public class GeometryExtractorFactory implements
     /** Grain boundaries extractor. */
     public static final GeometryExtractor GRAIN_BOUNDARIES =
             new AbstractGeometryExtractor(
-                    "pymontecarlo.input.base.geometry.GrainBoundaries") {
+                    "pymontecarlo.input.base.geometry.GrainBoundaries",
+                    "grainBoundaries") {
 
                 @Override
                 public double[] extract(Element geometryImplElement,

@@ -19,7 +19,6 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import sys
 from xml.etree.ElementTree import Element
 
 # Third party modules.
@@ -39,21 +38,60 @@ class objectxml(object):
 
     @classmethod
     def from_xml(cls, element, *args, **kwargs):
-        module, name = element.tag.rsplit('.', 1)
+        return XMLIO.from_xml(element, *args, **kwargs)
 
-        # This import technique is the same as the one used in pickle
-        # See Unpickler.find_class
-        __import__(module)
-        mod = sys.modules[module]
-        klass = getattr(mod, name)
+    def to_xml(self, *args, **kwargs):
+        return XMLIO.to_xml(self, *args, **kwargs)
+
+class _XMLIO(object):
+    def __init__(self):
+        self._loaders = {}
+        self._savers = {}
+
+    def register(self, tag, klass):
+        self.register_loader(tag, klass)
+        self.register_saver(tag, klass)
+
+    def register_loader(self, tag, klass):
+        if tag in self._loaders and self._loaders.get(tag) != klass:
+            raise ValueError, 'A class (%s) is already registered with the tag (%s).' % \
+                (self._loaders[tag].__name__, tag)
+
+        if not issubclass(klass, objectxml):
+            raise ValueError, 'The class (%s) must be a subclass of objectxml.' % \
+                klass.__name__
+
+        self._loaders[tag] = klass
+
+    def register_saver(self, tag, klass):
+        if klass in self._savers and self._savers.get(klass) != tag:
+            raise ValueError, 'A tag (%s) is already associated with class (%s).' % \
+                (self._savers[klass], klass.__name__)
+
+        if not issubclass(klass, objectxml):
+            raise ValueError, 'The class (%s) must be a subclass of objectxml.' % \
+                klass.__name__
+
+        self._savers[klass] = tag
+
+    def from_xml(self, element, *args, **kwargs):
+        tag = element.tag
+        if tag not in self._loaders:
+            raise ValueError, 'No loader found for element (%s). Please register it first.' % tag
+        klass = self._loaders[tag]
 
         return klass.__loadxml__(element, *args, **kwargs)
 
-    def to_xml(self, *args, **kwargs):
-        name = self.__class__.__module__ + "." + self.__class__.__name__
-        element = Element(name)
+    def to_xml(self, obj, *args, **kwargs):
+        klass = obj.__class__
+        if klass not in self._savers:
+            raise ValueError, 'No saver found for class (%s). Please register it first.' % klass
 
-        self.__savexml__(element, *args, **kwargs)
+        tag = self._savers[klass]
+        element = Element(tag)
+
+        obj.__savexml__(element, *args, **kwargs)
 
         return element
 
+XMLIO = _XMLIO()

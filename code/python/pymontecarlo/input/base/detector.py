@@ -25,6 +25,7 @@ import math
 
 # Local modules.
 from pymontecarlo.input.base.option import Option
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -375,26 +376,50 @@ class _AzimuthalAngularDetector(_AngularDetector):
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
 
+XMLIO.register('backscatteredElectronEnergyDetector', BackscatteredElectronEnergyDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronEnergyDetector', BackscatteredElectronEnergyDetector)
+
 class TransmittedElectronEnergyDetector(_EnergyDetector):
     pass
+
+XMLIO.register('transmittedElectronEnergyDetector', TransmittedElectronEnergyDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronEnergyDetector', TransmittedElectronEnergyDetector)
 
 class BackscatteredElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
+XMLIO.register('backscatteredElectronPolarAngularDetector', BackscatteredElectronPolarAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronPolarAngularDetector', BackscatteredElectronPolarAngularDetector)
+
 class TransmittedElectronPolarAngularDetector(_PolarAngularDetector):
     pass
+
+XMLIO.register('transmittedElectronPolarAngularDetector', TransmittedElectronPolarAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronPolarAngularDetector', TransmittedElectronPolarAngularDetector)
 
 class BackscatteredElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
+XMLIO.register('backscatteredElectronAzimuthalAngularDetector', BackscatteredElectronAzimuthalAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronAzimuthalAngularDetector', BackscatteredElectronAzimuthalAngularDetector)
+
 class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
+
+XMLIO.register('transmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
 
 class PhotonPolarAngularDetector(_PolarAngularDetector):
     pass
 
+XMLIO.register('photonPolarAngularDetector', PhotonPolarAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonPolarAngularDetector', PhotonPolarAngularDetector)
+
 class PhotonAzimuthalAngularDetector(_PolarAngularDetector):
     pass
+
+XMLIO.register('photonAzimuthalAngularDetector', PhotonAzimuthalAngularDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonAzimuthalAngularDetector', PhotonAzimuthalAngularDetector)
 
 class EnergyDepositedSpatialDetector(_ElectronRangeDetector, _SpatialDetector):
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
@@ -407,6 +432,9 @@ class EnergyDepositedSpatialDetector(_ElectronRangeDetector, _SpatialDetector):
         self.xlimits_m = (xlow_m, xhigh_m)
         self.ylimits_m = (ylow_m, yhigh_m)
         self.zlimits_m = (zlow_m, zhigh_m)
+
+XMLIO.register('energyDepositedSpatialDetector', EnergyDepositedSpatialDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.EnergyDepositedSpatialDetector', EnergyDepositedSpatialDetector)
 
 class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
     def __init__(self, elevation_rad, azimuth_rad, limits_eV, channels):
@@ -432,6 +460,9 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
     def __savexml__(self, element, *args, **kwargs):
         _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
         _EnergyDetector.__savexml__(self, element, *args, **kwargs)
+
+XMLIO.register('photonSpectrumDetector', PhotonSpectrumDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonSpectrumDetector', PhotonSpectrumDetector)
 
 class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation_rad, azimuth_rad, limits_m, channels):
@@ -475,8 +506,14 @@ class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetecto
     def limits_m(self, limits):
         self._set_limits(limits)
 
+XMLIO.register('phiRhoZDetector', PhiRhoZDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.PhiRhoZDetector', PhiRhoZDetector)
+
 class PhotonIntensityDetector(_DelimitedDetector):
     pass
+
+XMLIO.register('photonIntensityDetector', PhotonIntensityDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonIntensityDetector', PhotonIntensityDetector)
 
 class TimeDetector(Option):
     """
@@ -484,8 +521,14 @@ class TimeDetector(Option):
     """
     pass
 
+XMLIO.register('timeDetector', TimeDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.TimeDetector', TimeDetector)
+
 class ElectronFractionDetector(Option):
     """
     Records backscattered, transmitted and absorbed fraction of primary electrons.
     """
     pass
+
+XMLIO.register('electronFractionDetector', ElectronFractionDetector)
+XMLIO.register_loader('pymontecarlo.input.base.detector.ElectronFractionDetector', ElectronFractionDetector)

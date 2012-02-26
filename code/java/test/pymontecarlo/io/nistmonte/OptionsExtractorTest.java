@@ -50,8 +50,7 @@ public class OptionsExtractorTest {
 
 
     public static Element createOptionsElement() throws EPQException {
-        Element element =
-                new Element("pymontecarlo.input.base.options.Options");
+        Element element = new Element("options");
         element.setAttribute("name", "test");
 
         Element beamElement = new Element("beam");

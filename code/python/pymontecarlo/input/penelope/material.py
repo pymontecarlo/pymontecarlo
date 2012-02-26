@@ -25,6 +25,7 @@ __license__ = "GPL v3"
 # Local modules.
 from pymontecarlo.input.base.material import Material as _Material, _Vacuum
 import pymontecarlo.util.element_properties as ep
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -197,6 +198,9 @@ class Material(_Material):
             raise ValueError, "Cutoff energy Bremsstrahlung (%s) must be greater or equal to 0.0" \
                     % energy
         self._props['cutoff energy bremsstrahlung'] = energy
+
+XMLIO.register('PenelopeMaterial', Material)
+XMLIO.register_loader('pymontecarlo.input.penelope.material.Material', Material)
 
 class _PenelopeVacuum(_Vacuum, Material):
     def __init__(self):

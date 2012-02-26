@@ -31,7 +31,7 @@ public class ModelExtractorFactoryTest {
 
 
     public static Element createElasticCrossSectionModelElement() {
-        Element element = new Element("pymontecarlo.input.base.model.Model");
+        Element element = new Element("model");
 
         element.setAttribute("type", "elastic cross section");
         element.setAttribute("name", "ELSEPA");
@@ -61,7 +61,7 @@ public class ModelExtractorFactoryTest {
 
 
     public static Element createIonizationCrossSectionModelElement() {
-        Element element = new Element("pymontecarlo.input.base.model.Model");
+        Element element = new Element("model");
 
         element.setAttribute("type", "ionization cross section");
         element.setAttribute("name", "Bote and Salvat 2008");
@@ -92,7 +92,7 @@ public class ModelExtractorFactoryTest {
 
 
     public static Element createIonizationPotentialModelElement() {
-        Element element = new Element("pymontecarlo.input.base.model.Model");
+        Element element = new Element("model");
 
         element.setAttribute("type", "ionization potential");
         element.setAttribute("name", "Sternheimer 1964");
@@ -122,7 +122,7 @@ public class ModelExtractorFactoryTest {
 
 
     public static Element createEnergyLossModelElement() {
-        Element element = new Element("pymontecarlo.input.base.model.Model");
+        Element element = new Element("model");
 
         element.setAttribute("type", "energy loss");
         element.setAttribute("name", "Joy and Luo 1989");
@@ -152,7 +152,7 @@ public class ModelExtractorFactoryTest {
 
 
     public static Element createMassAbsorptionCoefficientModelElement() {
-        Element element = new Element("pymontecarlo.input.base.model.Model");
+        Element element = new Element("model");
 
         element.setAttribute("type", "mass absorption coefficient");
         element.setAttribute("name", "No MAC");

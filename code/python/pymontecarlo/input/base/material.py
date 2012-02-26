@@ -28,6 +28,7 @@ from pyparsing import Word, Group, Optional, OneOrMore
 # Local modules.
 from pymontecarlo.input.base.option import Option
 import pymontecarlo.util.element_properties as ep
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -303,6 +304,9 @@ class Material(Option):
             raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
                     % energy
         self._props['absorption energy photon'] = energy
+
+XMLIO.register('material', Material)
+XMLIO.register_loader('pymontecarlo.input.base.material.Material', Material)
 
 class _Vacuum(Material):
     def __init__(self):

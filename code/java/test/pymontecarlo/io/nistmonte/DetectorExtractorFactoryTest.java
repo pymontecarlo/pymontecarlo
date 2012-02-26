@@ -18,7 +18,7 @@ public class DetectorExtractorFactoryTest {
     public static Element createPhotonIntensityDetectorElement(String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.PhotonIntensityDetector");
+                        "photonIntensityDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("elevation_min",
@@ -52,7 +52,7 @@ public class DetectorExtractorFactoryTest {
             String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.BackscatteredElectronEnergyDetector");
+                        "backscatteredElectronEnergyDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -86,7 +86,7 @@ public class DetectorExtractorFactoryTest {
     public static Element createTransmittedElectronEnergyDetector(String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.TransmittedElectronEnergyDetector");
+                        "transmittedElectronEnergyDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -120,7 +120,7 @@ public class DetectorExtractorFactoryTest {
             String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.BackscatteredElectronPolarAngularDetector");
+                        "backscatteredElectronPolarAngularDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -155,7 +155,7 @@ public class DetectorExtractorFactoryTest {
             String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.TransmittedElectronPolarAngularDetector");
+                        "transmittedElectronPolarAngularDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -189,7 +189,7 @@ public class DetectorExtractorFactoryTest {
             String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.BackscatteredElectronAzimuthalAngularDetector");
+                        "backscatteredElectronAzimuthalAngularDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -224,7 +224,7 @@ public class DetectorExtractorFactoryTest {
             String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.TransmittedElectronAzimuthalAngularDetector");
+                        "transmittedElectronAzimuthalAngularDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");
@@ -258,7 +258,7 @@ public class DetectorExtractorFactoryTest {
     public static Element createPhotonSpectrumDetector(String key) {
         Element element =
                 new Element(
-                        "pymontecarlo.input.base.detector.PhotonSpectrumDetector");
+                        "photonSpectrumDetector");
         element.setAttribute("_key", key);
 
         element.setAttribute("limit_min", "0.0");

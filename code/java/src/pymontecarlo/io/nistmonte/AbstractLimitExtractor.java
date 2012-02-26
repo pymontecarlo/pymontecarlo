@@ -11,11 +11,11 @@ public abstract class AbstractLimitExtractor extends AbstractExtractor
     /**
      * Creates a new <code>AbstractLimitExtractor</code>.
      * 
-     * @param tag
-     *            required XML tag
+     * @param tags
+     *            required XML tag(s)
      */
-    public AbstractLimitExtractor(String tag) {
-        super(tag);
+    public AbstractLimitExtractor(String... tags) {
+        super(tags);
     }
 
 }

@@ -24,7 +24,7 @@ from operator import methodcaller, attrgetter
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import objectxml, XMLIO
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.subshell import get_subshell
 from pymontecarlo.util.relaxation_data import relaxation_data
@@ -219,6 +219,9 @@ class Transition(objectxml):
 
     def exists(self):
         return self._exists
+
+XMLIO.register('transition', Transition)
+XMLIO.register_loader('pymontecarlo.util.transition.Transition', Transition)
 
 class transitionset(frozenset):
 

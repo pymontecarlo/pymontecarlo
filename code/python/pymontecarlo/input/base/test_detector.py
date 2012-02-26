@@ -21,8 +21,17 @@ from pymontecarlo.input.base.detector import \
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
      ElectronFractionDetector)
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
+
+# Only required for testing
+XMLIO.register('_DelimitedDetector', _DelimitedDetector)
+XMLIO.register('_ChannelsDetector', _ChannelsDetector)
+XMLIO.register('_SpatialDetector', _SpatialDetector)
+XMLIO.register('_EnergyDetector', _EnergyDetector)
+XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
+XMLIO.register('_AzimuthalAngularDetector', _AzimuthalAngularDetector)
 
 class Test_DelimitedDetector(unittest.TestCase):
 

@@ -30,7 +30,7 @@ import pymontecarlo.input.nistmonte.ScatteringDetector;
  * 
  * @author ppinard
  */
-public class OptionsExtractor implements Extractor {
+public class OptionsExtractor extends AbstractExtractor {
 
     /**
      * Returns a default options extractor, where the default extractors have
@@ -88,15 +88,14 @@ public class OptionsExtractor implements Extractor {
     /** Extracted limits. */
     private Set<Limit> limits = null;
 
-    /** XML tag. */
-    private static final String TAG = "pymontecarlo.input.base.options.Options";
-
 
 
     /**
      * Creates a new <code>OptionsExtractor</code>.
      */
     public OptionsExtractor() {
+        super("pymontecarlo.input.base.options.Options", "options");
+
         beamExtractors = new ArrayList<BeamExtractor>();
         geometryExtractors = new ArrayList<GeometryExtractor>();
         detectorExtractors = new ArrayList<DetectorExtractor>();
@@ -493,13 +492,6 @@ public class OptionsExtractor implements Extractor {
         if (limits == null)
             throw new RuntimeException("Call extract(File) method first");
         return Collections.unmodifiableSet(limits);
-    }
-
-
-
-    @Override
-    public boolean canExtract(Element element) {
-        return element.getName().equals(TAG);
     }
 
 }

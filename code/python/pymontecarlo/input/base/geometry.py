@@ -25,7 +25,7 @@ from math import pi
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
@@ -113,7 +113,7 @@ class _Geometry(Option):
         materials_lookup = {}
         for child in children:
             index = int(child.get('index'))
-            materials_lookup[index] = objectxml.from_xml(child)
+            materials_lookup[index] = XMLIO.from_xml(child)
 
         return materials_lookup
 
@@ -124,7 +124,7 @@ class _Geometry(Option):
         for child in children:
             index = int(child.get('index'))
             material = materials_lookup[int(child.get('material'))]
-            bodies_lookup[index] = objectxml.from_xml(child, material=material)
+            bodies_lookup[index] = XMLIO.from_xml(child, material=material)
 
         return bodies_lookup
 
@@ -279,6 +279,9 @@ class Substrate(_Geometry):
         else:
             raise ValueError, "Unknown body: %s" % body
 
+XMLIO.register('substrate', Substrate)
+XMLIO.register_loader('pymontecarlo.input.base.geometry.Substrate', Substrate)
+
 class Inclusion(_Geometry):
     def __init__(self, substrate_material, inclusion_material, inclusion_diameter_m):
         _Geometry.__init__(self)
@@ -360,6 +363,9 @@ class Inclusion(_Geometry):
             return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
+
+XMLIO.register('inclusion', Inclusion)
+XMLIO.register_loader('pymontecarlo.input.base.geometry.Inclusion', Inclusion)
 
 class _Layered(_Geometry):
     def __init__(self, layers=[]):
@@ -525,6 +531,9 @@ class MultiLayers(_Layered):
         else:
             raise ValueError, "Unknown body: %s" % body
 
+XMLIO.register('multiLayers', MultiLayers)
+XMLIO.register_loader('pymontecarlo.input.base.geometry.MultiLayers', MultiLayers)
+
 class GrainBoundaries(_Layered):
     def __init__(self, left_material, right_material, layers=[]):
         """
@@ -628,3 +637,5 @@ class GrainBoundaries(_Layered):
         else:
             raise ValueError, "Unknown body: %s" % body
 
+XMLIO.register('grainBoundaries', GrainBoundaries)
+XMLIO.register_loader('pymontecarlo.input.base.geometry.GrainBoundaries', GrainBoundaries)

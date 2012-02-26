@@ -26,6 +26,7 @@ from xml.etree.ElementTree import Element
 # Local modules.
 from pymontecarlo.input.base.body import Body as _Body, Layer as _Layer
 from pymontecarlo.input.penelope.interactionforcing import InteractionForcing
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
@@ -84,6 +85,9 @@ class Body(_Body):
             raise ValueError, "Length (%s) must be between [0, 1e20]." % length
         self._props['maximum step length'] = length
 
+XMLIO.register('PenelopeBody', Body)
+XMLIO.register_loader('pymontecarlo.input.penelope.body.Body', Body)
+
 class Layer(Body, _Layer):
     def __init__(self, material, thickness, maximum_step_length_m=None):
         _Layer.__init__(self, material, thickness)
@@ -103,3 +107,5 @@ class Layer(Body, _Layer):
         Body.__savexml__(self, element, *args, **kwargs)
         _Layer.__savexml__(self, element, *args, **kwargs)
 
+XMLIO.register('PenelopeLayer', Layer)
+XMLIO.register_loader('pymontecarlo.input.penelope.body.Layer', Layer)

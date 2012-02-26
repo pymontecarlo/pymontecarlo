@@ -24,6 +24,7 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.input.base.option import Option
+from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 ELECTRON = 1
@@ -208,3 +209,6 @@ class InteractionForcing(Option):
             raise ValueError, "Weight upper limit (%s) must be between [0, 1]." % high
 
         self._props['weight'] = min(low, high), max(low, high)
+
+XMLIO.register('InteractionForcing', InteractionForcing)
+XMLIO.register_loader('pymontecarlo.input.penelope.interactionforcing.InteractionForcing', InteractionForcing)
