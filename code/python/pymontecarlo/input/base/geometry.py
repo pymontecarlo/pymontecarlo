@@ -19,10 +19,10 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from operator import attrgetter
-from xml.etree.ElementTree import Element
 from math import pi
 
 # Third party modules.
+from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlutil import XMLIO

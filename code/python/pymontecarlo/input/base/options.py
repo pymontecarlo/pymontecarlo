@@ -18,11 +18,10 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from xml.dom import minidom
-from xml.etree.ElementTree import Element, parse, tostring
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
+from lxml.etree import Element, tostring, parse
 
 # Local modules.
 from pymontecarlo.util.xmlutil import XMLIO
@@ -143,24 +142,35 @@ class Options(Option):
     def __loadxml__(cls, element, *args, **kwargs):
         options = cls(element.get('name'))
 
-        child = list(element.find("beam"))[0]
+        # Beam
+        parent = element.find("beam")
+        if parent is None:
+            raise IOError, 'No beam defined.'
+        child = list(parent)[0]
         options.beam = XMLIO.from_xml(child, *args, **kwargs)
 
-        child = list(element.find("geometry"))[0]
+        # Geometry
+        parent = element.find("geometry")
+        if parent is None:
+            raise IOError, 'No geometry defined.'
+        child = list(parent)[0]
         options.geometry = XMLIO.from_xml(child, *args, **kwargs)
 
-        children = list(element.find("detectors") or [])
-        for child in children:
-            key = child.get('_key')
-            options.detectors[key] = XMLIO.from_xml(child, *args, **kwargs)
+        parent = element.find('detectors')
+        if parent is not None:
+            for child in list(parent):
+                key = child.get('_key')
+                options.detectors[key] = XMLIO.from_xml(child, *args, **kwargs)
 
-        children = list(element.find("limits") or [])
-        for child in children:
-            options.limits.add(XMLIO.from_xml(child, *args, **kwargs))
+        parent = element.find('limits')
+        if parent is not None:
+            for child in list(parent):
+                options.limits.add(XMLIO.from_xml(child, *args, **kwargs))
 
-        children = list(element.find("models") or [])
-        for child in children:
-            options.models.add(XMLIO.from_xml(child, *args, **kwargs))
+        parent = element.find('models')
+        if parent is not None:
+            for child in list(parent):
+                options.models.add(XMLIO.from_xml(child, *args, **kwargs))
 
         return options
 
@@ -308,7 +318,7 @@ class Options(Option):
         :arg fileobj: file-object
         """
         element = self.to_xml()
-        output = minidom.parseString(tostring(element)).toprettyxml()
+        output = tostring(element, pretty_print=True)
         fileobj.write(output)
 
 XMLIO.register('options', Options)

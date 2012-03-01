@@ -21,9 +21,9 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 from operator import mul
-from xml.etree.ElementTree import Element
 
 # Third party modules.
+from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.base.option import Option

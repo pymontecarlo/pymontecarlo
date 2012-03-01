@@ -19,10 +19,10 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from xml.etree.ElementTree import Element
 from collections import defaultdict
 
 # Third party modules.
+from lxml.etree import Element
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.

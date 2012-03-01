@@ -23,9 +23,9 @@ __license__ = ""
 import math
 from itertools import chain
 from operator import methodcaller, attrgetter
-from xml.etree.ElementTree import Element
 
 # Third party modules.
+from lxml.etree import Element
 from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
                        ParseException, delimitedList, Group, printables, stringEnd)
 
