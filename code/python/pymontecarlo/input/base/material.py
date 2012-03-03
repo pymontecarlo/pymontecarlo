@@ -32,6 +32,8 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
+
 def composition_from_formula(formula):
     """
     Returns a dictionary when the keys are the atomic numbers and the values 
@@ -305,7 +307,7 @@ class Material(Option):
                     % energy
         self._props['absorption energy photon'] = energy
 
-XMLIO.register('material', Material)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}material', Material)
 XMLIO.register_loader('pymontecarlo.input.base.material.Material', Material)
 
 class _Vacuum(Material):

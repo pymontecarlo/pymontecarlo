@@ -114,7 +114,6 @@ class TestOptions(unittest.TestCase):
         children = list(element.find('models'))
         self.assertEqual(1, len(children))
 
-
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

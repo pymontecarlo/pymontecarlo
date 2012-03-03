@@ -47,12 +47,49 @@ class _XMLIO(object):
     def __init__(self):
         self._loaders = {}
         self._savers = {}
+        self._nsmap = {}
+        self._schema_locations = {}
+
+    def add_namespace(self, prefix, uri):
+        """
+        Register a namespace to be used when loading and saving from/to XML.
+        
+        :arg prefix: prefix of the namespace
+        :arg uri: URI of the namespace
+        """
+        if prefix in self._nsmap and self._nsmap.get(prefix) != uri:
+            raise ValueError, 'A URI (%s) is already associated with this prefix (%s)' % \
+                    (self._nsmap[prefix], prefix)
+
+        self._nsmap[prefix] = uri
 
     def register(self, tag, klass):
+        """
+        Associates a tag with a class. This class will be used to load every
+        element with the specified tag. Every object of this class will be saved
+        with the specifed tag.
+        
+        Raises :exc:`ValueError` if the specified tag is already associated with
+        a different class. 
+        
+        :arg tag: XML tag for the root element
+        :arg klass: class extending :class:`objectxml`
+        """
         self.register_loader(tag, klass)
         self.register_saver(tag, klass)
 
     def register_loader(self, tag, klass):
+        """
+        Associates a tag with a class. This class will be used to load every
+        element with the specified tag.
+        
+        Raises :exc:`ValueError` if the specified tag is already associated with
+        a different class. 
+        Note that several loaders can be associated with the same class.
+        
+        :arg tag: XML tag for the root element
+        :arg klass: class extending :class:`objectxml`
+        """
         if tag in self._loaders and self._loaders.get(tag) != klass:
             raise ValueError, 'A class (%s) is already registered with the tag (%s).' % \
                 (self._loaders[tag].__name__, tag)
@@ -64,6 +101,17 @@ class _XMLIO(object):
         self._loaders[tag] = klass
 
     def register_saver(self, tag, klass):
+        """
+        Associates a tag with a class. Every object of this class will be saved
+        with the specified tag.
+        
+        Raises :exc:`ValueError` if the specified tag is already associated with
+        a different class. 
+        Note that a class can only have one tag.
+        
+        :arg tag: XML tag for the root element
+        :arg klass: class extending :class:`objectxml`
+        """
         if klass in self._savers and self._savers.get(klass) != tag:
             raise ValueError, 'A tag (%s) is already associated with class (%s).' % \
                 (self._savers[klass], klass.__name__)
@@ -75,6 +123,12 @@ class _XMLIO(object):
         self._savers[klass] = tag
 
     def from_xml(self, element, *args, **kwargs):
+        """
+        Loads an object from a XML element. A :exc:`ValueError` is raised if
+        no loader is found for the XML element.
+        
+        :arg element: XML element
+        """
         tag = element.tag
         if tag not in self._loaders:
             raise ValueError, 'No loader found for element (%s). Please register it first.' % tag
@@ -83,12 +137,18 @@ class _XMLIO(object):
         return klass.__loadxml__(element, *args, **kwargs)
 
     def to_xml(self, obj, *args, **kwargs):
+        """
+        Saves an object as a XML element. A :exc:`ValueError` is raised if
+        no saver is found for the object.
+        
+        :arg obj: object
+        """
         klass = obj.__class__
         if klass not in self._savers:
             raise ValueError, 'No saver found for class (%s). Please register it first.' % klass
 
         tag = self._savers[klass]
-        element = Element(tag)
+        element = Element(tag, nsmap=self._nsmap)
 
         obj.__savexml__(element, *args, **kwargs)
 

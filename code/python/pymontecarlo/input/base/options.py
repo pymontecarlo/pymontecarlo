@@ -32,6 +32,8 @@ from pymontecarlo.input.base.geometry import Substrate
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
+
 class _Detectors(MutableMapping):
     def __init__(self):
         self._data = {}
@@ -202,6 +204,47 @@ class Options(Option):
             child.append(model.to_xml())
         element.append(child)
 
+    @classmethod
+    def from_xml(cls, element, validate=True, *args, **kwargs):
+        if validate:
+            pass
+
+        return Option.from_xml(element, *args, **kwargs)
+
+    def to_xml(self, *args, **kwargs):
+        root = Option.to_xml(self, *args, **kwargs)
+
+        # Validate
+
+
+        return root
+
+    @classmethod
+    def load(cls, fileobj, validate=True):
+        """
+        Loads the options from a file-object.
+        The file-object must correspond to a XML file where the options were 
+        saved.
+        
+        :arg fileobj: file-object
+        
+        :return: loaded options
+        """
+        element = parse(fileobj).getroot()
+        return cls.from_xml(element, validate)
+
+    def save(self, fileobj):
+        """
+        Saves the options to a file-object.
+        The file-object must correspond to a XML file where the options will 
+        be saved.
+        
+        :arg fileobj: file-object
+        """
+        element = self.to_xml()
+        output = tostring(element, pretty_print=True)
+        fileobj.write(output)
+
     @property
     def beam(self):
         """
@@ -295,31 +338,5 @@ class Options(Option):
         """
         return self._props['models']
 
-    @classmethod
-    def load(cls, fileobj):
-        """
-        Loads the options from a file-object.
-        The file-object must correspond to a XML file where the options were 
-        saved.
-        
-        :arg fileobj: file-object
-        
-        :return: loaded options
-        """
-        element = parse(fileobj).getroot()
-        return cls.from_xml(element)
-
-    def save(self, fileobj):
-        """
-        Saves the options to a file-object.
-        The file-object must correspond to a XML file where the options will 
-        be saved.
-        
-        :arg fileobj: file-object
-        """
-        element = self.to_xml()
-        output = tostring(element, pretty_print=True)
-        fileobj.write(output)
-
-XMLIO.register('options', Options)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}options', Options)
 XMLIO.register_loader('pymontecarlo.input.base.options.Options', Options)

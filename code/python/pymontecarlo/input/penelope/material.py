@@ -29,6 +29,8 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
+
 def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
          elastic_scattering=(0.0, 0.0),
          cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
@@ -199,7 +201,7 @@ class Material(_Material):
                     % energy
         self._props['cutoff energy bremsstrahlung'] = energy
 
-XMLIO.register('PenelopeMaterial', Material)
+XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}material', Material)
 XMLIO.register_loader('pymontecarlo.input.penelope.material.Material', Material)
 
 class _PenelopeVacuum(_Vacuum, Material):

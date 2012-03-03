@@ -28,6 +28,8 @@ from pymontecarlo.util.xmlutil import XMLIO, objectxml
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
+
 _model_registry = {}
 
 def get_all_models():
@@ -148,7 +150,7 @@ class Model(objectxml):
             raise ValueError, "No type. Model is unregistered."
         return self._type
 
-XMLIO.register('model', Model)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}model', Model)
 XMLIO.register_loader('pymontecarlo.input.base.model.Model', Model)
 
 class ModelCategory(collections.Set):

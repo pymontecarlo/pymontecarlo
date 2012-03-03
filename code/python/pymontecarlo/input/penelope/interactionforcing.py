@@ -31,6 +31,8 @@ ELECTRON = 1
 PHOTON = 2
 POSITRON = 3
 
+XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
+
 class Collisions(object):
     def __init__(self, particle):
         """
@@ -210,5 +212,5 @@ class InteractionForcing(Option):
 
         self._props['weight'] = min(low, high), max(low, high)
 
-XMLIO.register('InteractionForcing', InteractionForcing)
+XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}interactionForcing', InteractionForcing)
 XMLIO.register_loader('pymontecarlo.input.penelope.interactionforcing.InteractionForcing', InteractionForcing)

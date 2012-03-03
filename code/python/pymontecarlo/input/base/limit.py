@@ -30,6 +30,8 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
+
 class _TransitionLimit(Option):
     def __init__(self, transition):
         Option.__init__(self)
@@ -86,7 +88,7 @@ class TimeLimit(Option):
             raise ValueError, "Time (%s) must be greater than 0." % time
         self._props['time'] = long(time)
 
-XMLIO.register('timeLimit', TimeLimit)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}timeLimit', TimeLimit)
 XMLIO.register_loader('pymontecarlo.input.base.limit.TimeLimit', TimeLimit)
 
 class ShowersLimit(Option):
@@ -119,7 +121,7 @@ class ShowersLimit(Option):
             raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
         self._props['showers'] = long(showers)
 
-XMLIO.register('showersLimit', ShowersLimit)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}showersLimit', ShowersLimit)
 XMLIO.register_loader('pymontecarlo.input.base.limit.ShowersLimit', ShowersLimit)
 
 class UncertaintyLimit(_TransitionLimit):
@@ -154,5 +156,5 @@ class UncertaintyLimit(_TransitionLimit):
             raise ValueError, "Relative uncertainty (%s) must be between [0.0, 1.0]." % unc
         self._props['uncertainty'] = unc
 
-XMLIO.register('uncertaintyLimit', UncertaintyLimit)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}uncertaintyLimit', UncertaintyLimit)
 XMLIO.register_loader('pymontecarlo.input.base.limit.UncertaintyLimit', UncertaintyLimit)

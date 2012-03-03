@@ -29,6 +29,8 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
+
 class Body(Option):
     def __init__(self, material):
         """
@@ -65,7 +67,7 @@ class Body(Option):
     def material(self, m):
         self._props['material'] = m
 
-XMLIO.register('body', Body)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}body', Body)
 XMLIO.register_loader('pymontecarlo.input.base.body.Body', Body)
 
 class Layer(Body):
@@ -112,5 +114,5 @@ class Layer(Body):
             raise ValueError, "Thickness (%s) must be greater than 0." % thickness
         self._props['thickness'] = thickness
 
-XMLIO.register('layer', Layer)
+XMLIO.register('{http://pymontecarlo.sf.net/input/base}layer', Layer)
 XMLIO.register_loader('pymontecarlo.input.base.body.Layer', Layer)

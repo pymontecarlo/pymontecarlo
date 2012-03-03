@@ -30,6 +30,8 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
+
 class Body(_Body):
     def __init__(self, material, maximum_step_length_m=1e20):
         _Body.__init__(self, material)
@@ -85,7 +87,7 @@ class Body(_Body):
             raise ValueError, "Length (%s) must be between [0, 1e20]." % length
         self._props['maximum step length'] = length
 
-XMLIO.register('PenelopeBody', Body)
+XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}body', Body)
 XMLIO.register_loader('pymontecarlo.input.penelope.body.Body', Body)
 
 class Layer(Body, _Layer):
@@ -107,5 +109,5 @@ class Layer(Body, _Layer):
         Body.__savexml__(self, element, *args, **kwargs)
         _Layer.__savexml__(self, element, *args, **kwargs)
 
-XMLIO.register('PenelopeLayer', Layer)
+XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}layer', Layer)
 XMLIO.register_loader('pymontecarlo.input.penelope.body.Layer', Layer)
