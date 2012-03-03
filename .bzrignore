@@ -2,6 +2,6 @@
 settings.cfg
 bin
 .sconsign.dblite
-code/python/pymontecarlo/input/base/foo.py
-code/python/pymontecarlo/lib/penelope/wrapper.so
-code/python/pymontecarlo/lib/penelope/wrapper.def
+code/pymontecarlo/input/base/foo.py
+code/pymontecarlo/lib/penelope/wrapper.so
+code/pymontecarlo/lib/penelope/wrapper.def

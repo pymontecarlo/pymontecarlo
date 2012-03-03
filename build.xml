@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+   pyMonteCarlo
+   Copyright (C) 2011 Philippe T. Pinard and Hendrix Demers;
+  
+   This library is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU Lesser General Public License
+   along with this library.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<project basedir="."
+         name="pyMonteCarlo"
+         default="help"
+         xmlns:py="antlib:net.sf.antpython"
+         xmlns:ivy="antlib:org.apache.ivy.ant"
+         xmlns:cpptasks="antlib:net.sf.antcontrib.cpptasks">
+
+    <!-- Directories -->
+    <property name="tmp.dir" location="${java.io.tmpdir}" />
+    <property name="src.dir" location="${basedir}/code" />
+
+    <property name="code.dir" location="${tmp.dir}/code" />
+    <property name="build.dir" location="${tmp.dir}/build" />
+    <property name="dist.dir" location="${tmp.dir}/dist" />
+    <property name="test.dir" location="${tmp.dir}/test" />
+    <property name="coverage.dir" location="${tmp.dir}/coverage" />
+    <property name="lib.dir" location="${tmp.dir}/lib" />
+    <property name="test.report.dir" location="${tmp.dir}/test/report" />
+    <property name="doc.dir" location="${tmp.dir}/doc" />
+
+    <!-- Metadata -->
+    <property name="name" value="pyMonteCarlo" />
+    <property name="package.name" value="pymontecarlo" />
+    <property name="version" value="0.1" />
+    <property name="url" value="" />
+    <property name="author" value="Hendrix Demers and Philippe T. Pinard" />
+    <property name="author.email"
+              value="hendrix.demers@mail.mcgill.ca and philippe.pinard@gmail.com" />
+    <property name="description"
+              value="Python interface for Monte Carlo simulations" />
+    <property name="long.description"
+              value="Python interface for Monte Carlo simulations" />
+    <property name="license" value="GPL v3" />
+
+    <!-- ===================================================== -->
+    <!-- Clean targets                                         -->
+    <!-- ===================================================== -->
+
+    <target name="clean" description="Delete code, build and test directories">
+        <delete dir="${code.dir}" />
+        <delete dir="${build.dir}" />
+        <delete dir="${test.dir}" />
+        <delete dir="${coverage.dir}" />
+        <delete dir="${lib.dir}" />
+        <delete dir="${test.report.dir}" />
+    </target>
+
+
+
+    <target name="clean-dist"
+            depends="clean"
+            description="Delete all created directories">
+        <delete dir="${dist.dir}" />
+        <delete dir="${doc.dir}" />
+    </target>
+
+    <!-- ===================================================== -->
+    <!-- Build targets                                         -->
+    <!-- ===================================================== -->
+
+    <target name="-init" description="Creates all required directories">
+        <mkdir dir="${code.dir}" />
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${lib.dir}" />
+
+        <condition property="isWindows">
+            <os family="windows" />
+        </condition>
+
+        <condition property="isLinux">
+            <os family="unix" />
+        </condition>
+    </target>
+
+
+
+    <target name="-copy-python-src"
+            depends="-init"
+            description="Copy Python source code and project files to code directory">
+        <copy todir="${code.dir}">
+            <fileset dir="${src.dir}">
+                <include name="**/*.py" />
+                <include name="settings.cfg.example" />
+                <include name="pymontecarlo/util/data/**" />
+                <exclude name="**/test_*.py" />
+                <!--<exclude name="pymontecarlo/runner/**" />-->
+            </fileset>
+        </copy>
+
+        <!--<copy file="${src.dir}/README" todir="${code.dir}" />-->
+    </target>
+
+
+
+
+
+    <target name="help">
+        <echo>Use ant -p to get a listing of all the available targets.
+      </echo>
+    </target>
+
+
+    <target name="setup-python"
+            depends="-copy-python-src"
+            description="Create setup.py">
+        <py:setup name="${name}"
+                  dir="${code.dir}"
+                  manifest="${manifest}"
+                  version="${version}"
+                  url="${url}"
+                  author="${author}"
+                  authorEmail="${author.email}"
+                  shortDescription="${description}"
+                  longDescription="${long.description}"
+                  license="${license}">
+            <classifier name="Development Status :: 4 - Beta" />
+            <classifier name="Intended Audience :: End Users/Desktop" />
+            <classifier name="License :: OSI Approved :: GNU General Public License (GPL)" />
+            <classifier name="Natural Language :: English" />
+            <classifier name="Operating System :: OS Independent" />
+            <classifier name="Programming Language :: Python" />
+            <classifier name="Topic :: Scientific/Engineering" />
+            <classifier name="Topic :: Scientific/Engineering :: Physics" />
+
+            <!--<require name="DrixUtilities" op=">=" version="0.1" />-->
+        </py:setup>
+    </target>
+
+
+
+    <target name="compile-java"
+            depends="-init"
+            description="Compiles source classes">
+        <ivy:retrieve conf="default"
+                      pattern="${lib.dir}/[artifact](-[classifier]).[ext]" />
+
+        <javac srcdir="${src.dir}"
+               destdir="${build.dir}"
+               source="1.6"
+               target="1.6"
+               extdirs="${lib.dir}"
+               failonerror="true"
+               debug="true"
+               deprecation="true"
+               includeAntRuntime="false">
+            <include name="**/*.java" />
+            <exclude name="**/*Test.java" />
+            <exclude name="**/NistMonteTestCase.java" />
+        </javac>
+    </target>
+
+
+
+    <target name="compile-c"
+            depends="-init"
+            description="Compile PENELOPE as a python shared library">
+        <!-- Copy working files -->
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}/pymontecarlo/lib/penelope">
+                <include name="*.f" />
+                <include name="*.c" />
+                <include name="*.h" />
+                <include name="*.def" />
+            </fileset>
+        </copy>
+
+        <!-- Compile operating system specific -->
+        <antcall target="-compile-common" />
+        <antcall target="-compile-linux" />
+        <antcall target="-compile-windows" />
+
+        <!-- Delete working files -->
+        <delete dir="${build.dir}">
+            <include name="*" />
+            <exclude name="*.so" />
+            <exclude name="*.pyd" />
+            <exclude name="*.def" />
+        </delete>
+    </target>
+
+
+
+    <target name="-compile-common">
+        <!-- NOTE: optimize="full" == -O2 -->
+
+        <!-- Compile -->
+        <mkdir dir="${build.dir}" />
+        <cpptasks:cc objdir="${build.dir}"
+                     exceptions="true"
+                     failonerror="true"
+                     outtype="static"
+                     multithreaded="true">
+            <cpptasks:compiler id="compiler-fortran" name="g77">
+                <compilerarg value="-O2" />
+                <compilerarg value="-g" />
+                <compilerarg value="-Wall" />
+                <compilerarg value="-static-libgcc" />
+                <compilerarg value="-static-libgfortran" />
+            </cpptasks:compiler>
+
+            <fileset dir="${src.dir}/pymontecarlo/lib/penelope">
+                <include name="*.f" />
+                <exclude name="penepma.f" />
+            </fileset>
+        </cpptasks:cc>
+    </target>
+
+
+
+    <target name="-compile-linux" if="isLinux">
+        <!-- c objects -->
+        <echo message="Compiling wrapper.c" />
+        <exec executable="gcc" dir="${build.dir}">
+            <arg value="-DNDEBUG" />
+            <arg value="-g" />
+            <arg value="-O2" />
+            <arg value="-Wall" />
+            <arg value="-Wstrict-prototypes" />
+            <arg value="-fPIC" />
+            <arg value="-DMAJOR_VERSION=1" />
+            <arg value="-DMINOR_VERSION=0" />
+            <arg value="-I/usr/local/include" />
+            <arg value="-I/usr/include/python2.6" />
+            <arg value="-c" />
+            <arg value="-o" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.c" />
+        </exec>
+
+        <!-- Link to shared library -->
+        <echo message="Linking" />
+        <exec executable="gfortran" dir="${build.dir}">
+            <arg value="-shared" />
+            <arg value="wrapper.o" />
+            <arg value="penelope.o" />
+            <arg value="pengeom.o" />
+            <arg value="penvared.o" />
+            <arg value="rita.o" />
+            <arg value="timer.o" />
+            <arg value="utils.o" />
+            <arg value="-L/usr/local/lib" />
+            <arg value="-o" />
+            <arg value="wrapper.so" />
+        </exec>
+    </target>
+
+
+
+    <target name="-compile-windows" if="isWindows">
+        <!-- c objects -->
+        <echo message="Compiling wrapper.c" />
+        <exec executable="gcc" dir="${build.dir}">
+            <arg value="-mno-cygwin" />
+            <arg value="-mdll" />
+            <arg value="-O2" />
+            <arg value="-Wall" />
+            <arg value="-IC:\Python26\include" />
+            <arg value="-IC:\Python26\PC" />
+            <arg value="-c" />
+            <arg value="-o" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.c" />
+        </exec>
+
+        <!-- Link to shared library -->
+        <echo message="Linking" />
+        <exec executable="gfortran" dir="${build.dir}">
+            <arg value="-shared" />
+            <arg value="wrapper.o" />
+            <arg value="wrapper.def" />
+            <arg value="penelope.o" />
+            <arg value="pengeom.o" />
+            <arg value="penvared.o" />
+            <arg value="rita.o" />
+            <arg value="timer.o" />
+            <arg value="utils.o" />
+            <arg value="-LC:\Python26\libs" />
+            <arg value="-LC:\Python26\PCbuild" />
+            <arg value="-lpython26" />
+            <arg value="-lmsvcr90" />
+            <arg value="-o" />
+            <arg value="wrapper.pyd" />
+        </exec>
+    </target>
+
+
+
+    <target name="jar"
+            depends="compile-java"
+            description="Create distributions">
+        <jar destfile="${dist.dir}/${ivy.module}-${ivy.revision}.jar">
+            <fileset dir="${build.dir}" includes="**" />
+        </jar>
+    </target>
+
+
+
+    <target name="egg" depends="compile-c" description="Egg distribution">
+        <mkdir dir="${dist.dir}" />
+
+        <antcall target="setup-python">
+            <param name="manifest" value="false" />
+        </antcall>
+
+        <copy todir="${code.dir}/pymontecarlo/lib/penelope">
+            <fileset dir="${build.dir}" includes="*" />
+        </copy>
+
+        <py:build dir="${code.dir}" todir="${dist.dir}" command="bdist_egg" />
+    </target>
+
+
+
+    <target name="wininst"
+            depends="compile-c"
+            description="Windows intaller distribution">
+        <mkdir dir="${dist.dir}" />
+
+        <antcall target="setup-python">
+            <param name="manifest" value="false" />
+        </antcall>
+
+        <copy todir="${code.dir}/pymontecarlo/lib/penelope">
+            <fileset dir="${build.dir}" includes="*" />
+        </copy>
+
+        <py:build dir="${code.dir}"
+                  todir="${dist.dir}"
+                  command="bdist_wininst" />
+    </target>
+
+
+
+    <target name="test-java"
+            depends="compile-java"
+            description="Builds and runs the tests">
+        <mkdir dir="${test.report.dir}" />
+
+        <!-- Compile tests -->
+        <ivy:retrieve conf="test" />
+
+        <javac srcdir="${test.dir}"
+               destdir="${build.dir}"
+               source="1.6"
+               classpathref="libraries"
+               failonerror="true"
+               debug="true"
+               deprecation="true"
+               includeAntRuntime="false">
+        </javac>
+
+        <!-- Copy support files -->
+
+        <!-- Run junit -->
+        <junit failureproperty="test.failure">
+            <formatter type="brief" usefile="false" />
+            <formatter type="xml" />
+            <batchtest todir="${test.report.dir}">
+                <fileset dir="${build.dir}">
+                    <include name="**/*Test.class" />
+                </fileset>
+            </batchtest>
+            <classpath refid="libraries" />
+            <classpath path="${build.dir}" />
+        </junit>
+
+        <fail message="Some tests failed!!!" if="test.failure" />
+    </target>
+    
+    
+    
+    <target name="ide" description="Compile c code for use in IDE">
+        <antcall target="compile-c" />
+        
+        <copy todir="${src.dir}/pymontecarlo/lib/penelope">
+            <fileset dir="${build.dir}" includes="*" />
+        </copy>
+    </target>
+
+
+</project>
