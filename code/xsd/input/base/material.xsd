@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include schemaLocation="../../util/ep.xsd" />
+
+    <xsd:complexType name="elementType">
+        <xsd:attribute name="z" type="atomicNumberType"
+            use="required" />
+
+        <xsd:attribute name="weightFraction" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0.0" />
+                    <xsd:maxInclusive value="1.0" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="compositionType">
+        <xsd:sequence>
+            <xsd:element name="element" type="elementType"
+                minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="materialType">
+        <xsd:sequence>
+            <xsd:element name="composition" type="compositionType" />
+        </xsd:sequence>
+
+        <xsd:attribute name="index" type="xsd:positiveInteger"
+            use="required" />
+
+        <xsd:attribute name="name" type="xsd:string" />
+
+        <xsd:attribute name="density" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+
+        <xsd:attribute name="absorptionEnergyElectron"
+            use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+
+        <xsd:attribute name="absorptionEnergyPhoton" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:element name="material" type="materialType" />
+</xsd:schema>

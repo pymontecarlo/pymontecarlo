@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include schemaLocation="ep.xsd" />
+    
+    <xsd:simpleType name="subshellType">
+        <xsd:restriction base="xsd:integer">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="30" />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="transitionType">
+        <xsd:attribute name="z" type="atomicNumberType" use="required"/>
+        <xsd:attribute name="src" type="subshellType" use="required"/>
+        <xsd:attribute name="dest" type="subshellType" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:element name="transition" type="transitionType" />
+</xsd:schema>

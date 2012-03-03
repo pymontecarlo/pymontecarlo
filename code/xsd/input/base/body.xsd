@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:complexType name="bodyType">
+        <xsd:attribute name="index" type="xsd:integer" use="required"/>
+        <xsd:attribute name="material" type="xsd:integer" use="required"/>
+    </xsd:complexType>
+
+    <xsd:element name="body" type="bodyType" />
+
+    <xsd:complexType name="layerType">
+        <xsd:complexContent>
+            <xsd:extension base="bodyType">
+                <xsd:attribute name="thickness" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:double">
+                            <xsd:minExclusive value="0" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    
+    <xsd:element name="layer" type="layerType"
+        substitutionGroup="body" />
+</xsd:schema>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:simpleType name="atomicNumberType">
+        <xsd:restriction base="xsd:positiveInteger">
+            <xsd:minInclusive value="1" />
+            <xsd:maxInclusive value="96" />
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

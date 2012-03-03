@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<xsd:schema targetNamespace="http://pymontecarlo.sf.net/input"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://pymontecarlo.sf.net/input"
+    xmlns:base="http://pymontecarlo.sf.net/input/base" xmlns:pen="http://pymontecarlo.sf.net/input/penelope">
+
+    <xsd:import namespace="http://pymontecarlo.sf.net/input/base"
+        schemaLocation="base/base.xsd" />
+    <xsd:import namespace="http://pymontecarlo.sf.net/input/penelope"
+        schemaLocation="penelope/penelope.xsd" />
+</xsd:schema>
