@@ -29,7 +29,6 @@ from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.oset import oset
 from pymontecarlo.input.base.body import Body, Layer
-from pymontecarlo.input.base.material import VACUUM
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -141,7 +140,7 @@ class _Geometry(Option):
     def _indexify(self):
         count = 1
         for material in self.get_materials():
-            if isinstance(material, type(VACUUM)):
+            if material.is_vacuum():
                 material._index = 0
             else:
                 material._index = count

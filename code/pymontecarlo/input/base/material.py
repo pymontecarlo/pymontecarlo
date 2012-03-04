@@ -305,6 +305,9 @@ class Material(Option):
                     % energy
         self._props['absorption energy photon'] = energy
 
+    def is_vacuum(self):
+        return False
+
 XMLIO.register('{http://pymontecarlo.sf.net/input/base}material', Material)
 XMLIO.register_loader('pymontecarlo.input.base.material.Material', Material)
 
@@ -313,4 +316,9 @@ class _Vacuum(Material):
         Material.__init__(self, "Vacuum", {}, 0.0, 0.0, 0.0)
         self._index = 0
 
+    def is_vacuum(self):
+        return True
+
 VACUUM = _Vacuum()
+
+

@@ -31,7 +31,7 @@ from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
 
 # Local modules.
 from pymontecarlo.input.base.geometry import _Geometry
-from pymontecarlo.input.penelope.material import VACUUM
+from pymontecarlo.input.base.material import VACUUM
 from pymontecarlo.input.penelope.body import Body
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.xmlutil import objectxml

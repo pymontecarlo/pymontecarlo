@@ -19,7 +19,8 @@ from math import radians
 from pymontecarlo.input.penelope.geometry import \
     (Rotation, Shift, Scale, SurfaceImplicit, SurfaceReduced, PenelopeGeometry,
      xplane, zplane, cylinder, Module)
-from pymontecarlo.input.penelope.material import pure, VACUUM
+from pymontecarlo.input.base.material import VACUUM
+from pymontecarlo.input.penelope.material import pure
 from pymontecarlo.input.penelope.interactionforcing import InteractionForcing
 
 # Globals and constants variables.

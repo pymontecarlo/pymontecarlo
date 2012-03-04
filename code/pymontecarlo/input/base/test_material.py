@@ -15,7 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.material import Material, composition_from_formula, pure, VACUUM
+from pymontecarlo.input.base.material import \
+    Material, composition_from_formula, pure, VACUUM
 
 # Globals and constants variables.
 
@@ -69,6 +70,8 @@ class TestModule(unittest.TestCase):
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
     def testVACUUM(self):
+        self.assertTrue(VACUUM.is_vacuum())
+
         self.assertEquals('Vacuum', str(VACUUM))
 
         self.assertEqual({}, VACUUM.composition)

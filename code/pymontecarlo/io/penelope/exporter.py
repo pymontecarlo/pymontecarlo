@@ -32,9 +32,9 @@ from pymontecarlo.input.penelope.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
 from pymontecarlo.io.base.exporter import Exporter as _Exporter
 from pymontecarlo.lib.penelope.wrapper import create_material
+from pymontecarlo.input.base.material import VACUUM
 
 # Globals and constants variables.
-from pymontecarlo.input.penelope.material import VACUUM
 
 def _pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."

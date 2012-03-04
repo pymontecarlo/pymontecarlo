@@ -27,8 +27,7 @@ import warnings
 from pymontecarlo.input.base.converter import \
     Converter as _Converter, ConversionWarning, ConversionException
 
-from pymontecarlo.input.base.material import VACUUM
-from pymontecarlo.input.penelope.material import Material, VACUUM as PenelopeVACUUM
+from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.input.penelope.body import Body, Layer
 from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.geometry import \
@@ -163,8 +162,8 @@ class Converter(_Converter):
         return materials_lookup
 
     def _create_penelope_material(self, old):
-        if old is VACUUM:
-            return PenelopeVACUUM
+        if old.is_vacuum():
+            return old
 
         return Material(old.name, old.composition, old.density_kg_m3,
                         old.absorption_energy_electron_eV, old.absorption_energy_photon_eV,

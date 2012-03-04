@@ -23,7 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.material import Material as _Material, _Vacuum
+from pymontecarlo.input.base.material import Material as _Material
 from pymontecarlo.input.penelope.option import Option
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO
@@ -203,10 +203,3 @@ class Material(_Material, Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}material', Material)
 XMLIO.register_loader('pymontecarlo.input.penelope.material.Material', Material)
-
-class _PenelopeVacuum(_Vacuum, Material):
-    def __init__(self):
-        _Vacuum.__init__(self)
-        Material.__init__(self, "Vacuum", {}, 0.0, 0.0, 0.0, (0.0, 0.0), 0.0, 0.0)
-
-VACUUM = _PenelopeVacuum()
