@@ -32,8 +32,6 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 def composition_from_formula(formula):
     """
     Returns a dictionary when the keys are the atomic numbers and the values 

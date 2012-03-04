@@ -37,8 +37,6 @@ _THICKNESS_GETTER = attrgetter('thickness_m')
 POSINF = float('inf')
 NEGINF = float('-inf')
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 class _Dimension(object):
     """
     Dimensions in x, y and z of a body.

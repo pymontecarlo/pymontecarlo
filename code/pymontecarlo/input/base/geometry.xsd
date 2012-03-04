@@ -86,6 +86,8 @@
                     use="required" />
                 <xsd:attribute name="inclusion" type="xsd:integer"
                     use="required" />
+                <xsd:attribute name="diameter" type="xsd:double"
+                    use="required" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
@@ -116,7 +118,10 @@
                     </xsd:element>
                 </xsd:sequence>
 
-                <xsd:attribute name="substrate" type="xsd:integer"  use="optional" />
+                <xsd:attribute name="substrate" type="xsd:integer"
+                    use="optional" />
+                <xsd:attribute name="layers" type="xsd:string"
+                    use="required" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
@@ -147,8 +152,12 @@
                     </xsd:element>
                 </xsd:sequence>
 
-                <xsd:attribute name="left_substrate" type="xsd:integer" use="required"/>
-                <xsd:attribute name="right_substrate" type="xsd:integer" use="required"/>
+                <xsd:attribute name="left_substrate" type="xsd:integer"
+                    use="required" />
+                <xsd:attribute name="right_substrate"
+                    type="xsd:integer" use="required" />
+                <xsd:attribute name="layers" type="xsd:string"
+                    use="required" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

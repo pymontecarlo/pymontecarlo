@@ -57,8 +57,8 @@ class Test_DelimitedDetector(unittest.TestCase):
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _DelimitedDetector.from_xml(element)
+        element = self.d.to_xml(validate=False)
+        d = _DelimitedDetector.from_xml(element, validate=False)
 
         self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
         self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
@@ -76,7 +76,7 @@ class Test_DelimitedDetector(unittest.TestCase):
         self.assertRaises(TypeError, self.d.__setattr__, 'azimuth_rad', 0)
 
     def testto_xml(self):
-        element = self.d.to_xml()
+        element = self.d.to_xml(validate=False)
 
         self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
         self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
@@ -134,8 +134,8 @@ class Test_SpatialDetector(unittest.TestCase):
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _SpatialDetector.from_xml(element)
+        element = self.d.to_xml(validate=False)
+        d = _SpatialDetector.from_xml(element, validate=False)
 
         self.assertAlmostEqual(12.34, d.xlimits_m[0], 4)
         self.assertAlmostEqual(56.78, d.xlimits_m[1], 4)
@@ -171,7 +171,7 @@ class Test_SpatialDetector(unittest.TestCase):
         self.assertRaises(ValueError, self.d.__setattr__, 'zbins', 0)
 
     def testto_xml(self):
-        element = self.d.to_xml()
+        element = self.d.to_xml(validate=False)
 
         self.assertAlmostEqual(12.34, float(element.get('xlimit_min')), 4)
         self.assertAlmostEqual(56.78, float(element.get('xlimit_max')), 4)
@@ -207,8 +207,8 @@ class Test_EnergyDetector(unittest.TestCase):
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _EnergyDetector.from_xml(element)
+        element = self.d.to_xml(validate=False)
+        d = _EnergyDetector.from_xml(element, validate=False)
 
         self.assertAlmostEqual(12.34, d.limits_eV[0], 4)
         self.assertAlmostEqual(56.78, d.limits_eV[1], 4)
@@ -217,7 +217,7 @@ class Test_EnergyDetector(unittest.TestCase):
         self.assertEqual(float('inf'), d._extremums[1], 4)
 
     def testto_xml(self):
-        element = self.d.to_xml()
+        element = self.d.to_xml(validate=False)
 
         self.assertAlmostEqual(12.34, float(element.get('limit_min')), 4)
         self.assertAlmostEqual(56.78, float(element.get('limit_max')), 4)
@@ -245,8 +245,8 @@ class Test_PolarAngularDetector(unittest.TestCase):
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _PolarAngularDetector.from_xml(element)
+        element = self.d.to_xml(validate=False)
+        d = _PolarAngularDetector.from_xml(element, validate=False)
 
         self.assertAlmostEqual(radians(-90), d.limits_rad[0], 4)
         self.assertAlmostEqual(radians(90), d.limits_rad[1], 4)
@@ -255,7 +255,7 @@ class Test_PolarAngularDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(90), d._extremums[1], 4)
 
     def testto_xml(self):
-        element = self.d.to_xml()
+        element = self.d.to_xml(validate=False)
 
         self.assertAlmostEqual(radians(-90), float(element.get('limit_min')), 4)
         self.assertAlmostEqual(radians(90), float(element.get('limit_max')), 4)
@@ -283,8 +283,8 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
-        element = self.d.to_xml()
-        d = _AzimuthalAngularDetector.from_xml(element)
+        element = self.d.to_xml(validate=False)
+        d = _AzimuthalAngularDetector.from_xml(element, validate=False)
 
         self.assertAlmostEqual(radians(0), d.limits_rad[0], 4)
         self.assertAlmostEqual(radians(360), d.limits_rad[1], 4)
@@ -293,7 +293,7 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(360), d._extremums[1], 4)
 
     def testto_xml(self):
-        element = self.d.to_xml()
+        element = self.d.to_xml(validate=False)
 
         self.assertAlmostEqual(radians(0), float(element.get('limit_min')), 4)
         self.assertAlmostEqual(radians(360), float(element.get('limit_max')), 4)

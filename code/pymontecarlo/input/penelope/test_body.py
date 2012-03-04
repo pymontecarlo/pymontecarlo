@@ -20,7 +20,7 @@ from pymontecarlo.input.penelope.material import pure
 
 # Globals and constants variables.
 
-class TestPenelopeBody(unittest.TestCase):
+class TestBody(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -50,7 +50,7 @@ class TestPenelopeBody(unittest.TestCase):
 
         self.assertAlmostEqual(123.45, float(element.get('maximumStepLength')), 4)
 
-class TestPenelopeLayer(unittest.TestCase):
+class TestLayer(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)

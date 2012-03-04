@@ -21,16 +21,12 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.base.option import Option
-from pymontecarlo.util.transition import Transition
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
-
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
 
 class _TransitionLimit(Option):
     def __init__(self, transition):
@@ -40,15 +36,13 @@ class _TransitionLimit(Option):
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        child = list(element.find("transition"))[0]
-        transition = Transition.__loadxml__(child, *args, **kwargs)
+        child = list(element)[0]
+        transition = XMLIO.from_xml(child, *args, **kwargs)
 
         return cls(transition)
 
     def __savexml__(self, element, *args, **kwargs):
-        child = Element('transition')
-        child.append(self.transition.to_xml())
-        element.append(child)
+        element.append(self.transition.to_xml())
 
     @property
     def transition(self):

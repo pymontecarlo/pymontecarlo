@@ -32,8 +32,6 @@ HALFPI = math.pi / 2.0
 TWOPI = math.pi * 2.0
 TOLERANCE = 1e-6
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 class _DelimitedDetector(Option):
     def __init__(self, elevation_rad, azimuth_rad):
         """

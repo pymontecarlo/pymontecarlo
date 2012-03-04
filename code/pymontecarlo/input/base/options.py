@@ -32,8 +32,6 @@ from pymontecarlo.input.base.geometry import Substrate
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 class _Detectors(MutableMapping):
     def __init__(self):
         self._data = {}

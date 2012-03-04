@@ -29,8 +29,6 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 class Body(Option):
     def __init__(self, material):
         """
@@ -55,9 +53,14 @@ class Body(Option):
         return cls(material)
 
     def __savexml__(self, element, *args, **kwargs):
-        child = Element('material')
-        child.append(self.material.to_xml())
-        element.append(child)
+        child = element.find('material')
+        if child is not None:
+            child.clear()
+            child.append(self.material.to_xml())
+        else:
+            child = Element('material')
+            child.append(self.material.to_xml())
+            element.append(child)
 
     @property
     def material(self):

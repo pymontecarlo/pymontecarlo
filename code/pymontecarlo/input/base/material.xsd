@@ -30,7 +30,7 @@
         </xsd:sequence>
 
         <xsd:attribute name="index" type="xsd:positiveInteger"
-            use="required" />
+            use="optional" />
 
         <xsd:attribute name="name" type="xsd:string" />
 

@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <xsd:include schemaLocation="../../util/transition.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:util="http://pymontecarlo.sf.net/util">
+    <xsd:import namespace="http://pymontecarlo.sf.net/util"
+        schemaLocation="../../util/util.xsd" />
 
     <xsd:element name="limit" abstract="true" />
 
     <xsd:complexType name="transitionLimitType">
         <xsd:sequence>
-            <xsd:element ref="transition" />
+            <xsd:element ref="util:transition" />
         </xsd:sequence>
     </xsd:complexType>
 

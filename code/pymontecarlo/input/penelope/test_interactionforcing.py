@@ -56,26 +56,26 @@ class TestInteractionForcing(unittest.TestCase):
         self.assertEqual(self.coll_po.ANNIHILATION, self.if5.collision)
         self.assertEqual(self.coll_po.DELTA_INTERACTION, self.if6.collision)
 
-        self.assertEqual(-4, self.if1.forcer)
-        self.assertEqual(-400, self.if2.forcer)
-        self.assertEqual(-10, self.if3.forcer)
-        self.assertEqual(-10, self.if4.forcer)
-        self.assertEqual(-100, self.if5.forcer)
-        self.assertEqual(-100, self.if5.forcer)
+        self.assertAlmostEqual(-4, self.if1.forcer, 6)
+        self.assertAlmostEqual(-400, self.if2.forcer, 6)
+        self.assertAlmostEqual(-10, self.if3.forcer, 6)
+        self.assertAlmostEqual(-10, self.if4.forcer, 6)
+        self.assertAlmostEqual(-100, self.if5.forcer, 6)
+        self.assertAlmostEqual(-100, self.if5.forcer, 6)
 
-        self.assertEqual(0.1, self.if1.weight[0])
-        self.assertEqual(0.1, self.if2.weight[0])
-        self.assertEqual(1e-4, self.if3.weight[0])
-        self.assertEqual(1e-4, self.if4.weight[0])
-        self.assertEqual(1e-4, self.if5.weight[0])
-        self.assertEqual(1e-4, self.if6.weight[0])
+        self.assertAlmostEqual(0.1, self.if1.weight[0], 6)
+        self.assertAlmostEqual(0.1, self.if2.weight[0], 6)
+        self.assertAlmostEqual(1e-4, self.if3.weight[0], 6)
+        self.assertAlmostEqual(1e-4, self.if4.weight[0], 6)
+        self.assertAlmostEqual(1e-4, self.if5.weight[0], 6)
+        self.assertAlmostEqual(1e-4, self.if6.weight[0], 6)
 
-        self.assertEqual(1.0, self.if1.weight[1])
-        self.assertEqual(1.0, self.if2.weight[1])
-        self.assertEqual(1.0, self.if3.weight[1])
-        self.assertEqual(1.0, self.if4.weight[1])
-        self.assertEqual(1.0, self.if5.weight[1])
-        self.assertEqual(1.0, self.if6.weight[1])
+        self.assertAlmostEqual(1.0, self.if1.weight[1], 6)
+        self.assertAlmostEqual(1.0, self.if2.weight[1], 6)
+        self.assertAlmostEqual(1.0, self.if3.weight[1], 6)
+        self.assertAlmostEqual(1.0, self.if4.weight[1], 6)
+        self.assertAlmostEqual(1.0, self.if5.weight[1], 6)
+        self.assertAlmostEqual(1.0, self.if6.weight[1], 6)
 
     def test__eq__(self):
         if0 = InteractionForcing(ELECTRON, self.coll_el.HARD_BREMSSTRAHLUNG_EMISSION, -4, (0.1, 1.0))
@@ -131,6 +131,26 @@ class TestInteractionForcing(unittest.TestCase):
         self.assertEqual(cmp(if5, if7), 1) #if5 is greater than if7
 
         self.assertEqual(cmp(if6, if7), -1) #if6 is less than if7
+
+    def testfrom_xml(self):
+        element = self.if1.to_xml()
+        if1 = InteractionForcing.from_xml(element)
+
+        self.assertEqual(ELECTRON, if1.particle)
+        self.assertEqual(self.coll_el.HARD_BREMSSTRAHLUNG_EMISSION, if1.collision)
+        self.assertAlmostEqual(-4, if1.forcer, 6)
+        self.assertAlmostEqual(0.1, if1.weight[0], 6)
+        self.assertAlmostEqual(1.0, if1.weight[1], 6)
+
+    def testto_xml(self):
+        element = self.if1.to_xml()
+
+        self.assertEqual(ELECTRON, int(element.get('particle')))
+        self.assertEqual(self.coll_el.HARD_BREMSSTRAHLUNG_EMISSION,
+                         int(element.get('collision')))
+        self.assertAlmostEqual(-4.0, float(element.get('forcer')))
+        self.assertAlmostEqual(0.1, float(element.get('weightMin')))
+        self.assertAlmostEqual(1.0, float(element.get('weightMax')))
 
 class TestCollisions(unittest.TestCase):
 

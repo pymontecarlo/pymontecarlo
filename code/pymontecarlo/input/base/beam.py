@@ -31,8 +31,6 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
-
 class PencilBeam(Option):
     def __init__(self, energy_eV, origin_m=(0, 0, 1), direction=(0, 0, -1),
                  aperture_rad=0.0):

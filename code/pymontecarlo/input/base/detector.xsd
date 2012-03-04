@@ -20,8 +20,8 @@
         <xsd:attribute name="elevation_min" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
-                    <xsd:minInclusive value="-1.5707963267948966" />
-                    <xsd:maxInclusive value="1.5707963267948966" />
+                    <xsd:minExclusive value="-1.5707973267948965" />
+                    <xsd:maxExclusive value="1.5707973267948965" />
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
@@ -29,8 +29,8 @@
         <xsd:attribute name="elevation_max" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
-                    <xsd:minInclusive value="-1.5707963267948966" />
-                    <xsd:maxInclusive value="1.5707963267948966" />
+                    <xsd:minExclusive value="-1.5707973267948965" />
+                    <xsd:maxExclusive value="1.5707973267948965" />
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
@@ -38,8 +38,8 @@
         <xsd:attribute name="azimuth_min" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
-                    <xsd:minInclusive value="0" />
-                    <xsd:maxInclusive value="3.1415926535897931" />
+                    <xsd:minExclusive value="-1e-6" />
+                    <xsd:maxExclusive value="6.2831863071795864" />
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
@@ -47,8 +47,8 @@
         <xsd:attribute name="azimuth_max" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
-                    <xsd:minInclusive value="0" />
-                    <xsd:maxInclusive value="3.1415926535897931" />
+                    <xsd:minExclusive value="-1e-6" />
+                    <xsd:maxExclusive value="6.2831863071795864" />
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
@@ -99,8 +99,8 @@
                 <xsd:attribute name="limit_min" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:double">
-                            <xsd:minInclusive value="-1.5707963267948966" />
-                            <xsd:maxInclusive value="1.5707963267948966" />
+                            <xsd:minExclusive value="-1.5707973267948965" />
+                            <xsd:maxExclusive value="1.5707973267948965" />
                         </xsd:restriction>
                     </xsd:simpleType>
                 </xsd:attribute>
@@ -108,8 +108,8 @@
                 <xsd:attribute name="limit_max" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:double">
-                            <xsd:minInclusive value="-1.5707963267948966" />
-                            <xsd:maxInclusive value="1.5707963267948966" />
+                            <xsd:minExclusive value="-1.5707973267948965" />
+                            <xsd:maxExclusive value="1.5707973267948965" />
                         </xsd:restriction>
                     </xsd:simpleType>
                 </xsd:attribute>
@@ -140,8 +140,8 @@
                 <xsd:attribute name="limit_min" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:double">
-                            <xsd:minInclusive value="0" />
-                            <xsd:maxInclusive value="3.1415926535897931" />
+                            <xsd:minExclusive value="-1e6" />
+                            <xsd:maxExclusive value="3.1415936535897933" />
                         </xsd:restriction>
                     </xsd:simpleType>
                 </xsd:attribute>
@@ -149,8 +149,8 @@
                 <xsd:attribute name="limit_max" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:double">
-                            <xsd:minInclusive value="0" />
-                            <xsd:maxInclusive value="3.1415926535897931" />
+                            <xsd:minExclusive value="-1e6" />
+                            <xsd:maxExclusive value="3.1415936535897933" />
                         </xsd:restriction>
                     </xsd:simpleType>
                 </xsd:attribute>

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`option` -- Base class for all options
+:mod:`option` -- Base class for all PENELOPE options
 ================================================================================
 
 .. module:: option
-   :synopsis: Base class for all options
+   :synopsis: Base class for all PENELOPE options
 
-.. inheritance-diagram:: pymontecarlo.input.base.option
+.. inheritance-diagram:: pymontecarlo.input.penelope.option
 
 """
 
@@ -24,14 +24,10 @@ __license__ = "GPL v3"
 from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml, XMLIO
+from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.base.option import Option #@UnusedImport
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base',
-                    resource_filename(__name__, 'base.xsd'))
-
-class Option(objectxml):
-
-    def __init__(self):
-        self.__dict__.setdefault('_props', {}) # prevent double initialization
+XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope',
+                    resource_filename(__name__, 'penelope.xsd'))

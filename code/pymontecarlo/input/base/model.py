@@ -24,11 +24,10 @@ import collections
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import XMLIO, objectxml
+from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.base.option import Option
 
 # Globals and constants variables.
-
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base')
 
 _model_registry = {}
 
@@ -91,8 +90,10 @@ class __NoModelType(ModelType):
 
 NO_MODEL_TYPE = __NoModelType()
 
-class Model(objectxml):
+class Model(Option):
     def __init__(self, name, reference=''):
+        Option.__init__(self)
+
         self._name = name
         self._reference = reference
         self._type = NO_MODEL_TYPE

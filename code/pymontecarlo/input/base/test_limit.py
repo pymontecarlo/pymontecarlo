@@ -93,7 +93,7 @@ class TestUncertaintyLimit(unittest.TestCase):
     def testto_xml(self):
         element = self.lim.to_xml()
 
-        child = list(element.find('transition'))[0]
+        child = list(element)[0]
         self.assertEqual(29, int(child.get('z')))
         self.assertEqual(4, int(child.get('src')))
         self.assertEqual(1, int(child.get('dest')))

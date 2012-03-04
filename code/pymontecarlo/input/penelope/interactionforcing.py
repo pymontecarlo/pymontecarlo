@@ -23,15 +23,13 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.option import Option
+from pymontecarlo.input.penelope.option import Option
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 ELECTRON = 1
 PHOTON = 2
 POSITRON = 3
-
-XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
 
 class Collisions(object):
     def __init__(self, particle):

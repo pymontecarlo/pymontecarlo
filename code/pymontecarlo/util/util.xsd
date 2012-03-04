@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<xsd:schema targetNamespace="http://pymontecarlo.sf.net/util"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://pymontecarlo.sf.net/util">
+
+    <xsd:include schemaLocation="transition.xsd" />
+</xsd:schema>

@@ -25,15 +25,15 @@ from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.base.body import Body as _Body, Layer as _Layer
+from pymontecarlo.input.penelope.option import Option
 from pymontecarlo.input.penelope.interactionforcing import InteractionForcing
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
-
-class Body(_Body):
+class Body(_Body, Option):
     def __init__(self, material, maximum_step_length_m=1e20):
+        Option.__init__(self)
         _Body.__init__(self, material)
 
         self._props['interaction forcings'] = set()

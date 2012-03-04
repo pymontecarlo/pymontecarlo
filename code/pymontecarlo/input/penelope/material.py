@@ -24,12 +24,11 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.input.base.material import Material as _Material, _Vacuum
+from pymontecarlo.input.penelope.option import Option
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
-
-XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/input/penelope')
 
 def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
          elastic_scattering=(0.0, 0.0),
@@ -68,7 +67,7 @@ def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0
                     elastic_scattering,
                     cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
 
-class Material(_Material):
+class Material(_Material, Option):
     def __init__(self, name, composition, density_kg_m3=None,
                  absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
                  elastic_scattering=(0.0, 0.0),
@@ -116,6 +115,7 @@ class Material(_Material):
         :arg cutoff_energy_bremsstrahlung_eV: cutoff energy for Bremsstrahlung
             emission (in eV).
         """
+        Option.__init__(self)
         _Material.__init__(self, name, composition, density_kg_m3,
                            absorption_energy_electron_eV, absorption_energy_photon_eV)
 

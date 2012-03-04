@@ -30,7 +30,7 @@
         </xsd:attribute>
     </xsd:attributeGroup>
 
-    <xsd:complexType name="penelopeBodyType">
+    <xsd:complexType name="bodyType">
         <xsd:complexContent>
             <xsd:extension base="base:bodyType">
                 <xsd:group ref="interactionForcingsGroup" />
@@ -39,10 +39,10 @@
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="body" type="penelopeBodyType"
+    <xsd:element name="body" type="bodyType"
         substitutionGroup="base:body" />
 
-    <xsd:complexType name="penelopeLayerType">
+    <xsd:complexType name="layerType">
         <xsd:complexContent>
             <xsd:extension base="base:layerType">
                 <xsd:group ref="interactionForcingsGroup" />
@@ -51,6 +51,6 @@
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="layer" type="penelopeLayerType"
+    <xsd:element name="layer" type="layerType"
         substitutionGroup="base:body" />
 </xsd:schema>
