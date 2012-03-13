@@ -40,8 +40,8 @@ public class AngularDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.BackscatteredElevationAngularResult";
+        public String getTag() {
+            return "BackscatteredElevationAngularResult";
         }
 
     }
@@ -79,8 +79,8 @@ public class AngularDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.BackscatteredAzimuthalAngularResult";
+        public String getTag() {
+            return "BackscatteredAzimuthalAngularResult";
         }
 
     }
@@ -118,8 +118,8 @@ public class AngularDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.TransmittedElevationAngularResult";
+        public String getTag() {
+            return "TransmittedElevationAngularResult";
         }
 
     }
@@ -157,8 +157,8 @@ public class AngularDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.TransmittedAzimuthalAngularResult";
+        public String getTag() {
+            return "TransmittedAzimuthalAngularResult";
         }
 
     }

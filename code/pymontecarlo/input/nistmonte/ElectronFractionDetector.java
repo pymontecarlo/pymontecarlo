@@ -111,8 +111,8 @@ public class ElectronFractionDetector extends AbstractScatteringDetector {
 
 
     @Override
-    public String getPythonEquivalent() {
-        return "pymontecarlo.result.base.result.ElectronFractionResult";
+    public String getTag() {
+        return "ElectronFractionResult";
     }
 
 }

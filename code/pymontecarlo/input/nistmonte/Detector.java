@@ -74,9 +74,9 @@ public interface Detector extends ActionListener {
 
 
     /**
-     * Returns the module and name of equivalent result class of this detector.
+     * Returns the tag of the result class of this detector.
      * 
-     * @return equivalent Python result class for this detector
+     * @return tag of the result class for this detector
      */
-    public String getPythonEquivalent();
+    public String getTag();
 }

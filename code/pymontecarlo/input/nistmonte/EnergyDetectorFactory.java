@@ -40,8 +40,8 @@ public class EnergyDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.BackscatteredElectronEnergyResult";
+        public String getTag() {
+            return "BackscatteredElectronEnergyResult";
         }
 
     }
@@ -79,8 +79,8 @@ public class EnergyDetectorFactory {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.TransmittedElectronEnergyResult";
+        public String getTag() {
+            return "TransmittedElectronEnergyResult";
         }
     }
 

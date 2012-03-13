@@ -58,8 +58,8 @@ public class PhotonDetectorTest extends TestCase {
 
 
         @Override
-        public String getPythonEquivalent() {
-            return "pymontecarlo.result.base.result.PhotonDetectorMock";
+        public String getTag() {
+            return "PhotonDetectorMock";
         }
 
     }

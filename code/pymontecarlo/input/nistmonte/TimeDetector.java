@@ -144,7 +144,7 @@ public class TimeDetector extends AbstractDetector {
 
 
     @Override
-    public String getPythonEquivalent() {
-        return "pymontecarlo.result.base.result.TimeResult";
+    public String getTag() {
+        return "TimeResult";
     }
 }

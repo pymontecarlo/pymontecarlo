@@ -198,7 +198,7 @@ public class PhotonSpectrumDetector extends PhotonDetector implements
 
 
     @Override
-    public String getPythonEquivalent() {
-        return "pymontecarlo.result.base.result.PhotonSpectrumResult";
+    public String getTag() {
+        return "PhotonSpectrumResult";
     }
 }

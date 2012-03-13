@@ -168,8 +168,8 @@ public class Process {
         buf.append("[keys]\n");
 
         for (Entry<String, Detector> entry : detectors.entrySet())
-            buf.append(entry.getKey() + " = "
-                    + entry.getValue().getPythonEquivalent() + "\n");
+            buf.append(entry.getKey() + " = " + entry.getValue().getTag()
+                    + "\n");
 
         ZipUtil.saveStringBuffer(zipOutput, "keys.ini", buf);
 

@@ -154,8 +154,8 @@ public class PhotonIntensityDetector extends PhotonDetector {
 
 
     @Override
-    public String getPythonEquivalent() {
-        return "pymontecarlo.result.base.result.PhotonIntensityResult";
+    public String getTag() {
+        return "PhotonIntensityResult";
     }
 
 
