@@ -29,6 +29,7 @@ from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
+from pymontecarlo.result.base.manager import ResultsManager, Result
 
 # Globals and constants variables.
 GENERATED = "g"
@@ -37,25 +38,6 @@ NOFLUORESCENCE = "nf"
 CHARACTERISTIC = "cf"
 BREMSSTRAHLUNG = "bf"
 TOTAL = "t"
-
-class _Result(object):
-
-    def __init__(self, detector):
-        self._detector = detector
-
-    @classmethod
-    def __loadzip__(cls, zipfile, key, detector):
-        return cls(detector)
-
-    def __savezip__(self, zipfile, key):
-        pass
-
-    @property
-    def detector(self):
-        """
-        Detector associated to this result.
-        """
-        return self._detector
 
 def create_intensity_dict(transition,
                           gcf=(0.0, 0.0), gbf=(0.0, 0.0), gnf=(0.0, 0.0), gt=(0.0, 0.0),
@@ -74,7 +56,7 @@ def create_intensity_dict(transition,
                          }
             }
 
-class PhotonIntensityResult(_Result):
+class PhotonIntensityResult(Result):
     _COLUMNS = ['transition', 'energy (eV)',
                 'generated characteristic', 'generated characteristic unc',
                 'generated bremsstrahlung', 'generated bremsstrahlung unc',
@@ -93,7 +75,7 @@ class PhotonIntensityResult(_Result):
         :arg intensities: :class:`dict` containing the intensities.
             One should use :func:`.create_intensity_dict` to create the dictionary
         """
-        _Result.__init__(self, detector)
+        Result.__init__(self, detector)
 
         self._intensities = intensities
 
@@ -349,7 +331,10 @@ class PhotonIntensityResult(_Result):
         for transition in self._intensities:
             yield transition, self.intensity(transition, absorption, fluorescence)
 
-class TimeResult(_Result):
+ResultsManager.register('PhotonIntensityResult', PhotonIntensityResult)
+ResultsManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityResult', PhotonIntensityResult)
+
+class TimeResult(Result):
 
     def __init__(self, detector, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
         """
@@ -360,7 +345,7 @@ class TimeResult(_Result):
         :arg simulation_speed_s: time to simulation one electron (in seconds) and
             its uncertainty
         """
-        _Result.__init__(self, detector)
+        Result.__init__(self, detector)
 
         self._simulation_time_s = simulation_time_s
         self._simulation_speed_s = simulation_speed_s
@@ -405,13 +390,16 @@ class TimeResult(_Result):
     def simulation_speed_s(self):
         return self._simulation_speed_s
 
-class ElectronFractionResult(_Result):
+ResultsManager.register('TimeResult', TimeResult)
+ResultsManager.register_loader('pymontecarlo.result.base.result.TimeResult', TimeResult)
+
+class ElectronFractionResult(Result):
 
     def __init__(self, detector,
                  absorbed=(0.0, 0.0),
                  backscattered=(0.0, 0.0),
                  transmitted=(0.0, 0.0)):
-        _Result.__init__(self, detector)
+        Result.__init__(self, detector)
 
         self._absorbed = absorbed
         self._backscattered = backscattered
@@ -473,3 +461,5 @@ class ElectronFractionResult(_Result):
     def transmitted(self):
         return self._transmitted
 
+ResultsManager.register('ElectronFractionResult', ElectronFractionResult)
+ResultsManager.register_loader('pymontecarlo.result.base.result.ElectronFractionResult', ElectronFractionResult)

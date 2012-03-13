@@ -41,20 +41,20 @@ class TestResults(unittest.TestCase):
         # Detectors
         det1 = PhotonIntensityDetector((radians(35), radians(45)),
                                        (0, radians(360.0)))
-        det2 = TimeDetector()
+        self.det2 = TimeDetector()
         det3 = ElectronFractionDetector()
 
         # Options
         self.ops = Options()
         self.ops.beam.energy = 1234
         self.ops.detectors['det1'] = det1
-        self.ops.detectors['det2'] = det2
+        self.ops.detectors['det2'] = self.det2
         self.ops.detectors['det3'] = det3
 
         # Results
         results = {}
         results['det1'] = PhotonIntensityResult(det1)
-        results['det2'] = TimeResult(det2)
+        results['det2'] = TimeResult(self.det2)
         results['det3'] = ElectronFractionResult(det3)
 
         self.results = Results(self.ops, results)
@@ -69,6 +69,12 @@ class TestResults(unittest.TestCase):
 
     def testskeleton(self):
         self.assertTrue(True)
+
+    def test__init__invalidkey(self):
+        results = {}
+        results['det4'] = PhotonIntensityResult(self.det2)
+
+        self.assertRaises(ValueError, Results, self.ops, results)
 
     def testsave(self):
         with open(self.tmpzip, 'w') as fp:

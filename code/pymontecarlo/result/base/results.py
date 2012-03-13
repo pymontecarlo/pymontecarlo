@@ -19,7 +19,6 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import sys
 from collections import Mapping
 from zipfile import ZipFile
 from ConfigParser import SafeConfigParser
@@ -28,42 +27,71 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.result.base.manager import ResultsManager
+
+import pymontecarlo.result.base.result #@UnusedImport
 
 # Globals and constants variables.
 SECTION_KEYS = 'keys'
+KEYS_INI_FILENAME = 'keys.ini'
 
 class Results(Mapping):
 
     def __init__(self, options, results={}):
+        """
+        Creates a new container for the results.
+        Once created, the results container cannot be modified.
+        
+        :arg options: options used to generate these results
+        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
+        
+        :arg results: results to be part of this container.
+            The results are specified by a key (key of the detector) and a
+            :class:`Result <pymontecarlo.result.base.result.Result>` class.
+        :type results: :class:`dict`
+        """
         self._options = options
-        self._results = dict(results) # copy
+        self._results = {}
+
+        # Validate and populate
+        for key, result in results.iteritems():
+            if key not in options.detectors:
+                raise ValueError, 'No detector was found in the options for result key (%s)' % key
+
+            self._results[key] = result
 
     def __repr__(self):
         return '<Results(%s)>' % ', '.join(self._results.keys())
 
     @classmethod
-    def load(cls, fileobj, options):
-        zipfile = ZipFile(fileobj, 'r')
+    def load(cls, source, options):
+        """
+        Loads results from a results ZIP.
+        
+        :arg source: filepath or file-object
+        
+        :arg options: options used to generate these results
+        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
+        
+        :return: results container
+        """
+        zipfile = ZipFile(source, 'r')
 
         # Parse keys.ini
         try:
-            zipinfo = zipfile.getinfo('keys.ini')
+            zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
         except KeyError:
-            raise IOError, "Zip file (%s) does not contain a keys.ini" % fileobj
+            raise IOError, "Zip file (%s) does not contain a %s" % \
+                    (getattr(source, 'name', 'unknown'), KEYS_INI_FILENAME)
         config = SafeConfigParser()
         config.readfp(zipfile.open(zipinfo, 'r'))
 
         # Load each results
         results = {}
         for key in config.options(SECTION_KEYS):
-            module, name = config.get(SECTION_KEYS, key).rsplit('.', 1)
+            tag = config.get(SECTION_KEYS, key)
+            klass = ResultsManager._get_class(tag)
             detector = options.detectors[key]
-
-            # This import technique is the same as the one used in pickle
-            # See Unpickler.find_class
-            __import__(module)
-            mod = sys.modules[module]
-            klass = getattr(mod, name)
 
             results[key] = klass.__loadzip__(zipfile, key, detector)
 
@@ -71,8 +99,13 @@ class Results(Mapping):
 
         return cls(options, results)
 
-    def save(self, fileobj):
-        zipfile = ZipFile(fileobj, 'w')
+    def save(self, source):
+        """
+        Saves results in a results ZIP.
+        
+        :arg source: filepath or file-object
+        """
+        zipfile = ZipFile(source, 'w')
 
         # Creates keys.ini
         config = SafeConfigParser()
@@ -82,18 +115,21 @@ class Results(Mapping):
         for key, result in self.iteritems():
             result.__savezip__(zipfile, key)
 
-            value = result.__class__.__module__ + "." + result.__class__.__name__
-            config.set(SECTION_KEYS, key, value)
+            tag = ResultsManager._get_tag(result.__class__)
+            config.set(SECTION_KEYS, key, tag)
 
         # Save keys.ini in zip
         fp = StringIO()
         config.write(fp)
-        zipfile.writestr('keys.ini', fp.getvalue())
+        zipfile.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
         zipfile.close()
 
     @property
     def options(self):
+        """
+        Options used to generate the results.
+        """
         return self._options
 
     def __len__(self):
