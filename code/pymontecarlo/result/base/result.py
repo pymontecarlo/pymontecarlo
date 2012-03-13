@@ -29,7 +29,7 @@ from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
-from pymontecarlo.result.base.manager import ResultsManager, Result
+from pymontecarlo.result.base.manager import ResultManager, Result
 
 # Globals and constants variables.
 GENERATED = "g"
@@ -331,8 +331,8 @@ class PhotonIntensityResult(Result):
         for transition in self._intensities:
             yield transition, self.intensity(transition, absorption, fluorescence)
 
-ResultsManager.register('PhotonIntensityResult', PhotonIntensityResult)
-ResultsManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityResult', PhotonIntensityResult)
+ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
+ResultManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityResult', PhotonIntensityResult)
 
 class TimeResult(Result):
 
@@ -390,8 +390,8 @@ class TimeResult(Result):
     def simulation_speed_s(self):
         return self._simulation_speed_s
 
-ResultsManager.register('TimeResult', TimeResult)
-ResultsManager.register_loader('pymontecarlo.result.base.result.TimeResult', TimeResult)
+ResultManager.register('TimeResult', TimeResult)
+ResultManager.register_loader('pymontecarlo.result.base.result.TimeResult', TimeResult)
 
 class ElectronFractionResult(Result):
 
@@ -461,5 +461,5 @@ class ElectronFractionResult(Result):
     def transmitted(self):
         return self._transmitted
 
-ResultsManager.register('ElectronFractionResult', ElectronFractionResult)
-ResultsManager.register_loader('pymontecarlo.result.base.result.ElectronFractionResult', ElectronFractionResult)
+ResultManager.register('ElectronFractionResult', ElectronFractionResult)
+ResultManager.register_loader('pymontecarlo.result.base.result.ElectronFractionResult', ElectronFractionResult)

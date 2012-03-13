@@ -46,7 +46,7 @@ class Result(object):
         """
         return self._detector
 
-class _ResultsManager(Manager):
+class _ResultManager(Manager):
     def register_loader(self, tag, klass):
         if not issubclass(klass, Result):
             raise ValueError, 'The class (%s) must be a subclass of Result.' % \
@@ -61,4 +61,4 @@ class _ResultsManager(Manager):
 
         Manager.register_saver(self, tag, klass)
 
-ResultsManager = _ResultsManager()
+ResultManager = _ResultManager()

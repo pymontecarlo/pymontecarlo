@@ -27,7 +27,7 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.base.manager import ResultsManager
+from pymontecarlo.result.base.manager import ResultManager
 
 import pymontecarlo.result.base.result #@UnusedImport
 
@@ -90,7 +90,7 @@ class Results(Mapping):
         results = {}
         for key in config.options(SECTION_KEYS):
             tag = config.get(SECTION_KEYS, key)
-            klass = ResultsManager._get_class(tag)
+            klass = ResultManager._get_class(tag)
             detector = options.detectors[key]
 
             results[key] = klass.__loadzip__(zipfile, key, detector)
@@ -115,7 +115,7 @@ class Results(Mapping):
         for key, result in self.iteritems():
             result.__savezip__(zipfile, key)
 
-            tag = ResultsManager._get_tag(result.__class__)
+            tag = ResultManager._get_tag(result.__class__)
             config.set(SECTION_KEYS, key, tag)
 
         # Save keys.ini in zip

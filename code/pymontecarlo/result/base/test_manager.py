@@ -15,11 +15,11 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.base.manager import ResultsManager #@UnusedImport
+from pymontecarlo.result.base.manager import ResultManager #@UnusedImport
 
 # Globals and constants variables.
 
-class TestResultsManager(unittest.TestCase):
+class TestResultManager(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
