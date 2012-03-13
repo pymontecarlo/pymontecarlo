@@ -308,8 +308,34 @@
     <target name="jar"
             depends="compile-java"
             description="Create distributions">
+        <mkdir dir="${dist.dir}" />
+
+        <!-- Copy lib.dir -->
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="${lib.dir}" />
+        </copy>
+        
+        <!-- Manifest -->
+        <path id="lib">
+            <fileset dir="${dist.dir}/lib">
+                <include name="*.jar" />
+            </fileset>
+        </path>
+
+        <manifestclasspath property="jar.classpath"
+                           jarfile="${dist.dir}/${ivy.module}-${ivy.revision}.jar">
+            <classpath refid="lib" />
+        </manifestclasspath>
+
+        <!-- Create jar -->
         <jar destfile="${dist.dir}/${ivy.module}-${ivy.revision}.jar">
             <fileset dir="${build.dir}" includes="**" />
+
+            <manifest>
+                <attribute name="Class-Path" value="${jar.classpath}" />
+                <attribute name="Main-Class"
+                           value="pymontecarlo.runner.nistmonte.ProcessCUI" />
+            </manifest>
         </jar>
     </target>
 
@@ -386,12 +412,12 @@
 
         <fail message="Some tests failed!!!" if="test.failure" />
     </target>
-    
-    
-    
+
+
+
     <target name="ide" description="Compile c code for use in IDE">
         <antcall target="compile-c" />
-        
+
         <copy todir="${src.dir}/pymontecarlo/lib/penelope">
             <fileset dir="${build.dir}" includes="*" />
         </copy>
