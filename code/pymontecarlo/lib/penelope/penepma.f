@@ -72,6 +72,7 @@ C  SENERG SE0                              [Energy of the electron beam]
 C  SPOSIT SX0,SY0,SZ0               [Coordinates of the electron source]
 C  SDIREC STHETA,SPHI        [Direction angles of the beam axis, in deg]
 C  SAPERT SALPHA                                 [Beam aperture, in deg]
+C  SDIAM  SDIAM                                   [Beam diameter, in cm]
 C         .
 C         >>>>>>>> Material data and simulation parameters.
 C                  Up to 10 materials; 2 lines for each material.
@@ -150,6 +151,8 @@ C             DEFAULT: SALPHA=0.0
 C
 C           --> Notice that the default beam is a pencil beam that
 C           moves downwards along the Z-axis.
+C  SDIAM  : Diameter of the electron beam, in cm.
+C             DEFAULT: SDIAM=10.0E-7 ! 10 nm
 C
 C  >>>>>>>> Material data and simulation parameters.
 C
