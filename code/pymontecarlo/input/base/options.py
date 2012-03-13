@@ -30,6 +30,12 @@ from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.material import pure
 from pymontecarlo.input.base.geometry import Substrate
 
+import pymontecarlo.input.base.beam #@UnusedImport
+import pymontecarlo.input.base.geometry #@UnusedImport
+import pymontecarlo.input.base.limit #@UnusedImport
+import pymontecarlo.input.base.detector #@UnusedImport
+import pymontecarlo.input.base.model #@UnusedImport
+
 # Globals and constants variables.
 
 class _Detectors(MutableMapping):
@@ -203,45 +209,49 @@ class Options(Option):
         element.append(child)
 
     @classmethod
-    def from_xml(cls, element, validate=True, *args, **kwargs):
-        if validate:
-            pass
-
-        return Option.from_xml(element, *args, **kwargs)
-
-    def to_xml(self, *args, **kwargs):
-        root = Option.to_xml(self, *args, **kwargs)
-
-        # Validate
-
-
-        return root
-
-    @classmethod
-    def load(cls, fileobj, validate=True):
+    def load(cls, source, validate=True):
         """
         Loads the options from a file-object.
         The file-object must correspond to a XML file where the options were 
         saved.
         
-        :arg fileobj: file-object
+        :arg source: filepath or file-object
+        :arg validate: whether to validate XML file against the schemas 
+            (default: ``True``)
         
         :return: loaded options
         """
-        element = parse(fileobj).getroot()
+        self_opened = False
+        if not hasattr(source, "read"):
+            source = open(source, "rb")
+            self_opened = True
+
+        element = parse(source).getroot()
+        if self_opened: source.close()
+
         return cls.from_xml(element, validate)
 
-    def save(self, fileobj):
+    def save(self, source, validate=True):
         """
         Saves the options to a file-object.
         The file-object must correspond to a XML file where the options will 
         be saved.
         
-        :arg fileobj: file-object
+        :arg source: filepath or file-object
+        :arg validate: whether to validate XML file against the schemas 
+            (default: ``True``)
         """
-        element = self.to_xml()
+        element = self.to_xml(validate)
         output = tostring(element, pretty_print=True)
-        fileobj.write(output)
+
+        self_opened = False
+        if not hasattr(source, "write"):
+            source = open(source, "wb")
+            self_opened = True
+
+        source.write(output)
+
+        if self_opened: source.close()
 
     @property
     def beam(self):

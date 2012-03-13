@@ -154,7 +154,7 @@ class _XMLIO(object):
         schema = self._create_global_schema()
         schema.assertValid(element) # raise exceptions
 
-    def from_xml(self, element, validate=True, *args, **kwargs):
+    def from_xml(self, element, validate=False, *args, **kwargs):
         """
         Loads an object from a XML element. A :exc:`ValueError` is raised if
         no loader is found for the XML element.
@@ -172,7 +172,7 @@ class _XMLIO(object):
 
         return klass.__loadxml__(element, *args, **kwargs)
 
-    def to_xml(self, obj, validate=True, *args, **kwargs):
+    def to_xml(self, obj, validate=False, *args, **kwargs):
         """
         Saves an object as a XML element. A :exc:`ValueError` is raised if
         no saver is found for the object.
