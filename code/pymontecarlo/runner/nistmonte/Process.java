@@ -106,6 +106,7 @@ public class Process {
      */
     public int run() throws EPQException, IOException {
         // Extract from options XML file
+        report(0.0, "Loading options file");
         Element root = JDomUtils.loadXML(optionsFile).getRootElement();
 
         OptionsExtractor extractor = getOptionsExtractor();
@@ -144,9 +145,11 @@ public class Process {
             throw new EPQException("No ShowersLimit specified.");
 
         // Run
+        report(0.0, "Running showers");
         mcss.runMultipleTrajectories(showers);
 
         // Create ZIP
+        report(1.0, "Saving results");
         File resultsZip = new File(resultsDir, name + ".zip");
         OutputStream out =
                 new BufferedOutputStream(new FileOutputStream(resultsZip));
@@ -314,5 +317,20 @@ public class Process {
         }
 
         props.store(new FileOutputStream(logFile), "");
+    }
+
+
+
+    /**
+     * Report progress and status.
+     * 
+     * @param progress
+     *            current progress (between 0.0 and 1.0)
+     * @param status
+     *            current status
+     */
+    protected void report(double progress, String status) {
+        System.out.println(progress + "\t" + status);
+        System.out.flush();
     }
 }

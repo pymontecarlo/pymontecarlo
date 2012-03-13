@@ -1,2 +1,6 @@
 [penelope]
 pendbase=/penelope2011/pendbase
+
+[nistmonte]
+java=
+jar=
