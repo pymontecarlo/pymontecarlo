@@ -29,25 +29,18 @@ import logging
 # Local modules.
 from pymontecarlo import settings
 from pymontecarlo.input.nistmonte.converter import Converter
+from pymontecarlo.result.base.results import Results
 from pymontecarlo.runner.base.runner import Runner as _Runner
 from pymontecarlo.runner.base.manager import RunnerManager
 
 # Globals and constants variables.
 
 class Runner(_Runner):
-    def __init__(self, options, output, overwrite=True):
+    def __init__(self, options, outputdir, overwrite=True):
         """
-        Runner to run a NISTMonte simulation.
-        
-        :arg options: options of the simulation
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
-        
-        :arg output: output directory of the simulation
+        Runner to run NISTMonte simulation(s).
         """
-        _Runner.__init__(self, options, output, overwrite)
-
-        if not os.path.isdir(output):
-            raise ValueError, 'Output (%s) is not a directory' % output
+        _Runner.__init__(self, options, outputdir, overwrite)
 
         self._java_exec = settings.nistmonte.java
         if not os.path.exists(self._java_exec):
@@ -59,19 +52,20 @@ class Runner(_Runner):
             raise IOError, 'pyMonteCarlo jar (%s) cannot be found' % self._jar_path
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
 
+    def _reset(self):
+        _Runner._reset(self)
         self._process = None
-        self._progress = 0.0
-        self._status = ''
 
-    def _save_options(self):
-        ops = copy.deepcopy(self.options)
+    def _save_options(self, options):
+        ops = copy.deepcopy(options)
 
         # Convert
         Converter().convert(ops)
 
         # Save
-        filepath = os.path.join(self.output, ops.name + ".xml")
+        filepath = self._get_filepath(ops, 'xml')
         if os.path.exists(filepath) and not self.overwrite:
+            logging.info('Skipping %s as it already exists', filepath)
             return
 
         ops.save(filepath)
@@ -79,19 +73,16 @@ class Runner(_Runner):
 
         return filepath
 
-    def run(self):
-        options_filepath = self._save_options()
+    def _run_single(self, options):
+        options_filepath = self._save_options(options)
         if not options_filepath:
             return
 
         args = [self._java_exec]
         args += ['-jar', self._jar_path]
-        args += ['-o', self.output]
+        args += ['-o', self._outputdir]
         args += [options_filepath]
         logging.debug('Launching %s', ' '.join(args))
-
-        self._progress = 0.0
-        self._status = 'Starting'
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
         for line in iter(self._process.stdout.readline, ""):
@@ -100,16 +91,16 @@ class Runner(_Runner):
                 self._progress = float(infos[0])
                 self._status = infos[1].strip()
 
-        self._process = None
-        self._progress = 1.0
-        self._status = 'Finished'
-
     def stop(self):
+        _Runner.stop(self)
         if self._process is not None:
             self._process.kill()
-            self._status = 'Stopped'
 
-    def report(self):
-        return self._progress, self._status
+    def _get_results_single(self, options):
+        filepath = self._get_filepath(options, 'zip')
+        if not os.path.exists(filepath):
+            raise IOError, 'Cannot find results zip: %s' % filepath
+
+        return Results.load(filepath, options)
 
 RunnerManager.register('NISTMonte', Runner)
