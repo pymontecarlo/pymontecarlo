@@ -4,3 +4,9 @@ pendbase=/penelope2011/pendbase
 [nistmonte]
 java=
 jar=
+
+[casino2]
+exe=
+
+[winxray]
+exe=
