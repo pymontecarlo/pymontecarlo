@@ -18,13 +18,13 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
 from pymontecarlo.input.base.options import Options
 from pymontecarlo.input.base.geometry import Substrate, Inclusion, MultiLayers, GrainBoundaries
 from pymontecarlo.input.penelope.converter import Converter
 from pymontecarlo.input.penelope.material import Material
+from pymontecarlo.input.base.limit import TimeLimit
 from pymontecarlo.io.penelope.exporter import Exporter
-import pymontecarlo.lib.penelope.wrapper as wrapper
+import pymontecarlo.lib.penelope.wrapper as wrapper #@UnresolvedImport
 
 # Globals and constants variables.
 
@@ -34,7 +34,7 @@ class TestPenelopeExporter(unittest.TestCase):
         unittest.TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
-        self.e = Exporter(settings.penelope.pendbase)
+        self.e = Exporter()
         self.c = Converter()
 
     def tearDown(self):
@@ -45,15 +45,16 @@ class TestPenelopeExporter(unittest.TestCase):
     def testskeleton(self):
         self.assertTrue(True)
 
-    def testexport_geometry_substrate(self):
+    def testexport_substrate(self):
         # Create
         mat1 = Material('mat', {79: 0.5, 47: 0.5})
 
         ops = Options()
         ops.geometry = Substrate(mat1)
+        ops.limits.add(TimeLimit(100))
 
         self.c.convert(ops)
-        self.e.export_geometry(ops, self.tmpdir)
+        self.e.export(ops, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'substrate.geo')
@@ -66,16 +67,17 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
-    def testexport_geometry_inclusion(self):
+    def testexport_inclusion(self):
         # Create
         mat1 = Material('mat', {79: 0.5, 47: 0.5})
         mat2 = Material('mat', {29: 0.5, 30: 0.5})
 
         ops = Options()
         ops.geometry = Inclusion(mat1, mat2, 0.01)
+        ops.limits.add(TimeLimit(100))
 
         self.c.convert(ops)
-        self.e.export_geometry(ops, self.tmpdir)
+        self.e.export(ops, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'inclusion.geo')
@@ -91,7 +93,7 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat2.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
-    def testexport_geometry_multilayers(self):
+    def testexport_multilayers(self):
         # Create
         mat1 = Material('mat1', {79: 0.5, 47: 0.5})
         mat2 = Material('mat2', {29: 0.5, 30: 0.5})
@@ -106,8 +108,10 @@ class TestPenelopeExporter(unittest.TestCase):
         ops.geometry.add_layer(mat2, 52e-9)
         ops.geometry.add_layer(mat3, 25e-9)
 
+        ops.limits.add(TimeLimit(100))
+
         self.c.convert(ops)
-        self.e.export_geometry(ops, self.tmpdir)
+        self.e.export(ops, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'multilayers.geo')
@@ -126,7 +130,7 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat3.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
-    def testexport_geometry_grainboundaries(self):
+    def testexport_grainboundaries(self):
         # Create
         mat1 = Material('mat1', {79: 0.5, 47: 0.5})
         mat2 = Material('mat2', {29: 0.5, 30: 0.5})
@@ -140,8 +144,10 @@ class TestPenelopeExporter(unittest.TestCase):
         ops.geometry = GrainBoundaries(mat1, mat2)
         ops.geometry.add_layer(mat3, 5e-3)
 
+        ops.limits.add(TimeLimit(100))
+
         self.c.convert(ops)
-        self.e.export_geometry(ops, self.tmpdir)
+        self.e.export(ops, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'grainboundaries.geo')
