@@ -68,7 +68,24 @@ class TestPencilBeam(unittest.TestCase):
         self.assertAlmostEqual(5.0, self.beam.direction[1], 4)
         self.assertAlmostEqual(6.0, self.beam.direction[2], 4)
 
+        self.assertAlmostEqual(0.81789, self.beam.direction_polar_rad, 4)
+        self.assertAlmostEqual(0.89606, self.beam.direction_azimuth_rad, 4)
+
         self.assertAlmostEqual(math.radians(3.5), self.beam.aperture_rad, 4)
+
+    def testdirection_polar_rad(self):
+        beam = PencilBeam(15e3, direction=(0, 0, -1))
+        self.assertAlmostEqual(3.14159, beam.direction_polar_rad, 4)
+
+        beam = PencilBeam(15e3, direction=(0, 0, 1))
+        self.assertAlmostEqual(0.0, beam.direction_polar_rad, 4)
+
+    def testdirection_azimuth_rad(self):
+        beam = PencilBeam(15e3, direction=(0, 0, -1))
+        self.assertAlmostEqual(0.0, beam.direction_azimuth_rad, 4)
+
+        beam = PencilBeam(15e3, direction=(1, 1, -1))
+        self.assertAlmostEqual(0.78540, beam.direction_azimuth_rad, 4)
 
     def testfrom_xml(self):
         element = self.beam.to_xml()

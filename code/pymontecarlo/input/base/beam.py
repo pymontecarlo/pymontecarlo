@@ -114,6 +114,23 @@ class PencilBeam(Option):
         self._props['direction'] = tuple(direction)
 
     @property
+    def direction_polar_rad(self):
+        """
+        Angle of the beam with respect to the positive z-axis.
+        """
+        direction = self.direction
+        norm = math.sqrt(sum(map(mul, direction, direction)))
+        return math.acos(direction[2] / norm);
+
+    @property
+    def direction_azimuth_rad(self):
+        """
+        Angle of the beam with respect to the positive x-axis in the x-y plane.
+        """
+        direction = self.direction
+        return math.atan2(direction[1], direction[0]);
+
+    @property
     def aperture_rad(self):
         """
         Angular aperture of the electron beam (in radians).
