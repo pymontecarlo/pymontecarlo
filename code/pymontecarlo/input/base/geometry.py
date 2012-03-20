@@ -374,7 +374,11 @@ class _Layered(_Geometry):
 
     @classmethod
     def _parse_xml_layers(cls, element, bodies_lookup):
-        layer_indexes = map(int, element.get('layers').split(','))
+        layers_str = element.get('layers')
+        if not layers_str:
+            return []
+
+        layer_indexes = map(int, layers_str.split(','))
         layers = map(bodies_lookup.get, layer_indexes)
 
         return layers
