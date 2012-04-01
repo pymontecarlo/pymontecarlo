@@ -77,6 +77,35 @@ class PhotonIntensityResult(Result):
         """
         Result.__init__(self, detector)
 
+        # Check structure
+        def _check1(transition, data, key1, name1):
+            if key1 not in data:
+                raise ValueError, "Transition %s is missing %s intensities" % \
+                        (transition, name1)
+
+        def _check2(transition, data, key1, name1, key2, name2):
+            if key2 not in data[key1]:
+                raise ValueError, "Transition %s is missing %s %s intensities" % \
+                        (transition, name1, name2)
+
+            if len(data[key1][key2]) != 2:
+                raise ValueError, 'Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
+                    (transition, name1, name2)
+
+        for transition, data in intensities.iteritems():
+            _check1(transition, data, GENERATED, 'generated')
+            _check1(transition, data, EMITTED, 'emitted')
+
+            _check2(transition, data, GENERATED, 'generated', CHARACTERISTIC, 'characteristic')
+            _check2(transition, data, GENERATED, 'generated', BREMSSTRAHLUNG, 'bremsstrahlung')
+            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'no fluorescence')
+            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'total')
+
+            _check2(transition, data, EMITTED, 'emitted', CHARACTERISTIC, 'characteristic')
+            _check2(transition, data, EMITTED, 'emitted', BREMSSTRAHLUNG, 'bremsstrahlung')
+            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'no fluorescence')
+            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'total')
+
         self._intensities = intensities
 
     @classmethod
@@ -348,6 +377,9 @@ class TimeResult(Result):
         Result.__init__(self, detector)
 
         self._simulation_time_s = simulation_time_s
+
+        if len(simulation_speed_s) != 2:
+            raise ValueError, "Simulation speed must be a tuple (value, uncertainty)"
         self._simulation_speed_s = simulation_speed_s
 
     @classmethod
@@ -401,8 +433,16 @@ class ElectronFractionResult(Result):
                  transmitted=(0.0, 0.0)):
         Result.__init__(self, detector)
 
+        if len(absorbed) != 2:
+            raise ValueError, "Absorbed fraction must be a tuple (value, uncertainty)"
         self._absorbed = absorbed
+
+        if len(backscattered) != 2:
+            raise ValueError, "Backscattered fraction must be a tuple (value, uncertainty)"
         self._backscattered = backscattered
+
+        if len(transmitted) != 2:
+            raise ValueError, "Transmitted fraction must be a tuple (value, uncertainty)"
         self._transmitted = transmitted
 
     @classmethod
