@@ -85,11 +85,15 @@ class Runner(_Runner):
         logging.debug('Launching %s', ' '.join(args))
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
+
         for line in iter(self._process.stdout.readline, ""):
             infos = line.split('\t')
             if len(infos) == 2:
                 self._progress = float(infos[0])
                 self._status = infos[1].strip()
+
+        self._process.wait()
+        self._process = None
 
     def stop(self):
         _Runner.stop(self)

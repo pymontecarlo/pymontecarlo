@@ -98,6 +98,7 @@ class Runner(_Runner):
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
         self._process.wait()
+        self._process = None
 
     def stop(self):
         _Runner.stop(self)
