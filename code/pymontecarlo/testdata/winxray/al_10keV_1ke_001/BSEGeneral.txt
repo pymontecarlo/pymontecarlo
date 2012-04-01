@@ -1,0 +1,65 @@
+BSE Result File: General
+
+BackScattered Coeffcient: 	0.152
+Error BSC (3S): 	0.0340597
+BackScattered Coeffcient Theoritical: 	0.164531
+Number of BackScattered Electron: 	152
+Number of Electron: 	1000
+
+BackScattered Courant: 	1.52e-10
+Incident Courant: 	1e-09
+
+Range Depth (nm): 	0
+
+Range Radial (nm): 	-1312.53
+
+Range Energy (eV): 	0
+
+Range Angular (rad): 	0
+
+Range Lat X (nm): 	-698.199
+
+Range Lat Y (nm): 	-751.906
+
+Statistic on scattering event
+Mean: 	101.112
+Standart Deviation: 	55.0048
+Max: 	241
+Min: 	2
+Number of data: 	152
+
+Statistic on the position X of exit
+Mean: 	-22.4505
+Standart Deviation: 	313.847
+Max: 	703.565
+Min: 	-785.175
+Number of data: 	152
+
+Statistic on the position Y of exit
+Mean: 	17.6927
+Standart Deviation: 	276.91
+Max: 	730.157
+Min: 	-802.188
+Number of data: 	152
+
+Statistic on the energy exit
+Mean: 	6084.72
+Standart Deviation: 	2122.02
+Max: 	9963.81
+Min: 	1474.33
+Number of data: 	152
+
+Statistic on the maximum depth
+Mean: 	-193.221
+Standart Deviation: 	99.7711
+Max: 	-2.39696
+Min: 	-460.259
+Number of data: 	152
+
+Statistic on the mean depth
+Mean: 	-108.883
+Standart Deviation: 	54.6751
+Max: 	-2.45877
+Min: 	-244.183
+Number of data: 	152
+

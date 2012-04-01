@@ -1,0 +1,3 @@
+Type	Total Intensity	Background Intensity	Characteristic Intensity	
+Emi Spectrum	2.71215e+06	493377	2.21877e+06	
+Emi Spectrum_N	0.000141304	2.57051e-05	0.000115599	

@@ -1,0 +1,50 @@
+Nb Electron Total	848
+
+Nb Electron Depth	848
+
+Nb Electron Radial	848
+
+Nb Electron Spatial	848
+
+Nb Electron Lat X	848
+Nb Electron Lat Y	848
+
+Nb Electron: 	1000
+
+Depth
+Nb Point: 	200
+Min: 	-1315.84
+Max: 	0
+Step: 	6.61224
+Range: 	1094.33
+
+Radial
+Nb Point: 	200
+Min: 	0
+Max: 	1315.84
+Step: 	6.61224
+Range: 	975.306
+
+Spatial
+Nb Point: 	50
+Min: 	-1315.84
+Max: 	1315.84
+Step: 	53.7076
+
+Lateral X
+Nb Point: 	50
+Min: 	-1315.84
+Max: 	1315.84
+Step: 	53.7076
+Range: 	913.029
+
+Lateral X
+Nb Point: 	50
+Min: 	-1315.84
+Max: 	1315.84
+Step: 	53.7076
+Range: 	859.322
+
+Electron Result File: General
+Path: 	C:\programs\winxray-1.4.0\Result\al_10keV_1ke_001\
+

@@ -1,0 +1,5 @@
+Nb Electron: 	1000
+
+EnergyLoss Result File: General
+Path: 	C:\programs\winxray-1.4.0\Result\al_10keV_1ke_001\
+
