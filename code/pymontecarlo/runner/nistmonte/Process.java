@@ -146,7 +146,12 @@ public class Process {
 
         // Run
         report(0.0, "Running showers");
-        mcss.runMultipleTrajectories(showers);
+
+        int fraction = 25;
+        for (int n = 0; n < fraction; n++) {
+            report((double) n / fraction, "Running showers");
+            mcss.runMultipleTrajectories(showers / fraction);
+        }
 
         // Create ZIP
         report(1.0, "Saving results");
