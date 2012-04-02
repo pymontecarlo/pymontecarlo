@@ -45,7 +45,9 @@ from pymontecarlo.input.base.detector import \
 from pymontecarlo.util.element_properties import symbol
 from pymontecarlo.util.transition import from_string
 
-from winxrayTools.ResultsFile.Results import Results
+from winxrayTools.ResultsFile.BseResults import BseResults
+from winxrayTools.ResultsFile.GeneralResults import GeneralResults
+from winxrayTools.ResultsFile.CharacteristicIntensity import CharacteristicIntensity
 
 # Globals and constants variables.
 from winxrayTools.ResultsFile.CharacteristicIntensity import EMITTED, GENERATED
@@ -73,12 +75,10 @@ class Importer(_Importer):
         if not os.path.isdir(path):
             raise ValueError, "Specified path (%s) is not a directory" % path
 
-        wxrresults = Results(path)
+        return self._import_results(options, path)
 
-        return self._import_results(options, wxrresults)
-
-    def _detector_photon_intensity(self, options, name, detector, wxrresults):
-        wxrresult = wxrresults['CharacteristicIntensity']
+    def _detector_photon_intensity(self, options, name, detector, path):
+        wxrresult = CharacteristicIntensity(path)
 
         intensities = {}
 
@@ -97,15 +97,15 @@ class Importer(_Importer):
 
         return PhotonIntensityResult(detector, intensities)
 
-    def _detector_electron_fraction(self, options, name, detector, wxrresults):
-        wxrresult = wxrresults['BseResults']
+    def _detector_electron_fraction(self, options, name, detector, path):
+        wxrresult = BseResults(path)
 
         backscattered = wxrresult.getBseYield(), wxrresult.getBseYieldError()
 
         return ElectronFractionResult(detector, backscattered=backscattered)
 
-    def _detector_time(self, options, name, detector, wxrresults):
-        wxrresult = wxrresults['GeneralResults']
+    def _detector_time(self, options, name, detector, path):
+        wxrresult = GeneralResults(path)
 
         simulation_time_s = wxrresult.time_s
         simulation_speed_s = simulation_time_s / wxrresult.numberElectron, 0.0
