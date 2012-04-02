@@ -33,9 +33,9 @@ settings = ConfigReader()
 
 def __load_settings():
     filepaths = []
-    filepaths.append(os.path.join(os.path.dirname(__file__), 'settings.cfg'))
     filepaths.append(os.path.join(os.path.expanduser('~'), '.pymontecarlo',
                                   'settings.cfg'))
+    filepaths.append(os.path.join(os.path.dirname(__file__), 'settings.cfg'))
 
     for filepath in filepaths:
         if os.path.exists(filepath):
