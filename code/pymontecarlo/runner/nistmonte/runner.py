@@ -34,6 +34,7 @@ from pymontecarlo.runner.base.runner import Runner as _Runner
 from pymontecarlo.runner.base.manager import RunnerManager
 
 # Globals and constants variables.
+from pymontecarlo.runner.base.manager import ALL_PLATFORMS
 
 class Runner(_Runner):
     def __init__(self, options, outputdir, overwrite=True):
@@ -64,7 +65,7 @@ class Runner(_Runner):
 
         # Save
         filepath = self._get_filepath(ops, 'xml')
-        if os.path.exists(filepath) and not self.overwrite:
+        if os.path.exists(filepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', filepath)
             return
 
@@ -93,7 +94,12 @@ class Runner(_Runner):
                 self._status = infos[1].strip()
 
         self._process.wait()
+        retcode = self._process.returncode
+
         self._process = None
+
+        if retcode != 0:
+            raise RuntimeError, "An error occured during the simulation"
 
     def stop(self):
         _Runner.stop(self)
@@ -107,4 +113,4 @@ class Runner(_Runner):
 
         return Results.load(filepath, options)
 
-RunnerManager.register('NISTMonte', Runner)
+RunnerManager.register('nistmonte', Runner, ALL_PLATFORMS)

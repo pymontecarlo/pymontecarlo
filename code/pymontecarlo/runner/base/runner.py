@@ -85,7 +85,7 @@ class Runner(threading.Thread):
             self._progress = 0.0
             self._status = 'Starting'
 
-            self._run_single_options(options)
+            self._run_single(options)
 
             self._progress = 1.0
             self._status = 'Finished'

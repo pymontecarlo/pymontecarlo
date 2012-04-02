@@ -24,6 +24,8 @@ import copy
 import subprocess
 import logging
 import platform
+import tempfile
+import shutil
 
 # Third party modules.
 
@@ -36,7 +38,7 @@ from pymontecarlo.runner.base.runner import Runner as _Runner, InvalidPlatform
 from pymontecarlo.runner.base.manager import RunnerManager
 
 # Globals and constants variables.
-
+from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
 class Runner(_Runner):
     def __init__(self, options, outputdir, overwrite=True):
@@ -45,7 +47,7 @@ class Runner(_Runner):
         """
         _Runner.__init__(self, options, outputdir, overwrite)
 
-        if platform.system() != 'Windows':
+        if platform.system() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
 
         self._executable = settings.winxray.exe
@@ -65,7 +67,7 @@ class Runner(_Runner):
 
         # Export
         filepath = self._get_filepath(ops, 'wxc')
-        if os.path.exists(filepath) and not self.overwrite:
+        if os.path.exists(filepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', filepath)
             return
 
@@ -83,14 +85,21 @@ class Runner(_Runner):
         if not wxc_filepath:
             return
 
+        # Create temporary folder for WinX-Ray runtime folders
+        tmpfolder = tempfile.mkdtemp()
+
+        # Launch
         args = [self._executable, wxc_filepath]
         logging.debug('Launching %s', ' '.join(args))
 
         self._status = 'Running WinX-Ray'
 
-        self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=tmpfolder)
         self._process.wait()
         self._process = None
+
+        # Cleanup
+        shutil.rmtree(tmpfolder, ignore_errors=True)
 
     def stop(self):
         _Runner.stop(self)
@@ -100,7 +109,9 @@ class Runner(_Runner):
     def _get_results_single(self, options):
         dirpath = self._get_dirpath(options)
 
-        resultdirs = sorted(os.listdir(dirpath))
+        resultdirs = [name for name in os.listdir(dirpath) \
+                      if os.path.isdir(os.path.join(dirpath, name)) ]
+        resultdirs.sort()
         if not resultdirs:
             raise IOError, 'Cannot find results directories in %s' % dirpath
 
@@ -116,4 +127,4 @@ class Runner(_Runner):
 
         return dirpath
 
-RunnerManager.register('WinX-Ray', Runner)
+RunnerManager.register('winxray', Runner, [PLATFORM_WINDOWS])
