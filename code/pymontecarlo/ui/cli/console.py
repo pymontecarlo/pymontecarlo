@@ -48,6 +48,7 @@ class ProgressBar(object):
         self._width = width
 
     def start(self):
+        self._console.message('=' * self._console.width)
         self.update(0, 0, 'Start')
 
     def _create_bar_text(self, counter, progress, status):
@@ -75,6 +76,8 @@ class ProgressBar(object):
         stream.write(text + '\n')
         self._console._post_print(stream, text, COLOR_GREEN)
         stream.flush()
+
+        self._console.message('=' * self._console.width)
 
 class ConsoleLoggingHandler(logging.Handler):
     def __init__(self, console, level=logging.NOTSET):
