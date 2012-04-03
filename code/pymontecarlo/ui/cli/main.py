@@ -23,7 +23,7 @@ import os
 import time
 import platform
 #import multiprocessing
-import warnings
+import logging
 from optparse import OptionParser, OptionGroup
 
 # Third party modules.
@@ -44,8 +44,10 @@ from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
 def create_parser(flags):
     description = "pyMonteCarlo Command Line Interface. Runs simulation(s) " + \
-                  "with different Monte Carlo programs from the same interface."
-    epilog = "For more information, see"
+                  "with different Monte Carlo programs from the same interface." + \
+                  "After the simulations, the results are automatically saved " + \
+                  "in the output directory."
+    epilog = "For more information, see http://pymontecarlo.sf.net"
 
     parser = OptionParser(usage="%prog [options] [OPTION_FILE...]",
                           description=description, epilog=epilog)
@@ -72,12 +74,10 @@ def create_parser(flags):
 def run(argv=None):
     # Initialize
     console = create_console()
+    console.init()
+
     flags = RunnerManager.get_runners(platform.system())
     parser = create_parser(flags)
-
-    def showwarning(message, category, filename, lineno, file=None, line=None):
-        console.warn(category.__name__ + ": " + str(message))
-    warnings.showwarning = showwarning
 
     # Parse arguments
     (values, args) = parser.parse_args(argv)
@@ -86,6 +86,9 @@ def run(argv=None):
     outputdir = values.outputdir
     if not os.path.exists(outputdir):
         console.error("The specified output directory (%s) does not exist" % outputdir)
+
+    if values.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
 #    nprocessors = values.nprocessors
 #    if nprocessors <= 0:
@@ -137,7 +140,7 @@ def run(argv=None):
         console.info("Saved results of options '%s' in '%s'" % (name, filepath))
 
     # Clean up
-    warnings.showwarning = warnings._show_warning
+    console.close()
 
 if __name__ == '__main__':
     run()

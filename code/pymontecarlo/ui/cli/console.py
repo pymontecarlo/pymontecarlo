@@ -22,6 +22,8 @@ __license__ = "GPL v3"
 import sys
 import platform
 import textwrap
+import logging
+import warnings
 
 # Third party modules.
 
@@ -74,6 +76,30 @@ class ProgressBar(object):
         self._console._post_print(stream, text, COLOR_GREEN)
         stream.flush()
 
+class ConsoleLoggingHandler(logging.Handler):
+    def __init__(self, console, level=logging.NOTSET):
+        logging.Handler.__init__(self, level)
+
+        self._console = console
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            levelno = record.levelno
+
+            if levelno >= logging.ERROR:
+                self._console.error(msg)
+            elif levelno >= logging.WARNING:
+                self._console.warn(msg)
+            elif levelno >= logging.INFO:
+                self._console.info(msg)
+            elif levelno >= logging.DEBUG:
+                self._console.debug(msg)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
+
 class _Console(object):
     _COLORS = {}
 
@@ -86,6 +112,20 @@ class _Console(object):
     def width(self):
         return self._width
 
+    def init(self):
+        # Redirect warnings
+        def showwarning(message, category, filename, lineno, file=None, line=None):
+            name = category.__name__.replace('Warning', '')
+            self.warn('%s (%s)' % (message, name))
+        warnings.showwarning = showwarning
+
+        # Redirect logging
+        logger = logging.getLogger()
+
+        logger.handlers = []
+        handler = ConsoleLoggingHandler(self)
+        logger.addHandler(handler)
+
     def _pre_print(self, stream, text, color):
         pass
 
@@ -97,22 +137,40 @@ class _Console(object):
 
         self._post_print(stream, text, color)
         stream.write('\n')
+        stream.flush()
 
     def _post_print(self, stream, text, color):
         pass
 
     def error(self, text):
-        self._print(self._stderr, text, color=COLOR_RED)
+        self._print(self._stderr, 'Error: ' + text, color=COLOR_RED)
         sys.exit(1)
 
     def warn(self, text):
-        self._print(self._stderr, text, color=COLOR_YELLOW)
+        self._print(self._stderr, 'Warning: ' + text, color=COLOR_YELLOW)
 
     def info(self, text):
+        self._print(self._stderr, 'Info: ' + text, color=COLOR_DEFAULT)
+
+    def debug(self, text):
+        self._print(self._stderr, 'Debug: ' + text, color=COLOR_BLUE)
+
+    def message(self, text):
         self._print(self._stdout, text, color=COLOR_DEFAULT)
 
     def success(self, text):
         self._print(self._stdout, text, color=COLOR_GREEN)
+
+    def close(self):
+        # Reset warnings
+        warnings.showwarning = warnings._show_warning
+
+        # Reset logging basic configuration
+        logger = logging.getLogger()
+        logger.handlers = []
+        logging.basicConfig()
+
+        sys.exit(0)
 
 class UnixConsole(_Console):
     _COLORS = {COLOR_DEFAULT: 0, COLOR_RED: 31, COLOR_GREEN: 32,
@@ -142,6 +200,10 @@ if platform.system() == 'Windows':
 
         def _post_print(self, stream, text, color):
             windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
+
+        def close(self):
+            windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
+            _Console.close(self)
 
 def create_console(width=80, stdout=sys.stdout, stderr=sys.stderr):
     if platform.system() == 'Windows':
