@@ -18,6 +18,8 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import pkgutil
+import fnmatch
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
@@ -30,13 +32,24 @@ from pymontecarlo.input.base.beam import GaussianBeam
 from pymontecarlo.input.base.material import pure
 from pymontecarlo.input.base.geometry import Substrate
 
-import pymontecarlo.input.base.beam #@UnusedImport
-import pymontecarlo.input.base.geometry #@UnusedImport
-import pymontecarlo.input.base.limit #@UnusedImport
-import pymontecarlo.input.base.detector #@UnusedImport
-import pymontecarlo.input.base.model #@UnusedImport
-
 # Globals and constants variables.
+
+def _init():
+    """
+    Imports all packages and modules inside ``pymontecarlo.input`` except
+    the current module, unit tests and converters.
+    """
+    import pymontecarlo.input
+    package_path = pymontecarlo.input.__path__
+    package_name = pymontecarlo.input.__name__ + '.'
+
+    excludes = ['pymontecarlo.input.base.options', '*.test_*', '*.converter']
+
+    for _loader, name, _ispkg in pkgutil.walk_packages(package_path, package_name):
+        if not any(map(lambda pattern: fnmatch.fnmatch(name, pattern), excludes)):
+            __import__(name)
+
+_init()
 
 class _Detectors(MutableMapping):
     def __init__(self):
