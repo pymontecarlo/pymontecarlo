@@ -23,13 +23,13 @@ import os
 import copy
 import subprocess
 import logging
+import shutil
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo import settings
 from pymontecarlo.input.nistmonte.converter import Converter
-from pymontecarlo.result.base.results import Results
 from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker
 from pymontecarlo.runner.base.manager import WorkerManager
 
@@ -37,11 +37,11 @@ from pymontecarlo.runner.base.manager import WorkerManager
 from pymontecarlo.runner.base.manager import ALL_PLATFORMS
 
 class Worker(_Worker):
-    def __init__(self, queue_options, queue_results, workdir, overwrite=True):
+    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
         Runner to run NISTMonte simulation(s).
         """
-        _Worker.__init__(self, queue_options, queue_results, workdir, overwrite)
+        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
         self._java_exec = settings.nistmonte.java
         if not os.path.exists(self._java_exec):
@@ -53,14 +53,14 @@ class Worker(_Worker):
             raise IOError, 'pyMonteCarlo jar (%s) cannot be found' % self._jar_path
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
 
-    def _create(self, options):
+    def _create(self, options, dirpath):
         ops = copy.deepcopy(options)
 
         # Convert
         Converter().convert(ops)
 
         # Save
-        filepath = self._get_filepath(ops, 'xml')
+        filepath = self._get_filepath(ops, dirpath, 'xml')
         if os.path.exists(filepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', filepath)
             return
@@ -71,7 +71,7 @@ class Worker(_Worker):
         return filepath
 
     def _run(self, options):
-        xmlfilepath = self._create(options)
+        xmlfilepath = self._create(options, self._workdir)
         if not xmlfilepath:
             return # Exit if no options need to be run
 
@@ -97,11 +97,8 @@ class Worker(_Worker):
         if retcode != 0:
             raise RuntimeError, "An error occured during the simulation"
 
-    def _get_results(self, options):
-        filepath = self._get_filepath(options, 'zip')
-        if not os.path.exists(filepath):
-            raise IOError, 'Cannot find results zip: %s' % filepath
-
-        return Results.load(filepath, options)
+    def _save_results(self, options, zipfilepath):
+        work_zipfilepath = self._get_filepath(options, self._workdir, 'zip')
+        shutil.copy(work_zipfilepath, zipfilepath)
 
 WorkerManager.register('nistmonte', Worker, ALL_PLATFORMS)

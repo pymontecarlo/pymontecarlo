@@ -20,32 +20,17 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import tempfile
-import shutil
-import logging
-from Queue import Queue, Empty
+from operator import methodcaller
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.runner.base.queue import OptionsQueue
 
 # Globals and constants variables.
 
-def _iter_except(func, exception, first=None):
-    """
-    Call a function repeatedly until an exception is raised.
-    From Python's recipe in **itertools** module.
-    """
-    try:
-        if first is not None:
-            yield first()
-        while 1:
-            yield func()
-    except exception:
-        pass
-
 class Runner(object):
-    def __init__(self, worker_class, workdir=None, overwrite=True,
+    def __init__(self, worker_class, outputdir, workdir=None, overwrite=True,
                  nbprocesses=1, **kwargs):
         """
         Creates a new runner to run several simulations.
@@ -61,9 +46,12 @@ class Runner(object):
         
         :arg worker_class: class of the worker to use to run the simulations
         
+        :arg outputdir: output directory for saving the results from the 
+            simulation. The directory must exists.
+        
         :arg workdir: work directory for the simulation temporary files.
-            If ``None``, a temporary folder is created and removed after all
-            simulations are run. If not ``None``, the directory must exists.
+            If ``None``, a temporary folder is created and removed after each
+            simulation is run. If not ``None``, the directory must exists.
         
         :arg overwrite: whether to overwrite already existing simulation file(s)
         
@@ -78,6 +66,10 @@ class Runner(object):
 
         self._worker_class = worker_class
 
+        if not os.path.isdir(outputdir):
+            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+        self._outputdir = outputdir
+
         if workdir is not None and not os.path.isdir(workdir):
             raise ValueError, 'Work directory (%s) is not a directory' % workdir
         self._workdir = workdir
@@ -86,8 +78,7 @@ class Runner(object):
         self._kwargs = kwargs
 
         self._options_names = []
-        self._queue_options = Queue()
-        self._queue_results = Queue()
+        self._queue_options = OptionsQueue()
         self._workers = []
 
     def start(self):
@@ -97,34 +88,16 @@ class Runner(object):
         if self._workers:
             raise RuntimeError, 'Already started'
 
-        # Setup
-        if self._workdir is None:
-            self._workdir = tempfile.mkdtemp()
-            self._user_defined_workdir = False
-            logging.debug('Temporary work directory: %s', self._workdir)
-
         # Create workers
         self._workers = []
         for _ in range(self._nbprocesses):
-            worker = self._worker_class(self._queue_options, self._queue_results,
-                                        self._workdir, self._overwrite, **self._kwargs)
+            worker = self._worker_class(self._queue_options, self._outputdir,
+                                        self._workdir, self._overwrite,
+                                        **self._kwargs)
             self._workers.append(worker)
 
             worker.daemon = True
             worker.start()
-
-    def stop(self):
-        """
-        Stops all the simulations in the queue.
-        """
-        for worker in self._workers:
-            worker.stop()
-        self._workers = []
-
-        # Cleanup working directory if it was created in the __init__
-        if not self._user_defined_workdir:
-            shutil.rmtree(self._workdir, ignore_errors=True)
-            logging.debug('Removed temporary work directory: %s', self._workdir)
 
     def put(self, options):
         """
@@ -141,18 +114,22 @@ class Runner(object):
         self._queue_options.put(options)
         self._options_names.append(name)
 
-    def join(self):
+    def close(self):
         """
-        Blocks until all items in the queue have been gotten and processed.
+        Stops all workers and closes the current runner.
         """
-        self._queue_options.join()
-        self.stop()
+        for worker in self._workers:
+            worker.stop()
+        self._workers = []
 
     def is_alive(self):
         """
         Returns whether all options in the queue are simulated.
         """
-        return self._queue_results.qsize() < len(self._options_names)
+        all_workers_alive = all(map(methodcaller('is_alive'), self._workers))
+        all_tasks_done = self._queue_options.are_all_tasks_done()
+
+        return all_workers_alive and not all_tasks_done
 
     def report(self):
         """
@@ -164,27 +141,12 @@ class Runner(object):
           * text indicating the status of *one* of the currently running 
               simulations
         """
-        completed = self._queue_results.qsize()
+        completed = len(self._options_names) - self._queue_options.unfinished_tasks
 
         for worker in self._workers:
             progress, status = worker.report()
-            if progress < 1.0:
+            if progress > 0.0 and progress < 1.0: # active worker
                 return completed, progress, status
 
         return completed, 0, ''
-
-    def iter_results(self):
-        """
-        Returns an iterator over the results of the run. 
-        
-        .. note:: 
-        
-            Note that only the results of the completed simulations are returned.
-            To be sure to get all the results, called :meth:`join()` before
-            this method
-            
-        :return: results of each completed simulation
-        :rtype: :class:`list` of :class:`Results <pymontecarlo.result.base.results.Results>`
-        """
-        return _iter_except(self._queue_results.get_nowait, Empty)
 

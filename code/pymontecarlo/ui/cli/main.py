@@ -122,7 +122,7 @@ def run(argv=None):
     if values.create:
         runner = Creator(worker_class, outputdir, nbprocesses=nbprocesses)
     else:
-        runner = Runner(worker_class, workdir, nbprocesses=nbprocesses)
+        runner = Runner(worker_class, outputdir, workdir, nbprocesses=nbprocesses)
 
     progressbar = ProgressBar(console, len(list_options))
     progressbar.start()
@@ -132,21 +132,16 @@ def run(argv=None):
 
     runner.start()
 
-    while runner.is_alive():
-        counter, progress, status = runner.report()
-        progressbar.update(counter, progress, status)
-        time.sleep(1)
+    try:
+        while runner.is_alive():
+            counter, progress, status = runner.report()
+            progressbar.update(counter, progress, status)
+            time.sleep(1)
+    except Exception as ex:
+        console.error(str(ex))
 
-    runner.join()
+    runner.close()
     progressbar.close()
-
-    # Export results
-    if not values.create:
-        for result in runner.iter_results():
-            name = result.options.name
-            filepath = os.path.join(outputdir, name + ".zip")
-            result.save(filepath)
-            console.info("Saved results of options '%s' in '%s'" % (name, filepath))
 
     # Clean up
     console.close()

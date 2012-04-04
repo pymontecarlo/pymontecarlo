@@ -21,6 +21,9 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import threading
+import tempfile
+import shutil
+import logging
 
 # Third party modules.
 
@@ -32,21 +35,26 @@ class InvalidPlatform(Exception):
     pass
 
 class Worker(threading.Thread):
-    def __init__(self, queue_options, queue_results, workdir, overwrite=True):
+    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
-        Base class for all runners. A runner is used to run one **or many** 
-        simulations with a given program.
+        Base class for all workers. 
+        A worker is used to run simulations in a queue with a given program and 
+        saved their results in the output directory.
+        It can also be used to create the simulation files required to run
+        simulation(s) (without running them).
         
-        To start a runner, execute the method :meth:`start()`.
-        The method :meth:`report()` can be used to retrieve the progress.
+        A worker should not be directly used to start a simulation. 
+        One should rather use a runner.
         
-        :arg options: options of the simulation or :class:`list` of options of
-            several simulations. The order of the simulations is preserved.
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
-            or :class:`list` of :class:`Options <pymontecarlo.input.base.options.Options>`
+        :arg queue_options: queue of options to run using this worker
         
+        :arg outputdir: output directory for saving the results from the 
+            simulation. The directory must exists.
+            
         :arg workdir: work directory for temporary files created during the 
-            simulation(s). The directory must exists.
+            simulation(s). If ``None``, a temporary folder is created and 
+            removed after all simulations are run. If not ``None``, the 
+            directory must exists.
         
         :arg overwrite: whether to overwrite results if they exist
             (default: ``True``)
@@ -54,9 +62,12 @@ class Worker(threading.Thread):
         threading.Thread.__init__(self)
 
         self._queue_options = queue_options
-        self._queue_results = queue_results
 
-        if not os.path.isdir(workdir):
+        if not os.path.isdir(outputdir):
+            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+        self._outputdir = outputdir
+
+        if workdir is not None and not os.path.isdir(workdir):
             raise ValueError, 'Work directory (%s) is not a directory' % workdir
         self._workdir = workdir
 
@@ -77,44 +88,77 @@ class Worker(threading.Thread):
         All simulations in the options queue will be created.
         The simulation files created will depend on the Monte Carlo program used.
         The simulation files could also be a folder.
-        The simulation files are saved in the *work directory*.
+        The simulation files are saved in the *output directory*.
         """
         while True:
-            options = self._queue_options.get()
-            filepath = self._create(options)
+            try:
+                options = self._queue_options.get()
+                self._create(options, self._outputdir)
+                self._queue_options.task_done()
+            except Exception as exc:
+                self.stop()
+                self._queue_options.raise_exc(exc)
 
-            self._queue_results.put(filepath)
-
-            self._queue_options.task_done()
-
-    def _create(self, options):
+    def _create(self, options, dirpath):
         """
-        Creates the simulation files from the options.
-        This method should be implemented by derived class. 
+        Creates the simulation file(s) from the options and saves it inside the 
+        specified directory.
+        This method should be implemented by derived class as it is specific
+        to the different Monte Carlo programs.
+        
+        :arg options: options of a simulation
+        :arg dirpath: directory where to save the simulation file(s)
         """
         raise NotImplementedError
 
     def run(self):
         """
         Creates and runs all simulations in the options queue.
-        The results from the simulations are stored in the results queue.
+        The results from the simulations are then saved in the *output directory*.
         """
         while True:
-            self._reset()
+            try:
+                self._reset()
 
-            self._progress = 0.0
-            self._status = 'Starting'
+                self._progress = 0.0
+                self._status = 'Starting'
 
-            options = self._queue_options.get()
-            self._run(options)
+                # Retrieve options
+                options = self._queue_options.get()
 
-            results = self._get_results(options)
-            self._queue_results.put(results)
+                # Create working directory
+                if self._workdir is None:
+                    self._workdir = tempfile.mkdtemp()
+                    _user_defined_workdir = False
+                    logging.debug('Temporary work directory: %s', self._workdir)
+                else:
+                    _user_defined_workdir = True
 
-            self._progress = 1.0
-            self._status = 'Completed'
+                # Run
+                self._run(options)
 
-            self._queue_options.task_done()
+                # Save results
+                zipfilepath = os.path.join(self._outputdir, options.name + ".zip")
+                logging.debug('Saving results in %s', zipfilepath)
+                self._save_results(options, zipfilepath)
+
+                # Cleanup working directory if needed
+                if not _user_defined_workdir:
+                    shutil.rmtree(self._workdir, ignore_errors=True)
+                    logging.debug('Removed temporary work directory: %s', self._workdir)
+                    self._workdir = None
+
+                self._progress = 1.0
+                self._status = 'Completed'
+
+                self._queue_options.task_done()
+            except Exception as exc:
+                self.stop()
+
+                if not _user_defined_workdir:
+                    shutil.rmtree(self._workdir, ignore_errors=True)
+
+                self._queue_options.raise_exc(exc)
 
     def _run(self, options):
         """
@@ -123,15 +167,16 @@ class Worker(threading.Thread):
         """
         raise NotImplementedError
 
-    def _get_results(self, options):
+    def _save_results(self, options, zipfilepath):
         """
-        Generates and returns the results from the simulation outputs.
+        Generates the results from the simulation outputs after the simulation 
+        was run and then save them at the specified location.
         """
         raise NotImplementedError
 
     def stop(self):
         """
-        Stops all simulations.
+        Stops worker.
         """
         self._status = 'Stopped'
 
@@ -144,12 +189,16 @@ class Worker(threading.Thread):
         """
         return self._progress, self._status
 
-    def _get_filepath(self, options, ext='xml'):
+    def _get_filepath(self, options, dirpath, ext='xml'):
         """
-        Returns a filepath from the work directory, name of the options, 
-        extension.
+        Returns a filepath inside the specified directory.
+        The filename is the name of the options with the specified extension.
+        
+        :arg options: options of a simulation
+        :arg dirpath: directory of the file
+        :arg ext: extension of the file
         """
-        return os.path.join(self._workdir, options.name + "." + ext)
+        return os.path.join(dirpath, options.name + "." + ext)
 
 class SubprocessWorker(Worker):
     def _reset(self):
@@ -157,7 +206,7 @@ class SubprocessWorker(Worker):
         self._process = None
 
     def stop(self):
-        Worker.stop(self)
         if self._process is not None:
             self._process.kill()
+        Worker.stop(self)
 

@@ -41,11 +41,11 @@ from pymontecarlo.runner.base.manager import WorkerManager
 from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
 class Worker(_Worker):
-    def __init__(self, queue_options, queue_results, workdir, overwrite=True):
+    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
         Runner to run WinX-Ray simulation(s).
         """
-        _Worker.__init__(self, queue_options, queue_results, workdir, overwrite)
+        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
         if platform.system() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
@@ -55,20 +55,22 @@ class Worker(_Worker):
             raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
         logging.debug('WinX-Ray executable: %s', self._executable)
 
-    def _create(self, options):
+    def _create(self, options, dirpath):
         ops = copy.deepcopy(options)
 
         # Convert
         Converter().convert(ops)
 
         # Export
-        filepath = self._get_filepath(ops, 'wxc')
+        filepath = self._get_filepath(ops, dirpath, 'wxc')
         if os.path.exists(filepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', filepath)
             return
 
         wxrops = Exporter().export(ops)
-        wxrops.setResultsPath(self._get_dirpath(ops))
+
+        if dirpath == self._workdir:
+            wxrops.setResultsPath(self._get_dirpath(ops))
 
         # Save
         wxrops.write(filepath)
@@ -77,7 +79,7 @@ class Worker(_Worker):
         return filepath
 
     def _run(self, options):
-        wxcfilepath = self._create(options)
+        wxcfilepath = self._create(options, self._workdir)
         if not wxcfilepath:
             return
 
@@ -97,7 +99,7 @@ class Worker(_Worker):
         # Cleanup
         shutil.rmtree(tmpfolder, ignore_errors=True)
 
-    def _get_results(self, options):
+    def _save_results(self, options, zipfilepath):
         dirpath = self._get_dirpath(options)
 
         resultdirs = [name for name in os.listdir(dirpath) \
@@ -108,8 +110,7 @@ class Worker(_Worker):
 
         path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
-
-        return results
+        results.save(zipfilepath)
 
     def _get_dirpath(self, options):
         dirpath = os.path.join(self._workdir, options.name)

@@ -21,10 +21,8 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import copy
-import subprocess
 import logging
 import platform
-import time
 
 # Third party modules.
 
@@ -32,20 +30,18 @@ import time
 from pymontecarlo import settings
 from pymontecarlo.input.casino2.converter import Converter
 from pymontecarlo.io.casino2.exporter import Exporter
-from pymontecarlo.io.casino2.importer import Importer
-from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker, InvalidPlatform
+from pymontecarlo.runner.base.worker import Worker as _Worker, InvalidPlatform
 from pymontecarlo.runner.base.manager import WorkerManager
 
 # Globals and constants variables.
 from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
 class Worker(_Worker):
-    def __init__(self, queue_options, queue_results, outputdir, overwrite=True):
+    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
         Runner to run Casino2 simulation(s).
         """
-        _Worker.__init__(self, queue_options, queue_results,
-                         outputdir, overwrite=overwrite)
+        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
         if platform.system() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'Casino 2 can only be run on Windows'
@@ -55,14 +51,14 @@ class Worker(_Worker):
             raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
         logging.debug('Casino 2 executable: %s', self._executable)
 
-    def _create(self, options):
+    def _create(self, options, dirpath):
         ops = copy.deepcopy(options)
 
         # Convert
         Converter().convert(ops)
 
         # Export
-        simfilepath = self._get_filepath(ops, 'sim')
+        simfilepath = self._get_filepath(ops, dirpath, 'sim')
         if os.path.exists(simfilepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', simfilepath)
             return
@@ -73,45 +69,10 @@ class Worker(_Worker):
         simfile.write(simfilepath)
         logging.debug('Save sim file: %s', simfilepath)
 
-        # Remove previous .cas file
-        casfilepath = os.path.splitext(simfilepath)[0] + ".cas"
-        if os.path.exists(casfilepath):
-            os.remove(casfilepath)
-
         return simfilepath
 
     def _run(self, options):
-        simfilepath = self._create(options)
-        if not simfilepath:
-            return # Exit if no options need to be run
-
-        casfilepath = self._get_filepath(options, 'cas')
-
-        # Start Casino 2
-        args = [self._executable]
-        logging.debug('Launching %s', ' '.join(args))
-
-        self._status = 'Running Casino 2'
-
-        self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
-
-        while self._process.poll() == None:
-            time.sleep(1)
-
-            if os.path.exists(casfilepath):
-                self._process.kill()
-                break
-
-        self._process = None
-
-    def _get_results(self, options):
-        filepath = self._get_filepath(options, 'cas')
-        if not os.path.exists(filepath):
-            raise IOError, 'Cannot find cas file: %s' % filepath
-
-        with open(filepath, 'rb') as fp:
-            results = Importer().import_from_cas(options, fp)
-
-        return results
+        raise NotImplementedError, "Simulations with Casino2 cannot be directly run. " + \
+            "Please use the create method to create the .sim files and run them in Casino 2."
 
 WorkerManager.register('casino2', Worker, [PLATFORM_WINDOWS])

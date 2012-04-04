@@ -20,14 +20,13 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-from Queue import Queue
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.runner.base.queue import OptionsQueue
 
 # Globals and constants variables.
-
 
 class Creator(object):
     def __init__(self, worker_class, outputdir, overwrite=True,
@@ -66,8 +65,7 @@ class Creator(object):
         self._kwargs = kwargs
 
         self._options_names = []
-        self._queue_options = Queue()
-        self._queue_results = Queue()
+        self._queue_options = OptionsQueue()
         self._workers = []
 
     def start(self):
@@ -80,23 +78,14 @@ class Creator(object):
         # Create workers
         self._workers = []
         for _ in range(self._nbprocesses):
-            worker = self._worker_class(self._queue_options, self._queue_results,
-                                        self._outputdir, self._overwrite,
-                                        **self._kwargs)
+            worker = self._worker_class(self._queue_options, self._outputdir,
+                                        None, self._overwrite, **self._kwargs)
             worker.run = worker.create # Replace threading run by create method
 
             self._workers.append(worker)
 
             worker.daemon = True
             worker.start()
-
-    def stop(self):
-        """
-        Stops all the simulations in the queue.
-        """
-        for worker in self._workers:
-            worker.stop()
-        self._workers = []
 
     def put(self, options):
         """
@@ -113,18 +102,19 @@ class Creator(object):
         self._queue_options.put(options)
         self._options_names.append(name)
 
-    def join(self):
+    def close(self):
         """
-        Blocks until all items in the queue have been gotten and processed.
+        Stops all workers and closes the current creator.
         """
-        self._queue_options.join()
-        self.stop()
+        for worker in self._workers:
+            worker.stop()
+        self._workers = []
 
     def is_alive(self):
         """
-        Returns whether all options in the queue are simulated.
+        Returns whether all options in the queue are created.
         """
-        return self._queue_results.qsize() < len(self._options_names)
+        return not self._queue_options.are_all_tasks_done()
 
     def report(self):
         """
@@ -134,4 +124,5 @@ class Creator(object):
           * always 0.0
           * always empty string
         """
-        return self._queue_results.qsize(), 0.0, ''
+        completed = len(self._options_names) - self._queue_options.unfinished_tasks
+        return completed, 0.0, ''
