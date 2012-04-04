@@ -233,7 +233,8 @@ class Exporter(_Exporter):
             wxrops.setNumberChannel(options.beam.energy_eV / 40)
 
     def _detector_electron_fraction(self, options, name, detector, wxrops):
-        pass
+        wxrops.setComputeBSEDistribution(True) # Required to get distribution
+        wxrops.setComputeBSEEnergy(True) # Required to get distribution
 
     def _detector_time(self, options, name, detector, wxrops):
         pass
