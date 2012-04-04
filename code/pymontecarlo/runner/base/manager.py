@@ -24,7 +24,8 @@ import platform
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.base.runner import Runner
+from pymontecarlo.util.imp import import_recursive
+from pymontecarlo.runner.base.worker import Worker
 
 # Globals and constants variables.
 
@@ -33,14 +34,14 @@ PLATFORM_MACOS = 'MacOS'
 PLATFORM_LINUX = 'Linux'
 ALL_PLATFORMS = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX]
 
-class _RunnerManager:
+class _WorkerManager:
     def __init__(self):
         self._runners = {}
         self._platforms = {}
 
     def register(self, flag, klass, platforms):
-        if not issubclass(klass, Runner):
-            raise ValueError, 'The class (%s) must be a subclass of Runner.' % \
+        if not issubclass(klass, Worker):
+            raise ValueError, 'The class (%s) must be a subclass of Worker.' % \
                 klass.__name__
 
         if flag in self._runners and self._runners.get(flag) != klass:
@@ -55,25 +56,37 @@ class _RunnerManager:
                         (platform, ', '.join(ALL_PLATFORMS))
             self._platforms.setdefault(platform, []).append(flag)
 
-    def get_runners(self, platform):
+    def get_supported_workers(self, platform):
         """
-        Returns the tags of the runner supported by the specified platform.
+        Returns the flags of the worker(s) supported by the specified platform.
         
         :arg platform: system platform
         """
         return self._platforms.get(platform, [])
 
-    def get_runner(self, flag):
+    def get_worker(self, flag):
         """
-        Returns the runner class for the specified flag.
+        Returns the worker class for the specified flag.
         Raises :exc:`ValueError` if no class is associated with this tag.
         
-        :arg flag: flag associated with a runner
+        :arg flag: flag associated with a worker
         
-        :return: runner
+        :return: worker
         """
         if flag not in self._runners:
             raise ValueError, 'No loader found for flag (%s). Please register it first.' % flag
         return self._runners[flag]
 
-RunnerManager = _RunnerManager()
+WorkerManager = _WorkerManager()
+
+def _init():
+    """
+    Imports all ``worker`` modules inside ``pymontecarlo.runner``
+    """
+    import pymontecarlo.runner
+
+    package = pymontecarlo.runner
+    includes = ['pymontecarlo.runner.*.worker']
+    import_recursive(package, includes)
+
+_init()

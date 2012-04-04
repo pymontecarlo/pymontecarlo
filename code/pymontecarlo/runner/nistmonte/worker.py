@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`runner` -- NISTMonte runner
+:mod:`worker` -- NISTMonte worker
 ================================================================================
 
-.. module:: runner
-   :synopsis: NISTMonte runner
+.. module:: worker
+   :synopsis: NISTMonte worker
 
-.. inheritance-diagram:: pymontecarlo.runner.nistmonte.runner
+.. inheritance-diagram:: pymontecarlo.runner.nistmonte.worker
 
 """
 
@@ -30,18 +30,18 @@ import logging
 from pymontecarlo import settings
 from pymontecarlo.input.nistmonte.converter import Converter
 from pymontecarlo.result.base.results import Results
-from pymontecarlo.runner.base.runner import Runner as _Runner
-from pymontecarlo.runner.base.manager import RunnerManager
+from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker
+from pymontecarlo.runner.base.manager import WorkerManager
 
 # Globals and constants variables.
 from pymontecarlo.runner.base.manager import ALL_PLATFORMS
 
-class Runner(_Runner):
-    def __init__(self, options, outputdir, overwrite=True):
+class Worker(_Worker):
+    def __init__(self, queue_options, queue_results, workdir, overwrite=True):
         """
         Runner to run NISTMonte simulation(s).
         """
-        _Runner.__init__(self, options, outputdir, overwrite)
+        _Worker.__init__(self, queue_options, queue_results, workdir, overwrite)
 
         self._java_exec = settings.nistmonte.java
         if not os.path.exists(self._java_exec):
@@ -53,11 +53,7 @@ class Runner(_Runner):
             raise IOError, 'pyMonteCarlo jar (%s) cannot be found' % self._jar_path
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
 
-    def _reset(self):
-        _Runner._reset(self)
-        self._process = None
-
-    def _save_options(self, options):
+    def _create(self, options):
         ops = copy.deepcopy(options)
 
         # Convert
@@ -74,15 +70,15 @@ class Runner(_Runner):
 
         return filepath
 
-    def _run_single(self, options):
-        options_filepath = self._save_options(options)
-        if not options_filepath:
-            return
+    def _run(self, options):
+        xmlfilepath = self._create(options)
+        if not xmlfilepath:
+            return # Exit if no options need to be run
 
         args = [self._java_exec]
         args += ['-jar', self._jar_path]
-        args += ['-o', self._outputdir]
-        args += [options_filepath]
+        args += ['-o', self._workdir]
+        args += [xmlfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
@@ -101,16 +97,11 @@ class Runner(_Runner):
         if retcode != 0:
             raise RuntimeError, "An error occured during the simulation"
 
-    def stop(self):
-        _Runner.stop(self)
-        if self._process is not None:
-            self._process.kill()
-
-    def _get_results_single(self, options):
+    def _get_results(self, options):
         filepath = self._get_filepath(options, 'zip')
         if not os.path.exists(filepath):
             raise IOError, 'Cannot find results zip: %s' % filepath
 
         return Results.load(filepath, options)
 
-RunnerManager.register('nistmonte', Runner, ALL_PLATFORMS)
+WorkerManager.register('nistmonte', Worker, ALL_PLATFORMS)

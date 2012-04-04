@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`runner` -- Casino 2 runner
+:mod:`worker` -- Casino 2 worker
 ================================================================================
 
-.. module:: runner
-   :synopsis: Casino 2 runner
+.. module:: worker
+   :synopsis: Casino 2 worker
 
-.. inheritance-diagram:: pymontecarlo.runner.casino2.runner
+.. inheritance-diagram:: pymontecarlo.runner.casino2.worker
 
 """
 
@@ -33,18 +33,19 @@ from pymontecarlo import settings
 from pymontecarlo.input.casino2.converter import Converter
 from pymontecarlo.io.casino2.exporter import Exporter
 from pymontecarlo.io.casino2.importer import Importer
-from pymontecarlo.runner.base.runner import Runner as _Runner, InvalidPlatform
-from pymontecarlo.runner.base.manager import RunnerManager
+from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker, InvalidPlatform
+from pymontecarlo.runner.base.manager import WorkerManager
 
 # Globals and constants variables.
 from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
-class Runner(_Runner):
-    def __init__(self, options, outputdir, overwrite=True):
+class Worker(_Worker):
+    def __init__(self, queue_options, queue_results, outputdir, overwrite=True):
         """
         Runner to run Casino2 simulation(s).
         """
-        _Runner.__init__(self, options, outputdir, overwrite)
+        _Worker.__init__(self, queue_options, queue_results,
+                         outputdir, overwrite=overwrite)
 
         if platform.system() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'Casino 2 can only be run on Windows'
@@ -54,11 +55,7 @@ class Runner(_Runner):
             raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
         logging.debug('Casino 2 executable: %s', self._executable)
 
-    def _reset(self):
-        _Runner._reset(self)
-        self._process = None
-
-    def _create_sim(self, options):
+    def _create(self, options):
         ops = copy.deepcopy(options)
 
         # Convert
@@ -83,18 +80,12 @@ class Runner(_Runner):
 
         return simfilepath
 
-    def _run_multiple(self):
-        filepaths = []
+    def _run(self, options):
+        simfilepath = self._create(options)
+        if not simfilepath:
+            return # Exit if no options need to be run
 
-        # Save all options
-        for options in self._options:
-            filepath = self._create_sim(options)
-            if filepath:
-                filepaths.append(filepath)
-
-        # Exit if no options need to be run
-        if not filepaths:
-            return
+        casfilepath = self._get_filepath(options, 'cas')
 
         # Start Casino 2
         args = [self._executable]
@@ -107,26 +98,13 @@ class Runner(_Runner):
         while self._process.poll() == None:
             time.sleep(1)
 
-            self._check_completed_simulations()
-            if len(self._completed) == len(self._options):
+            if os.path.exists(casfilepath):
                 self._process.kill()
                 break
 
         self._process = None
 
-    def stop(self):
-        _Runner.stop(self)
-        if self._process is not None:
-            self._process.kill()
-
-    def _check_completed_simulations(self):
-        self._completed = []
-
-        for options in self._options:
-            if os.path.exists(self._get_filepath(options, 'cas')):
-                self._completed.append(options)
-
-    def _get_results_single(self, options):
+    def _get_results(self, options):
         filepath = self._get_filepath(options, 'cas')
         if not os.path.exists(filepath):
             raise IOError, 'Cannot find cas file: %s' % filepath
@@ -136,4 +114,4 @@ class Runner(_Runner):
 
         return results
 
-RunnerManager.register('casino', Runner, [PLATFORM_WINDOWS])
+WorkerManager.register('casino2', Worker, [PLATFORM_WINDOWS])

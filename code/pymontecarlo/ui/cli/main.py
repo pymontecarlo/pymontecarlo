@@ -22,7 +22,6 @@ __license__ = "GPL v3"
 import os
 import time
 import platform
-#import multiprocessing
 import logging
 from optparse import OptionParser, OptionGroup
 
@@ -31,11 +30,9 @@ from optparse import OptionParser, OptionGroup
 # Local modules.
 from pymontecarlo.input.base.options import Options
 
-import pymontecarlo.runner.casino2.runner #@UnusedImport
-import pymontecarlo.runner.nistmonte.runner #@UnusedImport
-import pymontecarlo.runner.winxray.runner #@UnusedImport
-
-from pymontecarlo.runner.base.manager import RunnerManager
+from pymontecarlo.runner.base.runner import Runner
+from pymontecarlo.runner.base.creator import Creator
+from pymontecarlo.runner.base.manager import WorkerManager
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -54,11 +51,15 @@ def create_parser(flags):
 
     # Base options
     parser.add_option("-o", '--outputdir', dest="outputdir", default=os.getcwd(), metavar="DIR",
-                      help="Output directory where the results from the simulation(s) will be saved [default: current directory]")
+                      help="Output directory where results from simulation(s) will be saved [default: current directory]")
+    parser.add_option("-w", '--workdir', dest="workdir", default=None, metavar="DIR",
+                      help="Work directory where temporary files from simulation(s) will be stored [default: temporary folder]")
     parser.add_option('-v', '--verbose', dest='verbose', default=False,
                       action='store_true', help='Debug mode')
-#    parser.add_option("-n", dest="nprocessors", default=1, type="int",
-#                      help="Number of processors to use (not applicable for all Monte Carlo programs) [default: %default]")
+    parser.add_option("-n", dest="nbprocesses", default=1, type="int",
+                      help="Number of processes/threads to use (not applicable for all Monte Carlo programs) [default: %default]")
+    parser.add_option('-c', '--create', dest='create', default=False,
+                      action='store_true', help='Create mode where only simulation files are created but not run')
 
     # Program group
     group = OptionGroup(parser, "Monte Carlo programs",
@@ -76,7 +77,7 @@ def run(argv=None):
     console = create_console()
     console.init()
 
-    flags = RunnerManager.get_runners(platform.system())
+    flags = WorkerManager.get_supported_workers(platform.system())
     parser = create_parser(flags)
 
     # Parse arguments
@@ -87,15 +88,16 @@ def run(argv=None):
     if not os.path.exists(outputdir):
         console.error("The specified output directory (%s) does not exist" % outputdir)
 
+    workdir = values.workdir
+    if workdir is not None and not os.path.exists(workdir):
+        console.error("The specified work directory (%s) does not exist" % workdir)
+
     if values.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-#    nprocessors = values.nprocessors
-#    if nprocessors <= 0:
-#        parser.error("Number of processors must be greater than 0.")
-#    if nprocessors > multiprocessing.cpu_count():
-#        parser.error("Number of processors is greater than the number of available processors (%i)" % \
-#                     multiprocessing.cpu_count())
+    nbprocesses = values.nbprocesses
+    if nbprocesses <= 0:
+        parser.error("Number of processes must be greater than 0.")
 
     selected_flags = [flag for flag in flags if getattr(values, flag)]
     if not selected_flags:
@@ -107,19 +109,27 @@ def run(argv=None):
     if not args:
         console.error("Please specify at least one options file")
 
-    options = []
+    list_options = []
     for arg in args:
         try:
-            options.append(Options.load(arg, validate=False))
+            list_options.append(Options.load(arg, validate=False))
         except Exception as ex:
             console.error("Error while loading %s: %s" % (arg, str(ex)))
 
-    # Setup runner
-    runner = RunnerManager.get_runner(selected_flag)(options, outputdir)
-    progressbar = ProgressBar(console, len(options))
+    # Setup
+    worker_class = WorkerManager.get_worker(selected_flag)
 
-    # Run
+    if values.create:
+        runner = Creator(worker_class, outputdir, nbprocesses=nbprocesses)
+    else:
+        runner = Runner(worker_class, workdir, nbprocesses=nbprocesses)
+
+    progressbar = ProgressBar(console, len(list_options))
     progressbar.start()
+
+    for options in list_options:
+        runner.put(options)
+
     runner.start()
 
     while runner.is_alive():
@@ -131,13 +141,12 @@ def run(argv=None):
     progressbar.close()
 
     # Export results
-    results = runner.get_results()
-    for result in results:
-        name = result.options.name
-        filepath = os.path.join(outputdir, name + ".zip")
-        result.save(filepath)
-
-        console.info("Saved results of options '%s' in '%s'" % (name, filepath))
+    if not values.create:
+        for result in runner.iter_results():
+            name = result.options.name
+            filepath = os.path.join(outputdir, name + ".zip")
+            result.save(filepath)
+            console.info("Saved results of options '%s' in '%s'" % (name, filepath))
 
     # Clean up
     console.close()

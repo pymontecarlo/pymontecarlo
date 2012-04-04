@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`runner` -- WinX-Ray runner
+:mod:`worker` -- WinX-Ray worker
 ================================================================================
 
-.. module:: runner
-   :synopsis: WinX-Ray 2 runner
+.. module:: worker
+   :synopsis: WinX-Ray 2 worker
 
-.. inheritance-diagram:: pymontecarlo.runner.winxray.runner
+.. inheritance-diagram:: pymontecarlo.runner.winxray.worker
 
 """
 
@@ -34,18 +34,18 @@ from pymontecarlo import settings
 from pymontecarlo.input.winxray.converter import Converter
 from pymontecarlo.io.winxray.exporter import Exporter
 from pymontecarlo.io.winxray.importer import Importer
-from pymontecarlo.runner.base.runner import Runner as _Runner, InvalidPlatform
-from pymontecarlo.runner.base.manager import RunnerManager
+from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker, InvalidPlatform
+from pymontecarlo.runner.base.manager import WorkerManager
 
 # Globals and constants variables.
 from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
-class Runner(_Runner):
-    def __init__(self, options, outputdir, overwrite=True):
+class Worker(_Worker):
+    def __init__(self, queue_options, queue_results, workdir, overwrite=True):
         """
         Runner to run WinX-Ray simulation(s).
         """
-        _Runner.__init__(self, options, outputdir, overwrite)
+        _Worker.__init__(self, queue_options, queue_results, workdir, overwrite)
 
         if platform.system() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
@@ -55,11 +55,7 @@ class Runner(_Runner):
             raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
         logging.debug('WinX-Ray executable: %s', self._executable)
 
-    def _reset(self):
-        _Runner._reset(self)
-        self._process = None
-
-    def _create_sim(self, options):
+    def _create(self, options):
         ops = copy.deepcopy(options)
 
         # Convert
@@ -80,16 +76,16 @@ class Runner(_Runner):
 
         return filepath
 
-    def _run_single(self, options):
-        wxc_filepath = self._create_sim(options)
-        if not wxc_filepath:
+    def _run(self, options):
+        wxcfilepath = self._create(options)
+        if not wxcfilepath:
             return
 
         # Create temporary folder for WinX-Ray runtime folders
         tmpfolder = tempfile.mkdtemp()
 
         # Launch
-        args = [self._executable, wxc_filepath]
+        args = [self._executable, wxcfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
         self._status = 'Running WinX-Ray'
@@ -101,12 +97,7 @@ class Runner(_Runner):
         # Cleanup
         shutil.rmtree(tmpfolder, ignore_errors=True)
 
-    def stop(self):
-        _Runner.stop(self)
-        if self._process is not None:
-            self._process.kill()
-
-    def _get_results_single(self, options):
+    def _get_results(self, options):
         dirpath = self._get_dirpath(options)
 
         resultdirs = [name for name in os.listdir(dirpath) \
@@ -121,10 +112,10 @@ class Runner(_Runner):
         return results
 
     def _get_dirpath(self, options):
-        dirpath = os.path.join(self._outputdir, options.name)
+        dirpath = os.path.join(self._workdir, options.name)
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
 
         return dirpath
 
-RunnerManager.register('winxray', Runner, [PLATFORM_WINDOWS])
+WorkerManager.register('winxray', Worker, [PLATFORM_WINDOWS])
