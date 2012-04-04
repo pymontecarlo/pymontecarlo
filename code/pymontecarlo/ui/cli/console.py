@@ -37,7 +37,7 @@ COLOR_BLUE = 'blue'
 COLOR_YELLOW = 'yellow'
 
 class ProgressBar(object):
-    _BAR_TEMPLATE = 'Simulation %i/%i: [%s%s] %i/100%% - %s'
+    _BAR_TEMPLATE = 'Completed %i/%i | [%s%s] %i/100%% - %s'
 
     def __init__(self, console, total, fill_char='#', empty_char=' ', width=25):
         self._console = console
@@ -69,7 +69,7 @@ class ProgressBar(object):
         stream.flush()
 
     def close(self):
-        text = self._create_bar_text(self._total, 1.0, 'Completed')
+        text = self._create_bar_text(self._total, 1.0, 'Done')
 
         stream = self._console._stdout
         self._console._pre_print(stream, text, COLOR_GREEN)
@@ -135,8 +135,10 @@ class _Console(object):
     def _print(self, stream, text, color=COLOR_DEFAULT):
         self._pre_print(stream, text, color)
 
-        out = '\n'.join(textwrap.wrap(text, self.width, subsequent_indent='  '))
-        stream.write(out)
+        lines = []
+        for line in textwrap.wrap(text, self.width, subsequent_indent='  '):
+            lines.append(line.ljust(self.width - 1))
+        stream.write('\n'.join(lines))
 
         self._post_print(stream, text, color)
         stream.write('\n')
