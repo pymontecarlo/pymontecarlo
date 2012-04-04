@@ -23,6 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.util.manager import Manager
 
 # Globals and constants variables.
@@ -62,3 +63,16 @@ class _ResultManager(Manager):
         Manager.register_saver(self, tag, klass)
 
 ResultManager = _ResultManager()
+
+
+def _init():
+    """
+    Imports all ``result`` modules inside ``pymontecarlo.result``
+    """
+    import pymontecarlo.result
+
+    package = pymontecarlo.result
+    includes = ['pymontecarlo.result.*.result']
+    import_recursive(package, includes)
+
+_init()

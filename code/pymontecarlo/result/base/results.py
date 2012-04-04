@@ -27,24 +27,11 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.result.base.manager import ResultManager
 
 # Globals and constants variables.
 SECTION_KEYS = 'keys'
 KEYS_INI_FILENAME = 'keys.ini'
-
-def _init():
-    """
-    Imports all ``result`` modules inside ``pymontecarlo.result``
-    """
-    import pymontecarlo.result
-
-    package = pymontecarlo.result
-    includes = ['pymontecarlo.result.*.result']
-    import_recursive(package, includes)
-
-_init()
 
 class Results(Mapping):
 
