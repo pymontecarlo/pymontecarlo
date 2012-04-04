@@ -18,14 +18,13 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import pkgutil
-import fnmatch
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
 from lxml.etree import Element, tostring, parse
 
 # Local modules.
+from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.input.base.beam import GaussianBeam
@@ -40,14 +39,11 @@ def _init():
     the current module, unit tests and converters.
     """
     import pymontecarlo.input
-    package_path = pymontecarlo.input.__path__
-    package_name = pymontecarlo.input.__name__ + '.'
 
+    package = pymontecarlo.input
+    includes = ['*']
     excludes = ['pymontecarlo.input.base.options', '*.test_*', '*.converter']
-
-    for _loader, name, _ispkg in pkgutil.walk_packages(package_path, package_name):
-        if not any(map(lambda pattern: fnmatch.fnmatch(name, pattern), excludes)):
-            __import__(name)
+    import_recursive(package, includes, excludes)
 
 _init()
 

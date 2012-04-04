@@ -19,8 +19,6 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import pkgutil
-import fnmatch
 from collections import Mapping
 from zipfile import ZipFile
 from ConfigParser import SafeConfigParser
@@ -29,6 +27,7 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.result.base.manager import ResultManager
 
 # Globals and constants variables.
@@ -37,18 +36,13 @@ KEYS_INI_FILENAME = 'keys.ini'
 
 def _init():
     """
-    Imports all packages and modules inside ``pymontecarlo.result`` except
-    the current module, unit tests and managers.
+    Imports all ``result`` modules inside ``pymontecarlo.result``
     """
-    import pymontecarlo.input
-    package_path = pymontecarlo.input.__path__
-    package_name = pymontecarlo.input.__name__ + '.'
+    import pymontecarlo.result
 
-    excludes = ['pymontecarlo.result.base.results', '*.test_*', '*.manager']
-
-    for _loader, name, _ispkg in pkgutil.walk_packages(package_path, package_name):
-        if not any(map(lambda pattern: fnmatch.fnmatch(name, pattern), excludes)):
-            __import__(name)
+    package = pymontecarlo.result
+    includes = ['pymontecarlo.result.*.result']
+    import_recursive(package, includes)
 
 _init()
 
