@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import time
+import glob
 import platform
 import logging
 from optparse import OptionParser, OptionGroup
@@ -72,6 +73,14 @@ def create_parser(flags):
 
     return parser
 
+def load_options(filepaths, list_options=[]):
+    for filepath in filepaths:
+        if os.path.isdir(filepath):
+            load_options(glob.glob(os.path.join(filepath, '*.xml')), list_options)
+            return
+
+        list_options.append(Options.load(filepath, validate=False))
+
 def run(argv=None):
     # Initialize
     console = create_console()
@@ -110,11 +119,10 @@ def run(argv=None):
         console.error("Please specify at least one options file")
 
     list_options = []
-    for arg in args:
-        try:
-            list_options.append(Options.load(arg, validate=False))
-        except Exception as ex:
-            console.error("Error while loading %s: %s" % (arg, str(ex)))
+    try:
+        load_options(args, list_options)
+    except Exception as ex:
+        console.error(str(ex))
 
     # Setup
     worker_class = WorkerManager.get_worker(selected_flag)
