@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+   pyMonteCarlo
+   Copyright (C) 2011 Philippe T. Pinard and Hendrix Demers;
+  
+   This library is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU Lesser General Public License
+   along with this library.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<project name="penelopelib"
+         basedir="."
+         xmlns:cpptasks="antlib:net.sf.antcontrib.cpptasks">
+
+    <!-- Directories -->
+    <property name="tmp.dir" location="${java.io.tmpdir}" />
+    <property name="src.dir" location="${basedir}" />
+    <property name="build.dir" location="${tmp.dir}/build" />
+    <property name="windows.python.dir" location="c:/Python26" />
+
+    <!-- ===================================================== -->
+    <!-- Init targets                                          -->
+    <!-- ===================================================== -->
+
+    <target name="-init" description="Creates all required directories">
+        <mkdir dir="${build.dir}" />
+
+        <condition property="isWindows">
+            <os family="windows" />
+        </condition>
+
+        <condition property="libext" value="pyd">
+            <os family="windows" />
+        </condition>
+
+        <condition property="isLinux">
+            <os family="unix" />
+        </condition>
+
+        <condition property="libext" value="so">
+            <os family="unix" />
+        </condition>
+    </target>
+
+    <!-- ===================================================== -->
+    <!-- Clean targets                                         -->
+    <!-- ===================================================== -->
+
+    <target name="clean" description="Delete build directory">
+        <delete dir="${build.dir}" />
+    </target>
+
+
+    <!-- ===================================================== -->
+    <!-- Compile targets                                       -->
+    <!-- ===================================================== -->
+
+    <target name="compile" depends="-init" description="Compile library" />
+
+    <target name="compile-common"
+            depends="-init"
+            description="Compile Fortran code">
+        <cpptasks:cc objdir="${build.dir}"
+                     outfile="${build.dir}/common"
+                     outputfileproperty="outfile"
+                     failonerror="true"
+                     exceptions="true"
+                     outtype="shared"
+                     debug="true"
+                     multithreaded="true">
+            <cpptasks:compiler id="compiler-fortran" name="gfortran">
+                <compilerarg value="-O2" />
+                <compilerarg value="-g" />
+                <compilerarg value="-Wall" />
+
+                <fileset dir="${src.dir}">
+                    <include name="penelope.f" />
+                    <include name="rita.f" />
+                    <include name="penvared.f" />
+                    <include name="timer.f" />
+                </fileset>
+            </cpptasks:compiler>
+
+            <cpptasks:compiler id="compiler-c" name="gcc">
+                <compilerarg value="-O2" />
+                <compilerarg value="-g" />
+                <compilerarg value="-Wall" />
+                <compilerarg value="-Wstrict-prototypes" />
+                <compilerarg value="-DMAJOR_VERSION=1" />
+                <compilerarg value="-DMINOR_VERSION=0" />
+                <compilerarg value="-DNDEBUG" />
+
+                <compilerarg value="-fPIC" if="isLinux" />
+
+                <compilerarg value="-mno-cygwin" if="isWindows" />
+                <compilerarg value="-mdll" if="isWindows" />
+
+                <includepath location="/usr/local/include" if="isLinux" />
+                <includepath location="/usr/include/python2.6" if="isLinux" />
+
+                <includepath location="${windows.python.dir}/include"
+                             if="isWindows" />
+                <includepath location="${windows.python.dir}/PC"
+                             if="isWindows" />
+
+                <fileset dir="${src.dir}">
+                    <include name="common.c" />
+                </fileset>
+            </cpptasks:compiler>
+
+            <cpptasks:linker id="linker" name="gfortran">
+                <libset dir="${windows.python.dir}/libs"
+                        libs="python26,msvcr90"
+                        if="isWindows" />
+
+                <fileset dir="${src.dir}" if="isWindows">
+                    <include name="common.def" />
+                </fileset>
+            </cpptasks:linker>
+        </cpptasks:cc>
+
+        <!-- Rename outfile -->
+        <echo message="outfile = ${outfile}" />
+        <move tofile="${build.dir}/common.${libext}" file="${outfile}" />
+    </target>
+
+</project>

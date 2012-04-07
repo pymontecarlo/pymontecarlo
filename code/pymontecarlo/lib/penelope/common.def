@@ -1,0 +1,3 @@
+LIBRARY common.pyd
+EXPORTS
+initcommon
