@@ -71,11 +71,11 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.exe.debug.451521061;photran.managedbuild.config.gnu.fortran.exe.debug.451521061.;photran.managedbuild.tool.gnu.c.compiler.exe.debug.1833885073;cdt.managedbuild.tool.gnu.c.compiler.input.513406438">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.exe.debug.451521061">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.exe.debug.451521061;photran.managedbuild.config.gnu.fortran.exe.debug.451521061.;photran.managedbuild.tool.gnu.c.compiler.exe.debug.1833885073;cdt.managedbuild.tool.gnu.c.compiler.input.513406438">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.exe.debug.451521061;photran.managedbuild.config.gnu.fortran.exe.debug.451521061.">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile"/>

@@ -5,3 +5,6 @@ bin
 code/pymontecarlo/input/base/foo.py
 code/pymontecarlo/lib/penelope/wrapper.so
 code/pymontecarlo/lib/penelope/wrapper.def
+history.xml
+dependencies.xml
+material.pyd

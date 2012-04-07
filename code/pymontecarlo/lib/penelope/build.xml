@@ -73,7 +73,9 @@
     <!-- Compile targets                                       -->
     <!-- ===================================================== -->
 
-    <target name="compile" depends="-init" description="Compile library" />
+    <target name="compile"
+            depends="-init,compile-common,compile-material"
+            description="Compile library" />
 
     <target name="compile-common"
             depends="-init"
