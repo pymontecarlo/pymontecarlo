@@ -91,11 +91,11 @@ static PyMethodDef material_methods[] =
 #ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
 #endif
-PyMODINIT_FUNC initmaterial(void)
+PyMODINIT_FUNC init_material(void)
 {
     // Initialize module
     PyObject* m;
-    m = Py_InitModule3("material", material_methods,
+    m = Py_InitModule3("_material", material_methods,
                     "PENELOPE functions to create materials.");
     if (m == NULL)
         return;

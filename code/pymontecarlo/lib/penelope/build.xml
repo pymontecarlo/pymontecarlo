@@ -141,7 +141,7 @@
 
         <!-- Rename outfile -->
         <echo message="outfile = ${outfile}" />
-        <move tofile="${build.dir}/common.${libext}" file="${outfile}" />
+        <move tofile="${build.dir}/_common.${libext}" file="${outfile}" />
     </target>
 
 
@@ -212,7 +212,7 @@
 
         <!-- Rename outfile -->
         <echo message="outfile = ${outfile}" />
-        <move tofile="${build.dir}/material.${libext}" file="${outfile}" />
+        <move tofile="${build.dir}/_material.${libext}" file="${outfile}" />
     </target>
 
 </project>

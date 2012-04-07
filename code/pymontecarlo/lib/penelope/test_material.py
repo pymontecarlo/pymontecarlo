@@ -18,9 +18,8 @@ import shutil
 # Third party modules.
 
 # Local modules.
-import pymontecarlo.lib.penelope.material as material #@UnresolvedImport
+import pymontecarlo.lib.penelope.material as material
 from pymontecarlo.input.base.material import pure
-from pymontecarlo import settings
 
 # Globals and constants variables.
 
@@ -40,9 +39,6 @@ class TestMaterial(unittest.TestCase):
         self.assertTrue(True)
 
     def testcreate(self):
-        oldcwd = os.getcwd()
-        os.chdir(settings.penelope.pendbase)
-
         filepath = os.path.join(self.tempdir, 'cu.mat')
         material.create(pure(29), filepath)
 
@@ -50,8 +46,6 @@ class TestMaterial(unittest.TestCase):
             lines = fp.readlines()
             self.assertTrue(lines[0].startswith(' PENELOPE'))
             self.assertTrue(lines[-1].startswith(' PENELOPE'))
-
-        os.chdir(oldcwd)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
