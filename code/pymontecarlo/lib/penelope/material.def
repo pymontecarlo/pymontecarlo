@@ -1,0 +1,3 @@
+LIBRARY material.pyd
+EXPORTS
+initmaterial
