@@ -16,6 +16,7 @@ import tempfile
 import shutil
 
 # Third party modules.
+from nose.plugins.attrib import attr
 
 # Local modules.
 from pymontecarlo.input.base.options import Options
@@ -24,7 +25,7 @@ from pymontecarlo.input.penelope.converter import Converter
 from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.input.base.limit import TimeLimit
 from pymontecarlo.io.penelope.exporter import Exporter
-import pymontecarlo.lib.penelope.wrapper as wrapper #@UnresolvedImport
+import pymontecarlo.lib.penelope.geometry as pengeometry
 
 # Globals and constants variables.
 
@@ -45,6 +46,7 @@ class TestPenelopeExporter(unittest.TestCase):
     def testskeleton(self):
         self.assertTrue(True)
 
+    @attr('slow')
     def testexport_substrate(self):
         # Create
         mat1 = Material('mat', {79: 0.5, 47: 0.5})
@@ -59,7 +61,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'substrate.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
+        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
 
         self.assertEqual(1, nmat)
         self.assertEqual(2, nbody)
@@ -67,6 +69,7 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
+    @attr('slow')
     def testexport_inclusion(self):
         # Create
         mat1 = Material('mat', {79: 0.5, 47: 0.5})
@@ -82,7 +85,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'inclusion.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
+        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
 
         self.assertEqual(2, nmat)
         self.assertEqual(3, nbody)
@@ -93,6 +96,7 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat2.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
+    @attr('slow')
     def testexport_multilayers(self):
         # Create
         mat1 = Material('mat1', {79: 0.5, 47: 0.5})
@@ -116,7 +120,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'multilayers.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
+        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(6, nbody)
@@ -130,6 +134,7 @@ class TestPenelopeExporter(unittest.TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat3.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
+    @attr('slow')
     def testexport_grainboundaries(self):
         # Create
         mat1 = Material('mat1', {79: 0.5, 47: 0.5})
@@ -152,7 +157,7 @@ class TestPenelopeExporter(unittest.TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'grainboundaries.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = wrapper.geomin(geofilepath, repfilepath)
+        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(4, nbody)

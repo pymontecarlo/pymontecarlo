@@ -74,7 +74,7 @@
     <!-- ===================================================== -->
 
     <target name="compile"
-            depends="-init,compile-common,compile-material"
+            depends="-init,compile-common,compile-material,compile-geometry"
             description="Compile library" />
 
     <target name="compile-common"
@@ -214,5 +214,73 @@
         <echo message="outfile = ${outfile}" />
         <move tofile="${build.dir}/_material.${libext}" file="${outfile}" />
     </target>
+    
+    
+    
+    <target name="compile-geometry"
+                depends="-init"
+                description="Compile PENELOPE geometry code">
+            <cpptasks:cc objdir="${build.dir}"
+                         outfile="${build.dir}/geometry"
+                         outputfileproperty="outfile"
+                         failonerror="true"
+                         exceptions="true"
+                         outtype="shared"
+                         debug="true"
+                         multithreaded="true">
+                <cpptasks:compiler id="compiler-fortran" name="gfortran">
+                    <compilerarg value="-O2" />
+                    <compilerarg value="-g" />
+                    <compilerarg value="-Wall" />
+
+                    <fileset dir="${src.dir}">
+                        <include name="pengeom.f" />
+                        <include name="utils_f.f" />
+                    </fileset>
+                </cpptasks:compiler>
+
+                <cpptasks:compiler id="compiler-c" name="gcc">
+                    <compilerarg value="-O2" />
+                    <compilerarg value="-g" />
+                    <compilerarg value="-Wall" />
+                    <compilerarg value="-Wstrict-prototypes" />
+                    <compilerarg value="-DMAJOR_VERSION=1" />
+                    <compilerarg value="-DMINOR_VERSION=0" />
+                    <compilerarg value="-DNDEBUG" />
+
+                    <compilerarg value="-fPIC" if="isLinux" />
+
+                    <compilerarg value="-mno-cygwin" if="isWindows" />
+                    <compilerarg value="-mdll" if="isWindows" />
+
+                    <includepath location="/usr/local/include" if="isLinux" />
+                    <includepath location="/usr/include/python2.6" if="isLinux" />
+
+                    <includepath location="${windows.python.dir}/include"
+                                 if="isWindows" />
+                    <includepath location="${windows.python.dir}/PC"
+                                 if="isWindows" />
+
+                    <fileset dir="${src.dir}">
+                        <include name="geometry.c" />
+                        <include name="utils_c.c" />
+                    </fileset>
+                </cpptasks:compiler>
+
+                <cpptasks:linker id="linker" name="gfortran">
+                    <libset dir="${windows.python.dir}/libs"
+                            libs="python26,msvcr90"
+                            if="isWindows" />
+
+                    <fileset dir="${src.dir}" if="isWindows">
+                        <include name="geometry.def" />
+                    </fileset>
+                </cpptasks:linker>
+            </cpptasks:cc>
+
+            <!-- Rename outfile -->
+            <echo message="outfile = ${outfile}" />
+            <move tofile="${build.dir}/_geometry.${libext}" file="${outfile}" />
+        </target>
 
 </project>

@@ -1,0 +1,3 @@
+LIBRARY _geometry.pyd
+EXPORTS
+init_geometry

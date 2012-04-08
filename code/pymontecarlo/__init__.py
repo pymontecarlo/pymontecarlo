@@ -50,6 +50,5 @@ def __load_settings():
 
 __load_settings()
 
-print 'ns'
 XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
                     resource_filename(__name__, 'schema.xsd'))

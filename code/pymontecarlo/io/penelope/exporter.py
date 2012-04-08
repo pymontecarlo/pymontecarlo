@@ -34,8 +34,8 @@ from pymontecarlo.input.penelope.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
 from pymontecarlo.input.base.detector import PhotonSpectrumDetector
 from pymontecarlo.input.base.limit import ShowersLimit, TimeLimit, UncertaintyLimit
-from pymontecarlo.io.base.exporter import Exporter as _Exporter
-from pymontecarlo.lib.penelope.wrapper import create_material #@UnresolvedImport
+from pymontecarlo.io.base.exporter import Exporter as _Exporter, ExporterException
+import pymontecarlo.lib.penelope.material as penmaterial
 from pymontecarlo.input.base.material import VACUUM
 
 # Globals and constants variables.
@@ -159,7 +159,7 @@ class Exporter(_Exporter):
 
     def export(self, options, outputdir):
         # Export geometry
-        geoinfo, matinfos = self.export_geometry(options, outputdir)
+        geoinfo, matinfos = self.export_geometry(options.geometry, outputdir)
 
         # Create input file
         lines = self._create_input_file(options, geoinfo, matinfos)
@@ -353,11 +353,11 @@ class Exporter(_Exporter):
 
         return lines
 
-    def export_geometry(self, options, outputdir):
+    def export_geometry(self, geometry, outputdir):
         """
         Exports geometry to a *geo* file and all materials to *mat* files.
         
-        :arg options: PENELOPE options
+        :arg geometry: :geometry object
         
         :arg outputdir: full path to a directory where the files will be saved.
             Note that any conflicting files will be overwritten without warnings.
@@ -374,11 +374,11 @@ class Exporter(_Exporter):
             geometry file. 
         """
         # Save geometry
-        title = options.geometry.__class__.__name__.lower()
+        title = geometry.__class__.__name__.lower()
         pengeom = PenelopeGeometry(title)
-        pengeom._props.update(options.geometry._props) # tilt and rotation
+        pengeom._props.update(geometry._props) # tilt and rotation
 
-        self._export_geometry(options, pengeom)
+        self._export_geometry(geometry, pengeom)
 
         lines = pengeom.to_geo()
         geofilepath = os.path.join(outputdir, title + ".geo")
@@ -396,8 +396,7 @@ class Exporter(_Exporter):
             if index == 0: continue
 
             filepath = os.path.join(outputdir, 'mat%i.mat' % index)
-            create_material(material.composition, material.density_kg_m3,
-                            material.name, filepath)
+            penmaterial.create(material, filepath)
 
             matinfos.append((material, filepath))
 
@@ -405,7 +404,16 @@ class Exporter(_Exporter):
 
         return (pengeom, geofilepath), matinfos
 
-    def _export_geometry_substrate(self, options, geometry, pengeom):
+    def _export_geometry(self, geometry, *args):
+        clasz = geometry.__class__
+        method = self._geometry_exporters.get(clasz)
+
+        if method:
+            method(geometry, *args)
+        else:
+            raise ExporterException, "Could not export geometry '%s'" % clasz.__name__
+
+    def _export_geometry_substrate(self, geometry, pengeom):
         surface_cylinder = cylinder(0.1) # 10 cm radius
         surface_top = zplane(0.0) # z = 0
         surface_bottom = zplane(-0.1) # z = -10 cm
@@ -417,7 +425,7 @@ class Exporter(_Exporter):
 
         pengeom.modules.add(module)
 
-    def _export_geometry_inclusion(self, options, geometry, pengeom):
+    def _export_geometry_inclusion(self, geometry, pengeom):
         surface_cylinder = cylinder(0.1) # 10 cm radius
         surface_top = zplane(0.0) # z = 0
         surface_bottom = zplane(-0.1) # z = -10 cm
@@ -436,7 +444,7 @@ class Exporter(_Exporter):
         pengeom.modules.add(module_substrate)
         pengeom.modules.add(module_inclusion)
 
-    def _export_geometry_multilayers(self, options, geometry, pengeom):
+    def _export_geometry_multilayers(self, geometry, pengeom):
         # Surfaces
         surface_cylinder = cylinder(0.1) # 10 cm radius
 
@@ -503,7 +511,7 @@ class Exporter(_Exporter):
 
             pengeom.modules.add(group)
 
-    def _export_geometry_grainboundaries(self, options, geometry, pengeom):
+    def _export_geometry_grainboundaries(self, geometry, pengeom):
         # Surfaces
         surface_top = zplane(0.0) # z = 0
         surface_bottom = zplane(-0.1) # z = -10 cm

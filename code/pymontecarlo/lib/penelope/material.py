@@ -7,7 +7,7 @@
 .. module:: material
    :synopsis: Create PENELOPE's material
 
-.. inheritance-diagram:: material
+.. inheritance-diagram:: pymontecarlo.lib.penelope.material
 
 """
 
