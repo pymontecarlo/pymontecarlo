@@ -13,6 +13,7 @@ import unittest
 import logging
 from math import radians
 import tempfile
+import shutil
 from zipfile import ZipFile
 import os
 
@@ -35,8 +36,8 @@ class TestResults(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        # Temporary files
-        _fp, self.tmpzip = tempfile.mkstemp('.zip')
+        # Temporary directory
+        self.tmpdir = tempfile.mkdtemp()
 
         # Detectors
         det1 = PhotonIntensityDetector((radians(35), radians(45)),
@@ -65,7 +66,7 @@ class TestResults(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-        os.remove(self.tmpzip)
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -77,10 +78,10 @@ class TestResults(unittest.TestCase):
         self.assertRaises(ValueError, Results, self.ops, results)
 
     def testsave(self):
-        with open(self.tmpzip, 'w') as fp:
-            self.results.save(fp)
+        zipfilepath = os.path.join(self.tmpdir, 'results.zip')
+        self.results.save(zipfilepath)
 
-        with open(self.tmpzip, 'r') as fp:
+        with open(zipfilepath, 'r') as fp:
             zipfile = ZipFile(fp, 'r')
 
             namelist = zipfile.namelist()
@@ -92,9 +93,7 @@ class TestResults(unittest.TestCase):
             zipfile.close()
 
     def testload(self):
-        with open(self.results_zip, 'r') as fp:
-            results = Results.load(fp, self.ops)
-
+        results = Results.load(self.results_zip, self.ops)
         self.assertEqual(3, len(results))
 
 if __name__ == '__main__': #pragma: no cover
