@@ -151,7 +151,7 @@ class Model(Option):
             raise ValueError, "No type. Model is unregistered."
         return self._type
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}model', Model)
+XMLIO.register('{http://pymontecarlo.sf.net}model', Model)
 XMLIO.register_loader('pymontecarlo.input.base.model.Model', Model)
 
 class ModelCategory(collections.Set):

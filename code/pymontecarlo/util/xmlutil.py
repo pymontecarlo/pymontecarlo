@@ -22,12 +22,14 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-from lxml.etree import Element, XMLSchema
+from lxml.etree import Element, XMLSchema, parse
 
 # Local modules.
 from pymontecarlo.util.manager import Manager
 
 # Globals and constants variables.
+_XSD_IMPORT_TAG = '{http://www.w3.org/2001/XMLSchema}import'
+_XSD_INCLUDE_TAG = '{http://www.w3.org/2001/XMLSchema}include'
 
 class objectxml(object):
 
@@ -70,6 +72,7 @@ class _XMLIO(Manager):
         if location is not None:
             self._locations[prefix] = os.path.abspath(location)
 
+
     def register_loader(self, tag, klass):
         if not issubclass(klass, objectxml):
             raise ValueError, 'The class (%s) must be a subclass of objectxml.' % \
@@ -84,31 +87,12 @@ class _XMLIO(Manager):
 
         Manager.register_saver(self, tag, klass)
 
-    def _create_global_schema(self):
-        nsmap_infos = []
-        for prefix, uri in self._nsmap.iteritems():
-            location = self._locations.get(prefix, '')
-            if os.path.exists(location):
-                nsmap_infos.append((prefix, uri, location))
-
-        nsmap = {'xsd': 'http://www.w3.org/2001/XMLSchema'}
-        for prefix, uri, _filepath in nsmap_infos:
-            nsmap[prefix] = uri
-
-        root = Element('{http://www.w3.org/2001/XMLSchema}schema', nsmap=nsmap)
-
-        for _prefix, uri, filepath in nsmap_infos:
-            element = Element('{http://www.w3.org/2001/XMLSchema}import')
-            element.set('namespace', uri)
-            element.set('schemaLocation', filepath)
-
-            root.append(element)
-
-        return XMLSchema(etree=root)
-
     def validate(self, element):
-        schema = self._create_global_schema()
-        schema.assertValid(element) # raise exceptions
+        for prefix in element.nsmap:
+            location = self._locations[prefix]
+            root = parse(location).getroot()
+            schema = XMLSchema(etree=root)
+            schema.assertValid(element) # raise exceptions
 
     def from_xml(self, element, validate=False, *args, **kwargs):
         """

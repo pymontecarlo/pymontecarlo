@@ -43,8 +43,7 @@ public abstract class AbstractExtractor implements Extractor {
      *            required XML tag(s)
      */
     public AbstractExtractor(String... tags) {
-        this(Namespace.getNamespace("mc",
-                "http://pymontecarlo.sf.net/input/base"), tags);
+        this(Namespace.getNamespace("mc", "http://pymontecarlo.sf.net"), tags);
     }
 
 

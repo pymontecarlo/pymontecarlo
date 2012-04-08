@@ -21,15 +21,11 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml, XMLIO
+from pymontecarlo.util.xmlutil import objectxml
 
 # Globals and constants variables.
-
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net/input/base',
-                    resource_filename(__name__, 'base.xsd'))
 
 class Option(objectxml):
 

@@ -37,11 +37,15 @@ def _match(name, includes, excludes):
 
     return False
 
-def import_recursive(package, includes=['*'], excludes=[]):
-    package_path = package.__path__
-    package_name = package.__name__ + '.'
+def import_recursive(package_path, package_name, includes=['*'], excludes=[]):
+    package_name += '.'
+
+    imported = []
 
     for _loader, name, _ispkg in pkgutil.walk_packages(package_path, package_name):
         if _match(name, includes, excludes):
             __import__(name)
+            imported.append(name)
+
+    return imported
 

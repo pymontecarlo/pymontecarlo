@@ -23,7 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.penelope.option import Option
+from pymontecarlo.input.base.option import Option
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -210,5 +210,5 @@ class InteractionForcing(Option):
 
         self._props['weight'] = min(low, high), max(low, high)
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}interactionForcing', InteractionForcing)
+XMLIO.register('{http://pymontecarlo.sf.net}penelopeInteractionForcing', InteractionForcing)
 XMLIO.register_loader('pymontecarlo.input.penelope.interactionforcing.InteractionForcing', InteractionForcing)

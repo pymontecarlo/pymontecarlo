@@ -24,7 +24,7 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.input.base.material import Material as _Material
-from pymontecarlo.input.penelope.option import Option
+from pymontecarlo.input.base.option import Option
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO
 
@@ -201,5 +201,5 @@ class Material(_Material, Option):
                     % energy
         self._props['cutoff energy bremsstrahlung'] = energy
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/penelope}material', Material)
+XMLIO.register('{http://pymontecarlo.sf.net}penelopeMaterial', Material)
 XMLIO.register_loader('pymontecarlo.input.penelope.material.Material', Material)

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <xsd:complexType name="interactionForcingType">
+    <xsd:complexType name="penelopeInteractionForcingType">
         <xsd:attribute name="particle" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:integer">
@@ -10,7 +10,7 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
-        
+
         <xsd:attribute name="collision" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:integer">
@@ -19,9 +19,10 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
-        
-        <xsd:attribute name="forcer" type="xsd:double" use="required"/>
-        
+
+        <xsd:attribute name="forcer" type="xsd:double"
+            use="required" />
+
         <xsd:attribute name="weightMin" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
@@ -30,7 +31,7 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
-        
+
         <xsd:attribute name="weightMax" use="required">
             <xsd:simpleType>
                 <xsd:restriction base="xsd:double">
@@ -40,6 +41,6 @@
             </xsd:simpleType>
         </xsd:attribute>
     </xsd:complexType>
-    
-    <xsd:element name="interactionForcing" type="interactionForcingType" />
+
+    <xsd:element name="penelopeInteractionForcing" type="penelopeInteractionForcingType" />
 </xsd:schema>

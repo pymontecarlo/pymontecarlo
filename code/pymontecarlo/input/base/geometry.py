@@ -278,7 +278,7 @@ class Substrate(_Geometry):
         else:
             raise ValueError, "Unknown body: %s" % body
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}substrate', Substrate)
+XMLIO.register('{http://pymontecarlo.sf.net}substrate', Substrate)
 XMLIO.register_loader('pymontecarlo.input.base.geometry.Substrate', Substrate)
 
 class Inclusion(_Geometry):
@@ -363,7 +363,7 @@ class Inclusion(_Geometry):
         else:
             raise ValueError, "Unknown body: %s" % body
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}inclusion', Inclusion)
+XMLIO.register('{http://pymontecarlo.sf.net}inclusion', Inclusion)
 XMLIO.register_loader('pymontecarlo.input.base.geometry.Inclusion', Inclusion)
 
 class _Layered(_Geometry):
@@ -534,7 +534,7 @@ class MultiLayers(_Layered):
         else:
             raise ValueError, "Unknown body: %s" % body
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}multiLayers', MultiLayers)
+XMLIO.register('{http://pymontecarlo.sf.net}multiLayers', MultiLayers)
 XMLIO.register_loader('pymontecarlo.input.base.geometry.MultiLayers', MultiLayers)
 
 class GrainBoundaries(_Layered):
@@ -640,5 +640,5 @@ class GrainBoundaries(_Layered):
         else:
             raise ValueError, "Unknown body: %s" % body
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}grainBoundaries', GrainBoundaries)
+XMLIO.register('{http://pymontecarlo.sf.net}grainBoundaries', GrainBoundaries)
 XMLIO.register_loader('pymontecarlo.input.base.geometry.GrainBoundaries', GrainBoundaries)

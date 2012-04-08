@@ -308,7 +308,7 @@ class Material(Option):
     def is_vacuum(self):
         return False
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}material', Material)
+XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
 XMLIO.register_loader('pymontecarlo.input.base.material.Material', Material)
 
 class _Vacuum(Material):

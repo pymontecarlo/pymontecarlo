@@ -1,17 +1,15 @@
 <?xml version="1.0"?>
 
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:base="http://pymontecarlo.sf.net/input/base">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:include schemaLocation="interactionforcing.xsd" />
-    <xsd:import namespace="http://pymontecarlo.sf.net/input/base"
-        schemaLocation="../base/base.xsd" />
+    <xsd:include schemaLocation="../base/base.xsd" />
 
     <xsd:group name="interactionForcingsGroup">
         <xsd:sequence>
             <xsd:element name="interactionForcings">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element ref="interactionForcing"
+                        <xsd:element ref="penelopeInteractionForcing"
                             minOccurs="0" maxOccurs="unbounded" />
                     </xsd:sequence>
                 </xsd:complexType>
@@ -30,27 +28,27 @@
         </xsd:attribute>
     </xsd:attributeGroup>
 
-    <xsd:complexType name="bodyType">
+    <xsd:complexType name="penelopeBodyType">
         <xsd:complexContent>
-            <xsd:extension base="base:bodyType">
+            <xsd:extension base="bodyType">
                 <xsd:group ref="interactionForcingsGroup" />
                 <xsd:attributeGroup ref="maximumStepLengthGroup" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="body" type="bodyType"
-        substitutionGroup="base:body" />
+    <xsd:element name="penelopeBody" type="penelopeBodyType"
+        substitutionGroup="body" />
 
-    <xsd:complexType name="layerType">
+    <xsd:complexType name="penelopeLayerType">
         <xsd:complexContent>
-            <xsd:extension base="base:layerType">
+            <xsd:extension base="layerType">
                 <xsd:group ref="interactionForcingsGroup" />
                 <xsd:attributeGroup ref="maximumStepLengthGroup" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="layer" type="layerType"
-        substitutionGroup="base:body" />
+    <xsd:element name="penelopeLayer" type="penelopeLayerType"
+        substitutionGroup="body" />
 </xsd:schema>

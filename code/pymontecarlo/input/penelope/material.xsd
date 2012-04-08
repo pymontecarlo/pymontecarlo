@@ -1,14 +1,11 @@
 <?xml version="1.0"?>
 
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:base="http://pymontecarlo.sf.net/input/base">
-    <xsd:include schemaLocation="interactionforcing.xsd" />
-    <xsd:import namespace="http://pymontecarlo.sf.net/input/base"
-        schemaLocation="../base/base.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include  schemaLocation="../base/base.xsd" />
 
     <xsd:complexType name="penelopeMaterialType">
         <xsd:complexContent>
-            <xsd:extension base="base:materialType">
+            <xsd:extension base="materialType">
                 <xsd:attribute name="c1" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:double">
@@ -46,6 +43,6 @@
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="material" type="penelopeMaterialType"
-        substitutionGroup="base:material" />
+    <xsd:element name="penelopeMaterial" type="penelopeMaterialType"
+        substitutionGroup="material" />
 </xsd:schema>

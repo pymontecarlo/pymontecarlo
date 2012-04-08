@@ -143,7 +143,7 @@ class PencilBeam(Option):
             raise ValueError, "Aperture (%s) must be between [0, pi/2] rad." % aperture
         self._props['aperture'] = aperture
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}pencilBeam', PencilBeam)
+XMLIO.register('{http://pymontecarlo.sf.net}pencilBeam', PencilBeam)
 XMLIO.register_loader('pymontecarlo.input.base.beam.PencilBeam', PencilBeam)
 
 class GaussianBeam(PencilBeam):
@@ -183,7 +183,7 @@ class GaussianBeam(PencilBeam):
             raise ValueError, "Diameter (%s) must be equal or greater than 0." % diameter
         self._props['diameter'] = diameter
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}gaussianBeam', GaussianBeam)
+XMLIO.register('{http://pymontecarlo.sf.net}gaussianBeam', GaussianBeam)
 XMLIO.register_loader('pymontecarlo.input.base.beam.GaussianBeam', GaussianBeam)
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):

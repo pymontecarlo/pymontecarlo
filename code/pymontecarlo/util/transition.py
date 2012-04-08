@@ -22,7 +22,6 @@ __license__ = "GPL v3"
 from operator import methodcaller, attrgetter
 
 # Third party modules.
-from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml, XMLIO
@@ -32,9 +31,6 @@ from pymontecarlo.util.relaxation_data import relaxation_data
 
 # Globals and constants variables.
 _ZGETTER = attrgetter('z')
-
-XMLIO.add_namespace('mc-util', 'http://pymontecarlo.sf.net/util',
-                    resource_filename(__name__, 'util.xsd'))
 
 """
 Subshells (source -> destination) of all transitions.
@@ -224,7 +220,7 @@ class Transition(objectxml):
     def exists(self):
         return self._exists
 
-XMLIO.register('{http://pymontecarlo.sf.net/util}transition', Transition)
+XMLIO.register('{http://pymontecarlo.sf.net}transition', Transition)
 XMLIO.register_loader('pymontecarlo.util.transition.Transition', Transition)
 
 class transitionset(frozenset):

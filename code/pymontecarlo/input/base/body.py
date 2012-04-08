@@ -70,7 +70,7 @@ class Body(Option):
     def material(self, m):
         self._props['material'] = m
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}body', Body)
+XMLIO.register('{http://pymontecarlo.sf.net}body', Body)
 XMLIO.register_loader('pymontecarlo.input.base.body.Body', Body)
 
 class Layer(Body):
@@ -117,5 +117,5 @@ class Layer(Body):
             raise ValueError, "Thickness (%s) must be greater than 0." % thickness
         self._props['thickness'] = thickness
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}layer', Layer)
+XMLIO.register('{http://pymontecarlo.sf.net}layer', Layer)
 XMLIO.register_loader('pymontecarlo.input.base.body.Layer', Layer)

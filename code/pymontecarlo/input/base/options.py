@@ -33,20 +33,6 @@ from pymontecarlo.input.base.geometry import Substrate
 
 # Globals and constants variables.
 
-def _init():
-    """
-    Imports all packages and modules inside ``pymontecarlo.input`` except
-    the current module, unit tests and converters.
-    """
-    import pymontecarlo.input
-
-    package = pymontecarlo.input
-    includes = ['*']
-    excludes = ['pymontecarlo.input.base.options', '*.test_*', '*.converter']
-    import_recursive(package, includes, excludes)
-
-_init()
-
 class _Detectors(MutableMapping):
     def __init__(self):
         self._data = {}
@@ -355,5 +341,5 @@ class Options(Option):
         """
         return self._props['models']
 
-XMLIO.register('{http://pymontecarlo.sf.net/input/base}options', Options)
+XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
 XMLIO.register_loader('pymontecarlo.input.base.options.Options', Options)
