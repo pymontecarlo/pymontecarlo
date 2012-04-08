@@ -24,7 +24,6 @@ import platform
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.runner.base.worker import Worker
 
 # Globals and constants variables.
@@ -79,14 +78,3 @@ class _WorkerManager:
 
 WorkerManager = _WorkerManager()
 
-def _init():
-    """
-    Imports all ``worker`` modules inside ``pymontecarlo.runner``
-    """
-    import pymontecarlo.runner
-
-    package = pymontecarlo.runner
-    includes = ['pymontecarlo.runner.*.worker']
-    import_recursive(package, includes)
-
-_init()

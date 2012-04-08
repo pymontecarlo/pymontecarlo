@@ -1,12 +1,12 @@
 """
 ================================================================================
-:mod:`options` -- Main class containing all options of a simulation
+:mod:`input` -- Setup, load and save inputs for a simulation
 ================================================================================
 
-.. module:: options
-   :synopsis: Main class containing all options of a simulation
+.. module:: input
+   :synopsis: Setup, load and save inputs for a simulation
 
-.. inheritance-diagram:: pymontecarlo.input.options
+.. inheritance-diagram:: pymontecarlo.input
 
 """
 
@@ -36,6 +36,6 @@ def _init():
     package_name = 'pymontecarlo.input'
     includes = ['*']
     excludes = ['*.test_*', '*.converter']
-    print import_recursive(package_path, package_name, includes, excludes)
+    import_recursive(package_path, package_name, includes, excludes)
 
 _init()
