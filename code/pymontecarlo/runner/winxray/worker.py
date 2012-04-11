@@ -24,8 +24,6 @@ import copy
 import subprocess
 import logging
 import platform
-import tempfile
-import shutil
 
 # Third party modules.
 
@@ -55,6 +53,9 @@ class Worker(_Worker):
             raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
         logging.debug('WinX-Ray executable: %s', self._executable)
 
+        self._executable_dir = os.path.dirname(self._executable)
+        logging.debug('WinX-Ray directory: %s', self._executable_dir)
+
     def _create(self, options, dirpath):
         ops = copy.deepcopy(options)
 
@@ -83,21 +84,16 @@ class Worker(_Worker):
         if not wxcfilepath:
             return
 
-        # Create temporary folder for WinX-Ray runtime folders
-        tmpfolder = tempfile.mkdtemp()
-
         # Launch
         args = [self._executable, wxcfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
         self._status = 'Running WinX-Ray'
 
-        self._process = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=tmpfolder)
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                         cwd=self._executable_dir)
         self._process.wait()
         self._process = None
-
-        # Cleanup
-        shutil.rmtree(tmpfolder, ignore_errors=True)
 
     def _save_results(self, options, zipfilepath):
         dirpath = self._get_dirpath(options)
