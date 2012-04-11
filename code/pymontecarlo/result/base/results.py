@@ -30,6 +30,8 @@ from StringIO import StringIO
 from pymontecarlo.result.base.manager import ResultManager
 
 # Globals and constants variables.
+from zipfile import ZIP_DEFLATED
+
 SECTION_KEYS = 'keys'
 KEYS_INI_FILENAME = 'keys.ini'
 
@@ -103,7 +105,7 @@ class Results(Mapping):
         
         :arg source: filepath or file-object
         """
-        zipfile = ZipFile(source, 'w')
+        zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED)
 
         # Creates keys.ini
         config = SafeConfigParser()
