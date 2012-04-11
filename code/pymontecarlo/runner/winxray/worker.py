@@ -24,6 +24,7 @@ import copy
 import subprocess
 import logging
 import platform
+from zipfile import ZipFile
 
 # Third party modules.
 
@@ -36,6 +37,7 @@ from pymontecarlo.runner.base.worker import SubprocessWorker as _Worker, Invalid
 from pymontecarlo.runner.base.manager import WorkerManager
 
 # Globals and constants variables.
+from zipfile import ZIP_DEFLATED
 from pymontecarlo.runner.base.manager import PLATFORM_WINDOWS
 
 class Worker(_Worker):
@@ -104,9 +106,20 @@ class Worker(_Worker):
         if not resultdirs:
             raise IOError, 'Cannot find results directories in %s' % dirpath
 
+        # Import results to pyMonteCarlo
         path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
         results.save(zipfilepath)
+
+        # Append all WinXRay results in zip
+        zip = ZipFile(zipfilepath, 'a', compression=ZIP_DEFLATED)
+
+        for filename in os.listdir(path):
+            filepath = os.path.join(path, filename)
+            arcname = "raw/%s" % filename
+            zip.write(filepath, arcname)
+
+        zip.close()
 
     def _get_dirpath(self, options):
         dirpath = os.path.join(self._workdir, options.name)
