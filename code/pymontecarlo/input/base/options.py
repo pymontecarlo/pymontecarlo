@@ -24,7 +24,6 @@ from collections import MutableMapping, MutableSet
 from lxml.etree import Element, tostring, parse
 
 # Local modules.
-from pymontecarlo.util.imp import import_recursive
 from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.base.option import Option
 from pymontecarlo.input.base.beam import GaussianBeam
