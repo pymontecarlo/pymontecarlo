@@ -47,7 +47,7 @@ class Worker(_Worker):
             raise InvalidPlatform, 'Casino 2 can only be run on Windows'
 
         self._executable = settings.casino2.exe
-        if not os.path.exists(self._executable):
+        if not os.path.isfile(self._executable):
             raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
         logging.debug('Casino 2 executable: %s', self._executable)
 

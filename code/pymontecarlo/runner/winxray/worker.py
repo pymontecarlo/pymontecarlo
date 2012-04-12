@@ -51,7 +51,7 @@ class Worker(_Worker):
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
 
         self._executable = settings.winxray.exe
-        if not os.path.exists(self._executable):
+        if not os.path.isfile(self._executable):
             raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
         logging.debug('WinX-Ray executable: %s', self._executable)
 
