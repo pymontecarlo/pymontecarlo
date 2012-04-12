@@ -642,3 +642,80 @@ class GrainBoundaries(_Layered):
 
 XMLIO.register('{http://pymontecarlo.sf.net}grainBoundaries', GrainBoundaries)
 XMLIO.register_loader('pymontecarlo.input.base.geometry.GrainBoundaries', GrainBoundaries)
+
+
+class Sphere(_Geometry):
+
+    def __init__(self, material, diameter_m):
+        """
+        Creates a geometry consisting of a sphere.
+        The sphere is entirely located below the ``z=0`` plane.
+        
+        :arg material: material
+        :arg diameter_m: diameter (in meters)
+        """
+        _Geometry.__init__(self)
+
+        self._props['body'] = Body(material)
+        self.diameter_m = diameter_m
+
+    def __repr__(self):
+        return '<Sphere(material=%s, diameter=%s m)>' % \
+                    (str(self.material), self.diameter_m)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
+
+        index = int(element.get('substrate'))
+        body = bodies_lookup[index]
+
+        diameter_m = float(element.get('diameter'))
+
+        obj = cls(body.material, diameter_m)
+        obj.tilt_rad = tilt_rad
+        obj.rotation_rad = rotation_rad
+
+        return obj
+
+    def __savexml__(self, element, *args, **kwargs):
+        _Geometry.__savexml__(self, element, *args, **kwargs)
+        element.set('substrate', str(self.body._index))
+        element.set('diameter', str(self.diameter_m))
+
+    @property
+    def material(self):
+        return self.body.material
+
+    @material.setter
+    def material(self, m):
+        self.body.material = m
+
+    @property
+    def diameter_m(self):
+        return self._props['diameter']
+
+    @diameter_m.setter
+    def diameter_m(self, diameter_m):
+        if diameter_m <= 0:
+            raise ValueError, 'Diameter must be greater than 0.'
+        self._props['diameter'] = diameter_m
+
+    @property
+    def body(self):
+        return self._props['body']
+
+    def get_bodies(self):
+        return set([self.body])
+
+    def get_dimensions(self, body):
+        if body is self.body:
+            d = self.diameter_m
+            r = d / 2.0
+            return _Dimension(xmin= -r, xmax=r,
+                              ymin= -r, ymax=r,
+                              zmin= -d, zmax=0.0)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
+XMLIO.register('{http://pymontecarlo.sf.net}sphere', Sphere)

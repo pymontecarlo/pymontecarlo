@@ -164,4 +164,38 @@
 
     <xsd:element name="grainBoundaries" type="grainBoundariesType"
         substitutionGroup="geometry" />
+
+    <xsd:complexType name="sphereType">
+        <xsd:complexContent>
+            <xsd:extension base="geometryType">
+                <xsd:sequence>
+                    <xsd:element name="materials">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element ref="material"
+                                    minOccurs="1" maxOccurs="1" />
+                            </xsd:sequence>
+                        </xsd:complexType>
+                    </xsd:element>
+
+                    <xsd:element name="bodies">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element ref="body"
+                                    minOccurs="1" maxOccurs="1" />
+                            </xsd:sequence>
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:sequence>
+
+                <xsd:attribute name="substrate" type="xsd:integer"
+                    use="required" />
+                <xsd:attribute name="diameter" type="xsd:double"
+                    use="required" />
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:element name="sphere" type="sphereType"
+        substitutionGroup="geometry" />
 </xsd:schema>

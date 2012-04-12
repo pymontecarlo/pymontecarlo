@@ -16,7 +16,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.input.base.geometry import \
-    _Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries
+    _Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.input.base.material import pure, VACUUM
 from pymontecarlo.input.base.body import Body, Layer
 
@@ -463,6 +463,62 @@ class TestGrainBoundaries(unittest.TestCase):
 
         layers = element.get('layers').split(',')
         self.assertEqual(2, len(layers))
+
+class TestSphere(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.g = Sphere(pure(29), 123.456)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual('Copper', str(self.g.material))
+        self.assertAlmostEqual(123.456, self.g.diameter_m, 4)
+
+    def testfrom_xml(self):
+        self.g.tilt_rad = 1.1
+        self.g.rotation_rad = 2.2
+        element = self.g.to_xml()
+        g = Sphere.from_xml(element)
+
+        self.assertEqual('Copper', str(g.material))
+        self.assertAlmostEqual(123.456, g.diameter_m, 4)
+
+        self.assertAlmostEqual(1.1, g.tilt_rad, 4)
+        self.assertAlmostEqual(2.2, g.rotation_rad, 4)
+
+    def testsubstrate(self):
+        self.assertEqual(self.g.material, self.g.body.material)
+
+    def testdiameter_m(self):
+        self.assertAlmostEqual(123.456, self.g.diameter_m, 4)
+
+        self.assertRaises(ValueError, self.g.__setattr__, 'diameter_m', -1)
+
+    def testget_bodies(self):
+        self.assertEqual(1, len(self.g.get_bodies()))
+
+    def testget_dimensions(self):
+        dim = self.g.get_dimensions(self.g.body)
+        self.assertEqual(-61.728, dim.xmin_m)
+        self.assertEqual(61.728, dim.xmax_m)
+        self.assertEqual(-61.728, dim.ymin_m)
+        self.assertEqual(61.728, dim.ymax_m)
+        self.assertEqual(-123.456, dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+    def testto_xml(self):
+        element = self.g.to_xml()
+
+        self.assertEqual(1, len(list(element.find('materials'))))
+        self.assertEqual(1, len(list(element.find('bodies'))))
+
+        self.assertEqual(0, int(element.get('substrate')))
+
+        self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
