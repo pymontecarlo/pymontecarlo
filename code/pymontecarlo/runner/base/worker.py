@@ -191,6 +191,8 @@ class Worker(threading.Thread):
 
     def _get_filepath(self, options, dirpath, ext='xml'):
         """
+        **Utility function**
+        
         Returns a filepath inside the specified directory.
         The filename is the name of the options with the specified extension.
         
@@ -199,6 +201,21 @@ class Worker(threading.Thread):
         :arg ext: extension of the file
         """
         return os.path.join(dirpath, options.name + "." + ext)
+
+    def _get_dirpath(self, options):
+        """
+        **Utility function**
+        
+        Returns the following path: *work directory*/*name of options*.
+        The directory is created if it doesn't exist.
+        
+        :arg options: options of a simulation
+        """
+        dirpath = os.path.join(self._workdir, options.name)
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+
+        return dirpath
 
 class SubprocessWorker(Worker):
     def _reset(self):

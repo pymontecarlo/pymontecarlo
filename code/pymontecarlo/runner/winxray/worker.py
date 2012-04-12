@@ -121,11 +121,4 @@ class Worker(_Worker):
 
         zip.close()
 
-    def _get_dirpath(self, options):
-        dirpath = os.path.join(self._workdir, options.name)
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-
-        return dirpath
-
 WorkerManager.register('winxray', Worker, [PLATFORM_WINDOWS])
