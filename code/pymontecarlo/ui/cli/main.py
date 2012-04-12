@@ -77,6 +77,7 @@ def load_options(filepaths, list_options=[]):
     for filepath in filepaths:
         if os.path.isdir(filepath):
             load_options(glob.glob(os.path.join(filepath, '*.xml')), list_options)
+            list_options.sort()
             return
 
         list_options.append(Options.load(filepath, validate=False))
