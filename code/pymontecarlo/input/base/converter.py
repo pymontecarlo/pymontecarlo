@@ -65,7 +65,7 @@ class Converter(object):
     def convert(self, options):
         """
         Converts the beam, geometry, detectors and limits to be compatible
-        with Casino2.
+        with the Monte Carlo program.
         This method may raise :exc:`ConversionException` if some parameters
         cannot be converted.
         If a parameter is modified or removed during the conversion, a
@@ -128,7 +128,7 @@ class Converter(object):
 
                     message = "Model (%s) is not allowable. It is replaced by the default model (%s)." % \
                         (model, default_model)
-                    raise ConversionException, message
+                    warnings.warn(message, ConversionWarning)
 
         # Remove extra model types
         for model_type, model in options.models.items():
