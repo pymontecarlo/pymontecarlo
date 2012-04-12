@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`converter` -- PENELOPE conversion from base options
+:mod:`converter` -- Base options conversion for all PENELOPE main programs
 ================================================================================
 
 .. module:: converter
-   :synopsis: PENELOPE conversion from base options
+   :synopsis: Base options conversion for all PENELOPE main programs
 
 .. inheritance-diagram:: pymontecarlo.input.penelope.converter
 
@@ -19,37 +19,17 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import warnings
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.base.converter import \
-    Converter as _Converter, ConversionWarning, ConversionException
+    Converter as _Converter, ConversionException
 
 from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.input.penelope.body import Body, Layer
-from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.geometry import \
     Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere
-from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.input.base.detector import \
-    (
-#     BackscatteredElectronAzimuthalAngularDetector,
-#     BackscatteredElectronEnergyDetector,
-#     BackscatteredElectronPolarAngularDetector,
-#     EnergyDepositedSpatialDetector,
-#     PhiRhoZDetector,
-#     PhotonAzimuthalAngularDetector,
-     PhotonIntensityDetector,
-#     PhotonPolarAngularDetector,
-     PhotonSpectrumDetector,
-#     TransmittedElectronAzimuthalAngularDetector,
-#     TransmittedElectronEnergyDetector,
-#     TransmittedElectronPolarAngularDetector
-     ElectronFractionDetector,
-     TimeDetector,
-     )
 from pymontecarlo.input.base.model import \
     (ELASTIC_CROSS_SECTION, INELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION,
      BREMSSTRAHLUNG_EMISSION, PHOTON_SCATTERING_CROSS_SECTION,
@@ -58,24 +38,7 @@ from pymontecarlo.input.base.model import \
 # Globals and constants variables.
 
 class Converter(_Converter):
-    BEAMS = [GaussianBeam]
     GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere]
-    DETECTORS = [
-#                 BackscatteredElectronAzimuthalAngularDetector,
-#                 BackscatteredElectronEnergyDetector,
-#                 BackscatteredElectronPolarAngularDetector,
-#                 EnergyDepositedSpatialDetector,
-#                 PhiRhoZDetector,
-#                 PhotonAzimuthalAngularDetector,
-#                 PhotonPolarAngularDetector,
-                 PhotonSpectrumDetector,
-#                 TransmittedElectronAzimuthalAngularDetector,
-#                 TransmittedElectronEnergyDetector,
-#                 TransmittedElectronPolarAngularDetector,
-                 ElectronFractionDetector,
-                 TimeDetector,
-                 ]
-    LIMITS = [TimeLimit, ShowersLimit, UncertaintyLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.elsepa2005],
               INELASTIC_CROSS_SECTION.type: [INELASTIC_CROSS_SECTION.sternheimer_liljequist1952],
               IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.bote_salvat2008],
@@ -94,7 +57,7 @@ class Converter(_Converter):
                  cutoff_energy_inelastic=50.0,
                  cutoff_energy_bremsstrahlung=50.0):
         """
-        Converter from base options to PENELOPE options.
+        Converter from base options to PENEPMA options.
         
         During the conversion, the materials are converted to :class:`PenelopeMaterial`. 
         For this, the specified elastic scattering and cutoff energies are used
@@ -105,20 +68,6 @@ class Converter(_Converter):
         self._elastic_scattering = elastic_scattering
         self._cutoff_energy_inelastic_eV = cutoff_energy_inelastic
         self._cutoff_energy_bremsstrahlung_eV = cutoff_energy_bremsstrahlung
-
-    def _convert_beam(self, options):
-        try:
-            _Converter._convert_beam(self, options)
-        except ConversionException as ex:
-            if isinstance(options.beam, PencilBeam):
-                old = options.beam
-                options.beam = GaussianBeam(old.energy_eV, 0.0, old.origin_m,
-                                            old.direction, old.aperture_rad)
-
-                message = "Pencil beam converted to Gaussian beam with 0 m diameter"
-                warnings.warn(message, ConversionWarning)
-            else:
-                raise ex
 
     def _convert_geometry(self, options):
         _Converter._convert_geometry(self, options)
@@ -159,7 +108,7 @@ class Converter(_Converter):
             geometry.layers.extend(newlayers)
 
         elif isinstance(geometry, Sphere):
-            geometry._props['substrate'] = \
+            geometry._props['body'] = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
         else:
@@ -199,39 +148,3 @@ class Converter(_Converter):
             newlayers.append(Layer(material, layer.thickness_m, maximum_step_length))
 
         return newlayers
-
-    def _convert_detectors(self, options):
-        # Create PhotonSpectrumDetector for PhotonIntensityDetectors
-        dets = options.detectors.findall(PhotonIntensityDetector)
-        for key, det in dets.iteritems():
-            newdet = PhotonSpectrumDetector(det.elevation_rad, det.azimuth_rad,
-                                            (0.0, options.beam.energy_eV), 1000)
-            options.detectors[key] = newdet
-
-            message = "Replaced PhotonIntensityDetector (%s) with a PhotonSpectrumDetector" % key
-            warnings.warn(message, ConversionWarning)
-
-        # Superclass convert
-        _Converter._convert_detectors(self, options)
-
-        # Check that no photon detector have the same delimited limit
-        dets = options.detectors.findall(PhotonSpectrumDetector)
-
-        limits = {}
-        for key, det in dets.iteritems():
-            limit = det.elevation_rad + det.azimuth_rad
-
-            for otherkey, otherlimit in limits.iteritems():
-                if limit == otherlimit:
-                    raise ConversionException, \
-                        "Detector (%s) has the same opening as detector (%s)" % \
-                            (key, otherkey)
-
-            limits[key] = limit
-
-    def _convert_limits(self, options):
-        _Converter._convert_limits(self, options)
-
-        if not options.limits:
-            raise ConversionException, "At least one limit must be defined."
-

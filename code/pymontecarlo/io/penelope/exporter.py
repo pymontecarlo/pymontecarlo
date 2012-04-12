@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`exporter` -- Exporter to PENELOPE files
+:mod:`exporter` -- Base exporter for all PENELOPE main programs
 ================================================================================
 
 .. module:: exporter
-   :synopsis: Exporter to PENELOPE files
+   :synopsis: Base exporter for all PENELOPE main programs
 
 .. inheritance-diagram:: pymontecarlo.input.penelope.exporter
 
@@ -20,8 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import math
-from operator import attrgetter, mul
+from operator import attrgetter
 from itertools import tee, izip
 
 # Third party modules.
@@ -32,8 +31,6 @@ from pymontecarlo.input.base.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.input.penelope.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
-from pymontecarlo.input.base.detector import PhotonSpectrumDetector
-from pymontecarlo.input.base.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 from pymontecarlo.io.base.exporter import Exporter as _Exporter, ExporterException
 import pymontecarlo.lib.penelope.material as penmaterial
 from pymontecarlo.input.base.material import VACUUM
@@ -46,7 +43,7 @@ def _pairwise(iterable):
     next(b, None)
     return izip(a, b)
 
-class _Keyword(object):
+class Keyword(object):
     LINE_KEYWORDS_SIZE = 6
     LINE_SIZE = 80
 
@@ -91,62 +88,10 @@ class _Keyword(object):
         return line
 
 class Exporter(_Exporter):
-    _KEYWORD_TITLE = _Keyword("TITLE")
-
-    _KEYWORD_SENERG = _Keyword("SENERG", "Energy of the electron beam, in eV")
-    _KEYWORD_SPOSIT = _Keyword("SPOSIT", "Coordinates of the electron source")
-    _KEYWORD_SDIREC = _Keyword("SDIREC", "Direction angles of the beam axis, in deg")
-    _KEYWORD_SAPERT = _Keyword("SAPERT", "Beam aperture, in deg")
-    _KEYWORD_SDIAM = _Keyword('SDIAM', "Beam diameter, in cm")
-
-    _KEYWORD_MFNAME = _Keyword("MFNAME", "Material file, up to 20 chars")
-    _KEYWORD_MSIMPA = _Keyword("MSIMPA", "EABS(1:3),C1,C2,WCC,WCR")
-
-    _KEYWORD_GEOMFN = _Keyword("GEOMFN", "Geometry definition file, 20 chars")
-    _KEYWORD_DSMAX = _Keyword("DSMAX", "IB, maximum step length (cm) in body IB")
-
-    _KEYWORD_IFORCE = _Keyword("IFORCE", "KB,KPAR,ICOL,FORCER,WLOW,WHIG")
-
-    _KEYWORD_NBE = _Keyword("NBE", "E-interval and no. of energy bins")
-    _KEYWORD_NBTH = _Keyword("NBTH", "No. of bins for the polar angle THETA")
-    _KEYWORD_NBPH = _Keyword("NBPH", "No. of bins for the azimuthal angle PHI")
-
-    _KEYWORD_PDANGL = _Keyword("PDANGL", "Angular window, in deg, IPSF")
-    _KEYWORD_PDENER = _Keyword("PDENER", "Energy window, no. of channels")
-    _KEYWORD_XRORIG = _Keyword("XRORIG", "Map of emission sites of detected x-rays")
-
-    _KEYWORD_GRIDX = _Keyword("GRIDX", "X coordinates of the box vertices")
-    _KEYWORD_GRIDY = _Keyword("GRIDY", "Y coordinates of the box vertices")
-    _KEYWORD_GRIDZ = _Keyword("GRIDZ", "Z coordinates of the box vertices")
-    _KEYWORD_GRIDBN = _Keyword("GRIDBN", "Numbers of bins")
-    _KEYWORD_XRAYE = _Keyword("XRAYE", "Energy interval where x-rays are tallied")
-
-    _KEYWORD_PRZ = _Keyword("PRZ", "prz for transition IZ,IS1,IS of detector IPD")
-
-    _KEYWORD_RESUME = _Keyword("RESUME", "Resume from this dump file, 20 chars")
-    _KEYWORD_DUMPTO = _Keyword("DUMPTO", "Generate this dump file, 20 chars")
-    _KEYWORD_DUMPP = _Keyword("DUMPP", "Dumping period, in sec")
-
-    _KEYWORD_NSIMSH = _Keyword("NSIMSH", "Desired number of simulated showers")
-    _KEYWORD_RSEED = _Keyword("RSEED", "Seeds of the random - number generator")
-    _KEYWORD_TIME = _Keyword("TIME", "Allotted simulation time, in sec")
-    _KEYWORD_XLIM = _Keyword('XLIM', "Uncertainty limit")
-
-    _LINE_SKIP = "       ."
-    _LINE_ELECTROBEAM = "       >>>>>>>> Electron beam definition."
-    _LINE_MATERIALDATA = "       >>>>>>>> Material data and simulation parameters."
-    _LINE_GEOMETRY = "       >>>>>>>> Geometry of the sample."
-    _LINE_INTERACTION = "       >>>>>>>> Interaction forcing."
-    _LINE_EMERGINGDIST = "       >>>>>>>> Emerging particles. Energy and angular distributions."
-    _LINE_DETECTORS = "       >>>>>>>> Photon detectors."
-    _LINE_SPATIALDIST = "       >>>>>>>> Spatial distribution of events."
-    _LINE_PHIRHOZ = "       >>>>>>>> Phi rho z distributions."
-    _LINE_JOBPROP = "       >>>>>>>> Job properties."
-    _LINE_END = "END"
 
     def __init__(self):
         """
-        Creates a exporter to PENELOPE.
+        Creates a exporter to PENELOPE main programs.
         """
         _Exporter.__init__(self)
 
@@ -173,186 +118,19 @@ class Exporter(_Exporter):
         return filepath
 
     def _create_input_file(self, options, geoinfo, matinfos):
-        lines = []
-
-        # Description
-        text = options.name
-        line = self._KEYWORD_TITLE.create_line(text)
-        lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Electron beam definition.
-        lines.append(self._LINE_ELECTROBEAM)
-
-        text = options.beam.energy_eV
-        line = self._KEYWORD_SENERG.create_line(text)
-        lines.append(line)
-
-        text = map(mul, [1e2] * 3, options.beam.origin_m) # to cm
-        line = self._KEYWORD_SPOSIT.create_line(text)
-        lines.append(line)
-
-        text = map(math.degrees, [options.beam.direction_polar_rad,
-                                  options.beam.direction_azimuth_rad])
-        line = self._KEYWORD_SDIREC.create_line(text)
-        lines.append(line)
-
-        text = 0.0
-        line = self._KEYWORD_SAPERT.create_line(text)
-        lines.append(line)
-
-        text = options.beam.diameter_m * 1e2 # to cm
-        line = self._KEYWORD_SDIAM.create_line(text)
-        lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Material data and simulation parameters
-        lines.append(self._LINE_MATERIALDATA)
-
-        for material, matfilepath in matinfos:
-            text = os.path.basename(matfilepath)
-            line = self._KEYWORD_MFNAME.create_line(text)
-            lines.append(line)
-
-            text = [material.absorption_energy_electron_eV,
-                    material.absorption_energy_photon_eV,
-                    options.beam.energy_eV, # No positron simulated
-                    material.elastic_scattering[0],
-                    material.elastic_scattering[1],
-                    material.cutoff_energy_inelastic_eV,
-                    material.cutoff_energy_bremsstrahlung_eV]
-            line = self._KEYWORD_MSIMPA.create_line(text)
-            lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Geometry
-        lines.append(self._LINE_GEOMETRY)
-
-        pengeom, geofilepath = geoinfo
-
-        text = os.path.basename(geofilepath)
-        line = self._KEYWORD_GEOMFN.create_line(text)
-        lines.append(line)
-
-        bodies = sorted(pengeom.get_bodies(), key=attrgetter('_index'))
-        for body in bodies:
-            if body.material.is_vacuum():
-                continue
-            text = [body._index + 1,
-                    body.maximum_step_length_m * 1e2]
-            line = self._KEYWORD_DSMAX.create_line(text)
-            lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Interaction forcing
-        lines.append(self._LINE_INTERACTION)
-
-        for body in bodies:
-            if body.material.is_vacuum():
-                continue
-
-            for intforce in sorted(body.interaction_forcings):
-                text = [body._index + 1,
-                        intforce.particle,
-                        intforce.collision,
-                        intforce.forcer,
-                        intforce.weight[0],
-                        intforce.weight[1]]
-                line = self._KEYWORD_IFORCE.create_line(text)
-                lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Emerging particles
-        lines.append(self._LINE_EMERGINGDIST)
-
-        #FIXME: Add emerging particle detectors
-
-        lines.append(self._LINE_SKIP)
-
-        # Photon detectors
-        lines.append(self._LINE_DETECTORS)
-
-        # NOTE: Only PhotonSpectrumDetector are considered (i.e.  
-        #       PhotonIntensityDetector are neglected), as the PENELOPE 
-        #       converter takes care of creating PhotonSpectrumDetector for all 
-        #       PhotonIntensityDetector.
-        detectors = options.detectors.findall(PhotonSpectrumDetector)
-        for detector in detectors:
-            text = map(math.degrees, detector.elevation_rad + detector.azimuth_rad) + [0]
-            line = self._KEYWORD_PDANGL.create_line(text)
-            lines.append(line)
-
-            text = detector.limits_eV + (detector.channels,)
-            line = self._KEYWORD_PDENER.create_line(text)
-            lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # Spatial distribution
-        lines.append(self._LINE_SPATIALDIST)
-
-        #FIXME: Add spatial distribution
-
-        lines.append(self._LINE_SKIP)
-
-        # Phi rho z distribution
-        lines.append(self._LINE_PHIRHOZ)
-
-
-        # FIXME: Add phi-rho-z distribution
-
-        lines.append(self._LINE_SKIP)
-
-        # Job properties
-        text = 'dump.dat'
-        line = self._KEYWORD_RESUME.create_line(text)
-        lines.append(line)
-
-        text = 'dump.dat'
-        line = self._KEYWORD_DUMPTO.create_line(text)
-        lines.append(line)
-
-        text = getattr(settings.penelope, 'dumpp', 60.0)
-        line = self._KEYWORD_DUMPP.create_line(text)
-        lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        limit = options.limits.find(ShowersLimit, ShowersLimit(1e38))
-        text = '%e' % limit.showers
-        line = self._KEYWORD_NSIMSH.create_line(text)
-        lines.append(line)
-
-        #NOTE: No random number. PENEPMA will select them.
-
-        limit = options.limits.find(TimeLimit, TimeLimit(1e38))
-        text = '%e' % limit.time_s
-        line = self._KEYWORD_TIME.create_line(text)
-        lines.append(line)
-
-        limit = options.limits.find(UncertaintyLimit)
-        if limit:
-            transition = limit.transition
-            text = [transition.z,
-                    transition.dest,
-                    transition.src,
-                    - 1, # FIXME: Specify detector for uncertainty
-                    limit.uncertainty,
-                    0.0]
-            line = self._KEYWORD_XLIM.create_line(text)
-            lines.append(line)
-
-        lines.append(self._LINE_SKIP)
-
-        # End
-        lines.append(self._LINE_END)
-
-        return lines
+        """
+        Creates .in file for the specific PENELOPE main program.
+        
+        :arg options: options to be exported
+        :arg geoinfo: class:`tuple` containing :class:`PenelopeGeometry`
+            object used to create the *geo* file and the full path of this
+            *geo* file.
+        :arg matinfos: :class:`list` of :class:`tuple` where each :class:`tuple` 
+            contains :class:`PenelopeMaterial` object and its associated *mat* 
+            filepath. The order of the materials is the same as they appear in 
+            the geometry file.
+        """
+        raise NotImplementedError
 
     def export_geometry(self, geometry, outputdir):
         """

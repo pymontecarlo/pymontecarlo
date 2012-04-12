@@ -56,8 +56,8 @@ class TestPenelopeExporter(unittest.TestCase):
         ops.geometry = Substrate(mat1)
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        self.c._convert_geometry(ops)
+        self.e.export_geometry(ops.geometry, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'substrate.geo')
@@ -80,8 +80,8 @@ class TestPenelopeExporter(unittest.TestCase):
         ops.geometry = Inclusion(mat1, mat2, 0.01)
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        self.c._convert_geometry(ops)
+        self.e.export_geometry(ops.geometry, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'inclusion.geo')
@@ -115,8 +115,8 @@ class TestPenelopeExporter(unittest.TestCase):
 
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        self.c._convert_geometry(ops)
+        self.e.export_geometry(ops.geometry, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'multilayers.geo')
@@ -152,8 +152,8 @@ class TestPenelopeExporter(unittest.TestCase):
 
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        self.c._convert_geometry(ops)
+        self.e.export_geometry(ops.geometry, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'grainboundaries.geo')
@@ -181,8 +181,8 @@ class TestPenelopeExporter(unittest.TestCase):
         ops.geometry = Sphere(mat1, 0.01)
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        self.c._convert_geometry(ops)
+        self.e.export_geometry(ops.geometry, self.tmpdir)
 
         # Test
         geofilepath = os.path.join(self.tmpdir, 'sphere.geo')
