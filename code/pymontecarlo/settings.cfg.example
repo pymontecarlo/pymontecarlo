@@ -1,6 +1,7 @@
 [penelope]
 pendbase=/penelope2011/pendbase
 dumpp=60
+penepma_exe=
 
 [nistmonte]
 java=
