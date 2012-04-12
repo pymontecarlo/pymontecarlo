@@ -31,7 +31,7 @@ from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.input.penelope.body import Body, Layer
 from pymontecarlo.input.base.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.base.geometry import \
-    Substrate, MultiLayers, GrainBoundaries, Inclusion
+    Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere
 from pymontecarlo.input.base.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.input.base.detector import \
     (
@@ -59,7 +59,7 @@ from pymontecarlo.input.base.model import \
 
 class Converter(_Converter):
     BEAMS = [GaussianBeam]
-    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion]
+    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere]
     DETECTORS = [
 #                 BackscatteredElectronAzimuthalAngularDetector,
 #                 BackscatteredElectronEnergyDetector,
@@ -157,6 +157,11 @@ class Converter(_Converter):
                 self._create_penelope_layers(geometry.layers, materials_lookup)
             geometry.clear()
             geometry.layers.extend(newlayers)
+
+        elif isinstance(geometry, Sphere):
+            geometry._props['substrate'] = \
+                self._create_penelope_body(geometry.body, materials_lookup)
+
         else:
             raise ConversionException, "Cannot convert geometry"
 

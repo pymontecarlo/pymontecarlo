@@ -29,7 +29,7 @@ from itertools import tee, izip
 # Local modules.
 from pymontecarlo import settings
 from pymontecarlo.input.base.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.input.penelope.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
 from pymontecarlo.input.base.detector import PhotonSpectrumDetector
@@ -154,6 +154,7 @@ class Exporter(_Exporter):
         self._geometry_exporters[Inclusion] = self._export_geometry_inclusion
         self._geometry_exporters[MultiLayers] = self._export_geometry_multilayers
         self._geometry_exporters[GrainBoundaries] = self._export_geometry_grainboundaries
+        self._geometry_exporters[Sphere] = self._export_geometry_sphere
 
         self._pendbase_dir = settings.penelope.pendbase
 
@@ -556,5 +557,12 @@ class Exporter(_Exporter):
         module.add_surface(surface_bottom, 1)
         module.add_surface(surface_layers[-1], 1)
 
+        pengeom.modules.add(module)
+
+    def _export_geometry_sphere(self, geometry, pengeom):
+        surface_sphere = sphere(geometry.diameter_m / 2.0)
+
+        module = Module.from_body(geometry.body, 'Sphere')
+        module.add_surface(surface_sphere, -1)
         pengeom.modules.add(module)
 

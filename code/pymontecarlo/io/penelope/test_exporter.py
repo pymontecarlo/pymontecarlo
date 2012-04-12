@@ -20,7 +20,8 @@ from nose.plugins.attrib import attr
 
 # Local modules.
 from pymontecarlo.input.base.options import Options
-from pymontecarlo.input.base.geometry import Substrate, Inclusion, MultiLayers, GrainBoundaries
+from pymontecarlo.input.base.geometry import \
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.input.penelope.converter import Converter
 from pymontecarlo.input.penelope.material import Material
 from pymontecarlo.input.base.limit import TimeLimit
@@ -170,6 +171,30 @@ class TestPenelopeExporter(unittest.TestCase):
 
         matfilepath = os.path.join(self.tmpdir, 'mat3.mat')
         self.assertTrue(os.path.exists(matfilepath))
+
+    @attr('slow')
+    def testexport_sphere(self):
+        # Create
+        mat1 = Material('mat', {79: 0.5, 47: 0.5})
+
+        ops = Options()
+        ops.geometry = Sphere(mat1, 0.01)
+        ops.limits.add(TimeLimit(100))
+
+        self.c.convert(ops)
+        self.e.export(ops, self.tmpdir)
+
+        # Test
+        geofilepath = os.path.join(self.tmpdir, 'sphere.geo')
+        repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
+        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+
+        self.assertEqual(1, nmat)
+        self.assertEqual(2, nbody)
+
+        matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
+        self.assertTrue(os.path.exists(matfilepath))
+
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
