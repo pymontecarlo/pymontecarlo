@@ -24,7 +24,7 @@ from pymontecarlo.input.base.detector import \
      PhotonIntensityDetector, TransmittedElectronEnergyDetector)
 from pymontecarlo.input.base.limit import ShowersLimit, TimeLimit
 from pymontecarlo.input.base.model import \
-    RANDOM_NUMBER_GENERATOR, IONIZATION_CROSS_SECTION, ModelType, ModelCategory, Model
+    RANDOM_NUMBER_GENERATOR, ModelType, ModelCategory, Model
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -142,15 +142,6 @@ class TestConverter(unittest.TestCase):
 
         # Test difference in elevation (PhotonSpectrumDetector)
         ops.detectors['xray'] = PhotonSpectrumDetector((0.5, 1), (2, 3), (0, 1234), 1000)
-        self.assertRaises(ConversionException, self.converter.convert, ops)
-
-    def testconvert5(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.beam.energy_eV = 100e3
-        ops.models.add(IONIZATION_CROSS_SECTION.bote_salvat2008)
-
-        # Not allowable model
         self.assertRaises(ConversionException, self.converter.convert, ops)
 
     def testconvert6(self):

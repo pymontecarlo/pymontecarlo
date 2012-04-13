@@ -143,15 +143,6 @@ class TestCasino2Converter(unittest.TestCase):
         ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2.5, 3))
         self.assertRaises(ConversionException, self.converter.convert, ops)
 
-    def testconvert5(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.beam.energy_eV = 100e3
-        ops.models.add(IONIZATION_CROSS_SECTION.bote_salvat2008)
-
-        # Not allowable model
-        self.assertRaises(ConversionException, self.converter.convert, ops)
-
     def testconvert6(self):
         NEW_MODEL_TYPE = ModelType('new')
         NEW_MODEL_CATEGORY = ModelCategory(NEW_MODEL_TYPE)
