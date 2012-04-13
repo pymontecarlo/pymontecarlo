@@ -202,8 +202,14 @@ class Exporter(_Exporter):
         #       PhotonIntensityDetector are neglected), as the PENELOPE 
         #       converter takes care of creating PhotonSpectrumDetector for all 
         #       PhotonIntensityDetector.
-        detectors = options.detectors.findall(PhotonSpectrumDetector).values()
-        for detector in detectors:
+        #
+        # NOTE: Detectors are alphabetically sorted with their key. This is 
+        #       important for the importer as this is the only way to know 
+        #       the index of the detector.
+        detectors = options.detectors.findall(PhotonSpectrumDetector)
+        for key in sorted(detectors.keys()):
+            detector = detectors[key]
+
             text = map(math.degrees, detector.elevation_rad + detector.azimuth_rad) + [0]
             line = self._KEYWORD_PDANGL.create_line(text)
             lines.append(line)
