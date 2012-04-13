@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-from lxml.etree import Element, XMLSchema, parse
+from lxml.etree import Element, XMLSchema, fromstring
 
 # Local modules.
 from pymontecarlo.util.manager import Manager
@@ -52,9 +52,9 @@ class _XMLIO(Manager):
         Manager.__init__(self)
 
         self._nsmap = {}
-        self._locations = {}
+        self._schemas = {}
 
-    def add_namespace(self, prefix, uri, location=None):
+    def add_namespace(self, prefix, uri, location=None, source=None):
         """
         Registers a namespace to be used when loading and saving from/to XML.
         Optionally, the location of the XSD schema file for this namespace
@@ -63,6 +63,7 @@ class _XMLIO(Manager):
         :arg prefix: prefix of the namespace
         :arg uri: URI of the namespace
         :arg location: location of the XSD schema (optional)
+        :arg source: content of XSD schema (optional)
         """
         if prefix in self._nsmap and self._nsmap.get(prefix) != uri:
             raise ValueError, 'A URI (%s) is already associated with this prefix (%s)' % \
@@ -70,7 +71,9 @@ class _XMLIO(Manager):
 
         self._nsmap[prefix] = uri
         if location is not None:
-            self._locations[prefix] = os.path.abspath(location)
+            self._schemas[prefix] = open(location, 'r').read()
+        if source is not None:
+            self._schemas[prefix] = source
 
 
     def register_loader(self, tag, klass):
@@ -89,8 +92,8 @@ class _XMLIO(Manager):
 
     def validate(self, element):
         for prefix in element.nsmap:
-            location = self._locations[prefix]
-            root = parse(location).getroot()
+            source = self._schemas[prefix]
+            root = fromstring(source)
             schema = XMLSchema(etree=root)
             schema.assertValid(element) # raise exceptions
 
