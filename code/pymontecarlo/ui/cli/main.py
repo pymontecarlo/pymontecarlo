@@ -29,11 +29,11 @@ from optparse import OptionParser, OptionGroup
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.base.options import Options
+from pymontecarlo.input.options import Options
 
-from pymontecarlo.runner.base.runner import Runner
-from pymontecarlo.runner.base.creator import Creator
-from pymontecarlo.runner.base.manager import WorkerManager
+from pymontecarlo.runner.runner import Runner
+from pymontecarlo.runner.creator import Creator
+from pymontecarlo.runner.manager import WorkerManager
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 

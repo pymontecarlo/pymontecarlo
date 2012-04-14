@@ -87,9 +87,18 @@ class _XMLIO(Manager):
         Manager.register_saver(self, tag, klass)
 
     def validate(self, element):
+        exception = None
         for prefix in element.nsmap:
             schema = self._schemas[prefix]
-            schema.assertValid(element) # raise exceptions
+            try:
+                schema.assertValid(element)
+            except Exception as ex:
+                exception = ex
+                continue
+
+            return
+
+        raise exception
 
     def from_xml(self, element, validate=False, *args, **kwargs):
         """

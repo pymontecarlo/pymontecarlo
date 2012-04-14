@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:complexType name="penelopeInteractionForcingType">
+        <xsd:attribute name="particle" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:integer">
+                    <xsd:minInclusive value="1" />
+                    <xsd:maxInclusive value="3" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+
+        <xsd:attribute name="collision" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:integer">
+                    <xsd:minInclusive value="1" />
+                    <xsd:maxInclusive value="8" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+
+        <xsd:attribute name="forcer" type="xsd:double"
+            use="required" />
+
+        <xsd:attribute name="weightMin" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0" />
+                    <xsd:maxInclusive value="1" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+
+        <xsd:attribute name="weightMax" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:double">
+                    <xsd:minInclusive value="0" />
+                    <xsd:maxInclusive value="1" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:element name="interactionForcing" type="penelopeInteractionForcingType" />
+</xsd:schema>
