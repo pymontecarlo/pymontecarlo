@@ -338,9 +338,11 @@ class Exporter(_Exporter):
         pengeom.modules.add(module)
 
     def _export_geometry_sphere(self, geometry, pengeom):
-        surface_sphere = sphere(geometry.diameter_m / 2.0)
+        radius_m = geometry.diameter_m / 2.0
+        surface_sphere = sphere(radius_m)
 
         module = Module.from_body(geometry.body, 'Sphere')
         module.add_surface(surface_sphere, -1)
+        module.shift.z_m = -radius_m
         pengeom.modules.add(module)
 
