@@ -23,7 +23,7 @@ import os
 import logging
 
 # Third party modules.
-from pkg_resources import resource_string #@UnresolvedImport
+from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
 from pymontecarlo.util.config import ConfigReader
@@ -51,4 +51,4 @@ def __load_settings():
 __load_settings()
 
 XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
-                    source=resource_string(__name__, 'schema.xsd'))
+                    resource_filename(__name__, 'schema.xsd'))

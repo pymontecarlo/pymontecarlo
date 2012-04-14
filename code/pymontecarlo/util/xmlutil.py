@@ -19,10 +19,9 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
 
 # Third party modules.
-from lxml.etree import Element, XMLSchema, fromstring
+from lxml.etree import Element, XMLSchema
 
 # Local modules.
 from pymontecarlo.util.manager import Manager
@@ -54,7 +53,7 @@ class _XMLIO(Manager):
         self._nsmap = {}
         self._schemas = {}
 
-    def add_namespace(self, prefix, uri, location=None, source=None):
+    def add_namespace(self, prefix, uri, location=None):
         """
         Registers a namespace to be used when loading and saving from/to XML.
         Optionally, the location of the XSD schema file for this namespace
@@ -71,10 +70,7 @@ class _XMLIO(Manager):
 
         self._nsmap[prefix] = uri
         if location is not None:
-            self._schemas[prefix] = open(location, 'r').read()
-        if source is not None:
-            self._schemas[prefix] = source
-
+            self._schemas[prefix] = XMLSchema(file=location)
 
     def register_loader(self, tag, klass):
         if not issubclass(klass, objectxml):
@@ -92,9 +88,7 @@ class _XMLIO(Manager):
 
     def validate(self, element):
         for prefix in element.nsmap:
-            source = self._schemas[prefix]
-            root = fromstring(source)
-            schema = XMLSchema(etree=root)
+            schema = self._schemas[prefix]
             schema.assertValid(element) # raise exceptions
 
     def from_xml(self, element, validate=False, *args, **kwargs):
