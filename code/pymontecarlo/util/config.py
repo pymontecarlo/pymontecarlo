@@ -41,6 +41,9 @@ class _Section(object):
         for option_name, value in self._options.iteritems():
             yield option_name, value
 
+    def __contains__(self, option):
+        return option in self._options
+
 class ConfigReader(object):
     def __init__(self):
         self._sections = {}
@@ -62,6 +65,9 @@ class ConfigReader(object):
             return self._sections[section]
         except KeyError as ex:
             raise AttributeError, str(ex)
+
+    def __contains__(self, section):
+        return section in self._sections
 
     def __iter__(self):
         for section_name, section in self._sections.iteritems():

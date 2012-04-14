@@ -44,6 +44,15 @@ class TestConfigReader(unittest.TestCase):
         self.assertRaises(AttributeError, self.c.__getattr__, 'section3')
         self.assertRaises(AttributeError, self.c.section1.__getattr__, 'option3')
 
+    def test__contains__(self):
+        self.assertTrue('section1' in self.c)
+        self.assertTrue('section2' in self.c)
+        self.assertFalse('section3' in self.c)
+
+        self.assertTrue('option1' in self.c.section1)
+        self.assertTrue('option2' in self.c.section1)
+        self.assertFalse('option3' in self.c.section1)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
