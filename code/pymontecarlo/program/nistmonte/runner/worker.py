@@ -31,10 +31,8 @@ import shutil
 from pymontecarlo import settings
 from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
-from pymontecarlo.runner.manager import WorkerManager
 
 # Globals and constants variables.
-from pymontecarlo.runner.manager import ALL_PLATFORMS
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -100,5 +98,3 @@ class Worker(_Worker):
     def _save_results(self, options, zipfilepath):
         work_zipfilepath = self._get_filepath(options, self._workdir, 'zip')
         shutil.copy(work_zipfilepath, zipfilepath)
-
-WorkerManager.register('nistmonte', Worker, ALL_PLATFORMS)

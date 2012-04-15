@@ -30,14 +30,12 @@ import logging
 from pymontecarlo import settings
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
-from pymontecarlo.runner.manager import WorkerManager
 
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.io.exporter import Exporter
 
 
 # Globals and constants variables.
-from pymontecarlo.runner.manager import ALL_PLATFORMS
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -120,6 +118,4 @@ class Worker(_Worker):
 
     def _save_results(self, options, zipfilepath):
         pass
-
-WorkerManager.register('penepma', Worker, ALL_PLATFORMS)
 

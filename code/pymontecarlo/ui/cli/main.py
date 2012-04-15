@@ -22,25 +22,25 @@ __license__ = "GPL v3"
 import os
 import time
 import glob
-import platform
 import logging
+from operator import methodcaller
 from optparse import OptionParser, OptionGroup
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo import programs
 from pymontecarlo.input.options import Options
 
 from pymontecarlo.runner.runner import Runner
 from pymontecarlo.runner.creator import Creator
-from pymontecarlo.runner.manager import WorkerManager
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
 # Globals and constants variables.
 
 
-def create_parser(flags):
+def create_parser():
     description = "pyMonteCarlo Command Line Interface. Runs simulation(s) " + \
                   "with different Monte Carlo programs from the same interface." + \
                   "After the simulations, the results are automatically saved " + \
@@ -66,8 +66,8 @@ def create_parser(flags):
     group = OptionGroup(parser, "Monte Carlo programs",
                         "Note: Specify only one of these flags. Only supported programs are shown.")
 
-    for flag in flags:
-        group.add_option('--%s' % flag, dest=flag, action="store_true")
+    for alias in map(methodcaller('get_alias'), programs):
+        group.add_option('--%s' % alias, dest=alias, action="store_true")
 
     parser.add_option_group(group)
 
@@ -87,8 +87,7 @@ def run(argv=None):
     console = create_console()
     console.init()
 
-    flags = WorkerManager.get_supported_workers(platform.system())
-    parser = create_parser(flags)
+    parser = create_parser()
 
     # Parse arguments
     (values, args) = parser.parse_args(argv)
@@ -109,12 +108,13 @@ def run(argv=None):
     if nbprocesses <= 0:
         parser.error("Number of processes must be greater than 0.")
 
-    selected_flags = [flag for flag in flags if getattr(values, flag)]
-    if not selected_flags:
+    aliases = map(methodcaller('get_alias'), programs)
+    selected_programs = [alias for alias in aliases if getattr(values, alias)]
+    if not selected_programs:
         console.error("Please select one Monte Carlo program")
-    if len(selected_flags) > 1:
+    if len(selected_programs) > 1:
         console.error("Please select only one Monte Carlo program")
-    selected_flag = selected_flags[0]
+    selected_program = selected_programs[0]
 
     if not args:
         console.error("Please specify at least one options file")
@@ -126,7 +126,8 @@ def run(argv=None):
         console.error(str(ex))
 
     # Setup
-    worker_class = WorkerManager.get_worker(selected_flag)
+    workers = dict(zip(aliases, methodcaller('get_worker'), programs))
+    worker_class = workers[selected_program]
 
     if values.create:
         runner = Creator(worker_class, outputdir, nbprocesses=nbprocesses)

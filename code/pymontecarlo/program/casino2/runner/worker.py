@@ -22,7 +22,6 @@ __license__ = "GPL v3"
 import os
 import copy
 import logging
-import platform
 
 # Third party modules.
 
@@ -30,11 +29,10 @@ import platform
 from pymontecarlo import settings
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.io.exporter import Exporter
-from pymontecarlo.runner.worker import Worker as _Worker, InvalidPlatform
-from pymontecarlo.runner.manager import WorkerManager
+from pymontecarlo.runner.worker import Worker as _Worker, InvalidPlatform, get_platform
 
 # Globals and constants variables.
-from pymontecarlo.runner.manager import PLATFORM_WINDOWS
+from pymontecarlo.runner.worker import PLATFORM_WINDOWS
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -43,7 +41,7 @@ class Worker(_Worker):
         """
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
-        if platform.system() != PLATFORM_WINDOWS:
+        if get_platform() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'Casino 2 can only be run on Windows'
 
         self._executable = settings.casino2.exe
@@ -74,5 +72,3 @@ class Worker(_Worker):
     def _run(self, options):
         raise NotImplementedError, "Simulations with Casino2 cannot be directly run. " + \
             "Please use the create method to create the .sim files and run them in Casino 2."
-
-WorkerManager.register('casino2', Worker, [PLATFORM_WINDOWS])

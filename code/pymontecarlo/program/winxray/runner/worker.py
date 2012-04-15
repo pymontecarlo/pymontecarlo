@@ -23,15 +23,13 @@ import os
 import copy
 import subprocess
 import logging
-import platform
 from zipfile import ZipFile
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.runner.worker import SubprocessWorker as _Worker, InvalidPlatform
-from pymontecarlo.runner.manager import WorkerManager
+from pymontecarlo.runner.worker import SubprocessWorker as _Worker, InvalidPlatform, get_platform
 
 from pymontecarlo.program.winxray.input.converter import Converter
 from pymontecarlo.program.winxray.io.exporter import Exporter
@@ -39,8 +37,8 @@ from pymontecarlo.program.winxray.io.importer import Importer
 
 
 # Globals and constants variables.
+from pymontecarlo.runner.worker import PLATFORM_WINDOWS
 from zipfile import ZIP_DEFLATED
-from pymontecarlo.runner.manager import PLATFORM_WINDOWS
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -49,7 +47,7 @@ class Worker(_Worker):
         """
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
-        if platform.system() != PLATFORM_WINDOWS:
+        if get_platform() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
 
         self._executable = settings.winxray.exe
@@ -122,5 +120,3 @@ class Worker(_Worker):
             zip.write(filepath, arcname)
 
         zip.close()
-
-WorkerManager.register('winxray', Worker, [PLATFORM_WINDOWS])
