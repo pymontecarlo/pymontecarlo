@@ -27,7 +27,7 @@ from pkg_resources import resource_filename #@UnresolvedImport
 # Local modules.
 from pymontecarlo import settings
 from pymontecarlo.util.xmlutil import XMLIO
-from pymontecarlo.program.config import ProgramConfiguration
+from pymontecarlo.program.config import Program
 
 import pymontecarlo.program.penelope.input.body #@UnusedImport
 import pymontecarlo.program.penelope.input.material #@UnusedImport
@@ -37,13 +37,16 @@ import pymontecarlo.program.penelope.input.material #@UnusedImport
 XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope',
                     resource_filename(__name__, 'schema.xsd'))
 
-class _PenelopeProgramConfiguration(ProgramConfiguration):
+class _PenelopeProgram(Program):
 
-    def is_valid(self):
-        try:
-            pendbase = settings.penelope.pendbase
-        except AttributeError:
-            return False
+    def validate(self):
+        if 'penelope' not in settings:
+            raise AssertionError, "Missing 'penelope' section in settings"
 
-        return os.path.isdir(pendbase)
+        if 'pendbase' not in settings.penelope:
+            raise AssertionError, "Missing 'pendbase' option in 'penelope' section of settings"
+
+        pendbase = settings.penelope.pendbase
+        if not os.path.isdir(pendbase):
+            raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
 

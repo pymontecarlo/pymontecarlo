@@ -210,6 +210,7 @@ class Exporter(_Exporter):
         for key in sorted(detectors.keys()):
             detector = detectors[key]
 
+            #FIXME: Elevation must be inverted
             text = map(math.degrees, detector.elevation_rad + detector.azimuth_rad) + [0]
             line = self._KEYWORD_PDANGL.create_line(text)
             lines.append(line)

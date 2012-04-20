@@ -26,37 +26,70 @@ __license__ = "GPL v3"
 
 # Globals and constants variables.
 
-class ProgramConfiguration(object):
+class Program(object):
+
+    def __hash__(self, *args, **kwargs):
+        return hash(self._get_alias())
 
     def _get_name(self):
         raise NotImplementedError
 
-    name = property(_get_name, doc="Full program name")
+    @property
+    def name(self):
+        """
+        Full program name.
+        """
+        return self._get_name()
 
     def _get_alias(self):
         raise NotImplementedError
 
-    alias = property(_get_alias, doc="Short program name")
-
-    def is_valid(self):
-        return False
+    @property
+    def alias(self):
+        """
+        Short program name
+        """
+        return self._get_alias()
 
     def _get_converter(self):
         raise NotImplementedError
 
-    converter = property(_get_converter, doc="Converter class of program")
+    @property
+    def converter(self):
+        """
+        Converter class of program
+        """
+        return self._get_converter()
 
     def _get_exporter(self):
         raise NotImplementedError
 
-    exporter = property(_get_exporter, doc="Exporter class of program")
+    @property
+    def exporter(self):
+        """
+        Exporter class of program
+        """
+        return self._get_exporter()
 
     def _get_importer(self):
         raise NotImplementedError
 
-    importer = property(_get_importer, doc="Importer class of program")
+    @property
+    def importer(self):
+        """
+        Importer class of program
+        """
+        return self._get_importer()
 
     def _get_worker(self):
         raise NotImplementedError
 
-    worker = property(_get_worker, doc="Worker class of program")
+    @property
+    def worker(self):
+        """
+        Worker class of program
+        """
+        return self._get_worker()
+
+    def validate(self):
+        raise AssertionError

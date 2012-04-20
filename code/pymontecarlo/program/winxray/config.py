@@ -25,7 +25,7 @@ import os
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.program.config import ProgramConfiguration
+from pymontecarlo.program.config import Program
 from pymontecarlo.program.winxray.input.converter import Converter
 from pymontecarlo.program.winxray.io.exporter import Exporter
 from pymontecarlo.program.winxray.io.importer import Importer
@@ -33,7 +33,7 @@ from pymontecarlo.program.winxray.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _WinXRayProgramConfiguration(ProgramConfiguration):
+class _WinXRayProgram(Program):
 
     def _get_name(self):
         return 'WinXRay'
@@ -41,13 +41,16 @@ class _WinXRayProgramConfiguration(ProgramConfiguration):
     def _get_alias(self):
         return 'winxray'
 
-    def is_valid(self):
-        try:
-            exe = settings.winxray.exe
-        except AttributeError:
-            return False
+    def validate(self):
+        if 'winxray' not in settings:
+            raise AssertionError, "Missing 'winxray' section in settings"
 
-        return os.path.isfile(exe)
+        if 'exe' not in settings.winxray:
+            raise AssertionError, "Missing 'exe' option in 'winxray' section of settings"
+
+        exe = settings.winxray.exe
+        if not os.path.isfile(exe):
+            raise AssertionError, "Specified WinXRay executable (%s) does not exist" % exe
 
     def _get_converter(self):
         return Converter
@@ -61,4 +64,4 @@ class _WinXRayProgramConfiguration(ProgramConfiguration):
     def _get_worker(self):
         return Worker
 
-config = _WinXRayProgramConfiguration()
+config = _WinXRayProgram()

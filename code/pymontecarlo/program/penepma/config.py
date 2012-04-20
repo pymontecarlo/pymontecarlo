@@ -25,7 +25,7 @@ import os
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.program.penelope.config import _PenelopeProgramConfiguration
+from pymontecarlo.program.penelope.config import _PenelopeProgram
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.io.exporter import Exporter
 from pymontecarlo.program.penepma.io.importer import Importer
@@ -33,7 +33,7 @@ from pymontecarlo.program.penepma.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _PenepmaProgramConfiguration(_PenelopeProgramConfiguration):
+class _PenepmaProgram(_PenelopeProgram):
 
     def _get_name(self):
         return 'PENEPMA'
@@ -41,16 +41,18 @@ class _PenepmaProgramConfiguration(_PenelopeProgramConfiguration):
     def _get_alias(self):
         return 'penepma'
 
-    def is_valid(self):
-        if not _PenelopeProgramConfiguration.is_valid(self):
-            return False
+    def validate(self):
+        _PenelopeProgram.validate(self)
 
-        try:
-            exe = settings.penepma.exe
-        except AttributeError:
-            return False
+        if 'penepma' not in settings:
+            raise AssertionError, "Missing 'penepma' section in settings"
 
-        return os.path.isfile(exe)
+        if 'exe' not in settings.penepma:
+            raise AssertionError, "Missing 'exe' option in 'penepma' section of settings"
+
+        exe = settings.penepma.exe
+        if not os.path.isfile(exe):
+            raise AssertionError, "Specified PENEPMA executable (%s) does not exist" % exe
 
     def _get_converter(self):
         return Converter
@@ -64,4 +66,4 @@ class _PenepmaProgramConfiguration(_PenelopeProgramConfiguration):
     def _get_worker(self):
         return Worker
 
-config = _PenepmaProgramConfiguration()
+program = _PenepmaProgram()

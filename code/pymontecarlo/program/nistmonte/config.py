@@ -25,13 +25,13 @@ import os
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.program.config import ProgramConfiguration
+from pymontecarlo.program.config import Program
 from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.program.nistmonte.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _NISTMonteProgramConfiguration(ProgramConfiguration):
+class _NISTMonteProgram(Program):
 
     def _get_name(self):
         return 'NISTMonte'
@@ -39,14 +39,23 @@ class _NISTMonteProgramConfiguration(ProgramConfiguration):
     def _get_alias(self):
         return 'nistmonte'
 
-    def is_valid(self):
-        try:
-            java = settings.nistmonte.java
-            jar = settings.nistmonte.jar
-        except AttributeError:
-            return False
+    def validate(self):
+        if 'nistmonte' not in settings:
+            raise AssertionError, "Missing 'nistmonte' section in settings"
 
-        return os.path.isfile(java) and os.path.isfile(jar)
+        if 'java' not in settings.nistmonte:
+            raise AssertionError, "Missing 'java' option in 'nistmonte' section of settings"
+
+        java = settings.nistmonte.java
+        if not os.path.isfile(java):
+            raise AssertionError, "Specified Java executable (%s) does not exist" % java
+
+        if 'jar' not in settings.nistmonte:
+            raise AssertionError, "Missing 'jar' option in 'nistmonte' section of settings"
+
+        jar = settings.nistmonte.jar
+        if not os.path.isfile(jar):
+            raise AssertionError, "Specified jar path (%s) does not exist" % jar
 
     def _get_converter(self):
         return Converter
@@ -54,4 +63,4 @@ class _NISTMonteProgramConfiguration(ProgramConfiguration):
     def _get_worker(self):
         return Worker
 
-config = _NISTMonteProgramConfiguration()
+program = _NISTMonteProgram()

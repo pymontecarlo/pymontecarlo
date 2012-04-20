@@ -25,7 +25,7 @@ import os
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.program.config import ProgramConfiguration
+from pymontecarlo.program.config import Program
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.io.exporter import Exporter
 from pymontecarlo.program.casino2.io.importer import Importer
@@ -33,21 +33,13 @@ from pymontecarlo.program.casino2.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _CasinoProgramConfiguration(ProgramConfiguration):
+class _CasinoProgram(Program):
 
     def _get_name(self):
         return 'Casino 2'
 
     def _get_alias(self):
         return 'casino2'
-
-    def is_valid(self):
-        try:
-            exe = settings.casino2.exe
-        except AttributeError:
-            return False
-
-        return os.path.isfile(exe)
 
     def _get_converter(self):
         return Converter
@@ -61,4 +53,15 @@ class _CasinoProgramConfiguration(ProgramConfiguration):
     def _get_worker(self):
         return Worker
 
-config = _CasinoProgramConfiguration()
+    def validate(self):
+        if 'casino2' not in settings:
+            raise AssertionError, "Missing 'casino2' section in settings"
+
+        if 'exe' not in settings.casino2:
+            raise AssertionError, "Missing 'exe' option in 'casino2' section of settings"
+
+        exe = settings.casino2.exe
+        if not os.path.isfile(exe):
+            raise AssertionError, "Specified Casino 2 executable (%s) does not exist" % exe
+
+program = _CasinoProgram()
