@@ -31,6 +31,12 @@ class Program(object):
     def __hash__(self, *args, **kwargs):
         return hash(self._get_alias())
 
+    def __repr__(self):
+        return '<Program(%s)>' % self.name
+
+    def __str__(self):
+        return self.name
+
     def _get_name(self):
         raise NotImplementedError
 

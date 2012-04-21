@@ -1,3 +1,6 @@
+[pymontecarlo]
+extensions=
+
 [penelope]
 pendbase=/penelope2011/pendbase
 

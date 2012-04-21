@@ -31,6 +31,10 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
+################################################################################
+# Load settings
+################################################################################
+
 settings = ConfigReader()
 
 def __load_settings():
@@ -50,5 +54,36 @@ def __load_settings():
 
 __load_settings()
 
+################################################################################
+# Register XML namespace and schema
+################################################################################
+
 XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
                     resource_filename(__name__, 'schema.xsd'))
+
+
+################################################################################
+# Load programs
+################################################################################
+
+programs = set()
+
+def __load_programs():
+    extensions = getattr(settings.pymontecarlo, 'extensions', '').split(',')
+    for extension in extensions:
+        mod = __import__(extension, None, None, ['config'])
+
+        if not hasattr(mod, 'config'):
+            raise ImportError, "Extension '%s' does not have a 'config' module." % extension
+
+        if not hasattr(mod.config, 'program'):
+            raise ImportError, "Module 'config' of extension '%s' must have a 'program' attribute" % extension
+
+        program = mod.config.program
+        program.validate()
+
+        programs.add(program)
+
+        logging.debug("Loaded program (%s) from %s", program.name, extension)
+
+__load_programs()
