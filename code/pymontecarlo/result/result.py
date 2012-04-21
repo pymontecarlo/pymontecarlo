@@ -29,7 +29,7 @@ from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
-from pymontecarlo.result.manager import ResultManager, Result
+from pymontecarlo.result.manager import ResultManager
 
 # Globals and constants variables.
 GENERATED = "g"
@@ -38,6 +38,34 @@ NOFLUORESCENCE = "nf"
 CHARACTERISTIC = "cf"
 BREMSSTRAHLUNG = "bf"
 TOTAL = "t"
+
+class _Result(object):
+    """
+    Base class of all results. 
+    A result is a read-only class where results of a detector are stored.
+    
+    Derived classes must implement :meth:`__loadzip__` and :meth:`__savezip__`
+    which respectively load and save the result to a ZIP file.
+    
+    Each result class must be register in the ResultManager.
+    """
+
+    def __init__(self, detector):
+        self._detector = detector
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key, detector):
+        return cls(detector)
+
+    def __savezip__(self, zipfile, key):
+        pass
+
+    @property
+    def detector(self):
+        """
+        Detector associated to this result.
+        """
+        return self._detector
 
 def create_intensity_dict(transition,
                           gcf=(0.0, 0.0), gbf=(0.0, 0.0), gnf=(0.0, 0.0), gt=(0.0, 0.0),
@@ -56,7 +84,7 @@ def create_intensity_dict(transition,
                          }
             }
 
-class PhotonIntensityResult(Result):
+class PhotonIntensityResult(_Result):
     _COLUMNS = ['transition', 'energy (eV)',
                 'generated characteristic', 'generated characteristic unc',
                 'generated bremsstrahlung', 'generated bremsstrahlung unc',
@@ -75,7 +103,7 @@ class PhotonIntensityResult(Result):
         :arg intensities: :class:`dict` containing the intensities.
             One should use :func:`.create_intensity_dict` to create the dictionary
         """
-        Result.__init__(self, detector)
+        _Result.__init__(self, detector)
 
         # Check structure
         def _check1(transition, data, key1, name1):
@@ -363,7 +391,7 @@ class PhotonIntensityResult(Result):
 ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
 ResultManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityResult', PhotonIntensityResult)
 
-class TimeResult(Result):
+class TimeResult(_Result):
 
     def __init__(self, detector, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
         """
@@ -374,7 +402,7 @@ class TimeResult(Result):
         :arg simulation_speed_s: time to simulation one electron (in seconds) and
             its uncertainty
         """
-        Result.__init__(self, detector)
+        _Result.__init__(self, detector)
 
         self._simulation_time_s = simulation_time_s
 
@@ -425,13 +453,13 @@ class TimeResult(Result):
 ResultManager.register('TimeResult', TimeResult)
 ResultManager.register_loader('pymontecarlo.result.base.result.TimeResult', TimeResult)
 
-class ElectronFractionResult(Result):
+class ElectronFractionResult(_Result):
 
     def __init__(self, detector,
                  absorbed=(0.0, 0.0),
                  backscattered=(0.0, 0.0),
                  transmitted=(0.0, 0.0)):
-        Result.__init__(self, detector)
+        _Result.__init__(self, detector)
 
         if len(absorbed) != 2:
             raise ValueError, "Absorbed fraction must be a tuple (value, uncertainty)"

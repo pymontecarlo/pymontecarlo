@@ -28,6 +28,7 @@ from StringIO import StringIO
 
 # Local modules.
 from pymontecarlo.result.manager import ResultManager
+import pymontecarlo.result.result #@UnusedImport
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
@@ -40,7 +41,7 @@ class Results(Mapping):
     def __init__(self, options, results={}):
         """
         Creates a new container for the results.
-        Once created, the results container cannot be modified.
+        Once created, the results container cannot be modified (i.e. read-only).
         
         :arg options: options used to generate these results
         :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
