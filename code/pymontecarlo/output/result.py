@@ -29,7 +29,7 @@ from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
-from pymontecarlo.result.manager import ResultManager
+from pymontecarlo.output.manager import ResultManager
 
 # Globals and constants variables.
 GENERATED = "g"

@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.manager import ResultManager #@UnusedImport
+from pymontecarlo.output.manager import ResultManager #@UnusedImport
 
 # Globals and constants variables.
 

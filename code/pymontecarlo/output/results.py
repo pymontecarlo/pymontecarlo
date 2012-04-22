@@ -27,8 +27,8 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.manager import ResultManager
-import pymontecarlo.result.result #@UnusedImport
+from pymontecarlo.output.manager import ResultManager
+import pymontecarlo.output.result #@UnusedImport
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED

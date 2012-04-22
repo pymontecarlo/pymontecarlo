@@ -23,8 +23,8 @@ import os
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
-from pymontecarlo.result.results import Results
-from pymontecarlo.result.result import \
+from pymontecarlo.output.results import Results
+from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
 
 import DrixUtilities.Files as Files

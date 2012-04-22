@@ -24,7 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.results import Results
+from pymontecarlo.output.results import Results
 
 # Globals and constants variables.
 

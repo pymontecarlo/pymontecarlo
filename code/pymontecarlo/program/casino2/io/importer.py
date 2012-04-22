@@ -24,7 +24,7 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.io.importer import Importer as _Importer
-from pymontecarlo.result.result import \
+from pymontecarlo.output.result import \
     (
     PhotonIntensityResult,
     ElectronFractionResult,

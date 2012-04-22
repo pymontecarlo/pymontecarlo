@@ -20,7 +20,7 @@ from xml.etree.ElementTree import fromstring
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.result.result import \
+from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult, create_intensity_dict
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, TimeDetector, ElectronFractionDetector

@@ -26,7 +26,7 @@ import os
 # Local modules.
 from pymontecarlo.io.importer import ImporterException
 from pymontecarlo.program.penelope.io.importer import Importer as _Importer
-from pymontecarlo.result.result import \
+from pymontecarlo.output.result import \
     (
     PhotonIntensityResult,
     ElectronFractionResult,
@@ -46,7 +46,7 @@ from pymontecarlo.input.detector import \
 from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
-from pymontecarlo.result.result import \
+from pymontecarlo.output.result import \
     EMITTED, NOFLUORESCENCE, CHARACTERISTIC, BREMSSTRAHLUNG, TOTAL
 
 def _read_intensities_line(line):
