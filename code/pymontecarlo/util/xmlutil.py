@@ -88,6 +88,7 @@ class _XMLIO(Manager):
 
     def validate(self, element):
         exception = None
+
         for prefix in element.nsmap:
             schema = self._schemas[prefix]
             try:
@@ -98,7 +99,8 @@ class _XMLIO(Manager):
 
             return
 
-        raise exception
+        if exception is not None:
+            raise exception
 
     def from_xml(self, element, validate=False, *args, **kwargs):
         """
