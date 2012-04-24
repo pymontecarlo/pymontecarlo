@@ -31,6 +31,7 @@ from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 # Globals and constants variables.
+VERSION = '2'
 
 class _Detectors(MutableMapping):
     def __init__(self):
@@ -140,6 +141,12 @@ class Options(Option):
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
+        # Check version
+        version = element.get('version')
+        if version != VERSION:
+            raise IOError, "Incorrect version of options. Only version %s is accepted" % \
+                    VERSION
+
         options = cls(element.get('name'))
 
         # Beam
@@ -176,6 +183,7 @@ class Options(Option):
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('name', self.name)
+        element.set('version', VERSION)
 
         child = Element('beam')
         child.append(self.beam.to_xml())
