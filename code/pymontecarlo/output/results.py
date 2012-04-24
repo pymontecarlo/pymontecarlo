@@ -33,6 +33,7 @@ import pymontecarlo.output.result #@UnusedImport
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
 
+VERSION = '2'
 SECTION_KEYS = 'keys'
 KEYS_INI_FILENAME = 'keys.ini'
 
@@ -78,6 +79,11 @@ class Results(Mapping):
         """
         zipfile = ZipFile(source, 'r')
 
+        # Check version
+        if zipfile.comment != 'version=%s' % VERSION:
+            raise IOError, "Incorrect version of results. Only version %s is accepted" % \
+                    VERSION
+
         # Parse keys.ini
         try:
             zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
@@ -107,6 +113,7 @@ class Results(Mapping):
         :arg source: filepath or file-object
         """
         zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED)
+        zipfile.comment = 'version=%s' % VERSION
 
         # Creates keys.ini
         config = SafeConfigParser()
