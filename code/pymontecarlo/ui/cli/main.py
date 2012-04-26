@@ -61,6 +61,8 @@ def create_parser():
                       help="Number of processes/threads to use (not applicable for all Monte Carlo programs) [default: %default]")
     parser.add_option('-c', '--create', dest='create', default=False,
                       action='store_true', help='Create mode where only simulation files are created but not run')
+    parser.add_option('-s', '--skip', dest='skip', default=False,
+                      action='store_true', help='Skip simulation if results already exist')
 
     # Program group
     group = OptionGroup(parser, "Monte Carlo programs",
@@ -108,6 +110,8 @@ def run(argv=None):
     if nbprocesses <= 0:
         parser.error("Number of processes must be greater than 0.")
 
+    overwrite = not values.skip
+
     aliases = map(methodcaller('get_alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
     if not selected_programs:
@@ -130,9 +134,9 @@ def run(argv=None):
     worker_class = workers[selected_program]
 
     if values.create:
-        runner = Creator(worker_class, outputdir, nbprocesses=nbprocesses)
+        runner = Creator(worker_class, outputdir, overwrite, nbprocesses)
     else:
-        runner = Runner(worker_class, outputdir, workdir, nbprocesses=nbprocesses)
+        runner = Runner(worker_class, outputdir, workdir, overwrite, nbprocesses)
 
     progressbar = ProgressBar(console, len(list_options))
     progressbar.start()

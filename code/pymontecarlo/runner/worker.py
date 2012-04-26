@@ -133,6 +133,12 @@ class Worker(threading.Thread):
                 # Retrieve options
                 options = self._queue_options.get()
 
+                # Check if results already exists
+                zipfilepath = os.path.join(self._outputdir, options.name + ".zip")
+                if os.path.exists(zipfilepath) and not self._overwrite:
+                    logging.info('Skipping %s as results already exists', options.name)
+                    continue
+
                 # Create working directory
                 if self._workdir is None:
                     self._workdir = tempfile.mkdtemp()
@@ -145,9 +151,8 @@ class Worker(threading.Thread):
                 self._run(options)
 
                 # Save results
-                zipfilepath = os.path.join(self._outputdir, options.name + ".zip")
-                logging.debug('Saving results in %s', zipfilepath)
                 self._save_results(options, zipfilepath)
+                logging.debug('Results saved at %s', zipfilepath)
 
                 # Cleanup working directory if needed
                 if not _user_defined_workdir:

@@ -23,6 +23,7 @@ import os
 import copy
 import subprocess
 import logging
+import shutil
 
 # Third party modules.
 
@@ -58,8 +59,9 @@ class Worker(_Worker):
         # Export
         dirpath = self._get_dirpath(ops)
         if os.listdir(dirpath): # not empty
-            logging.info('Skipping %s as it already exists', dirpath)
-            return
+            logging.info("Simulation directory (%s) is not empty. It will be empty.", dirpath)
+            shutil.rmtree(dirpath)
+            os.makedirs(dirpath)
 
         # Create .in, .geo and all .mat
         infilepath = Exporter().export(ops, dirpath)

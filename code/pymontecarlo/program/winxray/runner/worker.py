@@ -65,17 +65,13 @@ class Worker(_Worker):
         Converter().convert(ops)
 
         # Export
-        filepath = self._get_filepath(ops, dirpath, 'wxc')
-        if os.path.exists(filepath) and not self._overwrite:
-            logging.info('Skipping %s as it already exists', filepath)
-            return
-
         wxrops = Exporter().export(ops)
 
         if dirpath == self._workdir:
             wxrops.setResultsPath(self._get_dirpath(ops))
 
         # Save
+        filepath = self._get_filepath(ops, dirpath, 'wxc')
         wxrops.write(filepath)
         logging.debug('Save wxc file: %s', filepath)
 
@@ -83,8 +79,6 @@ class Worker(_Worker):
 
     def _run(self, options):
         wxcfilepath = self._create(options, self._workdir)
-        if not wxcfilepath:
-            return
 
         # Launch
         args = [self._executable, wxcfilepath]

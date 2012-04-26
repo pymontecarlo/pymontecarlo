@@ -59,10 +59,6 @@ class Worker(_Worker):
 
         # Save
         filepath = self._get_filepath(ops, dirpath, 'xml')
-        if os.path.exists(filepath) and not self._overwrite:
-            logging.info('Skipping %s as it already exists', filepath)
-            return
-
         ops.save(filepath)
         logging.debug('Save options to: %s', filepath)
 
