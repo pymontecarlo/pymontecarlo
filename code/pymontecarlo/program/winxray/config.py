@@ -64,4 +64,4 @@ class _WinXRayProgram(Program):
     def _get_worker(self):
         return Worker
 
-config = _WinXRayProgram()
+program = _WinXRayProgram()

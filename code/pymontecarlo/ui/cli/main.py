@@ -23,7 +23,7 @@ import os
 import time
 import glob
 import logging
-from operator import methodcaller
+from operator import attrgetter
 from optparse import OptionParser, OptionGroup
 
 # Third party modules.
@@ -68,7 +68,7 @@ def create_parser():
     group = OptionGroup(parser, "Monte Carlo programs",
                         "Note: Specify only one of these flags. Only supported programs are shown.")
 
-    for alias in map(methodcaller('get_alias'), programs):
+    for alias in map(attrgetter('alias'), programs):
         group.add_option('--%s' % alias, dest=alias, action="store_true")
 
     parser.add_option_group(group)
@@ -112,7 +112,7 @@ def run(argv=None):
 
     overwrite = not values.skip
 
-    aliases = map(methodcaller('get_alias'), programs)
+    aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
     if not selected_programs:
         console.error("Please select one Monte Carlo program")
@@ -130,7 +130,7 @@ def run(argv=None):
         console.error(str(ex))
 
     # Setup
-    workers = dict(zip(aliases, methodcaller('get_worker'), programs))
+    workers = dict(zip(aliases, map(attrgetter('worker'), programs)))
     worker_class = workers[selected_program]
 
     if values.create:
