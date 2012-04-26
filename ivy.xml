@@ -5,19 +5,12 @@
     </info>
 
     <configurations>
-        <conf name="default" description="binary" />
-        <conf name="test" description="test" extends="default" />
         <conf name="publish" visibility="private" description="publish" />
     </configurations>
 
     <publications/>
 
     <dependencies>
-        <dependency org="ptp" name="ptpshared" rev="latest.integration"
-            conf="default->jdom;default->opencsv;default->jsap" />
-        <dependency org="gov.nist.microanalysis" name="epq"
-            rev="0.1" conf="default" />
-
         <dependency org="net.sf.ant-python" name="ant-python"
             rev="0.1.5" conf="publish->default" />
     </dependencies>
