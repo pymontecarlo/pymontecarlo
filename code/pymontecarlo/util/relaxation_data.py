@@ -20,9 +20,10 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import csv
+import pkgutil
+from StringIO import StringIO
 
 # Third party modules.
-from pkg_resources import resource_stream #@UnresolvedImport
 
 # Local modules.
 
@@ -52,7 +53,8 @@ class RelaxationData(object):
         :arg fileobj: file-object containing the relaxation data.
         """
         if fileobj is None:
-            fileobj = resource_stream(__name__, 'data/relaxation_data.csv')
+            data = pkgutil.get_data(__name__, 'data/relaxation_data.csv')
+            fileobj = StringIO(data)
 
         self.data = self._read(fileobj)
 

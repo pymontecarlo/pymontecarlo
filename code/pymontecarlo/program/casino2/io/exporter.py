@@ -21,9 +21,10 @@ __license__ = "GPL v3"
 # Standard library modules.
 from operator import attrgetter
 import math
+import pkgutil
+from StringIO import StringIO
 
 # Third party modules.
-from pkg_resources import resource_stream #@UnresolvedImport
 import numpy as np
 
 # Local modules.
@@ -132,15 +133,22 @@ class Exporter(_Exporter):
         geometry_name = geometry.__class__.__name__
 
         if isinstance(geometry, Substrate):
-            return resource_stream(__name__, "templates/Substrate.sim")
+            data = pkgutil.get_data(__name__, "templates/Substrate.sim")
+            buffer = StringIO(data)
+            buffer.mode = 'rb'
+            return buffer
         elif isinstance(geometry, (MultiLayers, GrainBoundaries)):
             regions_count = len(geometry.get_bodies())
 
-            try:
-                return resource_stream(__name__, "templates/%s%i.sim" % (geometry_name, regions_count))
-            except IOError:
+            filename = "%s%i.sim" % (geometry_name, regions_count)
+            data = pkgutil.get_data(__name__, "templates/" + filename)
+            if data is None:
                 raise ExporterException, "No template for '%s' with region count: %i" % \
                     (geometry_name, regions_count)
+
+            buffer = StringIO(data)
+            buffer.mode = 'rb'
+            return buffer
         else:
             raise ExporterException, "Unknown geometry: %s" % geometry_name
 
