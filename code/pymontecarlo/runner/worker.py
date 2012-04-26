@@ -137,6 +137,7 @@ class Worker(threading.Thread):
                 zipfilepath = os.path.join(self._outputdir, options.name + ".zip")
                 if os.path.exists(zipfilepath) and not self._overwrite:
                     logging.info('Skipping %s as results already exists', options.name)
+                    self._queue_options.task_done()
                     continue
 
                 # Create working directory
