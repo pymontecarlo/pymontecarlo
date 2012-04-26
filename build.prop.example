@@ -1,11 +1,31 @@
 # Input directories
-src.dir=${basedir}/src
-test.dir=${basedir}/test
+src.dir=${basedir}/code
 
 # Output directories
-tmp.dir=
+tmp.dir=/tmp
 lib.dir=${tmp.dir}/lib
 build.dir=${tmp.dir}/build
 dist.dir=${tmp.dir}/dist
 doc.dir=${tmp.dir}/doc
-test.report.dir=${tmp.dir}/test/report
+
+workspace.dir=
+pythondev.dir=${workspace.dir}/pydev
+fortrandev.dir=${workspace.dir}/fortrandev
+
+####################
+# Program specific #
+####################
+
+# PENELOPE
+windows.python.dir=C:/Python26
+
+# NISTMonte
+
+
+# Casino 2
+casinotools.project.dir=${pythondev.dir}/casinoTools
+
+# WinXRay
+winxraytools.project.dir=${pythondev.dir}/winxrayTools
+databasestools.project.dir=${pythondev.dir}/DatabasesTools
+drixutilities.project.dir=${pythondev.dir}/DrixUtilities

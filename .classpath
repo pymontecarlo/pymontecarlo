@@ -5,5 +5,7 @@
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=pyMonteCarlo&amp;ivyXmlPath=ivy.xml&amp;confs=*"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JUnitTools"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/epq"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/PTPShared"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
