@@ -33,6 +33,13 @@ from pymontecarlo.input.geometry import Substrate
 # Globals and constants variables.
 VERSION = '2'
 
+# Load submodules to register XML loader and saver
+import pymontecarlo.input.beam #@UnusedImport
+import pymontecarlo.input.geometry #@UnusedImport
+import pymontecarlo.input.detector #@UnusedImport
+import pymontecarlo.input.limit #@UnusedImport
+import pymontecarlo.input.model #@UnusedImport
+
 class _Detectors(MutableMapping):
     def __init__(self):
         self._data = {}

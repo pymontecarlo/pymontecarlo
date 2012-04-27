@@ -27,10 +27,11 @@ import os
 from pymontecarlo import settings
 from pymontecarlo.program.config import Program
 
+# Globals and constants variables.
+
+# Load submodules to register XML loader and saver
 import pymontecarlo.program.penelope.input.body #@UnusedImport
 import pymontecarlo.program.penelope.input.material #@UnusedImport
-
-# Globals and constants variables.
 
 class _PenelopeProgram(Program):
 
