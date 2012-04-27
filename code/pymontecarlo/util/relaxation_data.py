@@ -19,9 +19,9 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
+import sys
 import csv
-import pkgutil
-from StringIO import StringIO
 
 # Third party modules.
 
@@ -53,8 +53,10 @@ class RelaxationData(object):
         :arg fileobj: file-object containing the relaxation data.
         """
         if fileobj is None:
-            data = pkgutil.get_data(__name__, 'data/relaxation_data.csv')
-            fileobj = StringIO(data)
+            # Weird bug in Windows when using pkgutil.get_data to retrieve
+            # relaxation_data.csv. This is a quick fix.
+            dirname = os.path.dirname(sys.modules[__name__].__file__)
+            fileobj = open(os.path.join(dirname, 'data/relaxation_data.csv'))
 
         self.data = self._read(fileobj)
 
