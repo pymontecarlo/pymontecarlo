@@ -29,11 +29,12 @@ from pymontecarlo import load_settings, _set_settings
 
 # Globals and constants variables.
 
+basepath = os.path.dirname(__file__)
+filepath = os.path.join(basepath, 'testdata', 'settings.cfg')
+settings = load_settings([filepath])
+
 class TestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
-
-        basepath = os.path.dirname(__file__)
-        filepath = os.path.join(basepath, 'testdata', 'settings.cfg')
-        settings = load_settings([filepath])
         _set_settings(settings)
+
