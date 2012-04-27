@@ -47,6 +47,32 @@ class TestConfigParser(TestCase):
         self.assertRaises(AttributeError, getattr, self.c, 'section3')
         self.assertRaises(AttributeError, getattr, self.c.section1, 'option3')
 
+    def testread(self):
+        # Section with digit
+        lines = ['[1section1]', 'option=value1', 'option2=value2',
+                 '[section2]', 'option3=value3', 'option4=value4']
+        sobj = StringIO('\n'.join(lines))
+        c = ConfigParser()
+        self.assertRaises(IOError, c.read, sobj, False)
+
+        # Option with digit
+        lines = ['[section1]', '1option=value1', 'option2=value2',
+                 '[section2]', 'option3=value3', 'option4=value4']
+        sobj = StringIO('\n'.join(lines))
+        c = ConfigParser()
+        self.assertRaises(IOError, c.read, sobj, False)
+
+        # Skip
+        lines = ['[1section1]', 'option=value1', 'option2=value2',
+                 '[section2]', '1option3=value3', 'option4=value4']
+        sobj = StringIO('\n'.join(lines))
+        c = ConfigParser()
+        c.read(sobj, ignore_errors=True)
+
+        self.assertEqual(1, len(list(c)))
+        self.assertTrue('section2' in c)
+        self.assertTrue('option4' in c.section2)
+
     def test__contains__(self):
         self.assertTrue('section1' in self.c)
         self.assertTrue('section2' in self.c)

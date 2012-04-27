@@ -17,6 +17,10 @@ While the access of the data is different, this class uses the
 :class:`SafeConfigParser` of the :mod:`ConfigParser` module to read and
 write configuration file.
 
+.. warning::
+
+   This parser does *not* support section or option starting with a number.
+
 Let's take the configuration file::
 
   [section1]
@@ -135,19 +139,35 @@ class ConfigParser(object):
             self.__dict__[section_name] = _Section()
         return self.__dict__[section_name]
 
-    def read(self, fileobj):
+    def read(self, fileobj, ignore_errors=False):
         """
         Reads the configuration from the file object.
         
+        If ``ignore_errors`` is ``True`` and a section or option starts with 
+        a number, a :exc:`IOError` exception is raised.
+        If not, these sections or options are skipped. 
+        
         :arg fileobj: file object
+        :arg ignore_errors: whether to raise exception or skip invalid 
+            section(s) and option(s)
         """
         parser = SafeConfigParser()
         parser.readfp(fileobj)
 
         for section in parser.sections():
+            if section[0].isdigit():
+                if ignore_errors:
+                    continue
+                raise IOError, "Section name (%s) cannot start with a digit" % section
+
             options = {}
 
             for option in parser.options(section):
+                if option[0].isdigit():
+                    if ignore_errors:
+                        continue
+                    raise IOError, "Option name (%s) cannot start with a digit" % option
+
                 options[option] = parser.get(section, option)
 
             self.__dict__[section] = _Section(options)
