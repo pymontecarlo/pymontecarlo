@@ -24,14 +24,14 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from _material import create as _create #@UnresolvedImport
 
 # Globals and constants variables.
 
 def create(mat, filepath):
     oldcwd = os.getcwd()
-    os.chdir(settings.penelope.pendbase)
+    os.chdir(get_settings().penelope.pendbase)
 
     _create(mat, filepath)
 

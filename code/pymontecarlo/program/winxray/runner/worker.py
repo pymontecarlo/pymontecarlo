@@ -28,7 +28,7 @@ from zipfile import ZipFile
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker, InvalidPlatform, get_platform
 
 from pymontecarlo.program.winxray.input.converter import Converter
@@ -50,7 +50,7 @@ class Worker(_Worker):
         if get_platform() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'WinX-Ray can only be run on Windows'
 
-        self._executable = settings.winxray.exe
+        self._executable = get_settings().winxray.exe
         if not os.path.isfile(self._executable):
             raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
         logging.debug('WinX-Ray executable: %s', self._executable)

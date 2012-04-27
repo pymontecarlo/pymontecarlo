@@ -29,7 +29,7 @@ from optparse import OptionParser, OptionGroup
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import programs
+from pymontecarlo import get_programs
 from pymontecarlo.input.options import Options
 
 from pymontecarlo.runner.runner import Runner
@@ -40,7 +40,7 @@ from pymontecarlo.ui.cli.console import create_console, ProgressBar
 # Globals and constants variables.
 
 
-def create_parser():
+def create_parser(programs):
     description = "pyMonteCarlo Command Line Interface. Runs simulation(s) " + \
                   "with different Monte Carlo programs from the same interface." + \
                   "After the simulations, the results are automatically saved " + \
@@ -89,7 +89,9 @@ def run(argv=None):
     console = create_console()
     console.init()
 
-    parser = create_parser()
+    programs = get_programs()
+
+    parser = create_parser(programs)
 
     # Parse arguments
     (values, args) = parser.parse_args(argv)
@@ -97,11 +99,11 @@ def run(argv=None):
     # Check inputs
     outputdir = values.outputdir
     if not os.path.exists(outputdir):
-        console.error("The specified output directory (%s) does not exist" % outputdir)
+        console.print_error("The specified output directory (%s) does not exist" % outputdir)
 
     workdir = values.workdir
     if workdir is not None and not os.path.exists(workdir):
-        console.error("The specified work directory (%s) does not exist" % workdir)
+        console.print_error("The specified work directory (%s) does not exist" % workdir)
 
     if values.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -115,19 +117,19 @@ def run(argv=None):
     aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
     if not selected_programs:
-        console.error("Please select one Monte Carlo program")
+        console.print_error("Please select one Monte Carlo program")
     if len(selected_programs) > 1:
-        console.error("Please select only one Monte Carlo program")
+        console.print_error("Please select only one Monte Carlo program")
     selected_program = selected_programs[0]
 
     if not args:
-        console.error("Please specify at least one options file")
+        console.print_error("Please specify at least one options file")
 
     list_options = []
     try:
         load_options(args, list_options)
     except Exception as ex:
-        console.error(str(ex))
+        console.print_error(str(ex))
 
     # Setup
     workers = dict(zip(aliases, map(attrgetter('worker'), programs)))
@@ -152,7 +154,7 @@ def run(argv=None):
             progressbar.update(counter, progress, status)
             time.sleep(1)
     except Exception as ex:
-        console.error(str(ex))
+        console.print_error(str(ex))
 
     runner.close()
     progressbar.close()

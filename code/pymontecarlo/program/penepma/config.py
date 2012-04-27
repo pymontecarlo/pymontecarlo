@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.penelope.config import _PenelopeProgram
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.io.exporter import Exporter
@@ -43,6 +43,8 @@ class _PenepmaProgram(_PenelopeProgram):
 
     def validate(self):
         _PenelopeProgram.validate(self)
+
+        settings = get_settings()
 
         if 'penepma' not in settings:
             raise AssertionError, "Missing 'penepma' section in settings"

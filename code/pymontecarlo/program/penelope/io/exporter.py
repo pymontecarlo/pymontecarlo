@@ -26,7 +26,7 @@ from itertools import tee, izip
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
@@ -106,7 +106,7 @@ class Exporter(_Exporter):
         self._geometry_exporters[GrainBoundaries] = self._export_geometry_grainboundaries
         self._geometry_exporters[Sphere] = self._export_geometry_sphere
 
-        self._pendbase_dir = settings.penelope.pendbase
+        self._pendbase_dir = get_settings().penelope.pendbase
 
     def export(self, options, outputdir):
         # Export geometry

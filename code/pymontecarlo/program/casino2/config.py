@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.io.exporter import Exporter
@@ -54,6 +54,8 @@ class _CasinoProgram(Program):
         return Worker
 
     def validate(self):
+        settings = get_settings()
+
         if 'casino2' not in settings:
             raise AssertionError, "Missing 'casino2' section in settings"
 

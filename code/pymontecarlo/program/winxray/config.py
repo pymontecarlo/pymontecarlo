@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.winxray.input.converter import Converter
 from pymontecarlo.program.winxray.io.exporter import Exporter
@@ -42,6 +42,8 @@ class _WinXRayProgram(Program):
         return 'winxray'
 
     def validate(self):
+        settings = get_settings()
+
         if 'winxray' not in settings:
             raise AssertionError, "Missing 'winxray' section in settings"
 

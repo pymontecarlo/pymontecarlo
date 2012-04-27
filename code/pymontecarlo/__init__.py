@@ -32,12 +32,26 @@ from pymontecarlo.util.xmlutil import XMLIO
 # Globals and constants variables.
 
 ################################################################################
-# Load settings
+# Register XML namespace and schema
 ################################################################################
 
-settings = ConfigParser()
+XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
+                    resource_filename(__name__, 'schema.xsd'))
 
-def __load_settings():
+################################################################################
+# Settings
+################################################################################
+
+_settings = None
+
+def get_settings():
+    global _settings
+
+    if _settings is not None:
+        return _settings
+
+    _settings = ConfigParser()
+
     filepaths = []
     filepaths.append(os.path.join(os.path.expanduser('~'), '.pymontecarlo',
                                   'settings.cfg'))
@@ -48,27 +62,26 @@ def __load_settings():
             logging.debug('Loading settings from: %s', filepath)
 
             with open(filepath, 'r') as f:
-                settings.read(f)
+                _settings.read(f)
 
             break
 
-__load_settings()
+    return _settings
 
 ################################################################################
-# Register XML namespace and schema
+# Programs
 ################################################################################
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
-                    resource_filename(__name__, 'schema.xsd'))
+_programs = None
 
+def get_programs():
+    global _programs
 
-################################################################################
-# Load programs
-################################################################################
+    if _programs is not None:
+        return _programs
 
-programs = set()
+    settings = get_settings()
 
-def __load_programs():
     value = getattr(settings.pymontecarlo, 'extensions', '')
     if not value:
         return
@@ -86,8 +99,9 @@ def __load_programs():
         program = mod.config.program
         program.validate()
 
-        programs.add(program)
-
+        _programs.add(program)
         logging.debug("Loaded program (%s) from %s", program.name, extension)
 
-__load_programs()
+def reload():
+    _settings = None
+    _programs = None

@@ -26,7 +26,7 @@ from operator import attrgetter, mul
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.input.detector import PhotonSpectrumDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 from pymontecarlo.program.penelope.io.exporter import Exporter as _Exporter, Keyword
@@ -245,7 +245,7 @@ class Exporter(_Exporter):
         line = self._KEYWORD_DUMPTO.create_line(text)
         lines.append(line)
 
-        text = getattr(settings.penelope, 'dumpp', 60.0)
+        text = getattr(get_settings().penelope, 'dumpp', 60.0)
         line = self._KEYWORD_DUMPP.create_line(text)
         lines.append(line)
 

@@ -26,7 +26,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.io.exporter import Exporter
 from pymontecarlo.runner.worker import Worker as _Worker, InvalidPlatform, get_platform
@@ -44,7 +44,7 @@ class Worker(_Worker):
         if get_platform() != PLATFORM_WINDOWS:
             raise InvalidPlatform, 'Casino 2 can only be run on Windows'
 
-        self._executable = settings.casino2.exe
+        self._executable = get_settings().casino2.exe
         if not os.path.isfile(self._executable):
             raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
         logging.debug('Casino 2 executable: %s', self._executable)

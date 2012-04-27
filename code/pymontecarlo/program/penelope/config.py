@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 
 # Globals and constants variables.
@@ -36,6 +36,8 @@ import pymontecarlo.program.penelope.input.material #@UnusedImport
 class _PenelopeProgram(Program):
 
     def validate(self):
+        settings = get_settings()
+
         if 'penelope' not in settings:
             raise AssertionError, "Missing 'penelope' section in settings"
 

@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.program.nistmonte.runner.worker import Worker
@@ -40,6 +40,8 @@ class _NISTMonteProgram(Program):
         return 'nistmonte'
 
     def validate(self):
+        settings = get_settings()
+
         if 'nistmonte' not in settings:
             raise AssertionError, "Missing 'nistmonte' section in settings"
 

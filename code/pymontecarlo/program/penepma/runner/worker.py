@@ -28,7 +28,7 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import settings
+from pymontecarlo import get_settings
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
@@ -45,7 +45,7 @@ class Worker(_Worker):
         """
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
-        self._executable = settings.penelope.penepma_exe
+        self._executable = get_settings().penelope.penepma_exe
         if not os.path.isfile(self._executable):
             raise IOError, 'PENEPMA executable (%s) cannot be found' % self._executable
         logging.debug('PENEPMA executable: %s', self._executable)
