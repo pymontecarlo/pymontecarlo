@@ -71,7 +71,6 @@ class Body(Option):
         self._props['material'] = m
 
 XMLIO.register('{http://pymontecarlo.sf.net}body', Body)
-XMLIO.register_loader('pymontecarlo.input.base.body.Body', Body)
 
 class Layer(Body):
     def __init__(self, material, thickness_m):
@@ -118,4 +117,3 @@ class Layer(Body):
         self._props['thickness'] = thickness
 
 XMLIO.register('{http://pymontecarlo.sf.net}layer', Layer)
-XMLIO.register_loader('pymontecarlo.input.base.body.Layer', Layer)

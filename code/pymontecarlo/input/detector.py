@@ -377,49 +377,41 @@ class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronEnergyDetector', BackscatteredElectronEnergyDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronEnergyDetector', BackscatteredElectronEnergyDetector)
 
 class TransmittedElectronEnergyDetector(_EnergyDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronEnergyDetector', TransmittedElectronEnergyDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronEnergyDetector', TransmittedElectronEnergyDetector)
 
 class BackscatteredElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronPolarAngularDetector', BackscatteredElectronPolarAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronPolarAngularDetector', BackscatteredElectronPolarAngularDetector)
 
 class TransmittedElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronPolarAngularDetector', TransmittedElectronPolarAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronPolarAngularDetector', TransmittedElectronPolarAngularDetector)
 
 class BackscatteredElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronAzimuthalAngularDetector', BackscatteredElectronAzimuthalAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.BackscatteredElectronAzimuthalAngularDetector', BackscatteredElectronAzimuthalAngularDetector)
 
 class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.TransmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
 
 class PhotonPolarAngularDetector(_PolarAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonPolarAngularDetector', PhotonPolarAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonPolarAngularDetector', PhotonPolarAngularDetector)
 
 class PhotonAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonAzimuthalAngularDetector', PhotonAzimuthalAngularDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonAzimuthalAngularDetector', PhotonAzimuthalAngularDetector)
 
 class EnergyDepositedSpatialDetector(_ElectronRangeDetector, _SpatialDetector):
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
@@ -434,7 +426,6 @@ class EnergyDepositedSpatialDetector(_ElectronRangeDetector, _SpatialDetector):
         self.zlimits_m = (zlow_m, zhigh_m)
 
 XMLIO.register('{http://pymontecarlo.sf.net}energyDepositedSpatialDetector', EnergyDepositedSpatialDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.EnergyDepositedSpatialDetector', EnergyDepositedSpatialDetector)
 
 class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
     def __init__(self, elevation_rad, azimuth_rad, limits_eV, channels):
@@ -462,7 +453,6 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
         _EnergyDetector.__savexml__(self, element, *args, **kwargs)
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonSpectrumDetector', PhotonSpectrumDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonSpectrumDetector', PhotonSpectrumDetector)
 
 class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation_rad, azimuth_rad, limits_m, channels):
@@ -507,13 +497,11 @@ class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetecto
         self._set_limits(limits)
 
 XMLIO.register('{http://pymontecarlo.sf.net}phiRhoZDetector', PhiRhoZDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.PhiRhoZDetector', PhiRhoZDetector)
 
 class PhotonIntensityDetector(_DelimitedDetector):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonIntensityDetector', PhotonIntensityDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.PhotonIntensityDetector', PhotonIntensityDetector)
 
 class TimeDetector(Option):
     """
@@ -522,7 +510,6 @@ class TimeDetector(Option):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}timeDetector', TimeDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.TimeDetector', TimeDetector)
 
 class ElectronFractionDetector(Option):
     """
@@ -531,4 +518,3 @@ class ElectronFractionDetector(Option):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}electronFractionDetector', ElectronFractionDetector)
-XMLIO.register_loader('pymontecarlo.input.base.detector.ElectronFractionDetector', ElectronFractionDetector)

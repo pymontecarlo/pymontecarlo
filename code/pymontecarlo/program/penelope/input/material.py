@@ -202,4 +202,3 @@ class Material(_Material, Option):
         self._props['cutoff energy bremsstrahlung'] = energy
 
 XMLIO.register('{http://pymontecarlo.sf.net/penelope}material', Material)
-XMLIO.register_loader('pymontecarlo.input.penelope.material.Material', Material)

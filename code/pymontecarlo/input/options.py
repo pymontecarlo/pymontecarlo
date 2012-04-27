@@ -349,4 +349,3 @@ class Options(Option):
         return self._props['models']
 
 XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
-XMLIO.register_loader('pymontecarlo.input.base.options.Options', Options)

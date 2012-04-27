@@ -22,20 +22,15 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
 from pymontecarlo import settings
-from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.program.config import Program
 
 import pymontecarlo.program.penelope.input.body #@UnusedImport
 import pymontecarlo.program.penelope.input.material #@UnusedImport
 
 # Globals and constants variables.
-
-XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope',
-                    resource_filename(__name__, 'schema.xsd'))
 
 class _PenelopeProgram(Program):
 

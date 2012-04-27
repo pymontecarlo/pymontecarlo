@@ -310,7 +310,6 @@ class Material(Option):
         return False
 
 XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
-XMLIO.register_loader('pymontecarlo.input.base.material.Material', Material)
 
 class _Vacuum(Material):
     def __init__(self):

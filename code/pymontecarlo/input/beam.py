@@ -144,7 +144,6 @@ class PencilBeam(Option):
         self._props['aperture'] = aperture
 
 XMLIO.register('{http://pymontecarlo.sf.net}pencilBeam', PencilBeam)
-XMLIO.register_loader('pymontecarlo.input.base.beam.PencilBeam', PencilBeam)
 
 class GaussianBeam(PencilBeam):
     def __init__(self, energy_eV, diameter_m, origin_m=(0, 0, 1),
@@ -184,7 +183,6 @@ class GaussianBeam(PencilBeam):
         self._props['diameter'] = diameter
 
 XMLIO.register('{http://pymontecarlo.sf.net}gaussianBeam', GaussianBeam)
-XMLIO.register_loader('pymontecarlo.input.base.beam.GaussianBeam', GaussianBeam)
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """

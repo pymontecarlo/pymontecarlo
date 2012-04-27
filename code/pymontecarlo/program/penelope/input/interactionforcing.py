@@ -211,4 +211,3 @@ class InteractionForcing(Option):
         self._props['weight'] = min(low, high), max(low, high)
 
 XMLIO.register('{http://pymontecarlo.sf.net/penelope}interactionForcing', InteractionForcing)
-XMLIO.register_loader('pymontecarlo.input.penelope.interactionforcing.InteractionForcing', InteractionForcing)

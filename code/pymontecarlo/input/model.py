@@ -152,7 +152,6 @@ class Model(Option):
         return self._type
 
 XMLIO.register('{http://pymontecarlo.sf.net}model', Model)
-XMLIO.register_loader('pymontecarlo.input.base.model.Model', Model)
 
 class ModelCategory(collections.Set):
 

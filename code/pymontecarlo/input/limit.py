@@ -83,7 +83,6 @@ class TimeLimit(Option):
         self._props['time'] = long(time)
 
 XMLIO.register('{http://pymontecarlo.sf.net}timeLimit', TimeLimit)
-XMLIO.register_loader('pymontecarlo.input.base.limit.TimeLimit', TimeLimit)
 
 class ShowersLimit(Option):
     def __init__(self, showers):
@@ -116,7 +115,6 @@ class ShowersLimit(Option):
         self._props['showers'] = long(showers)
 
 XMLIO.register('{http://pymontecarlo.sf.net}showersLimit', ShowersLimit)
-XMLIO.register_loader('pymontecarlo.input.base.limit.ShowersLimit', ShowersLimit)
 
 class UncertaintyLimit(_TransitionLimit):
     def __init__(self, transition, uncertainty):
@@ -151,4 +149,3 @@ class UncertaintyLimit(_TransitionLimit):
         self._props['uncertainty'] = unc
 
 XMLIO.register('{http://pymontecarlo.sf.net}uncertaintyLimit', UncertaintyLimit)
-XMLIO.register_loader('pymontecarlo.input.base.limit.UncertaintyLimit', UncertaintyLimit)

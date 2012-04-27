@@ -88,7 +88,6 @@ class Body(_Body, Option):
         self._props['maximum step length'] = length
 
 XMLIO.register('{http://pymontecarlo.sf.net/penelope}body', Body)
-XMLIO.register_loader('pymontecarlo.input.penelope.body.Body', Body)
 
 class Layer(Body, _Layer):
     def __init__(self, material, thickness, maximum_step_length_m=None):
@@ -110,4 +109,3 @@ class Layer(Body, _Layer):
         _Layer.__savexml__(self, element, *args, **kwargs)
 
 XMLIO.register('{http://pymontecarlo.sf.net/penelope}layer', Layer)
-XMLIO.register_loader('pymontecarlo.input.penelope.body.Layer', Layer)

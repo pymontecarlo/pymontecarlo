@@ -280,7 +280,6 @@ class Substrate(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
 XMLIO.register('{http://pymontecarlo.sf.net}substrate', Substrate)
-XMLIO.register_loader('pymontecarlo.input.base.geometry.Substrate', Substrate)
 
 class Inclusion(_Geometry):
     def __init__(self, substrate_material, inclusion_material, inclusion_diameter_m):
@@ -365,7 +364,6 @@ class Inclusion(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
 XMLIO.register('{http://pymontecarlo.sf.net}inclusion', Inclusion)
-XMLIO.register_loader('pymontecarlo.input.base.geometry.Inclusion', Inclusion)
 
 class _Layered(_Geometry):
     def __init__(self, layers=[]):
@@ -536,7 +534,6 @@ class MultiLayers(_Layered):
             raise ValueError, "Unknown body: %s" % body
 
 XMLIO.register('{http://pymontecarlo.sf.net}multiLayers', MultiLayers)
-XMLIO.register_loader('pymontecarlo.input.base.geometry.MultiLayers', MultiLayers)
 
 class GrainBoundaries(_Layered):
     def __init__(self, left_material, right_material, layers=[]):
@@ -642,8 +639,6 @@ class GrainBoundaries(_Layered):
             raise ValueError, "Unknown body: %s" % body
 
 XMLIO.register('{http://pymontecarlo.sf.net}grainBoundaries', GrainBoundaries)
-XMLIO.register_loader('pymontecarlo.input.base.geometry.GrainBoundaries', GrainBoundaries)
-
 
 class Sphere(_Geometry):
 
