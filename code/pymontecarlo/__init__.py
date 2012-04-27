@@ -69,7 +69,11 @@ XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
 programs = set()
 
 def __load_programs():
-    extensions = getattr(settings.pymontecarlo, 'extensions', '').split(',')
+    value = getattr(settings.pymontecarlo, 'extensions', '')
+    if not value:
+        return
+
+    extensions = getattr(settings.pymontecarlo, 'extensions').split(',')
     for extension in extensions:
         mod = __import__(extension, None, None, ['config'])
 
