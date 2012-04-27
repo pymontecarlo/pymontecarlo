@@ -17,6 +17,8 @@ import shutil
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.material import pure
 
@@ -25,15 +27,15 @@ from pymontecarlo.program.penelope.io.exporter import Exporter
 
 # Globals and constants variables.
 
-class TestGeometry(unittest.TestCase):
+class TestGeometry(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 

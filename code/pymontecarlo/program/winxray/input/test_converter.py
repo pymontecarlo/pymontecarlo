@@ -16,6 +16,8 @@ import warnings
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.winxray.input.converter import Converter, ConversionException
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
@@ -29,15 +31,15 @@ from pymontecarlo.input.model import \
 # Globals and constants variables.
 warnings.simplefilter("always")
 
-class TestConverter(unittest.TestCase):
+class TestConverter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.converter = Converter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

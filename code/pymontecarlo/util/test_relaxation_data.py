@@ -15,17 +15,19 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.relaxation_data import relaxation_data
 
 # Globals and constants variables.
 
-class TestRelaxationData(unittest.TestCase):
+class TestRelaxationData(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 #
     def testSkeleton(self):
         #self.fail("Test if the TestCase is working.")

@@ -16,6 +16,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
@@ -33,16 +35,16 @@ XMLIO.register('_EnergyDetector', _EnergyDetector)
 XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
 XMLIO.register('_AzimuthalAngularDetector', _AzimuthalAngularDetector)
 
-class Test_DelimitedDetector(unittest.TestCase):
+class Test_DelimitedDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _DelimitedDetector((radians(35), radians(45)),
                                     (0, radians(360.0)))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
@@ -83,15 +85,15 @@ class Test_DelimitedDetector(unittest.TestCase):
         self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
         self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
 
-class Test_ChannelsDetector(unittest.TestCase):
+class Test_ChannelsDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _ChannelsDetector((10, 60))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -103,10 +105,10 @@ class Test_ChannelsDetector(unittest.TestCase):
     def testchannels(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
 
-class Test_SpatialDetector(unittest.TestCase):
+class Test_SpatialDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _SpatialDetector((12.34, 56.78), 2,
                                   (21.43, 65.87), 3,
@@ -114,7 +116,7 @@ class Test_SpatialDetector(unittest.TestCase):
                                   (10, 60), (20, 70), (30, 80))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(12.34, self.d.xlimits_m[0], 4)
@@ -185,15 +187,15 @@ class Test_SpatialDetector(unittest.TestCase):
         self.assertAlmostEqual(78.56, float(element.get('zlimit_max')), 4)
         self.assertEqual(4, int(element.get('zbins')))
 
-class Test_EnergyDetector(unittest.TestCase):
+class Test_EnergyDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _EnergyDetector((12.34, 56.78), 1000)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(12.34, self.d.limits_eV[0], 4)
@@ -223,15 +225,15 @@ class Test_EnergyDetector(unittest.TestCase):
         self.assertAlmostEqual(56.78, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
 
-class Test_PolarAngularDetector(unittest.TestCase):
+class Test_PolarAngularDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _PolarAngularDetector(50)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(-90), self.d.limits_rad[0], 4)
@@ -261,15 +263,15 @@ class Test_PolarAngularDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(90), float(element.get('limit_max')), 4)
         self.assertEqual(50, int(element.get('channels')))
 
-class Test_AzimuthalAngularDetector(unittest.TestCase):
+class Test_AzimuthalAngularDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = _AzimuthalAngularDetector(50)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(0), self.d.limits_rad[0], 4)
@@ -299,17 +301,17 @@ class Test_AzimuthalAngularDetector(unittest.TestCase):
         self.assertAlmostEqual(radians(360), float(element.get('limit_max')), 4)
         self.assertEqual(50, int(element.get('channels')))
 
-class TestPhotonSpectrumDetector(unittest.TestCase):
+class TestPhotonSpectrumDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = PhotonSpectrumDetector((radians(35), radians(45)),
                                         (0, radians(360.0)),
                                         (12.34, 56.78), 1000)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
@@ -347,17 +349,17 @@ class TestPhotonSpectrumDetector(unittest.TestCase):
         self.assertAlmostEqual(56.78, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
 
-class TestPhiRhoZDetector(unittest.TestCase):
+class TestPhiRhoZDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = PhiRhoZDetector((radians(35), radians(45)),
                                  (0, radians(360.0)),
                                  (-12.34, -56.78), 1000)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
@@ -395,15 +397,15 @@ class TestPhiRhoZDetector(unittest.TestCase):
         self.assertAlmostEqual(-12.34, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
 
-class TestTimeDetector(unittest.TestCase):
+class TestTimeDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = TimeDetector()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testfrom_xml(self):
         element = self.d.to_xml()
@@ -412,15 +414,15 @@ class TestTimeDetector(unittest.TestCase):
     def testto_xml(self):
         self.d.to_xml()
 
-class TestElectronFractionDetector(unittest.TestCase):
+class TestElectronFractionDetector(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.d = ElectronFractionDetector()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testfrom_xml(self):
         element = self.d.to_xml()

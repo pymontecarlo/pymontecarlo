@@ -15,20 +15,22 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.penelope.input.body import Body, Layer
 from pymontecarlo.program.penelope.input.material import pure
 
 # Globals and constants variables.
 
-class TestBody(unittest.TestCase):
+class TestBody(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.body = Body(pure(29), 123.45)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.body.material))
@@ -50,15 +52,15 @@ class TestBody(unittest.TestCase):
 
         self.assertAlmostEqual(123.45, float(element.get('maximumStepLength')), 4)
 
-class TestLayer(unittest.TestCase):
+class TestLayer(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.layer = Layer(pure(29), 56.78, 123.45)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.layer.material))

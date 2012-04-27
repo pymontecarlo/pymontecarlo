@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.penelope.input.converter import Converter
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \
@@ -25,15 +27,15 @@ from pymontecarlo.input.limit import TimeLimit
 
 # Globals and constants variables.
 
-class TestPenelopeConverter(unittest.TestCase):
+class TestPenelopeConverter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.converter = Converter((0.1, 0.2), 51.2, 53.4)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

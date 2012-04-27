@@ -20,6 +20,8 @@ from xml.etree.ElementTree import fromstring
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult, create_intensity_dict
 from pymontecarlo.input.detector import \
@@ -30,10 +32,10 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
-class TestPhotonIntensityResult(unittest.TestCase):
+class TestPhotonIntensityResult(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         intensities = {}
 
@@ -63,7 +65,7 @@ class TestPhotonIntensityResult(unittest.TestCase):
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -237,10 +239,10 @@ class TestPhotonIntensityResult(unittest.TestCase):
     def testiter_transition(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))
 
-class TestTimeResult(unittest.TestCase):
+class TestTimeResult(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.det = TimeDetector()
         self.r = TimeResult(self.det, 5.0, (1.0, 0.5))
@@ -249,7 +251,7 @@ class TestTimeResult(unittest.TestCase):
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(5.0, self.r.simulation_time_s, 4)
@@ -277,10 +279,10 @@ class TestTimeResult(unittest.TestCase):
 
         zipfile.close()
 
-class TestElectronFractionResult(unittest.TestCase):
+class TestElectronFractionResult(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.det = ElectronFractionDetector()
         self.r = ElectronFractionResult(self.det, (1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
@@ -289,7 +291,7 @@ class TestElectronFractionResult(unittest.TestCase):
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1.0, self.r.absorbed[0], 4)

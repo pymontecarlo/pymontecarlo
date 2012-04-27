@@ -17,6 +17,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
 from pymontecarlo.input.detector import \
@@ -31,15 +33,15 @@ from pymontecarlo.program.casino2.input.converter import Converter, ConversionEx
 # Globals and constants variables.
 warnings.simplefilter("always")
 
-class TestCasino2Converter(unittest.TestCase):
+class TestCasino2Converter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.converter = Converter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

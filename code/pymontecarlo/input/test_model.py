@@ -15,20 +15,22 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.model import \
     Model, ModelCategory, ModelType, NO_MODEL_TYPE, get_all_models
 
 # Globals and constants variables.
 
-class TestModelType(unittest.TestCase):
+class TestModelType(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.mtype = ModelType('type1')
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('type1', self.mtype.name)
@@ -64,10 +66,10 @@ class TestModelType(unittest.TestCase):
         self.assertEqual('no type', NO_MODEL_TYPE.name)
         self.assertFalse(NO_MODEL_TYPE)
 
-class TestModel(unittest.TestCase):
+class TestModel(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.m1 = Model('name1', 'ref1')
         self.m2 = Model('name2')
@@ -76,7 +78,7 @@ class TestModel(unittest.TestCase):
         self.mtype.register(self.m2)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('name1', self.m1.name)
@@ -122,10 +124,10 @@ class TestModel(unittest.TestCase):
         self.assertEqual('name2', element.get('name'))
         self.assertEqual(str(self.mtype), element.get('type'))
 
-class TestModelCategory(unittest.TestCase):
+class TestModelCategory(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.mtype = ModelType('type1')
         self.mcat = ModelCategory(self.mtype)
@@ -137,7 +139,7 @@ class TestModelCategory(unittest.TestCase):
         self.mcat.m2 = self.m2
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEquals(self.mtype, self.mcat.type)

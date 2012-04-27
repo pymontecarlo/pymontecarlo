@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import BackscatteredElectronEnergyDetector
 from pymontecarlo.input.limit import ShowersLimit
@@ -22,10 +24,10 @@ from pymontecarlo.input.model import ELASTIC_CROSS_SECTION, ELASTIC_CROSS_SECTIO
 
 # Globals and constants variables.
 
-class TestOptions(unittest.TestCase):
+class TestOptions(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.ops = Options(name="Test")
         self.ops.beam.energy_eV = 1234
@@ -35,7 +37,7 @@ class TestOptions(unittest.TestCase):
         self.ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)

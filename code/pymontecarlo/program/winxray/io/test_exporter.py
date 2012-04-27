@@ -17,6 +17,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.winxray.io.exporter import Exporter
 
 from pymontecarlo.input.options import Options
@@ -42,15 +44,15 @@ import winxrayTools.Configuration.RandomNumberGenerator as RandomNumberGenerator
 
 warnings.simplefilter("always")
 
-class TestExporter(unittest.TestCase):
+class TestExporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.e = Exporter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

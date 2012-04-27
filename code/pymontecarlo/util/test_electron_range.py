@@ -15,20 +15,22 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.electron_range import kanaya_okayama
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.comp1 = {29: 1.0}
         self.comp2 = {29: 0.5, 30: 0.5}
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testkanaya_okayama(self):
         self.assertAlmostEqual(1.45504, kanaya_okayama(self.comp1, 20e3) * 1e6, 4)

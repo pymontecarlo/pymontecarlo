@@ -1,5 +1,5 @@
 [pymontecarlo]
-extensions=
+programs=
 
 [penelope]
 pendbase=/penelope2011/pendbase

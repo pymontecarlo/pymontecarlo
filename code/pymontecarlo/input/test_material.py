@@ -15,18 +15,20 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.material import \
     Material, composition_from_formula, pure, VACUUM
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -80,15 +82,15 @@ class TestModule(unittest.TestCase):
         self.assertAlmostEqual(0.0, VACUUM.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(0.0, VACUUM.absorption_energy_photon_eV, 4)
 
-class TestMaterial(unittest.TestCase):
+class TestMaterial(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

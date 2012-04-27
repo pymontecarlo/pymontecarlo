@@ -16,17 +16,19 @@ import math
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.beam import PencilBeam, GaussianBeam, tilt_beam
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -47,15 +49,15 @@ class TestModule(unittest.TestCase):
         for expected, actual in zip(expecteds, actuals):
             self.assertAlmostEqual(expected, actual, 4)
 
-class TestPencilBeam(unittest.TestCase):
+class TestPencilBeam(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.beam = PencilBeam(15e3, (1, 2, 3), (4, 5, 6), math.radians(3.5))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
@@ -120,15 +122,15 @@ class TestPencilBeam(unittest.TestCase):
 
         self.assertAlmostEqual(math.radians(3.5), float(element.get('aperture')), 4)
 
-class TestGaussianBeam(unittest.TestCase):
+class TestGaussianBeam(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.beam = GaussianBeam(15e3, 123.456, (1, 2, 3), (4, 5, 6), math.radians(3.5))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)

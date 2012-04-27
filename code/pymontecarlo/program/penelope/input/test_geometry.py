@@ -16,6 +16,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.penelope.input.geometry import \
     (Rotation, Shift, Scale, SurfaceImplicit, SurfaceReduced, PenelopeGeometry,
      xplane, zplane, cylinder, Module)
@@ -26,18 +28,18 @@ from pymontecarlo.program.penelope.input.interactionforcing import InteractionFo
 # Globals and constants variables.
 from pymontecarlo.program.penelope.input.geometry import SIDEPOINTER_NEGATIVE, SIDEPOINTER_POSITIVE
 
-class TestRotation(unittest.TestCase):
+class TestRotation(TestCase):
     GEOFILE = ['  OMEGA=(+1.000000000000000E+00,   0) DEG          (DEFAULT=0.0)',
                '  THETA=(+2.000000000000000E+00,   0) DEG          (DEFAULT=0.0)',
                '    PHI=(+3.000000000000000E+00,   0) DEG          (DEFAULT=0.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.rotation = Rotation(radians(1.0), radians(2.0), radians(3.0))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(radians(1.0), self.rotation.omega_rad, 4)
@@ -64,18 +66,18 @@ class TestRotation(unittest.TestCase):
         self.assertEqual(3, len(lines))
         self.assertEqual(self.GEOFILE, lines)
 
-class TestShift(unittest.TestCase):
+class TestShift(TestCase):
     GEOFILE = ['X-SHIFT=(+1.000000000000000E+00,   0)              (DEFAULT=0.0)',
                'Y-SHIFT=(+2.000000000000000E+00,   0)              (DEFAULT=0.0)',
                'Z-SHIFT=(+3.000000000000000E+00,   0)              (DEFAULT=0.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.shift = Shift(0.01, 0.02, 0.03)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(0.01, self.shift.x_m, 4)
@@ -102,18 +104,18 @@ class TestShift(unittest.TestCase):
         self.assertEqual(3, len(lines))
         self.assertEqual(self.GEOFILE, lines)
 
-class TestScale(unittest.TestCase):
+class TestScale(TestCase):
     GEOFILE = ['X-SCALE=(+1.000000000000000E+00,   0)              (DEFAULT=1.0)',
                'Y-SCALE=(+2.000000000000000E+00,   0)              (DEFAULT=1.0)',
                'Z-SCALE=(+3.000000000000000E+00,   0)              (DEFAULT=1.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.scale = Scale(1.0, 2.0, 3.0)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1.0, self.scale.x, 4)
@@ -140,7 +142,7 @@ class TestScale(unittest.TestCase):
         self.assertEqual(3, len(lines))
         self.assertEqual(self.GEOFILE, lines)
 
-class TestSurfaceImplicit(unittest.TestCase):
+class TestSurfaceImplicit(TestCase):
     GEOFILE = ['SURFACE (   1) surface',
                'INDICES=( 0, 0, 0, 0, 0)',
                '    AXX=(+1.000000000000000E+03,   0)              (DEFAULT=0.0)',
@@ -162,7 +164,7 @@ class TestSurfaceImplicit(unittest.TestCase):
                'Z-SHIFT=(-1.000000000000000E+05,   0)              (DEFAULT=0.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.surface = SurfaceImplicit(description='surface')
         self.surface.coefficients['xx'] = 1e3
@@ -172,7 +174,7 @@ class TestSurfaceImplicit(unittest.TestCase):
         self.surface._index = 0
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('surface', self.surface.description)
@@ -235,7 +237,7 @@ class TestSurfaceImplicit(unittest.TestCase):
         self.assertEqual(19, len(lines))
         self.assertEqual(self.GEOFILE, lines)
 
-class TestSurfaceReduced(unittest.TestCase):
+class TestSurfaceReduced(TestCase):
     GEOFILE = ['SURFACE (   1) surface',
                'INDICES=( 1, 1, 1, 0,-1)',
                'X-SCALE=(+3.000000000000000E+00,   0)              (DEFAULT=1.0)',
@@ -249,14 +251,14 @@ class TestSurfaceReduced(unittest.TestCase):
                'Z-SHIFT=(+0.000000000000000E+00,   0)              (DEFAULT=0.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.surface = SurfaceReduced((1, 1, 1, 0, -1), 'surface')
         self.surface.scale.x = 3.0
         self.surface._index = 0
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual((1, 1, 1, 0, -1), self.surface.indices)
@@ -288,7 +290,7 @@ class TestSurfaceReduced(unittest.TestCase):
         self.assertEqual(11, len(lines))
         self.assertEqual(self.GEOFILE, lines)
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
     GEO1 = ['MODULE  (   1) Test',
             'MATERIAL(   1)',
             'SURFACE (   1), SIDE POINTER=(-1)',
@@ -312,7 +314,7 @@ class TestModule(unittest.TestCase):
             'Z-SHIFT=(+0.000000000000000E+00,   0)              (DEFAULT=0.0)']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         mat1 = pure(29)
         mat1._index = 1
@@ -344,7 +346,7 @@ class TestModule(unittest.TestCase):
         self.modules_lookup = {0: self.module1, 1: self.module2}
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         # Module 1
@@ -426,7 +428,7 @@ class TestModule(unittest.TestCase):
         self.assertEqual(9, len(lines))
         self.assertEqual(self.GEO2, lines)
 
-class TestPenelopeGeometry(unittest.TestCase):
+class TestPenelopeGeometry(TestCase):
     GEOFILE = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
                '       Test Geometry',
                '0000000000000000000000000000000000000000000000000000000000000000',
@@ -520,7 +522,7 @@ class TestPenelopeGeometry(unittest.TestCase):
                'END      0000000000000000000000000000000000000000000000000000000']
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.geo = PenelopeGeometry('Test Geometry')
 
@@ -548,7 +550,7 @@ class TestPenelopeGeometry(unittest.TestCase):
         self.geo.tilt_rad = radians(45)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Test Geometry', self.geo.title)

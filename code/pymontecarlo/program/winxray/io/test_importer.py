@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
@@ -25,10 +27,10 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
-class TestImporter(unittest.TestCase):
+class TestImporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.ops = Options()
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
@@ -39,7 +41,7 @@ class TestImporter(unittest.TestCase):
         self.results = Importer().import_from_dir(self.ops, dirpath)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

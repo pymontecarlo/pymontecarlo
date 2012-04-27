@@ -19,6 +19,8 @@ import shutil
 from nose.plugins.attrib import attr
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
@@ -31,17 +33,17 @@ import pymontecarlo.program.penelope.lib.geometry as pengeometry
 
 # Globals and constants variables.
 
-class TestPenelopeExporter(unittest.TestCase):
+class TestPenelopeExporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
         self.e = Exporter()
         self.c = Converter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self.tmpdir)
 

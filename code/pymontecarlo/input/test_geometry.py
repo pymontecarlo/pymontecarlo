@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.geometry import \
     _Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.input.material import pure, VACUUM
@@ -32,15 +34,15 @@ class GeometryMock(_Geometry):
     def get_bodies(self):
         return self.bodies
 
-class Test_Geometry(unittest.TestCase):
+class Test_Geometry(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g = GeometryMock(1.1, 2.2)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1.1, self.g.tilt_rad, 4)
@@ -56,15 +58,15 @@ class Test_Geometry(unittest.TestCase):
         self.assertEqual(0, VACUUM._index) #@UndefinedVariable
         self.assertEqual(1, self.g.bodies[0].material._index)
 
-class TestSubstrate(unittest.TestCase):
+class TestSubstrate(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g = Substrate(pure(29))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.g.material))
@@ -102,15 +104,15 @@ class TestSubstrate(unittest.TestCase):
 
         self.assertEqual(0, int(element.get('substrate')))
 
-class TestInclusion(unittest.TestCase):
+class TestInclusion(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g = Inclusion(pure(29), pure(30), 123.456)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.g.substrate_material))
@@ -172,10 +174,10 @@ class TestInclusion(unittest.TestCase):
 
         self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
 
-class TestMultiLayers(unittest.TestCase):
+class TestMultiLayers(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g1 = MultiLayers(pure(29))
         self.g2 = MultiLayers(None)
@@ -190,7 +192,7 @@ class TestMultiLayers(unittest.TestCase):
         self.g2.layers.add(self.l2)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         # Multi-layers 1
@@ -315,10 +317,10 @@ class TestMultiLayers(unittest.TestCase):
 
         self.assertEqual(None, element.get('substrate'))
 
-class TestGrainBoundaries(unittest.TestCase):
+class TestGrainBoundaries(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g1 = GrainBoundaries(pure(29), pure(30))
         self.l1 = self.g1.add_layer(pure(31), 500.0)
@@ -329,7 +331,7 @@ class TestGrainBoundaries(unittest.TestCase):
         self.l3 = self.g2.add_layer(pure(32), 200.0)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         # Grain boundaries 1
@@ -464,15 +466,15 @@ class TestGrainBoundaries(unittest.TestCase):
         layers = element.get('layers').split(',')
         self.assertEqual(2, len(layers))
 
-class TestSphere(unittest.TestCase):
+class TestSphere(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.g = Sphere(pure(29), 123.456)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Copper', str(self.g.material))

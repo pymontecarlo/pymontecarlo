@@ -17,6 +17,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonSpectrumDetector
 from pymontecarlo.program.penepma.io.importer import Importer
@@ -25,10 +27,10 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
-class TestImporter(unittest.TestCase):
+class TestImporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         relativePath = os.path.join('../testdata/test1')
         self.testdata = Files.getCurrentModulePath(__file__, relativePath)
@@ -36,7 +38,7 @@ class TestImporter(unittest.TestCase):
         self.i = Importer()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

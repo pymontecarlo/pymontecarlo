@@ -70,6 +70,10 @@ def get_settings():
 
     return _settings
 
+def _set_settings(settings):
+    global _settings
+    _settings = settings
+
 def load_settings(filepaths):
     """
     Loads the settings from the first file path that exists from those 
@@ -134,23 +138,38 @@ def load_programs(settings):
     if not value:
         raise IOError, "No programs are defined in settings"
 
-    extensions = getattr(settings.pymontecarlo, 'programs').split(',')
-    for extension in extensions:
-        mod = __import__(extension, None, None, ['config'])
-
-        if not hasattr(mod, 'config'):
-            raise ImportError, "Extension '%s' does not have a 'config' module." % extension
-
-        if not hasattr(mod.config, 'program'):
-            raise ImportError, "Module 'config' of extension '%s' must have a 'program' attribute" % extension
-
-        program = mod.config.program
-        program.validate()
-
+    names = getattr(settings.pymontecarlo, 'programs').split(',')
+    for name in names:
+        program = load_program(name)
         programs.add(program)
-        logging.debug("Loaded program (%s) from %s", program.name, extension)
+        logging.debug("Loaded program (%s) from %s", program.name, name)
 
     return programs
+
+def load_program(name):
+    """
+    Imports, loads, validates and returns a program.
+    The method raises :exc:`ImportError` exception if:
+    
+      * No ``config.py`` module exists in program package.
+      * No ``program`` variable exists in ``config.py`` module.
+    
+    and a :exc:`AssertionError` if the program is not valid.
+    
+    :arg name: name of the program's module (e.g. ``pymontecarlo.program.penepma``)
+    """
+    mod = __import__(name, None, None, ['config'])
+
+    if not hasattr(mod, 'config'):
+        raise ImportError, "Package '%s' does not have a 'config' module." % name
+
+    if not hasattr(mod.config, 'program'):
+        raise ImportError, "Module 'config' of package '%s' must have a 'program' attribute" % name
+
+    program = mod.config.program
+    program.validate()
+
+    return program
 
 ################################################################################
 # Reload

@@ -15,16 +15,20 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.penelope.input.interactionforcing import Collisions, InteractionForcing
+from pymontecarlo.testcase import TestCase
+
+from pymontecarlo.program.penelope.input.interactionforcing import \
+    Collisions, InteractionForcing
 
 # Globals and constants variables.
-from pymontecarlo.program.penelope.input.interactionforcing import ELECTRON, PHOTON, POSITRON
+from pymontecarlo.program.penelope.input.interactionforcing import \
+    ELECTRON, PHOTON, POSITRON
 
 
-class TestInteractionForcing(unittest.TestCase):
+class TestInteractionForcing(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.coll_el = Collisions(ELECTRON)
         self.if1 = InteractionForcing(ELECTRON, self.coll_el.HARD_BREMSSTRAHLUNG_EMISSION, -4, (0.1, 1.0))
@@ -39,7 +43,7 @@ class TestInteractionForcing(unittest.TestCase):
         self.if6 = InteractionForcing(POSITRON, self.coll_po.DELTA_INTERACTION, -100, (1e-4, 1.0))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(ELECTRON, self.if1.particle)
@@ -152,17 +156,17 @@ class TestInteractionForcing(unittest.TestCase):
         self.assertAlmostEqual(0.1, float(element.get('weightMin')))
         self.assertAlmostEqual(1.0, float(element.get('weightMax')))
 
-class TestCollisions(unittest.TestCase):
+class TestCollisions(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.coll_el = Collisions(ELECTRON)
         self.coll_ph = Collisions(PHOTON)
         self.coll_po = Collisions(POSITRON)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testSkeleton(self):
         # Electron

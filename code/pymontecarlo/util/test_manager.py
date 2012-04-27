@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.manager import Manager
 
 # Globals and constants variables.
@@ -25,15 +27,15 @@ class Mock1(object):
 class Mock2(object):
     pass
 
-class TestManager(unittest.TestCase):
+class TestManager(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.manager = Manager()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

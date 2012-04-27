@@ -14,6 +14,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.transition import \
     (Transition, get_transitions, transitionset, from_string,
      K_family, L_family, M_family, N_family,
@@ -25,17 +27,17 @@ from pymontecarlo.util.subshell import get_subshell
 from pymontecarlo.util.transition import _SUBSHELLS, _SIEGBAHNS_NOGREEK, _SIEGBAHNS
 
 
-class TestTransition(unittest.TestCase):
+class TestTransition(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         for i, shells in enumerate(_SUBSHELLS):
             x = Transition(13, shells[0], shells[1])
             setattr(self, 'x%i' % i, x)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -112,10 +114,10 @@ class TestTransition(unittest.TestCase):
         self.assertEqual(4, int(element.get('src')))
         self.assertEqual(1, int(element.get('dest')))
 
-class Testtransitionset(unittest.TestCase):
+class Testtransitionset(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         t1 = Transition(13, 4, 1)
         t2 = Transition(13, 3, 1)
@@ -123,7 +125,7 @@ class Testtransitionset(unittest.TestCase):
         self.set = transitionset(13, 'G1', [t1, t2, t3])
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(13, self.set.z)
@@ -141,13 +143,13 @@ class Testtransitionset(unittest.TestCase):
         self.assertTrue(Transition(13, 4, 1) in self.set)
         self.assertFalse(Transition(13, 7, 1) in self.set)
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

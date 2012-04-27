@@ -15,20 +15,22 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.util.transition import Transition
 
 # Globals and constants variables.
 
-class TestTimeLimit(unittest.TestCase):
+class TestTimeLimit(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.lim = TimeLimit(123)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(123, self.lim.time_s)
@@ -44,15 +46,15 @@ class TestTimeLimit(unittest.TestCase):
 
         self.assertEqual(123, int(element.get('time')))
 
-class TestShowersLimit(unittest.TestCase):
+class TestShowersLimit(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.lim = ShowersLimit(123)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(123, self.lim.showers)
@@ -68,16 +70,16 @@ class TestShowersLimit(unittest.TestCase):
 
         self.assertEqual(123, int(element.get('showers')))
 
-class TestUncertaintyLimit(unittest.TestCase):
+class TestUncertaintyLimit(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         transition = Transition(29, siegbahn='Ka1')
         self.lim = UncertaintyLimit(transition, 0.05)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Cu Ka1', str(self.lim.transition))

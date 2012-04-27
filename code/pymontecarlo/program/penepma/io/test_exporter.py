@@ -18,6 +18,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.input.detector import PhotonIntensityDetector
@@ -26,10 +28,10 @@ from pymontecarlo.program.penepma.io.exporter import Exporter
 
 # Globals and constants variables.
 
-class TestPenelopeExporter(unittest.TestCase):
+class TestPenelopeExporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
 
@@ -37,7 +39,7 @@ class TestPenelopeExporter(unittest.TestCase):
         self.e = Exporter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 

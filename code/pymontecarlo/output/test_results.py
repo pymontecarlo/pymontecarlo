@@ -20,6 +20,8 @@ import os
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
@@ -31,10 +33,10 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
-class TestResults(unittest.TestCase):
+class TestResults(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         # Temporary directory
         self.tmpdir = tempfile.mkdtemp()
@@ -64,7 +66,7 @@ class TestResults(unittest.TestCase):
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 

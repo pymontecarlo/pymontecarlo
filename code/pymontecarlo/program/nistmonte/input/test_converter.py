@@ -17,6 +17,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonSpectrumDetector
 from pymontecarlo.input.limit import ShowersLimit
@@ -25,15 +27,15 @@ from pymontecarlo.program.nistmonte.input.converter import Converter, Conversion
 # Globals and constants variables.
 warnings.simplefilter("always")
 
-class TestConverter(unittest.TestCase):
+class TestConverter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.converter = Converter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

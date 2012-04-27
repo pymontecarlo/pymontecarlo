@@ -18,20 +18,22 @@ import shutil
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.input.material import pure
 import pymontecarlo.program.penelope.lib.material as material
 
 # Globals and constants variables.
 
-class TestMaterial(unittest.TestCase):
+class TestMaterial(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self.tempdir, ignore_errors=True)
 

@@ -17,14 +17,16 @@ from ConfigParser import SafeConfigParser
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from config import ConfigParser
 
 # Globals and constants variables.
 
-class TestConfigParser(unittest.TestCase):
+class TestConfigParser(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         lines = ['[section1]', 'option1=value1', 'option2=value2',
                  '[section2]', 'option3=value3', 'option4=value4']
@@ -34,7 +36,7 @@ class TestConfigParser(unittest.TestCase):
         self.c.read(sobj)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('value1', self.c.section1.option1)

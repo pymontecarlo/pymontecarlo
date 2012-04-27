@@ -15,17 +15,19 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testSkeleton(self):
         #self.fail("Test if the TestCase is working.")
@@ -52,5 +54,4 @@ class TestModule(unittest.TestCase):
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
-
     unittest.main()

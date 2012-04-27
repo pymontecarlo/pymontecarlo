@@ -17,6 +17,8 @@ from operator import attrgetter
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.casino2.io.exporter import Exporter
 
 from pymontecarlo.input.options import Options
@@ -38,15 +40,15 @@ from casinoTools.FileFormat.casino2.SimulationOptions import \
 
 # Globals and constants variables.
 
-class TestCasino2Exporter(unittest.TestCase):
+class TestCasino2Exporter(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.e = Exporter()
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

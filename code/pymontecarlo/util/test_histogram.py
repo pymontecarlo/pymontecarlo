@@ -16,20 +16,22 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.histogram import _Histogram, CountHistogram, SumHistogram
 
 # Globals and constants variables.
 
-class Test_Histogram(unittest.TestCase):
+class Test_Histogram(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         bins = range(1, 9, 2)
         self.h = _Histogram(bins)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -70,16 +72,16 @@ class Test_Histogram(unittest.TestCase):
     def testbins(self):
         self.assertEqual(len(self.h._values), len(self.h.bins))
 
-class TestCountHistogram(unittest.TestCase):
+class TestCountHistogram(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         bins = range(1, 9, 2)
         self.h = CountHistogram(bins)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -112,16 +114,16 @@ class TestCountHistogram(unittest.TestCase):
         self.h.add(8.0)
         self.assertEqual([1, 2, 2, 2, 2], list(self.h.counts))
 
-class TestSumHistogram(unittest.TestCase):
+class TestSumHistogram(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         bins = range(1, 9, 2)
         self.h = SumHistogram(bins)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

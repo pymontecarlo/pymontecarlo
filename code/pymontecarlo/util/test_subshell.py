@@ -16,18 +16,20 @@ import copy
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.util.subshell import get_subshell
 
 # Globals and constants variables.
 from pymontecarlo.util.subshell import _IUPACS, _ORBITALS, _SIEGBAHNS
 
-class TestSubshell(unittest.TestCase):
+class TestSubshell(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(get_subshell(1) is get_subshell(1))

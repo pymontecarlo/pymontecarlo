@@ -15,17 +15,19 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.penelope.input.material import Material, pure
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -49,10 +51,10 @@ class TestModule(unittest.TestCase):
         self.assertAlmostEqual(50.0, m.cutoff_energy_inelastic_eV, 4)
         self.assertAlmostEqual(50.0, m.cutoff_energy_bremsstrahlung_eV, 4)
 
-class TestMaterial(unittest.TestCase):
+class TestMaterial(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None,
                           elastic_scattering=(0.1, 0.2),
@@ -60,7 +62,7 @@ class TestMaterial(unittest.TestCase):
                           cutoff_energy_bremsstrahlung_eV=53.4)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

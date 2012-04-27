@@ -15,6 +15,8 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.program.casino2.io.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
@@ -24,10 +26,10 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 
-class TestCasino2Importer(unittest.TestCase):
+class TestCasino2Importer(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.ops = Options()
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
@@ -39,7 +41,7 @@ class TestCasino2Importer(unittest.TestCase):
             self.results = imp.import_from_cas(self.ops, f)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEquals(self.ops, self.results.options)
