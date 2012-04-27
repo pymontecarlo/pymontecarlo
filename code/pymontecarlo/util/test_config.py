@@ -42,8 +42,8 @@ class TestConfigParser(unittest.TestCase):
         self.assertEqual('value3', self.c.section2.option3)
         self.assertEqual('value4', self.c.section2.option4)
 
-        self.assertRaises(AttributeError, self.c.__getattr__, 'section3')
-        self.assertRaises(AttributeError, self.c.section1.__getattr__, 'option3')
+        self.assertRaises(AttributeError, getattr, self.c, 'section3')
+        self.assertRaises(AttributeError, getattr, self.c.section1, 'option3')
 
     def test__contains__(self):
         self.assertTrue('section1' in self.c)
@@ -73,6 +73,11 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(parser.has_option('section2', 'option4'))
         self.assertEqual('value3', parser.get('section2', 'option3'))
         self.assertEqual('value4', parser.get('section2', 'option4'))
+
+    def test__setattr__(self):
+        self.assertEqual('value1', self.c.section1.option1)
+        self.c.section1.option1 = 'value99'
+        self.assertEqual('value99', self.c.section1.option1)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
