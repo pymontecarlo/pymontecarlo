@@ -120,17 +120,19 @@ def get_programs():
 
     return _programs
 
-def load_programs(settings):
+def load_programs(settings, validate=True):
     """
     Loads the programs defined in the settings.
     The list of programs should be set under the section ``pymontecarlo`` and
     the option ``program``. An :exc:`IOError` exception is raised if the option
     is not defined.
     
-    Before a program is added to the list, the method makes sure that the
-    program is valid. 
+    If ``validate`` is ``True, the method will raise a :exc:`AssertionError` 
+    if one of the programs is not valid.
     
     :arg settings: settings
+    :arg validate: whether to validate if all the settings are correct for the
+        programs
     """
     programs = set()
 
@@ -140,13 +142,13 @@ def load_programs(settings):
 
     names = getattr(settings.pymontecarlo, 'programs').split(',')
     for name in names:
-        program = load_program(name)
+        program = load_program(name, validate)
         programs.add(program)
         logging.debug("Loaded program (%s) from %s", program.name, name)
 
     return programs
 
-def load_program(name):
+def load_program(name, validate=True):
     """
     Imports, loads, validates and returns a program.
     The method raises :exc:`ImportError` exception if:
@@ -154,9 +156,12 @@ def load_program(name):
       * No ``config.py`` module exists in program package.
       * No ``program`` variable exists in ``config.py`` module.
     
-    and a :exc:`AssertionError` if the program is not valid.
+    If ``validate`` is ``True, the method will raise a :exc:`AssertionError` 
+    if the program is not valid.
     
     :arg name: name of the program's module (e.g. ``pymontecarlo.program.penepma``)
+    :arg validate: whether to validate if all the settings are correct for the
+        program
     """
     mod = __import__(name, None, None, ['config'])
 
@@ -167,7 +172,9 @@ def load_program(name):
         raise ImportError, "Module 'config' of package '%s' must have a 'program' attribute" % name
 
     program = mod.config.program
-    program.validate()
+
+    if validate:
+        program.validate()
 
     return program
 
