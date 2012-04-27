@@ -26,7 +26,7 @@ import logging
 from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
-from pymontecarlo.util.config import ConfigReader
+from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -35,7 +35,7 @@ from pymontecarlo.util.xmlutil import XMLIO
 # Load settings
 ################################################################################
 
-settings = ConfigReader()
+settings = ConfigParser()
 
 def __load_settings():
     filepaths = []

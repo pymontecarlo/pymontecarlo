@@ -31,9 +31,9 @@ class _Section(object):
     def __init__(self, options):
         self._options = options
 
-    def __getattr__(self, option):
+    def __getattr__(self, option_name):
         try:
-            return self._options[option]
+            return self._options[option_name]
         except KeyError as ex:
             raise AttributeError, str(ex)
 
@@ -41,10 +41,10 @@ class _Section(object):
         for option_name, value in self._options.iteritems():
             yield option_name, value
 
-    def __contains__(self, option):
-        return option in self._options
+    def __contains__(self, option_name):
+        return option_name in self._options
 
-class ConfigReader(object):
+class ConfigParser(object):
     def __init__(self):
         self._sections = {}
 
@@ -60,21 +60,29 @@ class ConfigReader(object):
 
             self._sections[section] = _Section(options)
 
-    def __getattr__(self, section):
+    def __getattr__(self, section_name):
         try:
-            return self._sections[section]
+            return self._sections[section_name]
         except KeyError as ex:
             raise AttributeError, str(ex)
 
-    def __contains__(self, section):
-        return section in self._sections
+    def __contains__(self, section_name):
+        return section_name in self._sections
 
     def __iter__(self):
         for section_name, section in self._sections.iteritems():
             for option_name, value in section:
                 yield section_name, option_name, value
 
-def reader(fileobj):
-    c = ConfigReader()
-    c.read(fileobj)
-    return c
+    def write(self, fileobj):
+        parser = SafeConfigParser()
+
+        # Add sections
+        for section_name in self._sections:
+            parser.add_section(section_name)
+
+        # Add options
+        for section_name, option_name, value in self:
+            parser.set(section_name, option_name, value)
+
+        parser.write(fileobj)
