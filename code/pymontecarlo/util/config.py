@@ -28,7 +28,7 @@ from ConfigParser import SafeConfigParser
 # Globals and constants variables.
 
 class _Section(object):
-    def __init__(self, options):
+    def __init__(self, options={}):
         self.__dict__.update(options)
 
     def __iter__(self):
@@ -39,6 +39,17 @@ class _Section(object):
         return option_name in self.__dict__
 
 class ConfigParser(object):
+
+    def __contains__(self, section_name):
+        return section_name in self.__dict__
+
+    def __iter__(self):
+        for section_name, section in self.__dict__.iteritems():
+            for option_name, value in section:
+                yield section_name, option_name, value
+
+    def add_section(self, section_name):
+        self.__dict__[section_name] = _Section()
 
     def read(self, fileobj):
         parser = SafeConfigParser()
@@ -51,14 +62,6 @@ class ConfigParser(object):
                 options[option] = parser.get(section, option)
 
             self.__dict__[section] = _Section(options)
-
-    def __contains__(self, section_name):
-        return section_name in self.__dict__
-
-    def __iter__(self):
-        for section_name, section in self.__dict__.iteritems():
-            for option_name, value in section:
-                yield section_name, option_name, value
 
     def write(self, fileobj):
         parser = SafeConfigParser()

@@ -81,6 +81,10 @@ class TestConfigParser(TestCase):
         self.c.section1.option1 = 'value99'
         self.assertEqual('value99', self.c.section1.option1)
 
+    def testadd_section(self):
+        self.c.add_section('section3')
+        self.assertTrue('section3' in self.c)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
