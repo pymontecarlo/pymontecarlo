@@ -166,6 +166,6 @@ class ConfigParser(object):
 
         # Add options
         for section_name, option_name, value in self:
-            parser.set(section_name, option_name, value)
+            parser.set(section_name, option_name, str(value))
 
         parser.write(fileobj)

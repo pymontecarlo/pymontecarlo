@@ -57,9 +57,14 @@ class TestConfigParser(TestCase):
         self.assertFalse('option3' in self.c.section1)
 
     def testwrite(self):
+        # Add non-string value
+        self.c.section1.option3 = 1
+
+        # Write
         output = StringIO()
         self.c.write(output)
 
+        # Read and test
         input = StringIO(output.getvalue())
         parser = SafeConfigParser()
         parser.readfp(input)
@@ -67,8 +72,10 @@ class TestConfigParser(TestCase):
         self.assertTrue(parser.has_section('section1'))
         self.assertTrue(parser.has_option('section1', 'option1'))
         self.assertTrue(parser.has_option('section1', 'option2'))
+        self.assertTrue(parser.has_option('section1', 'option3'))
         self.assertEqual('value1', parser.get('section1', 'option1'))
         self.assertEqual('value2', parser.get('section1', 'option2'))
+        self.assertEqual('1', parser.get('section1', 'option3'))
 
         self.assertTrue(parser.has_section('section2'))
         self.assertTrue(parser.has_option('section2', 'option3'))
