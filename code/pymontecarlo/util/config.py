@@ -49,7 +49,9 @@ class ConfigParser(object):
                 yield section_name, option_name, value
 
     def add_section(self, section_name):
-        self.__dict__[section_name] = _Section()
+        if section_name not in self.__dict__:
+            self.__dict__[section_name] = _Section()
+        return self.__dict__[section_name]
 
     def read(self, fileobj):
         parser = SafeConfigParser()
