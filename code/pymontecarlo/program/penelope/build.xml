@@ -69,7 +69,7 @@
     <target name="compile-common"
             depends="-init"
             description="Compile PENELOPE COMMON code">
-        <property name="windows.python.dir" value="C:/Python26" />
+        <property name="windows.python.dir" value="C:/Python27" />
 
         <cpptasks:cc objdir="${compile.dir}"
                      outfile="${compile.dir}/common"
@@ -107,7 +107,7 @@
                 <compilerarg value="-mdll" if="isWindows" />
 
                 <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.6" if="isLinux" />
+                <includepath location="/usr/include/python2.7" if="isLinux" />
 
                 <includepath location="${windows.python.dir}/include"
                              if="isWindows" />
@@ -121,7 +121,7 @@
 
             <cpptasks:linker id="linker" name="gfortran">
                 <libset dir="${windows.python.dir}/libs"
-                        libs="python26,msvcr90"
+                        libs="python27,msvcr90"
                         if="isWindows" />
 
                 <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
@@ -142,7 +142,7 @@
     <target name="compile-material"
             depends="-init"
             description="Compile PENELOPE material code">
-        <property name="windows.python.dir" value="C:/Python26" />
+        <property name="windows.python.dir" value="C:/Python27" />
 
         <cpptasks:cc objdir="${compile.dir}"
                      outfile="${compile.dir}/material"
@@ -181,7 +181,7 @@
                 <compilerarg value="-mdll" if="isWindows" />
 
                 <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.6" if="isLinux" />
+                <includepath location="/usr/include/python2.7" if="isLinux" />
 
                 <includepath location="${windows.python.dir}/include"
                              if="isWindows" />
@@ -196,7 +196,7 @@
 
             <cpptasks:linker id="linker" name="gfortran">
                 <libset dir="${windows.python.dir}/libs"
-                        libs="python26,msvcr90"
+                        libs="python27,msvcr90"
                         if="isWindows" />
 
                 <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
@@ -216,7 +216,7 @@
     <target name="compile-geometry"
             depends="-init"
             description="Compile PENELOPE geometry code">
-        <property name="windows.python.dir" value="C:/Python26" />
+        <property name="windows.python.dir" value="C:/Python27" />
 
         <cpptasks:cc objdir="${compile.dir}"
                      outfile="${compile.dir}/geometry"
@@ -252,7 +252,7 @@
                 <compilerarg value="-mdll" if="isWindows" />
 
                 <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.6" if="isLinux" />
+                <includepath location="/usr/include/python2.7" if="isLinux" />
 
                 <includepath location="${windows.python.dir}/include"
                              if="isWindows" />
@@ -267,7 +267,7 @@
 
             <cpptasks:linker id="linker" name="gfortran">
                 <libset dir="${windows.python.dir}/libs"
-                        libs="python26,msvcr90"
+                        libs="python27,msvcr90"
                         if="isWindows" />
 
                 <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
