@@ -159,11 +159,11 @@ def load_program(name, validate=True):
     If ``validate`` is ``True, the method will raise a :exc:`AssertionError` 
     if the program is not valid.
     
-    :arg name: name of the program's module (e.g. ``pymontecarlo.program.penepma``)
+    :arg name: name of the program's module (e.g. ``penepma`` or ``winxray``)
     :arg validate: whether to validate if all the settings are correct for the
         program
     """
-    mod = __import__(name, None, None, ['config'])
+    mod = __import__('pymontecarlo.program.' + name, None, None, ['config'])
 
     if not hasattr(mod, 'config'):
         raise ImportError, "Package '%s' does not have a 'config' module." % name

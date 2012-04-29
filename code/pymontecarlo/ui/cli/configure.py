@@ -92,7 +92,7 @@ def run(argv=None):
 
                 setattr(section, option_name, str(value))
 
-            programs.append("pymontecarlo.program." + program.alias)
+            programs.append(program.alias)
         else:
             if program.alias in settings:
                 delattr(settings, program.alias)
