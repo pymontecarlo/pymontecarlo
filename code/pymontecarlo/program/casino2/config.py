@@ -32,6 +32,7 @@ from pymontecarlo.program.casino2.io.importer import Importer
 from pymontecarlo.program.casino2.runner.worker import Worker
 
 # Globals and constants variables.
+from pymontecarlo.program.config import TYPE_FILE
 
 class _CasinoProgram(Program):
 
@@ -65,5 +66,8 @@ class _CasinoProgram(Program):
         exe = settings.casino2.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified Casino 2 executable (%s) does not exist" % exe
+
+    def _get_configure_params(self):
+        return [('casino2', 'exe', 'Full path to WinCasino.exe', TYPE_FILE)]
 
 program = _CasinoProgram()

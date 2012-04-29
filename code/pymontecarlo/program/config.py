@@ -26,6 +26,13 @@ __license__ = "GPL v3"
 
 # Globals and constants variables.
 
+TYPE_FILE = 'file'
+TYPE_DIR = 'dir'
+TYPE_INT = 'int'
+TYPE_BOOL = 'bool'
+TYPE_FLOAT = 'float'
+TYPE_TEXT = 'text'
+
 class Program(object):
 
     def __hash__(self, *args, **kwargs):
@@ -100,4 +107,20 @@ class Program(object):
     def validate(self):
         raise AssertionError
 
+    @property
+    def configure_params(self):
+        """
+        Returns a :class:`list` of :class:`tuple` that will help the 
+        user interface configure this program
+        
+        Each tuple contains four values.
+        
+          1. the name of the section in the settinsg file
+          2. the name of the option in the settings file
+          3. a description of the option
+          4. type of value (see constants starting with ``TYPE_``)
+        """
+        return self._get_configure_params()
 
+    def _get_configure_params(self):
+        raise NotImplementedError

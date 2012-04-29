@@ -32,6 +32,7 @@ from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.program.winxray.runner.worker import Worker
 
 # Globals and constants variables.
+from pymontecarlo.program.config import TYPE_FILE
 
 class _WinXRayProgram(Program):
 
@@ -65,5 +66,8 @@ class _WinXRayProgram(Program):
 
     def _get_worker(self):
         return Worker
+
+    def _get_configure_params(self):
+        return [('winxray', 'exe', 'Full path to WinXRay.exe', TYPE_FILE)]
 
 program = _WinXRayProgram()

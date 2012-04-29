@@ -32,6 +32,7 @@ from pymontecarlo.program.penepma.io.importer import Importer
 from pymontecarlo.program.penepma.runner.worker import Worker
 
 # Globals and constants variables.
+from pymontecarlo.program.config import TYPE_FILE, TYPE_INT
 
 class _PenepmaProgram(_PenelopeProgram):
 
@@ -67,5 +68,13 @@ class _PenepmaProgram(_PenelopeProgram):
 
     def _get_worker(self):
         return Worker
+
+    def _get_configure_params(self):
+        params = _PenelopeProgram._get_configure_params(self)
+
+        params.append(('penepma', 'exe', 'Path to PENEPMA executable', TYPE_FILE))
+        params.append(('penepma', 'dumpp', 'Interval between dump', TYPE_INT))
+
+        return params
 
 program = _PenepmaProgram()

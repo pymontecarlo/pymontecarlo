@@ -28,6 +28,7 @@ from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 
 # Globals and constants variables.
+from pymontecarlo.program.config import TYPE_DIR
 
 # Load submodules to register XML loader and saver
 import pymontecarlo.program.penelope.input.body #@UnusedImport
@@ -48,3 +49,5 @@ class _PenelopeProgram(Program):
         if not os.path.isdir(pendbase):
             raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
 
+    def _get_configure_params(self):
+        return [('penelope', 'pendbase', 'Path to pendbase directory', TYPE_DIR)]

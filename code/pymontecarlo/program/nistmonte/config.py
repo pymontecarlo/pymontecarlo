@@ -30,6 +30,7 @@ from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.program.nistmonte.runner.worker import Worker
 
 # Globals and constants variables.
+from pymontecarlo.program.config import TYPE_FILE
 
 class _NISTMonteProgram(Program):
 
@@ -64,5 +65,9 @@ class _NISTMonteProgram(Program):
 
     def _get_worker(self):
         return Worker
+
+    def _get_configure_params(self):
+        return [('nistmonte', 'java', 'Path to Java executable', TYPE_FILE),
+                ('nistmonte', 'jar', 'Path to NISTMonte jar', TYPE_FILE)]
 
 program = _NISTMonteProgram()
