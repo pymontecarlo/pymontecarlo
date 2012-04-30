@@ -90,7 +90,10 @@ class _XMLIO(Manager):
         exception = None
 
         for prefix in element.nsmap:
-            schema = self._schemas[prefix]
+            schema = self._schemas.get(prefix)
+            if schema is None:
+                continue
+
             try:
                 schema.assertValid(element)
             except Exception as ex:
