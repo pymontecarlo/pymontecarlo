@@ -378,7 +378,6 @@ class PhotonIntensityResult(_Result):
             yield transition, self.intensity(transition, absorption, fluorescence)
 
 ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
-ResultManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityResult', PhotonIntensityResult)
 
 class TimeResult(_Result):
 
@@ -439,7 +438,6 @@ class TimeResult(_Result):
         return self._simulation_speed_s
 
 ResultManager.register('TimeResult', TimeResult)
-ResultManager.register_loader('pymontecarlo.result.base.result.TimeResult', TimeResult)
 
 class ElectronFractionResult(_Result):
 
@@ -517,4 +515,3 @@ class ElectronFractionResult(_Result):
         return self._transmitted
 
 ResultManager.register('ElectronFractionResult', ElectronFractionResult)
-ResultManager.register_loader('pymontecarlo.result.base.result.ElectronFractionResult', ElectronFractionResult)
