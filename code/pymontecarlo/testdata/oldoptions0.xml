@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<pymontecarlo.input.base.options.Options name="nistmonte_elastic_cross_section_elsepa_spc_1">
+    <beam>
+        <pymontecarlo.input.base.beam.PencilBeam aperture="0.0" energy="20000.0">
+            <origin x="0" y="0" z="0.01"/>
+            <direction x="0" y="0" z="-1"/>
+        </pymontecarlo.input.base.beam.PencilBeam>
+    </beam>
+    <geometry>
+        <pymontecarlo.input.base.geometry.Substrate rotation="0" substrate="0" tilt="0">
+            <materials>
+                <pymontecarlo.input.base.material.Material absorptionEnergyElectron="50.0" absorptionEnergyPhoton="50.0" density="6.61644" index="1" name="AlFe">
+                    <composition>
+                        <element weightFraction="0.759" z="26"/>
+                        <element weightFraction="0.241" z="13"/>
+                    </composition>
+                </pymontecarlo.input.base.material.Material>
+            </materials>
+            <bodies>
+                <pymontecarlo.input.base.body.Body index="0" material="1"/>
+            </bodies>
+        </pymontecarlo.input.base.geometry.Substrate>
+    </geometry>
+    <detectors>
+        <pymontecarlo.input.base.detector.ElectronFractionDetector _key="electron-fraction"/>
+        <pymontecarlo.input.base.detector.PhotonIntensityDetector _key="xrays-intensity" azimuth_max="6.28318530718" azimuth_min="0" elevation_max="0.916297857297" elevation_min="0.916297857297"/>
+        <pymontecarlo.input.base.detector.TimeDetector _key="time"/>
+    </detectors>
+    <limits>
+        <pymontecarlo.input.base.limit.ShowersLimit showers="10000"/>
+    </limits>
+    <models>
+        <pymontecarlo.input.base.model.Model name="Berger &amp; Seltzer 1983" type="ionization potential"/>
+        <pymontecarlo.input.base.model.Model name="ELSEPA" type="elastic cross section"/>
+        <pymontecarlo.input.base.model.Model name="Joy and Luo 1989" type="energy loss"/>
+        <pymontecarlo.input.base.model.Model name="Bote and Salvat 2008" type="ionization cross section"/>
+        <pymontecarlo.input.base.model.Model name="NIST-Chantler 2005" type="mass absorption coefficient"/>
+    </models>
+</pymontecarlo.input.base.options.Options>
