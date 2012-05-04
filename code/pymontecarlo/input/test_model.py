@@ -41,9 +41,6 @@ class TestModelType(TestCase):
     def test__repr__(self):
         self.assertEqual('<ModelType(type1)>', repr(self.mtype))
 
-    def test__hash__(self):
-        return self.assertEqual(84214172, hash(self.mtype))
-
     def test__eq__(self):
         self.assertTrue(ModelType('type1') == self.mtype)
         self.assertFalse(ModelType('type2') == self.mtype)
@@ -96,10 +93,6 @@ class TestModel(TestCase):
     def test__repr__(self):
         self.assertEqual('<Model(name1)>', repr(self.m1))
         self.assertEqual('<Model(name2)>', repr(self.m2))
-
-    def test__hash__(self):
-        self.assertEqual(1174532100, hash(self.m1))
-        self.assertEqual(-472180557, hash(self.m2))
 
     def test__eq__(self):
         self.assertTrue(self.m1 == Model('name1', 'ref1'))
