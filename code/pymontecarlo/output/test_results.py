@@ -11,7 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-from math import radians
 import tempfile
 import shutil
 from zipfile import ZipFile
@@ -22,9 +21,6 @@ import os
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 from pymontecarlo.output.results import Results
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
@@ -41,26 +37,13 @@ class TestResults(TestCase):
         # Temporary directory
         self.tmpdir = tempfile.mkdtemp()
 
-        # Detectors
-        det1 = PhotonIntensityDetector((radians(35), radians(45)),
-                                       (0, radians(360.0)))
-        self.det2 = TimeDetector()
-        det3 = ElectronFractionDetector()
-
-        # Options
-        self.ops = Options()
-        self.ops.beam.energy = 1234
-        self.ops.detectors['det1'] = det1
-        self.ops.detectors['det2'] = self.det2
-        self.ops.detectors['det3'] = det3
-
         # Results
         results = {}
-        results['det1'] = PhotonIntensityResult(det1)
-        results['det2'] = TimeResult(self.det2)
-        results['det3'] = ElectronFractionResult(det3)
+        results['det1'] = PhotonIntensityResult()
+        results['det2'] = TimeResult()
+        results['det3'] = ElectronFractionResult()
 
-        self.results = Results(self.ops, results)
+        self.results = Results(results)
 
         self.results_zip = \
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
@@ -72,12 +55,6 @@ class TestResults(TestCase):
 
     def testskeleton(self):
         self.assertTrue(True)
-
-    def test__init__invalidkey(self):
-        results = {}
-        results['det4'] = PhotonIntensityResult(self.det2)
-
-        self.assertRaises(ValueError, Results, self.ops, results)
 
     def testsave(self):
         zipfilepath = os.path.join(self.tmpdir, 'results.zip')
@@ -95,7 +72,7 @@ class TestResults(TestCase):
             zipfile.close()
 
     def testload(self):
-        results = Results.load(self.results_zip, self.ops)
+        results = Results.load(self.results_zip)
         self.assertEqual(3, len(results))
 
 if __name__ == '__main__': #pragma: no cover

@@ -39,41 +39,28 @@ KEYS_INI_FILENAME = 'keys.ini'
 
 class Results(Mapping):
 
-    def __init__(self, options, results={}):
+    def __init__(self, results={}):
         """
         Creates a new container for the results.
         Once created, the results container cannot be modified (i.e. read-only).
-        
-        :arg options: options used to generate these results
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
         
         :arg results: results to be part of this container.
             The results are specified by a key (key of the detector) and a
             :class:`Result <pymontecarlo.result.base.result.Result>` class.
         :type results: :class:`dict`
         """
-        self._options = options
         self._results = {}
-
-        # Validate and populate
-        for key, result in results.iteritems():
-            if key not in options.detectors:
-                raise ValueError, 'No detector was found in the options for result key (%s)' % key
-
-            self._results[key] = result
+        self._results.update(results)
 
     def __repr__(self):
         return '<Results(%s)>' % ', '.join(self._results.keys())
 
     @classmethod
-    def load(cls, source, options):
+    def load(cls, source):
         """
         Loads results from a results ZIP.
         
         :arg source: filepath or file-object
-        
-        :arg options: options used to generate these results
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
         
         :return: results container
         """
@@ -98,13 +85,12 @@ class Results(Mapping):
         for key in config.options(SECTION_KEYS):
             tag = config.get(SECTION_KEYS, key)
             klass = ResultManager._get_class(tag)
-            detector = options.detectors[key]
 
-            results[key] = klass.__loadzip__(zipfile, key, detector)
+            results[key] = klass.__loadzip__(zipfile, key)
 
         zipfile.close()
 
-        return cls(options, results)
+        return cls(results)
 
     def save(self, source):
         """
@@ -132,13 +118,6 @@ class Results(Mapping):
         zipfile.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
         zipfile.close()
-
-    @property
-    def options(self):
-        """
-        Options used to generate the results.
-        """
-        return self._options
 
     def __len__(self):
         return len(self._results)

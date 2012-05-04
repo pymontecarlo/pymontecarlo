@@ -122,7 +122,7 @@ class Importer(_Importer):
                     tmpintensities[EMITTED][NOFLUORESCENCE] = enf
                     tmpintensities[EMITTED][TOTAL] = et
 
-        return PhotonIntensityResult(detector, intensities)
+        return PhotonIntensityResult(intensities)
 
     def _detector_electron_fraction(self, options, key, detector, path):
         pass

@@ -95,14 +95,14 @@ class Importer(_Importer):
                                             enf=et, et=et)
             intensities.update(tmpints)
 
-        return PhotonIntensityResult(detector, intensities)
+        return PhotonIntensityResult(intensities)
 
     def _detector_electron_fraction(self, options, name, detector, path):
         wxrresult = BseResults(path)
 
         backscattered = wxrresult.getBseYield(), wxrresult.getBseYieldError()
 
-        return ElectronFractionResult(detector, backscattered=backscattered)
+        return ElectronFractionResult(backscattered=backscattered)
 
     def _detector_time(self, options, name, detector, path):
         wxrresult = GeneralResults(path)
@@ -110,4 +110,4 @@ class Importer(_Importer):
         simulation_time_s = wxrresult.time_s
         simulation_speed_s = simulation_time_s / wxrresult.numberElectron, 0.0
 
-        return TimeResult(detector, simulation_time_s, simulation_speed_s)
+        return TimeResult(simulation_time_s, simulation_speed_s)

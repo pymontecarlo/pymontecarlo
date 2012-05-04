@@ -14,7 +14,6 @@ import logging
 from StringIO import StringIO
 from zipfile import ZipFile
 import csv
-from math import radians
 from xml.etree.ElementTree import fromstring
 
 # Third party modules.
@@ -24,8 +23,6 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult, create_intensity_dict
-from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 from pymontecarlo.util.transition import Transition, K_family
 
 import DrixUtilities.Files as Files
@@ -57,9 +54,7 @@ class TestPhotonIntensityResult(TestCase):
                                      ecf=(25.0, 0.5), ebf=(26.0, 0.6), enf=(27.0, 0.7), et=(78.0, 0.8))
         intensities.update(ints)
 
-        self.det = PhotonIntensityDetector((radians(35), radians(45)),
-                                           (0, radians(360.0)))
-        self.r = PhotonIntensityResult(self.det, intensities)
+        self.r = PhotonIntensityResult(intensities)
 
         self.results_zip = \
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
@@ -88,7 +83,7 @@ class TestPhotonIntensityResult(TestCase):
 
     def test__loadzip__(self):
         zipfile = ZipFile(self.results_zip, 'r')
-        r = PhotonIntensityResult.__loadzip__(zipfile, 'det1', self.det)
+        r = PhotonIntensityResult.__loadzip__(zipfile, 'det1')
 
         self.assertEqual(3, len(r._intensities))
 
@@ -244,8 +239,7 @@ class TestTimeResult(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.det = TimeDetector()
-        self.r = TimeResult(self.det, 5.0, (1.0, 0.5))
+        self.r = TimeResult(5.0, (1.0, 0.5))
 
         self.results_zip = \
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
@@ -271,7 +265,7 @@ class TestTimeResult(TestCase):
 
     def test__loadzip__(self):
         zipfile = ZipFile(self.results_zip, 'r')
-        r = TimeResult.__loadzip__(zipfile, 'det2', self.det)
+        r = TimeResult.__loadzip__(zipfile, 'det2')
 
         self.assertAlmostEqual(5.0, r.simulation_time_s, 4)
         self.assertAlmostEqual(1.0, r.simulation_speed_s[0], 4)
@@ -284,8 +278,7 @@ class TestElectronFractionResult(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.det = ElectronFractionDetector()
-        self.r = ElectronFractionResult(self.det, (1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
+        self.r = ElectronFractionResult((1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
 
         self.results_zip = \
             Files.getCurrentModulePath(__file__, '../testdata/results.zip')
@@ -314,7 +307,7 @@ class TestElectronFractionResult(TestCase):
 
     def test__loadzip__(self):
         zipfile = ZipFile(self.results_zip, 'r')
-        r = ElectronFractionResult.__loadzip__(zipfile, 'det3', self.det)
+        r = ElectronFractionResult.__loadzip__(zipfile, 'det3')
 
         self.assertAlmostEqual(1.0, r.absorbed[0], 4)
         self.assertAlmostEqual(0.1, r.absorbed[1], 4)

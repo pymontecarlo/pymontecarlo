@@ -87,11 +87,11 @@ class Importer(_Importer):
                                                 enf=et, et=et)
                 intensities.update(tmpints)
 
-        return PhotonIntensityResult(detector, intensities)
+        return PhotonIntensityResult(intensities)
 
     def _detector_electron_fraction(self, options, name, detector, simdata):
         bse_intensity = simdata.getSimulationResults().BE_Intensity[0]
-        return ElectronFractionResult(detector, backscattered=(bse_intensity, 0.0))
+        return ElectronFractionResult(backscattered=(bse_intensity, 0.0))
 
 
 

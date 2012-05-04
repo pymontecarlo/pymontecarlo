@@ -50,22 +50,12 @@ class _Result(object):
     Each result class must be register in the ResultManager.
     """
 
-    def __init__(self, detector):
-        self._detector = detector
-
     @classmethod
-    def __loadzip__(cls, zipfile, key, detector):
-        return cls(detector)
+    def __loadzip__(cls, zipfile, key):
+        return cls()
 
     def __savezip__(self, zipfile, key):
         pass
-
-    @property
-    def detector(self):
-        """
-        Detector associated to this result.
-        """
-        return self._detector
 
 def create_intensity_dict(transition,
                           gcf=(0.0, 0.0), gbf=(0.0, 0.0), gnf=(0.0, 0.0), gt=(0.0, 0.0),
@@ -95,15 +85,14 @@ class PhotonIntensityResult(_Result):
                 'emitted no fluorescence', 'emitted no fluorescence unc',
                 'emitted total', 'emitted total unc']
 
-    def __init__(self, detector, intensities={}):
+    def __init__(self, intensities={}):
         """
         Creates a new result to store photon intensities.
         
-        :arg detector: photon intensity detector
         :arg intensities: :class:`dict` containing the intensities.
             One should use :func:`.create_intensity_dict` to create the dictionary
         """
-        _Result.__init__(self, detector)
+        _Result.__init__(self)
 
         # Check structure
         def _check1(transition, data, key1, name1):
@@ -137,7 +126,7 @@ class PhotonIntensityResult(_Result):
         self._intensities = intensities
 
     @classmethod
-    def __loadzip__(cls, zipfile, key, detector):
+    def __loadzip__(cls, zipfile, key):
         reader = csv.reader(zipfile.open(key + '.csv', 'r'))
 
         header = reader.next()
@@ -163,7 +152,7 @@ class PhotonIntensityResult(_Result):
                                                      gcf, gbf, gnf, gt,
                                                      ecf, ebf, enf, et))
 
-        return cls(detector, intensities)
+        return cls(intensities)
 
     def __savezip__(self, zipfile, key):
         fp = StringIO()
@@ -393,16 +382,15 @@ ResultManager.register_loader('pymontecarlo.result.base.result.PhotonIntensityRe
 
 class TimeResult(_Result):
 
-    def __init__(self, detector, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
+    def __init__(self, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
         """
         Creates a new result to store simulation time and speed.
         
-        :arg detector: time detector
         :arg simulation_time_s: total time of the simulation (in seconds)
         :arg simulation_speed_s: time to simulation one electron (in seconds) and
             its uncertainty
         """
-        _Result.__init__(self, detector)
+        _Result.__init__(self)
 
         self._simulation_time_s = simulation_time_s
 
@@ -411,7 +399,7 @@ class TimeResult(_Result):
         self._simulation_speed_s = simulation_speed_s
 
     @classmethod
-    def __loadzip__(cls, zipfile, key, detector):
+    def __loadzip__(cls, zipfile, key):
         element = fromstring(zipfile.open(key + '.xml', 'r').read())
 
         child = element.find('time')
@@ -427,7 +415,7 @@ class TimeResult(_Result):
         else:
             simulation_speed = (0.0, 0.0)
 
-        return cls(detector, simulation_time, simulation_speed)
+        return cls(simulation_time, simulation_speed)
 
     def __savezip__(self, zipfile, key):
         element = Element('result')
@@ -455,11 +443,10 @@ ResultManager.register_loader('pymontecarlo.result.base.result.TimeResult', Time
 
 class ElectronFractionResult(_Result):
 
-    def __init__(self, detector,
-                 absorbed=(0.0, 0.0),
-                 backscattered=(0.0, 0.0),
-                 transmitted=(0.0, 0.0)):
-        _Result.__init__(self, detector)
+    def __init__(self, absorbed=(0.0, 0.0),
+                        backscattered=(0.0, 0.0),
+                        transmitted=(0.0, 0.0)):
+        _Result.__init__(self)
 
         if len(absorbed) != 2:
             raise ValueError, "Absorbed fraction must be a tuple (value, uncertainty)"
@@ -474,7 +461,7 @@ class ElectronFractionResult(_Result):
         self._transmitted = transmitted
 
     @classmethod
-    def __loadzip__(cls, zipfile, key, detector):
+    def __loadzip__(cls, zipfile, key):
         element = fromstring(zipfile.open(key + '.xml', 'r').read())
 
         child = element.find('absorbed')
@@ -498,7 +485,7 @@ class ElectronFractionResult(_Result):
         else:
             transmitted = (0.0, 0.0)
 
-        return cls(detector, absorbed, backscattered, transmitted)
+        return cls(absorbed, backscattered, transmitted)
 
     def __savezip__(self, zipfile, key):
         element = Element('result')
