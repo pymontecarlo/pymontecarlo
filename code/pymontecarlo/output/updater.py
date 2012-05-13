@@ -60,34 +60,30 @@ class Updater(_Updater):
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')
 
-        oldzip = ZipFile(filepath, 'r')
-        newzip = ZipFile(filepath + ".new", 'w')
+        with ZipFile(filepath, 'r') as oldzip:
+            with ZipFile(filepath + ".new", 'w') as newzip:
+                # Update keys.ini
+                config = ConfigParser()
+                config.read(oldzip.open(KEYS_INI_FILENAME, 'r'))
 
-        # Update keys.ini
-        config = ConfigParser()
-        config.read(oldzip.open(KEYS_INI_FILENAME, 'r'))
+                for section, option, value in config:
+                    value = value.replace('pymontecarlo.result.base.result.', '')
+                    setattr(getattr(config, section), option, value)
 
-        for section, option, value in config:
-            value = value.replace('pymontecarlo.result.base.result.', '')
-            setattr(getattr(config, section), option, value)
+                fp = StringIO()
+                config.write(fp)
+                newzip.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
-        fp = StringIO()
-        config.write(fp)
-        newzip.writestr(KEYS_INI_FILENAME, fp.getvalue())
+                # Add other files to new zip
+                for zipinfo in oldzip.infolist():
+                    if zipinfo.filename == KEYS_INI_FILENAME:
+                        continue
 
-        # Add other files to new zip
-        for zipinfo in oldzip.infolist():
-            if zipinfo.filename == KEYS_INI_FILENAME:
-                continue
+                    data = oldzip.read(zipinfo)
+                    newzip.writestr(zipinfo, data)
 
-            data = oldzip.read(zipinfo)
-            newzip.writestr(zipinfo, data)
-
-        # Add version
-        newzip.comment = 'version=%s' % VERSION
-
-        oldzip.close()
-        newzip.close()
+                # Add version
+                newzip.comment = 'version=%s' % VERSION
 
         # Remove old zip and replace with new one
         os.remove(filepath)
