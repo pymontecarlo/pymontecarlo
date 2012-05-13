@@ -11,6 +11,7 @@ doc.dir=${tmp.dir}/doc
 workspace.dir=
 pythondev.dir=${workspace.dir}/pydev
 fortrandev.dir=${workspace.dir}/fortrandev
+javadev.dir=${workspace.dir}/javadev
 
 ####################
 # Program specific #
@@ -20,7 +21,7 @@ fortrandev.dir=${workspace.dir}/fortrandev
 penelope.project.dir=${fortrandev.dir}/penelope
 
 # NISTMonte
-
+nistmonte.project.dir=${javadev.dir}/NISTMonte
 
 # Casino 2
 casinotools.project.dir=${pythondev.dir}/casinoTools

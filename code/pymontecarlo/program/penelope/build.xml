@@ -5,7 +5,7 @@
    Copyright (C) 2011 Philippe T. Pinard and Hendrix Demers;
   
    This library is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published by
+   it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
    
@@ -14,11 +14,21 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
    
-   You should have received a copy of the GNU Lesser General Public License
+   You should have received a copy of the GNU General Public License
    along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <project name="pyMonteCarlo-PENELOPE" basedir="../../../">
+
+    <property name="tmp.penelope" location="${tmp.dir}/tmppenelope" />
+
+    <target name="init" description="Initializes">
+        <mkdir dir="${tmp.penelope}" />
+    </target>
+
+    <target name="clean" description="Cleans">
+        <delete dir="${tmp.penelope}" />
+    </target>
 
     <target name="build" description="Builds">
         <fail unless="penelope.project.dir"
@@ -39,7 +49,9 @@
         <!-- PENELOPE lib -->
         <ant antfile="${penelope.project.dir}/build.xml"
              target="compile-python"
-             inheritall="false" />
+             inheritall="false">
+            <property name="tmp.dir" location="${tmp.penelope}" />
+        </ant>
 
         <mkdir dir="${build.dir}/penelopelib" />
 
@@ -50,13 +62,16 @@
                 <exclude name="**/test_*.py" />
             </fileset>
         </copy>
-        
+
         <mkdir dir="${build.dir}/penelopelib/pendbase" />
-        
+
         <copy todir="${build.dir}/penelopelib/pendbase">
-            <fileset dir="${penelope.project.dir}/pendbase" includes="**/*" />
+            <fileset dir="${penelope.project.dir}/pendbase">
+                <include name="**/*" />
+                <exclude name="material*" />
+            </fileset>
         </copy>
-        
+
     </target>
 
 </project>

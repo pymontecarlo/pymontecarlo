@@ -5,7 +5,7 @@
    Copyright (C) 2011 Philippe T. Pinard and Hendrix Demers;
   
    This library is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published by
+   it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
    
@@ -14,7 +14,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
    
-   You should have received a copy of the GNU Lesser General Public License
+   You should have received a copy of the GNU General Public License
    along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
@@ -70,10 +70,16 @@
 
     <target name="-init" description="Creates all required directories">
         <mkdir dir="${build.dir}" />
+
+        <!-- Initializes programs -->
+        <subant target="init" inheritall="true">
+            <fileset dir="${src.dir}/pymontecarlo/program"
+                     includes="*/build.xml" />
+        </subant>
     </target>
 
-    
-    
+
+
     <target name="-retrieve-ivy-lib" description="Retrieve ivy libraries">
         <ivy:settings file="${basedir}/ivysettings.xml" />
         <ivy:retrieve conf="publish"
@@ -91,6 +97,12 @@
     <target name="clean" description="Delete code, build and test directories">
         <delete dir="${build.dir}" />
         <delete dir="${lib.dir}" />
+
+        <!-- Clean programs -->
+        <subant target="clean" inheritall="true">
+            <fileset dir="${src.dir}/pymontecarlo/program"
+                     includes="*/build.xml" />
+        </subant>
     </target>
 
 

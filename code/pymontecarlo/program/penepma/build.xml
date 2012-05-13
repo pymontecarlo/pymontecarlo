@@ -5,7 +5,7 @@
    Copyright (C) 2012 Philippe T. Pinard and Hendrix Demers;
   
    This library is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published by
+   it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
    
@@ -14,11 +14,15 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
    
-   You should have received a copy of the GNU Lesser General Public License
+   You should have received a copy of the GNU General Public License
    along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <project basedir="../../../" name="pyMonteCarlo-PENEPMA">
+
+    <target name="init" description="Initializes" />
+
+    <target name="clean" description="Cleans" />
 
     <target name="build" description="Builds">
         <!-- pyMonteCarlo -->
