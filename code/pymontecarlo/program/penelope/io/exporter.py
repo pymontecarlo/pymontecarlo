@@ -37,7 +37,7 @@ from pymontecarlo.program.penelope.input.geometry import \
 
 from pymontecarlo.io.exporter import Exporter as _Exporter, ExporterException
 
-import pymontecarlo.program.penelope.lib.material as penmaterial
+import penelopelib.material as penmaterial
 
 
 # Globals and constants variables.
@@ -171,20 +171,18 @@ class Exporter(_Exporter):
                 f.write(line + '\n')
 
         # Save materials
-        cwd = os.getcwd()
-        os.chdir(self._pendbase_dir)
-
         matinfos = []
         for material in pengeom.get_materials():
             index = material._index
             if index == 0: continue
 
             filepath = os.path.join(outputdir, 'mat%i.mat' % index)
-            penmaterial.create(material, filepath)
+
+            penmaterial.create(material.name, material.composition,
+                               material.density_kg_m3, filepath,
+                               self._pendbase_dir)
 
             matinfos.append((material, filepath))
-
-        os.chdir(cwd)
 
         return (pengeom, geofilepath), matinfos
 

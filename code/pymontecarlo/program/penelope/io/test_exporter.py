@@ -29,7 +29,7 @@ from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.program.penelope.input.converter import Converter
 from pymontecarlo.program.penelope.input.material import Material
 from pymontecarlo.program.penelope.io.exporter import Exporter
-import pymontecarlo.program.penelope.lib.geometry as pengeometry
+import penelopelib.pengeom as pengeom
 
 # Globals and constants variables.
 
@@ -65,7 +65,7 @@ class TestPenelopeExporter(TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'substrate.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+        nmat, nbody = pengeom.init(geofilepath, repfilepath)
 
         self.assertEqual(1, nmat)
         self.assertEqual(2, nbody)
@@ -89,7 +89,7 @@ class TestPenelopeExporter(TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'inclusion.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+        nmat, nbody = pengeom.init(geofilepath, repfilepath)
 
         self.assertEqual(2, nmat)
         self.assertEqual(3, nbody)
@@ -124,7 +124,7 @@ class TestPenelopeExporter(TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'multilayers.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+        nmat, nbody = pengeom.init(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(6, nbody)
@@ -161,7 +161,7 @@ class TestPenelopeExporter(TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'grainboundaries.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+        nmat, nbody = pengeom.init(geofilepath, repfilepath)
 
         self.assertEqual(3, nmat)
         self.assertEqual(4, nbody)
@@ -190,7 +190,7 @@ class TestPenelopeExporter(TestCase):
         # Test
         geofilepath = os.path.join(self.tmpdir, 'sphere.geo')
         repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeometry.init(geofilepath, repfilepath)
+        nmat, nbody = pengeom.init(geofilepath, repfilepath)
 
         self.assertEqual(1, nmat)
         self.assertEqual(2, nbody)

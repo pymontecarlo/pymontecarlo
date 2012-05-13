@@ -17,7 +17,7 @@ fortrandev.dir=${workspace.dir}/fortrandev
 ####################
 
 # PENELOPE
-windows.python.dir=C:/Python26
+penelope.project.dir=${fortrandev.dir}/penelope
 
 # NISTMonte
 

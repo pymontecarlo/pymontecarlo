@@ -1,3 +1,0 @@
-LIBRARY wrapper.pyd
-EXPORTS
-initwrapper

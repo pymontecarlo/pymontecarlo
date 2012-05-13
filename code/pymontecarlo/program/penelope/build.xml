@@ -18,280 +18,13 @@
    along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<project name="pyMonteCarlo-PENELOPE"
-         basedir="../../../"
-         xmlns:cpptasks="antlib:net.sf.antcontrib.cpptasks">
-    
-    <property name="compile.dir" location="${tmp.dir}/compile" />
-    <echo message="compile.dir = ${compile.dir}" />
-
-    <!-- ===================================================== -->
-    <!-- Init targets                                          -->
-    <!-- ===================================================== -->
-
-    <target name="-init" description="Platform dependent check">
-        <mkdir dir="${compile.dir}" />
-        
-        <condition property="isWindows">
-            <os family="windows" />
-        </condition>
-
-        <condition property="libext" value="pyd">
-            <os family="windows" />
-        </condition>
-
-        <condition property="isLinux">
-            <os family="unix" />
-        </condition>
-
-        <condition property="libext" value="so">
-            <os family="unix" />
-        </condition>
-    </target>
-
-    <!-- ===================================================== -->
-    <!-- Clean targets                                         -->
-    <!-- ===================================================== -->
-
-    <target name="clean" description="Delete build directory">
-        <delete dir="${compile.dir}"/>
-    </target>
-
-
-    <!-- ===================================================== -->
-    <!-- Compile targets                                       -->
-    <!-- ===================================================== -->
-
-    <target name="compile"
-            depends="-init,compile-common,compile-material,compile-geometry"
-            description="Compile library" />
-
-    <target name="compile-common"
-            depends="-init"
-            description="Compile PENELOPE COMMON code">
-        <property name="windows.python.dir" value="C:/Python27" />
-
-        <cpptasks:cc objdir="${compile.dir}"
-                     outfile="${compile.dir}/common"
-                     outputfileproperty="outfile"
-                     failonerror="true"
-                     exceptions="true"
-                     outtype="shared"
-                     debug="true"
-                     multithreaded="true">
-            <cpptasks:compiler id="compiler-fortran" name="gfortran">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="penelope.f" />
-                    <include name="rita.f" />
-                    <include name="penvared.f" />
-                    <include name="timer.f" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:compiler id="compiler-c" name="gcc">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-                <compilerarg value="-Wstrict-prototypes" />
-                <compilerarg value="-DMAJOR_VERSION=1" />
-                <compilerarg value="-DMINOR_VERSION=0" />
-                <compilerarg value="-DNDEBUG" />
-
-                <compilerarg value="-fPIC" if="isLinux" />
-
-                <compilerarg value="-mno-cygwin" if="isWindows" />
-                <compilerarg value="-mdll" if="isWindows" />
-
-                <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.7" if="isLinux" />
-
-                <includepath location="${windows.python.dir}/include"
-                             if="isWindows" />
-                <includepath location="${windows.python.dir}/PC"
-                             if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="common.c" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:linker id="linker" name="gfortran">
-                <libset dir="${windows.python.dir}/libs"
-                        libs="python27,msvcr90"
-                        if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
-                         if="isWindows">
-                    <include name="common.def" />
-                </fileset>
-            </cpptasks:linker>
-        </cpptasks:cc>
-
-        <!-- Rename outfile -->
-        <echo message="outfile = ${outfile}" />
-        <move tofile="${build.dir}/pymontecarlo/program/penelope/lib/_common.${libext}"
-              file="${outfile}" />
-    </target>
-
-
-
-    <target name="compile-material"
-            depends="-init"
-            description="Compile PENELOPE material code">
-        <property name="windows.python.dir" value="C:/Python27" />
-
-        <cpptasks:cc objdir="${compile.dir}"
-                     outfile="${compile.dir}/material"
-                     outputfileproperty="outfile"
-                     failonerror="true"
-                     exceptions="true"
-                     outtype="shared"
-                     debug="true"
-                     multithreaded="true">
-            <cpptasks:compiler id="compiler-fortran" name="gfortran">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="penelope.f" />
-                    <include name="rita.f" />
-                    <include name="penvared.f" />
-                    <include name="timer.f" />
-                    <include name="utils_f.f" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:compiler id="compiler-c" name="gcc">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-                <compilerarg value="-Wstrict-prototypes" />
-                <compilerarg value="-DMAJOR_VERSION=1" />
-                <compilerarg value="-DMINOR_VERSION=0" />
-                <compilerarg value="-DNDEBUG" />
-
-                <compilerarg value="-fPIC" if="isLinux" />
-
-                <compilerarg value="-mno-cygwin" if="isWindows" />
-                <compilerarg value="-mdll" if="isWindows" />
-
-                <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.7" if="isLinux" />
-
-                <includepath location="${windows.python.dir}/include"
-                             if="isWindows" />
-                <includepath location="${windows.python.dir}/PC"
-                             if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="material.c" />
-                    <include name="utils_c.c" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:linker id="linker" name="gfortran">
-                <libset dir="${windows.python.dir}/libs"
-                        libs="python27,msvcr90"
-                        if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
-                         if="isWindows">
-                    <include name="material.def" />
-                </fileset>
-            </cpptasks:linker>
-        </cpptasks:cc>
-
-        <!-- Rename outfile -->
-        <echo message="outfile = ${outfile}" />
-        <move tofile="${build.dir}/pymontecarlo/program/penelope/lib/_material.${libext}" file="${outfile}" />
-    </target>
-
-
-
-    <target name="compile-geometry"
-            depends="-init"
-            description="Compile PENELOPE geometry code">
-        <property name="windows.python.dir" value="C:/Python27" />
-
-        <cpptasks:cc objdir="${compile.dir}"
-                     outfile="${compile.dir}/geometry"
-                     outputfileproperty="outfile"
-                     failonerror="true"
-                     exceptions="true"
-                     outtype="shared"
-                     debug="true"
-                     multithreaded="true">
-            <cpptasks:compiler id="compiler-fortran" name="gfortran">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="pengeom.f" />
-                    <include name="utils_f.f" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:compiler id="compiler-c" name="gcc">
-                <compilerarg value="-O2" />
-                <compilerarg value="-g" />
-                <compilerarg value="-Wall" />
-                <compilerarg value="-Wstrict-prototypes" />
-                <compilerarg value="-DMAJOR_VERSION=1" />
-                <compilerarg value="-DMINOR_VERSION=0" />
-                <compilerarg value="-DNDEBUG" />
-
-                <compilerarg value="-fPIC" if="isLinux" />
-
-                <compilerarg value="-mno-cygwin" if="isWindows" />
-                <compilerarg value="-mdll" if="isWindows" />
-
-                <includepath location="/usr/local/include" if="isLinux" />
-                <includepath location="/usr/include/python2.7" if="isLinux" />
-
-                <includepath location="${windows.python.dir}/include"
-                             if="isWindows" />
-                <includepath location="${windows.python.dir}/PC"
-                             if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib">
-                    <include name="geometry.c" />
-                    <include name="utils_c.c" />
-                </fileset>
-            </cpptasks:compiler>
-
-            <cpptasks:linker id="linker" name="gfortran">
-                <libset dir="${windows.python.dir}/libs"
-                        libs="python27,msvcr90"
-                        if="isWindows" />
-
-                <fileset dir="${src.dir}/pymontecarlo/program/penelope/lib"
-                         if="isWindows">
-                    <include name="geometry.def" />
-                </fileset>
-            </cpptasks:linker>
-        </cpptasks:cc>
-
-        <!-- Rename outfile -->
-        <echo message="outfile = ${outfile}" />
-        <move tofile="${build.dir}/pymontecarlo/program/penelope/lib/_geometry.${libext}" file="${outfile}" />
-    </target>
-
-    <!-- ===================================================== -->
-    <!-- Build targets                                         -->
-    <!-- ===================================================== -->
+<project name="pyMonteCarlo-PENELOPE" basedir="../../../">
 
     <target name="build" description="Builds">
-        <!-- PENELOPE lib -->
-        <antcall target="clean" />
-        <antcall target="compile" />
-        <antcall target="clean" />
-        
+        <fail unless="penelope.project.dir"
+              message="Missing penelope.project.dir" />
+        <echo message="penelope.project.dir = ${penelope.project.dir}" />
+
         <!-- pyMonteCarlo -->
         <mkdir dir="${build.dir}/pymontecarlo/program/penelope" />
 
@@ -302,6 +35,28 @@
                 <exclude name="**/test_*.py" />
             </fileset>
         </copy>
+
+        <!-- PENELOPE lib -->
+        <ant antfile="${penelope.project.dir}/build.xml"
+             target="compile-python"
+             inheritall="false" />
+
+        <mkdir dir="${build.dir}/penelopelib" />
+
+        <copy todir="${build.dir}/penelopelib">
+            <fileset dir="${penelope.project.dir}/src/pysource/penelopelib">
+                <include name="**/*" />
+                <exclude name="**/*.pyc" />
+                <exclude name="**/test_*.py" />
+            </fileset>
+        </copy>
+        
+        <mkdir dir="${build.dir}/penelopelib/pendbase" />
+        
+        <copy todir="${build.dir}/penelopelib/pendbase">
+            <fileset dir="${penelope.project.dir}/pendbase" includes="**/*" />
+        </copy>
+        
     </target>
 
 </project>
