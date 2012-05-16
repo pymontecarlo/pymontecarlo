@@ -192,7 +192,7 @@ class _Console(object):
         # Redirect warnings
         def showwarning(message, category, filename, lineno, file=None, line=None):
             name = category.__name__.replace('Warning', '')
-            self.warn('%s (%s)' % (message, name))
+            self.print_warn('%s (%s)' % (message, name))
         warnings.showwarning = showwarning
 
         # Redirect logging
