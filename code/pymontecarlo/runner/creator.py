@@ -7,7 +7,7 @@
 .. module:: creator
    :synopsis: Queue of workers for creating simulation files
 
-.. inheritance-diagram:: pymontecarlo.runner.base.creator
+.. inheritance-diagram:: pymontecarlo.runner.creator
 
 """
 
@@ -35,7 +35,7 @@ class Creator(object):
         Creates a new creator to create simulation files of several simulations.
         
         Use :meth:`put` to add simulation to the creation list and then use the
-         method :meth:`start` to start the creation. 
+        method :meth:`start` to start the creation. 
         The method :meth:`join` before closing an application to ensure that
         all simulations were created and all workers are stopped.
         
@@ -48,7 +48,7 @@ class Creator(object):
         
         :arg nbprocesses: number of processes/threads to use (default: 1)
         
-        :arg **kwargs: other arguments to pass to the worker class during
+        :arg kwargs: other arguments to pass to the worker class during
             initialization
         """
         if nbprocesses < 1:

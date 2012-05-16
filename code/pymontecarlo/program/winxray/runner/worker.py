@@ -7,7 +7,7 @@
 .. module:: worker
    :synopsis: WinX-Ray 2 worker
 
-.. inheritance-diagram:: pymontecarlo.runner.winxray.worker
+.. inheritance-diagram:: pymontecarlo.program.winxray.runner.worker
 
 """
 

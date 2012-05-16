@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: WinX-Ray conversion from base options
 
-.. inheritance-diagram:: pymontecarlo.input.winxray.converter
+.. inheritance-diagram:: pymontecarlo.program.winxray.input.converter
 
 """
 

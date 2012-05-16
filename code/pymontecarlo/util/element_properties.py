@@ -7,8 +7,6 @@
 .. module:: element_properties
    :synopsis: Various properties of atoms
 
-.. inheritance-diagram:: pymontecarlo.utils.element_properties
-
 """
 
 # Script information for the file.

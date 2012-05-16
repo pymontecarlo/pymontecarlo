@@ -7,7 +7,7 @@
 .. module:: importer
    :synopsis: PENEPMA importer
 
-.. inheritance-diagram:: pymontecarlo.io.penelope.epma.importer
+.. inheritance-diagram:: pymontecarlo.program.penepma.io.importer
 
 """
 

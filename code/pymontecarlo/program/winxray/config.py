@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`winxray` -- WinXRay Monte Carlo program configuration
+:mod:`config` -- WinXRay Monte Carlo program configuration
 ================================================================================
 
-.. module:: winxray
+.. module:: config
    :synopsis: WinXRay Monte Carlo program configuration
-
-.. inheritance-diagram:: pymontecarlo.program.winxray
 
 """
 

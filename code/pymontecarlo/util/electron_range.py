@@ -7,8 +7,6 @@
 .. module:: electron_range
    :synopsis: Electron range calculations
 
-.. inheritance-diagram:: pymontecarlo.util.electron_range
-
 """
 
 # Script information for the file.

@@ -7,7 +7,7 @@
 .. module:: body
    :synopsis: PENELOPE body for geometry
 
-.. inheritance-diagram:: body
+.. inheritance-diagram:: pymontecarlo.program.penelope.input.body
 
 """
 

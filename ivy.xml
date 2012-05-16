@@ -12,6 +12,6 @@
 
     <dependencies>
         <dependency org="net.sf.ant-python" name="ant-python"
-            rev="0.1.5" conf="publish->default" />
+            rev="0.1.6" conf="publish->default" />
     </dependencies>
 </ivy-module>

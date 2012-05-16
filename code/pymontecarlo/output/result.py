@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`result` -- Common results
+:mod:`result` -- Simulation results
 ================================================================================
 
 .. module:: result
-   :synopsis: Common results
+   :synopsis: Simulation results
 
-.. inheritance-diagram:: result
+.. inheritance-diagram:: pymontecarlo.output.result
 
 """
 
@@ -267,7 +267,7 @@ class PhotonIntensityResult(_Result):
         For instance, the following lines will yield the same result::
         
             >>> result.intensity('Al Ka1')[0] + result.intensity('Al Ka2')[0]
-            >>> result.intensity('Al K')[0]
+            >>> result.intensity('Al Ka')[0]
             
         Note that the ``[0]`` is to return the intensity part of the 
         intensity/uncertainty tuple.

@@ -7,7 +7,7 @@
 .. module:: interactionforcing
    :synopsis: Interaction forcing
 
-.. inheritance-diagram:: pymontecarlo.input.penelope.interactionforcing
+.. inheritance-diagram:: pymontecarlo.program.penelope.input.interactionforcing
 
 """
 

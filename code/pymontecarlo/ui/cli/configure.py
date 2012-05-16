@@ -7,8 +7,6 @@
 .. module:: configure
    :synopsis: Script to configure settings
 
-.. inheritance-diagram:: pymontecarlo.ui.cli.configure
-
 """
 
 # Script information for the file.

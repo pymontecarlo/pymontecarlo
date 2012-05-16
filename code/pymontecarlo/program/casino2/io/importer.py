@@ -7,7 +7,7 @@
 .. module:: importer
    :synopsis: Casino 2 results importer
 
-.. inheritance-diagram:: pymontecarlo.result.casino2.importer
+.. inheritance-diagram:: pymontecarlo.program.casino2.io.importer
 
 """
 

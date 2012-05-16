@@ -7,7 +7,7 @@
 .. module:: exporter
    :synopsis: Exporter to WXC
 
-.. inheritance-diagram:: pymontecarlo.io.winxray.exporter
+.. inheritance-diagram:: pymontecarlo.program.winxray.io.exporter
 
 """
 

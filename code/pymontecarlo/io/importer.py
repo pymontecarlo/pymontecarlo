@@ -7,7 +7,7 @@
 .. module:: importer
    :synopsis: Base class for all importers
 
-.. inheritance-diagram:: pymontecarlo.result.base.importer
+.. inheritance-diagram:: pymontecarlo.io.importer
 
 """
 

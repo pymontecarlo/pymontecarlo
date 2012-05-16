@@ -7,7 +7,7 @@
 .. module:: exporter
    :synopsis: Base class for exporters
 
-.. inheritance-diagram:: pymontecarlo.input.base.exporter
+.. inheritance-diagram:: pymontecarlo.io.exporter
 
 """
 

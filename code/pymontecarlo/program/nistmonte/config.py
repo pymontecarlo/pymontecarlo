@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`nistmonte` -- NISTMonte Monte Carlo program configuration
+:mod:`config` -- NISTMonte Monte Carlo program configuration
 ================================================================================
 
-.. module:: nistmonte
+.. module:: config
    :synopsis: NISTMonte Monte Carlo program configuration
-
-.. inheritance-diagram:: pymontecarlo.program.nistmonte
 
 """
 

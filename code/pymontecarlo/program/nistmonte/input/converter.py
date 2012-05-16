@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: NistMonte conversion from base options
 
-.. inheritance-diagram:: pymontecarlo.input.nistmonte.converter
+.. inheritance-diagram:: pymontecarlo.program.nistmonte.input.converter
 
 """
 

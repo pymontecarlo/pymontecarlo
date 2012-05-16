@@ -7,7 +7,7 @@
 .. module:: transition
    :synopsis: Atomic transition
 
-.. inheritance-diagram:: transition
+.. inheritance-diagram:: pymontecarlo.util.transition
 
 """
 

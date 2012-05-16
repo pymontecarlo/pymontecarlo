@@ -7,7 +7,7 @@
 .. module:: worker
    :synopsis: NISTMonte worker
 
-.. inheritance-diagram:: pymontecarlo.runner.nistmonte.worker
+.. inheritance-diagram:: pymontecarlo.program.nistmonte.runner.worker
 
 """
 

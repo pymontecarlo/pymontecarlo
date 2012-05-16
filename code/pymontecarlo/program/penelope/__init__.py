@@ -7,8 +7,6 @@
 .. module:: penelope
    :synopsis: PENELOPE Monte Carlo program
 
-.. inheritance-diagram:: pymontecarlo.program.penelope
-
 """
 
 # Script information for the file.

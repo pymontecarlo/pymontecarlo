@@ -7,7 +7,7 @@
 .. module:: worker
    :synopsis: Casino 2 worker
 
-.. inheritance-diagram:: pymontecarlo.runner.casino2.worker
+.. inheritance-diagram:: pymontecarlo.program.casino2.runner.worker
 
 """
 

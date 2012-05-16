@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`results` -- Main container of all results
+:mod:`results` -- Container of all results
 ================================================================================
 
 .. module:: results
-   :synopsis: Main container of all results
+   :synopsis: Container of all results
 
-.. inheritance-diagram:: results
+.. inheritance-diagram:: pymontecarlo.output.results
 
 """
 

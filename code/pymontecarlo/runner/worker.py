@@ -7,7 +7,7 @@
 .. module:: worker
    :synopsis: Base worker
 
-.. inheritance-diagram:: pymontecarlo.runner.base.worker
+.. inheritance-diagram:: pymontecarlo.runner.worker
 
 """
 

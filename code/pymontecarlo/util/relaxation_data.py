@@ -7,7 +7,7 @@
 .. module:: relaxation_data
    :synopsis: ubshell, transition and relaxation data
 
-.. inheritance-diagram:: pymontecarlo.utils.relaxation_data
+.. inheritance-diagram:: pymontecarlo.util.relaxation_data
 
 """
 

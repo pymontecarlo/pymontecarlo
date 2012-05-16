@@ -7,7 +7,7 @@
 .. module:: oset
    :synopsis: Ordered set
 
-.. inheritance-diagram:: oset
+.. inheritance-diagram:: pymontecarlo.util.oset
 
 """
 

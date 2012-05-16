@@ -7,8 +7,6 @@
 .. module:: manager
    :synopsis: Results manager
 
-.. inheritance-diagram:: pymontecarlo.result.base.manager
-
 """
 
 # Script information for the file.

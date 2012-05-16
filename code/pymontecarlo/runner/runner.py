@@ -7,7 +7,7 @@
 .. module:: queue
    :synopsis: Queue of workers for running simulations
 
-.. inheritance-diagram:: pymontecarlo.runner.base.runner
+.. inheritance-diagram:: pymontecarlo.runner.runner
 
 """
 
@@ -57,7 +57,7 @@ class Runner(object):
         
         :arg nbprocesses: number of processes/threads to use (default: 1)
         
-        :arg **kwargs: other arguments to pass to the worker class during
+        :arg kwargs: other arguments to pass to the worker class during
             initialization
         """
         if nbprocesses < 1:

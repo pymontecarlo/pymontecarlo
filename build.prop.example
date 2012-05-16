@@ -1,12 +1,12 @@
 # Input directories
 src.dir=${basedir}/code
+doc.dir=${basedir}/doc
 
 # Output directories
 tmp.dir=/tmp
 lib.dir=${tmp.dir}/lib
 build.dir=${tmp.dir}/build
 dist.dir=${tmp.dir}/dist
-doc.dir=${tmp.dir}/doc
 
 workspace.dir=
 pythondev.dir=${workspace.dir}/pydev

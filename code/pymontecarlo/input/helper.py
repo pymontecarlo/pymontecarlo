@@ -7,8 +7,6 @@
 .. module:: helper
    :synopsis: Small routines to help change values in options
 
-.. inheritance-diagram:: helper
-
 """
 
 # Script information for the file.

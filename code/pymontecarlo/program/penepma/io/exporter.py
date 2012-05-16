@@ -7,7 +7,7 @@
 .. module:: exporter
    :synopsis: Exporter to PENEPMA files
 
-.. inheritance-diagram:: pymontecarlo.input.penelope.epma.exporter
+.. inheritance-diagram:: pymontecarlo.program.penepma.io.exporter
 
 """
 

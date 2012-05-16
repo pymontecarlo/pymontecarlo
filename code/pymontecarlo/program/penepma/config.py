@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`penepma` -- PENEPMA Monte Carlo program configuration
+:mod:`config` -- PENEPMA Monte Carlo program configuration
 ================================================================================
 
-.. module:: penepma
+.. module:: config
    :synopsis: PENEPMA Monte Carlo program configuration
-
-.. inheritance-diagram:: pymontecarlo.program.penepma
 
 """
 

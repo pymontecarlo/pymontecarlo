@@ -7,7 +7,7 @@
 .. module:: worker
    :synopsis: PENEPMA worker
 
-.. inheritance-diagram:: pymontecarlo.runner.penelope.epma.worker
+.. inheritance-diagram:: pymontecarlo.program.penepma.runner.worker
 
 """
 

@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: Base class for conversion of options
 
-.. inheritance-diagram:: pymontecarlo.input.base.converter
+.. inheritance-diagram:: pymontecarlo.input.converter
 
 """
 
@@ -40,18 +40,18 @@ class Converter(object):
     Derived class shall modify the following class variables to specify
     the allowable classes for each of these parameters:
     
-        * :var:`BEAM`: list of allowable beam classes
-        * :var:`GEOMETRIES`: list of allowable geometry classes
-        * :var:`DETECTORS`: list of allowable detector classes
-        * :var:`LIMITS`: list of allowable limit classes
-        * :var:`MODELS: dictionary of allowable models 
+        * :attr:`BEAM`: list of allowable beam classes
+        * :attr:`GEOMETRIES`: list of allowable geometry classes
+        * :attr:`DETECTORS`: list of allowable detector classes
+        * :attr:`LIMITS`: list of allowable limit classes
+        * :attr:`MODELS`: dictionary of allowable models 
             (key: model type, value: list of allowable models)
-        * :var:`DEFAULT_MODELS:` dictionary of default models
+        * :attr:`DEFAULT_MODELS`: dictionary of default models
             (key: model type, value: default model)
             
     .. note::
     
-       The keys for :var:`MODELS` and :var:`DEFAULT_MODELS` have to be the same.
+       The keys for :attr:`MODELS` and :attr:`DEFAULT_MODELS` have to be the same.
     """
 
     BEAMS = []

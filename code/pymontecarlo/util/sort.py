@@ -7,8 +7,6 @@
 .. module:: sort
    :synopsis: Sort utilities
 
-.. inheritance-diagram:: pymontecarlo.util.sort
-
 """
 
 # Script information for the file.

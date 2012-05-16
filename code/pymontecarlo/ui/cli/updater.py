@@ -7,8 +7,6 @@
 .. module:: updater
    :synopsis: Script to update options or results file to current version
 
-.. inheritance-diagram:: pymontecarlo.ui.cli.updater
-
 """
 
 # Script information for the file.

@@ -7,7 +7,7 @@
 .. module:: beam
    :synopsis: Parameters of the electron beam
 
-.. inheritance-diagram:: beam
+.. inheritance-diagram:: pymontecarlo.input.beam
 
 """
 

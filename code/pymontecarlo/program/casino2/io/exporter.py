@@ -7,7 +7,7 @@
 .. module:: exporter
    :synopsis: Exporter to CAS file
 
-.. inheritance-diagram:: pymontecarlo.input.casino2.exporter
+.. inheritance-diagram:: pymontecarlo.program.casino2.io.exporter
 
 """
 

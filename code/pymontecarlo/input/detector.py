@@ -7,7 +7,7 @@
 .. module:: detector
    :synopsis: Basic parameters about X-ray and electron detectors
 
-.. inheritance-diagram:: detector
+.. inheritance-diagram:: pymontecarlo.input.detector
 
 """
 

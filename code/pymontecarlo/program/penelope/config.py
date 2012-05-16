@@ -7,8 +7,6 @@
 .. module:: config
    :synopsis: PENELOPE Monte Carlo program configuration
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.config
-
 """
 
 # Script information for the file.

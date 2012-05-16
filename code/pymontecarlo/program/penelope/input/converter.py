@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: Base options conversion for all PENELOPE main programs
 
-.. inheritance-diagram:: pymontecarlo.input.penelope.converter
+.. inheritance-diagram:: pymontecarlo.program.penelope.input.converter
 
 """
 

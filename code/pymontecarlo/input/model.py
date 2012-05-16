@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`module_name` -- module_desc
+:mod:`model` -- Algorithm models
 ================================================================================
 
-.. module:: module_name
-   :synopsis: module_desc
+.. module:: model
+   :synopsis: Algorithm models
 
-.. inheritance-diagram:: module_name
+.. inheritance-diagram:: pymontecarlo.input.model
 
 """
 

@@ -7,7 +7,7 @@
 .. module:: option
    :synopsis: Base class for all options
 
-.. inheritance-diagram:: pymontecarlo.input.base.option
+.. inheritance-diagram:: pymontecarlo.input.option
 
 """
 

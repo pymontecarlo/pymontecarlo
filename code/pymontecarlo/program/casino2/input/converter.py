@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: Casino conversion from base options
 
-.. inheritance-diagram:: pymontecarlo.input.casino2.converter
+.. inheritance-diagram:: pymontecarlo.program.casino2.input.converter
 
 """
 

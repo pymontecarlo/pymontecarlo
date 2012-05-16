@@ -32,6 +32,9 @@
     <property name="src.dir" location="${basedir}/code" />
     <echo message="src.dir = ${src.dir}" />
 
+    <property name="doc.dir" location="${basedir}/doc" />
+    <echo message="doc.dir = ${doc.dir}" />
+
     <property name="tmp.dir" location="${java.io.tmpdir}" />
     <echo message="tmp.dir = ${tmp.dir}" />
 
@@ -43,9 +46,6 @@
 
     <property name="dist.dir" location="${tmp.dir}/dist" />
     <echo message="dist.dir = ${dist.dir}" />
-
-    <property name="doc.dir" location="${tmp.dir}/doc" />
-    <echo message="doc.dir = ${doc.dir}" />
 
     <ivy:info />
 
@@ -80,7 +80,8 @@
 
 
 
-    <target name="-retrieve-ivy-lib" description="Retrieve ivy libraries">
+    <target name="-retrieve-lib-antpython"
+            description="Retrieve ant-python library">
         <ivy:settings file="${basedir}/ivysettings.xml" />
         <ivy:retrieve conf="publish"
                       pattern="${lib.dir}/[artifact](-[classifier]).[ext]" />
@@ -111,7 +112,6 @@
             depends="clean"
             description="Delete all created directories">
         <delete dir="${dist.dir}" />
-        <delete dir="${doc.dir}" />
     </target>
 
     <!-- ===================================================== -->
@@ -162,7 +162,9 @@
     <!-- Distribution targets                                  -->
     <!-- ===================================================== -->
 
-    <target name="-setup-python" description="Creates setup.py">
+    <target name="-setup-python"
+            depends="-retrieve-lib-antpython"
+            description="Creates setup.py">
         <py:setup name="${name}"
                   dir="${build.dir}"
                   manifest="${manifest}"
@@ -189,6 +191,7 @@
 
 
     <target name="-setup-py2exe"
+            depends="-retrieve-lib-antpython"
             description="Create py2exe setup.py"
             if="isWindows">
         <py:setup-py2exe name="${name}"
@@ -221,7 +224,7 @@
 
 
     <target name="exe"
-            depends="-retrieve-ivy-lib,build,-setup-py2exe"
+            depends="build,-setup-py2exe"
             description="Windows executable"
             if="isWindows">
         <mkdir dir="${dist.dir}/exe" />
@@ -234,5 +237,42 @@
     <!-- ===================================================== -->
     <!-- Test targets                                          -->
     <!-- ===================================================== -->
+
+
+    <!-- ===================================================== -->
+    <!-- Documentation targets                                 -->
+    <!-- ===================================================== -->
+
+    <target name="-init-doc"
+            depends="-retrieve-lib-antpython"
+            description="Create RST files and copy other documentation files">
+        <!-- Create RST files -->
+        <mkdir dir="${dist.dir}/doc/src" />
+        <py:autorst todir="${dist.dir}/doc/src"
+                    dir="${src.dir}"
+                    privateMembers="true">
+            <include name="**/*.py" />
+            <exclude name="**/test*.py" />
+        </py:autorst>
+
+        <!-- Copy conf.py, other documentation RST files and templates -->
+        <copy todir="${dist.dir}/doc/src">
+            <fileset dir="${doc.dir}" includes="**/*" />
+        </copy>
+    </target>
+
+    <target name="doc-html"
+            depends="-init-doc"
+            description="Generation HTML documentation">
+        <mkdir dir="${dist.dir}/doc/html" />
+        <py:sphinxdoc dir="${dist.dir}/doc/src" todir="${dist.dir}/doc/html" />
+    </target>
+
+    <target name="doc-latex"
+            depends="-init-doc"
+            description="Generation LaTeX documentation">
+        <mkdir dir="${dist.dir}/doc/latex" />
+        <py:sphinxdoc dir="${dist.dir}/doc/src" todir="${dist.dir}/doc/latex" />
+    </target>
 
 </project>

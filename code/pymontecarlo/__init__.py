@@ -4,11 +4,6 @@
 :mod:`pymontecarlo` -- Common interface to several Monte Carlo codes
 ================================================================================
 
-.. module:: pymontecarlo
-   :synopsis: Common interface to several Monte Carlo codes
-
-.. inheritance-diagram:: pymontecarlo
-
 """
 
 # Script information for the file.
@@ -127,7 +122,7 @@ def load_programs(settings, validate=True):
     the option ``program``. An :exc:`IOError` exception is raised if the option
     is not defined.
     
-    If ``validate`` is ``True, the method will raise a :exc:`AssertionError` 
+    If ``validate`` is ``True``, the method will raise a :exc:`AssertionError` 
     if one of the programs is not valid.
     
     :arg settings: settings
@@ -156,7 +151,7 @@ def load_program(name, validate=True):
       * No ``config.py`` module exists in program package.
       * No ``program`` variable exists in ``config.py`` module.
     
-    If ``validate`` is ``True, the method will raise a :exc:`AssertionError` 
+    If ``validate`` is ``True``, the method will raise a :exc:`AssertionError` 
     if the program is not valid.
     
     :arg name: name of the program's module (e.g. ``penepma`` or ``winxray``)

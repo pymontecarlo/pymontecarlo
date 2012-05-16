@@ -7,7 +7,7 @@
 .. module:: material
    :synopsis: Material definition
 
-.. inheritance-diagram:: material
+.. inheritance-diagram:: pymontecarlo.input.material
 
 """
 

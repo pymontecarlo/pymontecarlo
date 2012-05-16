@@ -7,8 +7,6 @@
 .. module:: main
    :synopsis: Main for the command line user interface
 
-.. inheritance-diagram:: main
-
 """
 
 # Script information for the file.

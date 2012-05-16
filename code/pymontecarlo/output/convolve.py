@@ -7,8 +7,6 @@
 .. module:: convolve
    :synopsis: Perform convolution on photon spectrum
 
-.. inheritance-diagram:: convolve
-
 """
 
 # Script information for the file.

@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: PENEPMA conversion from base options
 
-.. inheritance-diagram:: pymontecarlo.input.penelope.epma.converter
+.. inheritance-diagram:: pymontecarlo.program.penepma.input.converter
 
 """
 

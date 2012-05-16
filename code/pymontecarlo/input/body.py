@@ -7,7 +7,7 @@
 .. module:: body
    :synopsis: Body for geometry
 
-.. inheritance-diagram:: body
+.. inheritance-diagram:: pymontecarlo.input.body
 
 """
 

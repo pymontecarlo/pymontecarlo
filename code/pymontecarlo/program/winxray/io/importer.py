@@ -7,7 +7,7 @@
 .. module:: importer
    :synopsis: WinX-Ray results importer
 
-.. inheritance-diagram:: pymontecarlo.result.winxray.importer
+.. inheritance-diagram:: pymontecarlo.program.winxray.io.importer
 
 """
 

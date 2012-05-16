@@ -1,12 +1,12 @@
 """
 ================================================================================
-:mod:`geometry` -- Base class of all geometries
+:mod:`geometry` -- Sample geometries
 ================================================================================
 
 .. module:: geometry
-   :synopsis: Base class of all geometries
+   :synopsis: Sample geometries
 
-.. inheritance-diagram:: geometry
+.. inheritance-diagram:: pymontecarlo.input.geometry
 
 """
 

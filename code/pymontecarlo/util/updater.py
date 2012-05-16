@@ -7,8 +7,6 @@
 .. module:: updater
    :synopsis: Base class for updaters
 
-.. inheritance-diagram:: pymontecarlo.util.updater
-
 """
 
 # Script information for the file.
@@ -32,7 +30,7 @@ class _Updater(object):
     """
     Base class of all updaters.
     Derived class must implement the method :meth:`_get_version` and registers
-    updater function in the :var:`_updaters` dictionary.
+    updater function in the :attr:`_updaters` dictionary.
     Updater functions takes only one argument which is the path to the file
     to be updated.
     The method :meth:`_validate` can also be overridden for validation.

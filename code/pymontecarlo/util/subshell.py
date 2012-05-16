@@ -7,8 +7,6 @@
 .. module:: subshell
    :synopsis: Atomic subshell
 
-.. inheritance-diagram:: subshell
-
 """
 
 # Script information for the file.

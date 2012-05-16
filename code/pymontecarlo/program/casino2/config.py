@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`casino2` -- Casino 2 Monte Carlo program configuration
+:mod:`config` -- Casino 2 Monte Carlo program configuration
 ================================================================================
 
-.. module:: casino2
+.. module:: config
    :synopsis: Casino 2 Monte Carlo program configuration
-
-.. inheritance-diagram:: pymontecarlo.program.casino2
 
 """
 
