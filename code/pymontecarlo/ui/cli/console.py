@@ -533,9 +533,9 @@ if platform.system() == 'Windows':
         def _post_print(self, stream, text, color):
             windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
 
-        def close(self):
+        def close(self, retcode=0):
             windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
-            _Console.close(self)
+            _Console.close(self, retcode)
 
 def create_console(width=80, stdout=sys.stdout, stderr=sys.stderr):
     """
