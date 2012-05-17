@@ -224,9 +224,9 @@ class Material(Option):
         density = 0.0
 
         for z, fraction in self.composition.iteritems():
-            density += ep.mass_density(z) * fraction
+            density += fraction / ep.mass_density(z)
 
-        return density
+        return 1.0 / density
 
     @property
     def name(self):
