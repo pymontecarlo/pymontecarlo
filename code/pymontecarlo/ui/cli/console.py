@@ -518,8 +518,7 @@ if platform.system() == 'Windows':
         """
 
         _COLORS = {COLOR_DEFAULT: 15, COLOR_RED: 12, COLOR_GREEN: 10,
-                   COLOR_BLUE: 9, COLOR_YELLOW: 14, COLOR_PURPLE: 15}
-        #FIXME: Find purple color in Windows
+                   COLOR_BLUE: 9, COLOR_YELLOW: 14, COLOR_PURPLE: 13}
 
         def __init__(self, width=80, stdout=sys.stdout, stderr=sys.stderr):
             _Console.__init__(self, width, stdout, stderr)
