@@ -40,7 +40,9 @@ TYPE_LOOKUP = \
      }
 
 def _find_programs():
-    settings = load_settings(['/home/ppinard/documents/workspace/pydev/pymontecarlo/code/pymontecarlo/settings.cfg.example'])
+    dirpath = os.path.abspath(os.path.dirname(__file__))
+    filepath = os.path.join(dirpath, '..', '..', 'settings.cfg.example')
+    settings = load_settings([filepath])
     return load_programs(settings, validate=False)
 
 def run(argv=None):
