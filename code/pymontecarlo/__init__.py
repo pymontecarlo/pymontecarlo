@@ -137,7 +137,13 @@ def load_programs(settings, validate=True):
 
     names = getattr(settings.pymontecarlo, 'programs').split(',')
     for name in names:
-        program = load_program(name, validate)
+        try:
+            program = load_program(name, validate)
+        except Exception as ex:
+            logging.error('The following exception occurred while loading program "%s": %s',
+                          name, str(ex))
+            continue
+
         programs.add(program)
         logging.debug("Loaded program (%s) from %s", program.name, name)
 
