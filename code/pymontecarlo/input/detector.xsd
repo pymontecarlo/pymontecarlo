@@ -216,22 +216,6 @@
             <xsd:extension base="detectorType">
                 <xsd:attributeGroup ref="delimitedDetectorGroup" />
 
-                <xsd:attribute name="limit_min" use="required">
-                    <xsd:simpleType>
-                        <xsd:restriction base="xsd:double">
-                            <xsd:maxInclusive value="0" />
-                        </xsd:restriction>
-                    </xsd:simpleType>
-                </xsd:attribute>
-
-                <xsd:attribute name="limit_max" use="required">
-                    <xsd:simpleType>
-                        <xsd:restriction base="xsd:double">
-                            <xsd:maxInclusive value="0" />
-                        </xsd:restriction>
-                    </xsd:simpleType>
-                </xsd:attribute>
-
                 <xsd:attribute name="channels" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:integer">

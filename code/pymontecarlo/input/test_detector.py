@@ -355,8 +355,7 @@ class TestPhiRhoZDetector(TestCase):
         TestCase.setUp(self)
 
         self.d = PhiRhoZDetector((radians(35), radians(45)),
-                                 (0, radians(360.0)),
-                                 (-12.34, -56.78), 1000)
+                                 (0, radians(360.0)), 1000)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -366,12 +365,10 @@ class TestPhiRhoZDetector(TestCase):
         self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
         self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
         self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
-        self.assertAlmostEqual(-56.78, self.d.limits_m[0], 4)
-        self.assertAlmostEqual(-12.34, self.d.limits_m[1], 4)
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhiRhoZDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, limits=-56.78 to -12.34 m, channels=1000)>'
+        expected = '<PhiRhoZDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
@@ -382,8 +379,6 @@ class TestPhiRhoZDetector(TestCase):
         self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
         self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
         self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
-        self.assertAlmostEqual(-56.78, d.limits_m[0], 4)
-        self.assertAlmostEqual(-12.34, d.limits_m[1], 4)
         self.assertEqual(1000, d.channels)
 
     def testto_xml(self):
@@ -393,8 +388,6 @@ class TestPhiRhoZDetector(TestCase):
         self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
         self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
         self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
-        self.assertAlmostEqual(-56.78, float(element.get('limit_min')), 4)
-        self.assertAlmostEqual(-12.34, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
 
 class TestTimeDetector(TestCase):

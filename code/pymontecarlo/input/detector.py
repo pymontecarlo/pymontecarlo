@@ -454,47 +454,30 @@ class PhotonSpectrumDetector(_DelimitedDetector, _EnergyDetector):
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonSpectrumDetector', PhotonSpectrumDetector)
 
-class PhiRhoZDetector(_PhotonRangeDetector, _DelimitedDetector, _ChannelsDetector):
-    def __init__(self, elevation_rad, azimuth_rad, limits_m, channels):
+class PhiRhoZDetector(_DelimitedDetector, _ChannelsDetector):
+    def __init__(self, elevation_rad, azimuth_rad, channels):
+        # Note: Using ChannelsDetector without setting any variable for the limits
         _ChannelsDetector.__init__(self, (float('-inf'), 0))
         _DelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
-        _PhotonRangeDetector.__init__(self)
 
-        self.limits_m = limits_m
         self.channels = channels
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s m, channels=%s)>' % \
+        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, channels=%s)>' % \
             (self.__class__.__name__,
              self.elevation_rad[0], self.elevation_rad[1],
              self.azimuth_rad[0], self.azimuth_rad[1],
-             self.limits_m[0], self.limits_m[1],
              self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         delimited = _DelimitedDetector.__loadxml__(element, *args, **kwargs)
-
-        limits = float(element.get('limit_min')), float(element.get('limit_max'))
         channels = int(element.get('channels'))
-
-        return cls(delimited.elevation_rad, delimited.azimuth_rad,
-                   limits, channels)
+        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels)
 
     def __savexml__(self, element, *args, **kwargs):
         _DelimitedDetector.__savexml__(self, element, *args, **kwargs)
-        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
-
-    def _set_range(self, xlow, xhigh, ylow, yhigh, zlow, zhigh):
-        self.limits_m = (zlow, zhigh)
-
-    @property
-    def limits_m(self):
-        return self._props['limits']
-
-    @limits_m.setter
-    def limits_m(self, limits):
-        self._set_limits(limits)
+        element.set('channels', str(self.channels))
 
 XMLIO.register('{http://pymontecarlo.sf.net}phiRhoZDetector', PhiRhoZDetector)
 
