@@ -184,7 +184,10 @@ class Exporter(_Exporter):
         wfs = map(itemgetter(1), composition)
 
         wxrops.setElements(zs, wfs)
-        wxrops.setMeanDensity_g_cm3(material.density_kg_m3)
+
+        if material.has_density_defined():
+            warnings.warn('WinXRay does not support user defined density', ExporterWarning)
+        #wxrops.setMeanDensity_g_cm3(material.density_kg_m3)
 
         # Absorption energy electron
         abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
