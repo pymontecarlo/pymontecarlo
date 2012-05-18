@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import csv
+import bisect
 from math import sqrt
 from collections import Iterable
 from StringIO import StringIO
@@ -378,6 +379,190 @@ class PhotonIntensityResult(_Result):
             yield transition, self.intensity(transition, absorption, fluorescence)
 
 ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
+
+class PhotonSpectrumResult(_Result):
+    _COLUMNS = ['energy (eV)',
+                'total', 'total unc',
+                'background', 'background unc']
+
+    def __init__(self, energy_offset_eV, energy_channel_width_eV,
+                        total, total_unc=None,
+                        background=None, background_unc=None):
+        """
+        Stores results from a photon spectrum.
+        
+        All intensities are given in counts / (sr.eV.electron). 
+        In other words, the number of counts is normalized by the solid angle 
+        of the detector collecting the spectrum, the width of the energy 
+        channel and the number of simulated electrons.
+        
+        :arg energy_offset_eV: energy (in eV) of the first channel.
+        :type energy_offset_eV: :class:`float`
+        
+        :arg energy_channel_width_eV: width of each energy channel (in eV)
+        :type energy_channel_width_eV: :class:`float`
+        
+        :arg total: total intensities of each channel in counts / (sr.eV.electron). 
+        :type intensities: :class:`list` of :class:`float`
+        
+        :arg total_unc: uncertainties on the total intensity of each channel in 
+            counts / (sr.eV.electron). 
+            The uncertainties should correspond to 3 sigma statistical 
+            uncertainty.
+            If ``None``, the uncertainty of all channels is set to 0.0.
+        :type intensities_unc: :class:`list` of :class:`float`
+        
+        :arg background: background intensities of each channel in 
+            counts / (sr.eV.electron).
+            The background intensity is the total intensity without the 
+            intensity from the characteristic photons.
+            If ``None``, the background intensities are set to 0.0.
+        :type backgrounds: :class:`list` of :class:`float`
+        
+        :arg background_unc: uncertainties on the background intensity of each 
+            channel in counts / (sr.eV.electron). 
+            The uncertainties should correspond to 3 sigma statistical 
+            uncertainty.
+            If ``None``, the uncertainty of all channels is set to 0.0.
+        :type backgrounds_unc: :class:`list` of :class:`float`
+        """
+        if total_unc is None: total_unc = [0.0] * len(total)
+        if background is None: background = [0.0] * len(total)
+        if background_unc is None: background_unc = [0.0] * len(total)
+
+        if len(total) != len(total_unc):
+            raise ValueError, \
+                'The number of total intensities (%i) must match the number of uncertainties (%i)' % \
+                    (len(total), len(total_unc))
+        if len(background) != len(total):
+            raise ValueError, \
+                'The number of background intensities (%i) must match the number of total intensities (%i)' % \
+                    (len(background), len(total))
+        if len(background) != len(background_unc):
+            raise ValueError, \
+                'The number of background intensities (%i) must match the number of uncertainties (%i)' % \
+                    (len(background), len(background_unc))
+
+        self._energies_eV = [i * float(energy_channel_width_eV) + energy_offset_eV \
+                             for i in range(len(total))]
+        self._total = total
+        self._total_unc = total_unc
+        self._background = background
+        self._background_unc = background_unc
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key):
+        reader = csv.reader(zipfile.open(key + '.csv', 'r'))
+
+        header = reader.next()
+        if header != cls._COLUMNS:
+            raise IOError, 'Header of "%s.csv" is invalid' % key
+
+        energies_eV = []
+        total = []
+        total_unc = []
+        background = []
+        background_unc = []
+        for row in reader:
+            energies_eV.append(float(row[0]))
+            total.append(float(row[1]))
+            total_unc.append(float(row[2]))
+            background.append(float(row[3]))
+            background_unc.append(float(row[4]))
+
+        energy_offset_eV = energies_eV[0]
+        energy_channel_width_eV = energies_eV[1] - energies_eV[0]
+
+        return cls(energy_offset_eV, energy_channel_width_eV,
+                   total, total_unc, background, background_unc)
+
+    def __savezip__(self, zipfile, key):
+        fp = StringIO()
+        writer = csv.writer(fp)
+
+        writer.writerow(self._COLUMNS)
+
+        for row in zip(self._energies_eV, self._total, self._total_unc,
+                       self._background, self._background_unc):
+            writer.writerow(row)
+
+        zipfile.writestr(key + '.csv', fp.getvalue())
+
+    @property
+    def energy_channel_width_eV(self):
+        """
+        Width of each energy channel in eV.
+        """
+        return self._energies_eV[1] - self._energies_eV[0]
+
+    @property
+    def energy_offset_eV(self):
+        """
+        Energy offset of the spectrum in eV. 
+        """
+        return self._energies_eV[0]
+
+    def get_total(self):
+        """
+        Returns the energies (in eV), the total intensities (in 
+        counts / (sr.eV.electron) and the 3 sigma uncertainty on the total 
+        intensities.
+        """
+        # Note: list(...) is used to return a copy of the energies and intensities
+        return list(self._energies_eV), list(self._total), list(self._total_unc)
+
+    def get_background(self):
+        """
+        Returns the energies (in eV), the background intensities (in 
+        counts / (sr.eV.electron) and the 3 sigma uncertainty on the background 
+        intensities.
+        """
+        # Note: list(...) is used to return a copy of the energies and intensities
+        return list(self._energies_eV), list(self._background), list(self._background_unc)
+
+    def _get_intensity(self, energy_eV, values, uncs):
+        """
+        Returns the intensity and its uncertainty for the specified 
+        energy.
+        Returns ``(0.0, 0.0)`` if the energy in outside the range of the 
+        spectrum.
+    
+        :arg energy_eV: energy of interest (in eV).
+        :arg values: intensity values
+        :arg uncs: uncertainty values
+        """
+        if energy_eV >= self._energies_eV[-1] + self.energy_channel_width_eV:
+            return 0.0, 0.0 # Above last channel
+
+        index = bisect.bisect_right(self._energies_eV, energy_eV)
+        if not index:
+            return 0.0, 0.0 # Below first channel
+
+        return values[index - 1], uncs[index - 1]
+
+    def total_intensity(self, energy_eV):
+        """
+        Returns the total intensity and its uncertainty for the specified 
+        energy.
+        Returns ``(0.0, 0.0)`` if the energy in outside the range of the 
+        spectrum.
+    
+        :arg energy_eV: energy of interest (in eV).
+        """
+        return self._get_intensity(energy_eV, self._total, self._total_unc)
+
+    def background_intensity(self, energy_eV):
+        """
+        Returns the background intensity and its uncertainty for the specified 
+        energy.
+        Returns ``(0.0, 0.0)`` if the energy in outside the range of the 
+        spectrum.
+    
+        :arg energy_eV: energy of interest (in eV).
+        """
+        return self._get_intensity(energy_eV, self._background, self._background_unc)
+
+ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
 
 class TimeResult(_Result):
 

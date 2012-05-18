@@ -22,7 +22,11 @@ from xml.etree.ElementTree import fromstring
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.output.result import \
-    PhotonIntensityResult, TimeResult, ElectronFractionResult, create_intensity_dict
+    (PhotonIntensityResult,
+     PhotonSpectrumResult,
+     TimeResult,
+     ElectronFractionResult,
+     create_intensity_dict)
 from pymontecarlo.util.transition import Transition, K_family
 
 import DrixUtilities.Files as Files
@@ -233,6 +237,145 @@ class TestPhotonIntensityResult(TestCase):
 
     def testiter_transition(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))
+
+class TestPhotonSpectrumResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        total = [6.0, 9.0, 1.0, 5.0]
+        total_unc = [0.1, 0.5, 0.9, 0.05]
+        background = [1.0, 2.0, 2.0, 0.5]
+        background_unc = [0.05, 0.04, 0.03, 0.02]
+
+        self.r = PhotonSpectrumResult(1.0, 0.5, total, total_unc,
+                                      background, background_unc)
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(1.0, self.r.energy_offset_eV, 4)
+        self.assertAlmostEqual(0.5, self.r.energy_channel_width_eV, 4)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det4')
+
+        reader = csv.reader(zipfile.open('det4.csv', 'r'))
+        lines = list(reader)
+
+        self.assertEqual(5, len(lines))
+        self.assertEqual(5, len(lines[0]))
+        self.assertEqual(5, len(lines[1]))
+        self.assertEqual(5, len(lines[2]))
+        self.assertEqual(5, len(lines[3]))
+        self.assertEqual(5, len(lines[4]))
+
+        self.assertAlmostEqual(1.0, float(lines[1][0]), 4)
+        self.assertAlmostEqual(1.5, float(lines[2][0]), 4)
+
+        self.assertAlmostEqual(6.0, float(lines[1][1]), 4)
+        self.assertAlmostEqual(0.1, float(lines[1][2]), 4)
+        self.assertAlmostEqual(1.0, float(lines[1][3]), 4)
+        self.assertAlmostEqual(0.05, float(lines[1][4]), 4)
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = PhotonSpectrumResult.__loadzip__(zipfile, 'det4')
+
+        self.assertAlmostEqual(1.0, r.energy_offset_eV, 4)
+        self.assertAlmostEqual(0.5, r.energy_channel_width_eV, 4)
+
+        es, ts, tus = r.get_total()
+        self.assertEqual(4, len(es))
+        self.assertEqual(4, len(ts))
+        self.assertEqual(4, len(tus))
+
+        es, bs, bus = r.get_background()
+        self.assertEqual(4, len(es))
+        self.assertEqual(4, len(bs))
+        self.assertEqual(4, len(bus))
+
+        zipfile.close()
+
+    def testget_total(self):
+        es, ts, tus = self.r.get_total()
+
+        self.assertEqual(4, len(es))
+        self.assertEqual(4, len(ts))
+        self.assertEqual(4, len(tus))
+
+        self.assertAlmostEqual(1.0, es[0], 4)
+        self.assertAlmostEqual(6.0, ts[0], 4)
+        self.assertAlmostEqual(0.1, tus[0], 4)
+
+    def testget_background(self):
+        es, bs, bus = self.r.get_background()
+
+        self.assertEqual(4, len(es))
+        self.assertEqual(4, len(bs))
+        self.assertEqual(4, len(bus))
+
+        self.assertAlmostEqual(1.0, es[0], 4)
+        self.assertAlmostEqual(1.0, bs[0], 4)
+        self.assertAlmostEqual(0.05, bus[0], 4)
+
+    def testtotal_intensity(self):
+        val, unc = self.r.total_intensity(0.0)
+        self.assertAlmostEqual(0.0, val, 4)
+        self.assertAlmostEqual(0.0, unc, 4)
+
+        val, unc = self.r.total_intensity(1.0)
+        self.assertAlmostEqual(6.0, val, 4)
+        self.assertAlmostEqual(0.1, unc, 4)
+
+        val, unc = self.r.total_intensity(1.2)
+        self.assertAlmostEqual(6.0, val, 4)
+        self.assertAlmostEqual(0.1, unc, 4)
+
+        val, unc = self.r.total_intensity(1.5)
+        self.assertAlmostEqual(9.0, val, 4)
+        self.assertAlmostEqual(0.5, unc, 4)
+
+        val, unc = self.r.total_intensity(2.5)
+        self.assertAlmostEqual(5.0, val, 4)
+        self.assertAlmostEqual(0.05, unc, 4)
+
+        val, unc = self.r.total_intensity(3.0)
+        self.assertAlmostEqual(0.0, val, 4)
+        self.assertAlmostEqual(0.0, unc, 4)
+
+    def testbackground_intensity(self):
+        val, unc = self.r.background_intensity(0.0)
+        self.assertAlmostEqual(0.0, val, 4)
+        self.assertAlmostEqual(0.0, unc, 4)
+
+        val, unc = self.r.background_intensity(1.0)
+        self.assertAlmostEqual(1.0, val, 4)
+        self.assertAlmostEqual(0.05, unc, 4)
+
+        val, unc = self.r.background_intensity(1.2)
+        self.assertAlmostEqual(1.0, val, 4)
+        self.assertAlmostEqual(0.05, unc, 4)
+
+        val, unc = self.r.background_intensity(1.5)
+        self.assertAlmostEqual(2.0, val, 4)
+        self.assertAlmostEqual(0.04, unc, 4)
+
+        val, unc = self.r.background_intensity(2.5)
+        self.assertAlmostEqual(0.5, val, 4)
+        self.assertAlmostEqual(0.02, unc, 4)
+
+        val, unc = self.r.background_intensity(3.0)
+        self.assertAlmostEqual(0.0, val, 4)
+        self.assertAlmostEqual(0.0, unc, 4)
 
 class TestTimeResult(TestCase):
 
