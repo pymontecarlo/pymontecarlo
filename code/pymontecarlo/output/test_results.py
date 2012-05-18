@@ -73,7 +73,7 @@ class TestResults(TestCase):
 
     def testload(self):
         results = Results.load(self.results_zip)
-        self.assertEqual(3, len(results))
+        self.assertEqual(5, len(results))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

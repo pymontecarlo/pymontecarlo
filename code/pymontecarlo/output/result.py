@@ -184,6 +184,9 @@ class PhotonIntensityResult(_Result):
 
         zipfile.writestr(key + '.csv', fp.getvalue())
 
+    def __contains__(self, transition):
+        return self.has_intensity(transition)
+
     def _get_intensity(self, key, transition, absorption=True):
         if isinstance(transition, basestring):
             transition = from_string(transition)
@@ -252,7 +255,7 @@ class PhotonIntensityResult(_Result):
 
     def intensity(self, transition, absorption=True, fluorescence=True):
         """
-        Returns the intensity (and its uncertainty) in counts / (sr.A).
+        Returns the intensity (and its uncertainty) in counts / (sr.electron).
         
         These examples will all returned the same values::
         
@@ -293,7 +296,7 @@ class PhotonIntensityResult(_Result):
     def characteristic_fluorescence(self, transition, absorption=True):
         """
         Returns the intensity (and its uncertainty) of the characteristic photons
-        produced by fluorescence of primary photons in counts / (sr.A).
+        produced by fluorescence of primary photons in counts / (sr.electron).
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.intensity`)
@@ -310,7 +313,7 @@ class PhotonIntensityResult(_Result):
     def bremsstrahlung_fluorescence(self, transition, absorption=True):
         """
         Returns the intensity (and its uncertainty) of the Bremsstrahlung photons
-        produced by fluorescence of primary photons in counts / (sr.A).
+        produced by fluorescence of primary photons in counts / (sr.electron).
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.intensity`)
@@ -327,7 +330,7 @@ class PhotonIntensityResult(_Result):
     def fluorescence(self, transition, absorption=True):
         """
         Returns the intensity (and its uncertainty) of the fluorescence 
-        contribution to the total intensity in counts / (sr.A).
+        contribution to the total intensity in counts / (sr.electron).
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.intensity`)
@@ -348,7 +351,7 @@ class PhotonIntensityResult(_Result):
     def absorption(self, transition, fluorescence=True):
         """
         Returns the intensity (and its uncertainty) of the absorption 
-        contribution to the total intensity in counts / (sr.A).
+        contribution to the total intensity in counts / (sr.electron).
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.intensity`)
@@ -728,6 +731,8 @@ class PhiRhoZResult(_Result):
         for transition in self._distributions:
             zs, values, uncs = self.get(transition, absorption, fluorescence)
             yield transition, zs, values, uncs
+
+ResultManager.register('PhiRhoZResult', PhiRhoZResult)
 
 class TimeResult(_Result):
 
