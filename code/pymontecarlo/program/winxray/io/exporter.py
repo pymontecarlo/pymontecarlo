@@ -189,6 +189,14 @@ class Exporter(_Exporter):
             warnings.warn('WinXRay does not support user defined density', ExporterWarning)
         #wxrops.setMeanDensity_g_cm3(material.density_kg_m3)
 
+        if options.geometry.tilt_rad != 0.0:
+            message = 'WinXRay does not support sample tilt. Use beam tilt instead.'
+            warnings.warn(message, ExporterWarning)
+
+        if options.geometry.rotation_rad != 0.0:
+            message = 'WinXRay does not support sample rotation.'
+            warnings.warn(message, ExporterWarning)
+
         # Absorption energy electron
         abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
                                options.geometry.get_materials()))
