@@ -24,9 +24,11 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.output.result import \
     (PhotonIntensityResult,
      PhotonSpectrumResult,
+     PhiRhoZResult,
      TimeResult,
      ElectronFractionResult,
-     create_intensity_dict)
+     create_intensity_dict,
+     create_phirhoz_dict)
 from pymontecarlo.util.transition import Transition, K_family
 
 import DrixUtilities.Files as Files
@@ -235,7 +237,7 @@ class TestPhotonIntensityResult(TestCase):
         self.assertAlmostEqual(4.0, val, 4)
         self.assertAlmostEqual(1.0, err, 4)
 
-    def testiter_transition(self):
+    def testiter_transitions(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))
 
 class TestPhotonSpectrumResult(TestCase):
@@ -376,6 +378,139 @@ class TestPhotonSpectrumResult(TestCase):
         val, unc = self.r.background_intensity(3.0)
         self.assertAlmostEqual(0.0, val, 4)
         self.assertAlmostEqual(0.0, unc, 4)
+
+class TestPhiRhoZResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.t1 = Transition(29, 9, 4)
+
+        gnf_zs = [1.0, 2.0, 3.0, 4.0]
+        gnf_values = [0.0, 5.0, 4.0, 1.0]
+        gnf_uncs = [0.01, 0.02, 0.03, 0.04]
+
+        gt_zs = [1.0, 2.0, 3.0, 4.0]
+        gt_values = [10.0, 15.0, 14.0, 11.0]
+        gt_uncs = [0.11, 0.12, 0.13, 0.14]
+
+        enf_zs = [1.0, 2.0, 3.0, 4.0]
+        enf_values = [20.0, 25.0, 24.0, 21.0]
+        enf_uncs = [0.21, 0.22, 0.23, 0.24]
+
+        et_zs = [1.0, 2.0, 3.0, 4.0]
+        et_values = [30.0, 35.0, 34.0, 31.0]
+        et_uncs = [0.31, 0.32, 0.33, 0.34]
+
+        distributions = \
+            create_phirhoz_dict(self.t1,
+                                gnf=(gnf_zs, gnf_values, gnf_uncs),
+                                gt=(gt_zs, gt_values, gt_uncs),
+                                enf=(enf_zs, enf_values, enf_uncs),
+                                et=(et_zs, et_values, et_uncs))
+
+        self.r = PhiRhoZResult(distributions)
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det5')
+
+        names = zipfile.namelist()
+        self.assertIn('det5+Cu_La1+gnf.csv', names)
+        self.assertIn('det5+Cu_La1+gt.csv', names)
+        self.assertIn('det5+Cu_La1+enf.csv', names)
+        self.assertIn('det5+Cu_La1+et.csv', names)
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = PhiRhoZResult.__loadzip__(zipfile, 'det5')
+
+        zs, values, uncs = r.get(self.t1, absorption=False, fluorescence=False)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(0.0, values[0], 4)
+        self.assertAlmostEqual(0.01, uncs[0], 4)
+
+        zs, values, uncs = r.get(self.t1, absorption=False, fluorescence=True)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(10.0, values[0], 4)
+        self.assertAlmostEqual(0.11, uncs[0], 4)
+
+        zs, values, uncs = r.get(self.t1, absorption=True, fluorescence=False)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(20.0, values[0], 4)
+        self.assertAlmostEqual(0.21, uncs[0], 4)
+
+        zs, values, uncs = r.get(self.t1, absorption=True, fluorescence=True)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(30.0, values[0], 4)
+        self.assertAlmostEqual(0.31, uncs[0], 4)
+#
+        zipfile.close()
+
+    def test__contains__(self):
+        self.assertTrue(self.t1 in self.r)
+        self.assertTrue('Cu La1' in self.r)
+        self.assertFalse('Cu Ka1' in self.r)
+
+    def testget(self):
+        zs, values, uncs = self.r.get(self.t1, absorption=False, fluorescence=False)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(0.0, values[0], 4)
+        self.assertAlmostEqual(0.01, uncs[0], 4)
+
+        zs, values, uncs = self.r.get(self.t1, absorption=False, fluorescence=True)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(10.0, values[0], 4)
+        self.assertAlmostEqual(0.11, uncs[0], 4)
+
+        zs, values, uncs = self.r.get(self.t1, absorption=True, fluorescence=False)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(20.0, values[0], 4)
+        self.assertAlmostEqual(0.21, uncs[0], 4)
+
+        zs, values, uncs = self.r.get(self.t1, absorption=True, fluorescence=True)
+        self.assertEqual(4, len(zs))
+        self.assertEqual(4, len(values))
+        self.assertEqual(4, len(uncs))
+        self.assertAlmostEqual(1.0, zs[0], 4)
+        self.assertAlmostEqual(30.0, values[0], 4)
+        self.assertAlmostEqual(0.31, uncs[0], 4)
+
+    def testiter_transition(self):
+        self.assertEqual(1, len(list(self.r.iter_transitions())))
 
 class TestTimeResult(TestCase):
 

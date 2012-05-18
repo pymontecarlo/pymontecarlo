@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import csv
+import os
 import bisect
 from math import sqrt
 from collections import Iterable
@@ -117,12 +118,12 @@ class PhotonIntensityResult(_Result):
             _check2(transition, data, GENERATED, 'generated', CHARACTERISTIC, 'characteristic')
             _check2(transition, data, GENERATED, 'generated', BREMSSTRAHLUNG, 'bremsstrahlung')
             _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'no fluorescence')
-            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'total')
+            _check2(transition, data, GENERATED, 'generated', TOTAL, 'total')
 
             _check2(transition, data, EMITTED, 'emitted', CHARACTERISTIC, 'characteristic')
             _check2(transition, data, EMITTED, 'emitted', BREMSSTRAHLUNG, 'bremsstrahlung')
             _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'no fluorescence')
-            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'total')
+            _check2(transition, data, EMITTED, 'emitted', TOTAL, 'total')
 
         self._intensities = intensities
 
@@ -426,6 +427,8 @@ class PhotonSpectrumResult(_Result):
             If ``None``, the uncertainty of all channels is set to 0.0.
         :type backgrounds_unc: :class:`list` of :class:`float`
         """
+        _Result.__init__(self)
+
         if total_unc is None: total_unc = [0.0] * len(total)
         if background is None: background = [0.0] * len(total)
         if background_unc is None: background_unc = [0.0] * len(total)
@@ -563,6 +566,168 @@ class PhotonSpectrumResult(_Result):
         return self._get_intensity(energy_eV, self._background, self._background_unc)
 
 ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
+
+def create_phirhoz_dict(transition, gnf, gt, enf, et):
+    return {transition: {
+                GENERATED: {
+                    NOFLUORESCENCE: gnf,
+                    TOTAL: gt},
+                EMITTED: {
+                    NOFLUORESCENCE: enf,
+                    TOTAL: et}
+                         }
+            }
+
+class PhiRhoZResult(_Result):
+    _COLUMNS = ['depth (kg/m2)', 'intensity', 'unc']
+
+    def __init__(self, distributions={}):
+        """
+        Creates a new result to store :math:`\\phi(\\rho z)` distributions.
+        
+        :arg distributions: :class:`dict` containing the distributions.
+            One should use :func:`.create_phirhoz_dict` to create the dictionary
+        """
+        _Result.__init__(self)
+        self._distributions = distributions
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key):
+        # Find all phi-rho-z files
+        arcnames = [name for name in zipfile.namelist() if name.startswith(key)]
+
+        # Read files
+        data = {}
+        for arcname in arcnames:
+            parts = os.path.splitext(arcname)[0].split('+')
+            transition = from_string(parts[-2].replace('_', ' '))
+            suffix = parts[-1]
+
+            reader = csv.reader(zipfile.open(arcname, 'r'))
+
+            header = reader.next()
+            if header != cls._COLUMNS:
+                raise IOError, 'Header of "%s.csv" is invalid' % arcname
+
+            zs = []
+            values = []
+            uncs = []
+            for row in reader:
+                zs.append(float(row[0]))
+                values.append(float(row[1]))
+                uncs.append(float(row[2]))
+
+            data.setdefault(transition, {})[suffix] = zs, values, uncs
+
+        # Construct distributions
+        distributions = {}
+        for transition, datum in data.iteritems():
+            distributions.update(create_phirhoz_dict(transition, **datum))
+
+        return cls(distributions)
+
+    def __savezip__(self, zipfile, key):
+        distributions = [('gnf', False, False), ('gt', False, True),
+                         ('enf', True, False), ('et', True, True)]
+
+        for suffix, absorption, fluorescence in distributions:
+            for transition, zs, values, uncs in \
+                    self.iter_transitions(absorption, fluorescence):
+                fp = StringIO()
+                writer = csv.writer(fp)
+
+                writer.writerow(self._COLUMNS)
+
+                for row in zip(zs, values, uncs):
+                    writer.writerow(row)
+
+                arcname = '+'.join([key, str(transition).replace(' ', '_'), suffix])
+                zipfile.writestr(arcname + '.csv', fp.getvalue())
+
+    def __contains__(self, transition):
+        """
+        Returns whether the result contains a :math:`\\phi(\\rho z)`
+        distribution for the specified transition.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples in :meth:`.intensity`)
+        """
+        if isinstance(transition, basestring):
+            transition = from_string(transition)
+
+        return transition in self._distributions
+
+    def get(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the :math:`\\phi(\\rho z)` distribution for the specified 
+        transition.
+        Three :class:`list` are returned representing:
+            
+            * :math:`\\rho z` values (in kg/m2)
+            * intensities
+            * uncertainties on the intensities
+            
+        Each of these three lists have the same number of values.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted intensity is returned, if ``false`` generated
+            intensity.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, intensity with fluorescence is returned, if ``false``
+            intensity without fluorescence.
+            
+        :return: intensity and its uncertainty
+        :raise: :class:`ValueError` if there is no distribution for the 
+            specified transition.
+            
+        Here are examples that will all returned the same values::
+        
+            >>> result.get(Transition(13, 4, 1))
+            >>> result.get('Al Ka1')
+        
+        or
+        
+            >>> result.get(K_family(13))
+            >>> result.get('Al K')
+        """
+        if isinstance(transition, basestring):
+            transition = from_string(transition)
+
+        # Check existence
+        if transition not in self._distributions:
+            raise ValueError, "No distribution for transition(s): %s" % transition
+
+        # Retrieve data
+        absorption_key = EMITTED if absorption else GENERATED
+        fluorescence_key = TOTAL if fluorescence else NOFLUORESCENCE
+
+        zs, values, uncs = \
+            self._distributions[transition][absorption_key][fluorescence_key]
+
+        # Note: list(...) is used to return a copy
+        return list(zs), list(values), list(uncs)
+
+    def iter_transitions(self, absorption=True, fluorescence=True):
+        """
+        Returns an iterator returning a tuple of the:
+
+          * transition
+          * depths (in kg/m2)
+          * intensities
+          * uncertainties on the intensities
+        
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted intensity is returned, if ``false`` generated
+            intensity.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, intensity with fluorescence is returned, if ``false``
+            intensity without fluorescence.
+        """
+        for transition in self._distributions:
+            zs, values, uncs = self.get(transition, absorption, fluorescence)
+            yield transition, zs, values, uncs
 
 class TimeResult(_Result):
 
