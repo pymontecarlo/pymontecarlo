@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from operator import attrgetter
+import warnings
 import math
 import pkgutil
 from StringIO import StringIO
@@ -43,7 +44,7 @@ from pymontecarlo.input.detector import \
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.io.exporter import Exporter as _Exporter, ExporterException
+from pymontecarlo.io.exporter import Exporter as _Exporter, ExporterException, ExporterWarning
 import pymontecarlo.util.element_properties as ep
 
 from casinoTools.FileFormat.casino2.File import File
@@ -154,6 +155,14 @@ class Exporter(_Exporter):
 
     def _export_geometry(self, options, simdata, simops):
         _Exporter._export_geometry(self, options, simdata, simops)
+
+        if options.geometry.tilt_rad != 0.0:
+            message = 'Casino does not support sample tilt. Use beam tilt instead.'
+            warnings.warn(message, ExporterWarning)
+
+        if options.geometry.rotation_rad != 0.0:
+            message = 'Casino does not support sample rotation.'
+            warnings.warn(message, ExporterWarning)
 
         # Absorption energy electron
         abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
