@@ -21,6 +21,7 @@ from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhiRhoZDetector, ElectronFractionDetector, TimeDetector
+from pymontecarlo.input.limit import ShowersLimit
 
 import DrixUtilities.Files as Files
 
@@ -33,10 +34,13 @@ class TestImporter(TestCase):
         TestCase.setUp(self)
 
         self.ops = Options()
+
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['fraction'] = ElectronFractionDetector()
         self.ops.detectors['time'] = TimeDetector()
         self.ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 100)
+
+        self.ops.limits.add(ShowersLimit(1000))
 
         dirpath = Files.getCurrentModulePath(__file__, '../testdata/al_10keV_1ke_001')
         self.results = Importer().import_from_dir(self.ops, dirpath)
@@ -49,14 +53,16 @@ class TestImporter(TestCase):
 
     def test_detector_photon_intensity(self):
         result = self.results['xray']
+        # Normalize counts by number of electrons and solid angle
+        factor = 1000 * 0.459697694132
 
         val, unc = result.intensity('Al Ka1')
-        self.assertAlmostEqual(276142, val, 3)
-        self.assertAlmostEqual(1668.34, unc, 3)
+        self.assertAlmostEqual(276142 / factor, val, 3)
+        self.assertAlmostEqual(1668.34 / factor, unc, 3)
 
         val, unc = result.intensity('Al Ka1', absorption=False)
-        self.assertAlmostEqual(294642, val, 3)
-        self.assertAlmostEqual(1833.41, unc, 3)
+        self.assertAlmostEqual(294642 / factor, val, 3)
+        self.assertAlmostEqual(1833.41 / factor, unc, 3)
 
     def test_detector_electron_fraction(self):
         result = self.results['fraction']
