@@ -570,16 +570,19 @@ class PhotonSpectrumResult(_Result):
 
 ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
 
-def create_phirhoz_dict(transition, gnf, gt, enf, et):
-    return {transition: {
-                GENERATED: {
-                    NOFLUORESCENCE: gnf,
-                    TOTAL: gt},
-                EMITTED: {
-                    NOFLUORESCENCE: enf,
-                    TOTAL: et}
-                         }
-            }
+def create_phirhoz_dict(transition, gnf=None, gt=None, enf=None, et=None):
+    dist = {transition: {}}
+
+    if gnf is not None:
+        dist[transition].setdefault(GENERATED, {})[NOFLUORESCENCE] = gnf
+    if gt is not None:
+        dist[transition].setdefault(GENERATED, {})[TOTAL] = gt
+    if enf is not None:
+        dist[transition].setdefault(EMITTED, {})[NOFLUORESCENCE] = enf
+    if et is not None:
+        dist[transition].setdefault(EMITTED, {})[TOTAL] = et
+
+    return dist
 
 class PhiRhoZResult(_Result):
     _COLUMNS = ['depth (kg/m2)', 'intensity', 'unc']
@@ -647,18 +650,34 @@ class PhiRhoZResult(_Result):
                 arcname = '+'.join([key, str(transition).replace(' ', '_'), suffix])
                 zipfile.writestr(arcname + '.csv', fp.getvalue())
 
-    def __contains__(self, transition):
+    def exists(self, transition, absorption=True, fluorescence=True):
         """
         Returns whether the result contains a :math:`\\phi(\\rho z)`
         distribution for the specified transition.
         
         :arg transition: transition or set of transitions or name of the
-            transition or transitions set (see examples in :meth:`.intensity`)
+            transition or transitions set (see examples in :meth:`.get`)
+        :arg absorption: distribution with absorption. If ``True``, emitted 
+            distribution is returned, if ``false`` generated distribution.
+        :arg fluorescence: distribution with fluorescence. If ``True``, 
+            distribution with fluorescence is returned, if ``false`` 
+            distribution without fluorescence.
         """
         if isinstance(transition, basestring):
             transition = from_string(transition)
 
-        return transition in self._distributions
+        if transition not in self._distributions:
+            return False
+
+        absorption_key = EMITTED if absorption else GENERATED
+        if absorption_key not in self._distributions[transition]:
+            return False
+
+        fluorescence_key = TOTAL if fluorescence else NOFLUORESCENCE
+        if fluorescence_key not in self._distributions[transition][absorption_key]:
+            return False
+
+        return True
 
     def get(self, transition, absorption=True, fluorescence=True):
         """
@@ -699,7 +718,7 @@ class PhiRhoZResult(_Result):
             transition = from_string(transition)
 
         # Check existence
-        if transition not in self._distributions:
+        if not self.exists(transition, absorption, fluorescence):
             raise ValueError, "No distribution for transition(s): %s" % transition
 
         # Retrieve data
@@ -729,6 +748,9 @@ class PhiRhoZResult(_Result):
             intensity without fluorescence.
         """
         for transition in self._distributions:
+            if not self.exists(transition, absorption, fluorescence):
+                continue
+
             zs, values, uncs = self.get(transition, absorption, fluorescence)
             yield transition, zs, values, uncs
 

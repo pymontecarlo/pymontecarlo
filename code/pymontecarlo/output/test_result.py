@@ -471,10 +471,10 @@ class TestPhiRhoZResult(TestCase):
 #
         zipfile.close()
 
-    def test__contains__(self):
-        self.assertTrue(self.t1 in self.r)
-        self.assertTrue('Cu La1' in self.r)
-        self.assertFalse('Cu Ka1' in self.r)
+    def testexists(self):
+        self.assertTrue(self.r.exists(self.t1))
+        self.assertTrue(self.r.exists('Cu La1'))
+        self.assertFalse(self.r.exists('Cu Ka1'))
 
     def testget(self):
         zs, values, uncs = self.r.get(self.t1, absorption=False, fluorescence=False)
