@@ -548,8 +548,8 @@ class PhotonSpectrumResult(_Result):
 
     def total_intensity(self, energy_eV):
         """
-        Returns the total intensity and its uncertainty for the specified 
-        energy.
+        Returns the total intensity (in counts / (sr.eV.electron) and its 
+        uncertainty for the specified energy.
         Returns ``(0.0, 0.0)`` if the energy in outside the range of the 
         spectrum.
     
@@ -559,8 +559,8 @@ class PhotonSpectrumResult(_Result):
 
     def background_intensity(self, energy_eV):
         """
-        Returns the background intensity and its uncertainty for the specified 
-        energy.
+        Returns the background intensity (in counts / (sr.eV.electron) and its 
+        uncertainty for the specified energy.
         Returns ``(0.0, 0.0)`` if the energy in outside the range of the 
         spectrum.
     
