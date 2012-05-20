@@ -20,7 +20,7 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, ElectronFractionDetector, TimeDetector
+    PhotonIntensityDetector, PhiRhoZDetector, ElectronFractionDetector, TimeDetector
 
 import DrixUtilities.Files as Files
 
@@ -36,6 +36,7 @@ class TestImporter(TestCase):
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['fraction'] = ElectronFractionDetector()
         self.ops.detectors['time'] = TimeDetector()
+        self.ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 100)
 
         dirpath = Files.getCurrentModulePath(__file__, '../testdata/al_10keV_1ke_001')
         self.results = Importer().import_from_dir(self.ops, dirpath)
@@ -66,6 +67,11 @@ class TestImporter(TestCase):
         result = self.results['time']
         self.assertAlmostEqual(64.486, result.simulation_time_s, 3)
         self.assertAlmostEqual(0.064486, result.simulation_speed_s[0], 3)
+
+    def test_detector_phirhoz(self):
+        result = self.results['prz']
+        self.assertEqual(3, len(list(result.iter_transitions())))
+        self.assertEqual(1, len(list(result.iter_transitions(absorption=False))))
 
 
 if __name__ == '__main__': #pragma: no cover

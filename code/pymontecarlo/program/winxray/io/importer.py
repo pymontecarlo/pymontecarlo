@@ -28,6 +28,7 @@ from pymontecarlo.io.importer import Importer as _Importer
 from pymontecarlo.output.result import \
     (
     PhotonIntensityResult,
+    PhiRhoZResult,
     ElectronFractionResult,
     TimeResult,
     create_intensity_dict,
@@ -36,7 +37,7 @@ from pymontecarlo.input.detector import \
     (
 #     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
-#     PhiRhoZDetector,
+     PhiRhoZDetector,
      PhotonIntensityDetector,
 #     PhotonSpectrumDetector,
      ElectronFractionDetector,
@@ -48,9 +49,12 @@ from pymontecarlo.util.transition import from_string
 from winxrayTools.ResultsFile.BseResults import BseResults
 from winxrayTools.ResultsFile.GeneralResults import GeneralResults
 from winxrayTools.ResultsFile.CharacteristicIntensity import CharacteristicIntensity
+from winxrayTools.ResultsFile.CharateristicPhirhoz import CharateristicPhirhoz
 
 # Globals and constants variables.
-from winxrayTools.ResultsFile.CharacteristicIntensity import EMITTED, GENERATED
+from winxrayTools.ResultsFile.CharacteristicIntensity import \
+    EMITTED as WXREMITTED, GENERATED as WXRGENERATED
+from pymontecarlo.output.result import EMITTED, GENERATED, NOFLUORESCENCE, TOTAL
 
 class Importer(_Importer):
 
@@ -59,6 +63,8 @@ class Importer(_Importer):
 
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity
+        self._detector_importers[PhiRhoZDetector] = \
+            self._detector_phirhoz
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
         self._detector_importers[TimeDetector] = self._detector_time
@@ -87,8 +93,8 @@ class Importer(_Importer):
             transition = from_string("%s %s" % (symbol(z), line))
 
             # FIXME: Normalize WinX-Ray intensity
-            gt = data[GENERATED]
-            et = data[EMITTED]
+            gt = data[WXRGENERATED]
+            et = data[WXREMITTED]
 
             tmpints = create_intensity_dict(transition,
                                             gnf=gt, gt=gt,
@@ -96,6 +102,27 @@ class Importer(_Importer):
             intensities.update(tmpints)
 
         return PhotonIntensityResult(intensities)
+
+    def _detector_phirhoz(self, options, name, detector, path):
+        wxrresult = CharateristicPhirhoz(path)
+        distributions = {}
+
+        def _extract(data, key, dists):
+            for z in data:
+                for xrayline in data[z]:
+                    transition = from_string(symbol(z) + " " + xrayline)
+
+                    zs, vals, uncs = data[z][xrayline]
+                    zs = [val * 1e-9 for val in zs]
+
+                    dists.setdefault(transition, {}).setdefault(key, {})
+                    dists[transition][key][NOFLUORESCENCE] = (zs, vals, uncs)
+                    dists[transition][key][TOTAL] = (zs, vals, uncs)
+
+        _extract(wxrresult.getPhirhozs('Generated'), GENERATED, distributions)
+        _extract(wxrresult.getPhirhozs('Emitted'), EMITTED, distributions)
+
+        return PhiRhoZResult(distributions)
 
     def _detector_electron_fraction(self, options, name, detector, path):
         wxrresult = BseResults(path)
