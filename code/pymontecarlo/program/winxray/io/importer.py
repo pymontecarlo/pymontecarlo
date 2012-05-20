@@ -29,6 +29,7 @@ from pymontecarlo.io.importer import Importer as _Importer
 from pymontecarlo.output.result import \
     (
     PhotonIntensityResult,
+    PhotonSpectrumResult,
     PhiRhoZResult,
     ElectronFractionResult,
     TimeResult,
@@ -40,7 +41,7 @@ from pymontecarlo.input.detector import \
 #     BackscatteredElectronPolarAngularDetector,
      PhiRhoZDetector,
      PhotonIntensityDetector,
-#     PhotonSpectrumDetector,
+     PhotonSpectrumDetector,
      ElectronFractionDetector,
      TimeDetector,
      )
@@ -52,10 +53,15 @@ from winxrayTools.ResultsFile.BseResults import BseResults
 from winxrayTools.ResultsFile.GeneralResults import GeneralResults
 from winxrayTools.ResultsFile.CharacteristicIntensity import CharacteristicIntensity
 from winxrayTools.ResultsFile.CharateristicPhirhoz import CharateristicPhirhoz
+from winxrayTools.ResultsFile.XRaySpectrum import XRaySpectrum
 
 # Globals and constants variables.
 from winxrayTools.ResultsFile.CharacteristicIntensity import \
     EMITTED as WXREMITTED, GENERATED as WXRGENERATED
+from winxrayTools.ResultsFile.XRaySpectrum import \
+    (ENERGY as WXRSPC_ENERGY,
+     TOTAL as WXRSPC_TOTAL,
+     BACKGROUND as WXRSPC_BACKGROUND)
 from pymontecarlo.output.result import EMITTED, GENERATED, NOFLUORESCENCE, TOTAL
 
 class Importer(_Importer):
@@ -65,6 +71,8 @@ class Importer(_Importer):
 
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity
+        self._detector_importers[PhotonSpectrumDetector] = \
+            self._detector_photon_spectrum
         self._detector_importers[PhiRhoZDetector] = \
             self._detector_phirhoz
         self._detector_importers[ElectronFractionDetector] = \
@@ -85,13 +93,18 @@ class Importer(_Importer):
 
         return self._import_results(options, path)
 
-    def _detector_photon_intensity(self, options, name, detector, path):
-        wxrresult = CharacteristicIntensity(path)
-
-        # Calculate normalization factor
+    def _get_normalization_factor(self, options, detector):
+        """
+        Returns the factor that should be *multiplied* to WinXRay intensities
+        to convert them to counts / (sr.electron).
+        """
         nelectron = options.limits.find(ShowersLimit).showers
         solidangle_sr = detector.solidangle_sr
-        factor = 1.0 / (nelectron * solidangle_sr)
+        return 1.0 / (nelectron * solidangle_sr)
+
+    def _detector_photon_intensity(self, options, name, detector, path):
+        wxrresult = CharacteristicIntensity(path)
+        factor = self._get_normalization_factor(options, detector)
 
         # Retrieve intensities
         intensities = {}
@@ -109,6 +122,25 @@ class Importer(_Importer):
             intensities.update(tmpints)
 
         return PhotonIntensityResult(intensities)
+
+    def _detector_photon_spectrum(self, options, name, detector, path):
+        wxrresult = XRaySpectrum(path)
+        factor = self._get_normalization_factor(options, detector)
+
+        # Retrieve data
+        energies = wxrresult.data[WXRSPC_ENERGY]
+        total = wxrresult.data[WXRSPC_TOTAL]
+        background = wxrresult.data[WXRSPC_BACKGROUND]
+
+        # Arrange units
+        total = [val * factor for val in total]
+        background = [val * factor for val in background]
+
+        energy_offset_eV = 0.0
+        energy_channel_width_eV = energies[1] - energies[0]
+
+        return PhotonSpectrumResult(energy_offset_eV, energy_channel_width_eV,
+                                    total=total, background=background)
 
     def _detector_phirhoz(self, options, name, detector, path):
         wxrresult = CharateristicPhirhoz(path)

@@ -20,7 +20,8 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, PhiRhoZDetector, ElectronFractionDetector, TimeDetector
+    (PhotonIntensityDetector, PhiRhoZDetector, ElectronFractionDetector,
+     TimeDetector, PhotonSpectrumDetector)
 from pymontecarlo.input.limit import ShowersLimit
 
 import DrixUtilities.Files as Files
@@ -39,6 +40,8 @@ class TestImporter(TestCase):
         self.ops.detectors['fraction'] = ElectronFractionDetector()
         self.ops.detectors['time'] = TimeDetector()
         self.ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 100)
+        self.ops.detectors['spectrum'] = \
+            PhotonSpectrumDetector((0, 1), (2, 3), (0, 1000), 500)
 
         self.ops.limits.add(ShowersLimit(1000))
 
@@ -53,8 +56,7 @@ class TestImporter(TestCase):
 
     def test_detector_photon_intensity(self):
         result = self.results['xray']
-        # Normalize counts by number of electrons and solid angle
-        factor = 1000 * 0.459697694132
+        factor = 1000 * 0.459697694132 # Normalization
 
         val, unc = result.intensity('Al Ka1')
         self.assertAlmostEqual(276142 / factor, val, 3)
@@ -79,6 +81,32 @@ class TestImporter(TestCase):
         self.assertEqual(3, len(list(result.iter_transitions())))
         self.assertEqual(1, len(list(result.iter_transitions(absorption=False))))
 
+    def test_detector_photon_spectrum(self):
+        result = self.results['spectrum']
+        factor = 1000 * 0.459697694132 # Normalization
+
+        self.assertAlmostEqual(10.0, result.energy_channel_width_eV, 4)
+        self.assertAlmostEqual(0.0, result.energy_offset_eV, 4)
+
+        # Total
+        energies, vals, uncs = result.get_total()
+        self.assertEqual(1000, len(energies))
+        self.assertEqual(1000, len(vals))
+        self.assertEqual(1000, len(uncs))
+
+        self.assertAlmostEqual(1480, energies[148], 4)
+        self.assertAlmostEqual(29489.1 / factor, vals[148], 4)
+        self.assertAlmostEqual(0.0, uncs[148], 4)
+
+        # Background
+        energies, vals, uncs = result.get_background()
+        self.assertEqual(1000, len(energies))
+        self.assertEqual(1000, len(vals))
+        self.assertEqual(1000, len(uncs))
+
+        self.assertAlmostEqual(1480, energies[148], 4)
+        self.assertAlmostEqual(194.188 / factor, vals[148], 4)
+        self.assertAlmostEqual(0.0, uncs[148], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
