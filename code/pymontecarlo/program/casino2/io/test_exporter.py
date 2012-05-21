@@ -19,7 +19,7 @@ from operator import attrgetter
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.casino2.io.exporter import Exporter
+from pymontecarlo.program.casino2.io.exporter import Exporter, ExporterException
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
@@ -68,8 +68,7 @@ class TestCasino2Exporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)),
-                            (-12.34, -56.78), 750)
+            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
 
         # Export to CAS
         casfile = self.e.export(ops)
@@ -334,6 +333,23 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(DIRECTION_COSINES_SOUM, simops.getDirectionCosines())
         self.assertEqual(ENERGY_LOSS_JOY_LUO, simops.getEnergyLossType())
         self.assertEqual(RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER, simops.getRandomNumberGeneratorType())
+
+    def testexport_different_openings(self):
+        # Create options
+        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        ops = Options()
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.beam.origin_m = (100e-9, 0, 1)
+        ops.geometry.material = mat
+        ops.limits.add(ShowersLimit(5678))
+        ops.detectors['xrays'] = \
+            PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
+        ops.detectors['prz'] = \
+            PhiRhoZDetector((radians(30), radians(55)), (0, radians(360.0)), 750)
+
+        # Test
+        self.assertRaises(ExporterException, self.e.export, ops)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -40,6 +40,7 @@ from pymontecarlo.input.detector import \
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      ElectronFractionDetector,
+     equivalent_opening,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -239,6 +240,12 @@ class Exporter(_Exporter):
 
         # Detector position
         dets = options.detectors.findall(_DelimitedDetector).values()
+
+        if len(dets) >= 2:
+            c = map(equivalent_opening, dets[:-1], dets[1:])
+            if not all(c):
+                raise ExporterException, "Some delimited detectors do not have the same opening"
+
         if dets:
             simops.TOA = math.degrees(dets[0].takeoffangle_rad) # deg
             simops.PhieRX = math.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg
