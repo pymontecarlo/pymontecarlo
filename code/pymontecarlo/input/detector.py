@@ -32,6 +32,24 @@ HALFPI = math.pi / 2.0
 TWOPI = math.pi * 2.0
 TOLERANCE = 1e-6
 
+def equivalent_opening(det1, det2, places=6):
+    """
+    Returns whether two delimited detectors have the same opening.
+    """
+    if round(abs(det2.elevation_rad[0] - det1.elevation_rad[0]), places) > 0:
+        return False
+
+    if round(abs(det2.elevation_rad[1] - det1.elevation_rad[1]), places) > 0:
+        return False
+
+    if round(abs(det2.azimuth_rad[0] - det1.azimuth_rad[0]), places) > 0:
+        return False
+
+    if round(abs(det2.azimuth_rad[1] - det1.azimuth_rad[1]), places) > 0:
+        return False
+
+    return True
+
 class _DelimitedDetector(Option):
     def __init__(self, elevation_rad, azimuth_rad):
         """

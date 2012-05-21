@@ -37,12 +37,14 @@ from pymontecarlo.input.detector import \
      PhotonIntensityDetector,
      PhotonSpectrumDetector,
      ElectronFractionDetector,
-     TimeDetector
+     TimeDetector,
+     equivalent_opening,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.io.exporter import Exporter as _Exporter, ExporterWarning
+from pymontecarlo.io.exporter import \
+    Exporter as _Exporter, ExporterWarning, ExporterException
 
 from winxrayTools.Configuration.OptionsFile import OptionsFile
 
@@ -147,6 +149,12 @@ class Exporter(_Exporter):
 
         # Detector position
         dets = options.detectors.findall(_DelimitedDetector).values()
+
+        if len(dets) >= 2:
+            c = map(equivalent_opening, dets[:-1], dets[1:])
+            if not all(c):
+                raise ExporterException, "Some delimited detectors do not have the same opening"
+
         if dets:
             toa_deg = math.degrees(dets[0].takeoffangle_rad) # deg
             phi_deg = math.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg

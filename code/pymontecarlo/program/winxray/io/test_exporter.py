@@ -19,7 +19,7 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.winxray.io.exporter import Exporter
+from pymontecarlo.program.winxray.io.exporter import Exporter, ExporterException
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
@@ -71,8 +71,7 @@ class TestExporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)),
-                            (-12.34, -56.78), 750)
+            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
 
         # Export to WinX-Ray options
         with warnings.catch_warnings(record=True) as ws:
@@ -158,6 +157,22 @@ class TestExporter(TestCase):
         self.assertEqual(EnergyLoss.TYPE_JOY_LUO, wxrops.getTypeEnergyLoss())
         self.assertEqual(RandomNumberGenerator.TYPE_RAN3, wxrops.getTypeRandomGenerator())
         self.assertEqual(MassAbsorptionCoefficient.TYPE_THINH_LEROUX, wxrops.getTypeMac())
+
+    def testexport_different_opening(self):
+        # Create options
+        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        ops = Options()
+        ops.beam.energy_eV = 1234
+        ops.beam.diameter_m = 25e-9
+        ops.geometry.material = mat
+        ops.limits.add(ShowersLimit(5678))
+        ops.detectors['xrays'] = \
+            PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
+        ops.detectors['prz'] = \
+            PhiRhoZDetector((radians(30), radians(50)), (0, radians(360.0)), 750)
+
+        # Test
+        self.assertRaises(ExporterException, self.e.export, ops)
 
 
 if __name__ == '__main__': #pragma: no cover

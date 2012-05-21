@@ -22,7 +22,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
-     ElectronFractionDetector)
+     ElectronFractionDetector, equivalent_opening)
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -34,6 +34,23 @@ XMLIO.register('_SpatialDetector', _SpatialDetector)
 XMLIO.register('_EnergyDetector', _EnergyDetector)
 XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
 XMLIO.register('_AzimuthalAngularDetector', _AzimuthalAngularDetector)
+
+class TestModule(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d1 = _DelimitedDetector((radians(35), radians(45)),
+                                     (0, radians(360.0)))
+        self.d2 = _DelimitedDetector((radians(35.0001), radians(45.0001)),
+                                     (0, radians(360.0)))
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testequivalent_opening(self):
+        self.assertTrue(equivalent_opening(self.d1, self.d2, 1))
+        self.assertFalse(equivalent_opening(self.d1, self.d2, 6))
 
 class Test_DelimitedDetector(TestCase):
 
