@@ -129,7 +129,7 @@ class TestCasino2Converter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy = 100e3
-        ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), (0, -10), 1000)
+        ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 1000)
         ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
 
         # Convert
