@@ -36,7 +36,7 @@ from pymontecarlo.input.detector import \
 #     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
 #     EnergyDepositedSpatialDetector,
-#     PhiRhoZDetector,
+     PhiRhoZDetector,
 #     PhotonAzimuthalAngularDetector,
      PhotonIntensityDetector,
 #     PhotonPolarAngularDetector,
@@ -57,10 +57,11 @@ class Converter(_Converter):
 #                 BackscatteredElectronEnergyDetector,
 #                 BackscatteredElectronPolarAngularDetector,
 #                 EnergyDepositedSpatialDetector,
-#                 PhiRhoZDetector,
+                 PhiRhoZDetector,
 #                 PhotonAzimuthalAngularDetector,
 #                 PhotonPolarAngularDetector,
                  PhotonSpectrumDetector,
+                 PhotonIntensityDetector,
 #                 TransmittedElectronAzimuthalAngularDetector,
 #                 TransmittedElectronEnergyDetector,
 #                 TransmittedElectronPolarAngularDetector,
@@ -95,35 +96,6 @@ class Converter(_Converter):
                 warnings.warn(message, ConversionWarning)
             else:
                 raise ex
-
-    def _convert_detectors(self, options):
-        # Create PhotonSpectrumDetector for PhotonIntensityDetectors
-        dets = options.detectors.findall(PhotonIntensityDetector)
-        for key, det in dets.iteritems():
-            newdet = PhotonSpectrumDetector(det.elevation_rad, det.azimuth_rad,
-                                            (0.0, options.beam.energy_eV), 1000)
-            options.detectors[key] = newdet
-
-            message = "Replaced PhotonIntensityDetector (%s) with a PhotonSpectrumDetector" % key
-            warnings.warn(message, ConversionWarning)
-
-        # Superclass convert
-        _Converter._convert_detectors(self, options)
-
-        # Check that no photon detector have the same delimited limit
-        dets = options.detectors.findall(PhotonSpectrumDetector)
-
-        limits = {}
-        for key, det in dets.iteritems():
-            limit = det.elevation_rad + det.azimuth_rad
-
-            for otherkey, otherlimit in limits.iteritems():
-                if limit == otherlimit:
-                    raise ConversionException, \
-                        "Detector (%s) has the same opening as detector (%s)" % \
-                            (key, otherkey)
-
-            limits[key] = limit
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)

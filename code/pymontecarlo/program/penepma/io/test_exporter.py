@@ -22,7 +22,8 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import TimeLimit
-from pymontecarlo.input.detector import PhotonIntensityDetector
+from pymontecarlo.input.detector import \
+    PhotonIntensityDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.io.exporter import Exporter
 
@@ -51,6 +52,10 @@ class TestPenelopeExporter(TestCase):
         ops = Options(name='test1')
         ops.detectors['x-ray'] = \
             PhotonIntensityDetector((radians(35), radians(45)), (0, radians(360.0)))
+        ops.detectors['spectrum'] = \
+            PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)), (0, 1000), 500)
+        ops.detectors['prz'] = \
+            PhiRhoZDetector((radians(0), radians(90)), (0, radians(360.0)), 500)
         ops.limits.add(TimeLimit(100))
 
         # Export

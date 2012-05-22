@@ -64,7 +64,7 @@ class Keyword(object):
     def comment(self):
         return self._comment
 
-    def create_line(self, text):
+    def __call__(self, text=''):
         """
         Creates an input line of this keyword from the specified text.
         The white space between the items is automatically adjusted to fit the
@@ -72,9 +72,7 @@ class Keyword(object):
         The keyword and the total length of the line is checked not to exceed 
         their respective maximum size.
         
-        :arg keyword: 6-character keyword
         :arg text: value of the keyword
-        :arg comment: comment associated with the line
         """
         keyword = self.name.ljust(self.LINE_KEYWORDS_SIZE)
         assert len(keyword) == self.LINE_KEYWORDS_SIZE
@@ -87,6 +85,19 @@ class Keyword(object):
         if len(self.comment) > 0:
             line = line.ljust(self.LINE_SIZE - (len(self.comment) + 2))
             line += '[%s]' % self.comment
+
+        assert len(line) <= self.LINE_SIZE
+
+        return line
+
+class Comment(Keyword):
+    def __init__(self, comment):
+        Keyword.__init__(self, ' ' * self.LINE_KEYWORDS_SIZE, comment)
+
+    def __call__(self, text=''):
+        text = text or self.comment
+
+        line = "%s %s" % (self.name, text)
 
         assert len(line) <= self.LINE_SIZE
 
@@ -109,24 +120,30 @@ class Exporter(_Exporter):
         self._pendbase_dir = get_settings().penelope.pendbase
 
     def export(self, options, outputdir):
+        """
+        Creates all materials, geometry and input file to run a PENELOPE main
+        program from the specified options.
+        
+        :arg options: options to be exported
+        :arg outputdir: directory where the simulation files should be saved
+        """
+        self._export(options, outputdir)
+
+    def _export(self, options, outputdir, *args):
         # Export geometry
         geoinfo, matinfos = self.export_geometry(options.geometry, outputdir)
 
         # Create input file
-        lines = self._create_input_file(options, geoinfo, matinfos)
-
-        filepath = os.path.join(outputdir, options.name + '.in')
-        with open(filepath, 'w') as fp:
-            for line in lines:
-                fp.write(line + os.linesep)
+        filepath = self._create_input_file(options, outputdir, geoinfo, matinfos)
 
         return filepath
 
-    def _create_input_file(self, options, geoinfo, matinfos):
+    def _create_input_file(self, options, outputdir, geoinfo, matinfos, *args):
         """
         Creates .in file for the specific PENELOPE main program.
         
         :arg options: options to be exported
+        :arg outputdir: output directory where to save the .in file
         :arg geoinfo: class:`tuple` containing :class:`PenelopeGeometry`
             object used to create the *geo* file and the full path of this
             *geo* file.
@@ -134,6 +151,8 @@ class Exporter(_Exporter):
             contains :class:`PenelopeMaterial` object and its associated *mat* 
             filepath. The order of the materials is the same as they appear in 
             the geometry file.
+            
+        :return: path to the .in file
         """
         raise NotImplementedError
 

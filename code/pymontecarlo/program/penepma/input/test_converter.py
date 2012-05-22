@@ -12,7 +12,6 @@ __license__ = "GPL v3"
 import unittest
 import logging
 import warnings
-from math import radians
 
 # Third party modules.
 
@@ -22,7 +21,6 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.penepma.input.converter import Converter, ConversionException
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.limit import TimeLimit
 
 # Globals and constants variables.
@@ -68,44 +66,6 @@ class TestPenelopeConverter(TestCase):
 
         # Convert
         self.assertRaises(ConversionException, self.converter.convert , ops)
-
-    def testconvert_photondetector(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.detectors['xray1'] = \
-            PhotonIntensityDetector((radians(35), radians(45)), (0, radians(360.0)))
-        ops.limits.add(TimeLimit(100))
-
-        # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
-
-        # 7 warning:
-        # Set default models (6)
-        # 1 for PhotonIntensityDetector to PhotonSpectrumDetector 
-        self.assertEqual(7, len(ws))
-
-        self.assertEqual(1, len(ops.detectors))
-
-        det = ops.detectors['xray1']
-        self.assertAlmostEqual(det.elevation_rad[0], radians(35), 4)
-        self.assertAlmostEqual(det.elevation_rad[1], radians(45), 4)
-        self.assertAlmostEqual(det.azimuth_rad[0], radians(0), 4)
-        self.assertAlmostEqual(det.azimuth_rad[1], radians(360), 4)
-        self.assertAlmostEqual(det.limits_eV[0], 0.0, 4)
-        self.assertAlmostEqual(det.limits_eV[1], 1e3, 4)
-        self.assertEqual(det.channels, 1000,)
-
-    def testconvert_photondetector_opening(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.detectors['xray1'] = \
-            PhotonIntensityDetector((radians(35), radians(45)), (0, radians(360.0)))
-        ops.detectors['xray2'] = \
-            PhotonIntensityDetector((radians(35), radians(45)), (0, radians(360.0)))
-        ops.limits.add(TimeLimit(100))
-
-        self.assertRaises(ConversionException, self.converter.convert, ops)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
