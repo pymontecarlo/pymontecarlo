@@ -1,2 +1,3 @@
 build.prop
 code/pymontecarlo/testdata/settings.cfg
+/*.pyc
