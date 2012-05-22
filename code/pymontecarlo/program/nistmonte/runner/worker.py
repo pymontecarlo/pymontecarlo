@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import copy
 import subprocess
 import logging
 import shutil
@@ -52,14 +51,12 @@ class Worker(_Worker):
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
 
     def _create(self, options, dirpath):
-        ops = copy.deepcopy(options)
-
         # Convert
-        Converter().convert(ops)
+        Converter().convert(options)
 
         # Save
-        filepath = self._get_filepath(ops, dirpath, 'xml')
-        ops.save(filepath)
+        filepath = self._get_filepath(options, dirpath, 'xml')
+        options.save(filepath)
         logging.debug('Save options to: %s', filepath)
 
         return filepath

@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import copy
 from operator import methodcaller
 
 # Third party modules.
@@ -106,12 +107,19 @@ class Runner(object):
         An :exc:`ValueError` is raised if an options with the same name was
         already added. This error is raised has options with the same name 
         would lead to results been overwritten.
+        
+        .. note::
+        
+           A copy of the options is put in queue to prevent actions of a worker 
+           to affect another one
+           
+        :arg options: options to be added to the queue
         """
         name = options.name
         if name in self._options_names:
             raise ValueError, 'An options with the name (%s) was already added' % name
 
-        self._queue_options.put(options)
+        self._queue_options.put(copy.deepcopy(options))
         self._options_names.append(name)
 
     def close(self):

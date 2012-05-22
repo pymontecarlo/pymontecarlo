@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import copy
 import subprocess
 import logging
 import shutil
@@ -53,20 +52,18 @@ class Worker(_Worker):
         logging.debug('PENEPMA executable: %s', self._executable)
 
     def _create(self, options, dirpath):
-        ops = copy.deepcopy(options)
-
         # Convert
-        Converter().convert(ops)
+        Converter().convert(options)
 
         # Export
-        dirpath = self._get_dirpath(ops)
+        dirpath = self._get_dirpath(options)
         if os.listdir(dirpath): # not empty
             logging.info("Simulation directory (%s) is not empty. It will be empty.", dirpath)
             shutil.rmtree(dirpath)
             os.makedirs(dirpath)
 
         # Create .in, .geo and all .mat
-        infilepath = Exporter().export(ops, dirpath)
+        infilepath = Exporter().export(options, dirpath)
 
         # Save
         logging.debug('Save in file: %s', infilepath)

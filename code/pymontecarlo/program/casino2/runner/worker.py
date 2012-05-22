@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import copy
 import logging
 
 # Third party modules.
@@ -50,18 +49,16 @@ class Worker(_Worker):
         logging.debug('Casino 2 executable: %s', self._executable)
 
     def _create(self, options, dirpath):
-        ops = copy.deepcopy(options)
-
         # Convert
-        Converter().convert(ops)
+        Converter().convert(options)
 
         # Export
-        simfilepath = self._get_filepath(ops, dirpath, 'sim')
+        simfilepath = self._get_filepath(options, dirpath, 'sim')
         if os.path.exists(simfilepath) and not self._overwrite:
             logging.info('Skipping %s as it already exists', simfilepath)
             return
 
-        simfile = Exporter().export(ops)
+        simfile = Exporter().export(options)
 
         # Save
         simfile.write(simfilepath)

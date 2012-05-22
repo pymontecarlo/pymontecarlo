@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import copy
 import subprocess
 import logging
 from zipfile import ZipFile
@@ -55,19 +54,17 @@ class Worker(_Worker):
         logging.debug('WinX-Ray directory: %s', self._executable_dir)
 
     def _create(self, options, dirpath):
-        ops = copy.deepcopy(options)
-
         # Convert
-        Converter().convert(ops)
+        Converter().convert(options)
 
         # Export
-        wxrops = Exporter().export(ops)
+        wxrops = Exporter().export(options)
 
         if dirpath == self._workdir:
-            wxrops.setResultsPath(self._get_dirpath(ops))
+            wxrops.setResultsPath(self._get_dirpath(options))
 
         # Save
-        filepath = self._get_filepath(ops, dirpath, 'wxc')
+        filepath = self._get_filepath(options, dirpath, 'wxc')
         wxrops.write(filepath)
         logging.debug('Save wxc file: %s', filepath)
 
