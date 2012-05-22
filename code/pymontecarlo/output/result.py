@@ -165,8 +165,8 @@ class PhotonIntensityResult(_Result):
         for transition, intensities in self._intensities.iteritems():
             row = []
             row.append(str(transition))
-            if hasattr(transition, 'energy'):
-                row.append(transition.energy)
+            if hasattr(transition, 'energy_eV'):
+                row.append(transition.energy_eV)
             else:
                 row.append(0.0)
 

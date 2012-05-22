@@ -97,8 +97,8 @@ class TestTransition(TestCase):
             x = getattr(self, "x%i" % i)
             self.assertEqual(siegbahn, x.siegbahn)
 
-    def testenergy(self):
-        self.assertAlmostEqual(1486.3, self.x1.energy, 4)
+    def testenergy_eV(self):
+        self.assertAlmostEqual(1486.3, self.x1.energy_eV, 4)
 
     def testprobability(self):
         self.assertAlmostEqual(0.0123699, self.x1.probability, 4)

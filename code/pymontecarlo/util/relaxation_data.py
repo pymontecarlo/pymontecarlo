@@ -96,7 +96,7 @@ class RelaxationData(object):
         except KeyError:
             return 0.0
 
-    def energy(self, z=None, subshells=None, transition=None):
+    def energy_eV(self, z=None, subshells=None, transition=None):
         """
         Returns the energy of a transition in eV.
         One can either specified the atomic number and subshells or an atomic

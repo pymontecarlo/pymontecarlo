@@ -124,7 +124,7 @@ class Transition(objectxml):
         self._z = z
         self._symbol = ep.symbol(z)
 
-        self._energy = relaxation_data.energy(z, (src, dest))
+        self._energy_eV = relaxation_data.energy_eV(z, (src, dest))
         self._probability = relaxation_data.probability(z, (src, dest))
         self._exists = relaxation_data.exists(z, (src, dest))
 
@@ -204,11 +204,11 @@ class Transition(objectxml):
         return self._siegbahn
 
     @property
-    def energy(self):
+    def energy_eV(self):
         """
         Energy of this transition in eV.
         """
-        return self._energy
+        return self._energy_eV
 
     @property
     def probability(self):
@@ -264,15 +264,15 @@ class transitionset(frozenset):
 
     atomicnumber = z
 
-def get_transitions(z, energylow=0.0, energyhigh=1e6):
+def get_transitions(z, energylow_eV=0.0, energyhigh_eV=1e6):
     """
     Returns all the X-ray transitions for the specified atomic number if
     the energy of these transitions is between the specified energy limits.
     The energy limits are inclusive.
     
     :arg z: atomic number (3 to 99)
-    :arg energylow: lower energy limit in eV (default: 0 eV)
-    :arg energyhigh: upper energy limit in eV (default: 1 MeV)
+    :arg energylow_eV: lower energy limit in eV (default: 0 eV)
+    :arg energyhigh_eV: upper energy limit in eV (default: 1 MeV)
     """
     transitions = []
 
@@ -280,8 +280,8 @@ def get_transitions(z, energylow=0.0, energyhigh=1e6):
         if not relaxation_data.exists(z, subshells):
             continue
 
-        energy = relaxation_data.energy(z, subshells)
-        if energy < energylow or energy > energyhigh:
+        energy = relaxation_data.energy_eV(z, subshells)
+        if energy < energylow_eV or energy > energyhigh_eV:
             continue
 
         transitions.append(Transition(z, *subshells))

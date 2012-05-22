@@ -36,9 +36,9 @@ class TestRelaxationData(TestCase):
     def testReadData(self):
         self.assertEquals(97, len(relaxation_data.data))
 #
-    def testenergy(self):
+    def testenergy_eV(self):
         # Test Al Ka1.
-        self.assertEquals(1.48671e3, relaxation_data.energy(13, [4, 1]))
+        self.assertEquals(1.48671e3, relaxation_data.energy_eV(13, [4, 1]))
 
     def testprobability(self):
         # Test Al Ka1.
