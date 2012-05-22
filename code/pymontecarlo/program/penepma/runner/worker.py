@@ -46,7 +46,7 @@ class Worker(_Worker):
         """
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
-        self._executable = get_settings().penelope.penepma_exe
+        self._executable = get_settings().penepma.exe
         if not os.path.isfile(self._executable):
             raise IOError, 'PENEPMA executable (%s) cannot be found' % self._executable
         logging.debug('PENEPMA executable: %s', self._executable)
