@@ -125,19 +125,22 @@ class Importer(_Importer):
 
     def _detector_photon_spectrum(self, options, name, detector, path):
         wxrresult = XRaySpectrum(path)
-        factor = self._get_normalization_factor(options, detector)
 
         # Retrieve data
         energies = wxrresult.data[WXRSPC_ENERGY]
         total = wxrresult.data[WXRSPC_TOTAL]
         background = wxrresult.data[WXRSPC_BACKGROUND]
 
-        # Arrange units
-        total = [val * factor for val in total]
-        background = [val * factor for val in background]
-
+        # Calculate energy offset and channel width
         energy_offset_eV = 0.0
         energy_channel_width_eV = energies[1] - energies[0]
+
+        # Arrange units
+        factor = self._get_normalization_factor(options, detector)
+        factor /= energy_channel_width_eV
+
+        total = [val * factor for val in total]
+        background = [val * factor for val in background]
 
         return PhotonSpectrumResult(energy_offset_eV, energy_channel_width_eV,
                                     total=total, background=background)
