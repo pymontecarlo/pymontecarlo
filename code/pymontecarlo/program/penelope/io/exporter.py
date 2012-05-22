@@ -35,7 +35,8 @@ from pymontecarlo.input.material import VACUUM
 from pymontecarlo.program.penelope.input.geometry import \
     PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
 
-from pymontecarlo.io.exporter import Exporter as _Exporter, ExporterException
+from pymontecarlo.io.exporter import \
+    Exporter as _Exporter, ExporterException, ExporterWarning #@UnusedImport
 
 import penelopelib.material as penmaterial
 
