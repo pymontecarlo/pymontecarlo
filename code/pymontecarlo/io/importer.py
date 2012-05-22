@@ -42,16 +42,16 @@ class Importer(object):
     def _import_results(self, options, *args):
         results = {}
 
-        for name, detector in options.detectors.iteritems():
+        for key, detector in options.detectors.iteritems():
             clasz = detector.__class__
             method = self._detector_importers.get(clasz)
 
             if method:
-                result = method(options, name, detector, *args)
-                results[name] = result
+                result = method(options, key, detector, *args)
+                results[key] = result
             else:
                 message = "Could not import results from '%s' detector (%s)" % \
-                    (name, clasz.__name__)
+                    (key, clasz.__name__)
                 warnings.warn(message, ImporterWarning)
 
         return Results(results)
