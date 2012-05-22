@@ -22,7 +22,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
-     ElectronFractionDetector, equivalent_opening)
+     ElectronFractionDetector)
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -34,23 +34,6 @@ XMLIO.register('_SpatialDetector', _SpatialDetector)
 XMLIO.register('_EnergyDetector', _EnergyDetector)
 XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
 XMLIO.register('_AzimuthalAngularDetector', _AzimuthalAngularDetector)
-
-class TestModule(TestCase):
-
-    def setUp(self):
-        TestCase.setUp(self)
-
-        self.d1 = _DelimitedDetector((radians(35), radians(45)),
-                                     (0, radians(360.0)))
-        self.d2 = _DelimitedDetector((radians(35.0001), radians(45.0001)),
-                                     (0, radians(360.0)))
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
-    def testequivalent_opening(self):
-        self.assertTrue(equivalent_opening(self.d1, self.d2, 1))
-        self.assertFalse(equivalent_opening(self.d1, self.d2, 6))
 
 class Test_DelimitedDetector(TestCase):
 
@@ -66,13 +49,21 @@ class Test_DelimitedDetector(TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
         self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(35, self.d.elevation_deg[0], 2)
+        self.assertAlmostEqual(45, self.d.elevation_deg[1], 2)
+
         self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
         self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
-        self.assertAlmostEqual(0.70400115, self.d.solidangle_sr, 4)
+        self.assertAlmostEqual(0, self.d.azimuth_deg[0], 2)
+        self.assertAlmostEqual(360.0, self.d.azimuth_deg[1], 2)
+
+        self.assertAlmostEqual(0.704001, self.d.solidangle_sr, 4)
+
         self.assertAlmostEqual(radians(40), self.d.takeoffangle_rad, 4)
+        self.assertAlmostEqual(40, self.d.takeoffangle_deg, 2)
 
     def test__repr__(self):
-        expected = '<_DelimitedDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad)>'
+        expected = '<_DelimitedDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):

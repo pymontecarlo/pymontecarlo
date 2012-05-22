@@ -78,9 +78,10 @@ class _DelimitedDetector(Option):
         self.azimuth_rad = azimuth_rad
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad)>' % \
-            (self.__class__.__name__, self.elevation_rad[0], self.elevation_rad[1],
-             self.azimuth_rad[0], self.azimuth_rad[1])
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg)>' % \
+            (self.__class__.__name__,
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1])
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -116,6 +117,14 @@ class _DelimitedDetector(Option):
         self._props['elevation'] = min(low, high), max(low, high)
 
     @property
+    def elevation_deg(self):
+        return tuple(map(math.degrees, self.elevation_rad))
+
+    @elevation_deg.setter
+    def elevation_deg(self, elevation):
+        self.elevation_rad = map(math.radians, elevation)
+
+    @property
     def azimuth_rad(self):
         return self._props['azimuth']
 
@@ -133,6 +142,14 @@ class _DelimitedDetector(Option):
         self._props['azimuth'] = min(low, high), max(low, high)
 
     @property
+    def azimuth_deg(self):
+        return tuple(map(math.degrees, self.azimuth_rad))
+
+    @azimuth_deg.setter
+    def azimuth_deg(self, azimuth):
+        self.azimuth_rad = map(math.radians, azimuth)
+
+    @property
     def solidangle_sr(self):
         return abs((self.azimuth_rad[1] - self.azimuth_rad[0]) * \
                    (math.cos(self.elevation_rad[0]) - math.cos(self.elevation_rad[1])))
@@ -140,6 +157,10 @@ class _DelimitedDetector(Option):
     @property
     def takeoffangle_rad(self):
         return sum(self.elevation_rad) / 2.0
+
+    @property
+    def takeoffangle_deg(self):
+        return math.degrees(self.takeoffangle_rad)
 
 class _ChannelsDetector(Option):
     def __init__(self, extremums=(float('-inf'), float('inf'))):
