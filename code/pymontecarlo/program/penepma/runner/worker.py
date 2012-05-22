@@ -24,6 +24,7 @@ import copy
 import subprocess
 import logging
 import shutil
+from zipfile import ZipFile
 
 # Third party modules.
 
@@ -34,9 +35,10 @@ from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.io.exporter import Exporter
-
+from pymontecarlo.program.penepma.io.importer import Importer
 
 # Globals and constants variables.
+from zipfile import ZIP_DEFLATED
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -73,8 +75,6 @@ class Worker(_Worker):
 
     def _run(self, options):
         infilepath = self._create(options, self._workdir)
-        if not infilepath:
-            return
 
         # Extract limit
         limit = options.limits.find(ShowersLimit)
@@ -116,8 +116,22 @@ class Worker(_Worker):
         self._process = None
 
         if retcode != 0:
-            raise RuntimeError, "An error occured during the simulation"
+            raise RuntimeError, "An error occurred during the simulation"
 
     def _save_results(self, options, zipfilepath):
-        pass
+        dirpath = self._get_dirpath(options)
+
+        # Import results to pyMonteCarlo
+        results = Importer().import_from_dir(options, dirpath)
+        results.save(zipfilepath)
+
+        # Append all PENEPMA results in zip
+        zip = ZipFile(zipfilepath, 'a', compression=ZIP_DEFLATED)
+
+        for filename in os.listdir(dirpath):
+            filepath = os.path.join(dirpath, filename)
+            arcname = "raw/%s" % filename
+            zip.write(filepath, arcname)
+
+        zip.close()
 
