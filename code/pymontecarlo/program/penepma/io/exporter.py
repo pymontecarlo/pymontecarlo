@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import os
 import math
 import logging
+import warnings
 from operator import attrgetter, mul
 
 # Third party modules.
@@ -32,10 +33,14 @@ from pymontecarlo.input.detector import \
     _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 from pymontecarlo.util.transition import get_transitions
-from pymontecarlo.program.penelope.io.exporter import Exporter as _Exporter, Keyword, Comment
+from pymontecarlo.program.penelope.io.exporter import \
+    Exporter as _Exporter, Keyword, Comment, ExporterException, ExporterWarning
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 
 # Globals and constants variables.
+MAX_PHOTON_DETECTORS = 25 # Set in penepma.f
+MAX_PRZ = 20 # Set in penepma.f
+MAX_PHOTON_DETECTOR_CHANNEL = 1000
 
 class Exporter(_Exporter):
     _KEYWORD_TITLE = Keyword("TITLE")
@@ -251,6 +256,13 @@ class Exporter(_Exporter):
                                  phdets1, phdets2, *args):
         lines.append(self._COMMENT_DETECTORS())
 
+        # Check number of detectors
+        if len(phdets2) > MAX_PHOTON_DETECTORS:
+            raise ExporterException, \
+                'PENEPMA can only have %i detectors. %i are defined.' % \
+                    (MAX_PHOTON_DETECTORS, len(phdets2))
+
+        # Add detector in correct order
         for index in sorted(phdets2.keys()):
             keys = phdets2[index]
             detectors = map(options.detectors.get, keys)
@@ -276,6 +288,15 @@ class Exporter(_Exporter):
             high = 90.0 - elevation_deg[1]
             elevation_deg = min(low, high), max(low, high)
 
+            # Check number of channels
+            channels = detector.channels
+            if channels > MAX_PHOTON_DETECTOR_CHANNEL:
+                channels = MAX_PHOTON_DETECTOR_CHANNEL
+
+                message = "Number of channel of photon detector (%i) exceeds PENEPMA limit (%i). The limit is enforced." % \
+                    (channels, MAX_PHOTON_DETECTOR_CHANNEL)
+                warnings.warn(message, ExporterWarning)
+
             # Add lines
             comment = Comment('Detector %i used by %s' % (index + 1, ', '.join(keys)))
             lines.append(comment())
@@ -284,7 +305,7 @@ class Exporter(_Exporter):
             line = self._KEYWORD_PDANGL(text)
             lines.append(line)
 
-            text = detector.limits_eV + (detector.channels,)
+            text = detector.limits_eV + (channels,)
             line = self._KEYWORD_PDENER(text)
             lines.append(line)
 
@@ -302,14 +323,24 @@ class Exporter(_Exporter):
         lines.append(self._COMMENT_PHIRHOZ())
 
         detectors = options.detectors.findall(PhiRhoZDetector)
+        if not detectors:
+            lines.append(self._COMMENT_SKIP())
+            return
 
-        # Retrieve all main x-ray lines of elements inside the geometry
+        # Check number of prz
+        if len(detectors) > MAX_PRZ:
+            raise ExporterException, \
+                'PENEPMA can only have %i phi-rho-z. %i are defined.' % \
+                    (MAX_PRZ, len(detectors))
+
+        # Retrieve all elements inside the geometry
         materials = options.geometry.get_materials()
 
         zs = set()
         for material in materials:
             zs |= set(material.composition.keys())
 
+        # Retrieve all transitions above a certain probability
         energylow = min(map(attrgetter('absorption_energy_electron_eV'), materials))
         energyhigh = options.beam.energy_eV
 
@@ -317,6 +348,21 @@ class Exporter(_Exporter):
         for z in zs:
             transitions += filter(lambda t: t.probability > 1e-2,
                                   get_transitions(z, energylow, energyhigh))
+
+        transitions.sort(key=attrgetter('probability'), reverse=True)
+
+        if not transitions:
+            message = "No transition found for PRZ distribution with high enough probability"
+            warnings.warn(message, ExporterWarning)
+
+        # Restrain number of transitions to maximum number of PRZ
+        if len(detectors) * len(transitions) > MAX_PRZ:
+            message = 'Too many transitions (%i) for the number of detectors (%i). Only the most probable is/are kept.' % \
+                          (len(transitions), len(detectors))
+            warnings.warn(message, ExporterWarning)
+
+            n = int(MAX_PRZ / len(detectors)) # >= 1
+            transitions = transitions[:n]
 
         logging.debug('PRZ of the following transitions: %s',
                       ', '.join(map(str, transitions)))
@@ -329,6 +375,9 @@ class Exporter(_Exporter):
                 text = (transition.z, transition.dest.index,
                         transition.src.index, index)
                 lines.append(self._KEYWORD_PRZ(text))
+
+            message = "PENEPMA does not support a specific number of slices for the PRZ"
+            warnings.warn(message, ExporterWarning)
 
         lines.append(self._COMMENT_SKIP())
 

@@ -13,6 +13,7 @@ import unittest
 import logging
 import tempfile
 import shutil
+import warnings
 from math import radians
 
 # Third party modules.
@@ -25,9 +26,13 @@ from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.program.penepma.input.converter import Converter
-from pymontecarlo.program.penepma.io.exporter import Exporter
+from pymontecarlo.program.penepma.io.exporter import Exporter, ExporterException
 
 # Globals and constants variables.
+from pymontecarlo.program.penepma.io.exporter import \
+    MAX_PHOTON_DETECTORS, MAX_PRZ
+
+warnings.simplefilter("always")
 
 class TestPenelopeExporter(TestCase):
 
@@ -62,6 +67,76 @@ class TestPenelopeExporter(TestCase):
         # Export
         self.c.convert(ops)
         self.e.export(ops, self.tmpdir)
+
+    def test_append_photon_detectors_maxlimit(self):
+        ops = Options()
+        ops.limits.add(TimeLimit(100))
+
+        for i in range(MAX_PHOTON_DETECTORS + 1):
+            ops.detectors['det%i' % i] = \
+                PhotonSpectrumDetector((radians(i), radians(45)), (0, radians(360.0)),
+                                       (0, 1000), 500)
+
+        self.c.convert(ops)
+        self.assertRaises(ExporterException, self.e.export, ops, self.tmpdir)
+
+    def test_append_photon_detectors_maxchannels(self):
+        ops = Options()
+        ops.limits.add(TimeLimit(100))
+        ops.detectors['spectrum'] = \
+            PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)),
+                                   (0, 1000), 50000)
+
+        self.c.convert(ops)
+
+        with warnings.catch_warnings(record=True) as ws:
+            self.e.export(ops, self.tmpdir)
+
+        self.assertEqual(1, len(ws))
+
+    def test_append_phirhoz_distribution_channels(self):
+        ops = Options()
+        ops.beam.energy_eV = 30e3
+        ops.limits.add(TimeLimit(100))
+        ops.detectors['prz1'] = \
+            PhiRhoZDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
+        ops.detectors['prz2'] = \
+            PhiRhoZDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
+
+        self.c.convert(ops)
+
+        with warnings.catch_warnings(record=True) as ws:
+            self.e.export(ops, self.tmpdir)
+
+        self.assertEqual(2, len(ws))
+
+    def test_append_phirhoz_distribution_maxlimit(self):
+        ops = Options()
+        ops.beam.energy_eV = 30e3
+        ops.limits.add(TimeLimit(100))
+
+        for i in range(MAX_PRZ + 1):
+            ops.detectors['det%i' % i] = \
+                PhiRhoZDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
+
+        self.c.convert(ops)
+        self.assertRaises(ExporterException, self.e.export, ops, self.tmpdir)
+
+    def test_append_phirhoz_distribution_restrain_transitions(self):
+        ops = Options()
+        ops.beam.energy_eV = 30e3
+        ops.limits.add(TimeLimit(100))
+
+        for i in range(10):
+            ops.detectors['det%i' % i] = \
+                PhiRhoZDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
+
+        self.c.convert(ops)
+
+        with warnings.catch_warnings(record=True) as ws:
+            self.e.export(ops, self.tmpdir)
+
+        self.assertEqual(10 + 1, len(ws))
 
 
 if __name__ == '__main__': #pragma: no cover
