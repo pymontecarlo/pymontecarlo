@@ -50,6 +50,7 @@ class TestPenelopeExporter(TestCase):
     def testexport(self):
         # Create
         ops = Options(name='test1')
+        ops.beam.energy_eV = 30e3
         ops.detectors['x-ray'] = \
             PhotonIntensityDetector((radians(35), radians(45)), (0, radians(360.0)))
         ops.detectors['spectrum'] = \

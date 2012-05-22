@@ -29,8 +29,9 @@ from operator import attrgetter, mul
 # Local modules.
 from pymontecarlo import get_settings
 from pymontecarlo.input.detector import \
-    _PhotonDelimitedDetector, PhotonSpectrumDetector
+    _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
+from pymontecarlo.util.transition import get_transitions
 from pymontecarlo.program.penelope.io.exporter import Exporter as _Exporter, Keyword, Comment
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 
@@ -297,10 +298,37 @@ class Exporter(_Exporter):
         lines.append(self._COMMENT_SKIP())
 
     def _append_phirhoz_distribution(self, lines, options, geoinfo, matinfos,
-                                     d1, d2, *args):
+                                     phdets1, phdets2, *args):
         lines.append(self._COMMENT_PHIRHOZ())
 
-        # FIXME: Add phi-rho-z distribution
+        detectors = options.detectors.findall(PhiRhoZDetector)
+
+        # Retrieve all main x-ray lines of elements inside the geometry
+        materials = options.geometry.get_materials()
+
+        zs = set()
+        for material in materials:
+            zs |= set(material.composition.keys())
+
+        energylow = min(map(attrgetter('absorption_energy_electron_eV'), materials))
+        energyhigh = options.beam.energy_eV
+
+        transitions = []
+        for z in zs:
+            transitions += filter(lambda t: t.probability > 1e-2,
+                                  get_transitions(z, energylow, energyhigh))
+
+        logging.debug('PRZ of the following transitions: %s',
+                      ', '.join(map(str, transitions)))
+
+        # Create lines
+        for key in detectors.iterkeys():
+            index = phdets1[key] + 1
+
+            for transition in transitions:
+                text = (transition.z, transition.dest.index,
+                        transition.src.index, index)
+                lines.append(self._KEYWORD_PRZ(text))
 
         lines.append(self._COMMENT_SKIP())
 
