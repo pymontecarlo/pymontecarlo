@@ -124,11 +124,12 @@ class Exporter(_Exporter):
         # The same method (index_delimited_detectors) is called when importing
         # the result. It ensures that the same index is used for all detectors
         dets = options.detectors.findall(_PhotonDelimitedDetector)
-        phdets1, phdets2 = index_delimited_detectors(dets)
+        phdets_key_index, phdets_index_keys = index_delimited_detectors(dets)
 
         # Create lines
         lines = []
-        args = (lines, options, geoinfo, matinfos, phdets1, phdets2) + args
+        args = (lines, options, geoinfo, matinfos,
+                phdets_key_index, phdets_index_keys) + args
 
         self._append_title(*args)
         self._append_electron_beam(*args)
@@ -253,18 +254,18 @@ class Exporter(_Exporter):
         lines.append(self._COMMENT_SKIP())
 
     def _append_photon_detectors(self, lines, options, geoinfo, matinfos,
-                                 phdets1, phdets2, *args):
+                                 phdets_key_index, phdets_index_keys, *args):
         lines.append(self._COMMENT_DETECTORS())
 
         # Check number of detectors
-        if len(phdets2) > MAX_PHOTON_DETECTORS:
+        if len(phdets_index_keys) > MAX_PHOTON_DETECTORS:
             raise ExporterException, \
                 'PENEPMA can only have %i detectors. %i are defined.' % \
-                    (MAX_PHOTON_DETECTORS, len(phdets2))
+                    (MAX_PHOTON_DETECTORS, len(phdets_index_keys))
 
         # Add detector in correct order
-        for index in sorted(phdets2.keys()):
-            keys = phdets2[index]
+        for index in sorted(phdets_index_keys.keys()):
+            keys = phdets_index_keys[index]
             detectors = map(options.detectors.get, keys)
 
             # Find if any of the detector is a PhotonSpectrumDetector
@@ -319,7 +320,7 @@ class Exporter(_Exporter):
         lines.append(self._COMMENT_SKIP())
 
     def _append_phirhoz_distribution(self, lines, options, geoinfo, matinfos,
-                                     phdets1, phdets2, *args):
+                                     phdets_key_index, phdets_index_keys, *args):
         lines.append(self._COMMENT_PHIRHOZ())
 
         detectors = options.detectors.findall(PhiRhoZDetector)
@@ -369,7 +370,7 @@ class Exporter(_Exporter):
 
         # Create lines
         for key in detectors.iterkeys():
-            index = phdets1[key] + 1
+            index = phdets_key_index[key] + 1
 
             for transition in transitions:
                 text = (transition.z, transition.dest.index,
