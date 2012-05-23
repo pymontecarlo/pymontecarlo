@@ -102,9 +102,9 @@ class Worker(threading.Thread):
                 options = self._queue_options.get()
                 self._create(options, self._outputdir)
                 self._queue_options.task_done()
-            except Exception as exc:
+            except Exception:
                 self.stop()
-                self._queue_options.raise_exc(exc)
+                self._queue_options.raise_exception()
 
     def _create(self, options, dirpath):
         """
@@ -165,13 +165,13 @@ class Worker(threading.Thread):
                 self._status = 'Completed'
 
                 self._queue_options.task_done()
-            except Exception as exc:
+            except Exception:
                 self.stop()
 
                 if not _user_defined_workdir:
                     shutil.rmtree(self._workdir, ignore_errors=True)
 
-                self._queue_options.raise_exc(exc)
+                self._queue_options.raise_exception()
 
     def _run(self, options):
         """

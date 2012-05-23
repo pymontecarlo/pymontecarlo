@@ -19,6 +19,8 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
+import traceback
 from Queue import Queue
 
 # Third party modules.
@@ -31,13 +33,15 @@ class OptionsQueue(Queue):
     def __init__(self, maxsize=0):
         Queue.__init__(self, maxsize)
 
-        self._exc = None
+        self._exc_info = None
 
     def are_all_tasks_done(self):
-        if self._exc is not None:
-            raise self._exc
+        if self._exc_info is not None:
+            traceback.print_exception(*self._exc_info)
+            raise self._exc_info[1]
+
         return self.unfinished_tasks == 0 and self.empty()
 
-    def raise_exc(self, exc):
-        self._exc = exc
+    def raise_exception(self):
+        self._exc_info = sys.exc_info()
 

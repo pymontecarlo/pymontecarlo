@@ -152,7 +152,7 @@ def run(argv=None):
             progressbar.update(counter, progress, status)
             time.sleep(1)
     except Exception as ex:
-        console.print_error(str(ex))
+        console.print_error('%s - %s' % (ex.__class__.__name__, str(ex)))
 
     runner.close()
     progressbar.close()
