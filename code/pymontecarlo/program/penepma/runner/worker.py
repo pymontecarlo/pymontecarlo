@@ -81,7 +81,7 @@ class Worker(_Worker):
         time_limit = limit.time_s if limit else 1e38
 
         limit = options.limits.find(UncertaintyLimit)
-        uncertainty_limit = limit.uncertainty if limit else float('inf')
+        uncertainty_limit = 1.0 - limit.uncertainty if limit else float('inf')
 
         # Launch
         args = [self._executable]
@@ -102,7 +102,7 @@ class Worker(_Worker):
             elif len(infos) == 4:
                 progress_showers = float(infos[0]) / showers_limit
                 progress_time = float(infos[1]) / time_limit
-                progress_uncertainty = float(infos[2]) / uncertainty_limit
+                progress_uncertainty = (1.0 - float(infos[2])) / uncertainty_limit
                 self._progress = max(0.001, progress_showers, progress_time,
                                      progress_uncertainty)
                 self._status = 'Running'
