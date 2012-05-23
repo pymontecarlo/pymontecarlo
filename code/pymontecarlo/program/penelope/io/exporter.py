@@ -127,8 +127,10 @@ class Exporter(_Exporter):
         
         :arg options: options to be exported
         :arg outputdir: directory where the simulation files should be saved
+        
+        :return: location of .in file
         """
-        self._export(options, outputdir)
+        return self._export(options, outputdir)
 
     def _export(self, options, outputdir, *args):
         # Export geometry
