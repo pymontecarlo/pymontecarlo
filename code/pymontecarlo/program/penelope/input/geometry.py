@@ -899,8 +899,8 @@ class Module(Body):
     def __repr__(self):
         return '<Module(description=%s, material=%s, %i interaction forcing(s), dsmax=%s m, surfaces_count=%i, modules_count=%i, rotation=%s, shift=%s)>' % \
             (self.description, self.material, len(self.interaction_forcings),
-             self.maximum_step_length_m, len(self._surfaces), len(self._modules),
-             str(self.rotation), str(self.shift))
+             self.maximum_step_length_m, len(self._props['surfaces']),
+             len(self._props['modules']), str(self.rotation), str(self.shift))
 
     @classmethod
     def __loadxml__(cls, element, materials_lookup, surfaces_lookup,
