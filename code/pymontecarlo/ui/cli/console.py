@@ -90,6 +90,9 @@ class ProgressBar(object):
         :arg progress: progress of the running task (0.0 to 1.0)
         :arg status: status of the running task
         """
+        if progress < 0: progress = 0.0
+        if progress > 1: progress = 1.0
+
         x = int(progress * self._width)
         fill = self._fill_char * x
         empty = self._empty_char * (self._width - x)
