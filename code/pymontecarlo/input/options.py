@@ -201,7 +201,8 @@ class Options(Option):
         element.append(child)
 
         child = Element('detectors')
-        for key, detector in self.detectors.iteritems():
+        for key in sorted(self.detectors.keys()):
+            detector = self.detectors[key]
             grandchild = detector.to_xml()
             grandchild.set('_key', key)
             child.append(grandchild)
