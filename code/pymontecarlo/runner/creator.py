@@ -79,7 +79,8 @@ class Creator(object):
         self._workers = []
         for _ in range(self._nbprocesses):
             worker = self._worker_class(self._queue_options, self._outputdir,
-                                        None, self._overwrite, **self._kwargs)
+                                        self._outputdir, self._overwrite,
+                                        **self._kwargs)
             worker.run = worker.create # Replace threading run by create method
 
             self._workers.append(worker)
