@@ -55,6 +55,8 @@ def create_parser(programs):
                       help="Work directory where temporary files from simulation(s) will be stored [default: temporary folder]")
     parser.add_option('-v', '--verbose', dest='verbose', default=False,
                       action='store_true', help='Debug mode')
+    parser.add_option('-q', '--quiet', dest='quiet', default=False,
+                      action='store_true', help='Quite mode (no progress bar is shown)')
     parser.add_option("-n", dest="nbprocesses", default=1, type="int",
                       help="Number of processes/threads to use (not applicable for all Monte Carlo programs) [default: %default]")
     parser.add_option('-c', '--create', dest='create', default=False,
@@ -106,6 +108,8 @@ def run(argv=None):
     if values.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
+    quiet = values.quiet
+
     nbprocesses = values.nbprocesses
     if nbprocesses <= 0:
         parser.error("Number of processes must be greater than 0.")
@@ -139,7 +143,7 @@ def run(argv=None):
         runner = Runner(worker_class, outputdir, workdir, overwrite, nbprocesses)
 
     progressbar = ProgressBar(console, len(list_options))
-    progressbar.start()
+    if not quiet: progressbar.start()
 
     for options in list_options:
         runner.put(options)
@@ -149,13 +153,13 @@ def run(argv=None):
     try:
         while runner.is_alive():
             counter, progress, status = runner.report()
-            progressbar.update(counter, progress, status)
+            if not quiet: progressbar.update(counter, progress, status)
             time.sleep(1)
     except Exception as ex:
         console.print_error('%s - %s' % (ex.__class__.__name__, str(ex)))
 
     runner.close()
-    progressbar.close()
+    if not quiet: progressbar.close()
 
     # Clean up
     console.close()
