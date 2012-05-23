@@ -30,6 +30,7 @@ from pymontecarlo.util.oset import oset
 
 from pymontecarlo.input.option import Option
 from pymontecarlo.input.body import Body, Layer
+from pymontecarlo.input.material import VACUUM
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -248,7 +249,8 @@ class Substrate(_Geometry):
         index = int(element.get('substrate'))
         body = bodies_lookup[index]
 
-        obj = cls(body.material)
+        obj = cls(VACUUM)
+        obj._props['body'] = body
         obj.tilt_rad = tilt_rad
         obj.rotation_rad = rotation_rad
 
@@ -305,7 +307,9 @@ class Inclusion(_Geometry):
 
         diameter = float(element.get('diameter'))
 
-        obj = cls(substrate.material, inclusion.material, diameter)
+        obj = cls(VACUUM, VACUUM, diameter)
+        obj._props['substrate'] = substrate
+        obj._props['inclusion'] = inclusion
         obj.tilt_rad = tilt
         obj.rotation_rad = rotation
 
@@ -466,11 +470,12 @@ class MultiLayers(_Layered):
 
         if element.get('substrate') is not None:
             index = int(element.get('substrate'))
-            substrate_material = bodies_lookup[index].material
+            substrate = bodies_lookup[index]
         else:
-            substrate_material = None
+            substrate = None
 
-        obj = cls(substrate_material, layers)
+        obj = cls(VACUUM, layers)
+        obj._props['substrate'] = substrate
         obj.tilt_rad = tilt_rad
         obj.rotation_rad = rotation_rad
 
@@ -561,12 +566,14 @@ class GrainBoundaries(_Layered):
         bodies_lookup, layers, tilt_rad, rotation_rad = _Layered._parse_xml(element)
 
         index = int(element.get('left_substrate'))
-        left_material = bodies_lookup[index].material
+        left = bodies_lookup[index]
 
         index = int(element.get('right_substrate'))
-        right_material = bodies_lookup[index].material
+        right = bodies_lookup[index]
 
-        obj = cls(left_material, right_material, layers)
+        obj = cls(VACUUM, VACUUM, layers)
+        obj._props['left'] = left
+        obj._props['right'] = right
         obj.tilt_rad = tilt_rad
         obj.rotation_rad = rotation_rad
 
@@ -668,7 +675,8 @@ class Sphere(_Geometry):
 
         diameter_m = float(element.get('diameter'))
 
-        obj = cls(body.material, diameter_m)
+        obj = cls(VACUUM, diameter_m)
+        obj._props['body'] = body
         obj.tilt_rad = tilt_rad
         obj.rotation_rad = rotation_rad
 
