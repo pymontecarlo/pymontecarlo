@@ -123,7 +123,12 @@ class Converter(_Converter):
         return materials_lookup
 
     def _create_penelope_material(self, old):
+        # Do not convert vacuum
         if old.is_vacuum():
+            return old
+
+        # Do not convert PENELOPE material
+        if isinstance(old, Material):
             return old
 
         return Material(old.name, old.composition, old.density_kg_m3,
@@ -132,6 +137,10 @@ class Converter(_Converter):
                         self._cutoff_energy_inelastic_eV, self._cutoff_energy_bremsstrahlung_eV)
 
     def _create_penelope_body(self, old, materials_lookup):
+        # Do not convert PENELOPE body
+        if isinstance(old, Body):
+            return old
+
         material = materials_lookup[old.material]
         return Body(material)
 
