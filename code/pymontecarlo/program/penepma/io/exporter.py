@@ -415,8 +415,8 @@ class Exporter(_Exporter):
         if limit:
             transition = limit.transition
             text = [transition.z,
-                    transition.dest,
-                    transition.src,
+                    transition.dest.index,
+                    transition.src.index,
                     - 1, # FIXME: Specify detector for uncertainty
                     limit.uncertainty,
                     0.0]
