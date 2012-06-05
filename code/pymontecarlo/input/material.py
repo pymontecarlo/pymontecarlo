@@ -43,7 +43,7 @@ def composition_from_formula(formula):
     # Parse chemical formula
     caps = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     lowers = caps.lower()
-    digits = "0124356789"
+    digits = "0124356789."
 
     element = Word(caps, lowers)
     integer = Word(digits)
