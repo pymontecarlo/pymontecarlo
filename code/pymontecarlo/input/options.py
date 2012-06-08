@@ -264,6 +264,19 @@ class Options(Option):
         if self_opened: source.close()
 
     @property
+    def name(self):
+        """
+        Name of these simulation options.
+        """
+        return self._props['name']
+
+    @name.setter
+    def name(self, name):
+        if not name:
+            raise ValueError, 'Name cannot be empty'
+        self._props['name'] = str(name)
+
+    @property
     def beam(self):
         """
         Options about the beam.

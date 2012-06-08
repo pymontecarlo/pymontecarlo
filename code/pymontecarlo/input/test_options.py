@@ -11,6 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import copy
 
 # Third party modules.
 
@@ -75,6 +76,16 @@ class TestOptions(TestCase):
         self.assertEqual(1, len(ops.models))
         model = ops.models.find(ELASTIC_CROSS_SECTION_TYPE)
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
+
+    def testcopy(self):
+        ops = copy.deepcopy(self.ops)
+        self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertNotEqual(self.ops.beam, ops.beam)
+
+        ops.beam.energy_eV = 5678
+        self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(5678, ops.beam.energy_eV, 4)
 
     def testdetectors(self):
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
