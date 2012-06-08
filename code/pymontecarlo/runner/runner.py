@@ -40,8 +40,6 @@ class Runner(object):
         :meth:`start` to start the simulation(s). 
         Status of the simulations can be retrieved using the method 
         :meth:`report`. 
-        Results can also be retrieved as the simulations are completed using 
-        :meth:`iter_results`.
         The method :meth:`join` before closing an application to ensure that
         all simulations were run and all workers are stopped.
         
@@ -122,7 +120,7 @@ class Runner(object):
         self._queue_options.put(copy.deepcopy(options))
         self._options_names.append(name)
 
-    def close(self):
+    def stop(self):
         """
         Stops all workers and closes the current runner.
         """
@@ -138,6 +136,13 @@ class Runner(object):
         all_tasks_done = self._queue_options.are_all_tasks_done()
 
         return all_workers_alive and not all_tasks_done
+
+    def join(self):
+        """
+        Blocks until all options have been simulated.
+        """
+        self._queue_options.join()
+        self.close()
 
     def report(self):
         """

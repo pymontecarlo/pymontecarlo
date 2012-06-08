@@ -158,7 +158,7 @@ def run(argv=None):
     except Exception as ex:
         console.print_error('%s - %s' % (ex.__class__.__name__, str(ex)))
 
-    runner.close()
+    runner.join()
     if not quiet: progressbar.close()
 
     # Clean up
