@@ -30,3 +30,12 @@ casinotools.project.dir=${pythondev.dir}/casinoTools
 winxraytools.project.dir=${pythondev.dir}/winxrayTools
 databasestools.project.dir=${pythondev.dir}/DatabasesTools
 drixutilities.project.dir=${pythondev.dir}/DrixUtilities
+
+# PAP
+specimentools.project.dir=${pythondev.dir}/SpecimenTools
+databasestools.project.dir=${pythondev.dir}/DatabasesTools
+pouchoupichoirmodels.project.dir=${pythondev.dir}/PouchouPichoirModels
+massabsorptioncoefficienttools.project.dir=${pythondev.dir}/MassAbsorptionCoefficientTools
+drixutilities.project.dir=${pythondev.dir}/DrixUtilities
+numericalmethodstools.project.dir=${pythondev.dir}/NumericalMethodsTools
+

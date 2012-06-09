@@ -1,5 +1,5 @@
 [pymontecarlo]
-programs=casino2,nistmonte,penepma,winxray
+programs=casino2,nistmonte,penepma,winxray,pap,xpp
 
 [penelope]
 pendbase=/penelope2011/pendbase
