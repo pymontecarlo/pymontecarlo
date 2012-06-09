@@ -105,7 +105,7 @@ class Program(object):
         return self._get_worker()
 
     def validate(self):
-        raise AssertionError
+        pass
 
     @property
     def configure_params(self):
@@ -115,7 +115,7 @@ class Program(object):
         
         Each tuple contains four values.
         
-          1. the name of the section in the settinsg file
+          1. the name of the section in the settings file
           2. the name of the option in the settings file
           3. a description of the option
           4. type of value (see constants starting with ``TYPE_``)
@@ -123,4 +123,4 @@ class Program(object):
         return self._get_configure_params()
 
     def _get_configure_params(self):
-        raise NotImplementedError
+        return []
