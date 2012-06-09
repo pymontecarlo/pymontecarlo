@@ -28,10 +28,9 @@ import logging
 from pymontecarlo import get_settings
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.io.exporter import Exporter
-from pymontecarlo.runner.worker import Worker as _Worker, InvalidPlatform, get_platform
+from pymontecarlo.runner.worker import Worker as _Worker
 
 # Globals and constants variables.
-from pymontecarlo.runner.worker import PLATFORM_WINDOWS
 
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
@@ -39,9 +38,6 @@ class Worker(_Worker):
         Runner to run Casino2 simulation(s).
         """
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
-
-        if get_platform() != PLATFORM_WINDOWS:
-            raise InvalidPlatform, 'Casino 2 can only be run on Windows'
 
         self._executable = get_settings().casino2.exe
         if not os.path.isfile(self._executable):

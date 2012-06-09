@@ -24,22 +24,12 @@ import threading
 import tempfile
 import shutil
 import logging
-import platform
 
 # Third party modules.
 
 # Local modules.
 
 # Globals and constants variables.
-PLATFORM_WINDOWS = 'Windows'
-PLATFORM_MACOS = 'MacOS'
-PLATFORM_LINUX = 'Linux'
-
-def get_platform():
-    return platform.system()
-
-class InvalidPlatform(Exception):
-    pass
 
 class Worker(threading.Thread):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
