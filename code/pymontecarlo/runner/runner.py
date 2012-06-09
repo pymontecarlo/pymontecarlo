@@ -142,7 +142,7 @@ class Runner(object):
         Blocks until all options have been simulated.
         """
         self._queue_options.join()
-        self.close()
+        self.stop()
 
     def report(self):
         """
