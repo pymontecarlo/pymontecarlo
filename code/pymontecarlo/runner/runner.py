@@ -80,6 +80,13 @@ class Runner(object):
         self._queue_options = OptionsQueue()
         self._workers = []
 
+    @property
+    def outputdir(self):
+        """
+        Output directory.
+        """
+        return self._outputdir
+
     def start(self):
         """
         Starts running the simulations.
