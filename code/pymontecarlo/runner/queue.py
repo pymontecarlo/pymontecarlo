@@ -45,3 +45,16 @@ class OptionsQueue(Queue):
     def raise_exception(self):
         self._exc_info = sys.exc_info()
 
+    def join(self):
+        self.all_tasks_done.acquire()
+        try:
+            while self.unfinished_tasks:
+                self.all_tasks_done.wait(1)
+
+                if self._exc_info is not None:
+                    traceback.print_exception(*self._exc_info)
+                    raise self._exc_info[1]
+        finally:
+            self.all_tasks_done.release()
+
+
