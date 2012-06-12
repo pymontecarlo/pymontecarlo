@@ -139,7 +139,7 @@ class Heinrich1972Iterator(_Iterator):
         wf = wfs[-1] # Take weight fraction from last iteration
 
         nominator = experimental_kratio * wf * (1.0 - calculated_kratio)
-        term1 = wf * (wf - calculated_kratio)
+        term1 = experimental_kratio * (wf - calculated_kratio)
         term2 = calculated_kratio * (1.0 - wf)
         denominator = term1 + term2
 
