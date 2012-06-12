@@ -125,7 +125,9 @@ class _Geometry(Option):
         for child in children:
             index = int(child.get('index'))
             material = materials_lookup[int(child.get('material'))]
-            bodies_lookup[index] = XMLIO.from_xml(child, material=material)
+            body = XMLIO.from_xml(child, material=material)
+            body._index = index
+            bodies_lookup[index] = body
 
         return bodies_lookup
 
