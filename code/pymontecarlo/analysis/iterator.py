@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 import pymontecarlo.util.element_properties as ep
@@ -147,3 +148,25 @@ class Heinrich1972Iterator(_Iterator):
             return nominator / denominator
         except ZeroDivisionError:
             return 0.0
+
+class Pouchou1991Iterator(Heinrich1972Iterator):
+    """
+    Using method reported in Pouchou (1991).
+    
+    Reference: Pouchou, J.-L. and Pichoir, F. (1991). Quantitative analysis of
+        homogeneous or stratified microvolumes applying the model "PAP". In 
+        Electron Probe Quantitation, K.F.J. Heinrich and D.E. Newbury, 
+        Plenum Press, New York, 400 p.
+    """
+
+    def _iterate(self, z, experimental_kratio, calculated_kratio, wfs):
+        wf = wfs[-1] # Take weight fraction from last iteration
+
+        if calculated_kratio / wf <= 1: # Hyperbolic
+            return Heinrich1972Iterator._iterate(self, z, experimental_kratio,
+                                          calculated_kratio, wfs)
+        else: # Parabolic
+            # From DTSA 2
+            alpha = (calculated_kratio - wf ** 2) / (wf - wf ** 2)
+            roots = np.roots([calculated_kratio, alpha, (1 - alpha)])
+            return max(roots)

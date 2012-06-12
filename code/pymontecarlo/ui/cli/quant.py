@@ -33,7 +33,7 @@ from pymontecarlo import get_programs
 
 from pymontecarlo.analysis.measurement import Measurement
 from pymontecarlo.analysis.quant import Quantification
-from pymontecarlo.analysis.iterator import Heinrich1972Iterator
+from pymontecarlo.analysis.iterator import Heinrich1972Iterator, Pouchou1991Iterator
 
 from pymontecarlo.runner.runner import Runner
 
@@ -67,6 +67,17 @@ def create_parser(programs):
                       help="Maximum number of iterations [default: %default]")
     parser.add_option("-l", '--convergence-limit', dest="convergence_limit", default=1e-5, type="float",
                       help="Convergence limit [default: %default]")
+
+    # Iterator group
+    group = OptionGroup(parser, "Iteration algorithm for quantification",
+                        "Note: Specify only one of these flags.")
+
+    group.add_option('--heinrich1972', dest='heinrich1972', action="store_true",
+                     help='Heinrich hyperbolic iteration [default]')
+    group.add_option('--pouchou1991', dest='pouchou1991', action="store_true",
+                     help='Pouchou parabolic iteration')
+
+    parser.add_option_group(group)
 
     # Program group
     group = OptionGroup(parser, "Monte Carlo programs",
@@ -117,6 +128,11 @@ def run(argv=None):
     if convergence_limit <= 0.0:
         raise ValueError, 'Convergence limit must be greater than 0.0'
 
+    if values.pouchou1991:
+        iterator_class = Pouchou1991Iterator
+    else:
+        iterator_class = Heinrich1972Iterator
+
     aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
     if not selected_programs:
@@ -139,8 +155,6 @@ def run(argv=None):
     worker_class = workers[selected_program]
 
     runner = Runner(worker_class, outputdir, workdir, nbprocesses=nbprocesses)
-
-    iterator_class = Heinrich1972Iterator
 
     quant = Quantification(runner, iterator_class, measurement,
                            max_iterations, convergence_limit)

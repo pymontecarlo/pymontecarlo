@@ -17,7 +17,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.iterator import Heinrich1972Iterator
+from pymontecarlo.analysis.iterator import Heinrich1972Iterator, Pouchou1991Iterator
 
 # Globals and constants variables.
 
@@ -41,8 +41,31 @@ class TestHeinrich1972Iterator(TestCase):
         calculated_kratios = {29: 0.3, 79: 0.7}
         composition = self.it.next(calculated_kratios)
 
-        self.assertAlmostEqual(0.28, composition[29], 4)
-        self.assertAlmostEqual(0.48, composition[79], 4)
+        self.assertAlmostEqual(0.3684, composition[29], 4)
+        self.assertAlmostEqual(0.6316, composition[79], 4)
+
+class TestPouchou1991Iterator(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        experimental_kratios = {29: 0.2, 79: 0.8}
+        initial_composition = {29: 0.5, 79: 0.5}
+
+        self.it = Pouchou1991Iterator(experimental_kratios, initial_composition)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testnext(self):
+        calculated_kratios = {29: 0.3, 79: 0.7}
+        composition = self.it.next(calculated_kratios)
+
+        self.assertAlmostEqual(0.3684, composition[29], 4)
+        self.assertAlmostEqual(0.3864, composition[79], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
