@@ -23,6 +23,7 @@ from operator import attrgetter
 
 # Third party modules.
 from lxml.etree import Element
+from pymontecarlo.input.options import Options #@UnusedImport
 
 # Local modules.
 from pymontecarlo.input.material import pure
