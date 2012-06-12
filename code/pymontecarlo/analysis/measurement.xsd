@@ -1,0 +1,64 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:include schemaLocation="rule.xsd" />
+    <xsd:include schemaLocation="../input/options.xsd" />
+    <xsd:include schemaLocation="../util/transition.xsd" />
+
+    <xsd:complexType name="kratioType">
+        <xsd:sequence>
+            <xsd:element name="transition">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element ref="transition" />
+                        <xsd:element ref="transitionset" />
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="standard">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="material" minOccurs="1"
+                            maxOccurs="1" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+
+        <xsd:attribute name="val" type="xsd:float" />
+    </xsd:complexType>
+
+    <xsd:element name="measurement">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="options">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element ref="options" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+
+                <xsd:element name="kratios">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="kratio" type="kratioType"
+                                minOccurs="0" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+
+                <xsd:element name="rules">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element ref="compositionRule" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+
+            <xsd:attribute name="body" type="xsd:int" use="required" />
+            <xsd:attribute name="detector" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

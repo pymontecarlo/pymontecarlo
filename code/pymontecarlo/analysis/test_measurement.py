@@ -24,7 +24,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.material import Material
 from pymontecarlo.util.transition import Ka, La
-from pymontecarlo.analysis.rule import ElementByDifference, FixedElement
+from pymontecarlo.analysis.rule import ElementByDifferenceRule, FixedElementRule
 
 # Globals and constants variables.
 
@@ -36,13 +36,13 @@ class TestMeasurement(TestCase):
         options = Options('PAP')
         options.beam.energy_eV = 20000
         options.detectors['xray'] = \
-            PhotonIntensityDetector((radians(52.5), radians(52.5)),
+            PhotonIntensityDetector((radians(50.0), radians(55)),
                                     (0.0, radians(360.0)))
 
         self.m = Measurement(options, options.geometry.body, 'xray')
 
         self.m.add_kratio(Ka(29), 0.2470)
-        self.m.add_rule(ElementByDifference(79))
+        self.m.add_rule(ElementByDifferenceRule(79))
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -84,14 +84,14 @@ class TestMeasurement(TestCase):
         self.assertFalse(self.m.has_kratio(79))
 
     def testadd_rule(self):
-        self.m.add_rule(FixedElement(14, 0.5))
+        self.m.add_rule(FixedElementRule(14, 0.5))
 
         self.assertTrue(self.m.has_rule(14))
         self.assertEqual(2, len(self.m.get_rules()))
 
-        self.assertRaises(ValueError, self.m.add_rule, ElementByDifference(92))
-        self.assertRaises(ValueError, self.m.add_rule, FixedElement(14, 0.1))
-        self.assertRaises(ValueError, self.m.add_rule, FixedElement(29, 0.1))
+        self.assertRaises(ValueError, self.m.add_rule, ElementByDifferenceRule(92))
+        self.assertRaises(ValueError, self.m.add_rule, FixedElementRule(14, 0.1))
+        self.assertRaises(ValueError, self.m.add_rule, FixedElementRule(29, 0.1))
 
     def testremove_rule(self):
         self.m.remove_rule(79)
@@ -125,6 +125,39 @@ class TestMeasurement(TestCase):
 
         self.assertEqual(1, len(rules))
 
+    def testfrom_xml(self):
+        element = self.m.to_xml()
+        m = Measurement.from_xml(element)
+
+        self.assertAlmostEqual(20000, m.options.beam.energy_eV, 4)
+        self.assertEqual(m.unknown_body, m.options.geometry.body)
+        self.assertEqual('xray', m.detector_key)
+
+        transitions = m.get_transitions()
+        self.assertEqual(1, len(transitions))
+        self.assertIn(Ka(29), transitions)
+
+        kratios = m.get_kratios()
+        self.assertEqual(1, len(kratios))
+        self.assertAlmostEqual(0.247, kratios[29], 4)
+
+        standards = m.get_standards()
+        self.assertEqual(1, len(standards))
+        self.assertEqual('Copper', standards[29].name)
+
+        rules = m.get_rules()
+        self.assertEqual(1, len(rules))
+
+    def testto_xml(self):
+        element = self.m.to_xml()
+
+        children = list(element.find('kratios'))
+        self.assertEqual(1, len(children))
+
+        children = list(element.find('rules'))
+        self.assertEqual(1, len(children))
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
+

@@ -17,16 +17,16 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.rule import ElementByDifference, FixedElement
+from pymontecarlo.analysis.rule import ElementByDifferenceRule, FixedElementRule
 
 # Globals and constants variables.
 
-class TestElementByDifference(TestCase):
+class TestElementByDifferenceRule(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
 
-        self.rule = ElementByDifference(79)
+        self.rule = ElementByDifferenceRule(79)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -41,12 +41,12 @@ class TestElementByDifference(TestCase):
         self.assertAlmostEqual(0.4, composition[29], 4)
         self.assertAlmostEqual(0.6, composition[79], 4)
 
-class TestFixedElement(unittest.TestCase):
+class TestFixedElementRule(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.rule = FixedElement(79, 0.2)
+        self.rule = FixedElementRule(79, 0.2)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

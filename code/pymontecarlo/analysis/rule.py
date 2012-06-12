@@ -23,13 +23,26 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.xmlutil import XMLIO, objectxml
 
 # Globals and constants variables.
 
-class _CompositionRule(object):
+class _CompositionRule(objectxml):
 
     def __init__(self, z):
         self._z = z
+
+    def __repr__(self):
+        return '<%s(%i)>' % (self.__class__.__name__, self.z)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        z = int(element.get('z'))
+
+        return cls(z)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('z', str(self.z))
 
     @property
     def z(self):
@@ -41,7 +54,7 @@ class _CompositionRule(object):
         """
         raise NotImplementedError
 
-class ElementByDifference(_CompositionRule):
+class ElementByDifferenceRule(_CompositionRule):
 
     def update(self, composition):
         if self.z in composition:
@@ -52,14 +65,34 @@ class ElementByDifference(_CompositionRule):
         if total < 1.0:
             composition[self.z] = 1.0 - total
 
-class FixedElement(_CompositionRule):
+XMLIO.register('{http://pymontecarlo.sf.net}elementByDifferenceRule', ElementByDifferenceRule)
+
+class FixedElementRule(_CompositionRule):
     """
     Fixed weight fraction for an element.
     """
 
     def __init__(self, z, wf):
         _CompositionRule.__init__(self, z)
+
+        if wf <= 0.0 or wf > 1.0:
+            raise ValueError, 'Weight fraction must be between ]0.0, 1.0]'
         self._wf = wf
+
+    def __repr__(self):
+        return '<%s(%i @ %s wt%%)>' % \
+                    (self.__class__.__name__, self.z, self._wf * 100.0)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        z = int(element.get('z'))
+        wf = float(element.get('weightFraction'))
+
+        return cls(z, wf)
+
+    def __savexml__(self, element, *args, **kwargs):
+        _CompositionRule.__savexml__(self, element, *args, **kwargs)
+        element.set('weightFraction', str(self.weightfraction))
 
     @property
     def weightfraction(self):
@@ -67,3 +100,5 @@ class FixedElement(_CompositionRule):
 
     def update(self, composition):
         composition[self.z] = self.weightfraction
+
+XMLIO.register('{http://pymontecarlo.sf.net}fixedElementRule', FixedElementRule)

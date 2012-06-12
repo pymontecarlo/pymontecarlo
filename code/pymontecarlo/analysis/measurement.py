@@ -19,17 +19,22 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from operator import attrgetter
 
 # Third party modules.
+from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.material import pure
-from pymontecarlo.analysis.rule import ElementByDifference
+
+from pymontecarlo.analysis.rule import ElementByDifferenceRule
+
 import pymontecarlo.util.element_properties as ep
+from pymontecarlo.util.xmlutil import XMLIO, objectxml
 
 # Globals and constants variables.
 
-class Measurement(object):
+class Measurement(objectxml):
 
     def __init__(self, options, unknown_body, detector_key):
         self._options = options
@@ -47,7 +52,93 @@ class Measurement(object):
         self._standards = {}
         self._rules = {}
 
-        self._element_by_difference = None
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        # options
+        parent = element.find('options')
+        if parent is None:
+            raise IOError, 'No options defined.'
+        child = list(parent)[0]
+        ops = XMLIO.from_xml(child)
+
+        # unknown body
+        bodies = list(ops.geometry.get_bodies())
+        indexes = map(attrgetter('_index'), bodies)
+        bodies_lookup = dict(zip(indexes, bodies))
+
+        index = int(element.get('body'))
+        unknown_body = bodies_lookup[index]
+
+        # detector key
+        detector_key = element.get('detector')
+
+        measurement = cls(ops, unknown_body, detector_key)
+
+        # k-ratios
+        parent = element.find('kratios')
+        if parent is not None:
+            for child in parent:
+                value = float(child.get('val'))
+
+                grandchild = child.find('transition')
+                if grandchild is None:
+                    raise IOError, 'kratio does not have a transition'
+                transition = XMLIO.from_xml(list(grandchild)[0])
+
+                grandchild = child.find('standard')
+                if grandchild is None:
+                    raise IOError, 'kratio does not have a standard'
+                standard = XMLIO.from_xml(list(grandchild)[0])
+
+                measurement.add_kratio(transition, value, standard)
+
+        # rules
+        parent = element.find('rules')
+        if parent is not None:
+            for child in parent:
+                rule = XMLIO.from_xml(child)
+                measurement.add_rule(rule)
+
+        return measurement
+
+    def __savexml__(self, element, *args, **kwargs):
+        # options
+        child = Element('options')
+        child.append(self.options.to_xml())
+        element.append(child)
+
+        # k-ratios
+        child = Element('kratios')
+
+        for z, transition in self._transitions.iteritems():
+            kratio = self._kratios[z]
+            standard = self._standards[z]
+
+            grandchild = Element('kratio')
+            grandchild.set('val', str(kratio))
+
+            grandgrandchild = Element('transition')
+            grandgrandchild.append(transition.to_xml())
+            grandchild.append(grandgrandchild)
+
+            grandgrandchild = Element('standard')
+            grandgrandchild.append(standard.to_xml())
+            grandchild.append(grandgrandchild)
+
+            child.append(grandchild)
+
+        element.append(child)
+
+        # rules
+        child = Element('rules')
+
+        for rule in self._rules.itervalues():
+            child.append(rule.to_xml())
+
+        element.append(child)
+
+        element.set('body', str(self.unknown_body._index))
+        element.set('detector', self.detector_key)
 
     @property
     def options(self):
@@ -96,10 +187,10 @@ class Measurement(object):
             raise ValueError, 'A k-ratio is already defined for element: %s' % ep.symbol(z)
 
         # Ensure that there is only one ElementByDifference rule
-        diff_rules = any(map(lambda rule: isinstance(rule, ElementByDifference),
+        diff_rules = any(map(lambda rule: isinstance(rule, ElementByDifferenceRule),
                              self._rules.values()))
-        if diff_rules and isinstance(rule, ElementByDifference):
-            raise ValueError, 'A rule ElementByDifference was already added'
+        if diff_rules and isinstance(rule, ElementByDifferenceRule):
+            raise ValueError, 'A ElementByDifferenceRule was already added'
 
         self._rules[z] = rule
 
@@ -129,3 +220,4 @@ class Measurement(object):
     def get_rules(self):
         return self._rules.values()
 
+XMLIO.register('{http://pymontecarlo.sf.net}measurement', Measurement)

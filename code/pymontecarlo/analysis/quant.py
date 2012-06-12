@@ -230,7 +230,7 @@ class Quantification(threading.Thread):
         Returns a tuple of:
         
           * counter of completed iterations
-          * the progress of teh currently running simulation 
+          * the progress of the currently running simulation 
               (between 0.0 and 1.0)
           * text indicating the status of the iteration process
         """

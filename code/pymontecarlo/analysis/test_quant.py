@@ -19,7 +19,7 @@ from math import radians
 from nose.plugins.attrib import attr
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
+#from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.analysis.quant import Quantification
 
@@ -28,16 +28,18 @@ from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.program.pap.runner.worker import Worker
 from pymontecarlo.runner.runner import Runner
 from pymontecarlo.analysis.measurement import Measurement
-from pymontecarlo.analysis.rule import ElementByDifference
+from pymontecarlo.analysis.rule import ElementByDifferenceRule
 from pymontecarlo.analysis.iterator import Heinrich1972Iterator
 from pymontecarlo.util.transition import Ka
 
+from pymontecarlo.input.limit import ShowersLimit
+
 # Globals and constants variables.
 
-class TestQuantification(TestCase):
+class TestQuantification(unittest.TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        unittest.TestCase.setUp(self)
 
         iterator_class = Heinrich1972Iterator
         worker_class = Worker
@@ -45,12 +47,13 @@ class TestQuantification(TestCase):
         options = Options('PAP')
         options.beam.energy_eV = 20000
         options.detectors['xray'] = \
-            PhotonIntensityDetector((radians(52.5), radians(52.5)),
+            PhotonIntensityDetector((radians(50), radians(55)),
                                     (0.0, radians(360.0)))
+        options.limits.add(ShowersLimit(100))
 
         m = Measurement(options, options.geometry.body, 'xray')
         m.add_kratio(Ka(29), 0.2470)
-        m.add_rule(ElementByDifference(79))
+        m.add_rule(ElementByDifferenceRule(79))
 
         self._outputdir = tempfile.mkdtemp()
         runner = Runner(worker_class, self._outputdir)
@@ -59,7 +62,7 @@ class TestQuantification(TestCase):
                                 convergence_limit=0.1)
 
     def tearDown(self):
-        TestCase.tearDown(self)
+        unittest.TestCase.tearDown(self)
 
         shutil.rmtree(self._outputdir, ignore_errors=True)
 
