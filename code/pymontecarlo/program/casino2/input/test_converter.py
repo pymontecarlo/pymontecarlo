@@ -121,6 +121,7 @@ class TestCasino2Converter(TestCase):
         ops.beam.energy_eV = 100e3
         ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         ops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.limits.add(ShowersLimit(5678))
 
         # Two many BackscatteredElectronEnergyDetector
         self.assertRaises(ConversionException, self.converter.convert, ops)
@@ -131,6 +132,7 @@ class TestCasino2Converter(TestCase):
         ops.beam.energy = 100e3
         ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 1000)
         ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
+        ops.limits.add(ShowersLimit(5678))
 
         # Convert
         self.converter.convert(ops)
@@ -155,11 +157,20 @@ class TestCasino2Converter(TestCase):
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
         ops.models.add(NEW_MODEL_CATEGORY.test)
+        ops.limits.add(ShowersLimit(5678))
 
         with warnings.catch_warnings(record=True) as ws:
             self.converter.convert(ops)
 
         self.assertEqual(8, len(ws))
+
+    def testconvert7(self):
+        # Base options
+        ops = Options(name="Test")
+        ops.beam.energy_eV = 100e3
+
+        # No shower limit
+        self.assertRaises(ConversionException, self.converter.convert, ops)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

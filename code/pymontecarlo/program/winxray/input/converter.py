@@ -131,3 +131,10 @@ class Converter(_Converter):
                     "The azimuth of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
                         (detector_class, str(elevation_rad),
                          detector.__class__.__name__, str(detector.elevation_rad))
+
+    def _convert_limits(self, options):
+        _Converter._convert_limits(self, options)
+
+        limit = options.limits.find(ShowersLimit)
+        if limit is None:
+            raise ConversionException, "A ShowersLimit must be defined."
