@@ -2,7 +2,7 @@
 
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:include schemaLocation="ep.xsd" />
-    
+
     <xsd:simpleType name="subshellType">
         <xsd:restriction base="xsd:integer">
             <xsd:minInclusive value="1" />
@@ -11,10 +11,21 @@
     </xsd:simpleType>
 
     <xsd:complexType name="transitionType">
-        <xsd:attribute name="z" type="atomicNumberType" use="required"/>
-        <xsd:attribute name="src" type="subshellType" use="required"/>
-        <xsd:attribute name="dest" type="subshellType" use="required"/>
+        <xsd:attribute name="z" type="atomicNumberType" use="required" />
+        <xsd:attribute name="src" type="subshellType" use="required" />
+        <xsd:attribute name="dest" type="subshellType" use="required" />
+    </xsd:complexType>
+
+    <xsd:element name="transition" type="transitionType" />
+
+    <xsd:complexType name="transitionsetType">
+        <xsd:sequence>
+            <xsd:element ref="transition" minOccurs="1" maxOccurs="unbounded" />
+        </xsd:sequence>
+        
+        <xsd:attribute name="z" type="atomicNumberType" use="required" />
+        <xsd:attribute name="name" type="xsd:string" use="required" />
     </xsd:complexType>
     
-    <xsd:element name="transition" type="transitionType" />
+    <xsd:element name="transitionset" type="transitionsetType" />
 </xsd:schema>

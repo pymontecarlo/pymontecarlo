@@ -221,9 +221,8 @@ class Transition(objectxml):
         return self._exists
 
 XMLIO.register('{http://pymontecarlo.sf.net}transition', Transition)
-XMLIO.register_loader('pymontecarlo.util.transition.Transition', Transition)
 
-class transitionset(frozenset):
+class transitionset(frozenset, objectxml):
 
     def __new__(cls, z, name, transitions):
         # Required
@@ -245,15 +244,33 @@ class transitionset(frozenset):
             raise ValueError, "All transitions in a set must have the same atomic number"
 
         self._z = z
-        self._name = '%s %s' % (ep.symbol(z), name)
+        self._name = name
 
         frozenset.__init__(transitions)
 
     def __repr__(self):
-        return '<transitionset(%s: %s)>' % (self._name, ', '.join(map(str, sorted(self))))
+        return '<transitionset(%s: %s)>' % (str(self), ', '.join(map(str, sorted(self))))
 
     def __str__(self):
-        return self._name
+        return '%s %s' % (ep.symbol(self._z), self._name)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        z = int(element.get('z'))
+        name = element.get('name')
+
+        transitions = []
+        for child in element:
+            transitions.append(Transition.from_xml(child))
+
+        return cls(z, name, transitions)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('z', str(self.z))
+        element.set('name', str(self._name))
+
+        for transition in self:
+            element.append(transition.to_xml())
 
     @property
     def z(self):
@@ -263,6 +280,8 @@ class transitionset(frozenset):
         return self._z
 
     atomicnumber = z
+
+XMLIO.register('{http://pymontecarlo.sf.net}transitionset', transitionset)
 
 def get_transitions(z, energylow_eV=0.0, energyhigh_eV=1e6):
     """

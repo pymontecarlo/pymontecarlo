@@ -139,9 +139,26 @@ class Testtransitionset(TestCase):
     def test__repr__(self):
         self.assertEqual('<transitionset(Al G1: Al Ka1, Al Ka2)>', repr(self.set))
 
+    def test__str__(self):
+        self.assertEqual('Al G1', str(self.set))
+
     def test__contains__(self):
         self.assertTrue(Transition(13, 4, 1) in self.set)
         self.assertFalse(Transition(13, 7, 1) in self.set)
+
+    def testto_xml(self):
+        element = self.set.to_xml()
+
+        self.assertEqual(13, int(element.get('z')))
+        self.assertEqual('G1', element.get('name'))
+        self.assertEqual(2, len(list(element)))
+
+    def testfrom_xml(self):
+        element = self.set.to_xml()
+        tset = transitionset.from_xml(element)
+
+        self.assertEqual(13, tset.z)
+        self.assertEqual(2, len(tset))
 
 class TestModule(TestCase):
 
