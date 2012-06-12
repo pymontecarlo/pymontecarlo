@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from lxml.etree import Element, XMLSchema
+from lxml.etree import Element, XMLSchema, tostring, parse
 
 # Local modules.
 from pymontecarlo.util.manager import Manager
@@ -45,6 +45,51 @@ class objectxml(object):
 
     def to_xml(self, validate=True, *args, **kwargs):
         return XMLIO.to_xml(self, validate, *args, **kwargs)
+
+    @classmethod
+    def load(cls, source, validate=True):
+        """
+        Loads the object from a file-object.
+        The file-object must correspond to a XML file where the options were 
+        saved.
+        
+        :arg source: filepath or file-object
+        :arg validate: whether to validate XML file against the schemas 
+            (default: ``True``)
+        
+        :return: loaded object
+        """
+        self_opened = False
+        if not hasattr(source, "read"):
+            source = open(source, "rb")
+            self_opened = True
+
+        element = parse(source).getroot()
+        if self_opened: source.close()
+
+        return cls.from_xml(element, validate)
+
+    def save(self, source, validate=True):
+        """
+        Saves this object to a file-object.
+        The file-object must correspond to a XML file where the options will 
+        be saved.
+        
+        :arg source: filepath or file-object
+        :arg validate: whether to validate XML file against the schemas 
+            (default: ``True``)
+        """
+        element = self.to_xml(validate)
+        output = tostring(element, pretty_print=True)
+
+        self_opened = False
+        if not hasattr(source, "write"):
+            source = open(source, "wb")
+            self_opened = True
+
+        source.write(output)
+
+        if self_opened: source.close()
 
 class _XMLIO(Manager):
     def __init__(self):

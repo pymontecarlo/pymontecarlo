@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
-from lxml.etree import Element, tostring, parse
+from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.util.xmlutil import XMLIO
@@ -217,51 +217,6 @@ class Options(Option):
         for model in self.models:
             child.append(model.to_xml())
         element.append(child)
-
-    @classmethod
-    def load(cls, source, validate=True):
-        """
-        Loads the options from a file-object.
-        The file-object must correspond to a XML file where the options were 
-        saved.
-        
-        :arg source: filepath or file-object
-        :arg validate: whether to validate XML file against the schemas 
-            (default: ``True``)
-        
-        :return: loaded options
-        """
-        self_opened = False
-        if not hasattr(source, "read"):
-            source = open(source, "rb")
-            self_opened = True
-
-        element = parse(source).getroot()
-        if self_opened: source.close()
-
-        return cls.from_xml(element, validate)
-
-    def save(self, source, validate=True):
-        """
-        Saves the options to a file-object.
-        The file-object must correspond to a XML file where the options will 
-        be saved.
-        
-        :arg source: filepath or file-object
-        :arg validate: whether to validate XML file against the schemas 
-            (default: ``True``)
-        """
-        element = self.to_xml(validate)
-        output = tostring(element, pretty_print=True)
-
-        self_opened = False
-        if not hasattr(source, "write"):
-            source = open(source, "wb")
-            self_opened = True
-
-        source.write(output)
-
-        if self_opened: source.close()
 
     @property
     def name(self):
