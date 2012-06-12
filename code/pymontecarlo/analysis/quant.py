@@ -234,7 +234,7 @@ class Quantification(threading.Thread):
               (between 0.0 and 1.0)
           * text indicating the status of the iteration process
         """
-        iterations = len(self._iterator) + 1
+        iterations = len(self._iterator)
         _completed, progress, _status = self._runner.report()
         return iterations, progress, self._status
 
@@ -252,9 +252,23 @@ class Quantification(threading.Thread):
         Note that this composition can also be directly retrieved from 
         the specified unknown body material.
         """
-        composition = self._iterator[-1].copy()
+        composition = dict(self._iterator[-1]) # copy
         self._apply_composition_rules(composition)
         return composition
+
+    def get_compositions(self):
+        """
+        Returns the composition of all iterations.
+        """
+        compositions = map(dict, self._iterator) # copy
+        map(self._apply_composition_rules, compositions)
+        return compositions
+
+    def get_number_iterations(self):
+        """
+        Returns the number of iteration performed.
+        """
+        return len(self._iterator)
 
 #def run():
 #    logging.getLogger().setLevel(logging.DEBUG)

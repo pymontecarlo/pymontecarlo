@@ -75,9 +75,14 @@ class TestQuantification(unittest.TestCase):
         self.q.join()
 
         composition = self.q.get_last_composition()
-
         self.assertAlmostEqual(0.21013, composition[29], 4)
         self.assertAlmostEqual(0.78987, composition[79], 4)
+
+        iterations = self.q.get_number_iterations()
+        self.assertEqual(2, iterations)
+
+        compositions = self.q.get_compositions()
+        self.assertEqual(2, len(compositions))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
