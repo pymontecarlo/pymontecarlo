@@ -97,7 +97,6 @@ class Worker(_Worker):
 
         # Import results to pyMonteCarlo
         logging.debug('Importing results from WinXRay')
-        print resultdirs
         path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
         results.save(zipfilepath)
