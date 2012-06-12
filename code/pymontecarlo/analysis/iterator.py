@@ -60,13 +60,16 @@ class _Iterator(object):
         """
         Number of iterations.
         """
-        return len(self._iterations)
+        return len(self._iterations) - 1
 
     def __getitem__(self, index):
         """
         Returns copy of the iterated composition with the specified index.
         """
         return dict(self._iterations[index])
+
+    def __iter__(self):
+        return iter(self._iterations[1:])
 
     @property
     def experimental_kratios(self):
