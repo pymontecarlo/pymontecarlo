@@ -84,6 +84,8 @@ class Worker(_Worker):
         self._process.wait()
         self._process = None
 
+        logging.debug('WinX-Ray ended')
+
     def _save_results(self, options, zipfilepath):
         dirpath = self._get_dirpath(options)
 
@@ -94,11 +96,14 @@ class Worker(_Worker):
             raise IOError, 'Cannot find results directories in %s' % dirpath
 
         # Import results to pyMonteCarlo
+        logging.debug('Importing results from WinXRay')
+        print resultdirs
         path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
         results.save(zipfilepath)
 
         # Append all WinXRay results in zip
+        logging.debug('Appending all WinXRay results')
         zip = ZipFile(zipfilepath, 'a', compression=ZIP_DEFLATED)
 
         for filename in os.listdir(path):

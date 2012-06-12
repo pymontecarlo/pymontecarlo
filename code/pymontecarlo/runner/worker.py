@@ -139,9 +139,12 @@ class Worker(threading.Thread):
                     _user_defined_workdir = True
 
                 # Run
+                logging.debug('Running program specific worker')
                 self._run(options)
+                logging.debug('End program specific worker')
 
                 # Save results
+                logging.debug('Started saving results')
                 self._save_results(options, zipfilepath)
                 logging.debug('Results saved at %s', zipfilepath)
 

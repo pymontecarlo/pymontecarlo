@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import copy
+import logging
 from operator import methodcaller
 
 # Third party modules.
@@ -104,6 +105,7 @@ class Runner(object):
 
             worker.daemon = True
             worker.start()
+            logging.debug('Started worker: %s', worker.name)
 
     def put(self, options):
         """
@@ -126,6 +128,8 @@ class Runner(object):
 
         self._queue_options.put(copy.deepcopy(options))
         self._options_names.append(name)
+
+        logging.debug('Options "%s" put in queue', name)
 
     def stop(self):
         """
