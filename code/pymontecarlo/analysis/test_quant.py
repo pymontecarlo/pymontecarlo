@@ -19,6 +19,8 @@ from math import radians
 from nose.plugins.attrib import attr
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.analysis.quant import Quantification
 
 from pymontecarlo.input.options import Options
@@ -32,10 +34,10 @@ from pymontecarlo.util.transition import Ka
 
 # Globals and constants variables.
 
-class TestQuantification(unittest.TestCase):
+class TestQuantification(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         iterator_class = Heinrich1972Iterator
         worker_class = Worker
@@ -57,7 +59,7 @@ class TestQuantification(unittest.TestCase):
                                 convergence_limit=0.1)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
         shutil.rmtree(self._outputdir, ignore_errors=True)
 

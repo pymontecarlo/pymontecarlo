@@ -15,19 +15,21 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.analysis.rule import ElementByDifference, FixedElement
 
 # Globals and constants variables.
 
-class TestElementByDifference(unittest.TestCase):
+class TestElementByDifference(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         self.rule = ElementByDifference(79)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

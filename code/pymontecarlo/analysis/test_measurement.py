@@ -16,6 +16,8 @@ from math import radians
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.analysis.measurement import Measurement
 
 from pymontecarlo.input.options import Options
@@ -26,10 +28,10 @@ from pymontecarlo.analysis.rule import ElementByDifference, FixedElement
 
 # Globals and constants variables.
 
-class TestMeasurement(unittest.TestCase):
+class TestMeasurement(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         options = Options('PAP')
         options.beam.energy_eV = 20000
@@ -43,7 +45,7 @@ class TestMeasurement(unittest.TestCase):
         self.m.add_rule(ElementByDifference(79))
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)

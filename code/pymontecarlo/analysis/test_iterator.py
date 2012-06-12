@@ -15,14 +15,16 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
+
 from pymontecarlo.analysis.iterator import Heinrich1972Iterator
 
 # Globals and constants variables.
 
-class TestHeinrich1972Iterator(unittest.TestCase):
+class TestHeinrich1972Iterator(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        TestCase.setUp(self)
 
         experimental_kratios = {29: 0.2, 79: 0.8}
         initial_composition = {29: 0.5, 79: 0.5}
@@ -30,7 +32,7 @@ class TestHeinrich1972Iterator(unittest.TestCase):
         self.it = Heinrich1972Iterator(experimental_kratios, initial_composition)
 
     def tearDown(self):
-        unittest.TestCase.tearDown(self)
+        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
