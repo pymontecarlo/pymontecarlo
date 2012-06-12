@@ -78,11 +78,13 @@ class Test_DelimitedDetector(TestCase):
     def testelevation_rad(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (-4, 0))
         self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (0, 4))
+        self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (1, 1))
         self.assertRaises(TypeError, self.d.__setattr__, 'elevation_rad', 0)
 
     def testazimuth_rad(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (-1, 0))
         self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (0, 7))
+        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (1, 1))
         self.assertRaises(TypeError, self.d.__setattr__, 'azimuth_rad', 0)
 
     def testto_xml(self):

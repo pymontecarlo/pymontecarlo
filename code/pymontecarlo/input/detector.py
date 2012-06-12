@@ -113,6 +113,8 @@ class _DelimitedDetector(Option):
         if abs(high) - HALFPI > TOLERANCE:
             raise ValueError, \
                 "Maximum elevation (%s) must be between [-pi/2, pi/2] rad." % high
+        if abs(high - low) <= TOLERANCE:
+            raise ValueError, "Elevations (%s and %s) are equal " % (low, high)
 
         self._props['elevation'] = min(low, high), max(low, high)
 
@@ -138,6 +140,8 @@ class _DelimitedDetector(Option):
         if high < 0 or high > TWOPI + TOLERANCE:
             raise ValueError, \
                 "Maximum azimuth (%s) must be between [0, 2pi] rad." % high
+        if abs(high - low) <= TOLERANCE:
+            raise ValueError, "Azimuths (%s and %s) are equal " % (low, high)
 
         self._props['azimuth'] = min(low, high), max(low, high)
 
