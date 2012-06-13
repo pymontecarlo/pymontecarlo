@@ -124,14 +124,14 @@ def run(argv=None):
         console.print_error("Please select only one Monte Carlo program")
     selected_program = selected_programs[0]
 
-    if not args:
-        console.print_error("Please specify at least one options file")
-
     list_options = []
     try:
         load_options(args, list_options)
     except Exception as ex:
         console.print_error(str(ex))
+
+    if not list_options:
+        console.print_error("Please specify at least one options file")
 
     # Setup
     workers = dict(zip(aliases, map(attrgetter('worker'), programs)))
