@@ -7,7 +7,7 @@
 .. module:: measurement
    :synopsis: Measurement
 
-.. inheritance-diagram:: pymontecarlo.analysis.measurement
+.. inheritance-diagram:: pymontecarlo.quant.input.measurement
 
 """
 
@@ -28,7 +28,7 @@ from pymontecarlo.input.options import Options #@UnusedImport
 # Local modules.
 from pymontecarlo.input.material import pure
 
-from pymontecarlo.analysis.rule import ElementByDifferenceRule
+from pymontecarlo.quant.input.rule import ElementByDifferenceRule
 
 import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO, objectxml

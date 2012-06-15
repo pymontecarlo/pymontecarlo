@@ -5,5 +5,5 @@
     
     <xsd:include schemaLocation="util/util.xsd" />
     <xsd:include schemaLocation="input/input.xsd" />
-    <xsd:include schemaLocation="analysis/analysis.xsd" />
+    <xsd:include schemaLocation="quant/input/input.xsd" />
 </xsd:schema>

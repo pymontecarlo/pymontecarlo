@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import sys
 import traceback
-from Queue import Queue
+from Queue import Queue as _Queue
 
 # Third party modules.
 
@@ -29,9 +29,9 @@ from Queue import Queue
 
 # Globals and constants variables.
 
-class OptionsQueue(Queue):
+class Queue(_Queue):
     def __init__(self, maxsize=0):
-        Queue.__init__(self, maxsize)
+        _Queue.__init__(self, maxsize)
 
         self._exc_info = None
 

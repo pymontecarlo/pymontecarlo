@@ -1,7 +1,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:include schemaLocation="rule.xsd" />
-    <xsd:include schemaLocation="../input/options.xsd" />
-    <xsd:include schemaLocation="../util/transition.xsd" />
+    <xsd:include schemaLocation="../../input/options.xsd" />
+    <xsd:include schemaLocation="../../util/transition.xsd" />
 
     <xsd:complexType name="kratioType">
         <xsd:sequence>

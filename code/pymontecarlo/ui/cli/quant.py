@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 import os
 import time
 import logging
-import csv
+import glob
 from operator import attrgetter
 from optparse import OptionParser, OptionGroup
 
@@ -31,15 +31,11 @@ from optparse import OptionParser, OptionGroup
 # Local modules.
 from pymontecarlo import get_programs
 
-from pymontecarlo.analysis.measurement import Measurement
-from pymontecarlo.analysis.quant import Quantification
-from pymontecarlo.analysis.iterator import Heinrich1972Iterator, Pouchou1991Iterator
-
-from pymontecarlo.runner.runner import Runner
+from pymontecarlo.quant.input.measurement import Measurement
+from pymontecarlo.quant.runner.runner import Runner
+from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator, Pouchou1991Iterator
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
-
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 
@@ -49,7 +45,7 @@ def create_parser(programs):
                   "same interface. "
     epilog = "For more information, see http://pymontecarlo.sf.net"
 
-    parser = OptionParser(usage="%prog [options] [measurement file]",
+    parser = OptionParser(usage="%prog [options] [measurement files...]",
                           description=description, epilog=epilog)
 
     # Base options
@@ -67,6 +63,8 @@ def create_parser(programs):
                       help="Maximum number of iterations [default: %default]")
     parser.add_option("-l", '--convergence-limit', dest="convergence_limit", default=1e-5, type="float",
                       help="Convergence limit [default: %default]")
+    parser.add_option('-s', '--skip', dest='skip', default=False,
+                      action='store_true', help='Skip quantification if results already exist')
 
     # Iterator group
     group = OptionGroup(parser, "Iteration algorithm for quantification",
@@ -89,6 +87,15 @@ def create_parser(programs):
     parser.add_option_group(group)
 
     return parser
+
+def load_measurements(filepaths, measurements=[]):
+    for filepath in filepaths:
+        if os.path.isdir(filepath):
+            load_measurements(glob.glob(os.path.join(filepath, '*.xml')), measurements)
+            measurements.sort()
+            return
+
+        measurements.append(Measurement.load(filepath))
 
 def run(argv=None):
     # Initialize
@@ -120,6 +127,8 @@ def run(argv=None):
     if nbprocesses <= 0:
         parser.error("Number of processes must be greater than 0.")
 
+    overwrite = not values.skip
+
     max_iterations = values.max_iterations
     if max_iterations < 1:
         raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
@@ -141,77 +150,40 @@ def run(argv=None):
         console.print_error("Please select only one Monte Carlo program")
     selected_program = selected_programs[0]
 
-    if not args:
-        console.print_error("Please specify a measurement file")
-    if len(args) > 1:
-        console.print_error("Please specify only one measurement file")
-    try:
-        measurement = Measurement.load(args[0])
-    except Exception as ex:
-        console.print_error(str(ex))
-
-    # Setup
     workers = dict(zip(aliases, map(attrgetter('worker'), programs)))
     worker_class = workers[selected_program]
 
-    runner = Runner(worker_class, outputdir, workdir, nbprocesses=nbprocesses)
+    measurements = []
+    try:
+        load_measurements(args, measurements)
+    except Exception as ex:
+        console.print_error(str(ex))
 
-    quant = Quantification(runner, iterator_class, measurement,
-                           max_iterations, convergence_limit)
+    if not measurements:
+        console.print_error("Please specify a measurement file")
 
-    progressbar = ProgressBar(console, max_iterations)
+    # Setup
+    runner = Runner(worker_class, iterator_class, outputdir, workdir,
+                    overwrite, max_iterations, convergence_limit, nbprocesses)
+
+    progressbar = ProgressBar(console, len(measurements))
     if not quiet: progressbar.start()
 
-    start_time = time.time()
-    quant.start()
+    runner.start()
+
+    for measurement in measurements:
+        runner.put(measurement)
 
     try:
-        while quant.is_alive():
-            counter, progress, status = quant.report()
+        while runner.is_alive():
+            counter, progress, status = runner.report()
             if not quiet: progressbar.update(counter, progress, status)
             time.sleep(1)
     except Exception as ex:
         console.print_error('%s - %s' % (ex.__class__.__name__, str(ex)))
 
-    quant.join()
-    runner.join() # Not necessary, but cannot hurt
+    runner.join()
     if not quiet: progressbar.close()
-    end_time = time.time()
-
-    # Save compositions as CSV
-    compositions = quant.get_compositions()
-    zs = compositions[0].keys()
-
-    filepath = os.path.join(outputdir, 'composition.csv')
-    with open(filepath, 'w') as fp:
-        writer = csv.writer(fp)
-
-        writer.writerow(['iteration'] + zs)
-
-        for i, composition in enumerate(compositions):
-            writer.writerow([i + 1] + [composition[z] for z in zs])
-
-    # Save statistics
-    filepath = os.path.join(outputdir, 'stats.txt')
-    with open(filepath, 'w') as fp:
-        fp.write('time=%s\n' % (end_time - start_time))
-        fp.write('iterations=%i\n' % quant.get_number_iterations())
-        fp.write('program=%s\n' % selected_program)
-        fp.write('convergenceLimit=%s\n' % convergence_limit)
-        fp.write('maxIterations=%s\n' % max_iterations)
-        fp.write('iteratorClass=%s\n' % iterator_class.__name__)
-
-    # Print final results
-    console.print_message("Element\tWeightFraction")
-    console.print_line()
-
-    composition = quant.get_last_composition()
-    for z in sorted(composition.keys()):
-        message = "%s\t%s" % (ep.symbol(z), composition[z])
-        console.print_message(message)
-
-    console.print_line()
-    console.print_message("# of iterations: %i" % quant.get_number_iterations())
 
     # Clean up
     console.close()

@@ -24,7 +24,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.queue import OptionsQueue
+from pymontecarlo.util.queue import Queue
 
 # Globals and constants variables.
 
@@ -65,7 +65,7 @@ class Creator(object):
         self._kwargs = kwargs
 
         self._options_names = []
-        self._queue_options = OptionsQueue()
+        self._queue_options = Queue()
         self._workers = []
 
     def start(self):

@@ -7,7 +7,7 @@
 .. module:: rule
    :synopsis: Rules applied during quantification
 
-.. inheritance-diagram:: pymontecarlo.analysis.rule
+.. inheritance-diagram:: pymontecarlo.quant.input.rule
 
 """
 

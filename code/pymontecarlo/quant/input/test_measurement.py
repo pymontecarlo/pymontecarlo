@@ -18,13 +18,13 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.measurement import Measurement
+from pymontecarlo.quant.input.measurement import Measurement
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.material import Material
 from pymontecarlo.util.transition import Ka, La
-from pymontecarlo.analysis.rule import ElementByDifferenceRule, FixedElementRule
+from pymontecarlo.quant.input.rule import ElementByDifferenceRule, FixedElementRule
 
 # Globals and constants variables.
 

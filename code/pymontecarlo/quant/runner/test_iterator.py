@@ -17,7 +17,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.iterator import Heinrich1972Iterator, Pouchou1991Iterator
+from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator, Pouchou1991Iterator
 
 # Globals and constants variables.
 

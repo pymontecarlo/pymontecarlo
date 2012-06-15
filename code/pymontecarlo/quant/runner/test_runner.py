@@ -11,6 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import os
 import tempfile
 import shutil
 from math import radians
@@ -21,22 +22,23 @@ from nose.plugins.attrib import attr
 # Local modules.
 #from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.quant import Quantification
+from pymontecarlo.quant.runner.runner import Runner
+from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator
+from pymontecarlo.quant.input.measurement import Measurement
+from pymontecarlo.quant.input.rule import ElementByDifferenceRule
+from pymontecarlo.quant.output.results import Results
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.program.pap.runner.worker import Worker
-from pymontecarlo.runner.runner import Runner
-from pymontecarlo.analysis.measurement import Measurement
-from pymontecarlo.analysis.rule import ElementByDifferenceRule
-from pymontecarlo.analysis.iterator import Heinrich1972Iterator
-from pymontecarlo.util.transition import Ka
-
 from pymontecarlo.input.limit import ShowersLimit
+
+from pymontecarlo.program.pap.runner.worker import Worker
+
+from pymontecarlo.util.transition import Ka
 
 # Globals and constants variables.
 
-class TestQuantification(unittest.TestCase):
+class TestRunner(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -51,38 +53,39 @@ class TestQuantification(unittest.TestCase):
                                     (0.0, radians(360.0)))
         options.limits.add(ShowersLimit(100))
 
-        m = Measurement(options, options.geometry.body, 'xray')
-        m.add_kratio(Ka(29), 0.2470)
-        m.add_rule(ElementByDifferenceRule(79))
+        self.m = Measurement(options, options.geometry.body, 'xray')
+        self.m.add_kratio(Ka(29), 0.2470)
+        self.m.add_rule(ElementByDifferenceRule(79))
 
-        self._outputdir = tempfile.mkdtemp()
-        runner = Runner(worker_class, self._outputdir)
+        self.outputdir = tempfile.mkdtemp()
 
-        self.q = Quantification(runner, iterator_class, m,
-                                convergence_limit=0.1)
+        self.runner = Runner(worker_class, iterator_class, self.outputdir,
+                             convergence_limit=0.1)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-        shutil.rmtree(self._outputdir, ignore_errors=True)
+        shutil.rmtree(self.outputdir, ignore_errors=True)
 
     def testskeleton(self):
         self.assertTrue(True)
 
     @attr('slow')
     def testrun(self):
-        self.q.start()
-        self.q.join()
+        self.runner.start()
+        self.runner.put(self.m)
+        self.runner.join()
 
-        composition = self.q.get_last_composition()
-        self.assertAlmostEqual(0.21013, composition[29], 4)
-        self.assertAlmostEqual(0.78987, composition[79], 4)
+        filepath = os.path.join(self.outputdir, 'PAP.zip')
+        results = Results.load(filepath)
 
-        iterations = self.q.get_number_iterations()
-        self.assertEqual(2, iterations)
+        composition = results.compositions[-1]
+        self.assertAlmostEqual(0.21069, composition[29], 4)
+        self.assertAlmostEqual(0.78931, composition[79], 4)
 
-        compositions = self.q.get_compositions()
-        self.assertEqual(2, len(compositions))
+        self.assertEqual(2, results.iterations)
+
+        self.assertEqual(2, len(results.compositions))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -17,7 +17,8 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.analysis.rule import ElementByDifferenceRule, FixedElementRule
+from pymontecarlo.quant.input.rule import \
+    ElementByDifferenceRule, FixedElementRule
 
 # Globals and constants variables.
 
