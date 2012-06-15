@@ -218,8 +218,6 @@ class Worker(threading.Thread):
         """
         Runs all the standards.
         """
-        self._runner.start()
-
         for z, material in standards.iteritems():
             ops = copy.deepcopy(options)
 
@@ -238,8 +236,6 @@ class Worker(threading.Thread):
         composition2 = composition.copy()
         self._apply_composition_rules(rules, composition2)
         self._normalize_composition(composition2)
-
-        self._runner.start()
 
         options.name = 'iteration%i' % index
         unknown_body.material.composition = composition2

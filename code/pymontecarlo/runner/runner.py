@@ -153,7 +153,7 @@ class Runner(object):
         Blocks until all options have been simulated.
         """
         self._queue_options.join()
-        self.stop()
+        self._options_names[:] = [] # clear
 
     def report(self):
         """

@@ -88,6 +88,8 @@ class Runner(object):
         if self._workers:
             raise RuntimeError, 'Already started'
 
+        self._runner.start()
+
         # Create workers
         self._workers = []
         for _ in range(self._nbprocesses):
@@ -143,7 +145,7 @@ class Runner(object):
         Blocks until all options have been simulated.
         """
         self._queue_measurements.join()
-        self.stop()
+        self._options_names[:] = [] # clear
 
     def report(self):
         """
