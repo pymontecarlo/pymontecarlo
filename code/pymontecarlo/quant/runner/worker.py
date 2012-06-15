@@ -35,7 +35,7 @@ from pymontecarlo.quant.output.results import Results as QuantResult
 # Globals and constants variables.
 
 class Worker(threading.Thread):
-    def __init__(self, queue_measurements, runner, iterator_class,
+    def __init__(self, queue_measurements, runner, iterator_class, outputdir,
                        max_iterations=50, convergence_limit=1e-5,
                        overwrite=True):
         threading.Thread.__init__(self)
@@ -43,9 +43,14 @@ class Worker(threading.Thread):
         self._queue_measurements = queue_measurements
 
         self._runner = runner
-        self._outputdir = runner.outputdir
 
         self._iterator_class = iterator_class
+
+        if not os.path.isdir(outputdir):
+            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+        self._outputdir = outputdir
+
+        self._workdir = runner.outputdir
 
         if max_iterations < 1:
             raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
@@ -251,7 +256,7 @@ class Worker(threading.Thread):
 
         for transition in transitions:
             filename = 'std%i.zip' % transition.z
-            filepath = os.path.join(self._outputdir, filename)
+            filepath = os.path.join(self._workdir, filename)
             results = SimResults.load(filepath)
 
             val, _unc = results[detector_key].intensity(transition)
@@ -266,7 +271,7 @@ class Worker(threading.Thread):
         intensities = {}
 
         filename = 'iteration%i.zip' % index
-        filepath = os.path.join(self._outputdir, filename)
+        filepath = os.path.join(self._workdir, filename)
         results = SimResults.load(filepath)
 
         for transition in transitions:
