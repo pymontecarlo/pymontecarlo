@@ -118,11 +118,6 @@ class Worker(threading.Thread):
         """
         Runs quantification from the specified measurement.
         """
-        # Create iterator
-        initial_composition = self._calculate_initial_composition(measurement)
-        iterator = self._iterator_class(measurement.get_kratios(),
-                                        initial_composition)
-
         # Extract variables from measurement
         options = measurement.options
         unknown_body = measurement.unknown_body
@@ -130,6 +125,14 @@ class Worker(threading.Thread):
         transitions = measurement.get_transitions()
         standards = measurement.get_standards()
         rules = measurement.get_rules()
+
+        # Initial guess of composition
+        initial_composition = self._calculate_initial_composition(measurement)
+        self._apply_composition_rules(rules, initial_composition)
+
+        # Create iterator
+        iterator = self._iterator_class(measurement.get_kratios(),
+                                        initial_composition)
 
         # Standards
         self._status = 'Simulate standards'
@@ -191,31 +194,19 @@ class Worker(threading.Thread):
 
     def _calculate_initial_composition(self, measurement):
         """
-        Compute the initial weight fraction.
-    
-        Using method reported in Heinrich (1972).
-    
-        Reference: Heinrich, K. F. J. Errors in theoretical correction systems
-        in quantitative electron probe microanalysis.
-        Synopsis Analytical Chemistry, 1972, 44, 350-354 [heinrich1972a]
-    
-        .. math:
-             C'_{0A} = \frac{k_{A}}{\sum k_{i}}.
-    
-        :arg kratios: k-ratios for each element given as a :class:`dict` where 
-            the keys are atomic numbers and the values are experimental k-ratios.
-        :type kratios: :class:`dict`
+        Compute the initial weight fraction assuming a ZAF of 1.0 for each 
+        element.
+        This method is used in DTSA-II.
     
         :return: composition
         """
         kratios = measurement.get_kratios()
-        rules = measurement.get_rules()
-
-        total_kratio = sum(kratios.values()) + 0.1 * len(rules)
+        standards = measurement.get_standards()
 
         composition = {}
         for z, kratio in kratios.iteritems():
-            composition[z] = kratio / total_kratio
+            wf = standards[z].composition[z]
+            composition[z] = kratio * wf
 
         return composition
 
