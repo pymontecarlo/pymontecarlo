@@ -76,8 +76,9 @@ class RelaxationData(object):
             data[z].setdefault(subshell_src, {})
             data[z][subshell_src].setdefault(subshell_dest, {})
 
+            data[z][subshell_src][subshell_dest][self.KEY_ENERGY] = energy_eV
+
             if probability >= 0:
-                data[z][subshell_src][subshell_dest][self.KEY_ENERGY] = energy_eV
                 data[z][subshell_src][subshell_dest][self.KEY_PROBABILITY] = probability
 
         return data
