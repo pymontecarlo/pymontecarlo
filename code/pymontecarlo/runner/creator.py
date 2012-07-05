@@ -103,7 +103,7 @@ class Creator(object):
         self._queue_options.put(options)
         self._options_names.append(name)
 
-    def close(self):
+    def stop(self):
         """
         Stops all workers and closes the current creator.
         """
