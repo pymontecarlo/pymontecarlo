@@ -17,9 +17,34 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator, Pouchou1991Iterator
+from pymontecarlo.quant.runner.iterator import \
+    (SimpleIterator, Heinrich1972Iterator, Pouchou1991Iterator,
+     Wegstein1958Iterator)
 
 # Globals and constants variables.
+
+class TestSimpleIterator(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        experimental_kratios = {29: 0.2, 79: 0.8}
+        initial_composition = {29: 0.5, 79: 0.5}
+
+        self.it = SimpleIterator(experimental_kratios, initial_composition)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testnext(self):
+        calculated_kratios = {29: 0.3, 79: 0.7}
+        composition = self.it.next(calculated_kratios)
+
+        self.assertAlmostEqual(0.3333, composition[29], 4)
+        self.assertAlmostEqual(0.5714, composition[79], 4)
 
 class TestHeinrich1972Iterator(TestCase):
 
@@ -66,6 +91,37 @@ class TestPouchou1991Iterator(TestCase):
 
         self.assertAlmostEqual(0.3684, composition[29], 4)
         self.assertAlmostEqual(0.3864, composition[79], 4)
+
+class TestWegstein1958Iterator(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        experimental_kratios = {29: 0.2, 79: 0.8}
+        initial_composition = {29: 0.5, 79: 0.5}
+
+        self.it = Wegstein1958Iterator(experimental_kratios, initial_composition)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testnext(self):
+        # First iteration = simple iteration
+        calculated_kratios = {29: 0.3, 79: 0.7}
+        composition = self.it.next(calculated_kratios)
+
+        self.assertAlmostEqual(0.3333, composition[29], 4)
+        self.assertAlmostEqual(0.5714, composition[79], 4)
+
+        # Second iteration = Wegstein iteration
+        calculated_kratios = {29: 0.25, 79: 0.68}
+        composition = self.it.next(calculated_kratios)
+
+        self.assertAlmostEqual(0.2222, composition[29], 4)
+        self.assertAlmostEqual(0.3265, composition[79], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

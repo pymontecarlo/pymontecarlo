@@ -9,6 +9,11 @@
 
 .. inheritance-diagram:: pymontecarlo.quant.iterator
 
+.. note::
+
+   Algorithm implemented with the help of the IterationAlgorithm class of 
+   DTSA-II.
+
 """
 
 # Script information for the file.
@@ -55,7 +60,7 @@ class _Iterator(object):
         self._experimental_kratios = dict(experimental_kratios) # copy
         self._initial_composition = dict(composition) # copy
 
-        self._iterations = [composition]
+        self.reset()
 
     def __len__(self):
         """
@@ -120,34 +125,59 @@ class _Iterator(object):
         
         :arg z: atomic number of element
         :arg experimental_kratio: experimental k-ratio of this element
-        :arg experimental_kratio: calculated k-ratio of this element
+        :arg calculated_kratio: calculated k-ratio of this element
         :arg wfs: list of weight fractions of this element from the previous
             iterations. Calling ``wfs[-1]`` will always return the last
             calculated weight fraction.
         """
         raise NotImplementedError
 
-class Heinrich1972Iterator(_Iterator):
+class SimpleIterator(_Iterator):
     """
-    Using method reported in Heinrich (1972).
-    
-    Reference: Heinrich, K. F. J. Errors in theoretical correction systems
-        in quantitative electron probe microanalysis.
-        Synopsis Analytical Chemistry, 1972, 44, 350-354
+    Using method reported in Scott, Love and Reed (1992).
     """
 
     def _iterate(self, z, experimental_kratio, calculated_kratio, wfs):
         wf = wfs[-1] # Take weight fraction from last iteration
 
-        nominator = experimental_kratio * wf * (1.0 - calculated_kratio)
-        term1 = experimental_kratio * (wf - calculated_kratio)
-        term2 = calculated_kratio * (1.0 - wf)
-        denominator = term1 + term2
-
         try:
-            return nominator / denominator
+            correction = calculated_kratio / wf
+            return experimental_kratio / correction
         except ZeroDivisionError:
             return 0.0
+
+class Heinrich1972Iterator(_Iterator):
+    """
+    Using method of Ziebold and Ogilvie (1964) as reported in Scott, Love and 
+    Reed (1992).
+    """
+
+    def _iterate(self, z, experimental_kratio, calculated_kratio, wfs):
+        wf = wfs[-1] # Take weight fraction from last iteration
+
+        try:
+            alpha = (wf * (1 - calculated_kratio)) / \
+                        (calculated_kratio * (1 - wf))
+            return (alpha * experimental_kratio) / \
+                        (1.0 - experimental_kratio * (1.0 - alpha))
+        except ZeroDivisionError:
+            return 0.0
+
+#        Using method reported in Heinrich (1972).
+#    
+#        Reference: Heinrich, K. F. J. Errors in theoretical correction systems
+#            in quantitative electron probe microanalysis.
+#            Synopsis Analytical Chemistry, 1972, 44, 350-354
+#
+#        nominator = experimental_kratio * wf * (1.0 - calculated_kratio)
+#        term1 = experimental_kratio * (wf - calculated_kratio)
+#        term2 = calculated_kratio * (1.0 - wf)
+#        denominator = term1 + term2
+#
+#        try:
+#            return nominator / denominator
+#        except ZeroDivisionError:
+#            return 0.0
 
 class Pouchou1991Iterator(Heinrich1972Iterator):
     """
@@ -170,3 +200,35 @@ class Pouchou1991Iterator(Heinrich1972Iterator):
             alpha = (calculated_kratio - wf ** 2) / (wf - wf ** 2)
             roots = np.roots([calculated_kratio, alpha, (1 - alpha)])
             return max(roots)
+
+class Wegstein1958Iterator(SimpleIterator):
+    """
+    Using method of Wegstein (1958) as reported in Scott, Love and Reed (1992).
+    """
+
+    def reset(self):
+        SimpleIterator.reset(self)
+        self._calculated_kratios = []
+
+    def next(self, calculated_kratios):
+        composition = SimpleIterator.next(self, calculated_kratios)
+        self._calculated_kratios.append(calculated_kratios)
+        return composition
+
+    def _iterate(self, z, experimental_kratio, calculated_kratio, wfs):
+        if len(wfs) < 2: # Use simple iterator
+            return SimpleIterator._iterate(self, z, experimental_kratio,
+                                           calculated_kratio, wfs)
+        else: # Wegstein
+            wf1 = wfs[-1]
+            wf2 = wfs[-2]
+            calculated_kratio1 = calculated_kratio
+            calculated_kratio2 = self._calculated_kratios[-1][z]
+
+            fa1 = wf1 / calculated_kratio1
+            fa2 = wf2 / calculated_kratio2
+
+            derivative = (fa1 - fa2) / (wf1 - wf2)
+
+            return wf1 + (experimental_kratio * fa1 - wf1) / \
+                            (1 - experimental_kratio * derivative)
