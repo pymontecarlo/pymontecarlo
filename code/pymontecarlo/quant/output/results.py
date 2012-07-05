@@ -150,7 +150,7 @@ class Results(object):
         writer.writerow(['iteration'] + zs)
 
         for i, composition in enumerate(self._compositions):
-            writer.writerow([i + 1] + [composition[z] for z in zs])
+            writer.writerow([i + 1] + [composition.get(z, 0.0) for z in zs])
 
         zipfile.writestr('compositions.csv', fp.getvalue())
 
