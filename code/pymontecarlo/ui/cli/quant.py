@@ -33,7 +33,9 @@ from pymontecarlo import get_programs
 
 from pymontecarlo.quant.input.measurement import Measurement
 from pymontecarlo.quant.runner.runner import Runner
-from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator, Pouchou1991Iterator
+from pymontecarlo.quant.runner.iterator import \
+    (SimpleIterator, Heinrich1972Iterator, Pouchou1991Iterator,
+     Wegstein1958Iterator)
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -70,10 +72,14 @@ def create_parser(programs):
     group = OptionGroup(parser, "Iteration algorithm for quantification",
                         "Note: Specify only one of these flags.")
 
+    group.add_option('--simple', dest='simple', action="store_true",
+                     help='Simple iteration')
     group.add_option('--heinrich1972', dest='heinrich1972', action="store_true",
                      help='Heinrich hyperbolic iteration [default]')
     group.add_option('--pouchou1991', dest='pouchou1991', action="store_true",
                      help='Pouchou parabolic iteration')
+    group.add_option('--wegstein1958', dest='wegstein1958', action="store_true",
+                     help='Wegstein iteration')
 
     parser.add_option_group(group)
 
@@ -137,8 +143,12 @@ def run(argv=None):
     if convergence_limit <= 0.0:
         raise ValueError, 'Convergence limit must be greater than 0.0'
 
-    if values.pouchou1991:
+    if values.simple:
+        iterator_class = SimpleIterator
+    elif values.pouchou1991:
         iterator_class = Pouchou1991Iterator
+    elif values.wegstein1958:
+        iterator_class = Wegstein1958Iterator
     else:
         iterator_class = Heinrich1972Iterator
 
