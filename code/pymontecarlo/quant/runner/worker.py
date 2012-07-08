@@ -38,7 +38,7 @@ from pymontecarlo.quant.output.results import Results as QuantResult
 class Worker(threading.Thread):
     def __init__(self, queue_measurements, runner, iterator_class, outputdir,
                        max_iterations=50, convergence_limit=1e-5,
-                       overwrite=True):
+                       overwrite=True, **kwargs):
         threading.Thread.__init__(self)
 
         self._queue_measurements = queue_measurements
@@ -46,6 +46,7 @@ class Worker(threading.Thread):
         self._runner = runner
 
         self._iterator_class = iterator_class
+        self._kwargs = kwargs
 
         if not os.path.isdir(outputdir):
             raise ValueError, 'Output directory (%s) is not a directory' % outputdir
@@ -133,7 +134,8 @@ class Worker(threading.Thread):
 
         # Create iterator
         iterator = self._iterator_class(measurement.get_kratios(),
-                                        initial_composition)
+                                        initial_composition,
+                                        **self._kwargs)
 
         # Standards
         self._status = 'Simulate standards'

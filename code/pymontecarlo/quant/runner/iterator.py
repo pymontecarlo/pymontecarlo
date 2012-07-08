@@ -34,7 +34,7 @@ import pymontecarlo.util.element_properties as ep
 # Globals and constants variables.
 
 class _Iterator(object):
-    def __init__(self, experimental_kratios, composition):
+    def __init__(self, experimental_kratios, composition, **kwargs):
         """
         Creates a new quantitative iterator.
         
@@ -210,8 +210,8 @@ class Wegstein1958Iterator(SimpleIterator):
     Using method of Wegstein (1958) as reported in Scott, Love and Reed (1992).
     """
 
-    def __init__(self, experimental_kratios, composition):
-        SimpleIterator.__init__(self, experimental_kratios, composition)
+    def __init__(self, experimental_kratios, composition, **kwargs):
+        SimpleIterator.__init__(self, experimental_kratios, composition, **kwargs)
         self._calculated_kratios = []
 
     def next(self, calculated_kratios):
