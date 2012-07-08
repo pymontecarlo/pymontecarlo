@@ -60,7 +60,7 @@ class _Iterator(object):
         self._experimental_kratios = dict(experimental_kratios) # copy
         self._initial_composition = dict(composition) # copy
 
-        self.reset()
+        self._iterations = [self._initial_composition]
 
     def __len__(self):
         """
@@ -83,12 +83,6 @@ class _Iterator(object):
         Experimental k-ratios
         """
         return self._experimental_kratios
-
-    def reset(self):
-        """
-        Resets the iterations.
-        """
-        self._iterations = [self._initial_composition]
 
     def next(self, calculated_kratios):
         """
@@ -216,8 +210,8 @@ class Wegstein1958Iterator(SimpleIterator):
     Using method of Wegstein (1958) as reported in Scott, Love and Reed (1992).
     """
 
-    def reset(self):
-        SimpleIterator.reset(self)
+    def __init__(self, experimental_kratios, composition):
+        SimpleIterator.__init__(self, experimental_kratios, composition)
         self._calculated_kratios = []
 
     def next(self, calculated_kratios):
