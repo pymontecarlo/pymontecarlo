@@ -36,7 +36,8 @@ from pymontecarlo.quant.runner.runner import Runner
 from pymontecarlo.quant.runner.iterator import \
     (SimpleIterator, Heinrich1972Iterator, Pouchou1991Iterator,
      Wegstein1958Iterator)
-from pymontecarlo.quant.runner.convergor import CompositionConvergor
+from pymontecarlo.quant.runner.convergor import \
+    CompositionConvergor, KRatioConvergor
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -90,6 +91,8 @@ def create_parser(programs):
 
     group.add_option('--composition', dest='composition', action="store_true",
                      help='Check convergence with composition [default]')
+    group.add_option('--kratio', dest='kratio', action="store_true",
+                     help='Check convergence with k-ratio')
 
     parser.add_option_group(group)
 
@@ -162,7 +165,10 @@ def run(argv=None):
     else:
         iterator_class = Heinrich1972Iterator
 
-    convergor_class = CompositionConvergor
+    if values.kratio:
+        convergor_class = KRatioConvergor
+    else:
+        convergor_class = CompositionConvergor
 
     aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]

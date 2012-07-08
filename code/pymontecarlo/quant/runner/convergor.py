@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import math
 import logging
 
 # Third party modules.
@@ -124,3 +125,20 @@ class CompositionConvergor(_LimitConvergor):
         logging.debug('Iteration %i - residual: %s', index, residuals)
 
         return not residuals
+
+class KRatioConvergor(_LimitConvergor):
+
+    def has_converged(self):
+        calculated_kratios = self._calculated_kratios[-1]
+
+        residual = 0.0
+
+        for z, experimental_kratio in self._experimental_kratios.iteritems():
+            residual += (experimental_kratio[0] - calculated_kratios.get(z, 0.0)[0]) ** 2
+
+        residual = math.sqrt(residual)
+
+        index = len(self._compositions) - 1
+        logging.debug('Iteration %i - residual: %s', index, residual)
+
+        return residual < self._limit
