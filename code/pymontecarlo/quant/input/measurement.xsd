@@ -24,7 +24,8 @@
             </xsd:element>
         </xsd:sequence>
 
-        <xsd:attribute name="val" type="xsd:float" />
+        <xsd:attribute name="val" type="xsd:float" use="required"/>
+        <xsd:attribute name="unc" type="xsd:float" use="optional"/>
     </xsd:complexType>
 
     <xsd:element name="measurement">

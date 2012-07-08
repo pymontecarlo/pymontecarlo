@@ -40,7 +40,7 @@ class _Iterator(object):
         
         :arg experimental_kratios: experimental k-ratios for each element given 
             as a :class:`dict` where the keys are atomic numbers and the values
-            are experimental k-ratios.
+            are tuples of the experimental k-ratios and their uncertainties.
         :type experimental_kratios: :class:`dict`
         
         :arg composition: initial composition for each element give as a 
@@ -93,12 +93,12 @@ class _Iterator(object):
     def next(self, calculated_kratios):
         """
         
-        :arg kratios: theoretical kratios for each element given as a 
+        :arg calculated_kratios: theoretical kratios for each element given as a 
             :class:`dict` where the keys are atomic numbers and the values
-            are experimental k-ratios.
-        :type kratios: :class:`dict`
+            are tuples of the theoretical k-ratios and their uncertainties.
+        :type calculated_kratios: :class:`dict`
         
-        :return: composition
+        :return: next composition
         """
         composition = {}
 
@@ -124,11 +124,20 @@ class _Iterator(object):
         Calculates the next weight fraction of an element.
         
         :arg z: atomic number of element
-        :arg experimental_kratio: experimental k-ratio of this element
-        :arg calculated_kratio: calculated k-ratio of this element
+        :type z: :class:`int`
+        
+        :arg experimental_kratio: tuple of experimental k-ratio of this element
+            and its uncertainty
+        :type experimental_kratio: :class:`tuple`
+            
+        :arg calculated_kratio: tuple of the calculated k-ratio of this element
+            and its uncertainty
+        :type calculated_kratio: :class:`tuple`
+        
         :arg wfs: list of weight fractions of this element from the previous
             iterations. Calling ``wfs[-1]`` will always return the last
             calculated weight fraction.
+        :type wfs: :class:`list`
         """
         raise NotImplementedError
 
@@ -141,8 +150,8 @@ class SimpleIterator(_Iterator):
         wf = wfs[-1] # Take weight fraction from last iteration
 
         try:
-            correction = calculated_kratio / wf
-            return experimental_kratio / correction
+            correction = calculated_kratio[0] / wf
+            return experimental_kratio[0] / correction
         except ZeroDivisionError:
             return 0.0
 
@@ -156,10 +165,10 @@ class Heinrich1972Iterator(_Iterator):
         wf = wfs[-1] # Take weight fraction from last iteration
 
         try:
-            alpha = (wf * (1 - calculated_kratio)) / \
-                        (calculated_kratio * (1 - wf))
-            return (alpha * experimental_kratio) / \
-                        (1.0 - experimental_kratio * (1.0 - alpha))
+            alpha = (wf * (1 - calculated_kratio[0])) / \
+                        (calculated_kratio[0] * (1 - wf))
+            return (alpha * experimental_kratio[0]) / \
+                        (1.0 - experimental_kratio[0] * (1.0 - alpha))
         except ZeroDivisionError:
             return 0.0
 
@@ -192,13 +201,13 @@ class Pouchou1991Iterator(Heinrich1972Iterator):
     def _iterate(self, z, experimental_kratio, calculated_kratio, wfs):
         wf = wfs[-1] # Take weight fraction from last iteration
 
-        if calculated_kratio / wf <= 1: # Hyperbolic
+        if calculated_kratio[0] / wf <= 1: # Hyperbolic
             return Heinrich1972Iterator._iterate(self, z, experimental_kratio,
                                           calculated_kratio, wfs)
         else: # Parabolic
             # From DTSA 2
-            alpha = (calculated_kratio - wf ** 2) / (wf - wf ** 2)
-            roots = np.roots([calculated_kratio, alpha, (1 - alpha)])
+            alpha = (calculated_kratio[0] - wf ** 2) / (wf - wf ** 2)
+            roots = np.roots([calculated_kratio[0], alpha, (1 - alpha)])
             return max(roots)
 
 class Wegstein1958Iterator(SimpleIterator):
@@ -222,13 +231,13 @@ class Wegstein1958Iterator(SimpleIterator):
         else: # Wegstein
             wf1 = wfs[-1]
             wf2 = wfs[-2]
-            calculated_kratio1 = calculated_kratio
-            calculated_kratio2 = self._calculated_kratios[-1][z]
+            calculated_kratio1 = calculated_kratio[0]
+            calculated_kratio2 = self._calculated_kratios[-1][z][0]
 
             fa1 = wf1 / calculated_kratio1
             fa2 = wf2 / calculated_kratio2
 
             derivative = (fa1 - fa2) / (wf1 - wf2)
 
-            return wf1 + (experimental_kratio * fa1 - wf1) / \
-                            (1 - experimental_kratio * derivative)
+            return wf1 + (experimental_kratio[0] * fa1 - wf1) / \
+                            (1 - experimental_kratio[0] * derivative)

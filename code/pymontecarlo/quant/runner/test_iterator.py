@@ -28,7 +28,7 @@ class TestSimpleIterator(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        experimental_kratios = {29: 0.2, 79: 0.8}
+        experimental_kratios = {29: (0.2, 0.0), 79: (0.8, 0.0)}
         initial_composition = {29: 0.5, 79: 0.5}
 
         self.it = SimpleIterator(experimental_kratios, initial_composition)
@@ -40,7 +40,7 @@ class TestSimpleIterator(TestCase):
         self.assertTrue(True)
 
     def testnext(self):
-        calculated_kratios = {29: 0.3, 79: 0.7}
+        calculated_kratios = {29: (0.3, 0.0), 79: (0.7, 0.0)}
         composition = self.it.next(calculated_kratios)
 
         self.assertAlmostEqual(0.3333, composition[29], 4)
@@ -51,7 +51,7 @@ class TestHeinrich1972Iterator(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        experimental_kratios = {29: 0.2, 79: 0.8}
+        experimental_kratios = {29: (0.2, 0.0), 79: (0.8, 0.0)}
         initial_composition = {29: 0.5, 79: 0.5}
 
         self.it = Heinrich1972Iterator(experimental_kratios, initial_composition)
@@ -63,7 +63,7 @@ class TestHeinrich1972Iterator(TestCase):
         self.assertTrue(True)
 
     def testnext(self):
-        calculated_kratios = {29: 0.3, 79: 0.7}
+        calculated_kratios = {29: (0.3, 0.0), 79: (0.7, 0.0)}
         composition = self.it.next(calculated_kratios)
 
         self.assertAlmostEqual(0.3684, composition[29], 4)
@@ -74,7 +74,7 @@ class TestPouchou1991Iterator(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        experimental_kratios = {29: 0.2, 79: 0.8}
+        experimental_kratios = {29: (0.2, 0.0), 79: (0.8, 0.0)}
         initial_composition = {29: 0.5, 79: 0.5}
 
         self.it = Pouchou1991Iterator(experimental_kratios, initial_composition)
@@ -86,7 +86,7 @@ class TestPouchou1991Iterator(TestCase):
         self.assertTrue(True)
 
     def testnext(self):
-        calculated_kratios = {29: 0.3, 79: 0.7}
+        calculated_kratios = {29: (0.3, 0.0), 79: (0.7, 0.0)}
         composition = self.it.next(calculated_kratios)
 
         self.assertAlmostEqual(0.3684, composition[29], 4)
@@ -97,7 +97,7 @@ class TestWegstein1958Iterator(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        experimental_kratios = {29: 0.2, 79: 0.8}
+        experimental_kratios = {29: (0.2, 0.0), 79: (0.8, 0.0)}
         initial_composition = {29: 0.5, 79: 0.5}
 
         self.it = Wegstein1958Iterator(experimental_kratios, initial_composition)
@@ -110,14 +110,14 @@ class TestWegstein1958Iterator(TestCase):
 
     def testnext(self):
         # First iteration = simple iteration
-        calculated_kratios = {29: 0.3, 79: 0.7}
+        calculated_kratios = {29: (0.3, 0.0), 79: (0.7, 0.0)}
         composition = self.it.next(calculated_kratios)
 
         self.assertAlmostEqual(0.3333, composition[29], 4)
         self.assertAlmostEqual(0.5714, composition[79], 4)
 
         # Second iteration = Wegstein iteration
-        calculated_kratios = {29: 0.25, 79: 0.68}
+        calculated_kratios = {29: (0.25, 0.0), 79: (0.68, 0.0)}
         composition = self.it.next(calculated_kratios)
 
         self.assertAlmostEqual(0.2222, composition[29], 4)

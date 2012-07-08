@@ -41,7 +41,7 @@ class TestMeasurement(TestCase):
 
         self.m = Measurement(options, options.geometry.body, 'xray')
 
-        self.m.add_kratio(Ka(29), 0.2470)
+        self.m.add_kratio(Ka(29), 0.2470, 0.004)
         self.m.add_rule(ElementByDifferenceRule(79))
 
     def tearDown(self):
@@ -61,11 +61,12 @@ class TestMeasurement(TestCase):
 
     def testadd_kratio(self):
         standard = Material('U90', {92: 0.9, 49: 0.1})
-        self.m.add_kratio(La(92), 0.5, standard)
+        self.m.add_kratio(La(92), 0.5, standard=standard)
 
         self.assertTrue(self.m.has_kratio(92))
         self.assertEqual('U90', self.m.get_standards()[92].name)
-        self.assertAlmostEqual(0.5, self.m.get_kratios()[92], 4)
+        self.assertAlmostEqual(0.5, self.m.get_kratios()[92][0], 4)
+        self.assertAlmostEqual(0.0, self.m.get_kratios()[92][1], 4)
         self.assertIn(La(92), self.m.get_transitions())
 
         self.assertRaises(ValueError, self.m.add_kratio, Ka(92), 0.1)
@@ -112,7 +113,8 @@ class TestMeasurement(TestCase):
         kratios = self.m.get_kratios()
 
         self.assertEqual(1, len(kratios))
-        self.assertAlmostEqual(0.247, kratios[29], 4)
+        self.assertAlmostEqual(0.247, kratios[29][0], 4)
+        self.assertAlmostEqual(0.004, kratios[29][1], 4)
 
     def testget_standards(self):
         standards = self.m.get_standards()
@@ -139,7 +141,8 @@ class TestMeasurement(TestCase):
 
         kratios = m.get_kratios()
         self.assertEqual(1, len(kratios))
-        self.assertAlmostEqual(0.247, kratios[29], 4)
+        self.assertAlmostEqual(0.247, kratios[29][0], 4)
+        self.assertAlmostEqual(0.004, kratios[29][1], 4)
 
         standards = m.get_standards()
         self.assertEqual(1, len(standards))

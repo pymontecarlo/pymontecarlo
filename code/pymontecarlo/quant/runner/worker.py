@@ -24,6 +24,7 @@ import copy
 import logging
 import threading
 import time
+import math
 
 # Third party modules.
 
@@ -157,8 +158,14 @@ class Worker(threading.Thread):
             # Calculate new k-ratios
             kratios = {}
             for z, unkintensity in unkintensities.iteritems():
-                stdintensity = stdintensities[z]
-                kratios[z] = unkintensity / stdintensity
+                unkval, unkunc = unkintensity
+                stdval, stdunc = stdintensities[z]
+
+                kratioval = unkval / stdval
+                kratiounc = kratioval * math.sqrt((unkunc / unkval) ** 2 + \
+                                                  (stdunc / stdval) ** 2)
+
+                kratios[z] = kratioval, kratiounc
 
             # Iterate for new composition
             self._status = 'Calculate new composition'
@@ -206,7 +213,7 @@ class Worker(threading.Thread):
         composition = {}
         for z, kratio in kratios.iteritems():
             wf = standards[z].composition[z]
-            composition[z] = kratio * wf
+            composition[z] = kratio[0] * wf
 
         return composition
 
@@ -250,8 +257,8 @@ class Worker(threading.Thread):
             filepath = os.path.join(self._workdir, filename)
             results = SimResults.load(filepath)
 
-            val, _unc = results[detector_key].intensity(transition)
-            intensities[transition.z] = val
+            val, unc = results[detector_key].intensity(transition)
+            intensities[transition.z] = (val, unc)
 
         return intensities
 
@@ -267,10 +274,11 @@ class Worker(threading.Thread):
 
         for transition in transitions:
             try:
-                val, _unc = results[detector_key].intensity(transition)
+                val, unc = results[detector_key].intensity(transition)
             except ValueError:
                 val = 0.0
-            intensities[transition.z] = val
+                unc = 0.0
+            intensities[transition.z] = (val, unc)
 
         return intensities
 
