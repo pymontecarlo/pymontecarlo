@@ -34,7 +34,7 @@ class TestResults(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
 
         compositions = [{29:0.5, 79:0.5}, {29:0.2, 79:0.8}]
-        self.results = Results(compositions, 123.456, 12, 0.123, 'TestIterator')
+        self.results = Results(compositions, 123.456, 12, 'TestIterator', 'TestConvergor')
 
         relpath = os.path.join('..', '..', 'testdata', 'quant_results.zip')
         self.results_zip = Files.getCurrentModulePath(__file__, relpath)
@@ -59,8 +59,8 @@ class TestResults(unittest.TestCase):
 
         self.assertAlmostEqual(123.456, results.elapsed_time_s, 4)
         self.assertEqual(12, results.max_iterations)
-        self.assertAlmostEqual(0.123, results.convergence_limit, 4)
         self.assertEqual('TestIterator', results.iterator)
+        self.assertEqual('TestConvergor', results.convergor)
 
     def testsave(self):
         zipfilepath = os.path.join(self.tmpdir, 'results.zip')

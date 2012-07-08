@@ -62,6 +62,9 @@ class _Iterator(object):
 
         self._iterations = [self._initial_composition]
 
+    def __repr__(self):
+        return '<%s()>' % self.__class__.__name__
+
     def __len__(self):
         """
         Number of iterations.

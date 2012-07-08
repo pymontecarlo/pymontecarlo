@@ -27,6 +27,7 @@ from optparse import OptionParser
 from pymontecarlo.ui.cli.console import create_console
 from pymontecarlo.input.updater import Updater as OptionsUpdater
 from pymontecarlo.output.updater import Updater as ResultsUpdater
+from pymontecarlo.quant.output.updater import Updater as QuantResultsUpdater
 
 # Globals and constants variables.
 
@@ -45,6 +46,8 @@ if __name__ == '__main__':
 
     parser.add_option('-v', '--verbose', dest='verbose', default=False,
                       action='store_true', help='Debug mode')
+    parser.add_option('-q', '--quant', dest='quant', default=False,
+                      action='store_true', help='Update quantification input and output')
 
     # Parse arguments
     (values, args) = parser.parse_args()
@@ -60,16 +63,27 @@ if __name__ == '__main__':
             console.print_error('File %s does not exists' % filepath)
 
         ext = os.path.splitext(filepath)[1]
-        if ext == '.xml':
-            console.print_info("Updating options %s" % filepath)
-            OptionsUpdater().update(filepath)
-            console.print_success("Successfully updated %s" % filepath)
-        elif ext == '.zip':
-            console.print_info("Updating results %s" % filepath)
-            ResultsUpdater().update(filepath)
-            console.print_success("Successfully results %s" % filepath)
+
+        if values.quant:
+            if ext == '.xml':
+                console.error('No updater for %s' % filepath)
+            elif ext == '.zip':
+                console.print_info("Updating results %s" % filepath)
+                QuantResultsUpdater().update(filepath)
+                console.print_success("Successfully results %s" % filepath)
+            else:
+                console.error('Unknown extension %s' % ext)
         else:
-            console.error('Unknown extension %s' % ext)
+            if ext == '.xml':
+                console.print_info("Updating options %s" % filepath)
+                OptionsUpdater().update(filepath)
+                console.print_success("Successfully updated %s" % filepath)
+            elif ext == '.zip':
+                console.print_info("Updating results %s" % filepath)
+                ResultsUpdater().update(filepath)
+                console.print_success("Successfully results %s" % filepath)
+            else:
+                console.error('Unknown extension %s' % ext)
 
     console.close()
 

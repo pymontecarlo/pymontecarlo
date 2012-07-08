@@ -36,6 +36,7 @@ from pymontecarlo.quant.runner.runner import Runner
 from pymontecarlo.quant.runner.iterator import \
     (SimpleIterator, Heinrich1972Iterator, Pouchou1991Iterator,
      Wegstein1958Iterator)
+from pymontecarlo.quant.runner.convergor import CompositionConvergor
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -80,6 +81,15 @@ def create_parser(programs):
                      help='Pouchou parabolic iteration')
     group.add_option('--wegstein1958', dest='wegstein1958', action="store_true",
                      help='Wegstein iteration')
+
+    parser.add_option_group(group)
+
+    # Convergor group
+    group = OptionGroup(parser, "Convergence algorithm for quantification",
+                        "Note: Specify only one of these flags.")
+
+    group.add_option('--composition', dest='composition', action="store_true",
+                     help='Check convergence with composition [default]')
 
     parser.add_option_group(group)
 
@@ -152,6 +162,8 @@ def run(argv=None):
     else:
         iterator_class = Heinrich1972Iterator
 
+    convergor_class = CompositionConvergor
+
     aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
     if not selected_programs:
@@ -173,8 +185,10 @@ def run(argv=None):
         console.print_error("Please specify a measurement file")
 
     # Setup
-    runner = Runner(worker_class, iterator_class, outputdir, workdir,
-                    overwrite, max_iterations, convergence_limit, nbprocesses)
+    runner = Runner(worker_class, iterator_class, convergor_class,
+                    outputdir, workdir,
+                    overwrite, max_iterations, nbprocesses,
+                    limit=convergence_limit)
 
     progressbar = ProgressBar(console, len(measurements))
     if not quiet: progressbar.start()

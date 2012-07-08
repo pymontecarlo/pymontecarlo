@@ -31,14 +31,13 @@ import math
 # Local modules.
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.output.results import Results as SimResults
-from pymontecarlo.quant.output.results import Results as QuantResult
+from pymontecarlo.quant.output.results import Results as QuantResults
 
 # Globals and constants variables.
 
 class Worker(threading.Thread):
-    def __init__(self, queue_measurements, runner, iterator_class, outputdir,
-                       max_iterations=50, convergence_limit=1e-5,
-                       overwrite=True, **kwargs):
+    def __init__(self, queue_measurements, runner, iterator_class, convergor_class,
+                       outputdir, max_iterations=50, overwrite=True, **kwargs):
         threading.Thread.__init__(self)
 
         self._queue_measurements = queue_measurements
@@ -46,6 +45,7 @@ class Worker(threading.Thread):
         self._runner = runner
 
         self._iterator_class = iterator_class
+        self._convergor_class = convergor_class
         self._kwargs = kwargs
 
         if not os.path.isdir(outputdir):
@@ -57,10 +57,6 @@ class Worker(threading.Thread):
         if max_iterations < 1:
             raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
         self._max_iterations = max_iterations
-
-        if convergence_limit <= 0.0:
-            raise ValueError, 'Convergence limit must be greater than 0.0'
-        self._convergence_limit = convergence_limit
 
         self._overwrite = overwrite
 
@@ -99,13 +95,14 @@ class Worker(threading.Thread):
 
                 # Run
                 start_time_s = time.time()
-                iterator = self._run(measurement)
+                iterator, convergor = self._run(measurement)
                 end_time_s = time.time()
 
                 # Save results
                 logging.debug('Started saving results')
                 elapsed_time_s = end_time_s - start_time_s
-                self._save_results(measurement, iterator, elapsed_time_s, zipfilepath)
+                self._save_results(measurement, iterator, convergor,
+                                   elapsed_time_s, zipfilepath)
                 logging.debug('Results saved at %s', zipfilepath)
 
                 self._progress = 1.0
@@ -125,6 +122,7 @@ class Worker(threading.Thread):
         unknown_body = measurement.unknown_body
         detector_key = measurement.detector_key
         transitions = measurement.get_transitions()
+        experimental_kratios = measurement.get_kratios()
         standards = measurement.get_standards()
         rules = measurement.get_rules()
 
@@ -133,9 +131,12 @@ class Worker(threading.Thread):
         self._apply_composition_rules(rules, initial_composition)
 
         # Create iterator
-        iterator = self._iterator_class(measurement.get_kratios(),
-                                        initial_composition,
-                                        **self._kwargs)
+        iterator = self._iterator_class(experimental_kratios,
+                                        initial_composition, **self._kwargs)
+
+        # Create convergor
+        convergor = self._convergor_class(experimental_kratios,
+                                          initial_composition, **self._kwargs)
 
         # Standards
         self._status = 'Simulate standards'
@@ -171,25 +172,15 @@ class Worker(threading.Thread):
 
             # Iterate for new composition
             self._status = 'Calculate new composition'
-            previous_composition = composition
             composition = iterator.next(kratios)
 
             # Check for convergence
-            residuals = {}
-            for z, wf in composition.iteritems():
-                if z in rules: continue # skip element that have rules
+            convergor.add_iteration(kratios, composition)
 
-                residual = abs(wf - previous_composition.get(z, 0.0))
-                if residual > self._convergence_limit:
-                    residuals[z] = residual
-
-            logging.debug('Iteration %i - estimate: %s', index, composition)
-            logging.debug('Iteration %i - residual: %s', index, residuals)
-
-            if not residuals:
+            if convergor.has_converged():
                 break
 
-        return iterator
+        return iterator, convergor
 
     def _apply_composition_rules(self, rules, composition):
         for rule in rules:
@@ -284,7 +275,8 @@ class Worker(threading.Thread):
 
         return intensities
 
-    def _save_results(self, measurement, iterator, elapsed_time_s, zipfilepath):
+    def _save_results(self, measurement, iterator, convergor,
+                      elapsed_time_s, zipfilepath):
         """
         Generates the results from the measurement outputs after the measurement 
         was run and then save them at the specified location.
@@ -298,9 +290,8 @@ class Worker(threading.Thread):
             compositions.append(composition)
 
         # Create results
-        results = QuantResult(compositions, elapsed_time_s,
-                              self._max_iterations, self._convergence_limit,
-                              iterator.__class__.__name__)
+        results = QuantResults(compositions, elapsed_time_s,
+                               self._max_iterations, iterator, convergor)
         results.save(zipfilepath)
 
     def stop(self):

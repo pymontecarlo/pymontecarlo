@@ -31,7 +31,7 @@ from pymontecarlo.util.config import ConfigParser
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
 
-VERSION = 1
+VERSION = 2
 
 class _CompositionResult(object):
 
@@ -58,7 +58,7 @@ class _CompositionResult(object):
 class Results(object):
 
     def __init__(self, compositions, elapsed_time_s, max_iterations,
-                 convergence_limit, iterator):
+                 iterator, convergor):
         """
         Results from a quantification.
         
@@ -72,11 +72,11 @@ class Results(object):
         :arg max_iterations: maximum number of iterations used
         :type max_iterations: :class:`int`
         
-        :arg convergence_limit: convergence limit used
-        :type convergence_limit: :class:`float`
-        
-        :arg iterator: name of the iterator used
+        :arg iterator: iterator algorithm used
         :type iterator: :class:`str`
+        
+        :arg convergor: convergence algorithm used
+        :type convergor: :class:`str`
         """
         if elapsed_time_s < 0:
             raise ValueError, 'Elapsed time cannot be less than 0'
@@ -84,8 +84,8 @@ class Results(object):
         self._compositions = _CompositionResult(compositions)
         self._elapsed_time_s = elapsed_time_s
         self._max_iterations = max_iterations
-        self._convergence_limit = convergence_limit
-        self._iterator = iterator
+        self._iterator = str(iterator)
+        self._convergor = str(convergor)
 
     @classmethod
     def load(cls, source):
@@ -122,16 +122,16 @@ class Results(object):
         section = config.stats
         elapsed_time_s = float(section.elapsed_time_s)
         iterations = int(section.iterations)
-        convergence_limit = float(section.convergence_limit)
         max_iterations = int(section.max_iterations)
         iterator = section.iterator
+        convergor = section.convergor
 
         assert iterations == len(compositions)
 
         zipfile.close()
 
         return cls(compositions, elapsed_time_s, max_iterations,
-                   convergence_limit, iterator)
+                   iterator, convergor)
 
     def save(self, source):
         """
@@ -160,9 +160,9 @@ class Results(object):
 
         section.elapsed_time_s = self.elapsed_time_s
         section.iterations = self.iterations
-        section.convergence_limit = self.convergence_limit
         section.max_iterations = self.max_iterations
         section.iterator = self.iterator
+        section.convergor = self.convergor
 
         fp = StringIO()
         config.write(fp)
@@ -197,13 +197,6 @@ class Results(object):
         return len(self._compositions)
 
     @property
-    def convergence_limit(self):
-        """
-        Convergence limit used.
-        """
-        return self._convergence_limit
-
-    @property
     def max_iterations(self):
         """
         Maximum number of iterations used.
@@ -213,6 +206,13 @@ class Results(object):
     @property
     def iterator(self):
         """
-        Name of the iterator used.
+        Iterator used.
         """
         return self._iterator
+
+    @property
+    def convergor(self):
+        """
+        Convergence algorithm used.
+        """
+        return self._convergor

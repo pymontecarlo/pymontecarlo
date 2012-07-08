@@ -35,9 +35,9 @@ from pymontecarlo.runner.runner import Runner as SimRunner
 # Globals and constants variables.
 
 class Runner(object):
-    def __init__(self, worker_class, iterator_class, outputdir, workdir=None,
-                 overwrite=True, max_iterations=50, convergence_limit=1e-5,
-                 nbprocesses=1, **kwargs):
+    def __init__(self, worker_class, iterator_class, convergor_class,
+                 outputdir, workdir=None,
+                 overwrite=True, max_iterations=50, nbprocesses=1, **kwargs):
         """
         Creates a new runner to run several quantifications.
         
@@ -72,8 +72,8 @@ class Runner(object):
 
         self._worker_class = worker_class
         self._iterator_class = iterator_class
+        self._convergor_class = convergor_class
         self._max_iterations = max_iterations
-        self._convergence_limit = convergence_limit
         self._overwrite = overwrite
         self._kwargs = kwargs
 
@@ -115,8 +115,8 @@ class Runner(object):
         for _ in range(self._quant_nbprocesses):
             worker = \
                 QuantWorker(self._queue_measurements, self._runner,
-                            self._iterator_class, self._outputdir,
-                            self._max_iterations, self._convergence_limit,
+                            self._iterator_class, self._convergor_class,
+                            self._outputdir, self._max_iterations,
                             self._overwrite, **self._kwargs)
             self._workers.append(worker)
 
