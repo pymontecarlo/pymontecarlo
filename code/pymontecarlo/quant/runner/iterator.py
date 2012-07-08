@@ -92,8 +92,9 @@ class _Iterator(object):
 
     def next(self, calculated_kratios):
         """
+        Returns a new composition from the specified calculated k-ratios
         
-        :arg calculated_kratios: theoretical kratios for each element given as a 
+        :arg calculated_kratios: theoretical k-ratios for each element given as a 
             :class:`dict` where the keys are atomic numbers and the values
             are tuples of the theoretical k-ratios and their uncertainties.
         :type calculated_kratios: :class:`dict`
