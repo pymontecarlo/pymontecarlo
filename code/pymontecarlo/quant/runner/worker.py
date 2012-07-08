@@ -164,9 +164,20 @@ class Worker(threading.Thread):
                 unkval, unkunc = unkintensity
                 stdval, stdunc = stdintensities[z]
 
-                kratioval = unkval / stdval
-                kratiounc = kratioval * math.sqrt((unkunc / unkval) ** 2 + \
-                                                  (stdunc / stdval) ** 2)
+                try:
+                    kratioval = unkval / stdval
+                except ZeroDivisionError:
+                    kratioval = 0.0
+                try:
+                    unkuncrel = unkunc / unkval
+                except ZeroDivisionError:
+                    unkuncrel = 0.0
+                try:
+                    stduncrel = stdunc / stdval
+                except ZeroDivisionError:
+                    stduncrel = 0.0
+
+                kratiounc = kratioval * math.sqrt(unkuncrel ** 2 + stduncrel ** 2)
 
                 kratios[z] = kratioval, kratiounc
 
