@@ -25,24 +25,44 @@ import logging
 import threading
 import time
 import math
+import tempfile
+import shutil
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.output.results import Results as SimResults
+from pymontecarlo.runner.runner import Runner as SimRunner
 from pymontecarlo.quant.output.results import Results as QuantResults
 
 # Globals and constants variables.
 
 class Worker(threading.Thread):
-    def __init__(self, queue_measurements, runner, iterator_class, convergor_class,
-                       outputdir, max_iterations=50, overwrite=True, **kwargs):
+    def __init__(self, queue_measurements, worker_class,
+                 iterator_class, convergor_class,
+                 outputdir, workdir=None,
+                 max_iterations=50, overwrite=True, **kwargs):
         threading.Thread.__init__(self)
 
-        self._queue_measurements = queue_measurements
+        # Setup work directory
+        if workdir is not None and not os.path.isdir(workdir):
+            raise ValueError, 'Work directory (%s) is not a directory' % workdir
+        self._workdir = workdir
 
-        self._runner = runner
+        if self._workdir is None:
+            self._workdir = tempfile.mkdtemp()
+            self._user_defined_workdir = False
+            logging.debug('Temporary work directory: %s', self._workdir)
+        else:
+            self._user_defined_workdir = True
+
+        # Create runner
+        self._runner = SimRunner(worker_class, self._workdir,
+                                 workdir=None, overwrite=True, nbprocesses=1)
+
+        # Setup variables
+        self._queue_measurements = queue_measurements
 
         self._iterator_class = iterator_class
         self._convergor_class = convergor_class
@@ -51,8 +71,6 @@ class Worker(threading.Thread):
         if not os.path.isdir(outputdir):
             raise ValueError, 'Output directory (%s) is not a directory' % outputdir
         self._outputdir = outputdir
-
-        self._workdir = runner.outputdir
 
         if max_iterations < 1:
             raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
@@ -69,6 +87,10 @@ class Worker(threading.Thread):
         self._progress = 0.0
         self._status = ''
         self._should_continue = True
+
+    def start(self):
+        self._runner.start()
+        threading.Thread.start(self)
 
     def run(self):
         """
@@ -141,7 +163,8 @@ class Worker(threading.Thread):
         # Standards
         self._status = 'Simulate standards'
         self._run_standards(options, standards)
-        stdintensities = self._read_standard_intensities(detector_key, transitions)
+        stdintensities = \
+            self._read_standard_intensities(detector_key, transitions)
 
         composition = iterator[0]
         logging.debug('Initial composition: %s', composition)
@@ -154,9 +177,11 @@ class Worker(threading.Thread):
             self._progress = float(index) / self._max_iterations
 
             self._status = 'Simulate iteration'
-            self._run_iteration(index, composition, options, unknown_body, rules)
+            self._run_iteration(index, composition, options,
+                                unknown_body, rules)
             unkintensities = \
-                self._read_iteration_intensities(index, detector_key, transitions)
+                self._read_iteration_intensities(index, detector_key,
+                                                 transitions)
 
             # Calculate new k-ratios
             kratios = {}
@@ -235,7 +260,8 @@ class Worker(threading.Thread):
 
         self._runner.join()
 
-    def _run_iteration(self, index, composition, options, unknown_body, rules):
+    def _run_iteration(self, index, composition, options,
+                       unknown_body, rules):
         """
         Normalizes the composition, assigns it to the unknown body and then
         run the simulation.
@@ -309,8 +335,16 @@ class Worker(threading.Thread):
         """
         Stops worker.
         """
+        self._runner.stop()
+
         self._should_continue = False
         self._status = 'Stopping after next iteration'
+
+        # Cleanup working directory if needed
+        if not self._user_defined_workdir:
+            shutil.rmtree(self._workdir, ignore_errors=True)
+            logging.debug('Removed temporary work directory: %s', self._workdir)
+            self._workdir = None
 
     def report(self):
         """

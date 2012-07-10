@@ -22,15 +22,12 @@ __license__ = "GPL v3"
 import os
 import logging
 from operator import methodcaller
-import tempfile
-import shutil
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.util.queue import Queue
 from pymontecarlo.quant.runner.worker import Worker as QuantWorker
-from pymontecarlo.runner.runner import Runner as SimRunner
 
 # Globals and constants variables.
 
@@ -54,13 +51,7 @@ class Runner(object):
         """
         if nbprocesses < 1:
             raise ValueError, "Number of processes must be greater or equal to 1."
-
-        # Split processes between simulation and quantification
-        # Quantification is given a higher weight
-        nbprocesses1 = max(1, nbprocesses / 2)
-        nbprocesses2 = max(1, nbprocesses - nbprocesses1)
-        self._sim_nbprocesses = min(nbprocesses1, nbprocesses2)
-        self._quant_nbprocesses = max(nbprocesses1, nbprocesses2)
+        self._nbprocesses = nbprocesses
 
         if not os.path.isdir(outputdir):
             raise ValueError, 'Output directory (%s) is not a directory' % outputdir
@@ -95,29 +86,14 @@ class Runner(object):
         if self._workers:
             raise RuntimeError, 'Already started'
 
-        # Create working directory
-        if self._workdir is None:
-            self._workdir = tempfile.mkdtemp()
-            self._user_defined_workdir = False
-            logging.debug('Temporary work directory: %s', self._workdir)
-        else:
-            self._user_defined_workdir = True
-
-        # Create simulation runner
-        # Simulations are always overwritten to prevent conflict between
-        # quantification
-        self._runner = SimRunner(self._worker_class, self._workdir, None,
-                                 True, self._sim_nbprocesses)
-        self._runner.start()
-
         # Create workers
         self._workers = []
-        for _ in range(self._quant_nbprocesses):
+        for _ in range(self._nbprocesses):
             worker = \
-                QuantWorker(self._queue_measurements, self._runner,
+                QuantWorker(self._queue_measurements, self._worker_class,
                             self._iterator_class, self._convergor_class,
-                            self._outputdir, self._max_iterations,
-                            self._overwrite, **self._kwargs)
+                            self._outputdir, self._workdir,
+                            self._max_iterations, self._overwrite, **self._kwargs)
             self._workers.append(worker)
 
             worker.daemon = True
@@ -147,18 +123,9 @@ class Runner(object):
         """
         Stops all workers and closes the current runner.
         """
-        self._runner.stop()
-        del self._runner
-
         for worker in self._workers:
             worker.stop()
         self._workers = []
-
-        # Cleanup working directory if needed
-        if not self._user_defined_workdir:
-            shutil.rmtree(self._workdir, ignore_errors=True)
-            logging.debug('Removed temporary work directory: %s', self._workdir)
-            self._workdir = None
 
     def is_alive(self):
         """
