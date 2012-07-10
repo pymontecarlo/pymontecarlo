@@ -232,8 +232,15 @@ class Wegstein1958Iterator(SimpleIterator):
             calculated_kratio1 = calculated_kratio[0]
             calculated_kratio2 = self._calculated_kratios[-1][z][0]
 
-            fa1 = wf1 / calculated_kratio1
-            fa2 = wf2 / calculated_kratio2
+            try:
+                fa1 = wf1 / calculated_kratio1
+            except ZeroDivisionError:
+                return 0.0
+
+            try:
+                fa2 = wf2 / calculated_kratio2
+            except ZeroDivisionError:
+                return 0.0
 
             derivative = (fa1 - fa2) / (wf1 - wf2)
 
