@@ -23,7 +23,7 @@
     </geometry>
     <detectors>
         <pymontecarlo.input.base.detector.ElectronFractionDetector _key="electron-fraction"/>
-        <pymontecarlo.input.base.detector.PhotonIntensityDetector _key="xrays-intensity" azimuth_max="6.28318530718" azimuth_min="0" elevation_max="0.916297857297" elevation_min="0.916297857297"/>
+        <pymontecarlo.input.base.detector.PhotonIntensityDetector _key="xrays-intensity" azimuth_max="6.28318530718" azimuth_min="0" elevation_max="0.0" elevation_min="0.916297857297"/>
         <pymontecarlo.input.base.detector.TimeDetector _key="time"/>
     </detectors>
     <limits>

@@ -23,7 +23,7 @@
 	</geometry>
 	<detectors>
 		<mc:electronFractionDetector _key="electron-fraction"/>
-		<mc:photonIntensityDetector _key="xrays-intensity" azimuth_max="6.28318530718" azimuth_min="0" elevation_max="0.916297857297" elevation_min="0.916297857297"/>
+		<mc:photonIntensityDetector _key="xrays-intensity" azimuth_max="6.28318530718" azimuth_min="0" elevation_max="0.0" elevation_min="0.916297857297"/>
 		<mc:timeDetector _key="time"/>
 	</detectors>
 	<limits>
