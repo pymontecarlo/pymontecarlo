@@ -756,7 +756,7 @@ class Cuboids2D(_Geometry):
                 raise IndexError, 'No material at index (%i, %i)' % index
             self._bodies[index].material = material
 
-    def __init__(self, nx, ny, xsize, ysize):
+    def __init__(self, nx, ny, xsize_m, ysize_m):
         """
         Creates a geometry made of *nx* by *ny* adjacent cuboids with 
         infinite depth. 
@@ -785,27 +785,24 @@ class Cuboids2D(_Geometry):
         :arg ny: number of cuboids in y-direction (odd number)
         :type ny: :class:`int`
         
-        :arg xsize: size of a cuboid in x-direction (in meters)
-        :type xsize: :class:`float`
+        :arg xsize_m: size of a cuboid in x-direction (in meters)
+        :type xsize_m: :class:`float`
         
-        :arg ysize: size of a cuboid in y-direction (in meters)
-        :type ysize: :class:`float`
+        :arg ysize_m: size of a cuboid in y-direction (in meters)
+        :type ysize_m: :class:`float`
         """
         _Geometry.__init__(self)
 
         if nx < 1 and nx % 2 == 1:
             raise ValueError, 'nx must be greater or equal to 1 and an odd number'
+        self._props['nx'] = nx
+
         if ny < 1 and ny % 2 == 1:
             raise ValueError, 'ny must be greater or equal to 1 and an odd number'
-        if xsize <= 0.0:
-            raise ValueError, 'xsize must be greater than 0'
-        if ysize <= 0.0:
-            raise ValueError, 'ysize must be greater than 0'
+        self._props['ny'] = ny
 
-        self._nx = nx
-        self._ny = ny
-        self._xsize = xsize
-        self._ysize = ysize
+        self.xsize_m = xsize_m
+        self.ysize_m = ysize_m
 
         # Create empty bodies
         self._bodies = {}
@@ -826,10 +823,10 @@ class Cuboids2D(_Geometry):
 
         nx = int(element.get('nx'))
         ny = int(element.get('ny'))
-        xsize = float(element.get('xsize'))
-        ysize = float(element.get('ysize'))
+        xsize_m = float(element.get('xsize'))
+        ysize_m = float(element.get('ysize'))
 
-        obj = cls(nx, ny, xsize, ysize)
+        obj = cls(nx, ny, xsize_m, ysize_m)
         obj.tilt_rad = tilt_rad
         obj.rotation_rad = rotation_rad
 
@@ -847,10 +844,10 @@ class Cuboids2D(_Geometry):
     def __savexml__(self, element, *args, **kwargs):
         _Geometry.__savexml__(self, element, *args, **kwargs)
 
-        element.set('nx', str(self._nx))
-        element.set('ny', str(self._ny))
-        element.set('xsize', str(self._xsize))
-        element.set('ysize', str(self._ysize))
+        element.set('nx', str(self.nx))
+        element.set('ny', str(self.ny))
+        element.set('xsize', str(self.xsize_m))
+        element.set('ysize', str(self.ysize_m))
 
         child = Element('positions')
         for position, body in self._bodies.iteritems():
@@ -860,6 +857,46 @@ class Cuboids2D(_Geometry):
             grandchild.set('y', str(position[1]))
             child.append(grandchild)
         element.append(child)
+
+    @property
+    def nx(self):
+        """
+        Number of cuboids in x-direction (read-only).
+        """
+        return self._props['nx']
+
+    @property
+    def ny(self):
+        """
+        Number of cuboids in y-direction (read-only).
+        """
+        return self._props['ny']
+
+    @property
+    def xsize_m(self):
+        """
+        Size of a cuboids in x-direction (in meters).
+        """
+        return self._props['xsize']
+
+    @xsize_m.setter
+    def xsize_m(self, size):
+        if size <= 0.0:
+            raise ValueError, 'size must be greater than 0'
+        self._props['xsize'] = size
+
+    @property
+    def ysize_m(self):
+        """
+        Size of a cuboids in y-direction (in meters).
+        """
+        return self._props['ysize']
+
+    @ysize_m.setter
+    def ysize_m(self, size):
+        if size <= 0.0:
+            raise ValueError, 'size must be greater than 0'
+        self._props['ysize'] = size
 
     @property
     def body(self):
@@ -878,8 +915,8 @@ class Cuboids2D(_Geometry):
         except IndexError:
             raise ValueError, "Unknown body: %s" % body
 
-        xsize = self._xsize
-        ysize = self._ysize
+        xsize = self.xsize_m
+        ysize = self.ysize_m
 
         xmin = (x * xsize) - xsize / 2
         xmax = (x * xsize) + xsize / 2

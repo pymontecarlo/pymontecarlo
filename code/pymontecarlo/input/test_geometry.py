@@ -584,6 +584,12 @@ class TestCuboids2D(TestCase):
         self.assertEqual('Gold', str(self.g.material[-1, -1]))
         self.assertEqual('Vacuum', str(self.g.material[1, 1]))
 
+        self.assertEqual(3, self.g.nx)
+        self.assertEqual(3, self.g.ny)
+
+        self.assertAlmostEqual(10.0, self.g.xsize_m, 4)
+        self.assertAlmostEqual(10.0, self.g.ysize_m, 4)
+
     def testfrom_xml(self):
         self.g.tilt_rad = 1.1
         self.g.rotation_rad = 2.2
@@ -594,8 +600,8 @@ class TestCuboids2D(TestCase):
         self.assertEqual('Gold', str(self.g.material[-1, -1]))
         self.assertEqual('Vacuum', str(self.g.material[1, 1]))
 
-        self.assertAlmostEqual(10.0, self.g._xsize, 4)
-        self.assertAlmostEqual(10.0, self.g._ysize, 4)
+        self.assertAlmostEqual(10.0, self.g.xsize_m, 4)
+        self.assertAlmostEqual(10.0, self.g.ysize_m, 4)
 
         self.assertAlmostEqual(1.1, g.tilt_rad, 4)
         self.assertAlmostEqual(2.2, g.rotation_rad, 4)
