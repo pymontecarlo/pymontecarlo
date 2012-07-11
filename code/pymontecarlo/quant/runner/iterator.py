@@ -7,7 +7,7 @@
 .. module:: iterator
    :synopsis: Quantitative iterator algorithm
 
-.. inheritance-diagram:: pymontecarlo.quant.iterator
+.. inheritance-diagram:: pymontecarlo.quant.runner.iterator
 
 .. note::
 

@@ -7,8 +7,6 @@
 .. module:: quant
    :synopsis: Quantification of experimental results
 
-.. inheritance-diagram:: pymontecarlo.ui.cli.quant
-
 """
 
 # Script information for the file.

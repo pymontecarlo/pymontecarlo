@@ -7,7 +7,7 @@
 .. module:: results
    :synopsis: Results from quantification
 
-.. inheritance-diagram:: pymontecarlo.qunat.output.results
+.. inheritance-diagram:: pymontecarlo.quant.output.results
 
 """
 

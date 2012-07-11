@@ -7,7 +7,7 @@
 .. module:: queue
    :synopsis: Queue for runner and creator
 
-.. inheritance-diagram:: pymontecarlo.runner.queue
+.. inheritance-diagram:: pymontecarlo.util.queue
 
 """
 

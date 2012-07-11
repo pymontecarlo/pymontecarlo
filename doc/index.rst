@@ -107,6 +107,34 @@ PENEPMA
    pymontecarlo/program/penepma/io/*
    pymontecarlo/program/penepma/runner/*
 
+Pouchou and Pichoir
+^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/program/pouchou/*
+   pymontecarlo/program/pouchou/input/*
+   pymontecarlo/program/pouchou/runner/*
+
+PAP
+^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/program/pap/*
+   pymontecarlo/program/pap/runner/*
+   
+XPP
+^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/program/xpp/*
+   pymontecarlo/program/xpp/runner/*
+
 WinXRay
 ^^^^^^^
 
@@ -118,6 +146,32 @@ WinXRay
    pymontecarlo/program/winxray/io/*
    pymontecarlo/program/winxray/runner/*
 
+Quantification
+--------------
+
+Inputs
+^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/quant/input/*
+   
+Outputs
+^^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/quant/output/*
+   
+Runner
+^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/quant/runner/*
 
 Indices and tables
 ==================
