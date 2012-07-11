@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import csv
 from zipfile import ZipFile
 from StringIO import StringIO
+from collections import defaultdict
 
 # Third party modules.
 
@@ -112,7 +113,8 @@ class Results(object):
         compositions = []
         for row in reader:
             wfs = map(float, row[1:])
-            composition = dict(zip(zs, wfs))
+            composition = defaultdict(float)
+            composition.update(dict(zip(zs, wfs)))
             compositions.append(composition)
 
         # Read stats

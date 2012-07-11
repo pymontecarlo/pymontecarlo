@@ -57,6 +57,8 @@ class TestResults(unittest.TestCase):
         self.assertAlmostEqual(0.2, results.compositions[-1][29], 4)
         self.assertAlmostEqual(0.8, results.compositions[-1][79], 4)
 
+        self.assertAlmostEqual(0.0, results.compositions[-1][99], 4) # test defaultdict
+
         self.assertAlmostEqual(123.456, results.elapsed_time_s, 4)
         self.assertEqual(12, results.max_iterations)
         self.assertEqual('TestIterator', results.iterator)
