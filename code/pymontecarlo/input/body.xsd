@@ -7,15 +7,16 @@
         <xsd:sequence>
             <xsd:element name="material" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
-                    <xsd:sequence>
+                    <xsd:choice>
                         <xsd:element ref="material" />
-                    </xsd:sequence>
+                        <xsd:element ref="vacuum" />
+                    </xsd:choice>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
-    
-        <xsd:attribute name="index" type="xsd:integer" use="optional"/>
-        <xsd:attribute name="material" type="xsd:integer" use="optional"/>
+
+        <xsd:attribute name="index" type="xsd:integer" use="optional" />
+        <xsd:attribute name="material" type="xsd:integer" use="optional" />
     </xsd:complexType>
 
     <xsd:element name="body" type="bodyType" />
@@ -33,7 +34,6 @@
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>
-    
-    <xsd:element name="layer" type="layerType"
-        substitutionGroup="body" />
+
+    <xsd:element name="layer" type="layerType" substitutionGroup="body" />
 </xsd:schema>

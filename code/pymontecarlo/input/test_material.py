@@ -71,16 +71,29 @@ class TestModule(TestCase):
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
 
-    def testVACUUM(self):
-        self.assertTrue(VACUUM.is_vacuum())
+class TestVACUUM(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
         self.assertEquals('Vacuum', str(VACUUM))
-
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
 
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_photon_eV, 4)
+    def testfrom_xml(self):
+        element = VACUUM.to_xml()
+        obj = VACUUM.from_xml(element)
+
+        self.assertIs(obj, VACUUM)
+
+    def testto_xml(self):
+        element = VACUUM.to_xml()
+
+        self.assertEqual(0, len(list(element)))
 
 class TestMaterial(TestCase):
 

@@ -61,4 +61,8 @@
     </xsd:complexType>
 
     <xsd:element name="material" type="materialType" />
+    
+    <xsd:complexType name="vacuumType" />
+    
+    <xsd:element name="vacuum" type="vacuumType" />
 </xsd:schema>

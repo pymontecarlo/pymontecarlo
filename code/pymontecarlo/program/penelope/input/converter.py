@@ -25,6 +25,7 @@ __license__ = "GPL v3"
 # Local modules.
 from pymontecarlo.input.converter import \
     Converter as _Converter, ConversionException
+from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.geometry import \
     Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere
 from pymontecarlo.input.model import \
@@ -124,7 +125,7 @@ class Converter(_Converter):
 
     def _create_penelope_material(self, old):
         # Do not convert vacuum
-        if old.is_vacuum():
+        if old is VACUUM:
             return old
 
         # Do not convert PENELOPE material

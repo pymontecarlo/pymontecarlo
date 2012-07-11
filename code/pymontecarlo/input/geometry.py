@@ -111,7 +111,7 @@ class _Geometry(Option):
     @classmethod
     def _parse_xml_materials(cls, element):
         children = list(element.find('materials'))
-        materials_lookup = {}
+        materials_lookup = {0: VACUUM}
         for child in children:
             index = int(child.get('index'))
             materials_lookup[index] = XMLIO.from_xml(child)
@@ -144,9 +144,7 @@ class _Geometry(Option):
     def _indexify(self):
         count = 1
         for material in self.get_materials():
-            if material.is_vacuum():
-                material._index = 0
-            else:
+            if material is not VACUUM: # Vacuum has an index of 0
                 material._index = count
                 count += 1
 
@@ -156,6 +154,8 @@ class _Geometry(Option):
     def _materials_to_xml(self):
         element = Element('materials')
         for material in self.get_materials():
+            if material is VACUUM:
+                continue
             child = material.to_xml()
             child.set('index', str(material._index))
             element.append(child)
@@ -215,8 +215,12 @@ class _Geometry(Option):
         Returns a :class:`set` of all materials inside this geometry.
         Since a :class:`set` is returned, even if the same material is used 
         more than once, it will only appear once.
+        :obj:`VACUUM` is not considered as a material, so this object will
+        not appear in this list.
         """
-        return set(map(_MATERIAL_GETTER, self.get_bodies()))
+        materials = set(map(_MATERIAL_GETTER, self.get_bodies()))
+        materials.discard(VACUUM)
+        return materials
 
     def get_bodies(self):
         """

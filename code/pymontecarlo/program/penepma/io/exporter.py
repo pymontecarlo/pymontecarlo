@@ -29,6 +29,7 @@ from operator import attrgetter, mul
 
 # Local modules.
 from pymontecarlo import get_settings
+from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.detector import \
     _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
@@ -216,7 +217,7 @@ class Exporter(_Exporter):
 
         bodies = sorted(pengeom.get_bodies(), key=attrgetter('_index'))
         for body in bodies:
-            if body.material.is_vacuum():
+            if body.material is VACUUM:
                 continue
             text = [body._index + 1,
                     body.maximum_step_length_m * 1e2]
@@ -230,7 +231,7 @@ class Exporter(_Exporter):
 
         bodies = sorted(geoinfo[0].get_bodies(), key=attrgetter('_index'))
         for body in bodies:
-            if body.material.is_vacuum():
+            if body.material is VACUUM:
                 continue
 
             for intforce in sorted(body.interaction_forcings):

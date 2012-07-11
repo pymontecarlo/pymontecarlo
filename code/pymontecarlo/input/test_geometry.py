@@ -51,11 +51,11 @@ class Test_Geometry(TestCase):
 
     def testget_materials(self):
         materials = self.g.get_materials()
-        self.assertEqual(2, len(materials))
+        self.assertEqual(1, len(materials))
 
     def test_indexify(self):
         self.g._indexify()
-        self.assertEqual(0, VACUUM._index) #@UndefinedVariable
+        self.assertEqual(0, VACUUM._index)
         self.assertEqual(1, self.g.bodies[0].material._index)
 
 class TestSubstrate(TestCase):
@@ -180,16 +180,22 @@ class TestMultiLayers(TestCase):
         TestCase.setUp(self)
 
         self.g1 = MultiLayers(pure(29))
-        self.g2 = MultiLayers(None)
+        self.g2 = MultiLayers(None) # No substrate
+        self.g3 = MultiLayers(pure(29)) # Empty layer
 
         self.l1 = Layer(pure(30), 123.456)
         self.l2 = Layer(pure(31), 456.789)
+        self.l3 = Layer(VACUUM, 456.123)
 
         self.g1.layers.add(self.l1)
         self.g1.layers.add(self.l2)
 
         self.g2.layers.add(self.l1)
         self.g2.layers.add(self.l2)
+
+        self.g3.layers.add(self.l1)
+        self.g3.layers.add(self.l2)
+        self.g3.layers.add(self.l3)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -209,6 +215,15 @@ class TestMultiLayers(TestCase):
         self.assertEqual(2, len(self.g2.layers))
         self.assertEqual('Zinc', str(self.g2.layers[0].material))
         self.assertEqual('Gallium', str(self.g2.layers[1].material))
+
+        # Multi-layers 3
+        self.assertTrue(self.g3.has_substrate())
+        self.assertEqual('Copper', str(self.g3.substrate_material))
+
+        self.assertEqual(3, len(self.g3.layers))
+        self.assertEqual('Zinc', str(self.g3.layers[0].material))
+        self.assertEqual('Gallium', str(self.g3.layers[1].material))
+        self.assertEqual('Vacuum', str(self.g3.layers[2].material))
 
     def testfrom_xml(self):
         # Multi-layers 1
@@ -237,6 +252,18 @@ class TestMultiLayers(TestCase):
         self.assertEqual('Zinc', str(g2.layers[0].material))
         self.assertEqual('Gallium', str(g2.layers[1].material))
 
+        # Multi-layers 3
+        element = self.g3.to_xml()
+        g3 = MultiLayers.from_xml(element)
+
+        self.assertTrue(g3.has_substrate())
+        self.assertEqual('Copper', str(g3.substrate_material))
+
+        self.assertEqual(3, len(g3.layers))
+        self.assertEqual('Zinc', str(g3.layers[0].material))
+        self.assertEqual('Gallium', str(g3.layers[1].material))
+        self.assertEqual('Vacuum', str(g3.layers[2].material))
+
     def testsubstrate_material(self):
         self.g1.substrate_material = None
         self.assertFalse(self.g1.has_substrate())
@@ -248,6 +275,12 @@ class TestMultiLayers(TestCase):
     def testget_bodies(self):
         self.assertEqual(3, len(self.g1.get_bodies()))
         self.assertEqual(2, len(self.g2.get_bodies()))
+        self.assertEqual(4, len(self.g3.get_bodies()))
+
+    def testget_materials(self):
+        self.assertEqual(3, len(self.g1.get_materials()))
+        self.assertEqual(2, len(self.g2.get_materials()))
+        self.assertEqual(3, len(self.g3.get_materials()))
 
     def testget_dimensions(self):
         # Multi-layers 1
@@ -316,6 +349,17 @@ class TestMultiLayers(TestCase):
         self.assertEqual(2, len(layers))
 
         self.assertEqual(None, element.get('substrate'))
+
+        # Multi-layers 3
+        element = self.g3.to_xml()
+
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(4, len(list(element.find('bodies'))))
+
+        layers = element.get('layers').split(',')
+        self.assertEqual(3, len(layers))
+
+        self.assertNotEqual(None, element.get('substrate'))
 
 class TestGrainBoundaries(TestCase):
 
@@ -505,11 +549,11 @@ class TestSphere(TestCase):
 
     def testget_dimensions(self):
         dim = self.g.get_dimensions(self.g.body)
-        self.assertEqual(-61.728, dim.xmin_m)
-        self.assertEqual(61.728, dim.xmax_m)
-        self.assertEqual(-61.728, dim.ymin_m)
-        self.assertEqual(61.728, dim.ymax_m)
-        self.assertEqual(-123.456, dim.zmin_m)
+        self.assertAlmostEqual(-61.728, dim.xmin_m, 4)
+        self.assertAlmostEqual(61.728, dim.xmax_m, 4)
+        self.assertAlmostEqual(-61.728, dim.ymin_m, 4)
+        self.assertAlmostEqual(61.728, dim.ymax_m, 4)
+        self.assertAlmostEqual(-123.456, dim.zmin_m, 4)
         self.assertAlmostEqual(0.0, dim.zmax_m, 4)
 
     def testto_xml(self):
