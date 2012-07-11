@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 from operator import attrgetter
 from math import pi
+import itertools
 
 # Third party modules.
 from lxml.etree import Element
@@ -729,3 +730,162 @@ class Sphere(_Geometry):
             raise ValueError, "Unknown body: %s" % body
 
 XMLIO.register('{http://pymontecarlo.sf.net}sphere', Sphere)
+
+class Cuboids2D(_Geometry):
+
+    class __Cuboids2DBody(object):
+        def __init__(self, bodies):
+            self._bodies = bodies
+
+        def __getitem__(self, index):
+            if index not in self._bodies:
+                raise IndexError, 'No body at index (%i, %i)' % index
+            return self._bodies[index]
+
+    class __Cuboids2DMaterial(object):
+        def __init__(self, bodies):
+            self._bodies = bodies
+
+        def __getitem__(self, index):
+            if index not in self._bodies:
+                raise IndexError, 'No material at index (%i, %i)' % index
+            return self._bodies[index].material
+
+        def __setitem__(self, index, material):
+            if index not in self._bodies:
+                raise IndexError, 'No material at index (%i, %i)' % index
+            self._bodies[index].material = material
+
+    def __init__(self, nx, ny, xsize, ysize):
+        """
+        Creates a geometry made of *nx* by *ny* adjacent cuboids with 
+        infinite depth. 
+        Each cuboid was a size of *xsize* by *ysize*.
+        The number of cuboids in x and y-direction must be odd, so that the
+        cuboid (nx/2+1, ny/2+1) is located at the center.
+        
+        The position (0, 0) is given to the center cuboid. 
+        Cuboids on the upper-left quadrant have positive indexes whereas
+        cuboids on the bottom-right quadrant have negative indexes.
+        
+        The material of each cuboid can be access as follows::
+        
+            >>> print geometry.material[0,0] # center cuboid
+            >>> print geometry.material[1,0] # cuboid to the left of the center cuboid
+            >>> print geometry.material[0,1] # cuboid above the center cuboid
+            >>> print geometry.material[1,-2] # cuboid one up and 2 to the right of the center cuboid
+            
+        .. note:: 
+        
+           When the geometry is created, all cuboids have no material (i.e. vacuum).
+        
+        :arg nx: number of cuboids in x-direction (odd number)
+        :type nx: :class:`int`
+        
+        :arg ny: number of cuboids in y-direction (odd number)
+        :type ny: :class:`int`
+        
+        :arg xsize: size of a cuboid in x-direction (in meters)
+        :type xsize: :class:`float`
+        
+        :arg ysize: size of a cuboid in y-direction (in meters)
+        :type ysize: :class:`float`
+        """
+        _Geometry.__init__(self)
+
+        if nx < 1 and nx % 2 == 1:
+            raise ValueError, 'nx must be greater or equal to 1 and an odd number'
+        if ny < 1 and ny % 2 == 1:
+            raise ValueError, 'ny must be greater or equal to 1 and an odd number'
+        if xsize <= 0.0:
+            raise ValueError, 'xsize must be greater than 0'
+        if ysize <= 0.0:
+            raise ValueError, 'ysize must be greater than 0'
+
+        self._nx = nx
+        self._ny = ny
+        self._xsize = xsize
+        self._ysize = ysize
+
+        # Create empty bodies
+        self._bodies = {}
+        self._bodies_reverse = {}
+
+        for position in itertools.product(range(-(nx / 2), nx / 2 + 1),
+                                          range(-(ny / 2), ny / 2 + 1)):
+            body = Body(VACUUM)
+            self._bodies[position] = body
+            self._bodies_reverse[body] = position
+
+        self._body = self.__Cuboids2DBody(self._bodies)
+        self._material = self.__Cuboids2DMaterial(self._bodies)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
+
+        nx = int(element.get('nx'))
+        ny = int(element.get('ny'))
+        xsize = float(element.get('xsize'))
+        ysize = float(element.get('ysize'))
+
+        obj = cls(nx, ny, xsize, ysize)
+        obj.tilt_rad = tilt_rad
+        obj.rotation_rad = rotation_rad
+
+        children = list(element.find('positions'))
+        for child in children:
+            index = int(child.get('index'))
+            position = int(child.get('x')), int(child.get('y'))
+            body = bodies_lookup[index]
+
+            obj._bodies[position] = body
+            obj._bodies_reverse[body] = position
+
+        return obj
+
+    def __savexml__(self, element, *args, **kwargs):
+        _Geometry.__savexml__(self, element, *args, **kwargs)
+
+        element.set('nx', str(self._nx))
+        element.set('ny', str(self._ny))
+        element.set('xsize', str(self._xsize))
+        element.set('ysize', str(self._ysize))
+
+        child = Element('positions')
+        for position, body in self._bodies.iteritems():
+            grandchild = Element('position')
+            grandchild.set('index', str(body._index))
+            grandchild.set('x', str(position[0]))
+            grandchild.set('y', str(position[1]))
+            child.append(grandchild)
+        element.append(child)
+
+    @property
+    def body(self):
+        return self._body
+
+    @property
+    def material(self):
+        return self._material
+
+    def get_bodies(self):
+        return set(self._bodies.values())
+
+    def get_dimensions(self, body):
+        try:
+            x, y = self._bodies_reverse[body]
+        except IndexError:
+            raise ValueError, "Unknown body: %s" % body
+
+        xsize = self._xsize
+        ysize = self._ysize
+
+        xmin = (x * xsize) - xsize / 2
+        xmax = (x * xsize) + xsize / 2
+        ymin = (y * ysize) - ysize / 2
+        ymax = (y * ysize) + ysize / 2
+
+        return _Dimension(xmin, xmax, ymin, ymax, zmax=0.0)
+
+XMLIO.register('{http://pymontecarlo.sf.net}cuboids2d', Cuboids2D)
