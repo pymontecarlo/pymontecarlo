@@ -18,7 +18,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.util.transition import Transition
+from pymontecarlo.util.transition import Transition, La
 
 # Globals and constants variables.
 
@@ -84,6 +84,10 @@ class TestUncertaintyLimit(TestCase):
     def testskeleton(self):
         self.assertEqual('Cu Ka1', str(self.lim.transition))
         self.assertAlmostEqual(0.05, self.lim.uncertainty, 4)
+
+    def testtransitionset(self):
+        self.lim.transition = La(29)
+        self.assertEqual('Cu La1', str(self.lim.transition))
 
     def testfrom_xml(self):
         element = self.lim.to_xml()

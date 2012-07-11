@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from operator import attrgetter
 
 # Third party modules.
 
@@ -46,10 +47,20 @@ class _TransitionLimit(Option):
 
     @property
     def transition(self):
+        """
+        Transition for the limit.
+        If a :class:`set` or :class:`list` of transitions is given, the
+        transitions with the highest probability is selected.
+        """
         return self._props['transition']
 
     @transition.setter
     def transition(self, transition):
+        if hasattr(transition, '__iter__'): # set or list of transitions
+            transitions = list(transition)
+            transitions.sort(key=attrgetter('probability'), reverse=True)
+            transition = transitions[0]
+
         self._props['transition'] = transition
 
 class TimeLimit(Option):
