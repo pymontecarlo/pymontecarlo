@@ -27,7 +27,7 @@ from pymontecarlo.input.converter import \
     Converter as _Converter, ConversionException
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.geometry import \
-    Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere
+    Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere, Cuboids2D
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, INELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION,
      BREMSSTRAHLUNG_EMISSION, PHOTON_SCATTERING_CROSS_SECTION,
@@ -39,7 +39,7 @@ from pymontecarlo.program.penelope.input.body import Body, Layer
 # Globals and constants variables.
 
 class Converter(_Converter):
-    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere]
+    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere, Cuboids2D]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.elsepa2005],
               INELASTIC_CROSS_SECTION.type: [INELASTIC_CROSS_SECTION.sternheimer_liljequist1952],
               IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.bote_salvat2008],
@@ -112,11 +112,16 @@ class Converter(_Converter):
             geometry._props['body'] = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
+        elif isinstance(geometry, Cuboids2D):
+            for position, body in geometry._bodies.iteritems():
+                geometry._bodies[position] = \
+                    self._create_penelope_body(body, materials_lookup)
+
         else:
             raise ConversionException, "Cannot convert geometry"
 
     def _create_penelope_materials(self, oldmaterials):
-        materials_lookup = {}
+        materials_lookup = {VACUUM: VACUUM}
 
         for oldmaterial in oldmaterials:
             materials_lookup[oldmaterial] = self._create_penelope_material(oldmaterial)
@@ -124,10 +129,6 @@ class Converter(_Converter):
         return materials_lookup
 
     def _create_penelope_material(self, old):
-        # Do not convert vacuum
-        if old is VACUUM:
-            return old
-
         # Do not convert PENELOPE material
         if isinstance(old, Material):
             return old

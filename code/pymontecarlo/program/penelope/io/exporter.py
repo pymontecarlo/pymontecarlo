@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 from operator import attrgetter
-from itertools import tee, izip
+import itertools
 
 # Third party modules.
 
@@ -29,11 +29,11 @@ from itertools import tee, izip
 from pymontecarlo import get_settings
 
 from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
 from pymontecarlo.input.material import VACUUM
 
 from pymontecarlo.program.penelope.input.geometry import \
-    PenelopeGeometry, Module, xplane, zplane, cylinder, sphere
+    PenelopeGeometry, Module, xplane, yplane, zplane, cylinder, sphere
 
 from pymontecarlo.io.exporter import \
     Exporter as _Exporter, ExporterException, ExporterWarning #@UnusedImport
@@ -45,9 +45,9 @@ import penelopelib.material as penmaterial
 
 def _pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = tee(iterable)
+    a, b = itertools.tee(iterable)
     next(b, None)
-    return izip(a, b)
+    return itertools.izip(a, b)
 
 class Keyword(object):
     LINE_KEYWORDS_SIZE = 6
@@ -117,6 +117,7 @@ class Exporter(_Exporter):
         self._geometry_exporters[MultiLayers] = self._export_geometry_multilayers
         self._geometry_exporters[GrainBoundaries] = self._export_geometry_grainboundaries
         self._geometry_exporters[Sphere] = self._export_geometry_sphere
+        self._geometry_exporters[Cuboids2D] = self._export_geometry_cuboids2d
 
         self._pendbase_dir = get_settings().penelope.pendbase
 
@@ -370,4 +371,40 @@ class Exporter(_Exporter):
         module.add_surface(surface_sphere, -1)
         module.shift.z_m = -radius_m
         pengeom.modules.add(module)
+
+    def _export_geometry_cuboids2d(self, geometry, pengeom):
+        # Surfaces
+        surface_top = zplane(0.0) # z = 0
+        surface_bottom = zplane(-0.1) # z = -10 cm
+
+        ## Vertical planes
+        nx = geometry.nx
+        ny = geometry.ny
+
+        xsurfaces = {}
+        for x in range(-(nx / 2), nx / 2 + 1):
+            dims = geometry.get_dimensions(geometry.body[x, 0])
+            xsurfaces[x] = xplane(dims.xmin_m)
+        xsurfaces[x + 1] = xplane(dims.xmax_m)
+
+        ysurfaces = {}
+        for y in range(-(ny / 2), ny / 2 + 1):
+            dims = geometry.get_dimensions(geometry.body[0, y])
+            ysurfaces[y] = yplane(dims.ymin_m)
+        ysurfaces[y + 1] = yplane(dims.ymax_m)
+
+        # Modules
+        for position, body in geometry._bodies.iteritems():
+            x, y = position
+
+            module = Module.from_body(body, description='Position (%i, %i)' % position)
+
+            module.add_surface(surface_bottom, 1) # zmin
+            module.add_surface(surface_top, -1) # zmax
+            module.add_surface(xsurfaces[x], 1) # xmin
+            module.add_surface(xsurfaces[x + 1], -1) # xmax
+            module.add_surface(ysurfaces[y], 1) # ymin
+            module.add_surface(ysurfaces[y + 1], -1) # ymax
+
+            pengeom.modules.add(module)
 
