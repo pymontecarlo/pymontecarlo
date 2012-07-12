@@ -806,13 +806,11 @@ class Cuboids2D(_Geometry):
 
         # Create empty bodies
         self._bodies = {}
-        self._bodies_reverse = {}
 
         for position in itertools.product(range(-(nx / 2), nx / 2 + 1),
                                           range(-(ny / 2), ny / 2 + 1)):
             body = Body(VACUUM)
             self._bodies[position] = body
-            self._bodies_reverse[body] = position
 
         self._body = self.__Cuboids2DBody(self._bodies)
         self._material = self.__Cuboids2DMaterial(self._bodies)
@@ -837,7 +835,6 @@ class Cuboids2D(_Geometry):
             body = bodies_lookup[index]
 
             obj._bodies[position] = body
-            obj._bodies_reverse[body] = position
 
         return obj
 
@@ -910,8 +907,10 @@ class Cuboids2D(_Geometry):
         return set(self._bodies.values())
 
     def get_dimensions(self, body):
+        reverse_lookup = dict(zip(self._bodies.values(), self._bodies.keys()))
+
         try:
-            x, y = self._bodies_reverse[body]
+            x, y = reverse_lookup[body]
         except IndexError:
             raise ValueError, "Unknown body: %s" % body
 
