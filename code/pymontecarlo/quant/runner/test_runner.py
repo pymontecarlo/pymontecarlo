@@ -50,12 +50,12 @@ class TestRunner(unittest.TestCase):
 
         options = Options('PAP')
         options.beam.energy_eV = 20000
-        options.detectors['xray'] = \
-            PhotonIntensityDetector((radians(50), radians(55)),
-                                    (0.0, radians(360.0)))
         options.limits.add(ShowersLimit(100))
 
-        self.m = Measurement(options, options.geometry.body, 'xray')
+        detector = PhotonIntensityDetector((radians(50), radians(55)),
+                                          (0.0, radians(360.0)))
+
+        self.m = Measurement(options, options.geometry.body, detector)
         self.m.add_kratio(Ka(29), 0.2470)
         self.m.add_rule(ElementByDifferenceRule(79))
 

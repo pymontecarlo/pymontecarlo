@@ -31,12 +31,12 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.output.results import Results as SimResults
 from pymontecarlo.runner.runner import Runner as SimRunner
 from pymontecarlo.quant.output.results import Results as QuantResults
 
 # Globals and constants variables.
+_DETECTOR_KEY = 'xrays'
 
 class Worker(threading.Thread):
     def __init__(self, queue_measurements, worker_class,
@@ -142,14 +142,15 @@ class Worker(threading.Thread):
         # Extract variables from measurement
         options = measurement.options
         unknown_body = measurement.unknown_body
-        detector_key = measurement.detector_key
+        detector = measurement.detector
         transitions = measurement.get_transitions()
         experimental_kratios = measurement.get_kratios()
         standards = measurement.get_standards()
         rules = measurement.get_rules()
 
         # Initial guess of composition
-        initial_composition = self._calculate_initial_composition(measurement)
+        initial_composition = \
+            self._calculate_initial_composition(experimental_kratios, standards)
         self._apply_composition_rules(rules, initial_composition)
 
         # Create iterator
@@ -162,9 +163,9 @@ class Worker(threading.Thread):
 
         # Standards
         self._status = 'Simulate standards'
-        self._run_standards(options, standards)
+        self._run_standards(options, unknown_body, detector, standards)
         stdintensities = \
-            self._read_standard_intensities(detector_key, transitions)
+            self._read_standard_intensities(transitions)
 
         composition = iterator[0]
         logging.debug('Initial composition: %s', composition)
@@ -178,10 +179,9 @@ class Worker(threading.Thread):
 
             self._status = 'Simulate iteration'
             self._run_iteration(index, composition, options,
-                                unknown_body, rules)
+                                unknown_body, detector, rules)
             unkintensities = \
-                self._read_iteration_intensities(index, detector_key,
-                                                 transitions)
+                self._read_iteration_intensities(index, transitions)
 
             # Calculate new k-ratios
             kratios = {}
@@ -228,7 +228,7 @@ class Worker(threading.Thread):
         for z, wf in composition.iteritems():
             composition[z] = wf / total
 
-    def _calculate_initial_composition(self, measurement):
+    def _calculate_initial_composition(self, kratios, standards):
         """
         Compute the initial weight fraction assuming a ZAF of 1.0 for each 
         element.
@@ -236,32 +236,33 @@ class Worker(threading.Thread):
     
         :return: composition
         """
-        kratios = measurement.get_kratios()
-        standards = measurement.get_standards()
-
         composition = {}
         for z, kratio in kratios.iteritems():
-            wf = standards[z].composition[z]
+            wf = standards[z].material.composition[z]
             composition[z] = kratio[0] * wf
 
         return composition
 
-    def _run_standards(self, options, standards):
+    def _run_standards(self, options, unknown_body, detector, standards):
         """
         Runs all the standards.
         """
-        for z, material in standards.iteritems():
+        for z, geometry in standards.iteritems():
             ops = copy.deepcopy(options)
 
             ops.name = 'std%i' % z
-            ops.geometry = Substrate(material)
+
+            ops.detectors.clear()
+            ops.detectors[_DETECTOR_KEY] = detector
+
+            ops.geometry = geometry
 
             self._runner.put(ops)
 
         self._runner.join()
 
     def _run_iteration(self, index, composition, options,
-                       unknown_body, rules):
+                       unknown_body, detector, rules):
         """
         Normalizes the composition, assigns it to the unknown body and then
         run the simulation.
@@ -271,12 +272,16 @@ class Worker(threading.Thread):
         self._normalize_composition(composition2)
 
         options.name = 'iteration%i' % index
+
+        options.detectors.clear()
+        options.detectors[_DETECTOR_KEY] = detector
+
         unknown_body.material.composition = composition2
 
         self._runner.put(options)
         self._runner.join()
 
-    def _read_standard_intensities(self, detector_key, transitions):
+    def _read_standard_intensities(self, transitions):
         """
         Reads the intensities of all standards.
         """
@@ -287,12 +292,12 @@ class Worker(threading.Thread):
             filepath = os.path.join(self._workdir, filename)
             results = SimResults.load(filepath)
 
-            val, unc = results[detector_key].intensity(transition)
+            val, unc = results[_DETECTOR_KEY].intensity(transition)
             intensities[transition.z] = (val, unc)
 
         return intensities
 
-    def _read_iteration_intensities(self, index, detector_key, transitions):
+    def _read_iteration_intensities(self, index, transitions):
         """
         Reads the intensities of iteration *index*.
         """
@@ -304,7 +309,7 @@ class Worker(threading.Thread):
 
         for transition in transitions:
             try:
-                val, unc = results[detector_key].intensity(transition)
+                val, unc = results[_DETECTOR_KEY].intensity(transition)
             except ValueError:
                 val = 0.0
                 unc = 0.0

@@ -17,7 +17,7 @@
             <xsd:element name="standard">
                 <xsd:complexType>
                     <xsd:sequence>
-                        <xsd:element ref="material" minOccurs="1"
+                        <xsd:element ref="geometry" minOccurs="1"
                             maxOccurs="1" />
                     </xsd:sequence>
                 </xsd:complexType>
@@ -35,6 +35,14 @@
                     <xsd:complexType>
                         <xsd:sequence>
                             <xsd:element ref="options" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+                
+                <xsd:element name="detector">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element ref="detector" />
                         </xsd:sequence>
                     </xsd:complexType>
                 </xsd:element>
@@ -58,7 +66,6 @@
             </xsd:sequence>
 
             <xsd:attribute name="body" type="xsd:int" use="required" />
-            <xsd:attribute name="detector" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
 
