@@ -22,7 +22,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import load_settings, load_programs
+from pymontecarlo import load_settings, load_program
 from pymontecarlo.ui.cli.console import create_console
 from pymontecarlo.util.config import ConfigParser
 
@@ -42,8 +42,12 @@ TYPE_LOOKUP = \
 def _find_programs():
     dirpath = os.path.abspath(os.path.dirname(__file__))
     filepath = os.path.join(dirpath, '..', '..', 'settings.cfg.example')
-    settings = load_settings([filepath])
-    return load_programs(settings, validate=False)
+
+    settings = ConfigParser()
+    with open(filepath, 'r') as fp:
+        settings.read(fp)
+
+    return settings.pymontecarlo.programs.split(',')
 
 def run(argv=None):
     # Initialize
@@ -74,10 +78,16 @@ def run(argv=None):
     # Programs
     programs = []
 
-    for program in _find_programs():
+    for program_alias in _find_programs():
         answer = \
-            console.prompt_boolean("Do you want to setup %s?" % program.name, True)
+            console.prompt_boolean("Do you want to setup %s?" % program_alias, True)
         if answer:
+            try:
+                program = load_program(program_alias, validate=False)
+            except Exception as ex:
+                console.print_error(str(ex))
+                return
+
             params = program.configure_params
             for section_name, option_name, question, type in params:
                 section = settings.add_section(section_name)
@@ -94,8 +104,8 @@ def run(argv=None):
 
             programs.append(program.alias)
         else:
-            if program.alias in settings:
-                delattr(settings, program.alias)
+            if program_alias in settings:
+                delattr(settings, program_alias)
 
         console.print_line()
 
