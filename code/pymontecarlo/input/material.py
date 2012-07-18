@@ -319,6 +319,12 @@ class _Vacuum(Option):
     def __str__(self):
         return self.name
 
+    def __copy__(self):
+        return VACUUM
+
+    def __deepcopy__(self, memo):
+        return VACUUM
+
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         return VACUUM

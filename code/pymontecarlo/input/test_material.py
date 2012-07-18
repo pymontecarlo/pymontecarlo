@@ -11,6 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import copy
 
 # Third party modules.
 
@@ -83,6 +84,10 @@ class TestVACUUM(TestCase):
         self.assertEquals('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
+
+    def testcopy(self):
+        self.assertIs(VACUUM, copy.copy(VACUUM))
+        self.assertIs(VACUUM, copy.deepcopy(VACUUM))
 
     def testfrom_xml(self):
         element = VACUUM.to_xml()
