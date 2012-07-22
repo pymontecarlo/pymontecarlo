@@ -93,12 +93,15 @@ class Worker(_Worker):
 
         self._process = \
             subprocess.Popen(args, stdin=stdin, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
                              cwd=os.path.dirname(infilepath))
 
         for line in iter(self._process.stdout.readline, ""):
             infos = line.split(',')
             if len(infos) == 1:
                 self._status = infos[0].strip()
+                if self._status.startswith('STOP'):
+                    raise RuntimeError, "The following error occurred during the simulation: %s" % self._status
             elif len(infos) == 4:
                 progress_showers = float(infos[0]) / showers_limit
                 progress_time = float(infos[1]) / time_limit
