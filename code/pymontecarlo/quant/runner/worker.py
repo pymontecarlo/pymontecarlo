@@ -24,7 +24,6 @@ import copy
 import logging
 import threading
 import time
-import math
 import tempfile
 import shutil
 
@@ -40,7 +39,7 @@ _DETECTOR_KEY = 'xrays'
 
 class Worker(threading.Thread):
     def __init__(self, queue_measurements, worker_class,
-                 iterator_class, convergor_class,
+                 iterator_class, convergor_class, calculator_class,
                  outputdir, workdir=None,
                  max_iterations=50, overwrite=True, **kwargs):
         threading.Thread.__init__(self)
@@ -66,6 +65,7 @@ class Worker(threading.Thread):
 
         self._iterator_class = iterator_class
         self._convergor_class = convergor_class
+        self._calculator_class = calculator_class
         self._kwargs = kwargs
 
         if not os.path.isdir(outputdir):
@@ -153,6 +153,12 @@ class Worker(threading.Thread):
             self._calculate_initial_composition(experimental_kratios, standards)
         self._apply_composition_rules(rules, initial_composition)
 
+        # Standards
+        self._status = 'Simulate standards'
+        self._run_standards(options, unknown_body, detector, standards)
+        stdintensities = \
+            self._read_standard_intensities(transitions)
+
         # Create iterator
         iterator = self._iterator_class(experimental_kratios,
                                         initial_composition, **self._kwargs)
@@ -161,16 +167,14 @@ class Worker(threading.Thread):
         convergor = self._convergor_class(experimental_kratios,
                                           initial_composition, **self._kwargs)
 
-        # Standards
-        self._status = 'Simulate standards'
-        self._run_standards(options, unknown_body, detector, standards)
-        stdintensities = \
-            self._read_standard_intensities(transitions)
+        # Create calculator
+        calculator = \
+            self._calculator_class(measurement, stdintensities, **self._kwargs)
 
         composition = iterator[0]
         logging.debug('Initial composition: %s', composition)
 
-        # Iteration
+        # Iterative loop
         index = 0
         while index < self._max_iterations and self._should_continue:
             # Run next iteration
@@ -184,27 +188,8 @@ class Worker(threading.Thread):
                 self._read_iteration_intensities(index, transitions)
 
             # Calculate new k-ratios
-            kratios = {}
-            for z, unkintensity in unkintensities.iteritems():
-                unkval, unkunc = unkintensity
-                stdval, stdunc = stdintensities[z]
-
-                try:
-                    kratioval = unkval / stdval
-                except ZeroDivisionError:
-                    kratioval = 0.0
-                try:
-                    unkuncrel = unkunc / unkval
-                except ZeroDivisionError:
-                    unkuncrel = 0.0
-                try:
-                    stduncrel = stdunc / stdval
-                except ZeroDivisionError:
-                    stduncrel = 0.0
-
-                kratiounc = kratioval * math.sqrt(unkuncrel ** 2 + stduncrel ** 2)
-
-                kratios[z] = kratioval, kratiounc
+            self._status = 'Calculate k-ratios'
+            kratios = calculator.calculate(unkintensities)
 
             # Iterate for new composition
             self._status = 'Calculate new composition'
@@ -212,7 +197,6 @@ class Worker(threading.Thread):
 
             # Check for convergence
             convergor.add_iteration(kratios, composition)
-
             if convergor.has_converged():
                 break
 

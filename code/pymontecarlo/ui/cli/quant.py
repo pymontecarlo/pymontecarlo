@@ -36,6 +36,7 @@ from pymontecarlo.quant.runner.iterator import \
      Wegstein1958Iterator)
 from pymontecarlo.quant.runner.convergor import \
     CompositionConvergor, KRatioConvergor
+from pymontecarlo.quant.runner.calculator import SimpleCalculator
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -72,8 +73,8 @@ def create_parser(programs):
     group = OptionGroup(parser, "Iteration algorithm for quantification",
                         "Note: Specify only one of these flags.")
 
-    group.add_option('--simple', dest='simple', action="store_true",
-                     help='Simple iteration')
+    group.add_option('--linear', dest='linear', action="store_true",
+                     help='Simple linear iteration')
     group.add_option('--heinrich1972', dest='heinrich1972', action="store_true",
                      help='Heinrich hyperbolic iteration [default]')
     group.add_option('--pouchou1991', dest='pouchou1991', action="store_true",
@@ -91,6 +92,15 @@ def create_parser(programs):
                      help='Check convergence with composition [default]')
     group.add_option('--kratio', dest='kratio', action="store_true",
                      help='Check convergence with k-ratio')
+
+    parser.add_option_group(group)
+
+    # Calculator group
+    group = OptionGroup(parser, "Algorithm to calculate k-ratio",
+                        "Note: Specify only one of these flags.")
+
+    group.add_option('--simple', dest='simple', action="store_true",
+                     help='Simple ratio between unknown and standard intensities [default]')
 
     parser.add_option_group(group)
 
@@ -154,7 +164,7 @@ def run(argv=None):
     if convergence_limit <= 0.0:
         raise ValueError, 'Convergence limit must be greater than 0.0'
 
-    if values.simple:
+    if values.linear:
         iterator_class = SimpleIterator
     elif values.pouchou1991:
         iterator_class = Pouchou1991Iterator
@@ -167,6 +177,11 @@ def run(argv=None):
         convergor_class = KRatioConvergor
     else:
         convergor_class = CompositionConvergor
+
+    if values.simple:
+        calculator_class = SimpleCalculator
+    else:
+        calculator_class = SimpleCalculator
 
     aliases = map(attrgetter('alias'), programs)
     selected_programs = [alias for alias in aliases if getattr(values, alias)]
@@ -189,7 +204,7 @@ def run(argv=None):
         console.print_error("Please specify a measurement file")
 
     # Setup
-    runner = Runner(worker_class, iterator_class, convergor_class,
+    runner = Runner(worker_class, iterator_class, convergor_class, calculator_class,
                     outputdir, workdir,
                     overwrite, max_iterations, nbprocesses,
                     limit=convergence_limit)

@@ -25,6 +25,7 @@ from nose.plugins.attrib import attr
 from pymontecarlo.quant.runner.runner import Runner
 from pymontecarlo.quant.runner.iterator import Heinrich1972Iterator
 from pymontecarlo.quant.runner.convergor import CompositionConvergor
+from pymontecarlo.quant.runner.calculator import SimpleCalculator
 from pymontecarlo.quant.input.measurement import Measurement
 from pymontecarlo.quant.input.rule import ElementByDifferenceRule
 from pymontecarlo.quant.output.results import Results
@@ -46,6 +47,7 @@ class TestRunner(unittest.TestCase):
 
         iterator_class = Heinrich1972Iterator
         convergor_class = CompositionConvergor
+        calculator_class = SimpleCalculator
         worker_class = Worker
 
         options = Options('PAP')
@@ -62,7 +64,7 @@ class TestRunner(unittest.TestCase):
         self.outputdir = tempfile.mkdtemp()
 
         self.runner = Runner(worker_class, iterator_class, convergor_class,
-                             self.outputdir, limit=0.1)
+                             calculator_class, self.outputdir, limit=0.1)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
