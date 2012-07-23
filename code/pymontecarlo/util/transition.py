@@ -238,9 +238,12 @@ class transitionset(frozenset, objectxml):
         :arg name: name of the set (e.g. ``Ka``)
         :arg transitions: transitions in the set
         """
+        if not transitions:
+            raise ValueError, 'A transitionset must contain at least one transition'
+
         # Common z
         zs = map(_ZGETTER, transitions)
-        if transitions and len(set(zs)) != 1:
+        if len(set(zs)) != 1:
             raise ValueError, "All transitions in a set must have the same atomic number"
 
         self._z = z
