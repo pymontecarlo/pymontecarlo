@@ -281,6 +281,10 @@ class transitionset(frozenset, objectxml):
 
     atomicnumber = z
 
+    @property
+    def most_probable(self):
+        return sorted(self, key=attrgetter('probability'), reverse=True)[0]
+
 XMLIO.register('{http://pymontecarlo.sf.net}transitionset', transitionset)
 
 def get_transitions(z, energylow_eV=0.0, energyhigh_eV=1e6):
