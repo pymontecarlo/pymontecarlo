@@ -292,6 +292,13 @@ class transitionset(frozenset, objectxml):
     atomicnumber = z
 
     @property
+    def name(self):
+        """
+        Name of this transition set.
+        """
+        return self._name
+
+    @property
     def most_probable(self):
         return sorted(self, key=attrgetter('probability'), reverse=True)[0]
 

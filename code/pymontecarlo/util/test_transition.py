@@ -168,6 +168,9 @@ class Testtransitionset(TestCase):
     def testmost_probable(self):
         self.assertEqual(Transition(13, 4, 1), self.set.most_probable)
 
+    def testname(self):
+        self.assertEqual('G1', self.set.name)
+
 class TestModule(TestCase):
 
     def setUp(self):
