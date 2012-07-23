@@ -59,7 +59,7 @@
                 <xsd:element name="rules">
                     <xsd:complexType>
                         <xsd:sequence>
-                            <xsd:element ref="compositionRule" />
+                            <xsd:element ref="compositionRule" minOccurs="0" />
                         </xsd:sequence>
                     </xsd:complexType>
                 </xsd:element>
