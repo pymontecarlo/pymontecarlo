@@ -141,15 +141,15 @@ class FluorescenceCalculator(SimpleCalculator):
 
         elements = []
         material = self._measurement.unknown_body.material
-        for z, wf in material.composition.iteritems():
-            elements.append(Element(z, weightFraction=wf))
+        for atomicnumber, wf in material.composition.iteritems():
+            elements.append(Element(atomicnumber, weightFraction=wf))
         region = SampleRegion(elements)
         fluorescence.setSpecimenBulk(region)
 
         elements = []
         material = self._measurement.get_standards()[z].material
-        for z, wf in material.composition.iteritems():
-            elements.append(Element(z, weightFraction=wf))
+        for atomicnumber, wf in material.composition.iteritems():
+            elements.append(Element(atomicnumber, weightFraction=wf))
         region = SampleRegion(elements)
         fluorescence.setStandardBulk(region)
 
