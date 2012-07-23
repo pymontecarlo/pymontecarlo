@@ -36,7 +36,7 @@ from pymontecarlo.quant.runner.iterator import \
      Wegstein1958Iterator)
 from pymontecarlo.quant.runner.convergor import \
     CompositionConvergor, KRatioConvergor
-from pymontecarlo.quant.runner.calculator import SimpleCalculator
+from pymontecarlo.quant.runner.calculator import SimpleCalculator, FluorescenceCalculator
 
 from pymontecarlo.ui.cli.console import create_console, ProgressBar
 
@@ -101,6 +101,8 @@ def create_parser(programs):
 
     group.add_option('--simple', dest='simple', action="store_true",
                      help='Simple ratio between unknown and standard intensities [default]')
+    group.add_option('--fluorescence', dest='fluorescence', action="store_true",
+                     help='Simple ratio + fluorescence correction')
 
     parser.add_option_group(group)
 
@@ -178,8 +180,8 @@ def run(argv=None):
     else:
         convergor_class = CompositionConvergor
 
-    if values.simple:
-        calculator_class = SimpleCalculator
+    if values.fluorescence:
+        calculator_class = FluorescenceCalculator
     else:
         calculator_class = SimpleCalculator
 
