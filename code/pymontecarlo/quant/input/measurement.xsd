@@ -24,8 +24,8 @@
             </xsd:element>
         </xsd:sequence>
 
-        <xsd:attribute name="val" type="xsd:float" use="required"/>
-        <xsd:attribute name="unc" type="xsd:float" use="optional"/>
+        <xsd:attribute name="val" type="xsd:float" use="required" />
+        <xsd:attribute name="unc" type="xsd:float" use="optional" />
     </xsd:complexType>
 
     <xsd:element name="measurement">
@@ -38,7 +38,7 @@
                         </xsd:sequence>
                     </xsd:complexType>
                 </xsd:element>
-                
+
                 <xsd:element name="detector">
                     <xsd:complexType>
                         <xsd:sequence>
@@ -51,7 +51,7 @@
                     <xsd:complexType>
                         <xsd:sequence>
                             <xsd:element name="kratio" type="kratioType"
-                                minOccurs="0" />
+                                minOccurs="0" maxOccurs="unbounded" />
                         </xsd:sequence>
                     </xsd:complexType>
                 </xsd:element>
@@ -59,7 +59,8 @@
                 <xsd:element name="rules">
                     <xsd:complexType>
                         <xsd:sequence>
-                            <xsd:element ref="compositionRule" minOccurs="0" />
+                            <xsd:element ref="compositionRule"
+                                minOccurs="0" maxOccurs="unbounded" />
                         </xsd:sequence>
                     </xsd:complexType>
                 </xsd:element>
