@@ -159,7 +159,7 @@ class TestPhotonIntensityResult(TestCase):
         self.assertTrue(self.r.has_intensity(self.t1))
         self.assertTrue(self.r.has_intensity(self.t2))
         self.assertTrue(self.r.has_intensity(self.t3))
-        self.assertFalse(self.r.has_intensity('Cu Ma'))
+        self.assertFalse(self.r.has_intensity('U Ma'))
 
     def testcharacteristic_fluorescence(self):
         # Transition 1
