@@ -72,9 +72,9 @@ class Converter(_Converter):
 
     def _convert_geometry(self, options):
         _Converter._convert_geometry(self, options)
+        self.convert_geometry(options.geometry)
 
-        geometry = options.geometry
-
+    def convert_geometry(self, geometry):
         materials_lookup = self._create_penelope_materials(geometry.get_materials())
 
         if isinstance(geometry, Substrate):
