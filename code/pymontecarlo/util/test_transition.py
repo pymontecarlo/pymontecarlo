@@ -97,6 +97,11 @@ class TestTransition(TestCase):
             x = getattr(self, "x%i" % i)
             self.assertEqual(siegbahn, x.siegbahn)
 
+    def testsiegbahn_nogreek(self):
+        for i, siegbahn in enumerate(_SIEGBAHNS_NOGREEK):
+            x = getattr(self, "x%i" % i)
+            self.assertEqual(siegbahn, x.siegbahn_nogreek)
+
     def testenergy_eV(self):
         self.assertAlmostEqual(1486.3, self.x1.energy_eV, 4)
 

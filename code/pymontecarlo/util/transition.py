@@ -204,6 +204,13 @@ class Transition(objectxml):
         return self._siegbahn
 
     @property
+    def siegbahn_nogreek(self):
+        """
+        Seigbahn symbol of this transition (greek characters removed).
+        """
+        return self._siegbahn_nogreek
+
+    @property
     def energy_eV(self):
         """
         Energy of this transition in eV.
