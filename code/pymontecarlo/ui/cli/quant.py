@@ -159,8 +159,8 @@ def run(argv=None):
     overwrite = not values.skip
 
     max_iterations = values.max_iterations
-    if max_iterations < 1:
-        raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
+    if max_iterations < 0:
+        raise ValueError, 'Maximum number of iterations must be greater or equal to 0'
 
     convergence_limit = values.convergence_limit
     if convergence_limit <= 0.0:

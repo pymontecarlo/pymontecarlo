@@ -72,8 +72,8 @@ class Worker(threading.Thread):
             raise ValueError, 'Output directory (%s) is not a directory' % outputdir
         self._outputdir = outputdir
 
-        if max_iterations < 1:
-            raise ValueError, 'Maximum number of iterations must be greater or equal to 1'
+        if max_iterations < 0:
+            raise ValueError, 'Maximum number of iterations must be greater or equal to 0'
         self._max_iterations = max_iterations
 
         self._overwrite = overwrite

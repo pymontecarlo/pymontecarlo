@@ -78,7 +78,7 @@ class _Iterator(object):
         return dict(self._iterations[index])
 
     def __iter__(self):
-        return iter(self._iterations[1:])
+        return iter(self._iterations)
 
     @property
     def experimental_kratios(self):
