@@ -415,7 +415,7 @@ def Kb(z):
     """
     Returns all transitions from the Kb group.
     """
-    return _group(z, 'Ka')
+    return _group(z, 'Kb')
 
 def La(z):
     """

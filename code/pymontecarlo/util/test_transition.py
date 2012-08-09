@@ -230,7 +230,7 @@ class TestModule(TestCase):
 
         # Kb
         transitions = Kb(79)
-        self.assertEqual(2, len(transitions))
+        self.assertEqual(5, len(transitions))
 
         # La
         transitions = La(79)
