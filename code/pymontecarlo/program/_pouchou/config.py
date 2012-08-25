@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.program.config import Program
-from pymontecarlo.program.pouchou.input.converter import Converter
+from pymontecarlo.program._pouchou.input.converter import Converter
 
 # Globals and constants variables.
 
