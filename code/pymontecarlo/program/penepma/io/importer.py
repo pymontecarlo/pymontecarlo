@@ -49,7 +49,7 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      )
 from pymontecarlo.util.transition import Transition
-from pymontecarlo.program.penelope.io.importer import \
+from pymontecarlo.program._penelope.io.importer import \
     Importer as _Importer, ImporterException
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 

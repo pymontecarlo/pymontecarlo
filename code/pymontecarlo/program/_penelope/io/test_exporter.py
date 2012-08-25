@@ -26,9 +26,9 @@ from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
 from pymontecarlo.input.limit import TimeLimit
 
-from pymontecarlo.program.penelope.input.converter import Converter
-from pymontecarlo.program.penelope.input.material import Material
-from pymontecarlo.program.penelope.io.exporter import Exporter
+from pymontecarlo.program._penelope.input.converter import Converter
+from pymontecarlo.program._penelope.input.material import Material
+from pymontecarlo.program._penelope.io.exporter import Exporter
 import penelopelib.pengeom as pengeom
 
 # Globals and constants variables.

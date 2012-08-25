@@ -34,7 +34,7 @@ from pymontecarlo.input.geometry import _Geometry
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.option import Option
 
-from pymontecarlo.program.penelope.input.body import Body
+from pymontecarlo.program._penelope.input.body import Body
 
 from pymontecarlo.util.xmlutil import objectxml
 from pymontecarlo.util.sort import topological_sort

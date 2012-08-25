@@ -33,8 +33,8 @@ from pymontecarlo.input.model import \
      BREMSSTRAHLUNG_EMISSION, PHOTON_SCATTERING_CROSS_SECTION,
      MASS_ABSORPTION_COEFFICIENT)
 
-from pymontecarlo.program.penelope.input.material import Material
-from pymontecarlo.program.penelope.input.body import Body, Layer
+from pymontecarlo.program._penelope.input.material import Material
+from pymontecarlo.program._penelope.input.body import Body, Layer
 
 # Globals and constants variables.
 

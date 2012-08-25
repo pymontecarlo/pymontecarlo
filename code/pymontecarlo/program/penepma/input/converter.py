@@ -25,7 +25,7 @@ import warnings
 
 # Local modules.
 from pymontecarlo.input.converter import ConversionWarning
-from pymontecarlo.program.penelope.input.converter import \
+from pymontecarlo.program._penelope.input.converter import \
     Converter as _Converter, ConversionException
 
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam

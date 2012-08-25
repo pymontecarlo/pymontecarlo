@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.pouchou.config import _PouchouProgram
+from pymontecarlo.program._pouchou.config import _PouchouProgram
 from pymontecarlo.program.xpp.runner.worker import Worker
 
 # Globals and constants variables.

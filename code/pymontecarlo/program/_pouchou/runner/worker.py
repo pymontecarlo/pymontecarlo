@@ -28,7 +28,7 @@ import time
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.pouchou.input.converter import Converter
+from pymontecarlo.program._pouchou.input.converter import Converter
 from pymontecarlo.runner.worker import Worker as _Worker
 from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.util.transition import get_transitions

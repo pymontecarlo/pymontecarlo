@@ -34,7 +34,7 @@ from pymontecarlo.input.detector import \
     _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 from pymontecarlo.util.transition import get_transitions
-from pymontecarlo.program.penelope.io.exporter import \
+from pymontecarlo.program._penelope.io.exporter import \
     Exporter as _Exporter, Keyword, Comment, ExporterException, ExporterWarning
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 

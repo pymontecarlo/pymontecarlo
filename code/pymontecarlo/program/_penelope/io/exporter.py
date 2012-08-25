@@ -32,7 +32,7 @@ from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
 from pymontecarlo.input.material import VACUUM
 
-from pymontecarlo.program.penelope.input.geometry import \
+from pymontecarlo.program._penelope.input.geometry import \
     PenelopeGeometry, Module, xplane, yplane, zplane, cylinder, sphere
 
 from pymontecarlo.io.exporter import \

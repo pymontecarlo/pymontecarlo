@@ -17,7 +17,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penelope.input.material import Material, pure
+from pymontecarlo.program._penelope.input.material import Material, pure
 
 # Globals and constants variables.
 

@@ -17,7 +17,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penelope.input.converter import Converter
+from pymontecarlo.program._penelope.input.converter import Converter
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D

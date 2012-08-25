@@ -21,7 +21,7 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.program.pouchou.input.converter import Converter, ConversionException
+from pymontecarlo.program._pouchou.input.converter import Converter, ConversionException
 
 # Globals and constants variables.
 warnings.simplefilter("always")

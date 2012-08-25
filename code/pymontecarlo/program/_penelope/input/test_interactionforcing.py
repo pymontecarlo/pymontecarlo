@@ -17,11 +17,11 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penelope.input.interactionforcing import \
+from pymontecarlo.program._penelope.input.interactionforcing import \
     Collisions, InteractionForcing
 
 # Globals and constants variables.
-from pymontecarlo.program.penelope.input.interactionforcing import \
+from pymontecarlo.program._penelope.input.interactionforcing import \
     ELECTRON, PHOTON, POSITRON
 
 

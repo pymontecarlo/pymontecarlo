@@ -18,15 +18,15 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penelope.input.geometry import \
+from pymontecarlo.program._penelope.input.geometry import \
     (Rotation, Shift, Scale, SurfaceImplicit, SurfaceReduced, PenelopeGeometry,
      xplane, zplane, cylinder, Module)
 from pymontecarlo.input.material import VACUUM
-from pymontecarlo.program.penelope.input.material import pure
-from pymontecarlo.program.penelope.input.interactionforcing import InteractionForcing
+from pymontecarlo.program._penelope.input.material import pure
+from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 
 # Globals and constants variables.
-from pymontecarlo.program.penelope.input.geometry import SIDEPOINTER_NEGATIVE, SIDEPOINTER_POSITIVE
+from pymontecarlo.program._penelope.input.geometry import SIDEPOINTER_NEGATIVE, SIDEPOINTER_POSITIVE
 
 class TestRotation(TestCase):
     GEOFILE = ['  OMEGA=(+1.000000000000000E+00,   0) DEG          (DEFAULT=0.0)',
