@@ -48,7 +48,7 @@ class IonizationData(object):
             # Weird bug in Windows when using pkgutil.get_data to retrieve
             # relaxation_data.csv. This is a quick fix.
             dirname = os.path.dirname(sys.modules[__name__].__file__)
-            fileobj = open(os.path.join(dirname, 'data/ionization_energies.csv'))
+            fileobj = open(os.path.join(dirname, 'data/ionization_data.csv'))
 
         self.data = self._read(fileobj)
 
@@ -72,7 +72,7 @@ class IonizationData(object):
         Returns the ionization energy of a subshell in eV.
         
         :arg z: atomic number (1 to 99)
-        :arg subshell: id of the subshells (1 to 29 inclu.)
+        :arg subshell: index of the subshells (1 to 29 inclu.)
         """
         if not z in self.data:
             raise ValueError, "No ionization energy for atomic number %i." % z
@@ -80,15 +80,14 @@ class IonizationData(object):
         try:
             return self.data[z][subshell]
         except KeyError:
-            raise ValueError, 'No ionization energy for z=%i and subshell=%i.' % \
-                        (z, subshell)
+            return 0.0
 
     def exists(self, z, subshell):
         """
         Returns whether the subshell exists.
         
         :arg z: atomic number (1 to 99)
-        :arg subshell: id of the subshells (1 to 29 inclu.)
+        :arg subshell: index of the subshells (1 to 29 inclu.)
         """
         try:
             self.data[z][subshell]
