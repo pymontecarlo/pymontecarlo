@@ -38,7 +38,7 @@ class TestIonizationData(TestCase):
 #
     def testenergy_eV(self):
         # Test Al K.
-        self.assertEquals(1.564e3, ionization_data.energy_eV(13, 1))
+        self.assertAlmostEquals(1.564e3, ionization_data.energy_eV(13, 1), 4)
 
 
 if __name__ == '__main__': #pragma: no cover

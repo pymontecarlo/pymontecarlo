@@ -42,7 +42,7 @@ class TestRelaxationData(TestCase):
 
     def testprobability(self):
         # Test Al Ka1.
-        self.assertEquals(2.45528e-2, relaxation_data.probability(13, [4, 1]))
+        self.assertAlmostEquals(2.45528e-2, relaxation_data.probability(13, [4, 1]), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
