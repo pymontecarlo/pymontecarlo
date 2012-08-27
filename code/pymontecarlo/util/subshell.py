@@ -21,6 +21,8 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
+import pymontecarlo.util.element_properties as ep
+from pymontecarlo.util.ionization_data import ionization_data
 
 # Globals and constants variables.
 _IUPACS = ["K",
@@ -47,13 +49,50 @@ _ORBITALS = ["1s1/2",
              "6s1/2", "6p1/2", "6p3/2", "6d3/2", "6d5/2",
              "7s1/2", ""]
 
-class __Subshell(object):
-    def __init__(self, index):
+class Subshell(object):
+    def __init__(self, z, index=None, orbital=None, iupac=None, siegbahn=None):
         """
-        Creates an atomic subshell. 
+        Creates an atomic subshell::
         
+            s = SubShell(29, 1) # K
+            s = SubShell(29, siegbahn='K')
+        
+        :arg z: atomic number (from 1 to 99 inclusively)
         :arg index: index of the subshell between 1 (K) and 30 (outer)
+        :arg orbital: orbital of the subshell (e.g. ``1s1/2``)
+        :arg iupac: IUPAC symbol of the subshell
+        :arg siegbahn: Siegbahn symbol of the subshell
+
+        If more than one argument is given, only the first one is used to create
+        the subshell.
         """
+        self._z = z
+        self._symbol = ep.symbol(z)
+
+        if index is not None:
+            if index < 1 or index > 30:
+                raise ValueError, "Id (%s) must be between [1, 30]." % index
+        elif orbital is not None:
+            try:
+                index = _ORBITALS.index(orbital.lower()) + 1
+            except ValueError:
+                raise ValueError, "Unknown orbital (%s). Possible orbitals: %s" % \
+                        (orbital, _ORBITALS)
+        elif iupac is not None:
+            try:
+                index = _IUPACS.index(iupac.upper()) + 1
+            except ValueError:
+                raise ValueError, "Unknown IUPAC (%s). Possible IUPAC: %s" % \
+                        (iupac, _IUPACS)
+        elif siegbahn is not None:
+            try:
+                index = _SIEGBAHNS.index(siegbahn.upper()) + 1
+            except ValueError:
+                raise ValueError, "Unknown Siegbahn (%s). Possible Siegbahn: %s" % \
+                        (siegbahn, _SIEGBAHNS)
+        else:
+            raise ValueError, "You must specify an index, orbital, IUPAC or Siegbahn"
+
         self._index = index
         self._orbtial = _ORBITALS[index - 1]
         self._iupac = _IUPACS[index - 1]
@@ -61,35 +100,43 @@ class __Subshell(object):
 
         if index != 30:
             self._family = self._iupac[0].upper()
+            self._ionization_energy_eV = ionization_data.energy_eV(z, index)
+            self._exists = ionization_data.exists(z, index)
         else:
             self._family = None
+            self._ionization_energy_eV = float('inf')
+            self._exists = False
 
     def __repr__(self):
-        return '<Subshell(index=%i)>' % self.index
+        return '<Subshell(%s %s)>' % (self._symbol, self._siegbahn)
 
     def __str__(self):
-        return self._iupac
-
-    def __unicode__(self):
-        return self._iupac
+        return "%s %s" % (self._symbol, self._siegbahn)
 
     def __hash__(self):
-        return hash(("Subshell", self._index))
+        return hash(("Subshell", self._z, self._index))
 
     def __eq__(self, other):
-        return self._index == other._index
+        return self._index == other._index and self._z == other._z
 
     def __ne__(self, other):
-        return self._index != other._index
+        return self._index != other._index or self._z != other._z
 
     def __cmp__(self, other):
+        c = cmp(self._z, other._z)
+        if c != 0:
+            return c
+
         return cmp(self._index, other._index)
 
-    def __copy__(self):
-        return self
+    @property
+    def z(self):
+        """
+        Atomic number of this transition.
+        """
+        return self._z
 
-    def __deepcopy__(self, memo=None):
-        return self
+    atomicnumber = z
 
     @property
     def index(self):
@@ -128,46 +175,15 @@ class __Subshell(object):
         """
         return self._family
 
-__subshells = {}
-for i in range(1, 31):
-    __subshells[i] = __Subshell(i)
+    @property
+    def ionization_energy_eV(self):
+        """
+        Ionization energy of this subshell in eV.
+        """
+        return self._ionization_energy_eV
 
-def get_subshell(index=None, orbital=None, iupac=None, siegbahn=None):
-    """
-    An atomic subshell. Only one of the following arguments must be
-        defined:
-
-        :arg index: index of the subshell between 1 (K) and 30 (outer)
-        :arg orbital: orbital of the subshell (e.g. 1s1 / 2)
-        :arg iupac: IUPAC symbol of the subshell
-        :arg siegbahn: Siegbahn symbol of the subshell
-
-        If more than one argument is given, only the first one is used to create
-        the subshell.
-    """
-    if index is not None:
-        if index < 1 or index > 30:
-            raise ValueError, "Id (%s) must be between [1, 30]." % index
-    elif orbital is not None:
-        try:
-            index = _ORBITALS.index(orbital.lower()) + 1
-        except ValueError:
-            raise ValueError, "Unknown orbital (%s). Possible orbitals: %s" % \
-                    (orbital, _ORBITALS)
-    elif iupac is not None:
-        try:
-            index = _IUPACS.index(iupac.upper()) + 1
-        except ValueError:
-            raise ValueError, "Unknown IUPAC (%s). Possible IUPAC: %s" % \
-                    (iupac, _IUPACS)
-    elif siegbahn is not None:
-        try:
-            index = _SIEGBAHNS.index(siegbahn.upper()) + 1
-        except ValueError:
-            raise ValueError, "Unknown Siegbahn (%s). Possible Siegbahn: %s" % \
-                    (siegbahn, _SIEGBAHNS)
-    else:
-        raise ValueError, "You must specify an index, orbital, IUPAC or Siegbahn"
-
-    return __subshells[index]
-
+    def exists(self):
+        """
+        Whether this subshell exists.
+        """
+        return self._exists

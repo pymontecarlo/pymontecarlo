@@ -11,14 +11,13 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import copy
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.util.subshell import get_subshell
+from pymontecarlo.util.subshell import Subshell
 
 # Globals and constants variables.
 from pymontecarlo.util.subshell import _IUPACS, _ORBITALS, _SIEGBAHNS
@@ -28,78 +27,74 @@ class TestSubshell(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
+        for i in range(1, 31):
+            x = Subshell(13, i)
+            setattr(self, 'x%i' % i, x)
+
     def tearDown(self):
         TestCase.tearDown(self)
 
-    def testskeleton(self):
-        self.assertTrue(get_subshell(1) is get_subshell(1))
-
-    def testcopy(self):
-        subshell = get_subshell(1)
-        copied = copy.copy(subshell)
-        self.assertTrue(subshell is copied)
-
-        copied = copy.deepcopy(subshell)
-        self.assertTrue(subshell is copied)
-
     def testindex(self):
         for i in range(1, 31):
-            self.assertEqual(i, get_subshell(i).index)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual(i, x.index)
 
     def testorbital(self):
         for i in range(1, 31):
-            self.assertEqual(_ORBITALS[i - 1], get_subshell(i).orbital)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual(_ORBITALS[i - 1], x.orbital)
 
     def testiupac(self):
         for i in range(1, 31):
-            self.assertEqual(_IUPACS[i - 1], get_subshell(i).iupac)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual(_IUPACS[i - 1], x.iupac)
 
     def testsiegbahn(self):
         for i in range(1, 31):
-            self.assertEqual(_SIEGBAHNS[i - 1], get_subshell(i).siegbahn)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual(_SIEGBAHNS[i - 1], x.siegbahn)
 
     def testfamily(self):
         # K
-        self.assertEqual('K', get_subshell(1).family)
+        self.assertEqual('K', self.x1.family)
 
         # L
         for i in range(2, 5):
-            self.assertEqual("L", get_subshell(i).family)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual("L", x.family)
 
         # M
         for i in range(5, 10):
-            self.assertEqual("M", get_subshell(i).family)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual("M", x.family)
 
         # N
         for i in range(10, 17):
-            self.assertEqual("N", get_subshell(i).family)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual("N", x.family)
 
         # O
         for i in range(17, 24):
-            self.assertEqual("O", get_subshell(i).family)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual("O", x.family)
 
         # P
         for i in range(24, 29):
-            self.assertEqual("P", get_subshell(i).family)
+            x = getattr(self, "x%i" % i)
+            self.assertEqual("P", x.family)
 
         # Q
-        self.assertEqual('Q', get_subshell(29).family)
+        self.assertEqual('Q', self.x29.family)
 
         # outer
-        self.assertEqual(None, get_subshell(30).family)
+        self.assertEqual(None, self.x30.family)
 
-    def testget_subshell(self):
-        for i, orbital in enumerate(_ORBITALS):
-            s = get_subshell(orbital=orbital)
-            self.assertEqual(i + 1, s.index)
+    def testionization_energy_eV(self):
+        self.assertAlmostEqual(1.564e3, self.x1.ionization_energy_eV, 4)
 
-        for i, iupac in enumerate(_IUPACS):
-            s = get_subshell(iupac=iupac)
-            self.assertEqual(i + 1, s.index)
-
-        for i, siegbahn in enumerate(_SIEGBAHNS):
-            s = get_subshell(siegbahn=siegbahn)
-            self.assertEqual(i + 1, s.index)
+    def testexists(self):
+        self.assertTrue(self.x1.exists())
+        self.assertFalse(self.x29.exists())
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

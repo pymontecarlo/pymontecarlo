@@ -21,7 +21,7 @@ from pymontecarlo.util.transition import \
      K_family, L_family, M_family, N_family,
      Ka, Kb, La, Lb, Lg, Ma, Mb, Mg,
      LI, LII, LIII, MI, MII, MIII, MIV, MV)
-from pymontecarlo.util.subshell import get_subshell
+from pymontecarlo.util.subshell import Subshell
 
 # Globals and constants variables.
 from pymontecarlo.util.transition import _SUBSHELLS, _SIEGBAHNS_NOGREEK, _SIEGBAHNS
@@ -43,7 +43,7 @@ class TestTransition(TestCase):
         self.assertTrue(True)
 
     def test__init__subshells(self):
-        x = Transition(13, get_subshell(4), get_subshell(1))
+        x = Transition(13, Subshell(13, 4), Subshell(13, 1))
         self.assertEqual(13, x.z)
         self.assertEqual("Al Ka1", str(x))
 
@@ -78,18 +78,18 @@ class TestTransition(TestCase):
     def testsrc(self):
         for i, shells in enumerate(_SUBSHELLS):
             x = getattr(self, "x%i" % i)
-            self.assertEqual(get_subshell(shells[0]), x.src)
+            self.assertEqual(Subshell(13, shells[0]), x.src)
 
     def testdest(self):
         for i, shells in enumerate(_SUBSHELLS):
             x = getattr(self, "x%i" % i)
-            self.assertEqual(get_subshell(shells[1]), x.dest)
+            self.assertEqual(Subshell(13, shells[1]), x.dest)
 
     def testiupac(self):
         for i, shells in enumerate(_SUBSHELLS):
             x = getattr(self, "x%i" % i)
-            src = get_subshell(shells[0])
-            dest = get_subshell(shells[1])
+            src = Subshell(13, shells[0])
+            dest = Subshell(13, shells[1])
             self.assertEqual('-'.join([src.iupac, dest.iupac]), x.iupac)
 
     def testsiegbahn(self):

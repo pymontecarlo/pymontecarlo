@@ -26,7 +26,7 @@ from operator import methodcaller, attrgetter
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml, XMLIO
 import pymontecarlo.util.element_properties as ep
-from pymontecarlo.util.subshell import get_subshell
+from pymontecarlo.util.subshell import Subshell
 from pymontecarlo.util.relaxation_data import relaxation_data
 
 # Globals and constants variables.
@@ -116,8 +116,8 @@ class Transition(objectxml):
         self._index = index
         src, dest = _SUBSHELLS[index]
 
-        self._src = get_subshell(src)
-        self._dest = get_subshell(dest)
+        self._src = Subshell(z, src)
+        self._dest = Subshell(z, dest)
         self._iupac = '-'.join([self._src.iupac, self._dest.iupac])
         self._siegbahn = unicode(_SIEGBAHNS[index])
         self._siegbahn_nogreek = _SIEGBAHNS_NOGREEK[index]
@@ -354,8 +354,7 @@ def from_string(s):
         return Transition(z, siegbahn=notation)
     elif '-' in notation: # Transition with IUPAC notation
         dest, src = notation.split('-')
-        return Transition(z, src=get_subshell(iupac=src),
-                          dest=get_subshell(iupac=dest))
+        return Transition(z, src=Subshell(z, iupac=src), dest=Subshell(z, iupac=dest))
     elif notation in _TRANSITIONSETS: # transitionset from Family, group or shell
         return _TRANSITIONSETS[notation](z)
     else:
@@ -377,7 +376,7 @@ def _shell(z, dest):
         if ddest != dest: continue
         transitions.append(Transition(z, src, dest))
 
-    name = get_subshell(dest).siegbahn
+    name = Subshell(z, dest).siegbahn
 
     return transitionset(z, name, filter(methodcaller('exists'), transitions))
 
