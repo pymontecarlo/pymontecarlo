@@ -63,6 +63,7 @@ class RelaxationData(object):
     def _read(self, fileobj):
         data = {}
         reader = csv.reader(fileobj)
+        reader.next() # skip header
 
         for row in reader:
             z = int(row[0])
