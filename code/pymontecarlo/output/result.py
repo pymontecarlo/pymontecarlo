@@ -760,7 +760,7 @@ class PhiRhoZResult(_Result):
         :rtype: :class:`float`
         """
         rzs, vals, _uncs = self.get(transition, absorption, fluorescence)
-        width = rzs[1] - rzs[0]
+        width = abs(rzs[1] - rzs[0])
         return sum(vals) * width
 
     def fchi(self, transition, fluorescence=True):
