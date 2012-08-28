@@ -571,6 +571,17 @@ class PhotonSpectrumResult(_Result):
 ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
 
 def create_phirhoz_dict(transition, gnf=None, gt=None, enf=None, et=None):
+    """
+    Values of *gnf*, *gt*, *enf* and *et* must be a :class:`tuple` of three
+    :class:`list` containing:
+    
+        * :math:`\\rho z` values (in kg/m2)
+        * intensities
+        * uncertainties on the intensities
+    
+    The values of :math:`\\rho z` must all be positive in ascending order and
+    following a regular interval: :math:`|\\rho z_i - \\rho z_{i+1}| = k`
+    """
     dist = {transition: {}}
 
     if gnf is not None:
@@ -658,9 +669,9 @@ class PhiRhoZResult(_Result):
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.get`)
         :arg absorption: distribution with absorption. If ``True``, emitted 
-            distribution is returned, if ``false`` generated distribution.
+            distribution is returned, if ``False`` generated distribution.
         :arg fluorescence: distribution with fluorescence. If ``True``, 
-            distribution with fluorescence is returned, if ``false`` 
+            distribution with fluorescence is returned, if ``False`` 
             distribution without fluorescence.
         """
         if isinstance(transition, basestring):
@@ -694,25 +705,26 @@ class PhiRhoZResult(_Result):
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)
         :arg absorption: whether to return the distribution with absorption.
-            If ``True``, emitted intensity is returned, if ``false`` generated
-            intensity.
+            If ``True``, emitted :math:`\\phi(\\rho z)` is returned, 
+            if ``False`` generated :math:`\\phi(\\rho z)`.
         :arg fluorescence: whether to return the distribution with fluorescence.
-            If ``True``, intensity with fluorescence is returned, if ``false``
-            intensity without fluorescence.
+            If ``True``, :math:`\\phi(\\rho z)` with fluorescence is returned, 
+            if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
             
-        :return: intensity and its uncertainty
+        :return: :math:`\\rho z` values (in kg/m2), intensities and
+            uncertainties on the intensities
         :raise: :class:`ValueError` if there is no distribution for the 
             specified transition.
             
         Here are examples that will all returned the same values::
         
-            >>> result.get(Transition(13, 4, 1))
-            >>> result.get('Al Ka1')
+            >>> rzs, vals, uncs = result.get(Transition(13, 4, 1))
+            >>> rzs, vals, uncs = result.get('Al Ka1')
         
         or
         
-            >>> result.get(K_family(13))
-            >>> result.get('Al K')
+            >>> rzs, vals, uncs = result.get(K_family(13))
+            >>> rzs, vals, uncs = result.get('Al K')
         """
         if isinstance(transition, basestring):
             transition = from_string(transition)
@@ -731,6 +743,43 @@ class PhiRhoZResult(_Result):
         # Note: list(...) is used to return a copy
         return list(zs), list(values), list(uncs)
 
+    def integral(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the integral over the phi-rho-z for the specified transition 
+        in kg/m2.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to use the :math:`\\phi(\\rho z)` with 
+            absorption. If ``True``, emitted :math:`\\phi(\\rho z)` is used, 
+            if ``False`` generated :math:`\\phi(\\rho z)`.
+        :arg fluorescence: whether to use math:`\\phi(\\rho z)` with 
+            fluorescence. If ``True``, :math:`\\phi(\\rho z)` with fluorescence 
+            is used, if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
+            
+        :rtype: :class:`float`
+        """
+        rzs, vals, _uncs = self.get(transition, absorption, fluorescence)
+        width = rzs[1] - rzs[0]
+        return sum(vals) * width
+
+    def fchi(self, transition, fluorescence=True):
+        """
+        Returns the ratio between the emitted over the generated phi-rho-zs for 
+        the specified transition.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, :math:`\\phi(\\rho z)` with fluorescence is used, 
+            if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
+            
+        :rtype: :class:`float`
+        """
+        Fchi = self.integral(transition, True, fluorescence)
+        F0chi = self.integral(transition, False, fluorescence)
+        return Fchi / F0chi
+
     def iter_transitions(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the:
@@ -741,10 +790,10 @@ class PhiRhoZResult(_Result):
           * uncertainties on the intensities
         
         :arg absorption: whether to return the distribution with absorption.
-            If ``True``, emitted intensity is returned, if ``false`` generated
+            If ``True``, emitted intensity is returned, if ``False`` generated
             intensity.
         :arg fluorescence: whether to return the distribution with fluorescence.
-            If ``True``, intensity with fluorescence is returned, if ``false``
+            If ``True``, intensity with fluorescence is returned, if ``False``
             intensity without fluorescence.
         """
         for transition in self._distributions:

@@ -509,6 +509,26 @@ class TestPhiRhoZResult(TestCase):
         self.assertAlmostEqual(30.0, values[0], 4)
         self.assertAlmostEqual(0.31, uncs[0], 4)
 
+    def testintegral(self):
+        val = self.r.integral(self.t1, absorption=False, fluorescence=False)
+        self.assertAlmostEqual(10.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=False, fluorescence=True)
+        self.assertAlmostEqual(50.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=True, fluorescence=False)
+        self.assertAlmostEqual(90.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=True, fluorescence=True)
+        self.assertAlmostEqual(130.0, val, 4)
+
+    def testfchi(self):
+        val = self.r.fchi(self.t1, fluorescence=False)
+        self.assertAlmostEqual(9.0, val, 4)
+
+        val = self.r.fchi(self.t1, fluorescence=True)
+        self.assertAlmostEqual(2.6, val, 4)
+
     def testiter_transition(self):
         self.assertEqual(1, len(list(self.r.iter_transitions())))
 
