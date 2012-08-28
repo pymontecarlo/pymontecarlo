@@ -146,6 +146,11 @@ class Importer(_Importer):
                                     total=total, background=background)
 
     def _detector_phirhoz(self, options, name, detector, path):
+        # Read density
+        wxrresult = GeneralResults(path)
+        density_kg_m3 = wxrresult.getMeanDensity_g_cm3() / 1000.0
+
+        # Read phirhoz
         wxrresult = CharateristicPhirhoz(path)
         distributions = {}
 
@@ -155,7 +160,13 @@ class Importer(_Importer):
                     transition = from_string(symbol(z) + " " + xrayline)
 
                     zs, vals, uncs = data[z][xrayline]
-                    zs = [val * 1e-9 for val in zs]
+                    zs = [val * 1e-9 * density_kg_m3 for val in zs]
+
+                    # WinXRay starts from the bottom to the top
+                    # The order must be reversed
+                    zs.reverse()
+                    vals.reverse()
+                    uncs.reverse()
 
                     dists.setdefault(transition, {}).setdefault(key, {})
                     dists[transition][key][NOFLUORESCENCE] = (zs, vals, uncs)

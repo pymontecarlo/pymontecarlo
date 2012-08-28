@@ -81,6 +81,11 @@ class TestImporter(TestCase):
         self.assertEqual(3, len(list(result.iter_transitions())))
         self.assertEqual(1, len(list(result.iter_transitions(absorption=False))))
 
+        rzs, vals, uncs = result.get('Al Ka1')
+        self.assertAlmostEqual(0.0, rzs[0], 4)
+        self.assertAlmostEqual(1.3379, vals[0], 4)
+        self.assertAlmostEqual(0.03524, uncs[0], 4)
+
     def test_detector_photon_spectrum(self):
         result = self.results['spectrum']
         factor = 1000 * 0.459697694132 * 10.0 # Normalization
