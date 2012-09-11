@@ -28,15 +28,11 @@ from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.program.nistmonte.runner.worker import Worker
 
 # Globals and constants variables.
-from pymontecarlo.program.config import TYPE_FILE
 
 class _NISTMonteProgram(Program):
 
-    def _get_name(self):
-        return 'NISTMonte'
-
-    def _get_alias(self):
-        return 'nistmonte'
+    def __init__(self):
+        Program.__init__(self, 'NISTMonte', 'nistmonte', Converter, Worker)
 
     def validate(self):
         settings = get_settings()
@@ -57,15 +53,5 @@ class _NISTMonteProgram(Program):
         jar = settings.nistmonte.jar
         if not os.path.isfile(jar):
             raise AssertionError, "Specified jar path (%s) does not exist" % jar
-
-    def _get_converter(self):
-        return Converter
-
-    def _get_worker(self):
-        return Worker
-
-    def _get_configure_params(self):
-        return [('nistmonte', 'java', 'Path to Java executable', TYPE_FILE),
-                ('nistmonte', 'jar', 'Path to NISTMonte jar', TYPE_FILE)]
 
 program = _NISTMonteProgram()

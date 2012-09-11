@@ -179,6 +179,42 @@ def load_program(name, validate=True):
 
     return program
 
+def find_programs():
+    """
+    Returns a list of program aliases that could be found in the settings.cfg,
+    but may not have been configured.
+    """
+    dirpath = os.path.abspath(os.path.dirname(__file__))
+    filepath = os.path.join(dirpath, 'settings.cfg.example')
+
+    settings = ConfigParser()
+    with open(filepath, 'r') as fp:
+        settings.read(fp)
+
+    return settings.pymontecarlo.programs.split(',')
+
+def get_program_cli(program):
+    """
+    Imports, loads and returns the command line interface of the specified
+    program.
+    The method raises :exc:`ImportError` exception if:
+    
+      * No ``config_cli.py`` module exists in program package.
+      * No ``cli`` variable exists in ``config_cli.py`` module.
+    
+    :arg program: program configuration object
+    """
+    name = program.alias
+    mod = __import__('pymontecarlo.program.' + name, None, None, ['config_cli'])
+
+    if not hasattr(mod, 'config_cli'):
+        raise ImportError, "Package '%s' does not have a 'config_cli' module." % name
+
+    if not hasattr(mod.config_cli, 'cli'):
+        raise ImportError, "Module 'config_cli' of package '%s' must have a 'cli' attribute" % name
+
+    return mod.config_cli.cli
+
 ################################################################################
 # Reload
 ################################################################################

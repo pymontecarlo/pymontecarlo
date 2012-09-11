@@ -22,32 +22,11 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import load_settings, load_program
+from pymontecarlo import load_settings, load_program, find_programs, get_program_cli
 from pymontecarlo.ui.cli.console import create_console
 from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
-from pymontecarlo.program.config import \
-    TYPE_FILE, TYPE_DIR, TYPE_INT, TYPE_BOOL, TYPE_FLOAT, TYPE_TEXT
-
-TYPE_LOOKUP = \
-    {TYPE_FILE: 'prompt_file',
-     TYPE_DIR: 'prompt_directory',
-     TYPE_INT: 'prompt_int',
-     TYPE_BOOL: 'prompt_bool',
-     TYPE_FLOAT: 'prompt_float',
-     TYPE_TEXT: 'prompt_text',
-     }
-
-def _find_programs():
-    dirpath = os.path.abspath(os.path.dirname(__file__))
-    filepath = os.path.join(dirpath, '..', '..', 'settings.cfg.example')
-
-    settings = ConfigParser()
-    with open(filepath, 'r') as fp:
-        settings.read(fp)
-
-    return settings.pymontecarlo.programs.split(',')
 
 def run(argv=None):
     # Initialize
@@ -78,7 +57,7 @@ def run(argv=None):
     # Programs
     programs = []
 
-    for program_alias in _find_programs():
+    for program_alias in find_programs():
         answer = \
             console.prompt_boolean("Do you want to setup %s?" % program_alias, True)
         if answer:
@@ -88,19 +67,14 @@ def run(argv=None):
                 console.print_error(str(ex))
                 return
 
-            params = program.configure_params
-            for section_name, option_name, question, type in params:
-                section = settings.add_section(section_name)
+            cli = get_program_cli(program)
+            try:
+                pass
+            except Exception as ex:
+                console.print_error(str(ex))
+                return
 
-                try:
-                    default = getattr(section, option_name)
-                except AttributeError:
-                    default = None
-
-                method = TYPE_LOOKUP[type]
-                value = getattr(console, method)(question, default)
-
-                setattr(section, option_name, str(value))
+            cli.configure(console, settings)
 
             programs.append(program.alias)
         else:

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config` -- PAP Monte Carlo program configuration
+:mod:`config_cli` -- Base configuration of the command line interface
 ================================================================================
 
-.. module:: config
-   :synopsis: PAP Monte Carlo program configuration
+.. module:: config_cli
+   :synopsis: Base configuration of the command line interface
+
+.. inheritance-diagram:: pymontecarlo.program.config_cli
 
 """
 
@@ -21,15 +23,14 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.config import Program
-from pymontecarlo.program._pouchou.input.converter import Converter
-from pymontecarlo.program.pap.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _PAPProgram(Program):
+class CLI(object):
 
-    def __init__(self):
-        Program.__init__(self, 'PAP', 'pap', Converter, Worker)
-
-program = _PAPProgram()
+    def configure(self, console, settings):
+        """
+        Configures the settings of this program.
+        The method should only exit if the settings of this program are valid.
+        """
+        pass

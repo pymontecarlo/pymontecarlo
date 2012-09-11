@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config` -- PAP Monte Carlo program configuration
+:mod:`config_cli` -- PAP Monte Carlo program CLI configuration
 ================================================================================
 
-.. module:: config
-   :synopsis: PAP Monte Carlo program configuration
+.. module:: config_cli
+   :synopsis: PAP Monte Carlo program CLI configuration
+
+.. inheritance-diagram:: pymontecarlo.program.pap.config_cli
 
 """
 
@@ -21,15 +23,11 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.config import Program
-from pymontecarlo.program._pouchou.input.converter import Converter
-from pymontecarlo.program.pap.runner.worker import Worker
+from pymontecarlo.program.config_cli import CLI
 
 # Globals and constants variables.
 
-class _PAPProgram(Program):
+class _PAPCLI(CLI):
+    pass
 
-    def __init__(self):
-        Program.__init__(self, 'PAP', 'pap', Converter, Worker)
-
-program = _PAPProgram()
+cli = _PAPCLI()

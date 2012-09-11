@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config` -- PAP Monte Carlo program configuration
+:mod:`config_cli` -- XPP Monte Carlo program CLI configuration
 ================================================================================
 
-.. module:: config
-   :synopsis: PAP Monte Carlo program configuration
+.. module:: config_cli
+   :synopsis: XPP Monte Carlo program CLI configuration
+
+.. inheritance-diagram:: pymontecarlo.program.xpp.config_cli
 
 """
 
@@ -21,13 +23,11 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.config import Program
-from pymontecarlo.program._pouchou.input.converter import Converter
+from pymontecarlo.program.config_cli import CLI
 
 # Globals and constants variables.
 
-class _PouchouProgram(Program):
+class _XPPCLI(CLI):
+    pass
 
-    def _get_converter(self):
-        return Converter
-
+cli = _XPPCLI()

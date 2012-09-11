@@ -21,20 +21,15 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program._pouchou.config import _PouchouProgram
+from pymontecarlo.program.config import Program
+from pymontecarlo.program._pouchou.input.converter import Converter
 from pymontecarlo.program.xpp.runner.worker import Worker
 
 # Globals and constants variables.
 
-class _XPPProgram(_PouchouProgram):
+class _XPPProgram(Program):
 
-    def _get_name(self):
-        return 'XPP'
-
-    def _get_alias(self):
-        return 'xpp'
-
-    def _get_worker(self):
-        return Worker
+    def __init__(self):
+        Program.__init__(self, 'XPP', 'xpp', Converter, Worker)
 
 program = _XPPProgram()

@@ -26,17 +26,40 @@ __license__ = "GPL v3"
 
 # Globals and constants variables.
 
-TYPE_FILE = 'file'
-TYPE_DIR = 'dir'
-TYPE_INT = 'int'
-TYPE_BOOL = 'bool'
-TYPE_FLOAT = 'float'
-TYPE_TEXT = 'text'
-
 class Program(object):
 
-    def __hash__(self, *args, **kwargs):
-        return hash(self._get_alias())
+    def __init__(self, name, alias, converter_class, worker_class,
+                 exporter_class=None, importer_class=None):
+        """
+        Creates a new program.
+        
+        :arg name: full name of the program
+        :type name: :class:`str`
+        
+        :arg alias: name of the package containing the program. 
+        :type alias: :class:`str`
+        
+        :arg converter_class: class of the converter
+        :type converter_class: :class:`Converter <pymontecarlo.input.converter.Converter>`
+        
+        :arg worker_class: class of the worker
+        :type worker_class: :class:`Worker <pymontecarlo.runner.worker.Worker>`
+        
+        :arg exporter_class: class of the exporter (optional)
+        :type exporter_class: :class:`Exporter <pymontecarlo.io.exporter.Exporter>`
+        
+        :arg importer_class: class of the importer (optional)
+        :type importer_class: :class:`Importer <pymontecarlo.io.importer.Importer>`
+        """
+        self._name = name
+        self._alias = alias
+        self._converter_class = converter_class
+        self._worker_class = worker_class
+        self._exporter_class = exporter_class
+        self._importer_class = importer_class
+
+    def __hash__(self):
+        return hash(self.alias)
 
     def __repr__(self):
         return '<Program(%s)>' % self.name
@@ -44,83 +67,51 @@ class Program(object):
     def __str__(self):
         return self.name
 
-    def _get_name(self):
-        raise NotImplementedError
-
     @property
     def name(self):
         """
         Full program name.
         """
-        return self._get_name()
-
-    def _get_alias(self):
-        raise NotImplementedError
+        return self._name
 
     @property
     def alias(self):
         """
         Short program name
         """
-        return self._get_alias()
-
-    def _get_converter(self):
-        raise NotImplementedError
+        return self._alias
 
     @property
-    def converter(self):
+    def converter_class(self):
         """
         Converter class of program
         """
-        return self._get_converter()
-
-    def _get_exporter(self):
-        raise NotImplementedError
+        return self._converter_class
 
     @property
-    def exporter(self):
-        """
-        Exporter class of program
-        """
-        return self._get_exporter()
-
-    def _get_importer(self):
-        raise NotImplementedError
-
-    @property
-    def importer(self):
-        """
-        Importer class of program
-        """
-        return self._get_importer()
-
-    def _get_worker(self):
-        raise NotImplementedError
-
-    @property
-    def worker(self):
+    def worker_class(self):
         """
         Worker class of program
         """
-        return self._get_worker()
+        return self._worker_class
+
+    @property
+    def exporter_class(self):
+        """
+        Exporter class of program
+        """
+        if self._exporter_class is None:
+            raise RuntimeError, "No exporter class"
+        return self._exporter_class
+
+    @property
+    def importer_class(self):
+        """
+        Importer class of program
+        """
+        if self._importer_class is None:
+            raise RuntimeError, "No importer class"
+        return self._importer_class
 
     def validate(self):
         pass
-
-    @property
-    def configure_params(self):
-        """
-        Returns a :class:`list` of :class:`tuple` that will help the 
-        user interface configure this program
-        
-        Each tuple contains four values.
-        
-          1. the name of the section in the settings file
-          2. the name of the option in the settings file
-          3. a description of the option
-          4. type of value (see constants starting with ``TYPE_``)
-        """
-        return self._get_configure_params()
-
-    def _get_configure_params(self):
-        return []

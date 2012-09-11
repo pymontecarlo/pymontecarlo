@@ -30,15 +30,12 @@ from pymontecarlo.program.penepma.io.importer import Importer
 from pymontecarlo.program.penepma.runner.worker import Worker
 
 # Globals and constants variables.
-from pymontecarlo.program.config import TYPE_FILE, TYPE_INT
 
 class _PenepmaProgram(_PenelopeProgram):
 
-    def _get_name(self):
-        return 'PENEPMA'
-
-    def _get_alias(self):
-        return 'penepma'
+    def __init__(self):
+        _PenelopeProgram.__init__(self, 'PENEPMA', 'penepma',
+                                  Converter, Worker, Exporter, Importer)
 
     def validate(self):
         _PenelopeProgram.validate(self)
@@ -54,25 +51,5 @@ class _PenepmaProgram(_PenelopeProgram):
         exe = settings.penepma.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified PENEPMA executable (%s) does not exist" % exe
-
-    def _get_converter(self):
-        return Converter
-
-    def _get_exporter(self):
-        return Exporter
-
-    def _get_importer(self):
-        return Importer
-
-    def _get_worker(self):
-        return Worker
-
-    def _get_configure_params(self):
-        params = _PenelopeProgram._get_configure_params(self)
-
-        params.append(('penepma', 'exe', 'Path to PENEPMA executable', TYPE_FILE))
-        params.append(('penepma', 'dumpp', 'Interval between dump', TYPE_INT))
-
-        return params
 
 program = _PenepmaProgram()

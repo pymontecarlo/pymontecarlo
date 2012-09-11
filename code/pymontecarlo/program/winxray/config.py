@@ -30,15 +30,12 @@ from pymontecarlo.program.winxray.io.importer import Importer
 from pymontecarlo.program.winxray.runner.worker import Worker
 
 # Globals and constants variables.
-from pymontecarlo.program.config import TYPE_FILE
 
 class _WinXRayProgram(Program):
 
-    def _get_name(self):
-        return 'WinXRay'
-
-    def _get_alias(self):
-        return 'winxray'
+    def __init__(self):
+        Program.__init__(self, 'WinXRay', 'winxray', Converter, Worker,
+                          Exporter, Importer)
 
     def validate(self):
         settings = get_settings()
@@ -52,20 +49,5 @@ class _WinXRayProgram(Program):
         exe = settings.winxray.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified WinXRay executable (%s) does not exist" % exe
-
-    def _get_converter(self):
-        return Converter
-
-    def _get_exporter(self):
-        return Exporter
-
-    def _get_importer(self):
-        return Importer
-
-    def _get_worker(self):
-        return Worker
-
-    def _get_configure_params(self):
-        return [('winxray', 'exe', 'Full path to WinXRay.exe', TYPE_FILE)]
 
 program = _WinXRayProgram()
