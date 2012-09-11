@@ -118,7 +118,7 @@ class Transition(objectxml):
 
         self._src = Subshell(z, src)
         self._dest = Subshell(z, dest)
-        self._iupac = '-'.join([self._src.iupac, self._dest.iupac])
+        self._iupac = '-'.join([self._dest.iupac, self._src.iupac])
         self._siegbahn = unicode(_SIEGBAHNS[index])
         self._siegbahn_nogreek = _SIEGBAHNS_NOGREEK[index]
         self._z = z

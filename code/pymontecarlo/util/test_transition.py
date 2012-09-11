@@ -90,7 +90,7 @@ class TestTransition(TestCase):
             x = getattr(self, "x%i" % i)
             src = Subshell(13, shells[0])
             dest = Subshell(13, shells[1])
-            self.assertEqual('-'.join([src.iupac, dest.iupac]), x.iupac)
+            self.assertEqual('-'.join([dest.iupac, src.iupac]), x.iupac)
 
     def testsiegbahn(self):
         for i, siegbahn in enumerate(_SIEGBAHNS):
