@@ -50,7 +50,7 @@ class TestPenelopeExporter(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-#        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testskeleton(self):
         self.assertTrue(True)
