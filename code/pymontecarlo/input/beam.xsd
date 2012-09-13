@@ -35,6 +35,16 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
+
+        <xsd:attribute name="particle" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:token">
+                    <xsd:enumeration value="electron" />
+                    <xsd:enumeration value="photon" />
+                    <xsd:enumeration value="positron" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:element name="beam" type="beamType" abstract="true" />

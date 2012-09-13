@@ -19,6 +19,7 @@ import math
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.beam import PencilBeam, GaussianBeam, tilt_beam
+from pymontecarlo.input.particle import POSITRON
 
 # Globals and constants variables.
 
@@ -54,12 +55,15 @@ class TestPencilBeam(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.beam = PencilBeam(15e3, (1, 2, 3), (4, 5, 6), math.radians(3.5))
+        self.beam = PencilBeam(15e3, POSITRON,
+                               (1, 2, 3), (4, 5, 6), math.radians(3.5))
 
     def tearDown(self):
         TestCase.tearDown(self)
 
     def testskeleton(self):
+        self.assertEqual(POSITRON, self.beam.particle)
+
         self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
 
         self.assertAlmostEqual(1.0, self.beam.origin_m[0], 4)
@@ -93,6 +97,8 @@ class TestPencilBeam(TestCase):
         element = self.beam.to_xml()
         beam = PencilBeam.from_xml(element)
 
+        self.assertEqual(POSITRON, beam.particle)
+
         self.assertAlmostEqual(15e3, beam.energy_eV, 4)
 
         self.assertAlmostEqual(1.0, beam.origin_m[0], 4)
@@ -107,6 +113,8 @@ class TestPencilBeam(TestCase):
 
     def testto_xml(self):
         element = self.beam.to_xml()
+
+        self.assertEqual('positron', element.get('particle'))
 
         self.assertAlmostEqual(15e3, float(element.get('energy')), 4)
 
@@ -127,7 +135,8 @@ class TestGaussianBeam(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.beam = GaussianBeam(15e3, 123.456, (1, 2, 3), (4, 5, 6), math.radians(3.5))
+        self.beam = GaussianBeam(15e3, 123.456, POSITRON,
+                                 (1, 2, 3), (4, 5, 6), math.radians(3.5))
 
     def tearDown(self):
         TestCase.tearDown(self)

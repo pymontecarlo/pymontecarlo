@@ -26,6 +26,7 @@ __license__ = "GPL v3"
 from pymontecarlo.input.converter import \
     Converter as _Converter, ConversionException
 
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.geometry import \
     Substrate, MultiLayers, GrainBoundaries
@@ -102,6 +103,12 @@ class Converter(_Converter):
         Converter from base options for NistMonte simulation.
         """
         _Converter.__init__(self)
+
+    def _convert_beam(self, options):
+        _Converter._convert_beam(self, options)
+
+        if options.beam.particle is not ELECTRON:
+            raise ConversionException, "Beam particle must be ELECTRON"
 
     def _convert_detectors(self, options):
         _Converter._convert_detectors(self, options)

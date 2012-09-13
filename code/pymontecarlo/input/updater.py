@@ -41,6 +41,7 @@ class Updater(_Updater):
 
         self._updaters[0] = self._update_noversion
         self._updaters[2] = self._update_version2
+        self._updaters[3] = self._update_version3
 
     def _get_version(self, filepath):
         root = etree.parse(filepath).getroot()
@@ -112,5 +113,19 @@ class Updater(_Updater):
             with open(filepath, 'w') as fp:
                 fp.write(etree.tostring(root, pretty_print=True))
 
+        self._update_version2(filepath)
+
     def _update_version2(self, filepath):
+        logging.debug('Updating from "version 2"')
+
+        root = etree.parse(filepath).getroot()
+        root.set('version', VERSION)
+
+        element = list(root.find('beam'))[0]
+        element.set('particle', 'electron')
+
+        with open(filepath, 'w') as fp:
+            fp.write(etree.tostring(root, pretty_print=True))
+
+    def _update_version3(self, filepath):
         logging.info('Nothing to update')

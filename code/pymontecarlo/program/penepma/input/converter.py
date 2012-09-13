@@ -28,6 +28,7 @@ from pymontecarlo.input.converter import ConversionWarning
 from pymontecarlo.program._penelope.input.converter import \
     Converter as _Converter, ConversionException
 
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.input.detector import \
@@ -89,13 +90,17 @@ class Converter(_Converter):
         except ConversionException as ex:
             if isinstance(options.beam, PencilBeam):
                 old = options.beam
-                options.beam = GaussianBeam(old.energy_eV, 0.0, old.origin_m,
-                                            old.direction, old.aperture_rad)
+                options.beam = GaussianBeam(old.energy_eV, 0.0, old.particle,
+                                            old.origin_m, old.direction,
+                                            old.aperture_rad)
 
                 message = "Pencil beam converted to Gaussian beam with 0 m diameter"
                 warnings.warn(message, ConversionWarning)
             else:
                 raise ex
+
+        if options.beam.particle is not ELECTRON:
+            raise ConversionException, "Beam particle must be ELECTRON"
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)

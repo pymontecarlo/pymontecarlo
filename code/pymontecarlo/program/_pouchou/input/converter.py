@@ -27,6 +27,7 @@ import warnings
 from pymontecarlo.input.converter import \
     Converter as _Converter, ConversionException, ConversionWarning
 
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import PencilBeam, GaussianBeam
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.detector import \
@@ -62,13 +63,17 @@ class Converter(_Converter):
         except ConversionException as ex:
             if isinstance(options.beam, GaussianBeam):
                 old = options.beam
-                options.beam = PencilBeam(old.energy_eV, old.origin_m,
-                                          old.direction, old.aperture_rad)
+                options.beam = PencilBeam(old.energy_eV, old.particle,
+                                          old.origin_m, old.direction,
+                                          old.aperture_rad)
 
                 message = "Gaussian beam converted to pencil beam"
                 warnings.warn(message, ConversionWarning)
             else:
                 raise ex
+
+        if options.beam.particle is not ELECTRON:
+            raise ConversionException, "Beam particle must be ELECTRON"
 
     def _convert_detectors(self, options):
         _Converter._convert_detectors(self, options)

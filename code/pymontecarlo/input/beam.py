@@ -30,23 +30,29 @@ from pymontecarlo.input.option import Option
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 
 class PencilBeam(Option):
-    def __init__(self, energy_eV, origin_m=(0, 0, 1), direction=(0, 0, -1),
+    def __init__(self, energy_eV, particle=ELECTRON,
+                 origin_m=(0, 0, 1), direction=(0, 0, -1),
                  aperture_rad=0.0):
         Option.__init__(self)
 
+        self.particle = particle
         self.energy_eV = energy_eV
         self.origin_m = origin_m
         self.direction = direction
         self.aperture_rad = aperture_rad
 
     def __repr__(self):
-        return '<PencilBeam(energy=%s eV, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.energy_eV, self.origin_m, self.direction, self.aperture_rad)
+        return '<PencilBeam(particle=%s, energy=%s eV, origin=%s m, direction=%s, aperture=%s rad)>' % \
+            (self.particle, self.energy_eV, self.origin_m, self.direction, self.aperture_rad)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
+        particles = {'electron': ELECTRON, 'photon': PHOTON, 'positron': POSITRON}
+        particle = particles.get(element.get('particle'), ELECTRON)
+
         energy = float(element.get('energy'))
 
         attrib = element.find('origin').attrib
@@ -57,9 +63,11 @@ class PencilBeam(Option):
 
         aperture = float(element.get('aperture'))
 
-        return cls(energy, origin, direction, aperture)
+        return cls(energy, particle, origin, direction, aperture)
 
     def __savexml__(self, element, *args, **kwargs):
+        element.set('particle', str(self.particle))
+
         element.set('energy', str(self.energy_eV))
 
         attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin_m)))
@@ -69,6 +77,19 @@ class PencilBeam(Option):
         element.append(Element('direction', attrib))
 
         element.set('aperture', str(self.aperture_rad))
+
+    @property
+    def particle(self):
+        """
+        Type of particles in this beam.
+        """
+        return self._props['particle']
+
+    @particle.setter
+    def particle(self, particle):
+        if particle not in [ELECTRON, PHOTON, POSITRON]:
+            raise ValueError, 'Particle (%i) must either be an ELECTRON, PHOTON or POSITRON'
+        self._props['particle'] = particle
 
     @property
     def energy_eV(self):
@@ -146,15 +167,15 @@ class PencilBeam(Option):
 XMLIO.register('{http://pymontecarlo.sf.net}pencilBeam', PencilBeam)
 
 class GaussianBeam(PencilBeam):
-    def __init__(self, energy_eV, diameter_m, origin_m=(0, 0, 1),
-                 direction=(0, 0, -1), aperture_rad=0.0):
-        PencilBeam.__init__(self, energy_eV, origin_m, direction, aperture_rad)
+    def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
+                 origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
+        PencilBeam.__init__(self, energy_eV, particle, origin_m, direction, aperture_rad)
 
         self.diameter_m = diameter_m
 
     def __repr__(self):
-        return '<GaussianBeam(energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
+        return '<GaussianBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
+            (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
 
     @classmethod
     def __loadxml__ (cls, element, *args, **kwargs):
@@ -162,8 +183,8 @@ class GaussianBeam(PencilBeam):
 
         diameter_m = float(element.get('diameter'))
 
-        return cls(pencil.energy_eV, diameter_m, pencil.origin_m,
-                   pencil.direction, pencil.aperture_rad)
+        return cls(pencil.energy_eV, diameter_m, pencil.particle,
+                   pencil.origin_m, pencil.direction, pencil.aperture_rad)
 
     def __savexml__(self, element, *args, **kwargs):
         PencilBeam.__savexml__(self, element, *args, **kwargs)
