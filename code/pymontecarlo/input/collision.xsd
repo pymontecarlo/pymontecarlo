@@ -1,0 +1,16 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:simpleType name="collisionType">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="delta" />
+            <xsd:enumeration value="hard elastic" />
+            <xsd:enumeration value="hard inelastic" />
+            <xsd:enumeration value="hard bremsstrahlung emission" />
+            <xsd:enumeration value="inner shell impact ionisation" />
+            <xsd:enumeration value="coherent Rayleigh scattering" />
+            <xsd:enumeration value="incoherent Compton scattering" />
+            <xsd:enumeration value="photoelectric absorption" />
+            <xsd:enumeration value="electron-positron pair production" />
+            <xsd:enumeration value="annihilation" />
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>
