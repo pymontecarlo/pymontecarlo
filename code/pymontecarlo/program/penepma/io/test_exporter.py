@@ -21,11 +21,14 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.input.collision import HARD_ELASTIC
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.program.penepma.input.converter import Converter
+from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 from pymontecarlo.program.penepma.io.exporter import Exporter, ExporterException
 
 # Globals and constants variables.
@@ -47,7 +50,7 @@ class TestPenelopeExporter(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+#        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -138,6 +141,17 @@ class TestPenelopeExporter(TestCase):
 
         self.assertEqual(10 + 1, len(ws))
 
+    def testinteraction_forcing(self):
+        ops = Options()
+        ops.beam.energy_eV = 30e3
+        ops.limits.add(TimeLimit(100))
+
+        self.c.convert(ops)
+
+        intfor = InteractionForcing(ELECTRON, HARD_ELASTIC, -40)
+        ops.geometry.body.interaction_forcings.add(intfor)
+
+        self.e.export(ops, self.tmpdir)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

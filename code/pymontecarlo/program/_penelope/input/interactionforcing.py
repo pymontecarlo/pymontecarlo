@@ -24,75 +24,23 @@ __license__ = "GPL v3"
 
 # Local modules.
 from pymontecarlo.input.option import Option
+from pymontecarlo.input.particle import PARTICLES
+from pymontecarlo.input.collision import COLLISIONS
+
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
-ELECTRON = 1
-PHOTON = 2
-POSITRON = 3
-
-class Collisions(object):
-    def __init__(self, particle):
-        """
-        Structure for the particle_type of collisions for each primary particle.
-    
-        :arg particle: particle_type of particle (use :const:`ELECTRON`, 
-            :const:`PHOTON` or :const:`POSITRON`)
-        :type particle: :class:`int`
-    
-        **Examples**::
-    
-          >>> collision = Collisions(ELECTRON).HARD_ELASTIC_COLLISION
-          >>> print collision
-          >>> 2
-          
-        """
-        if particle == ELECTRON:
-            self.ARTIFICIAL_SOFT_EVENT = 1
-            self.HARD_ELASTIC_COLLISION = 2
-            self.HARD_INELASTIC_COLLISION = 3
-            self.HARD_BREMSSTRAHLUNG_EMISSION = 4
-            self.INNERSHELL_IMPACT_IONISATION = 5
-            self.DELTA_INTERACTION = 7
-            self.AUXILIARY_INTERACTION = 8
-        elif particle == PHOTON:
-            self.COHERENT_RAYLEIGH_SCATTERING = 1
-            self.INCOHERENT_COMPTON_SCATTERING = 2
-            self.PHOTOELECTRIC_ABSORPTION = 3
-            self.ELECTRON_POSITRON_PAIR_PRODUCTION = 4
-            self.DELTA_INTERACTION = 7
-            self.AUXILIARY_INTERACTION = 8
-        elif particle == POSITRON:
-            self.ARTIFICIAL_SOFT_EVENT = 1
-            self.HARD_ELASTIC_COLLISION = 2
-            self.HARD_INELASTIC_COLLISION = 3
-            self.HARD_BREMSSTRAHLUNG_EMISSION = 4
-            self.INNERSHELL_IMPACT_IONISATION = 5
-            self.ANNIHILATION = 6
-            self.DELTA_INTERACTION = 7
-            self.AUXILIARY_INTERACTION = 8
-
-    @property
-    def possible_collisions(self):
-        """
-        Returns all the possible collisions for the primary particle.
-    
-        :rtype: :class:`dict`
-        """
-        variables = vars(self).copy()
-        return variables
 
 class InteractionForcing(Option):
     def __init__(self, particle, collision, forcer= -1, weight=(0.1, 1.0)):
         """
         Creates a new interaction forcing.
     
-        :arg particle: type of particle (use :const:`ELECTRON`, :const:`PHOTON` 
-            or :const:`POSITRON`)
-        :type particle: :class:`int`
+        :arg particle: type of particle
+        :type particle: :class:`_Particle`
     
-        :arg collision: type of collisions (see :class:`Collisions`)
-        :type collision: :class:`int`
+        :arg collision: type of collisions
+        :type collision: :class:`_Collision`
     
         :arg forcer: forcing factor (``default=-1``)
     
@@ -107,34 +55,26 @@ class InteractionForcing(Option):
         self.forcer = forcer
         self.weight = weight
 
-    def __cmp__(self, other):
-        """
-        Comparison between two :class:`InteractionForcing` using the function 
-        :func:`cmp(x, y)`
+    def __eq__(self, other):
+        return self.particle is other.particle and \
+                    self.collision is other.collision
     
-        The *particle* and *collision* are compared in this order of importance.
-        If they are all equal, the two :class:`InteractionForcing` are 
-        defined as equal.
-        """
-        if self.particle > other.particle:
-            return 1
-        elif self.particle < other.particle:
-            return -1
-        else:
-            if self.collision > other.collision:
-                return 1
-            elif self.collision < other.collision:
-                return -1
-            else:
-                return 0
+    def __ne__(self, other):
+        return not self == other
 
     def __hash__(self):
-        return hash((self.particle, self.collision))
+        return hash(('interactionforcing', self.particle, self.collision))
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        particle = int(element.get('particle'))
-        collision = int(element.get('collision'))
+        particles = list(PARTICLES)
+        particles = dict(zip(map(str, particles), particles))
+        particle = particles[element.get('particle')]
+
+        collisions = list(COLLISIONS)
+        collisions = dict(zip(map(str, collisions), collisions))
+        collision = collisions[element.get('collision')]
+
         forcer = float(element.get('forcer'))
         weight = (float(element.get('weightMin')), float(element.get('weightMax')))
 
@@ -151,29 +91,25 @@ class InteractionForcing(Option):
     def particle(self):
         """
         Type of particle.
-        The particle can either be a :const:`ELECTRON`, :const:`PHOTON` 
-        or :const:`POSITRON`.
         """
         return self._props['particle']
 
     @particle.setter
     def particle(self, particle):
-        if not particle in [ELECTRON, PHOTON, POSITRON]:
-            raise ValueError, "Incorrect particle type (%s)." % particle
+        if particle not in PARTICLES:
+            raise ValueError, 'Particle (%i) must be %s' % (particle, PARTICLES)
         self._props['particle'] = particle
 
     @property
     def collision(self):
         """
         Type of collision.
-        A value between 1 and 8.
-        See :class:`.Collisions` for the definitions.
         """
         return self._props['collision']
 
     @collision.setter
     def collision(self, collision):
-        if collision < 1 or collision > 8:
+        if collision not in COLLISIONS:
             raise ValueError, "Incorrect collision type (%s)." % collision
         self._props['collision'] = collision
 

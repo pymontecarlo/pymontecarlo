@@ -29,11 +29,20 @@ from operator import attrgetter, mul
 
 # Local modules.
 from pymontecarlo import get_settings
+
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
+from pymontecarlo.input.collision import \
+    (DELTA, HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
+     INNERSHELL_IMPACT_IONISATION, COHERENT_RAYLEIGH_SCATTERING,
+     INCOHERENT_COMPTON_SCATTERING, PHOTOELECTRIC_ABSORPTION,
+     ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.detector import \
     _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
+
 from pymontecarlo.util.transition import get_transitions
+
 from pymontecarlo.program._penelope.io.exporter import \
     Exporter as _Exporter, Keyword, Comment, ExporterException, ExporterWarning
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
@@ -42,6 +51,24 @@ from pymontecarlo.program.penepma.input.detector import index_delimited_detector
 MAX_PHOTON_DETECTORS = 25 # Set in penepma.f
 MAX_PRZ = 20 # Set in penepma.f
 MAX_PHOTON_DETECTOR_CHANNEL = 1000
+
+_PARTICLES_REF = {ELECTRON: 1, PHOTON: 2, POSITRON: 3}
+_COLLISIONS_REF = {ELECTRON: {HARD_ELASTIC: 2,
+                              HARD_INELASTIC: 3,
+                              HARD_BREMSSTRAHLUNG_EMISSION: 4,
+                              INNERSHELL_IMPACT_IONISATION: 5,
+                              DELTA: 7},
+                   PHOTON: {COHERENT_RAYLEIGH_SCATTERING: 1,
+                            INCOHERENT_COMPTON_SCATTERING: 2,
+                            PHOTOELECTRIC_ABSORPTION: 3,
+                            ELECTRON_POSITRON_PAIR_PRODUCTION: 4,
+                            DELTA: 7},
+                   POSITRON: {HARD_ELASTIC: 2,
+                              HARD_INELASTIC: 3,
+                              HARD_BREMSSTRAHLUNG_EMISSION: 4,
+                              INNERSHELL_IMPACT_IONISATION: 5,
+                              ANNIHILATION: 6,
+                              DELTA: 7}}
 
 class Exporter(_Exporter):
     _KEYWORD_TITLE = Keyword("TITLE")
@@ -234,10 +261,10 @@ class Exporter(_Exporter):
             if body.material is VACUUM:
                 continue
 
-            for intforce in sorted(body.interaction_forcings):
+            for intforce in body.interaction_forcings:
                 text = [body._index + 1,
-                        intforce.particle,
-                        intforce.collision,
+                        _PARTICLES_REF[intforce.particle],
+                        _COLLISIONS_REF[intforce.particle][intforce.collision],
                         intforce.forcer,
                         intforce.weight[0],
                         intforce.weight[1]]
