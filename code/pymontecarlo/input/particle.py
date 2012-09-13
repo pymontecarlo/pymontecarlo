@@ -50,3 +50,5 @@ class _Particle(object):
 ELECTRON = _Particle('electron', -1)
 PHOTON = _Particle('photon', 0)
 POSITRON = _Particle('positron', +1)
+
+PARTICLES = frozenset([ELECTRON, PHOTON, POSITRON])

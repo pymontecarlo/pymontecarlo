@@ -30,7 +30,7 @@ from pymontecarlo.input.option import Option
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
-from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
+from pymontecarlo.input.particle import ELECTRON, PARTICLES
 
 class PencilBeam(Option):
     def __init__(self, energy_eV, particle=ELECTRON,
@@ -50,7 +50,8 @@ class PencilBeam(Option):
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        particles = {'electron': ELECTRON, 'photon': PHOTON, 'positron': POSITRON}
+        particles = list(PARTICLES)
+        particles = dict(zip(map(str, particles), particles))
         particle = particles.get(element.get('particle'), ELECTRON)
 
         energy = float(element.get('energy'))
@@ -87,8 +88,8 @@ class PencilBeam(Option):
 
     @particle.setter
     def particle(self, particle):
-        if particle not in [ELECTRON, PHOTON, POSITRON]:
-            raise ValueError, 'Particle (%i) must either be an ELECTRON, PHOTON or POSITRON' % particle
+        if particle not in PARTICLES:
+            raise ValueError, 'Particle (%i) must be %s' % (particle, PARTICLES)
         self._props['particle'] = particle
 
     @property
