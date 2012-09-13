@@ -88,7 +88,7 @@ class PencilBeam(Option):
     @particle.setter
     def particle(self, particle):
         if particle not in [ELECTRON, PHOTON, POSITRON]:
-            raise ValueError, 'Particle (%i) must either be an ELECTRON, PHOTON or POSITRON'
+            raise ValueError, 'Particle (%i) must either be an ELECTRON, PHOTON or POSITRON' % particle
         self._props['particle'] = particle
 
     @property
