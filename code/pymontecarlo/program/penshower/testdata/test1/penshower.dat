@@ -1,0 +1,56 @@
+
+
+   *************************************************************
+   **   Program PENSHOWER.  Input data and run-time messages.   **
+   *************************************************************
+
+   Date and time: 13th Sep 2012. 18:28:42
+
+   Untitled                                                                                                                
+
+
+   ------------------------------------------------------------------------
+   >>>>>>  Electron beam.
+
+   Primary particles: electrons
+   Initial energy =  2.000000E+04 eV
+   Coordinates of source:     SX0 =  0.000000E+00 cm
+                              SY0 =  0.000000E+00 cm
+                              SZ0 =  1.000000E+01 cm
+   Beam direction angles:   THETA =  1.800000E+02 deg
+                              PHI =  0.000000E+00 deg
+   Beam aperture:           ALPHA =  0.000000E+00 deg
+   Beam diameter:             DIA =  1.000000E-06 cm
+
+
+   ------------------------------------------------------------------------
+   >>>>>>  Material data and simulation parameters.
+
+   ****  1st material
+   Material data file: Au100.mat           
+   Electron absorption energy =  5.000000E+01 eV
+     Photon absorption energy =  5.000000E+01 eV
+   Positron absorption energy =  2.000000E+04 eV
+   Electron-positron simulation parameters:
+    C1 = 1.000000E-01,      C2 = 1.000000E-01
+   Wcc = 5.000000E+01 eV,  Wcr = 5.000000E+01 eV
+
+   PENGEOM's geometry definition file: substrate.geo       
+
+
+   ------------------------------------------------------------------------
+   >>>>>>  Maximum allowed step lengths of electrons and positrons.
+   * Body =   1,   DSMAX =  1.000000E+20 cm
+
+
+   ------------------------------------------------------------------------
+   >>>>>>  Job characteristics.
+   Track primary and secondary electrons
+
+
+   ------------------------------------------------------------------------
+   >>>>>>  Simulation limits.
+   Number of trajectories = 5.000000E+00
+
+
+   ------------------------------------------------------------------------
