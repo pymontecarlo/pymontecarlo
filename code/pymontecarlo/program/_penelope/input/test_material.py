@@ -44,6 +44,7 @@ class TestModule(TestCase):
 
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
 
         self.assertAlmostEqual(0.0, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.0, m.elastic_scattering[1], 4)
@@ -77,6 +78,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_positron_eV, 4)
 
         self.assertAlmostEqual(0.1, self.m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, self.m.elastic_scattering[1], 4)
@@ -97,6 +99,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
 
         self.assertAlmostEqual(0.1, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, m.elastic_scattering[1], 4)
@@ -140,6 +143,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyElectron')), 4)
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyPhoton')), 4)
+        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPositron')), 4)
 
         self.assertAlmostEqual(0.1, float(element.get('c1')), 4)
         self.assertAlmostEqual(0.2, float(element.get('c2')), 4)
@@ -150,3 +154,4 @@ class TestMaterial(TestCase):
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
+

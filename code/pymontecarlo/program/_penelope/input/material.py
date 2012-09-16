@@ -30,7 +30,9 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
+def pure(z,
+         absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
+         absorption_energy_positron_eV=50.0,
          elastic_scattering=(0.0, 0.0),
          cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
     """
@@ -46,6 +48,10 @@ def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0
     :arg absorption_energy_photon_eV: absorption energy of the photons in
         this material.
     :type absorption_energy_photon_eV: :class:`float`
+    
+    :arg absorption_energy_positron_eV: absorption energy of the positrons in
+        this material.
+    :type absorption_energy_positron_eV: :class:`float`
     
     :arg elastic_scattering: elastic scattering coefficients. 
         They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
@@ -64,12 +70,15 @@ def pure(z, absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0
 
     return Material(name, composition, None,
                     absorption_energy_electron_eV, absorption_energy_photon_eV,
+                    absorption_energy_positron_eV,
                     elastic_scattering,
                     cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
 
 class Material(_Material, Option):
     def __init__(self, name, composition, density_kg_m3=None,
-                 absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
+                 absorption_energy_electron_eV=50.0,
+                 absorption_energy_photon_eV=50.0,
+                 absorption_energy_positron_eV=50.0,
                  elastic_scattering=(0.0, 0.0),
                  cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
         """
@@ -103,6 +112,10 @@ class Material(_Material, Option):
             this material.
         :type absorption_energy_photon_eV: :class:`float`
         
+        :arg absorption_energy_positron_eV: absorption energy of the positrons in
+            this material.
+        :type absorption_energy_positron_eV: :class:`float`
+        
         :arg elastic_scattering: elastic scattering coefficients. 
             They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
             as a single :class:`float` value, where ``C1=C2``. 
@@ -117,16 +130,19 @@ class Material(_Material, Option):
         """
         Option.__init__(self)
         _Material.__init__(self, name, composition, density_kg_m3,
-                           absorption_energy_electron_eV, absorption_energy_photon_eV)
+                           absorption_energy_electron_eV,
+                           absorption_energy_photon_eV,
+                           absorption_energy_positron_eV)
 
         self.elastic_scattering = elastic_scattering
         self.cutoff_energy_inelastic_eV = cutoff_energy_inelastic_eV
         self.cutoff_energy_bremsstrahlung_eV = cutoff_energy_bremsstrahlung_eV
 
     def __repr__(self):
-        return '<PenelopeMaterial(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, elastic_scattering=%s, cutoff_inelastic=%s eV, cutoff_bremsstrahlung=%s eV)>' % \
+        return '<PenelopeMaterial(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, abs_positron=%s eV, elastic_scattering=%s, cutoff_inelastic=%s eV, cutoff_bremsstrahlung=%s eV)>' % \
             (self.name, self.composition, self.density_kg_m3,
              self.absorption_energy_electron_eV, self.absorption_energy_photon_eV,
+             self.absorption_energy_positron_eV,
              self.elastic_scattering,
              self.cutoff_energy_inelastic_eV, self.cutoff_energy_bremsstrahlung_eV)
 
@@ -140,6 +156,7 @@ class Material(_Material, Option):
 
         return cls(material.name, material.composition, material.density_kg_m3,
                    material.absorption_energy_electron_eV, material.absorption_energy_photon_eV,
+                   material.absorption_energy_positron_eV,
                    elastic_scattering,
                    cutoff_energy_inelastic, cutoff_energy_bremsstrahlung)
 
