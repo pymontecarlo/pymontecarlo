@@ -22,18 +22,25 @@ __license__ = "GPL v3"
 import csv
 import os
 import bisect
+import tempfile
+import shutil
+import math
 from math import sqrt
-from collections import Iterable
+from collections import Iterable, Sized
 from StringIO import StringIO
 from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
 from pymontecarlo.output.manager import ResultManager
 
 # Globals and constants variables.
+from pymontecarlo.input.particle import PARTICLES
+from pymontecarlo.input.collision import COLLISIONS
+
 GENERATED = "g"
 EMITTED = "e"
 NOFLUORESCENCE = "nf"
@@ -941,3 +948,169 @@ class ElectronFractionResult(_Result):
         return self._transmitted
 
 ResultManager.register('ElectronFractionResult', ElectronFractionResult)
+
+EXIT_STATE_BACKSCATTERED = 1
+EXIT_STATE_TRANSMITTED = 2
+EXIT_STATE_ABSORBED = 3
+
+class Trajectory(object):
+    def __init__(self, primary, particle, collision, exit_state, interactions):
+        """
+        Container for one trajectory.
+        
+        :arg primary: whether the trajectory corresponds to a primary particle
+        :type primary: :class:`bool`
+        
+        :arg particle: type of particle
+            (:const:`ELECTRON`, :const:`Photon` or :const:`POSITRON`)
+        :type particle: :class:`_Particle`
+        
+        :arg collision: type of collision that created this trajectory
+        :type collision: :class:`_Collision`
+        
+        :arg exit_state: exit state flag (backscattered, transmitted or absorbed)
+        
+        :arg interactions: two-dimensional array where each row corresponds
+            to an interaction of the particle. The first three columns must
+            be the x, y and z position (in m) of the interaction, the fourth
+            column, the energy at the position (in eV) and the fifth, the type 
+            of collision. The array can contain more columns.
+        :type: :class:`ndarray`
+        """
+        self._primary = primary
+        self._particle = particle
+        self._collision = collision
+        self._exit_state = exit_state
+        self._interactions = interactions
+
+    @property
+    def particle(self):
+        """
+        Returns the type of particle.
+        """
+        return self._particle
+
+    @property
+    def collision(self):
+        """
+        Returns the type of collision that created this trajectory.
+        """
+        return self._collision
+
+    @property
+    def exit_state(self):
+        """
+        Returns the exit state flag:
+            
+            * :const:`EXIT_STATE_BACKSCATTERED`
+            * :const:`EXIT_STATE_TRANSMITTED`
+            * :const:`EXIT_STATE_ABSORBED`
+        """
+        return self._exit_state
+
+    @property
+    def interactions(self):
+        """
+        Returns two-dimensional array where each row corresponds to an 
+        interaction of the particle. 
+        The first three columns must be the x, y and z position (in m) of the 
+        interaction, the fourth column, the energy at the position (in eV) and 
+        the fifth, the type of collision. 
+        The array can contain more columns.
+        """
+        return self._interactions
+
+    def is_primary(self):
+        """
+        Returns whether this trajectory is from a primary particle.
+        """
+        return self._primary
+
+    def is_secondary(self):
+        """
+        Returns whether this trajectory is from a secondary particle.
+        """
+        return not self._primary
+
+class TrajectoryResult(_Result, Iterable, Sized):
+
+    def __init__(self, trajectories=[]):
+        self._trajectories = trajectories
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key):
+        tmpdir = tempfile.mkdtemp()
+        filename = key + '.h5'
+        zipfile.extract(filename, tmpdir)
+
+        h5file = h5py.File(os.path.join(tmpdir, filename), 'r')
+
+        return _TrajectoryResultHDF5(h5file, tmpdir)
+
+    def __savezip__(self, zipfile, key):
+        # Create temporary folder
+        tmpdir = tempfile.mkdtemp()
+        filepath = os.path.join(tmpdir, key + '.h5')
+
+        # Create HDF5 file
+        h5file = h5py.File(filepath, 'w')
+        h5group = h5file.create_group('trajectories')
+
+        # Save trajectories
+        width = int(math.floor(math.log10(len(self)))) + 1
+
+        for index, trajectory in enumerate(self._trajectories):
+            name = 'trajectory%s' % str(index).zfill(width)
+            dataset = h5group.create_dataset(name, data=trajectory.interactions)
+
+            dataset.attrs['primary'] = trajectory.is_primary()
+            dataset.attrs['particle'] = str(trajectory.particle)
+            dataset.attrs['collision'] = str(trajectory.collision)
+            dataset.attrs['exit_state'] = trajectory.exit_state
+
+        # Close HDF5, write file to zip, remove temporary folder
+        h5file.close()
+        zipfile.write(filepath, key + '.h5')
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def __len__(self):
+        return len(self._trajectories)
+
+    def __iter__(self):
+        return iter(self._trajectories)
+
+ResultManager.register('TrajectoryResult', TrajectoryResult)
+
+class _TrajectoryResultHDF5(TrajectoryResult):
+
+    def __init__(self, h5file, tmpdir):
+        self._h5file = h5file
+        self._tmpdir = tmpdir
+
+    def __del__(self):
+        self._h5file.close()
+        shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+    def __savezip__(self, zipfile, key):
+        pass
+
+    def __len__(self):
+        return len(self._h5file['trajectories'])
+
+    def __iter__(self):
+        for dataset in self._h5file['trajectories'].itervalues():
+            primary = bool(dataset.attrs['primary'])
+
+            particles = list(PARTICLES)
+            particles = dict(zip(map(str, particles), particles))
+            particle = particles.get(dataset.attrs['particle'])
+
+            collisions = list(COLLISIONS)
+            collisions = dict(zip(map(str, collisions), collisions))
+            collision = collisions.get(dataset.attrs['collision'])
+
+            exit_state = int(dataset.attrs['exit_state'])
+
+            interactions = dataset[:]
+
+            yield Trajectory(primary, particle, collision, exit_state, interactions)

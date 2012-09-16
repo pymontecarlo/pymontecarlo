@@ -17,6 +17,7 @@ import csv
 from xml.etree.ElementTree import fromstring
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
@@ -28,12 +29,16 @@ from pymontecarlo.output.result import \
      TimeResult,
      ElectronFractionResult,
      create_intensity_dict,
-     create_phirhoz_dict)
+     create_phirhoz_dict,
+     Trajectory,
+     TrajectoryResult)
 from pymontecarlo.util.transition import Transition, K_family
 
 import DrixUtilities.Files as Files
 
 # Globals and constants variables.
+from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.output.result import EXIT_STATE_ABSORBED
 
 class TestPhotonIntensityResult(TestCase):
 
@@ -613,6 +618,57 @@ class TestElectronFractionResult(TestCase):
         self.assertAlmostEqual(0.2, r.backscattered[1], 4)
         self.assertAlmostEqual(3.0, r.transmitted[0], 4)
         self.assertAlmostEqual(0.3, r.transmitted[1], 4)
+
+        zipfile.close()
+
+class TestTrajectoryResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        interactions = np.array([[0.0, 0.0, 1.0, 20e3, -1], [1.0, 1.0, 1.0, 19e3, 2]])
+        traj = Trajectory(True, ELECTRON, None, EXIT_STATE_ABSORBED, interactions)
+        self.r = TrajectoryResult([traj])
+
+        self.results_zip = \
+            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual(1, len(self.r))
+
+        trajectory = list(self.r)[0]
+        self.assertTrue(trajectory.is_primary())
+        self.assertFalse(trajectory.is_secondary())
+        self.assertIs(ELECTRON, trajectory.particle)
+        self.assertIsNone(trajectory.collision)
+        self.assertEqual(EXIT_STATE_ABSORBED, trajectory.exit_state)
+        self.assertEqual(2, len(trajectory.interactions))
+        self.assertEqual(5, trajectory.interactions.shape[1])
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det6')
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = TrajectoryResult.__loadzip__(zipfile, 'det6')
+
+        self.assertEqual(559, len(r))
+
+        trajectory = list(r)[0]
+        self.assertTrue(trajectory.is_primary())
+        self.assertFalse(trajectory.is_secondary())
+        self.assertIs(ELECTRON, trajectory.particle)
+        self.assertIsNone(trajectory.collision)
+        self.assertEqual(EXIT_STATE_ABSORBED, trajectory.exit_state)
+        self.assertEqual(577, len(trajectory.interactions))
+        self.assertEqual(5, trajectory.interactions.shape[1])
 
         zipfile.close()
 
