@@ -547,3 +547,45 @@ class ElectronFractionDetector(Option):
     pass
 
 XMLIO.register('{http://pymontecarlo.sf.net}electronFractionDetector', ElectronFractionDetector)
+
+class TrajectoryDetector(Option):
+    """
+    Records the trajectories of particles.
+    """
+
+    def __init__(self, showers):
+        """
+        Creates a detector of trajectories.
+        
+        :arg showers: maximum number of primary showers to record
+        :type showers: :class:`int`
+        """
+        Option.__init__(self)
+        self.showers = showers
+
+    def __repr__(self):
+        return '<%s(showers%s)>' % (self.__class__.__name__, self.showers)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        showers = int(element.get('showers'))
+        return cls(showers)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('showers', str(self.showers))
+
+    @property
+    def showers(self):
+        """
+        Maximum number of primary showers to record.
+        """
+        return self._props['showers']
+
+    @showers.setter
+    def showers(self, showers):
+        if showers < 1:
+            raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
+        self._props['showers'] = long(showers)
+
+XMLIO.register('{http://pymontecarlo.sf.net}trajectoryDetector', TrajectoryDetector)
+

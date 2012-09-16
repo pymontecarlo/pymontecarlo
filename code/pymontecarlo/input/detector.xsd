@@ -11,8 +11,7 @@
         <xsd:attribute name="_key" type="xsd:string" />
     </xsd:complexType>
 
-    <xsd:element name="detector" type="detectorType"
-        abstract="true" />
+    <xsd:element name="detector" type="detectorType" abstract="true" />
 
     <!-- Building blocks -->
 
@@ -86,10 +85,10 @@
         </xsd:complexContent>
     </xsd:complexType>
 
-    <xsd:element name="backscatteredElectronEnergyDetector"
-        type="energyDetectorType" substitutionGroup="detector" />
-    <xsd:element name="transmittedElectronEnergyDetector"
-        type="energyDetectorType" substitutionGroup="detector" />
+    <xsd:element name="backscatteredElectronEnergyDetector" type="energyDetectorType"
+        substitutionGroup="detector" />
+    <xsd:element name="transmittedElectronEnergyDetector" type="energyDetectorType"
+        substitutionGroup="detector" />
 
     <!-- Polar angular detectors -->
 
@@ -228,5 +227,24 @@
     </xsd:complexType>
 
     <xsd:element name="phiRhoZDetector" type="phiRhoZDetectorType"
+        substitutionGroup="detector" />
+
+    <!-- Trajectory detector -->
+
+    <xsd:complexType name="trajectoryDetectorType">
+        <xsd:complexContent>
+            <xsd:extension base="detectorType">
+                <xsd:attribute name="showers" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:integer">
+                            <xsd:minExclusive value="0" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:element name="trajectoryDetector" type="trajectoryDetectorType"
         substitutionGroup="detector" />
 </xsd:schema>
