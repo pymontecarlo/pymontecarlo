@@ -134,8 +134,8 @@ def run(argv=None):
         console.print_error("Please specify at least one options file")
 
     # Setup
-    workers = dict(zip(aliases, map(attrgetter('worker'), programs)))
-    worker_class = workers[selected_program]
+    worker_classes = dict(zip(aliases, map(attrgetter('worker_class'), programs)))
+    worker_class = worker_classes[selected_program]
 
     if values.create:
         runner = Creator(worker_class, outputdir, overwrite, nbprocesses)
