@@ -42,6 +42,7 @@ class Updater(_Updater):
         self._updaters[0] = self._update_noversion
         self._updaters[2] = self._update_version2
         self._updaters[3] = self._update_version3
+        self._updaters[4] = self._update_version4
 
     def _get_version(self, filepath):
         root = etree.parse(filepath).getroot()
@@ -114,6 +115,7 @@ class Updater(_Updater):
                 fp.write(etree.tostring(root, pretty_print=True))
 
         self._update_version2(filepath)
+        self._update_version3(filepath)
 
     def _update_version2(self, filepath):
         logging.debug('Updating from "version 2"')
@@ -127,5 +129,20 @@ class Updater(_Updater):
         with open(filepath, 'w') as fp:
             fp.write(etree.tostring(root, pretty_print=True))
 
+        self._update_version3(filepath)
+
     def _update_version3(self, filepath):
+        logging.debug('Updating from "version 3"')
+
+        root = etree.parse(filepath).getroot()
+        root.set('version', VERSION)
+
+        elements = list(list(root.find('geometry'))[0].find('materials'))
+        for element in elements:
+            element.set('absorptionEnergyPositron', '50.0')
+
+        with open(filepath, 'w') as fp:
+            fp.write(etree.tostring(root, pretty_print=True))
+
+    def _update_version4(self, filepath):
         logging.info('Nothing to update')

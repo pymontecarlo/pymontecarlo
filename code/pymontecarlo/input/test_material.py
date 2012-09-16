@@ -123,6 +123,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_positron_eV, 4)
 
     def testfrom_xml(self):
         element = self.m.to_xml()
@@ -137,6 +138,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
 
     def testcomposition(self):
         # Vacuum
@@ -192,6 +194,13 @@ class TestMaterial(TestCase):
         # ValueError: Energy less than 0
         self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_photon_eV', -1.0)
 
+    def testabsoprtion_energy_positron_eV(self):
+        self.m.absorption_energy_positron_eV = 1e3
+        self.assertAlmostEqual(1e3, self.m.absorption_energy_positron_eV, 4)
+
+        # ValueError: Energy less than 0
+        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_positron_eV', -1.0)
+
     def testto_xml(self):
         element = self.m.to_xml()
 
@@ -206,6 +215,7 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyElectron')), 4)
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyPhoton')), 4)
+        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPositron')), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

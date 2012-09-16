@@ -31,7 +31,7 @@ from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 # Globals and constants variables.
-VERSION = '3'
+VERSION = '4'
 
 # Load submodules to register XML loader and saver
 import pymontecarlo.input.beam #@UnusedImport

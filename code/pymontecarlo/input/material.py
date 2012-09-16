@@ -75,30 +75,40 @@ def composition_from_formula(formula):
 
     return composition
 
-def pure(z, absorption_energy_electron=50.0, absorption_energy_photon=50.0):
+def pure(z,
+         absorption_energy_electron_eV=50.0,
+         absorption_energy_photon_eV=50.0,
+         absorption_energy_positron_eV=50.0):
     """
     Returns the material for the specified pure element.
     
     :arg z: atomic number
     :type z: :class:`int`
     
-    :arg absorption_energy_electron: absorption energy of the electrons in
+    :arg absorption_energy_electron_eV: absorption energy of the electrons in
             this material.
-    :type absorption_energy_electron: :class:`float`
+    :type absorption_energy_electron_eV: :class:`float`
     
-    :arg absorption_energy_photon: absorption energy of the photons in
+    :arg absorption_energy_photon_eV: absorption energy of the photons in
         this material.
-    :type absorption_energy_photon: :class:`float`
+    :type absorption_energy_photon_eV: :class:`float`
+    
+    :arg absorption_energy_positron_eV: absorption energy of the positrons in
+        this material.
+    :type absorption_energy_positron_eV: :class:`float`
     """
     name = ep.name(z)
     composition = {z: '?'}
 
     return Material(name, composition, None,
-                    absorption_energy_electron, absorption_energy_photon)
+                    absorption_energy_electron_eV, absorption_energy_photon_eV,
+                    absorption_energy_positron_eV)
 
 class Material(Option):
     def __init__(self, name, composition, density_kg_m3=None,
-                 absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0):
+                 absorption_energy_electron_eV=50.0,
+                 absorption_energy_photon_eV=50.0,
+                 absorption_energy_positron_eV=50.0):
         """
         Creates a new material.
         
@@ -128,6 +138,10 @@ class Material(Option):
         :arg absorption_energy_photon_eV: absorption energy of the photons in
             this material.
         :type absorption_energy_photon_eV: :class:`float`
+        
+        :arg absorption_energy_positron_eV: absorption energy of the positrons
+            in this material.
+        :type absorption_energy_positron_eV: :class:`float`
         """
         Option.__init__(self)
 
@@ -137,11 +151,14 @@ class Material(Option):
 
         self.absorption_energy_electron_eV = absorption_energy_electron_eV
         self.absorption_energy_photon_eV = absorption_energy_photon_eV
+        self.absorption_energy_positron_eV = absorption_energy_positron_eV
 
     def __repr__(self):
-        return '<Material(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV)>' % \
+        return '<Material(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, abs_positron=%s eV)>' % \
             (self.name, self.composition, self.density_kg_m3,
-             self.absorption_energy_electron_eV, self.absorption_energy_photon_eV)
+             self.absorption_energy_electron_eV,
+             self.absorption_energy_photon_eV,
+             self.absorption_energy_positron_eV)
 
     def __str__(self):
         return self.name
@@ -158,8 +175,10 @@ class Material(Option):
 
         abs_electron_eV = float(element.get('absorptionEnergyElectron'))
         abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
+        abs_positron_eV = float(element.get('absorptionEnergyPositron'))
 
-        return cls(name, composition, density_kg_m3, abs_electron_eV, abs_photon_eV)
+        return cls(name, composition, density_kg_m3,
+                   abs_electron_eV, abs_photon_eV, abs_positron_eV)
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('name', self.name)
@@ -173,6 +192,7 @@ class Material(Option):
 
         element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
         element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
+        element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
 
     def __calculate_composition(self, composition):
         composition2 = {}
@@ -305,6 +325,20 @@ class Material(Option):
             raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
                     % energy
         self._props['absorption energy photon'] = energy
+
+    @property
+    def absorption_energy_positron_eV(self):
+        """
+        Absorption energy of the positrons in this material.
+        """
+        return self._props['absorption energy positron']
+
+    @absorption_energy_positron_eV.setter
+    def absorption_energy_positron_eV(self, energy):
+        if energy < 0.0:
+            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
+                    % energy
+        self._props['absorption energy positron'] = energy
 
 XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
 
