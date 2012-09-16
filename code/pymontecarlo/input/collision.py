@@ -27,8 +27,9 @@ __license__ = "GPL v3"
 # Globals and constants variables.
 
 class _Collision(object):
-    def __init__(self, name):
+    def __init__(self, name, index):
         self._name = name
+        self._index = index
 
     def __repr__(self):
         return '<%s>' % self._name.title()
@@ -36,27 +37,32 @@ class _Collision(object):
     def __str__(self):
         return self._name
 
+    def __int__(self):
+        return self._index
+
     def __copy__(self):
         return self
 
     def __deepcopy__(self, memo=None):
         return self
 
-DELTA = _Collision('delta') # No interaction
+DELTA = _Collision('delta', 0) # No interaction
 
-HARD_ELASTIC = _Collision('hard elastic')
-HARD_INELASTIC = _Collision('hard inelastic')
-HARD_BREMSSTRAHLUNG_EMISSION = _Collision('hard bremsstrahlung emission')
-INNERSHELL_IMPACT_IONISATION = _Collision('inner shell impact ionisation')
-COHERENT_RAYLEIGH_SCATTERING = _Collision('coherent Rayleigh scattering')
-INCOHERENT_COMPTON_SCATTERING = _Collision('incoherent Compton scattering')
-PHOTOELECTRIC_ABSORPTION = _Collision('photoelectric absorption')
-ELECTRON_POSITRON_PAIR_PRODUCTION = _Collision('electron-positron pair production')
-ANNIHILATION = _Collision('annihilation')
+SOFT_EVENT = _Collision('artificial soft event', 1)
+HARD_ELASTIC = _Collision('hard elastic', 2)
+HARD_INELASTIC = _Collision('hard inelastic', 3)
+HARD_BREMSSTRAHLUNG_EMISSION = _Collision('hard bremsstrahlung emission', 4)
+INNERSHELL_IMPACT_IONISATION = _Collision('inner shell impact ionisation', 5)
+COHERENT_RAYLEIGH_SCATTERING = _Collision('coherent Rayleigh scattering', 6)
+INCOHERENT_COMPTON_SCATTERING = _Collision('incoherent Compton scattering', 7)
+PHOTOELECTRIC_ABSORPTION = _Collision('photoelectric absorption', 8)
+ELECTRON_POSITRON_PAIR_PRODUCTION = _Collision('electron-positron pair production', 9)
+ANNIHILATION = _Collision('annihilation', 10)
 
 COLLISIONS = \
-    frozenset([DELTA, HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
-               INNERSHELL_IMPACT_IONISATION, COHERENT_RAYLEIGH_SCATTERING,
-               INCOHERENT_COMPTON_SCATTERING, PHOTOELECTRIC_ABSORPTION,
-               ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION])
+    frozenset([DELTA, SOFT_EVENT, HARD_ELASTIC, HARD_INELASTIC,
+               HARD_BREMSSTRAHLUNG_EMISSION, INNERSHELL_IMPACT_IONISATION,
+               COHERENT_RAYLEIGH_SCATTERING, INCOHERENT_COMPTON_SCATTERING,
+               PHOTOELECTRIC_ABSORPTION, ELECTRON_POSITRON_PAIR_PRODUCTION,
+               ANNIHILATION])
 
