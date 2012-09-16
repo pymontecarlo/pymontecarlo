@@ -68,7 +68,7 @@ def create_parser(programs):
     group = OptionGroup(parser, "Monte Carlo programs",
                         "Note: Specify only one of these flags. Only supported programs are shown.")
 
-    for alias in map(attrgetter('alias'), programs):
+    for alias in sorted(map(attrgetter('alias'), programs)):
         group.add_option('--%s' % alias, dest=alias, action="store_true")
 
     parser.add_option_group(group)
