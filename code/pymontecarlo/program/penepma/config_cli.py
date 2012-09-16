@@ -39,7 +39,7 @@ class _PenepmaCLI(_PenelopeCLI):
         default = getattr(section, 'exe', None)
         section.exe = console.prompt_file(question, default, should_exist=True)
 
-        # exe
+        # dumpp
         question = 'Interval between dump (s)'
         default = getattr(section, 'dumpp', None)
         section.dumpp = console.prompt_int(question, default)
