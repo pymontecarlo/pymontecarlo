@@ -21,7 +21,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 from collections import Mapping
 from zipfile import ZipFile
-from ConfigParser import SafeConfigParser
 from StringIO import StringIO
 
 # Third party modules.
@@ -29,6 +28,8 @@ from StringIO import StringIO
 # Local modules.
 from pymontecarlo.output.manager import ResultManager
 import pymontecarlo.output.result #@UnusedImport
+
+from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
@@ -77,13 +78,12 @@ class Results(Mapping):
         except KeyError:
             raise IOError, "Zip file (%s) does not contain a %s" % \
                     (getattr(source, 'name', 'unknown'), KEYS_INI_FILENAME)
-        config = SafeConfigParser()
-        config.readfp(zipfile.open(zipinfo, 'r'))
+        config = ConfigParser()
+        config.read(zipfile.open(zipinfo, 'r'))
 
         # Load each results
         results = {}
-        for key in config.options(SECTION_KEYS):
-            tag = config.get(SECTION_KEYS, key)
+        for key, tag in getattr(config, SECTION_KEYS):
             klass = ResultManager._get_class(tag)
 
             results[key] = klass.__loadzip__(zipfile, key)
@@ -102,15 +102,15 @@ class Results(Mapping):
         zipfile.comment = 'version=%s' % VERSION
 
         # Creates keys.ini
-        config = SafeConfigParser()
-        config.add_section(SECTION_KEYS)
+        config = ConfigParser()
+        section = config.add_section(SECTION_KEYS)
 
         # Save each result and update keys.ini
         for key, result in self.iteritems():
             result.__savezip__(zipfile, key)
 
             tag = ResultManager._get_tag(result.__class__)
-            config.set(SECTION_KEYS, key, tag)
+            setattr(section, key, tag)
 
         # Save keys.ini in zip
         fp = StringIO()
