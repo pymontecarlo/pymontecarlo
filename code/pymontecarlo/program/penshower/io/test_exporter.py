@@ -58,7 +58,6 @@ class TestPenelopeExporter(TestCase):
         # Export
         self.c.convert(ops)
         self.e.export(ops, self.tmpdir)
-        ops.save('/tmp/options.xml')
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

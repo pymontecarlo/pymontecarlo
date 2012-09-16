@@ -142,7 +142,7 @@ class Exporter(_Exporter):
 
             text = [material.absorption_energy_electron_eV,
                     material.absorption_energy_photon_eV,
-                    options.beam.energy_eV, # No positron simulated
+                    material.absorption_energy_positron_eV,
                     material.elastic_scattering[0],
                     material.elastic_scattering[1],
                     material.cutoff_energy_inelastic_eV,
