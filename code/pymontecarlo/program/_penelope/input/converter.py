@@ -135,6 +135,7 @@ class Converter(_Converter):
 
         return Material(old.name, old.composition, old.density_kg_m3,
                         old.absorption_energy_electron_eV, old.absorption_energy_photon_eV,
+                        old.absorption_energy_positron_eV,
                         self._elastic_scattering,
                         self._cutoff_energy_inelastic_eV, self._cutoff_energy_bremsstrahlung_eV)
 
