@@ -28,10 +28,10 @@ import numpy as np
 from pymontecarlo.output.result import TrajectoryResult, Trajectory
 from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 from pymontecarlo.input.collision import \
-    (DELTA, SOFT_EVENT, HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
-     INNERSHELL_IMPACT_IONISATION, COHERENT_RAYLEIGH_SCATTERING,
-     INCOHERENT_COMPTON_SCATTERING, PHOTOELECTRIC_ABSORPTION,
-     ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
+    (NO_COLLISION, DELTA, SOFT_EVENT, HARD_ELASTIC, HARD_INELASTIC,
+     HARD_BREMSSTRAHLUNG_EMISSION, INNERSHELL_IMPACT_IONISATION,
+     COHERENT_RAYLEIGH_SCATTERING, INCOHERENT_COMPTON_SCATTERING,
+     PHOTOELECTRIC_ABSORPTION, ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 from pymontecarlo.input.detector import TrajectoryDetector
 
 from pymontecarlo.program._penelope.io.importer import \
@@ -107,7 +107,7 @@ class Importer(_Importer):
                 elif line.startswith('PARENT'):
                     primary = int(line.split()[1]) == 0
                 elif line.startswith('ICOL'):
-                    collision = _COLLISIONS_REF[particle].get(int(line.split()[1]))
+                    collision = _COLLISIONS_REF[particle].get(int(line.split()[1]), NO_COLLISION)
                 elif line.startswith('EXIT'):
                     exit_state = int(line.split()[1])
                 else:
@@ -116,7 +116,7 @@ class Importer(_Importer):
                     y = float(values[1]) * 0.01 # cm to m
                     z = float(values[2]) * 0.01 # cm to m
                     e = float(values[3])
-                    c = int(_COLLISIONS_REF[particle].get(int(values[6]), -1))
+                    c = int(_COLLISIONS_REF[particle].get(int(values[6]), NO_COLLISION))
                     interactions.append([x, y, z, e, c])
 
         return TrajectoryResult(trajectories.values())

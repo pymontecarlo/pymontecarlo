@@ -26,6 +26,7 @@ import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.input.collision import NO_COLLISION
 from pymontecarlo.output.result import EXIT_STATE_ABSORBED
 
 class TestImporter(TestCase):
@@ -61,7 +62,7 @@ class TestImporter(TestCase):
         self.assertTrue(trajectory.is_primary())
         self.assertFalse(trajectory.is_secondary())
         self.assertIs(ELECTRON, trajectory.particle)
-        self.assertIsNone(trajectory.collision)
+        self.assertIs(NO_COLLISION, trajectory.collision)
         self.assertEqual(EXIT_STATE_ABSORBED, trajectory.exit_state)
         self.assertEqual(577, len(trajectory.interactions))
         self.assertEqual(5, trajectory.interactions.shape[1])
