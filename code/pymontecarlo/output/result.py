@@ -953,6 +953,9 @@ EXIT_STATE_BACKSCATTERED = 1
 EXIT_STATE_TRANSMITTED = 2
 EXIT_STATE_ABSORBED = 3
 
+EXIT_STATES = frozenset([EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED,
+                         EXIT_STATE_ABSORBED])
+
 class Trajectory(object):
     def __init__(self, primary, particle, collision, exit_state, interactions):
         """
@@ -982,6 +985,22 @@ class Trajectory(object):
         self._collision = collision
         self._exit_state = exit_state
         self._interactions = interactions
+
+    def __repr__(self):
+        primary = {True: 'primary', False: 'secondary'}[self._primary]
+        particle = str(self._particle).lower()
+        collision = str(self._collision)
+        exit_state = {EXIT_STATE_ABSORBED: 'absorbed',
+                      EXIT_STATE_BACKSCATTERED: 'backscattered',
+                      EXIT_STATE_TRANSMITTED: 'transmitted'}.get(self.exit_state)
+        interactions_count = len(self.interactions)
+
+        if self.is_primary():
+            return '<Trajectory(%s %s %s with %i interactions)>' % \
+                (primary, exit_state, particle, interactions_count)
+        else:
+            return '<Trajectory(%s %s %s from %s with %i interactions)>' % \
+                (primary, exit_state, particle, collision, interactions_count)
 
     @property
     def particle(self):
@@ -1079,6 +1098,44 @@ class TrajectoryResult(_Result, Iterable, Sized):
     def __iter__(self):
         return iter(self._trajectories)
 
+    def filter(self, is_primary=[True, False], particles=PARTICLES,
+               collisions=COLLISIONS, exit_states=EXIT_STATES):
+        """
+        Filters the trajectories based on the specified criteria.
+        Each criterion can a single value or a list of accepted values.
+        Returns an iterator.
+        
+        :arg is_primary: whether to include primary particles. Possible values:
+        
+            * ``True``: only primary particles
+            * ``False``: only secondary particles
+            * ``[True, False]``: both primary and secondary particles
+            
+        :type is_primary: :class:`bool` or :class:`list`
+        
+        :arg particles: which particle(s) to include
+        :type particles: :class:`_Particle` or :class:`list`
+        
+        :arg collisions: which collision(s) from which a trajectory initiated to 
+            include. 
+        :type collisions: :class:`_Collision` or :class:`list`
+        
+        :arg exit_states: which exit state(s) of a trajectory to include
+        :type exit_states: :class:`int` or :class:`list`
+        """
+        if not hasattr(is_primary, '__contains__'): is_primary = [is_primary]
+        if not hasattr(particles, '__contains__'): particles = [particles]
+        if not hasattr(collisions, '__contains__'): collisions = [collisions]
+        if not hasattr(exit_states, '__contains__'): exit_states = [exit_states]
+
+        for trajectory in self:
+            if trajectory._primary not in is_primary: continue
+            if trajectory.particle not in particles: continue
+            if trajectory.collision not in collisions: continue
+            if trajectory.exit_state not in exit_states: continue
+
+            yield trajectory
+
 ResultManager.register('TrajectoryResult', TrajectoryResult)
 
 class _TrajectoryResultHDF5(TrajectoryResult):
@@ -1098,19 +1155,67 @@ class _TrajectoryResultHDF5(TrajectoryResult):
         return len(self._h5file['trajectories'])
 
     def __iter__(self):
+        particles_ref = list(PARTICLES)
+        particles_ref = dict(zip(map(str, particles_ref), particles_ref))
+
+        collisions_ref = list(COLLISIONS)
+        collisions_ref = dict(zip(map(str, collisions_ref), collisions_ref))
+
         for dataset in self._h5file['trajectories'].itervalues():
             primary = bool(dataset.attrs['primary'])
-
-            particles = list(PARTICLES)
-            particles = dict(zip(map(str, particles), particles))
-            particle = particles.get(dataset.attrs['particle'])
-
-            collisions = list(COLLISIONS)
-            collisions = dict(zip(map(str, collisions), collisions))
-            collision = collisions.get(dataset.attrs['collision'])
-
+            particle = particles_ref.get(dataset.attrs['particle'])
+            collision = collisions_ref.get(dataset.attrs['collision'])
             exit_state = int(dataset.attrs['exit_state'])
-
             interactions = dataset[:]
 
+            yield Trajectory(primary, particle, collision, exit_state, interactions)
+
+    def filter(self, is_primary=[True, False], particles=PARTICLES,
+               collisions=COLLISIONS, exit_states=EXIT_STATES):
+        """
+        Filters the trajectories based on the specified criteria.
+        Each criterion can a single value or a list of accepted values.
+        Returns an iterator.
+        
+        :arg is_primary: whether to include primary particles. Possible values:
+        
+            * ``True``: only primary particles
+            * ``False``: only secondary particles
+            * ``[True, False]``: both primary and secondary particles
+            
+        :type is_primary: :class:`bool` or :class:`list`
+        
+        :arg particles: which particle(s) to include
+        :type particles: :class:`_Particle` or :class:`list`
+        
+        :arg collisions: which collision(s) from which a trajectory initiated to 
+            include. 
+        :type collisions: :class:`_Collision` or :class:`list`
+        
+        :arg exit_states: which exit state(s) of a trajectory to include
+        :type exit_states: :class:`int` or :class:`list`
+        """
+        if not hasattr(is_primary, '__contains__'): is_primary = [is_primary]
+        if not hasattr(particles, '__contains__'): particles = [particles]
+        if not hasattr(collisions, '__contains__'): collisions = [collisions]
+        if not hasattr(exit_states, '__contains__'): exit_states = [exit_states]
+
+        particles_ref = list(PARTICLES)
+        particles_ref = dict(zip(map(str, particles_ref), particles_ref))
+
+        collisions_ref = list(COLLISIONS)
+        collisions_ref = dict(zip(map(str, collisions_ref), collisions_ref))
+
+        for dataset in self._h5file['trajectories'].itervalues():
+            primary = bool(dataset.attrs['primary'])
+            particle = particles_ref.get(dataset.attrs['particle'])
+            collision = collisions_ref.get(dataset.attrs['collision'])
+            exit_state = int(dataset.attrs['exit_state'])
+
+            if primary not in is_primary: continue
+            if particle not in particles: continue
+            if collision not in collisions: continue
+            if exit_state not in exit_states: continue
+
+            interactions = dataset[:]
             yield Trajectory(primary, particle, collision, exit_state, interactions)

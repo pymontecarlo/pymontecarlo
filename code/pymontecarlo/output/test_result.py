@@ -37,8 +37,9 @@ from pymontecarlo.util.transition import Transition, K_family
 import DrixUtilities.Files as Files
 
 # Globals and constants variables.
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.output.result import EXIT_STATE_ABSORBED
+from pymontecarlo.input.particle import ELECTRON, PHOTON
+from pymontecarlo.input.collision import NO_COLLISION, HARD_INELASTIC
+from pymontecarlo.output.result import EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED
 
 class TestPhotonIntensityResult(TestCase):
 
@@ -659,18 +660,47 @@ class TestTrajectoryResult(TestCase):
         zipfile = ZipFile(self.results_zip, 'r')
         r = TrajectoryResult.__loadzip__(zipfile, 'det6')
 
-        self.assertEqual(559, len(r))
+        self.assertEqual(337, len(r))
 
         trajectory = list(r)[0]
         self.assertTrue(trajectory.is_primary())
         self.assertFalse(trajectory.is_secondary())
         self.assertIs(ELECTRON, trajectory.particle)
-        self.assertIsNone(trajectory.collision)
+        self.assertIs(NO_COLLISION, trajectory.collision)
         self.assertEqual(EXIT_STATE_ABSORBED, trajectory.exit_state)
-        self.assertEqual(577, len(trajectory.interactions))
+        self.assertEqual(317, len(trajectory.interactions))
         self.assertEqual(5, trajectory.interactions.shape[1])
 
         zipfile.close()
+
+    def testfilter(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = TrajectoryResult.__loadzip__(zipfile, 'det6')
+        zipfile.close()
+
+        trajs = list(r.filter())
+        self.assertEqual(337, len(trajs))
+
+        trajs = list(r.filter(is_primary=True))
+        self.assertEqual(50, len(trajs))
+
+        trajs = list(r.filter(is_primary=False))
+        self.assertEqual(287, len(trajs))
+
+        trajs = list(r.filter(particles=ELECTRON))
+        self.assertEqual(337, len(trajs))
+
+        trajs = list(r.filter(particles=PHOTON))
+        self.assertEqual(0, len(trajs))
+
+        trajs = list(r.filter(collisions=HARD_INELASTIC))
+        self.assertEqual(246, len(trajs))
+
+        trajs = list(r.filter(exit_states=EXIT_STATE_BACKSCATTERED))
+        self.assertEqual(12, len(trajs))
+
+        trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_BACKSCATTERED))
+        self.assertEqual(0, len(trajs))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
