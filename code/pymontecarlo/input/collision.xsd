@@ -1,7 +1,9 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <xsd:simpleType name="collisionType">
         <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="no collision" />
             <xsd:enumeration value="delta" />
+            <xsd:enumeration value="soft event" />
             <xsd:enumeration value="hard elastic" />
             <xsd:enumeration value="hard inelastic" />
             <xsd:enumeration value="hard bremsstrahlung emission" />

@@ -46,6 +46,7 @@ class _Collision(object):
     def __deepcopy__(self, memo=None):
         return self
 
+NO_COLLISION = _Collision('No collision', -1)
 DELTA = _Collision('delta', 0) # No interaction
 
 SOFT_EVENT = _Collision('artificial soft event', 1)
@@ -60,7 +61,7 @@ ELECTRON_POSITRON_PAIR_PRODUCTION = _Collision('electron-positron pair productio
 ANNIHILATION = _Collision('annihilation', 10)
 
 COLLISIONS = \
-    frozenset([DELTA, SOFT_EVENT, HARD_ELASTIC, HARD_INELASTIC,
+    frozenset([NO_COLLISION, DELTA, SOFT_EVENT, HARD_ELASTIC, HARD_INELASTIC,
                HARD_BREMSSTRAHLUNG_EMISSION, INNERSHELL_IMPACT_IONISATION,
                COHERENT_RAYLEIGH_SCATTERING, INCOHERENT_COMPTON_SCATTERING,
                PHOTOELECTRIC_ABSORPTION, ELECTRON_POSITRON_PAIR_PRODUCTION,
