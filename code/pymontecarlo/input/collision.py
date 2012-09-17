@@ -46,7 +46,7 @@ class _Collision(object):
     def __deepcopy__(self, memo=None):
         return self
 
-NO_COLLISION = _Collision('No collision', -1)
+NO_COLLISION = _Collision('no collision', -1)
 DELTA = _Collision('delta', 0) # No interaction
 
 SOFT_EVENT = _Collision('artificial soft event', 1)
