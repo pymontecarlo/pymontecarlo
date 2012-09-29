@@ -32,7 +32,7 @@ class TestCollision(TestCase):
 
     def test__str__(self):
         self.assertEqual('delta', str(DELTA))
-        self.assertEqual(1, int(DELTA))
+        self.assertEqual(0, int(DELTA))
 
     def test__repr__(self):
         self.assertEqual('<Delta>', repr(DELTA))
