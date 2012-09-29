@@ -204,6 +204,7 @@ ELASTIC_CROSS_SECTION.mott_browning1994 = \
 ELASTIC_CROSS_SECTION.rutherford = Model('Rutherford')
 ELASTIC_CROSS_SECTION.rutherford_relativistic = Model('Rutherford relativistic')
 ELASTIC_CROSS_SECTION.elsepa2005 = Model('ELSEPA', 'Salvat, F., Jablonski, A., & Powell, C. (2005). ELSEPA - Dirac partial-wave calculation of elastic scattering of electrons and positrons by atoms, positive ions and molecules. Comput. Phys. Commun., 165, 157-190.')
+ELASTIC_CROSS_SECTION.reimer = Model('Reimer')
 
 #-------------------------------------------------------------------------------
 
@@ -281,6 +282,7 @@ RANDOM_NUMBER_GENERATOR.press1966_rand3 = \
 RANDOM_NUMBER_GENERATOR.press1966_rand4 = \
     Model('Press et al. - rand4', 'Press et al. (1966)')
 RANDOM_NUMBER_GENERATOR.mersenne = Model('Mersenne - Twister')
+RANDOM_NUMBER_GENERATOR.lagged_fibonacci = Model ('Lagged Fibonacci (Boost If607)')
 
 #-------------------------------------------------------------------------------
 
@@ -290,6 +292,7 @@ DIRECTION_COSINE = ModelCategory(DIRECTION_COSINE_TYPE)
 DIRECTION_COSINE.soum1979 = Model('Soum et al.', 'Soum et al. (1979)')
 DIRECTION_COSINE.drouin1996 = Model('Drouin', 'Drouin (1996)')
 DIRECTION_COSINE.demers2000 = Model('Demers - Matrices rotation', 'Demers (2000)')
+DIRECTION_COSINE.lowney1994 = Model('Lowney (1994)')
 
 #-------------------------------------------------------------------------------
 
@@ -309,6 +312,7 @@ ENERGY_LOSS.joy_luo1989 = Model('Joy and Luo 1989', 'Joy and Luo (1989)')
 #    Model("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.bether1930mod = \
     Model("Modified Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
+ENERGY_LOSS.joy_luo_lowney = Model('Joy and Luo + Lowney')
 
 #-------------------------------------------------------------------------------
 
