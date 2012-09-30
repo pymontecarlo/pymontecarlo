@@ -215,6 +215,29 @@ def get_program_cli(program):
 
     return mod.config_cli.cli
 
+def get_program_gui(program):
+    """
+    Imports, loads and returns the graphical user interface of the specified
+    program.
+    The method raises :exc:`ImportError` exception if:
+    
+      * No ``config_gui.py`` module exists in program package.
+      * No ``gui`` variable exists in ``config_gui.py`` module.
+    
+    :arg program: program configuration object
+    """
+    name = program.alias
+    mod = __import__('pymontecarlo.program.' + name, None, None, ['config_gui'])
+
+    if not hasattr(mod, 'config_gui'):
+        raise ImportError, "Package '%s' does not have a 'config_gui' module." % name
+
+    if not hasattr(mod.config_gui, 'gui'):
+        raise ImportError, "Module 'config_gui' of package '%s' must have a 'gui' attribute" % name
+
+    return mod.config_gui.gui
+
+
 ################################################################################
 # Reload
 ################################################################################

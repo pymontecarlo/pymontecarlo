@@ -23,16 +23,20 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program._penelope.config_cli import _PenelopeCLI
+from pymontecarlo.program.config_cli import CLI
 
 # Globals and constants variables.
 
-class _PenshowerCLI(_PenelopeCLI):
+class _PenshowerCLI(CLI):
 
     def configure(self, console, settings):
-        _PenelopeCLI.configure(self, console, settings)
-
         section = settings.add_section('penshower')
+
+        # Pendbase
+        question = 'Path to pendbase directory'
+        default = getattr(section, 'pendbase', None)
+        section.pendbase = \
+            console.prompt_directory(question, default, should_exist=True)
 
         # exe
         question = 'Path to PENSHOWER executable'

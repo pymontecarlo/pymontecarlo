@@ -48,6 +48,10 @@ class _PenepmaProgram(_PenelopeProgram):
         if 'exe' not in settings.penepma:
             raise AssertionError, "Missing 'exe' option in 'penepma' section of settings"
 
+        pendbase = settings.penepma.pendbase
+        if not os.path.isdir(pendbase):
+            raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
+
         exe = settings.penepma.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified PENEPMA executable (%s) does not exist" % exe

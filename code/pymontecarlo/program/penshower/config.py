@@ -48,6 +48,10 @@ class _PenshowerProgram(_PenelopeProgram):
         if 'exe' not in settings.penshower:
             raise AssertionError, "Missing 'exe' option in 'penshower' section of settings"
 
+        pendbase = settings.penshower.pendbase
+        if not os.path.isdir(pendbase):
+            raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
+
         exe = settings.penshower.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified PENSHOWER executable (%s) does not exist" % exe
