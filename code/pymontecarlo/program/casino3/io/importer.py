@@ -26,10 +26,12 @@ import numpy as np
 # Local modules.
 from casinoTools.FileFormat.casino3.File import File
 
-from pymontecarlo.output.result import TrajectoryResult, Trajectory
+from pymontecarlo.output.result import \
+    (TrajectoryResult, Trajectory, ElectronFractionResult)
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.collision import NO_COLLISION, DELTA, HARD_INELASTIC
-from pymontecarlo.input.detector import TrajectoryDetector
+from pymontecarlo.input.detector import \
+    (TrajectoryDetector, ElectronFractionDetector)
 
 from pymontecarlo.io.importer import Importer as _Importer
 
@@ -51,6 +53,8 @@ class Importer(_Importer):
         _Importer.__init__(self)
 
         self._detector_importers[TrajectoryDetector] = self._detector_trajectory
+        self._detector_importers[ElectronFractionDetector] = \
+            self._detector_electron_fraction
 
     def import_from_cas(self, options, filepath):
         # Read cas
@@ -90,3 +94,13 @@ class Importer(_Importer):
 
         return TrajectoryResult(trajectories)
 
+    def _detector_electron_fraction(self, options, key, detector, simdata, *args):
+        results = simdata.getFirstScanPointResults()
+
+        absorbed = 1.0 - results.getBackscatteredCoefficient() \
+                       - results.getTransmittedCoefficient()
+        backscattered = results.getBackscatteredCoefficient()
+        transmitted = results.getTransmittedCoefficient()
+
+        return ElectronFractionResult((absorbed, 0.0), (backscattered, 0.0),
+                                      (transmitted, 0.0))

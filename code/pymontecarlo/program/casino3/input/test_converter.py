@@ -62,14 +62,6 @@ class TestPenelopeConverter(TestCase):
 
         self.assertEqual(5, len(ops.models))
 
-    def testconvert_nodetector(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.limits.add(ShowersLimit(100))
-
-        # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
-
     def testconvert_nolimit(self):
         # Base options
         ops = Options(name="Test")

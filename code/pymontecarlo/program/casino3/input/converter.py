@@ -30,7 +30,7 @@ from pymontecarlo.input.converter import Converter as _Converter, ConversionExce
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.geometry import Substrate, MultiLayers
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import TrajectoryDetector
+from pymontecarlo.input.detector import TrajectoryDetector, ElectronFractionDetector
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS)
@@ -40,7 +40,7 @@ from pymontecarlo.input.model import \
 class Converter(_Converter):
     BEAMS = [GaussianBeam]
     GEOMETRIES = [Substrate, MultiLayers]
-    DETECTORS = [TrajectoryDetector]
+    DETECTORS = [TrajectoryDetector, ElectronFractionDetector]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_drouin1993,
@@ -76,13 +76,6 @@ class Converter(_Converter):
             else:
                 raise ex
 
-    def _convert_detectors(self, options):
-        _Converter._convert_detectors(self, options)
-
-        dets = options.detectors.findall(TrajectoryDetector)
-        if not dets:
-            raise ConversionException, 'A TrajectoryDetector must be defined'
-
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
 
@@ -90,8 +83,12 @@ class Converter(_Converter):
         if limit is None:
             raise ConversionException, "A ShowersLimit must be defined."
 
-        det = options.detectors.findall(TrajectoryDetector).values()[0]
-        if det.showers != limit.showers:
+        dets = options.detectors.findall(TrajectoryDetector).values()
+        if not dets:
+            return
+
+        det = dets[0]
+        if dets[0].showers != limit.showers:
             raise ConversionException, \
                 'The number of showers in the TrajectoryDetector (%i) must equal the number in the ShowersLimit (%i)' % \
                     (det.showers, limit.showers)

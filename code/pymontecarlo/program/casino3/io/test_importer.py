@@ -19,7 +19,7 @@ import os
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import TrajectoryDetector
+from pymontecarlo.input.detector import TrajectoryDetector, ElectronFractionDetector
 from pymontecarlo.program.casino3.io.importer import Importer
 
 import DrixUtilities.Files as Files
@@ -68,7 +68,27 @@ class TestImporter(TestCase):
         self.assertEqual(851, len(trajectory.interactions))
         self.assertEqual(5, trajectory.interactions.shape[1])
 
-        results.save('/tmp/casino.zip')
+    def test_detector_electron_fraction(self):
+        # Create
+        ops = Options(name='test1')
+        ops.beam.energy_eV = 20e3
+        ops.detectors['electron-fraction'] = ElectronFractionDetector()
+
+        # Import
+        filepath = os.path.join(self.testdata, 'gold_15kev.cas')
+        results = self.i.import_from_cas(ops, filepath)
+
+        # Test
+        result = results['electron-fraction']
+
+        self.assertAlmostEqual(0.46, result.absorbed[0], 4)
+        self.assertAlmostEqual(0.0, result.absorbed[1], 4)
+
+        self.assertAlmostEqual(0.54, result.backscattered[0], 4)
+        self.assertAlmostEqual(0.0, result.backscattered[1], 4)
+
+        self.assertAlmostEqual(0.0, result.transmitted[0], 4)
+        self.assertAlmostEqual(0.0, result.transmitted[1], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
