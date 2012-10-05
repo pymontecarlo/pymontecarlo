@@ -102,6 +102,15 @@ class Converter(_Converter):
         if options.beam.particle is not ELECTRON:
             raise ConversionException, "Beam particle must be ELECTRON"
 
+        if options.beam.energy_eV <= 1e6:
+            message = "Beam energy (%s) must be less than 1MeV" % \
+                            options.beam.energy_eV
+            raise ConversionException, message
+
+        if options.beam.aperture_rad != 0.0:
+            message = "Casino 2 does not support beam aperture."
+            warnings.warn(message, ConversionWarning)
+
     def _convert_geometry(self, options):
         _Converter._convert_geometry(self, options)
 
