@@ -69,9 +69,9 @@ class ConfigureDialog(wx.Dialog):
         btn_deactivate = wx.Button(self, label='Deactivate')
 
         ## Ok/Cancel
-        btn_ok = wx.Button(self, label='Ok')
+        btn_ok = wx.Button(self, id=wx.ID_OK)
         btn_ok.SetDefault()
-        btn_cancel = wx.Button(self, label='Cancel')
+        btn_cancel = wx.Button(self, id=wx.ID_CANCEL)
 
         # Sizer
         mainsizer = wx.BoxSizer(wx.VERTICAL)
