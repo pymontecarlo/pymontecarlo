@@ -84,7 +84,7 @@ class Results(Mapping):
         # Load each results
         results = {}
         for key, tag in getattr(config, SECTION_KEYS):
-            klass = ResultManager._get_class(tag)
+            klass = ResultManager.get_class(tag)
 
             results[key] = klass.__loadzip__(zipfile, key)
 
@@ -109,7 +109,7 @@ class Results(Mapping):
         for key, result in self.iteritems():
             result.__savezip__(zipfile, key)
 
-            tag = ResultManager._get_tag(result.__class__)
+            tag = ResultManager.get_tag(result.__class__)
             setattr(section, key, tag)
 
         # Save keys.ini in zip

@@ -82,7 +82,7 @@ class Manager(object):
 
         self._savers[klass] = tag
 
-    def _get_class(self, tag):
+    def get_class(self, tag):
         """
         Returns the loader class for the specified tag.
         Raises :exc:`ValueError` if no class is associated with this tag.
@@ -95,7 +95,7 @@ class Manager(object):
             raise ValueError, 'No loader found for element (%s). Please register it first.' % tag
         return self._loaders[tag]
 
-    def _get_tag(self, klass):
+    def get_tag(self, klass):
         """
         Returns the tag for the specified class.
         Raises :exc:`ValueError` if no tag is associated with this class.

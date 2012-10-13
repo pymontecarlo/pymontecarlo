@@ -161,7 +161,7 @@ class _XMLIO(Manager):
         if validate:
             self.validate(element)
 
-        klass = self._get_class(element.tag)
+        klass = self.get_class(element.tag)
 
         return klass.__loadxml__(element, *args, **kwargs)
 
@@ -174,7 +174,7 @@ class _XMLIO(Manager):
         :arg validate: whether to validate element using XSD schema before 
             returning the XML element
         """
-        tag = self._get_tag(obj.__class__)
+        tag = self.get_tag(obj.__class__)
         element = Element(tag, nsmap=self._nsmap)
 
         obj.__savexml__(element, *args, **kwargs)

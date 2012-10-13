@@ -42,15 +42,15 @@ class TestManager(TestCase):
 
     def testregister_loader(self):
         self.manager.register_loader('tag1', Mock1)
-        self.assertEqual(Mock1, self.manager._get_class('tag1'))
-        self.assertRaises(ValueError, self.manager._get_class, 'tag2')
+        self.assertEqual(Mock1, self.manager.get_class('tag1'))
+        self.assertRaises(ValueError, self.manager.get_class, 'tag2')
 
         self.assertRaises(ValueError, self.manager.register_loader, 'tag1', Mock2)
 
     def testregister_saver(self):
         self.manager.register_saver('tag1', Mock1)
-        self.assertEqual('tag1', self.manager._get_tag(Mock1))
-        self.assertRaises(ValueError, self.manager._get_tag, Mock2)
+        self.assertEqual('tag1', self.manager.get_tag(Mock1))
+        self.assertRaises(ValueError, self.manager.get_tag, Mock2)
 
         self.assertRaises(ValueError, self.manager.register_saver, 'tag2', Mock1)
 
