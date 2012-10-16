@@ -439,25 +439,25 @@ class TestTrajectoryDetector(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.d = TrajectoryDetector(100)
+        self.d = TrajectoryDetector(False)
 
     def tearDown(self):
         TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEqual(100, self.d.showers)
+        self.assertFalse(self.d.secondary)
 
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = TrajectoryDetector.from_xml(element)
 
-        self.assertEqual(100, d.showers)
+        self.assertFalse(d.secondary)
 
     def testto_xml(self):
         element = self.d.to_xml()
 
-        self.assertEqual(100, int(element.get('showers')))
+        self.assertEqual('false', element.get('secondary'))
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

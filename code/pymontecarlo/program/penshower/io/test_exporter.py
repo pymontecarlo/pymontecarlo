@@ -52,13 +52,13 @@ class TestPenelopeExporter(TestCase):
         # Create
         ops = Options(name='test1')
         ops.beam.energy_eV = 30e3
-        ops.detectors['trajectories'] = TrajectoryDetector(100)
+        ops.detectors['trajectories'] = TrajectoryDetector(False)
         ops.limits.add(ShowersLimit(100))
 
         # Export
         self.c.convert(ops)
         self.e.export(ops, self.tmpdir)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

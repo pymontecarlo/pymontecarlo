@@ -234,13 +234,8 @@
     <xsd:complexType name="trajectoryDetectorType">
         <xsd:complexContent>
             <xsd:extension base="detectorType">
-                <xsd:attribute name="showers" use="required">
-                    <xsd:simpleType>
-                        <xsd:restriction base="xsd:integer">
-                            <xsd:minExclusive value="0" />
-                        </xsd:restriction>
-                    </xsd:simpleType>
-                </xsd:attribute>
+                <xsd:attribute name="secondary" use="required"
+                    type="xsd:boolean" />
             </xsd:extension>
         </xsd:complexContent>
     </xsd:complexType>

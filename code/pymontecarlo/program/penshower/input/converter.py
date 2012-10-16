@@ -73,6 +73,8 @@ class Converter(_Converter):
         dets = options.detectors.findall(TrajectoryDetector)
         if not dets:
             raise ConversionException, 'A TrajectoryDetector must be defined'
+        if len(dets) != 1:
+            raise ConversionException, 'Only one TrajectoryDetector must be defined'
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
@@ -80,12 +82,3 @@ class Converter(_Converter):
         limit = options.limits.find(ShowersLimit)
         if limit is None:
             raise ConversionException, "A ShowersLimit must be defined."
-
-        det = options.detectors.findall(TrajectoryDetector).values()[0]
-        if det.showers != limit.showers:
-            raise ConversionException, \
-                'The number of showers in the TrajectoryDetector (%i) must equal the number in the ShowersLimit (%i)' % \
-                    (det.showers, limit.showers)
-
-
-

@@ -45,7 +45,7 @@ class TestPenelopeConverter(TestCase):
         ops = Options(name="Test")
         ops.beam = PencilBeam(1234)
         ops.limits.add(ShowersLimit(100))
-        ops.detectors['trajectories'] = TrajectoryDetector(100)
+        ops.detectors['trajectories'] = TrajectoryDetector(False)
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
@@ -65,20 +65,11 @@ class TestPenelopeConverter(TestCase):
     def testconvert_nolimit(self):
         # Base options
         ops = Options(name="Test")
-        ops.detectors['trajectories'] = TrajectoryDetector(100)
+        ops.detectors['trajectories'] = TrajectoryDetector(False)
 
         # Convert
         self.assertRaises(ConversionException, self.converter.convert , ops)
 
-    def testconvert_showers_not_equal(self):
-        # Base options
-        ops = Options(name="Test")
-        ops.limits.add(ShowersLimit(200))
-        ops.detectors['trajectories'] = TrajectoryDetector(100)
-
-        # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
-
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

@@ -553,39 +553,43 @@ class TrajectoryDetector(Option):
     Records the trajectories of particles.
     """
 
-    def __init__(self, showers):
+    def __init__(self, secondary=True):
         """
         Creates a detector of trajectories.
         
-        :arg showers: maximum number of primary showers to record
-        :type showers: :class:`int`
+        .. note::
+        
+           The number of trajectories is defined by the :class:`ShowerLimit`
+        
+        :arg secondary: whether to simulate secondary particles
+        :type secondary: :class:`bool`
         """
         Option.__init__(self)
-        self.showers = showers
+        self.secondary = secondary
 
     def __repr__(self):
-        return '<%s(showers%s)>' % (self.__class__.__name__, self.showers)
+        prep = 'with' if self.secondary else 'without'
+        return '<%s(%s secondary particles)>' % (self.__class__.__name__, prep)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        showers = int(element.get('showers'))
-        return cls(showers)
+        secondary = True if element.get('secondary') == 'true' else False
+        
+        return cls(secondary)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.set('showers', str(self.showers))
+        element.set('secondary', str(self.secondary).lower())
 
     @property
-    def showers(self):
+    def secondary(self):
         """
-        Maximum number of primary showers to record.
+        Whether to simulate secondary particles.
         """
-        return self._props['showers']
-
-    @showers.setter
-    def showers(self, showers):
-        if showers < 1:
-            raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
-        self._props['showers'] = long(showers)
+        return self._props['secondary']
+    
+    @secondary.setter
+    def secondary(self, secondary):
+        self._props['secondary'] = secondary
 
 XMLIO.register('{http://pymontecarlo.sf.net}trajectoryDetector', TrajectoryDetector)
 

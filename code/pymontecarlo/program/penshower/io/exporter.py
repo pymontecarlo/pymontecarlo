@@ -29,13 +29,14 @@ from operator import attrgetter, mul
 from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.input.detector import TrajectoryDetector
 
 from pymontecarlo.program._penelope.io.exporter import \
     Exporter as _Exporter, Keyword, Comment
 
 # Globals and constants variables.
-MAX_PHOTON_DETECTORS = 25 # Set in penepma.f
-MAX_PRZ = 20 # Set in penepma.f
+MAX_PHOTON_DETECTORS = 25  # Set in penepma.f
+MAX_PRZ = 20  # Set in penepma.f
 MAX_PHOTON_DETECTOR_CHANNEL = 1000
 
 _PARTICLES_REF = {ELECTRON: 1, PHOTON: 2, POSITRON: 3}
@@ -113,7 +114,7 @@ class Exporter(_Exporter):
         line = self._KEYWORD_SENERG(text)
         lines.append(line)
 
-        text = map(mul, [1e2] * 3, options.beam.origin_m) # to cm
+        text = map(mul, [1e2] * 3, options.beam.origin_m)  # to cm
         line = self._KEYWORD_SPOSIT(text)
         lines.append(line)
 
@@ -126,7 +127,7 @@ class Exporter(_Exporter):
         line = self._KEYWORD_SAPERT(text)
         lines.append(line)
 
-        text = options.beam.diameter_m * 1e2 # to cm
+        text = options.beam.diameter_m * 1e2  # to cm
         line = self._KEYWORD_SDIAM(text)
         lines.append(line)
 
@@ -175,9 +176,10 @@ class Exporter(_Exporter):
     def _append_job_properties(self, lines, options, geoinfo, matinfos, *args):
         lines.append(self._COMMENT_JOBPROP())
 
-        #NOTE: No random number. PENEPMA will select them.
+        #NOTE: No random number. PENSHOWER will select them.
 
-        text = '1'
+        det = options.detectors.findall(TrajectoryDetector).values()[0]  # only one is defined
+        text = '1' if det.secondary else '0'
         line = self._KEYWORD_TRJSC(text)
         lines.append(line)
 

@@ -87,11 +87,3 @@ class Converter(_Converter):
         if not dets:
             return
 
-        det = dets[0]
-        if dets[0].showers != limit.showers:
-            raise ConversionException, \
-                'The number of showers in the TrajectoryDetector (%i) must equal the number in the ShowersLimit (%i)' % \
-                    (det.showers, limit.showers)
-
-
-
