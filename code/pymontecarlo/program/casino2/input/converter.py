@@ -102,7 +102,7 @@ class Converter(_Converter):
         if options.beam.particle is not ELECTRON:
             raise ConversionException, "Beam particle must be ELECTRON"
 
-        if options.beam.energy_eV <= 1e6:
+        if options.beam.energy_eV > 1e6:
             message = "Beam energy (%s) must be less than 1MeV" % \
                             options.beam.energy_eV
             raise ConversionException, message
