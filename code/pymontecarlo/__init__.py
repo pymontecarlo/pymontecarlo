@@ -18,7 +18,7 @@ import os
 import logging
 
 # Third party modules.
-from pkg_resources import resource_filename #@UnresolvedImport
+from pkg_resources import resource_filename  #@UnresolvedImport
 
 # Local modules.
 from pymontecarlo.util.config import ConfigParser
@@ -250,3 +250,9 @@ def reload():
     """
     _settings = None
     _programs = None
+
+################################################################################
+# Initialize
+################################################################################
+
+get_programs()
