@@ -25,8 +25,6 @@ from pymontecarlo.output.results import Results
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
 
-import DrixUtilities.Files as Files
-
 # Globals and constants variables.
 
 class TestResults(TestCase):
@@ -45,8 +43,8 @@ class TestResults(TestCase):
 
         self.results = Results(results)
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -75,6 +73,6 @@ class TestResults(TestCase):
         results = Results.load(self.results_zip)
         self.assertEqual(6, len(results))
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

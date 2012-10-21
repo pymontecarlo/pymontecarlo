@@ -14,6 +14,7 @@ import logging
 from StringIO import StringIO
 from zipfile import ZipFile
 import csv
+import os
 from xml.etree.ElementTree import fromstring
 
 # Third party modules.
@@ -33,8 +34,6 @@ from pymontecarlo.output.result import \
      Trajectory,
      TrajectoryResult)
 from pymontecarlo.util.transition import Transition, K_family
-
-import DrixUtilities.Files as Files
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PHOTON
@@ -68,8 +67,8 @@ class TestPhotonIntensityResult(TestCase):
 
         self.r = PhotonIntensityResult(intensities)
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -259,8 +258,8 @@ class TestPhotonSpectrumResult(TestCase):
         self.r = PhotonSpectrumResult(1.0, 0.5, total, total_unc,
                                       background, background_unc)
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -417,8 +416,8 @@ class TestPhiRhoZResult(TestCase):
 
         self.r = PhiRhoZResult(distributions)
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -545,8 +544,8 @@ class TestTimeResult(TestCase):
 
         self.r = TimeResult(5.0, (1.0, 0.5))
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -584,8 +583,8 @@ class TestElectronFractionResult(TestCase):
 
         self.r = ElectronFractionResult((1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -631,8 +630,8 @@ class TestTrajectoryResult(TestCase):
         traj = Trajectory(True, ELECTRON, None, EXIT_STATE_ABSORBED, interactions)
         self.r = TrajectoryResult([traj])
 
-        self.results_zip = \
-            Files.getCurrentModulePath(__file__, '../testdata/results.zip')
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -702,6 +701,6 @@ class TestTrajectoryResult(TestCase):
         trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_BACKSCATTERED))
         self.assertEqual(0, len(trajs))
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

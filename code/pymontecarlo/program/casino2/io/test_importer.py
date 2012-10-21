@@ -9,6 +9,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 import unittest
 import logging
 
@@ -22,8 +23,6 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, ElectronFractionDetector
 
-import DrixUtilities.Files as Files
-
 # Globals and constants variables.
 
 class TestCasino2Importer(TestCase):
@@ -35,7 +34,8 @@ class TestCasino2Importer(TestCase):
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['fraction'] = ElectronFractionDetector()
 
-        filepath = Files.getCurrentModulePath(__file__, '../testdata/result1.cas')
+        filepath = os.path.join(os.path.dirname(__file__),
+                                '../testdata/result1.cas')
         imp = Importer()
         with open(filepath, 'rb') as f:
             self.results = imp.import_from_cas(self.ops, f)
@@ -64,6 +64,6 @@ class TestCasino2Importer(TestCase):
         self.assertAlmostEqual(0.017436, val, 5)
         self.assertAlmostEqual(0.0, unc, 4)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.ERROR)
     unittest.main()

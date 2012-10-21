@@ -22,8 +22,6 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import TrajectoryDetector
 from pymontecarlo.program.penshower.io.importer import Importer
 
-import DrixUtilities.Files as Files
-
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.collision import NO_COLLISION
@@ -34,8 +32,8 @@ class TestImporter(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        relativePath = os.path.join('../testdata/test1')
-        self.testdata = Files.getCurrentModulePath(__file__, relativePath)
+        self.testdata = os.path.join(os.path.dirname(__file__),
+                                     '../testdata/test1')
 
         self.i = Importer()
 
@@ -67,6 +65,6 @@ class TestImporter(TestCase):
         self.assertEqual(577, len(trajectory.interactions))
         self.assertEqual(5, trajectory.interactions.shape[1])
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

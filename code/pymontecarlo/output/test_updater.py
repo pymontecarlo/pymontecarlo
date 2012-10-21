@@ -22,8 +22,6 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.output.updater import Updater
 
-import DrixUtilities.Files as Files
-
 # Globals and constants variables.
 
 class TestUpdater(TestCase):
@@ -32,7 +30,7 @@ class TestUpdater(TestCase):
         TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
-        self.testdata = Files.getCurrentModulePath(__file__, '../testdata')
+        self.testdata = os.path.join(os.path.dirname(__file__), '../testdata')
         self.updater = Updater()
 
     def tearDown(self):
@@ -57,6 +55,6 @@ class TestUpdater(TestCase):
 
         self.updater.update(dst)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

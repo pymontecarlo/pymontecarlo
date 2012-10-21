@@ -28,8 +28,6 @@ from pymontecarlo.input.detector import \
      TimeDetector)
 from pymontecarlo.program.penepma.io.importer import Importer
 
-import DrixUtilities.Files as Files
-
 # Globals and constants variables.
 
 class TestImporter(TestCase):
@@ -37,8 +35,8 @@ class TestImporter(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        relativePath = os.path.join('../testdata/test1')
-        self.testdata = Files.getCurrentModulePath(__file__, relativePath)
+        self.testdata = os.path.join(os.path.dirname(__file__),
+                                     '../testdata/test1')
 
         self.i = Importer()
 
@@ -206,6 +204,6 @@ class TestImporter(TestCase):
         self.assertAlmostEqual(1.0 / 0.1508e3, result.simulation_speed_s[0], 4)
 
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

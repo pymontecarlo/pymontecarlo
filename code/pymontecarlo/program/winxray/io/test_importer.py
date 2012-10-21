@@ -11,6 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import os
 
 # Third party modules.
 
@@ -23,9 +24,6 @@ from pymontecarlo.input.detector import \
     (PhotonIntensityDetector, PhiRhoZDetector, ElectronFractionDetector,
      TimeDetector, PhotonSpectrumDetector)
 from pymontecarlo.input.limit import ShowersLimit
-
-import DrixUtilities.Files as Files
-
 
 # Globals and constants variables.
 
@@ -45,7 +43,8 @@ class TestImporter(TestCase):
 
         self.ops.limits.add(ShowersLimit(1000))
 
-        dirpath = Files.getCurrentModulePath(__file__, '../testdata/al_10keV_1ke_001')
+        dirpath = os.path.join(os.path.dirname(__file__),
+                               '../testdata/al_10keV_1ke_001')
         self.results = Importer().import_from_dir(self.ops, dirpath)
 
     def tearDown(self):
@@ -56,7 +55,7 @@ class TestImporter(TestCase):
 
     def test_detector_photon_intensity(self):
         result = self.results['xray']
-        factor = 1000 * 0.459697694132 # Normalization
+        factor = 1000 * 0.459697694132  # Normalization
 
         val, unc = result.intensity('Al Ka1')
         self.assertAlmostEqual(276142 / factor, val, 3)
@@ -88,7 +87,7 @@ class TestImporter(TestCase):
 
     def test_detector_photon_spectrum(self):
         result = self.results['spectrum']
-        factor = 1000 * 0.459697694132 * 10.0 # Normalization
+        factor = 1000 * 0.459697694132 * 10.0  # Normalization
 
         self.assertAlmostEqual(10.0, result.energy_channel_width_eV, 4)
         self.assertAlmostEqual(0.0, result.energy_offset_eV, 4)
@@ -113,6 +112,6 @@ class TestImporter(TestCase):
         self.assertAlmostEqual(194.188 / factor, vals[148], 4)
         self.assertAlmostEqual(0.0, uncs[148], 4)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
