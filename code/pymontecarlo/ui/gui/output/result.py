@@ -32,7 +32,7 @@ import numpy as np
 # Local modules.
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
 
-from wxtools2.opengl import GLCanvas, GLCanvasToolbar
+from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
 from wxtools2.floatspin import FloatSpin
 
 # Globals and constants variables.
@@ -655,8 +655,8 @@ class TrajectoryResultPanel(_ResultPanel):
         self.SetSizer(sizer)
 
 if __name__ == '__main__':  # pragma: no cover
+    import os
     import math
-    import DrixUtilities.Files as Files
     from zipfile import ZipFile
     from pymontecarlo.input.options import Options
     from pymontecarlo.input.geometry import \
@@ -664,8 +664,8 @@ if __name__ == '__main__':  # pragma: no cover
     from pymontecarlo.input.material import pure
     from pymontecarlo.output.result import TrajectoryResult
 
-    results_zip = \
-            Files.getCurrentModulePath(__file__, '../../../testdata/results.zip')
+    results_zip = os.path.join(os.path.dirname(__file__),
+                               '../../../testdata/results.zip')
     zipfile = ZipFile(results_zip, 'r')
     result = TrajectoryResult.__loadzip__(zipfile, 'det6')
 
