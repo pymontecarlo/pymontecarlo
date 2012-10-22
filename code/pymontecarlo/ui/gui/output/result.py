@@ -19,21 +19,27 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import csv
 
 # Third party modules.
 import wx
-from wx.lib.scrolledpanel import ScrolledPanel
 from wx.lib.embeddedimage import PyEmbeddedImage
+from wx.grid import Grid
 
 from OpenGL import GL
 
 import numpy as np
 
+import xlwt
+
 # Local modules.
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
+import pymontecarlo.util.physics as physics
 
 from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
 from wxtools2.floatspin import FloatSpin
+from wxtools2.combobox import PyComboBox
+from wxtools2.dialog import show_save_filedialog
 
 # Globals and constants variables.
 from pymontecarlo.output.result import \
@@ -42,13 +48,77 @@ from pymontecarlo.input.collision import \
     (HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
      INNERSHELL_IMPACT_IONISATION)
 
-class _ResultPanel(ScrolledPanel):
+_ICON_OPTIONS = PyEmbeddedImage(
+    "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlw"
+    "SFlzAAABCgAAAQoBFqS8ywAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoA"
+    "AAMFSURBVEiJrZVBSBxnFMd/365J1x2IGItIBhMQXUhrrcUUJFKZQy/xEuwhOaSQQI4BKYQc"
+    "2ksuttBLofVSSE6SYnLKQgxiQqmJJCb2oMu23Q2io5mqg9i1TZOd7q7u66HflMnEuK7tgwfz"
+    "3vu+//99//fNjBIR/keLA/lgIrJXJMdxDo2PjyenpqYuAKTT6ZMjIyNzMzMzA8F1NXslqK+v"
+    "31xcXLSAY2trax9sbGy8t7S0dKizs7P0XwkiQHl1dbUhGo2+WF5eNl3XPe0Xs9nsuVgs9jyX"
+    "y7V1dXV9qaqdwfT09OX5+fkzpVJJbNtOAMRiMZRSeJ4HQDQaRUTo7++/VPUJyuXyZi6Xa1xf"
+    "X68DaG1t/cWyrIFCoRCbmJj4xnGclq2tLfr6+q60t7d/XfWQu7u7P7cs6ws/Nk3zlmma37e0"
+    "tNxubm6+4+dra2sfAaU9DVlE3vSfPc97B9gPKM/zEn7etu0z8Xg8veMMlFKHgcNASkT+BJid"
+    "nf10bGxssFgsRvQaEonET0qpSDabfQvAMIxyoVCI9PT0fFuJ4AZwCjgrIsMACwsLbXNzc4N1"
+    "dXW/plKpj13XbQzuaWho+KO3t3fAMIxnxWLx55oQ4AXgvoiklVJvAF26dBwYVkop4ARwVUTu"
+    "5vP5iOu6nzQ1NW0YhpG3bds0TTPV0dExHNQTfYqTgAAF4Drwm459fwI80M8vgIOTk5PfDQ0N"
+    "Pc9kMpaIRJPJ5L3R0dGMiET/xQ0Q1AAPQ6Cv88/0vn2O41g+xsrKyhEROeDHLxFoksEQUBlY"
+    "2YbgeHDfTh4EPwCsBUAeA0cBBXwI/B6o3QU6gH0VCYA2YEl3G+yyL7Twq21O8rQSQQSoBZp0"
+    "p0HLh+JnodjT8u1sgQG/q0H97u4AB3W9DXADtR8AVdUMNNDVkAQe8OM28p3f7ZDDH7v9oTgG"
+    "HNtGvo8qShOUSHffH+gww6sD/Qu4BRR13FPtNY0D14ATOn6bf66qAI+ARp1/H7hY9Xvwmjt8"
+    "WRMM7hYw7JX+BzeBTSC5a81D9jedwJ/5I/IkFQAAAABJRU5ErkJggg==")
 
-    def __init__(self, parent, options, result):
-        ScrolledPanel.__init__(self, parent)
+_ICON_SAVE = PyEmbeddedImage(
+    "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlw"
+    "SFlzAAACXwAAAl8BvoUoWgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoA"
+    "AAPcSURBVEjHtVbNax1VFP+dc+/kq0mapEVrW6UopWirRWkiFkGwoOAH6MIKxS5040b82IlY"
+    "lfoXCC4El0VFFDe66E6oi6JkUbWkVWxrpTE1TdrYNPa9zDnn52Lee5nGJijqwGVm7sycc38f"
+    "554Rkvg/jwwAA/vf2AvgLoIqkI0EqqwEAUbrXdZGLLsnAAoQJH8AEKJ6eP7QwbPS/8yBd0ju"
+    "pEdDwKGXrnw5umPbGpBADZyQAVIAEp1psnoP1ZK+PhN4X+6+JIAU/X3zqSgeygDGdvYn3bp+"
+    "3S2fnJyc6usbjMG1N0qVgEIRgCQgIFjNt/GAVVIBGETP5Aw3C+Tx0e29X4yfTBdUX8ggu7Zv"
+    "umH45b0Pb/n01Xdn5594caFnx23m5lqaq5mJmambS+mubqYWgfCAh1dnD3gYxhunZXhyKr+y"
+    "79GeoxOnbdoxnAnI58fP/PzVxHtznnIoBOEh7i7ujlNTF9KvM3OJpJChCEdQwIgWjQ6S2DDU"
+    "TxXiu+nLV7c9+2aDuUD3+hFkADIXevWSs1SRESHFPMSC4uFyZPz7rh+/PZ7btLTVbwvRVmRs"
+    "96irIKhKkyJEVQEwgxQGC5CJKllEWqs3CQ95as/uZvnAaGmlaxku4Y6IipYIg0cgnBAQkyfO"
+    "CaQSq25TJaMAmUBkYYi7ibvDw+XDw0d6Jo4dTx03dYy1hAIA7rt/l6kgAEHtATMIQbAgmURR"
+    "QLTNv7i57Bm7s7znjlsjAhIM0APBaGkQiAgygMHegrNnZypL1Qutsh4Lkkoi/9Fs6sUrDZqZ"
+    "hrvklGR4TR+DZEWNV7SQaNMVHlh0hwWlqrcKbZsiYUQBUqO08qMjxxZASpAJoEZQK7+jTk6n"
+    "CllTP0CAncpvaUAIyQxSEYbfpmcvkchgZAYzlmP+53sRBREFCQWYSCYEE/nvg4MtkUlmEgpS"
+    "wU7w/2Y3JdCuAyWoIBQAUrhKxN9DIIClwv8yuVRoUSynY6s0Bu/ddbs2Gk2x5iIoQM6ZJCvn"
+    "1MZPp37RE2lkZqV+INfjuru7Sx575EF+/MFn6Zuj4wkA9j/3dLnp5o1hZQkzg5mhLEtMX5wL"
+    "LFxn/QB1NeTmDsaS68wcbgZ3h5nDWtdYpSuumsDNELWPrw1snWus0nVXTCACmhkYtQTm1wR2"
+    "twrlKhlUVIoVEbgjaoVZIVgKbGbwFRCIqkLQzKL6Vs/agbcbv8/nZUUiZoaNmzfQzF0U6O3r"
+    "YT1wmzLp9P1K2lQU2j00cFZTOiAk0b/v9dcY8TxJa281N12+sG6wK+Ugq5bcOi8bJCmLzUWc"
+    "37BlEiLV34XqOU3pyflDBxf+BCkUDvQPQayTAAAAAElFTkSuQmCC")
+
+_ICON_COPY = PyEmbeddedImage(
+    "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlw"
+    "SFlzAAAG7AAABuwBHnU4NQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoA"
+    "AAAPdEVYdFRpdGxlAEVkaXQgQ29weaFFjiAAAAAWdEVYdEF1dGhvcgBBbmRyZWFzIE5pbHNz"
+    "b24r7+SjAAAAGHRFWHRDcmVhdGlvbiBUaW1lADIwMDUtMTAtMTUNlAdXAAAASXRFWHRDb3B5"
+    "cmlnaHQAUHVibGljIERvbWFpbiBodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNl"
+    "cy9wdWJsaWNkb21haW4vWcP+ygAAAsNJREFUSImdlj1v01AUht9jX7d2BQy10zQL4mNA3Ri7"
+    "AUvFQMU/oGJiKgIkBsSMGNg6MYHKP+AnsKEiBkANatUyNqWJ2yRu0/jrHgbH13YaN6RXim6O"
+    "7vH7nPfc6w9ae79WnTHMRRARJh3M3Av7X1efrP4tSxEzhrm48ujx7TiOJtbXdYH1Tx8B4HMp"
+    "AEQUxxH6/f7EANM0Mc65NrHqYDAzmAFAnpsnJhcGAM7m8/WLgGazCdd1VdzxOs9vXr8xPepC"
+    "Ig1HbeDunXty989OOLy+u7PTXVq6f7UAqFQqqFQqKnZdd9q2bXOcqws7cBz7QqJJ+0YA8g6Y"
+    "GYeHhxcQ50J8xkGr1VKJc3OFdv2XsGVZsCwL4BEAx3Fg2w7SU9JuH6m1OI5LhAsRpOSCC5Em"
+    "MTMODppw3ZY64/PzcypR1/XSqrN7InHAzKmB1EFCdRwbjmMrYLfbGekgKzADZCAurAlAKsFm"
+    "s4VWq6kEarXqGQdZtQxmGgglTwvbns3BEoJgCUgpwcywbXuQlAh4nqcAUZQ6yAOGZ1ZxGAYy"
+    "tweZi7zl/H9NI9UeIoCZkD7m0hzXdWFZFkzTRBTFrADpzucBmqbl+s2IY1la/XBhU1NTiJML"
+    "UoAs2BNCwDAMJB1KD4AzFmAYBoQQEEJAygFAxlH7568fx8ySwcmWMTM00rhWq3G6qcNV5mdd"
+    "11VRKaDTbWtv372p0PCtnR/1+qZbrVZny9qhaZoS/PZ9Q7k4Pvawtb3lP1t9YZ77PgjCUBaP"
+    "ZTYPVxwGIS5fuoJOp4O9xj4T0Re1B2UjCgM5XHXajjyAiOAHPgLXRaOxh7Z3tLn84OHyWEAQ"
+    "BlLXdTAziAhCCOi6rn5CCASBD8/rorG/x73e6anv99cZ/HTh1kI0FlD/Xf+wtb19jZCcfSIN"
+    "RGAigmQJKSVkLBFGoXnSO/H9IFh59fJ14fPkH+Ui+1O1qExzAAAAAElFTkSuQmCC")
+
+class _ResultPanel(wx.Panel):
+
+    def __init__(self, parent, options, key, result):
+        wx.Panel.__init__(self, parent)
 
         # Variables
         self._options = options
+        self._key = key
         self._result = result
 
     @property
@@ -56,10 +126,81 @@ class _ResultPanel(ScrolledPanel):
         return self._options
 
     @property
+    def key(self):
+        return self._key
+
+    @property
     def result(self):
         return self._result
 
-class _TrajectoryParameters(object):
+class _SaveableResultPanel(_ResultPanel):
+
+    def dump(self):
+        """
+        Dumps the result in a tabular format.
+        Returns a :class:`list` of :class`list`.
+        """
+        raise NotImplementedError
+
+    def copy(self, *args):
+        text = ''
+        for row in self.dump():
+            text += '\t'.join([str(item) for item in row]) + os.linesep
+
+        clipdata = wx.TextDataObject()
+        clipdata.SetText(text)
+        wx.TheClipboard.Open()
+        wx.TheClipboard.SetData(clipdata)
+        wx.TheClipboard.Close()
+
+    def save(self, *args):
+        filetypes = [('CSV file (*.csv)', 'csv'),
+                     ('Excel file (*.xls)', 'xls'),
+                     ('Open document file (*.ods)', 'ods')]
+        filepath = show_save_filedialog(self, filetypes)
+        if not filepath:
+            return
+
+        ext = os.path.splitext(filepath)[1]
+        if ext == '.csv':
+            self._save_csv(filepath)
+        else:
+            self._save_xls(filepath)
+
+    def _save_csv(self, filepath):
+        with open(filepath, 'w') as fp:
+            writer = csv.writer(fp)
+            writer.writerows(self.dump())
+
+    def _save_xls(self, filepath):
+        book = xlwt.Workbook(encoding='utf-8')
+        sheet = book.add_sheet(self.key)
+
+        for irow, row in enumerate(self.dump()):
+            for icol, value in enumerate(row):
+                sheet.write(irow, icol, value)
+
+        book.save(filepath)
+
+class _SaveableResultToolbar(wx.ToolBar):
+
+    def __init__(self, panel):
+        wx.ToolBar.__init__(self, panel)
+
+        # Controls
+        self._TB_COPY = wx.NewId()
+        self.AddSimpleTool(self._TB_COPY, _ICON_COPY.GetBitmap(),
+                           "Copy results to clipboard")
+
+        self._TB_SAVE = wx.NewId()
+        self.AddSimpleTool(self._TB_SAVE, _ICON_SAVE.GetBitmap(),
+                           "Save results to file")
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, panel.copy, id=self._TB_COPY)
+        self.Bind(wx.EVT_TOOL, panel.save, id=self._TB_SAVE)
+
+class _TrajectoryResultParameters(object):
 
     def __init__(self, max_trajectories):
         self.max_trajectories = max_trajectories
@@ -105,7 +246,7 @@ class _TrajectoryParameters(object):
         self.collision_ionisation_color = (0.0, 0.0, 0.0)
         self.collision_ionisation_size = 3.0
 
-class _TrajectoryDialog(wx.Dialog):
+class _TrajectoryResultDialog(wx.Dialog):
 
     def __init__(self, parent, params):
         wx.Dialog.__init__(self, parent, title='Setup display options')
@@ -210,7 +351,7 @@ class _TrajectoryDialog(wx.Dialog):
         szr_primary = wx.StaticBoxSizer(box_primary, wx.VERTICAL)
         szr_trajectories.Add(szr_primary, 1, wx.GROW | wx.ALL, 5)
 
-        szr_primary2 = wx.GridBagSizer(5, 4)
+        szr_primary2 = wx.GridBagSizer(5, 5)
         szr_primary2.AddGrowableCol(0)
         szr_primary.Add(szr_primary2, 1, wx.GROW | wx.ALL, 5)
 
@@ -230,7 +371,7 @@ class _TrajectoryDialog(wx.Dialog):
         szr_secondary = wx.StaticBoxSizer(box_secondary, wx.VERTICAL)
         szr_trajectories.Add(szr_secondary, 1, wx.GROW | wx.ALL, 5)
 
-        szr_secondary2 = wx.GridBagSizer(5, 4)
+        szr_secondary2 = wx.GridBagSizer(5, 5)
         szr_secondary2.AddGrowableCol(0)
         szr_secondary.Add(szr_secondary2, 1, wx.GROW | wx.ALL, 5)
 
@@ -279,7 +420,6 @@ class _TrajectoryDialog(wx.Dialog):
         sizer3 = wx.StdDialogButtonSizer()
         sizer3.AddButton(btn_ok)
         sizer3.AddButton(btn_cancel)
-        sizer3.AddButton(btn_default)
         sizer3.SetAffirmativeButton(btn_ok)
         sizer3.SetCancelButton(btn_cancel)
         sizer3.Realize()
@@ -328,7 +468,7 @@ class _TrajectoryDialog(wx.Dialog):
         dialog.Destroy()
 
     def OnDefault(self, event):
-        params = _TrajectoryParameters(self._sld_trajectories.GetMax())
+        params = _TrajectoryResultParameters(self._sld_trajectories.GetMax())
         self.SetParameters(params)
 
     def SetParameters(self, params):
@@ -384,7 +524,7 @@ class _TrajectoryDialog(wx.Dialog):
             r, g, b = color.Get(False)
             return r / 255.0, g / 255.0, b / 255.0
 
-        params = _TrajectoryParameters(self._sld_trajectories.GetMax())
+        params = _TrajectoryResultParameters(self._sld_trajectories.GetMax())
 
         params.number_trajectories = self._sld_trajectories.GetValue()
 
@@ -430,57 +570,14 @@ class _TrajectoryDialog(wx.Dialog):
 
         return params
 
-_ICON_OPTIONS = PyEmbeddedImage(
-    "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlw"
-    "SFlzAAABCgAAAQoBFqS8ywAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoA"
-    "AAMFSURBVEiJrZVBSBxnFMd/365J1x2IGItIBhMQXUhrrcUUJFKZQy/xEuwhOaSQQI4BKYQc"
-    "2ksuttBLofVSSE6SYnLKQgxiQqmJJCb2oMu23Q2io5mqg9i1TZOd7q7u66HflMnEuK7tgwfz"
-    "3vu+//99//fNjBIR/keLA/lgIrJXJMdxDo2PjyenpqYuAKTT6ZMjIyNzMzMzA8F1NXslqK+v"
-    "31xcXLSAY2trax9sbGy8t7S0dKizs7P0XwkiQHl1dbUhGo2+WF5eNl3XPe0Xs9nsuVgs9jyX"
-    "y7V1dXV9qaqdwfT09OX5+fkzpVJJbNtOAMRiMZRSeJ4HQDQaRUTo7++/VPUJyuXyZi6Xa1xf"
-    "X68DaG1t/cWyrIFCoRCbmJj4xnGclq2tLfr6+q60t7d/XfWQu7u7P7cs6ws/Nk3zlmma37e0"
-    "tNxubm6+4+dra2sfAaU9DVlE3vSfPc97B9gPKM/zEn7etu0z8Xg8veMMlFKHgcNASkT+BJid"
-    "nf10bGxssFgsRvQaEonET0qpSDabfQvAMIxyoVCI9PT0fFuJ4AZwCjgrIsMACwsLbXNzc4N1"
-    "dXW/plKpj13XbQzuaWho+KO3t3fAMIxnxWLx55oQ4AXgvoiklVJvAF26dBwYVkop4ARwVUTu"
-    "5vP5iOu6nzQ1NW0YhpG3bds0TTPV0dExHNQTfYqTgAAF4Drwm459fwI80M8vgIOTk5PfDQ0N"
-    "Pc9kMpaIRJPJ5L3R0dGMiET/xQ0Q1AAPQ6Cv88/0vn2O41g+xsrKyhEROeDHLxFoksEQUBlY"
-    "2YbgeHDfTh4EPwCsBUAeA0cBBXwI/B6o3QU6gH0VCYA2YEl3G+yyL7Twq21O8rQSQQSoBZp0"
-    "p0HLh+JnodjT8u1sgQG/q0H97u4AB3W9DXADtR8AVdUMNNDVkAQe8OM28p3f7ZDDH7v9oTgG"
-    "HNtGvo8qShOUSHffH+gww6sD/Qu4BRR13FPtNY0D14ATOn6bf66qAI+ARp1/H7hY9Xvwmjt8"
-    "WRMM7hYw7JX+BzeBTSC5a81D9jedwJ/5I/IkFQAAAABJRU5ErkJggg==")
-
-class _TrajectoryToolbar(GLCanvasToolbar):
-
-    def __init__(self, canvas):
-        GLCanvasToolbar.__init__(self, canvas)
-
-        # Controls
-        self._TOOL_OPTIONS = wx.NewId()
-        self.AddSimpleTool(self._TOOL_OPTIONS, _ICON_OPTIONS.GetBitmap(),
-                           'Setup display options')
-
-        self.Realize()
-
-        # Bind
-        self.Bind(wx.EVT_TOOL, self.OnOptions, id=self._TOOL_OPTIONS)
-
-    def OnOptions(self, event):
-        params = self.canvas.GetParameters()
-        dialog = _TrajectoryDialog(self.canvas.GetParent(), params)
-
-        if dialog.ShowModal() == wx.ID_OK:
-            self.canvas.SetParameters(dialog.GetParameters())
-
-        dialog.Destroy()
-
-class _TrajectoryGLCanvas(GLCanvas):
+class _TrajectoryResultGLCanvas(GLCanvas):
 
     def __init__(self, parent, options, result):
         GLCanvas.__init__(self, parent)
 
         # Variables
         self._result = result
-        self._params = _TrajectoryParameters(len(result))  # default
+        self._params = _TrajectoryResultParameters(len(result))  # default
         self._geometrygl = GeometryGLManager.get(options.geometry)
         self._glists = []
 
@@ -638,21 +735,334 @@ class _TrajectoryGLCanvas(GLCanvas):
 
 class TrajectoryResultPanel(_ResultPanel):
 
-    def __init__(self, parent, options, result):
-        _ResultPanel.__init__(self, parent, options, result)
+    def __init__(self, parent, options, key, result):
+        _ResultPanel.__init__(self, parent, options, key, result)
 
         # Controls
-        self._canvas = _TrajectoryGLCanvas(self, options, result)
+        self._canvas = _TrajectoryResultGLCanvas(self, options, result)
         self._canvas.SetSensitivityRotation(2.5)
 
-        bottom_toolbar = _TrajectoryToolbar(self._canvas)
+        toolbar = GLCanvasToolbar(self._canvas)
+        item_options = toolbar.AddSimpleTool(-1, _ICON_OPTIONS.GetBitmap(),
+                                             'Setup display options')
+        toolbar.Realize()
 
         # Sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self._canvas, 1, wx.EXPAND)
-        sizer.Add(bottom_toolbar, 0, wx.GROW)
+        sizer.Add(toolbar, 0, wx.GROW)
 
         self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.OnOptions, item_options)
+
+    def OnOptions(self, event):
+        params = self._canvas.GetParameters()
+        dialog = _TrajectoryResultDialog(self, params)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            self._canvas.SetParameters(dialog.GetParameters())
+
+        dialog.Destroy()
+
+class _PhotonIntensityResultParameters(object):
+
+    def __init__(self):
+        self.units = 'counts / (sr.electron)'
+
+        self.generated_nofluorescence = True
+        self.generated_characteristic_fluorescence = True
+        self.generated_bremsstrahlung_fluorescence = True
+        self.generated_total = True
+
+        self.emitted_nofluorescence = True
+        self.emitted_characteristic_fluorescence = True
+        self.emitted_bremsstrahlung_fluorescence = True
+        self.emitted_total = True
+
+        self.uncertainty = True
+
+class _PhotonIntensityResultDialog(wx.Dialog):
+
+    def __init__(self, parent, params):
+        wx.Dialog.__init__(self, parent, title='Setup display options')
+
+        # Controls
+        ## Units
+        lbl_units = wx.StaticText(self, label='Units')
+        self._cb_units = PyComboBox(self)
+        self._cb_units.append('counts / (sr.electron)')
+        self._cb_units.append('counts / (s.A)')
+        self._cb_units.append('counts / (s.nA)')
+
+        ## Uncertainties
+        self._chk_uncertainty = wx.CheckBox(self, label='Show uncertainties')
+
+        ## Generated
+        box_generated = wx.StaticBox(self, label='Generated intensities (no absorption)')
+
+        self._chk_generated_nofluorescence = \
+            wx.CheckBox(self, label='No fluorescence')
+        self._chk_generated_characteristic_fluorescence = \
+            wx.CheckBox(self, label='Characteristic fluorescence')
+        self._chk_generated_bremsstrahlung_fluorescence = \
+            wx.CheckBox(self, label='Bremsstrahlung fluorescence')
+        self._chk_generated_total = wx.CheckBox(self, label='Total')
+
+        ## Emitted
+        box_emitted = wx.StaticBox(self, label='Emitted intensities (with absorption)')
+
+        self._chk_emitted_nofluorescence = \
+            wx.CheckBox(self, label='No fluorescence')
+        self._chk_emitted_characteristic_fluorescence = \
+            wx.CheckBox(self, label='Characteristic fluorescence')
+        self._chk_emitted_bremsstrahlung_fluorescence = \
+            wx.CheckBox(self, label='Bremsstrahlung fluorescence')
+        self._chk_emitted_total = wx.CheckBox(self, label='Total')
+
+        ## Buttons
+        btn_ok = wx.Button(self, wx.ID_OK)
+        btn_cancel = wx.Button(self, wx.ID_CANCEL)
+        btn_default = wx.Button(self, wx.ID_DEFAULT, label='Default')
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        ## Units
+        szr_top = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(szr_top, 0, wx.GROW | wx.ALL, 5)
+
+        szr_top.Add(lbl_units, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_top.Add(self._cb_units, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_top.AddStretchSpacer()
+        szr_top.Add(self._chk_uncertainty, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        ## Generated
+        szr_generated = wx.StaticBoxSizer(box_generated, wx.VERTICAL)
+        sizer.Add(szr_generated, 0, wx.GROW | wx.ALL, 5)
+
+        szr_generated2 = wx.GridBagSizer(5, 5)
+        szr_generated.Add(szr_generated2, 1, wx.GROW | wx.ALL, 5)
+
+        szr_generated2.Add(self._chk_generated_nofluorescence, (0, 0))
+        szr_generated2.Add(self._chk_generated_total, (1, 0))
+        szr_generated2.Add(self._chk_generated_characteristic_fluorescence, (0, 1))
+        szr_generated2.Add(self._chk_generated_bremsstrahlung_fluorescence, (1, 1))
+
+        ## Emitted
+        szr_emitted = wx.StaticBoxSizer(box_emitted, wx.VERTICAL)
+        sizer.Add(szr_emitted, 0, wx.GROW | wx.ALL, 5)
+
+        szr_emitted2 = wx.GridBagSizer(5, 5)
+        szr_emitted.Add(szr_emitted2, 1, wx.GROW | wx.ALL, 5)
+
+        szr_emitted2.Add(self._chk_emitted_nofluorescence, (0, 0))
+        szr_emitted2.Add(self._chk_emitted_total, (1, 0))
+        szr_emitted2.Add(self._chk_emitted_characteristic_fluorescence, (0, 1))
+        szr_emitted2.Add(self._chk_emitted_bremsstrahlung_fluorescence, (1, 1))
+
+        ## Buttons
+        szr_button = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(szr_button, 0, wx.GROW | wx.ALL, 5)
+
+        szr_button.Add(btn_default, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
+        szr_button.AddStretchSpacer()
+
+        szr_button2 = wx.StdDialogButtonSizer()
+        szr_button.Add(szr_button2, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
+
+        szr_button2.AddButton(btn_ok)
+        szr_button2.AddButton(btn_cancel)
+        szr_button2.SetAffirmativeButton(btn_ok)
+        szr_button2.SetCancelButton(btn_cancel)
+        szr_button2.Realize()
+
+        self.SetSizer(sizer)
+        self.Fit()
+
+        # Bind
+        self.Bind(wx.EVT_BUTTON, self.OnDefault, btn_default)
+
+        # Default
+        self.SetParameters(params)
+
+    def OnDefault(self, event):
+        self.SetParameters(_PhotonIntensityResultParameters())
+
+    def SetParameters(self, params):
+        self._cb_units.selection = params.units
+
+        self._chk_generated_nofluorescence.SetValue(params.generated_nofluorescence)
+        self._chk_generated_characteristic_fluorescence.SetValue(params.generated_characteristic_fluorescence)
+        self._chk_generated_bremsstrahlung_fluorescence.SetValue(params.generated_bremsstrahlung_fluorescence)
+        self._chk_generated_total.SetValue(params.generated_total)
+
+        self._chk_emitted_nofluorescence.SetValue(params.emitted_nofluorescence)
+        self._chk_emitted_characteristic_fluorescence.SetValue(params.emitted_characteristic_fluorescence)
+        self._chk_emitted_bremsstrahlung_fluorescence.SetValue(params.emitted_bremsstrahlung_fluorescence)
+        self._chk_emitted_total.SetValue(params.emitted_total)
+
+        self._chk_uncertainty.SetValue(params.uncertainty)
+
+    def GetParameters(self):
+        params = _PhotonIntensityResultParameters()
+
+        params.units = self._cb_units.selection
+
+        params.generated_nofluorescence = self._chk_generated_nofluorescence.GetValue()
+        params.generated_characteristic_fluorescence = self._chk_generated_characteristic_fluorescence.GetValue()
+        params.generated_bremsstrahlung_fluorescence = self._chk_generated_bremsstrahlung_fluorescence.GetValue()
+        params.generated_total = self._chk_generated_total.GetValue()
+
+        params.emitted_nofluorescence = self._chk_emitted_nofluorescence.GetValue()
+        params.emitted_characteristic_fluorescence = self._chk_emitted_characteristic_fluorescence.GetValue()
+        params.emitted_bremsstrahlung_fluorescence = self._chk_emitted_bremsstrahlung_fluorescence.GetValue()
+        params.emitted_total = self._chk_emitted_total.GetValue()
+
+        params.uncertainty = self._chk_uncertainty.GetValue()
+
+        return params
+
+class PhotonIntensityResultPanel(_SaveableResultPanel):
+    _COLUMNS = ['Gen. No Fluo.', 'Gen. Charac. Fluo.', 'Gen. Bremss. Fluo.', 'Gen. Total',
+                'Emi. No Fluo.', 'Emi. Charac. Fluo.', 'Emi. Bremss. Fluo.', 'Emi. Total']
+
+    _COLUMNS_VISIBLE = {'Gen. No Fluo.': lambda params: params.generated_nofluorescence,
+                        'Gen. Charac. Fluo.': lambda params: params.generated_characteristic_fluorescence,
+                        'Gen. Bremss. Fluo.': lambda params: params.generated_bremsstrahlung_fluorescence,
+                        'Gen. Total': lambda params: params.generated_total,
+                        'Emi. No Fluo.': lambda params: params.emitted_nofluorescence,
+                        'Emi. Charac. Fluo.': lambda params: params.emitted_characteristic_fluorescence,
+                        'Emi. Bremss. Fluo.': lambda params: params.emitted_bremsstrahlung_fluorescence,
+                        'Emi. Total': lambda params: params.emitted_total}
+
+    _COLUMNS_VALUE = {'Gen. No Fluo.': lambda res, trans: res.intensity(trans, False, False),
+                      'Gen. Charac. Fluo.': lambda result, transition: result.characteristic_fluorescence(transition, False),
+                      'Gen. Bremss. Fluo.': lambda result, transition: result.bremsstrahlung_fluorescence(transition, False),
+                      'Gen. Total': lambda res, trans: res.intensity(trans, False, True),
+                      'Emi. No Fluo.': lambda res, trans: res.intensity(trans, True, False),
+                      'Emi. Charac. Fluo.': lambda result, transition: result.characteristic_fluorescence(transition, True),
+                      'Emi. Bremss. Fluo.': lambda result, transition: result.bremsstrahlung_fluorescence(transition, True),
+                      'Emi. Total': lambda res, trans: res.intensity(trans, True, True)}
+
+    def __init__(self, parent, options, key, result):
+        _SaveableResultPanel.__init__(self, parent, options, key, result)
+
+        # Variables
+        self._params = _PhotonIntensityResultParameters()  # default
+
+        # Controls
+        toolbar = _SaveableResultToolbar(self)
+        item_options = \
+            toolbar.InsertSimpleTool(toolbar.GetToolPos(toolbar._TB_COPY), -1,
+                                     _ICON_OPTIONS.GetBitmap(),
+                                     'Setup display options')
+        toolbar.InsertSeparator(toolbar.GetToolPos(toolbar._TB_COPY))
+
+        self._grid = Grid(self)
+        self._grid.CreateGrid(1, 1)
+        self._grid.SetDefaultColSize(125)
+        self._grid.EnableEditing(False)
+
+        # Sizer
+        mainsizer = wx.BoxSizer(wx.VERTICAL)
+        mainsizer.Add(self._grid, 1, wx.EXPAND)
+        mainsizer.Add(toolbar, 0, wx.GROW)
+
+        self.SetSizer(mainsizer)
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.OnOptions, item_options)
+
+        # Default
+        self.DrawGrid()
+
+    def GetParameters(self):
+        return self._params
+
+    def SetParameters(self, params):
+        self._params = params
+        self.DrawGrid()
+
+    def DrawGrid(self):
+        # Calculate conversion factor
+        solidangle_sr = self.options.detectors[self._key].solidangle_sr
+        factors = {'counts / (s.A)': solidangle_sr / physics.e,
+                   'counts / (s.nA)': solidangle_sr / physics.e / 1e9}
+        factor = factors.get(self._params.units, 1.0)
+
+        self._grid.BeginBatch()
+
+        # Clear grid
+        self._grid.DeleteRows(0, self._grid.GetNumberRows())
+        self._grid.DeleteCols(0, self._grid.GetNumberCols())
+
+        # Create columns
+        icol = -1
+        columns = []
+        for column in self._COLUMNS:
+            if not self._COLUMNS_VISIBLE[column](self._params): continue
+
+            icol += 1
+            self._grid.AppendCols(1)
+            self._grid.SetColLabelValue(icol, column)
+
+            if self._params.uncertainty:
+                icol += 1
+                self._grid.AppendCols(1)
+                self._grid.SetColLabelValue(icol, column + " Unc.")
+
+            columns.append(column)
+
+        # Create rows
+        for irow, transition in enumerate(self.result._intensities.iterkeys()):
+            self._grid.AppendRows(1)
+            self._grid.SetRowLabelValue(irow, unicode(transition))
+
+            icol = -1
+            for column in columns:
+                val, unc = self._COLUMNS_VALUE[column](self.result, transition)
+
+                val *= factor
+                unc *= factor
+
+                icol += 1
+                self._grid.SetCellValue(irow, icol, "%e" % val)
+
+                if self._params.uncertainty:
+                    icol += 1
+                    self._grid.SetCellValue(irow, icol, '%e' % unc)
+
+        self._grid.EndBatch()
+
+    def OnOptions(self, event):
+        dialog = _PhotonIntensityResultDialog(self, self.GetParameters())
+
+        if dialog.ShowModal() == wx.ID_OK:
+            self.SetParameters(dialog.GetParameters())
+
+        dialog.Destroy()
+
+    def dump(self):
+        rows = []
+
+        # Header
+        header = ['Transition']
+        for icol in range(self._grid.GetNumberCols()):
+            header.append(self._grid.GetColLabelValue(icol))
+        rows.append(header)
+
+        # Data
+        for irow in range(self._grid.GetNumberRows()):
+            row = [self._grid.GetRowLabelValue(irow)]
+
+            for icol in range(self._grid.GetNumberCols()):
+                row.append(float(self._grid.GetCellValue(irow, icol)))
+
+            rows.append(row)
+
+        return rows
 
 if __name__ == '__main__':  # pragma: no cover
     import os
@@ -662,14 +1072,15 @@ if __name__ == '__main__':  # pragma: no cover
     from pymontecarlo.input.geometry import \
         Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
     from pymontecarlo.input.material import pure
-    from pymontecarlo.output.result import TrajectoryResult
+    from pymontecarlo.input.detector import PhotonIntensityDetector
+    from pymontecarlo.output.result import TrajectoryResult, PhotonIntensityResult
 
     results_zip = os.path.join(os.path.dirname(__file__),
                                '../../../testdata/results.zip')
     zipfile = ZipFile(results_zip, 'r')
-    result = TrajectoryResult.__loadzip__(zipfile, 'det6')
 
     options = Options(name="Test")
+    options.detectors['det1'] = PhotonIntensityDetector((0, math.pi / 2), (0, 2 * math.pi))
 
     options.geometry = Substrate(pure(8))
 
@@ -691,7 +1102,11 @@ if __name__ == '__main__':  # pragma: no cover
         def __init__(self, parent):
             wx.Frame.__init__(self, parent, title='Main frame')
 
-            self.panel = TrajectoryResultPanel(self, options, result)
+#            result = TrajectoryResult.__loadzip__(zipfile, 'det6')
+#            self.panel = TrajectoryResultPanel(self, options, 'det6', result)
+
+            result = PhotonIntensityResult.__loadzip__(zipfile, 'det1')
+            self.panel = PhotonIntensityResultPanel(self, options, 'det1', result)
 
             sizer = wx.BoxSizer(wx.VERTICAL)
             sizer.Add(self.panel, 1, wx.EXPAND)
