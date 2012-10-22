@@ -17,9 +17,9 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
-from pkg_resources import resource_filename #@UnresolvedImport
 
 # Local modules.
 
@@ -28,4 +28,4 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 
 XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope',
-                    resource_filename(__name__, 'schema.xsd'))
+                    os.path.join(os.path.dirname(__file__), 'schema.xsd'))
