@@ -107,7 +107,6 @@ class _XMLIO(Manager):
         :arg prefix: prefix of the namespace
         :arg uri: URI of the namespace
         :arg location: location of the XSD schema (optional)
-        :arg source: content of XSD schema (optional)
         """
         if prefix in self._nsmap and self._nsmap.get(prefix) != uri:
             raise ValueError, 'A URI (%s) is already associated with this prefix (%s)' % \
