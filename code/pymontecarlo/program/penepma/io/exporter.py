@@ -129,9 +129,7 @@ class Exporter(_Exporter):
         """
         Creates a exporter to PENEPMA.
         """
-        _Exporter.__init__(self)
-        
-        self._pendbase_dir = get_settings().penepma.pendbase
+        _Exporter.__init__(self, get_settings().penepma.pendbase)
 
     def _create_input_file(self, options, outputdir, geoinfo, matinfos, *args):
         """

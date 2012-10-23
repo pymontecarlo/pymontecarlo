@@ -1,12 +1,14 @@
 [pymontecarlo]
 programs=casino2,nistmonte,penepma,penshower,winxray,pap,xpp
 
-[penelope]
-pendbase=/penelope2011/pendbase
-
 [penepma]
 dumpp=60
 exe=
+pendbase=
+
+[penshower]
+exe=
+penshower=
 
 [nistmonte]
 java=

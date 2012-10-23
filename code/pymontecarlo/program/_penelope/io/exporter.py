@@ -26,8 +26,6 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
-
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
 from pymontecarlo.input.material import VACUUM
@@ -106,7 +104,7 @@ class Comment(Keyword):
 
 class Exporter(_Exporter):
 
-    def __init__(self):
+    def __init__(self, pendbase_dir):
         """
         Creates a exporter to PENELOPE main programs.
         """
@@ -118,6 +116,8 @@ class Exporter(_Exporter):
         self._geometry_exporters[GrainBoundaries] = self._export_geometry_grainboundaries
         self._geometry_exporters[Sphere] = self._export_geometry_sphere
         self._geometry_exporters[Cuboids2D] = self._export_geometry_cuboids2d
+
+        self._pendbase_dir = pendbase_dir
 
     def export(self, options, outputdir):
         """

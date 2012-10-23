@@ -21,6 +21,8 @@ from nose.plugins.attrib import attr
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo import get_settings
+
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
@@ -39,7 +41,7 @@ class TestPenelopeExporter(TestCase):
         TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
-        self.e = Exporter()
+        self.e = Exporter(get_settings().penepma.pendbase)
         self.c = Converter()
 
     def tearDown(self):
