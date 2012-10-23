@@ -8,11 +8,6 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/pymontecarlo/code</path>
 </pydev_pathproperty>
-<pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
-<path>${python_workspace}</path>
-</pydev_pathproperty>
-<pydev_variables_property name="org.python.pydev.PROJECT_VARIABLE_SUBSTITUTION">
-<key>python_workspace</key>
-<value>/home/ppinard/documents/workspace4/pydev</value>
-</pydev_variables_property>
+
+
 </pydev_project>
