@@ -102,7 +102,12 @@ class Layer(Body, _Layer):
         layer = _Layer.__loadxml__(element, material, thickness, *args, **kwargs)
         body = Body.__loadxml__(element, material, *args, **kwargs)
 
-        return cls(layer.material, layer.thickness_m, body.maximum_step_length_m)
+        layer = cls(layer.material, layer.thickness_m, body.maximum_step_length_m)
+
+        for intforce in body.interaction_forcings:
+            layer.interaction_forcings.add(intforce)
+
+        return layer
 
     def __savexml__(self, element, *args, **kwargs):
         Body.__savexml__(self, element, *args, **kwargs)

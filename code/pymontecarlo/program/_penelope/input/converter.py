@@ -151,9 +151,13 @@ class Converter(_Converter):
         newlayers = []
 
         for layer in layers:
+            if isinstance(layer, Layer):
+                newlayers.append(layer)
+                continue
+
             material = materials_lookup[layer.material]
 
-            # By default, the maximum step length in a layer is equal to 1/10 of 
+            # By default, the maximum step length in a layer is equal to 1/10 of
             # the layer thickness
             maximum_step_length = layer.thickness_m / 10.0
 
