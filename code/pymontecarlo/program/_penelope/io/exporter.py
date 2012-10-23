@@ -119,8 +119,6 @@ class Exporter(_Exporter):
         self._geometry_exporters[Sphere] = self._export_geometry_sphere
         self._geometry_exporters[Cuboids2D] = self._export_geometry_cuboids2d
 
-        self._pendbase_dir = get_settings().penelope.pendbase
-
     def export(self, options, outputdir):
         """
         Creates all materials, geometry and input file to run a PENELOPE main
