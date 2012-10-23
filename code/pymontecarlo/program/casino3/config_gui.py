@@ -38,7 +38,7 @@ class _Casino3ConfigurePanel(ConfigurePanel):
         # Controls
         lbl_exe = wx.StaticText(self, label='Full path to console_casino3_script.exe')
 
-        filetypes = [('Application files (*.exe)', '*.exe')]
+        filetypes = [('Application files (*.exe)', 'exe')]
         self._brw_exe = FileBrowseCtrl(self, filetypes=filetypes)
 
         # Sizer

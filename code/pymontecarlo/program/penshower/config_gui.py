@@ -27,7 +27,7 @@ import wx
 from pymontecarlo.program.config_gui import GUI, ConfigurePanel
 from pymontecarlo.program.penshower.config import program
 
-from wxtools2.browse import FileBrowseCtrl, DirBrowseCtrl
+from wxtools2.browse import FileBrowseCtrl, DirBrowseCtrl, EVT_BROWSE
 from wxtools2.dialog import show_error_dialog
 
 # Globals and constants variables.
@@ -41,7 +41,7 @@ class _PenshowerConfigurePanel(ConfigurePanel):
 
         lbl_exe = wx.StaticText(self, label='Path to PENSHOWER executable')
 
-        filetypes = [('Application files (*.exe)', '*.exe'),
+        filetypes = [('Application files (*.exe)', 'exe'),
                      ('Application files', '*')]
         self._brw_exe = FileBrowseCtrl(self, filetypes=filetypes)
 
@@ -50,6 +50,10 @@ class _PenshowerConfigurePanel(ConfigurePanel):
         sizer.Add(self._brw_pendbase, 0, wx.GROW)
         sizer.Add(lbl_exe, 0, wx.TOP, 10)
         sizer.Add(self._brw_exe, 0, wx.GROW)
+
+        # Bind
+        self.Bind(EVT_BROWSE, self.OnBrowse, self._brw_pendbase)
+        self.Bind(EVT_BROWSE, self.OnBrowse, self._brw_exe)
 
         # Values
         if 'penshower' in settings:
@@ -64,6 +68,10 @@ class _PenshowerConfigurePanel(ConfigurePanel):
                 self._brw_exe.SetPath(path)
             except ValueError:
                 pass
+
+    def OnBrowse(self, event):
+        self._brw_pendbase.SetBaseDir(event.path)
+        self._brw_exe.SetBaseDir(event.path)
 
     def Validate(self):
         if not ConfigurePanel.Validate(self):

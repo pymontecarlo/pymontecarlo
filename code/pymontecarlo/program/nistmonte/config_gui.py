@@ -27,7 +27,7 @@ import wx
 from pymontecarlo.program.config_gui import GUI, ConfigurePanel
 from pymontecarlo.program.nistmonte.config import program
 
-from wxtools2.browse import FileBrowseCtrl
+from wxtools2.browse import FileBrowseCtrl, EVT_BROWSE
 from wxtools2.dialog import show_error_dialog
 
 # Globals and constants variables.
@@ -38,14 +38,13 @@ class _NistMonteConfigurePanel(ConfigurePanel):
         # Controls
         lbl_java = wx.StaticText(self, label='Path to Java executable')
 
-        filetypes = [('Application files (*.exe)', '*.exe'),
+        filetypes = [('Application files (*.exe)', 'exe'),
                      ('Application files', '*')]
         self._brw_java = FileBrowseCtrl(self, filetypes=filetypes)
 
         lbl_jar = wx.StaticText(self, label='Path to NISTMonte jar')
 
-        filetypes = [('Jar files (*.jar)', '*.jar'),
-                     ('Jar files (*.jar)', '*')]
+        filetypes = [('Jar files (*.jar)', 'jar')]
         self._brw_jar = FileBrowseCtrl(self, filetypes=filetypes)
 
         # Sizer
@@ -53,6 +52,10 @@ class _NistMonteConfigurePanel(ConfigurePanel):
         sizer.Add(self._brw_java, 0, wx.GROW)
         sizer.Add(lbl_jar, 0, wx.TOP, 10)
         sizer.Add(self._brw_jar, 0, wx.GROW)
+
+        # Bind
+        self.Bind(EVT_BROWSE, self.OnBrowse, self._brw_java)
+        self.Bind(EVT_BROWSE, self.OnBrowse, self._brw_jar)
 
         # Values
         if 'nistmonte' in settings:
@@ -67,6 +70,10 @@ class _NistMonteConfigurePanel(ConfigurePanel):
                 self._brw_jar.SetPath(path)
             except ValueError:
                 pass
+
+    def OnBrowse(self, event):
+        self._brw_java.SetBaseDir(event.path)
+        self._brw_jar.SetBaseDir(event.path)
 
     def Validate(self):
         if not ConfigurePanel.Validate(self):
