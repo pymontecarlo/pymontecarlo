@@ -30,6 +30,7 @@ from pymontecarlo.output.manager import ResultManager
 import pymontecarlo.output.result #@UnusedImport
 
 from pymontecarlo.util.config import ConfigParser
+import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
@@ -65,6 +66,8 @@ class Results(Mapping):
         
         :return: results container
         """
+        task = progress.start_task("Loading results")
+
         zipfile = ZipFile(source, 'r')
 
         # Check version
@@ -78,17 +81,27 @@ class Results(Mapping):
         except KeyError:
             raise IOError, "Zip file (%s) does not contain a %s" % \
                     (getattr(source, 'name', 'unknown'), KEYS_INI_FILENAME)
+
+        task.status = 'Reading %s' % KEYS_INI_FILENAME
         config = ConfigParser()
         config.read(zipfile.open(zipinfo, 'r'))
 
         # Load each results
-        results = {}
-        for key, tag in getattr(config, SECTION_KEYS):
-            klass = ResultManager.get_class(tag)
+        items = list(getattr(config, SECTION_KEYS))
 
+        results = {}
+        for i, item in enumerate(items):
+            key, tag = item
+
+            task.progress = float(i) / len(items)
+            task.status = 'Loading %s' % key
+
+            klass = ResultManager.get_class(tag)
             results[key] = klass.__loadzip__(zipfile, key)
 
         zipfile.close()
+
+        progress.stop_task(task)
 
         return cls(results)
 
@@ -98,6 +111,8 @@ class Results(Mapping):
         
         :arg source: filepath or file-object
         """
+        task = progress.start_task('Saving results')
+
         zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED)
         zipfile.comment = 'version=%s' % VERSION
 
@@ -106,18 +121,24 @@ class Results(Mapping):
         section = config.add_section(SECTION_KEYS)
 
         # Save each result and update keys.ini
-        for key, result in self.iteritems():
-            result.__savezip__(zipfile, key)
+        for i, key in enumerate(self.iterkeys()):
+            task.progress = float(i) / len(self)
+            task.status = 'Saving result(s) for %s' % key
 
+            result = self[key]
+            result.__savezip__(zipfile, key)
             tag = ResultManager.get_tag(result.__class__)
             setattr(section, key, tag)
 
         # Save keys.ini in zip
+        task.status = 'Saving %s' % KEYS_INI_FILENAME
         fp = StringIO()
         config.write(fp)
         zipfile.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
         zipfile.close()
+
+        progress.stop_task(task)
 
     def __len__(self):
         return len(self._results)
