@@ -7,8 +7,6 @@
 .. module:: particle
    :synopsis: Type of particles
 
-.. inheritance-diagram:: pymontecarlo.input.particle
-
 """
 
 # Script information for the file.

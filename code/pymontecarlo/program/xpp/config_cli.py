@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: XPP Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.xpp.config_cli
-
 """
 
 # Script information for the file.

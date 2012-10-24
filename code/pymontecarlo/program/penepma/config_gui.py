@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: PENEPMA Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.penepma.config_gui
-
 """
 
 # Script information for the file.

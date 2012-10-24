@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: XPP Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.xpp.config_gui
-
 """
 
 # Script information for the file.

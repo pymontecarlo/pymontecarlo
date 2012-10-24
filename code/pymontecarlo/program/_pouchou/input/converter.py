@@ -7,7 +7,7 @@
 .. module:: converter
    :synopsis: Pouchou analytical model conversion from base options
 
-.. inheritance-diagram:: pymontecarlo.program.pouchou.input.converter
+.. inheritance-diagram:: pymontecarlo.program._pouchou.input.converter
 
 """
 

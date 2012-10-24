@@ -7,7 +7,7 @@
 .. module:: geometry
    :synopsis: Geometry definition for PENGEOM
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.input.geometry
+.. inheritance-diagram:: pymontecarlo.program._penelope.input.geometry
 
 """
 

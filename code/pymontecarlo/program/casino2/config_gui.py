@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: Casino 2 Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.casino2.config_gui
-
 """
 
 # Script information for the file.

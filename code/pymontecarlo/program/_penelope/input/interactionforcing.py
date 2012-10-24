@@ -7,7 +7,7 @@
 .. module:: interactionforcing
    :synopsis: Interaction forcing
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.input.interactionforcing
+.. inheritance-diagram:: pymontecarlo.program._penelope.input.interactionforcing
 
 """
 
@@ -58,7 +58,7 @@ class InteractionForcing(Option):
     def __eq__(self, other):
         return self.particle is other.particle and \
                     self.collision is other.collision
-    
+
     def __ne__(self, other):
         return not self == other
 

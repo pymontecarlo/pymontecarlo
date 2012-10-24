@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: PAP Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.pap.config_gui
-
 """
 
 # Script information for the file.

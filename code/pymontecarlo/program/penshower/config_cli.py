@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: PENSHOWER Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.penshower.config_cli
-
 """
 
 # Script information for the file.

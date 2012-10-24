@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: Casino 3 Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.casino3.config_cli
-
 """
 
 # Script information for the file.

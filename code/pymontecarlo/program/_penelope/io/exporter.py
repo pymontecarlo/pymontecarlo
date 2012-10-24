@@ -7,7 +7,7 @@
 .. module:: exporter
    :synopsis: Base exporter for all PENELOPE main programs
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.io.exporter
+.. inheritance-diagram:: pymontecarlo.program._penelope.io.exporter
 
 """
 

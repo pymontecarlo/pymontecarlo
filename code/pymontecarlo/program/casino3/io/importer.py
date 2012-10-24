@@ -4,7 +4,7 @@
 :mod:`importer` -- Casino 3 importer
 ================================================================================
 
-.. module:: Casino 3
+.. module:: importer
    :synopsis: PENEPMA importer
 
 .. inheritance-diagram:: pymontecarlo.program.casino3.io.importer

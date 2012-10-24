@@ -7,7 +7,7 @@
 .. module:: importer
    :synopsis: Base importer for PENELOPE main programs
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.io.importer
+.. inheritance-diagram:: pymontecarlo.program._penelope.io.importer
 
 """
 

@@ -7,7 +7,7 @@
 .. module:: material
    :synopsis: PENELOPE material definition
 
-.. inheritance-diagram:: pymontecarlo.program.penelope.input.material
+.. inheritance-diagram:: pymontecarlo.program._penelope.input.material
 
 """
 

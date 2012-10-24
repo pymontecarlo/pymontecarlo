@@ -7,8 +7,6 @@
 .. module:: worker
    :synopsis: PAP worker
 
-.. inheritance-diagram:: pymontecarlo.program.pap.runner.worker
-
 """
 
 # Script information for the file.

@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: NISTMonte Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.nistmonte.config_cli
-
 """
 
 # Script information for the file.

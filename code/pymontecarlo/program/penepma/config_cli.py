@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: PENEPMA Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.penepma.config_cli
-
 """
 
 # Script information for the file.

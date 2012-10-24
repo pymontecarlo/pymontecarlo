@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: NISTMonte Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.nistmonte.config_gui
-
 """
 
 # Script information for the file.

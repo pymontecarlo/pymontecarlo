@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: PAP Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.pap.config_cli
-
 """
 
 # Script information for the file.

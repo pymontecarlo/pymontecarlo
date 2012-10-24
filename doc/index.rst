@@ -44,10 +44,23 @@ Runner
 User interfaces
 ---------------
 
+Command line interface
+^^^^^^^^^^^^^^^^^^^^^^
+
 .. toctree::
    :glob:
    
    pymontecarlo/ui/cli/*
+
+Graphical user interface
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :glob:
+
+   pymontecarlo/ui/gui/*
+   pymontecarlo/ui/gui/input/*
+   pymontecarlo/ui/gui/output/*
    
 Utilities
 ---------
@@ -75,6 +88,17 @@ Casino 2
    pymontecarlo/program/casino2/input/*
    pymontecarlo/program/casino2/io/*
    pymontecarlo/program/casino2/runner/*
+   
+Casino 3
+^^^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/program/casino3/*
+   pymontecarlo/program/casino3/input/*
+   pymontecarlo/program/casino3/io/*
+   pymontecarlo/program/casino3/runner/*
 
 NIST Monte
 ^^^^^^^^^^
@@ -92,9 +116,9 @@ PENELOPE
 .. toctree::
    :glob:
    
-   pymontecarlo/program/penelope/*
-   pymontecarlo/program/penelope/input/*
-   pymontecarlo/program/penelope/io/*
+   pymontecarlo/program/_penelope/*
+   pymontecarlo/program/_penelope/input/*
+   pymontecarlo/program/_penelope/io/*
 
 PENEPMA
 ^^^^^^^
@@ -107,15 +131,25 @@ PENEPMA
    pymontecarlo/program/penepma/io/*
    pymontecarlo/program/penepma/runner/*
 
+PENSHOWER
+^^^^^^^^^
+
+.. toctree::
+   :glob:
+   
+   pymontecarlo/program/penshower/*
+   pymontecarlo/program/penshower/input/*
+   pymontecarlo/program/penshower/io/*
+   pymontecarlo/program/penshower/runner/*
+
 Pouchou and Pichoir
 ^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :glob:
    
-   pymontecarlo/program/pouchou/*
-   pymontecarlo/program/pouchou/input/*
-   pymontecarlo/program/pouchou/runner/*
+   pymontecarlo/program/_pouchou/input/*
+   pymontecarlo/program/_pouchou/runner/*
 
 PAP
 ^^^

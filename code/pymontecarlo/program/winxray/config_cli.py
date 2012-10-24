@@ -7,8 +7,6 @@
 .. module:: config_cli
    :synopsis: WinXRay Monte Carlo program CLI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.winxray.config_cli
-
 """
 
 # Script information for the file.

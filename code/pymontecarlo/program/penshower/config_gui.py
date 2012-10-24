@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: PENSHOWER Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.penshower.config_gui
-
 """
 
 # Script information for the file.

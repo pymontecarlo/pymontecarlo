@@ -7,7 +7,7 @@
 .. module:: result
    :synopsis: Panels for results
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.panel.result
+.. inheritance-diagram:: pymontecarlo.ui.gui.output.result
 
 """
 
@@ -577,7 +577,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
 
         # Variables
         self._result = result
-        self._params = _TrajectoryResultParameters(len(result))  # default
+        self._params = _TrajectoryResultParameters(len(result)) # default
         self._geometrygl = GeometryGLManager.get(options.geometry)
         self._glists = []
 
@@ -950,7 +950,7 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
         _SaveableResultPanel.__init__(self, parent, options, key, result)
 
         # Variables
-        self._params = _PhotonIntensityResultParameters()  # default
+        self._params = _PhotonIntensityResultParameters() # default
 
         # Controls
         toolbar = _SaveableResultToolbar(self)
@@ -1064,7 +1064,7 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
 
         return rows
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     import os
     import math
     from zipfile import ZipFile

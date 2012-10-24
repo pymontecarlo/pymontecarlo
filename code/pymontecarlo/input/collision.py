@@ -7,8 +7,6 @@
 .. module:: collision
    :synopsis: Type of particle collisions
 
-.. inheritance-diagram:: pymontecarlo.input.collision
-
 """
 
 # Script information for the file.

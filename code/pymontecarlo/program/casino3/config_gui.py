@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: Casino 3 Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.casino3.config_gui
-
 """
 
 # Script information for the file.

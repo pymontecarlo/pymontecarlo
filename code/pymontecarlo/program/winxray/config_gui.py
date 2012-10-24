@@ -7,8 +7,6 @@
 .. module:: config_gui
    :synopsis: WinXRay Monte Carlo program GUI configuration
 
-.. inheritance-diagram:: pymontecarlo.program.winxray.config_gui
-
 """
 
 # Script information for the file.
