@@ -27,6 +27,7 @@ __license__ = "GPL v3"
 # Globals and constants variables.
 
 class Manager(object):
+
     def __init__(self):
         self._loaders = {}
         self._savers = {}
@@ -108,3 +109,45 @@ class Manager(object):
             raise ValueError, 'No saver found for class (%s). Please register it first.' % klass
         return self._savers[klass]
 
+class ClassManager(object):
+
+    def __init__(self):
+        self._map = {}
+
+    def register(self, key_class, value_class):
+        """
+        Registers a link between two classes.
+        
+        Raises :exc:`KeyError` if the specified *key* class is already 
+        associated with a different *value* class. 
+        
+        :arg key_class: *key* class
+        :arg value_class: *value* class
+        """
+        if key_class in self._map and self._loaders.get(key_class) != value_class:
+            raise KeyError, 'A class (%s) is already registered for (%s).' % \
+                (self._loaders[key_class].__name__, key_class.__name__)
+
+        self._map[key_class] = value_class
+
+    def get(self, key_class, search_inheritance=True):
+        """
+        Returns the *value* class associated with the specified *key* class.
+        If *search_inheritance* is ``True``, the base classes of the specified
+        *key* class are searched to find a potential match.
+        
+        :arg key_class: *key* class
+        :arg search_inheritance: whether to search for a match in the base
+            classes of the specified *key* class (default: ``True``)
+        """
+        value_class = self._map.get(key_class, None)
+        if value_class is not None:
+            return value_class
+
+        if search_inheritance:
+            for base_class in key_class.__bases__:
+                value_class = self._map.get(base_class, None)
+                if value_class is not None:
+                    return value_class
+
+        raise KeyError, 'No class was found for %s.' % key_class.__name__
