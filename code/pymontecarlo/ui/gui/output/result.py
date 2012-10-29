@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import csv
+import re
 
 # Third party modules.
 import wx
@@ -52,6 +53,8 @@ from pymontecarlo.output.result import \
 from pymontecarlo.input.collision import \
     (HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
      INNERSHELL_IMPACT_IONISATION)
+
+_REGEX_CAMEL_CASE = re.compile('([a-z0-9])([A-Z])')
 
 _ICON_OPTIONS = PyEmbeddedImage(
     "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlw"
@@ -126,6 +129,37 @@ class _ResultPanel(wx.Panel):
         self._key = key
         self._result = result
 
+        # Controls and sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        font = wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+        lbl_key = wx.StaticText(self, label=key)
+        lbl_key.SetFont(font)
+
+        font = wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_NORMAL)
+        label = self.result.__class__.__name__[:-6]
+        label = _REGEX_CAMEL_CASE.sub(r'\1 \2', label)
+        lbl_class = wx.StaticText(self, label=label)
+        lbl_class.SetFont(font)
+
+        szr_title = wx.BoxSizer(wx.HORIZONTAL)
+        szr_title.Add(lbl_key, 0)
+        szr_title.AddStretchSpacer()
+        szr_title.Add(lbl_class, 0, wx.ALIGN_RIGHT)
+        sizer.Add(szr_title, 0, wx.GROW | wx.ALL, 5)
+
+        self._init_panel(sizer)
+
+        self._init_toolbar(sizer)
+
+        self.SetSizer(sizer)
+
+    def _init_panel(self, sizer):
+        raise NotImplementedError
+
+    def _init_toolbar(self, sizer):
+        pass
+
     @property
     def options(self):
         return self._options
@@ -139,6 +173,29 @@ class _ResultPanel(wx.Panel):
         return self._result
 
 class _SaveableResultPanel(_ResultPanel):
+
+    def _init_toolbar(self, sizer):
+        # Controls
+        toolbar = wx.ToolBar(self)
+
+        self._TB_COPY = wx.NewId()
+        toolbar.AddSimpleTool(self._TB_COPY, _ICON_COPY.GetBitmap(),
+                              "Copy results to clipboard")
+
+        self._TB_SAVE = wx.NewId()
+        toolbar.AddSimpleTool(self._TB_SAVE, _ICON_SAVE.GetBitmap(),
+                              "Save results to file")
+
+        toolbar.Realize()
+
+        # Sizer
+        sizer.Add(toolbar, 0, wx.GROW)
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.copy, id=self._TB_COPY)
+        self.Bind(wx.EVT_TOOL, self.save, id=self._TB_SAVE)
+
+        return toolbar
 
     def dump(self):
         """
@@ -186,26 +243,6 @@ class _SaveableResultPanel(_ResultPanel):
                 sheet.write(irow, icol, value)
 
         book.save(filepath)
-
-class _SaveableResultToolbar(wx.ToolBar):
-
-    def __init__(self, panel):
-        wx.ToolBar.__init__(self, panel)
-
-        # Controls
-        self._TB_COPY = wx.NewId()
-        self.AddSimpleTool(self._TB_COPY, _ICON_COPY.GetBitmap(),
-                           "Copy results to clipboard")
-
-        self._TB_SAVE = wx.NewId()
-        self.AddSimpleTool(self._TB_SAVE, _ICON_SAVE.GetBitmap(),
-                           "Save results to file")
-
-        self.Realize()
-
-        # Bind
-        self.Bind(wx.EVT_TOOL, panel.copy, id=self._TB_COPY)
-        self.Bind(wx.EVT_TOOL, panel.save, id=self._TB_SAVE)
 
 class _TrajectoryResultParameters(object):
 
@@ -742,24 +779,23 @@ class _TrajectoryResultGLCanvas(GLCanvas):
 
 class TrajectoryResultPanel(_ResultPanel):
 
-    def __init__(self, parent, options, key, result):
-        _ResultPanel.__init__(self, parent, options, key, result)
-
+    def _init_panel(self, sizer):
         # Controls
-        self._canvas = _TrajectoryResultGLCanvas(self, options, result)
+        self._canvas = _TrajectoryResultGLCanvas(self, self.options, self.result)
         self._canvas.SetSensitivityRotation(2.5)
 
+        # Sizer
+        sizer.Add(self._canvas, 1, wx.EXPAND)
+
+    def _init_toolbar(self, sizer):
+        # Controls
         toolbar = GLCanvasToolbar(self._canvas)
         item_options = toolbar.AddSimpleTool(-1, _ICON_OPTIONS.GetBitmap(),
                                              'Setup display options')
         toolbar.Realize()
 
         # Sizer
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self._canvas, 1, wx.EXPAND)
         sizer.Add(toolbar, 0, wx.GROW)
-
-        self.SetSizer(sizer)
 
         # Bind
         self.Bind(wx.EVT_TOOL, self.OnOptions, item_options)
@@ -956,37 +992,33 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
                       'Emi. Total': lambda res, trans: res.intensity(trans, True, True)}
 
     def __init__(self, parent, options, key, result):
+        self._params = _PhotonIntensityResultParameters() # default
         _SaveableResultPanel.__init__(self, parent, options, key, result)
 
-        # Variables
-        self._params = _PhotonIntensityResultParameters() # default
-
+    def _init_panel(self, sizer):
         # Controls
-        toolbar = _SaveableResultToolbar(self)
-        item_options = \
-            toolbar.InsertSimpleTool(toolbar.GetToolPos(toolbar._TB_COPY), -1,
-                                     _ICON_OPTIONS.GetBitmap(),
-                                     'Setup display options')
-        toolbar.InsertSeparator(toolbar.GetToolPos(toolbar._TB_COPY))
-        toolbar.Realize()
-
         self._grid = Grid(self)
         self._grid.CreateGrid(1, 1)
         self._grid.SetDefaultColSize(125)
         self._grid.EnableEditing(False)
 
         # Sizer
-        mainsizer = wx.BoxSizer(wx.VERTICAL)
-        mainsizer.Add(self._grid, 1, wx.EXPAND)
-        mainsizer.Add(toolbar, 0, wx.GROW)
-
-        self.SetSizer(mainsizer)
-
-        # Bind
-        self.Bind(wx.EVT_TOOL, self.OnOptions, item_options)
+        sizer.Add(self._grid, 1, wx.EXPAND)
 
         # Default
         self.DrawGrid()
+
+    def _init_toolbar(self, sizer):
+        toolbar = _SaveableResultPanel._init_toolbar(self, sizer)
+        item_options = \
+            toolbar.InsertSimpleTool(toolbar.GetToolPos(self._TB_COPY), -1,
+                                     _ICON_OPTIONS.GetBitmap(),
+                                     'Setup display options')
+        toolbar.InsertSeparator(toolbar.GetToolPos(self._TB_COPY))
+        toolbar.Realize()
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.OnOptions, item_options)
 
     def GetParameters(self):
         return self._params
@@ -1078,34 +1110,26 @@ ResultPanelManager.register(PhotonIntensityResult, PhotonIntensityResultPanel)
 
 class TimeResultPanel(_SaveableResultPanel):
 
-    def __init__(self, parent, options, key, result):
-        _SaveableResultPanel.__init__(self, parent, options, key, result)
-
+    def _init_panel(self, sizer):
         # Controls
         lbl_time = wx.StaticText(self, label='Total time of the simulation')
         txt_time = wx.TextCtrl(self, size=(200, -1),
                                style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_time.SetValue(human_time(result.simulation_time_s))
+        txt_time.SetValue(human_time(self.result.simulation_time_s))
 
         lbl_speed = wx.StaticText(self, label='Average time of one trajectory')
         txt_speed = wx.TextCtrl(self, size=(200, -1),
                                 style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        val, _unc = result.simulation_speed_s
+        val, _unc = self.result.simulation_speed_s
         txt_speed.SetValue(human_time(val))
 
-        toolbar = _SaveableResultToolbar(self)
-
         # Sizer
-        mainsizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(lbl_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        sizer.Add(txt_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
+        sizer.Add(lbl_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        sizer.Add(txt_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
 
-        mainsizer.Add(lbl_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
-        mainsizer.Add(txt_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
-        mainsizer.Add(lbl_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
-        mainsizer.Add(txt_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
-        mainsizer.AddStretchSpacer()
-        mainsizer.Add(toolbar, 0, wx.GROW)
-
-        self.SetSizer(mainsizer)
+        sizer.AddStretchSpacer()
 
     def dump(self):
         return [['Simulation time (s)', 'Simulation speed (s)'],
@@ -1115,64 +1139,55 @@ ResultPanelManager.register(TimeResult, TimeResultPanel)
 
 class ElectronFractionResultPanel(_SaveableResultPanel):
 
-    def __init__(self, parent, options, key, result):
-        _SaveableResultPanel.__init__(self, parent, options, key, result)
-
+    def _init_panel(self, sizer):
         # Controls
         lbl_absorbed = wx.StaticText(self, label='Absorbed fraction')
         txt_absorbed_val = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_absorbed_val.SetValue(str(result.absorbed[0]))
+        txt_absorbed_val.SetValue(str(self.result.absorbed[0]))
         txt_absorbed_unc = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_absorbed_unc.SetValue(str(result.absorbed[1]))
+        txt_absorbed_unc.SetValue(str(self.result.absorbed[1]))
 
         lbl_backscattered = wx.StaticText(self, label='Backscattered fraction')
         txt_backscattered_val = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_backscattered_val.SetValue(str(result.backscattered[0]))
+        txt_backscattered_val.SetValue(str(self.result.backscattered[0]))
         txt_backscattered_unc = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_backscattered_unc.SetValue(str(result.backscattered[1]))
+        txt_backscattered_unc.SetValue(str(self.result.backscattered[1]))
 
         lbl_transmitted = wx.StaticText(self, label='Transmitted fraction')
         txt_transmitted_val = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_transmitted_val.SetValue(str(result.transmitted[0]))
+        txt_transmitted_val.SetValue(str(self.result.transmitted[0]))
         txt_transmitted_unc = wx.TextCtrl(self, size=(100, -1),
                                        style=wx.TE_READONLY | wx.ALIGN_RIGHT)
-        txt_transmitted_unc.SetValue(str(result.transmitted[1]))
-
-        toolbar = _SaveableResultToolbar(self)
+        txt_transmitted_unc.SetValue(str(self.result.transmitted[1]))
 
         # Sizer
-        mainsizer = wx.BoxSizer(wx.VERTICAL)
-
-        mainsizer.Add(lbl_absorbed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        sizer.Add(lbl_absorbed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
         szr_absorbed = wx.BoxSizer(wx.HORIZONTAL)
         szr_absorbed.Add(txt_absorbed_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_absorbed.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_absorbed.Add(txt_absorbed_unc, 0, wx.ALIGN_CENTER_VERTICAL)
-        mainsizer.Add(szr_absorbed, 0, wx.LEFT, 25)
+        sizer.Add(szr_absorbed, 0, wx.LEFT, 25)
 
-        mainsizer.Add(lbl_backscattered, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        sizer.Add(lbl_backscattered, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
         szr_backscattered = wx.BoxSizer(wx.HORIZONTAL)
         szr_backscattered.Add(txt_backscattered_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_backscattered.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_backscattered.Add(txt_backscattered_unc, 0, wx.ALIGN_CENTER_VERTICAL)
-        mainsizer.Add(szr_backscattered, 0, wx.LEFT, 25)
+        sizer.Add(szr_backscattered, 0, wx.LEFT, 25)
 
-        mainsizer.Add(lbl_transmitted, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        sizer.Add(lbl_transmitted, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
         szr_transmitted = wx.BoxSizer(wx.HORIZONTAL)
         szr_transmitted.Add(txt_transmitted_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_transmitted.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_transmitted.Add(txt_transmitted_unc, 0, wx.ALIGN_CENTER_VERTICAL)
-        mainsizer.Add(szr_transmitted, 0, wx.LEFT, 25)
+        sizer.Add(szr_transmitted, 0, wx.LEFT, 25)
 
-        mainsizer.AddStretchSpacer()
-        mainsizer.Add(toolbar, 0, wx.GROW)
-
-        self.SetSizer(mainsizer)
+        sizer.AddStretchSpacer()
 
     def dump(self):
         return [['', 'Absorbed', 'Backscattered', 'Transmitted'],
@@ -1181,57 +1196,57 @@ class ElectronFractionResultPanel(_SaveableResultPanel):
 
 ResultPanelManager.register(ElectronFractionResult, ElectronFractionResultPanel)
 
-if __name__ == '__main__': # pragma: no cover
-    import math
-    from zipfile import ZipFile
-    from pymontecarlo.input.options import Options
-    from pymontecarlo.input.geometry import \
-        Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
-    from pymontecarlo.input.material import pure
-    from pymontecarlo.input.detector import PhotonIntensityDetector
-
-    results_zip = os.path.join(os.path.dirname(__file__),
-                               '../../../testdata/results.zip')
-    zipfile = ZipFile(results_zip, 'r')
-
-    options = Options(name="Test")
-    options.detectors['det1'] = PhotonIntensityDetector((0, math.pi / 2), (0, 2 * math.pi))
-
-    options.geometry = Substrate(pure(8))
-
-    options.geometry = Inclusion(pure(5), pure(6), 0.5e-6)
-
-    options.geometry = MultiLayers(pure(5))
-    options.geometry.add_layer(pure(6), 0.55e-6)
-    options.geometry.add_layer(pure(6), 0.1e-6)
-
-    options.geometry = GrainBoundaries(pure(8), pure(9))
-    options.geometry.add_layer(pure(6), 0.55e-6)
-
-    options.geometry = Sphere(pure(10), 0.75e-6)
-
-    options.geometry.tilt_rad = math.radians(30)
-
-    class __MainFrame(wx.Frame):
-
-        def __init__(self, parent):
-            wx.Frame.__init__(self, parent, title='Main frame')
-
-#            result = TrajectoryResult.__loadzip__(zipfile, 'det6')
-#            self.panel = TrajectoryResultPanel(self, options, 'det6', result)
-
-            result = PhotonIntensityResult.__loadzip__(zipfile, 'det1')
-            self.panel = PhotonIntensityResultPanel(self, options, 'det1', result)
-
-            sizer = wx.BoxSizer(wx.VERTICAL)
-            sizer.Add(self.panel, 1, wx.EXPAND)
-
-            self.SetSizer(sizer)
-
-    app = wx.PySimpleApp()
-
-    mainframe = __MainFrame(None)
-    mainframe.SetSizeWH(400, 400)
-    mainframe.Show()
-
-    app.MainLoop()
+#if __name__ == '__main__': # pragma: no cover
+#    import math
+#    from zipfile import ZipFile
+#    from pymontecarlo.input.options import Options
+#    from pymontecarlo.input.geometry import \
+#        Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
+#    from pymontecarlo.input.material import pure
+#    from pymontecarlo.input.detector import PhotonIntensityDetector
+#
+#    results_zip = os.path.join(os.path.dirname(__file__),
+#                               '../../../testdata/results.zip')
+#    zipfile = ZipFile(results_zip, 'r')
+#
+#    options = Options(name="Test")
+#    options.detectors['det1'] = PhotonIntensityDetector((0, math.pi / 2), (0, 2 * math.pi))
+#
+#    options.geometry = Substrate(pure(8))
+#
+#    options.geometry = Inclusion(pure(5), pure(6), 0.5e-6)
+#
+#    options.geometry = MultiLayers(pure(5))
+#    options.geometry.add_layer(pure(6), 0.55e-6)
+#    options.geometry.add_layer(pure(6), 0.1e-6)
+#
+#    options.geometry = GrainBoundaries(pure(8), pure(9))
+#    options.geometry.add_layer(pure(6), 0.55e-6)
+#
+#    options.geometry = Sphere(pure(10), 0.75e-6)
+#
+#    options.geometry.tilt_rad = math.radians(30)
+#
+#    class __MainFrame(wx.Frame):
+#
+#        def __init__(self, parent):
+#            wx.Frame.__init__(self, parent, title='Main frame')
+#
+##            result = TrajectoryResult.__loadzip__(zipfile, 'det6')
+##            self.panel = TrajectoryResultPanel(self, options, 'det6', result)
+#
+#            result = PhotonIntensityResult.__loadzip__(zipfile, 'det1')
+#            self.panel = PhotonIntensityResultPanel(self, options, 'det1', result)
+#
+#            sizer = wx.BoxSizer(wx.VERTICAL)
+#            sizer.Add(self.panel, 1, wx.EXPAND)
+#
+#            self.SetSizer(sizer)
+#
+#    app = wx.PySimpleApp()
+#
+#    mainframe = __MainFrame(None)
+#    mainframe.SetSizeWH(400, 400)
+#    mainframe.Show()
+#
+#    app.MainLoop()
