@@ -145,7 +145,7 @@ class PhotonIntensityResult(_Result):
         intensities = {}
         for row in reader:
             transition = from_string(row[0])
-            # skip row[1] (energy) 
+            # skip row[1] (energy)
 
             gcf = float(row[2]), float(row[3])
             gbf = float(row[4]), float(row[5])
@@ -1064,7 +1064,7 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
         h5file = h5py.File(os.path.join(tmpdir, filename), 'r')
 
-        return _TrajectoryResultHDF5(h5file, tmpdir)
+        return TrajectoryHDF5Result(h5file, tmpdir)
 
     def __savezip__(self, zipfile, key):
         # Create temporary folder
@@ -1138,7 +1138,7 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
 ResultManager.register('TrajectoryResult', TrajectoryResult)
 
-class _TrajectoryResultHDF5(TrajectoryResult):
+class TrajectoryHDF5Result(TrajectoryResult):
 
     def __init__(self, h5file, tmpdir):
         self._h5file = h5file
