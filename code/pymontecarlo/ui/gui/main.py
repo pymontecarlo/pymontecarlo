@@ -206,6 +206,7 @@ class MainFrame(wx.Frame):
         for node in self._tree:
             if node.sim == sim:
                 node.remove()
+                self.change_window(wx.Panel(self._splitter))
                 break
 
     def OnClearSimulation(self, message):
@@ -235,6 +236,9 @@ class MainFrame(wx.Frame):
         if panel is None:
             return
 
+        self.change_window(panel)
+
+    def change_window(self, panel):
         self.Freeze()
 
         oldpanel = self._panel
