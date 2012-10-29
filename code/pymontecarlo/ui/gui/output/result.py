@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 import csv
 
 # Third party modules.
@@ -33,10 +34,12 @@ import numpy as np
 import xlwt
 
 # Local modules.
-from pymontecarlo.output.result import PhotonIntensityResult, TrajectoryResult
+from pymontecarlo.output.result import \
+    PhotonIntensityResult, TrajectoryResult, TimeResult, ElectronFractionResult
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
 from pymontecarlo.ui.gui.output.manager import ResultPanelManager
 import pymontecarlo.util.physics as physics
+from pymontecarlo.util.human import human_time
 
 from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
 from wxtools2.floatspin import FloatSpin
@@ -1073,8 +1076,112 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
 
 ResultPanelManager.register(PhotonIntensityResult, PhotonIntensityResultPanel)
 
+class TimeResultPanel(_SaveableResultPanel):
+
+    def __init__(self, parent, options, key, result):
+        _SaveableResultPanel.__init__(self, parent, options, key, result)
+
+        # Controls
+        lbl_time = wx.StaticText(self, label='Total time of the simulation')
+        txt_time = wx.TextCtrl(self, size=(200, -1),
+                               style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_time.SetValue(human_time(result.simulation_time_s))
+
+        lbl_speed = wx.StaticText(self, label='Average time of one trajectory')
+        txt_speed = wx.TextCtrl(self, size=(200, -1),
+                                style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        val, _unc = result.simulation_speed_s
+        txt_speed.SetValue(human_time(val))
+
+        toolbar = _SaveableResultToolbar(self)
+
+        # Sizer
+        mainsizer = wx.BoxSizer(wx.VERTICAL)
+
+        mainsizer.Add(lbl_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mainsizer.Add(txt_time, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
+        mainsizer.Add(lbl_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mainsizer.Add(txt_speed, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 25)
+        mainsizer.AddStretchSpacer()
+        mainsizer.Add(toolbar, 0, wx.GROW)
+
+        self.SetSizer(mainsizer)
+
+    def dump(self):
+        return [['Simulation time (s)', 'Simulation speed (s)'],
+                [self.result.simulation_time_s, self.result.simulation_speed_s[0]]]
+
+ResultPanelManager.register(TimeResult, TimeResultPanel)
+
+class ElectronFractionResultPanel(_SaveableResultPanel):
+
+    def __init__(self, parent, options, key, result):
+        _SaveableResultPanel.__init__(self, parent, options, key, result)
+
+        # Controls
+        lbl_absorbed = wx.StaticText(self, label='Absorbed fraction')
+        txt_absorbed_val = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_absorbed_val.SetValue(str(result.absorbed[0]))
+        txt_absorbed_unc = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_absorbed_unc.SetValue(str(result.absorbed[1]))
+
+        lbl_backscattered = wx.StaticText(self, label='Backscattered fraction')
+        txt_backscattered_val = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_backscattered_val.SetValue(str(result.backscattered[0]))
+        txt_backscattered_unc = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_backscattered_unc.SetValue(str(result.backscattered[1]))
+
+        lbl_transmitted = wx.StaticText(self, label='Transmitted fraction')
+        txt_transmitted_val = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_transmitted_val.SetValue(str(result.transmitted[0]))
+        txt_transmitted_unc = wx.TextCtrl(self, size=(100, -1),
+                                       style=wx.TE_READONLY | wx.ALIGN_RIGHT)
+        txt_transmitted_unc.SetValue(str(result.transmitted[1]))
+
+        toolbar = _SaveableResultToolbar(self)
+
+        # Sizer
+        mainsizer = wx.BoxSizer(wx.VERTICAL)
+
+        mainsizer.Add(lbl_absorbed, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        szr_absorbed = wx.BoxSizer(wx.HORIZONTAL)
+        szr_absorbed.Add(txt_absorbed_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_absorbed.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_absorbed.Add(txt_absorbed_unc, 0, wx.ALIGN_CENTER_VERTICAL)
+        mainsizer.Add(szr_absorbed, 0, wx.LEFT, 25)
+
+        mainsizer.Add(lbl_backscattered, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        szr_backscattered = wx.BoxSizer(wx.HORIZONTAL)
+        szr_backscattered.Add(txt_backscattered_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_backscattered.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_backscattered.Add(txt_backscattered_unc, 0, wx.ALIGN_CENTER_VERTICAL)
+        mainsizer.Add(szr_backscattered, 0, wx.LEFT, 25)
+
+        mainsizer.Add(lbl_transmitted, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        szr_transmitted = wx.BoxSizer(wx.HORIZONTAL)
+        szr_transmitted.Add(txt_transmitted_val, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_transmitted.Add(wx.StaticText(self, label=u"\u00b1"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_transmitted.Add(txt_transmitted_unc, 0, wx.ALIGN_CENTER_VERTICAL)
+        mainsizer.Add(szr_transmitted, 0, wx.LEFT, 25)
+
+        mainsizer.AddStretchSpacer()
+        mainsizer.Add(toolbar, 0, wx.GROW)
+
+        self.SetSizer(mainsizer)
+
+    def dump(self):
+        return [['', 'Absorbed', 'Backscattered', 'Transmitted'],
+                ['Average', self.result.absorbed[0], self.result.backscattered[0], self.result.transmitted[0]],
+                ['Std. Dev.', self.result.absorbed[1], self.result.backscattered[1], self.result.transmitted[1]]]
+
+ResultPanelManager.register(ElectronFractionResult, ElectronFractionResultPanel)
+
 if __name__ == '__main__': # pragma: no cover
-    import os
     import math
     from zipfile import ZipFile
     from pymontecarlo.input.options import Options
