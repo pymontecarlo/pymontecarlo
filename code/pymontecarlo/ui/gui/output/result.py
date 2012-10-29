@@ -33,7 +33,9 @@ import numpy as np
 import xlwt
 
 # Local modules.
+from pymontecarlo.output.result import PhotonIntensityResult, TrajectoryResult
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
+from pymontecarlo.ui.gui.output.manager import ResultPanelManager
 import pymontecarlo.util.physics as physics
 
 from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
@@ -195,6 +197,8 @@ class _SaveableResultToolbar(wx.ToolBar):
         self._TB_SAVE = wx.NewId()
         self.AddSimpleTool(self._TB_SAVE, _ICON_SAVE.GetBitmap(),
                            "Save results to file")
+
+        self.Realize()
 
         # Bind
         self.Bind(wx.EVT_TOOL, panel.copy, id=self._TB_COPY)
@@ -766,6 +770,8 @@ class TrajectoryResultPanel(_ResultPanel):
 
         dialog.Destroy()
 
+ResultPanelManager.register(TrajectoryResult, TrajectoryResultPanel)
+
 class _PhotonIntensityResultParameters(object):
 
     def __init__(self):
@@ -959,6 +965,7 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
                                      _ICON_OPTIONS.GetBitmap(),
                                      'Setup display options')
         toolbar.InsertSeparator(toolbar.GetToolPos(toolbar._TB_COPY))
+        toolbar.Realize()
 
         self._grid = Grid(self)
         self._grid.CreateGrid(1, 1)
@@ -1064,6 +1071,8 @@ class PhotonIntensityResultPanel(_SaveableResultPanel):
 
         return rows
 
+ResultPanelManager.register(PhotonIntensityResult, PhotonIntensityResultPanel)
+
 if __name__ == '__main__': # pragma: no cover
     import os
     import math
@@ -1073,7 +1082,6 @@ if __name__ == '__main__': # pragma: no cover
         Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
     from pymontecarlo.input.material import pure
     from pymontecarlo.input.detector import PhotonIntensityDetector
-    from pymontecarlo.output.result import TrajectoryResult, PhotonIntensityResult
 
     results_zip = os.path.join(os.path.dirname(__file__),
                                '../../../testdata/results.zip')
