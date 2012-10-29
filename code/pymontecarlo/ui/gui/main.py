@@ -22,6 +22,8 @@ __license__ = "GPL v3"
 # Write stdout and stderr to file if main is frozen
 import os, sys, imp
 
+os.chdir('/home/ppinard/tmp')
+
 if hasattr(sys, "frozen") or hasattr(sys, "importers") or imp.is_frozen("__main__"):
     filepath = os.path.join(os.path.expanduser('~'), '.pymontecarlo', "stdout.log")
     sys.stdout = open(filepath, "w")
@@ -215,7 +217,8 @@ class MainFrame(wx.Frame):
         menubar = self.GetMenuBar()
         toolbar = self.GetToolBar()
 
-        enabled = self._tree.selection is not None
+        selection = self._tree.selection
+        enabled = selection is not None and hasattr(selection, 'sim')
         menubar.Enable(wx.ID_CLOSE, enabled)
         toolbar.EnableTool(wx.ID_CLOSE, enabled)
 
