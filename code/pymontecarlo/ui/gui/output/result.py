@@ -34,9 +34,13 @@ import numpy as np
 
 import xlwt
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
+
 # Local modules.
 from pymontecarlo.output.result import \
-    PhotonIntensityResult, TrajectoryResult, TimeResult, ElectronFractionResult
+    (PhotonIntensityResult, TrajectoryResult, TimeResult, ElectronFractionResult,
+     PhotonSpectrumResult)
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
 from pymontecarlo.ui.gui.output.manager import ResultPanelManager
 import pymontecarlo.util.physics as physics
@@ -46,6 +50,7 @@ from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
 from wxtools2.floatspin import FloatSpin
 from wxtools2.combobox import PyComboBox
 from wxtools2.dialog import show_save_filedialog
+from wxtools2.wxmatplotlib import NavigationToolbarWx, StatusBarWx
 
 # Globals and constants variables.
 from pymontecarlo.output.result import \
@@ -171,6 +176,15 @@ class _ResultPanel(wx.Panel):
     @property
     def result(self):
         return self._result
+
+class UnknownResultPanel(_ResultPanel):
+
+    def _init_panel(self, sizer):
+        # Controls
+        label = wx.StaticText(self, label='No viewer for this result')
+
+        # Sizer
+        sizer.Add(label, 0, wx.LEFT, 10)
 
 class _SaveableResultPanel(_ResultPanel):
 
@@ -1207,6 +1221,72 @@ class ElectronFractionResultPanel(_SaveableResultPanel):
                 ['Std. Dev.', self.result.absorbed[1], self.result.backscattered[1], self.result.transmitted[1]]]
 
 ResultPanelManager.register(ElectronFractionResult, ElectronFractionResultPanel)
+
+class PhotonSpectrumResultPanel(_SaveableResultPanel):
+
+    def __init__(self, parent, options, key, result):
+        _SaveableResultPanel.__init__(self, parent, options, key, result)
+
+        self._register_save_method('emsa', 'Electronic Microscopy Society of America format',
+                                   self._save_emsa)
+
+    def _init_panel(self, sizer):
+        # Variable
+        fig = Figure()
+        ax = fig.add_subplot("111")
+
+        energies_eV, intensities, uncs = self.result.get_total()
+        ax.errorbar(energies_eV, intensities, uncs,
+                    fmt='b-', ecolor='#c0d8ff', elinewidth=1)
+
+        ax.set_xlabel('Energy (eV)')
+        ax.set_ylabel('Intensity (counts / (sr.eV.electron))')
+
+        # Controls
+        self._canvas = FigureCanvasWxAgg(self, -1, fig)
+
+        # Sizer
+        sizer.Add(self._canvas, 1, wx.EXPAND)
+
+    def _init_toolbar(self, sizer):
+        # Controls
+        statusbar = StatusBarWx(self)
+
+        toolbar = NavigationToolbarWx(self._canvas)
+        toolbar.set_status_bar(statusbar)
+
+        toolbar.DeleteTool(toolbar._NTB2_SAVE)
+
+        toolbar.AddSeparator()
+
+        self._TB_COPY = wx.NewId()
+        toolbar.AddSimpleTool(self._TB_COPY, _ICON_COPY.GetBitmap(),
+                              "Copy results to clipboard")
+
+        self._TB_SAVE = wx.NewId()
+        toolbar.AddSimpleTool(self._TB_SAVE, _ICON_SAVE.GetBitmap(),
+                              "Save results to file")
+
+        toolbar.Realize()
+
+        # Sizer
+        sizer.Add(statusbar, 0, wx.GROW)
+        sizer.Add(toolbar, 0, wx.GROW)
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.copy, id=self._TB_COPY)
+        self.Bind(wx.EVT_TOOL, self.save, id=self._TB_SAVE)
+
+        return toolbar
+
+    def dump(self):
+        data = np.array(self.result.get_total())
+        return np.transpose(data)
+
+    def _save_emsa(self, filepath):
+        pass
+
+ResultPanelManager.register(PhotonSpectrumResult, PhotonSpectrumResultPanel)
 
 #if __name__ == '__main__': # pragma: no cover
 #    import math

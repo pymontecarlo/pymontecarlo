@@ -45,6 +45,7 @@ from wx.lib.pubsub import Publisher as pub
 # Local modules.
 from pymontecarlo.ui.gui.controller import controller
 from pymontecarlo.ui.gui.output.manager import ResultPanelManager
+from pymontecarlo.ui.gui.output.result import UnknownResultPanel
 from pymontecarlo.ui.gui.configure import ConfigureDialog
 import pymontecarlo.ui.gui.output.result #@UnusedImport
 
@@ -192,12 +193,9 @@ class MainFrame(wx.Frame):
             try:
                 panel_class = ResultPanelManager.get(result.__class__, True)
             except KeyError:
-                panel = wx.Panel(self._splitter)
-                sizer = wx.BoxSizer(wx.VERTICAL)
-                sizer.Add(wx.StaticText(panel, label='No viewer for this result'))
-                panel.SetSizer(sizer)
-            else:
-                panel = panel_class(self._splitter, sim.options, key, result)
+                panel_class = UnknownResultPanel
+
+            panel = panel_class(self._splitter, sim.options, key, result)
 
             subnode.panel = panel
             subnode.panel.Hide()
