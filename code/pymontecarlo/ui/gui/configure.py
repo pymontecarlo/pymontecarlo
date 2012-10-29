@@ -26,7 +26,7 @@ from operator import attrgetter
 import wx
 
 # Local modules.
-from pymontecarlo import load_settings, load_program, get_program_gui, find_programs
+from pymontecarlo import load_settings, load_program, get_program_gui, find_programs, reload
 from pymontecarlo.util.config import ConfigParser
 
 from wxtools2.combobox import PyComboBox
@@ -202,6 +202,8 @@ class ConfigureDialog(wx.Dialog):
 
         message = 'Configuration saved in %s' % self._filepath
         show_exclamation_dialog(self, message, 'Configuration')
+
+        reload() # Reload settings and programs
 
         self.EndModal(wx.ID_OK)
 
