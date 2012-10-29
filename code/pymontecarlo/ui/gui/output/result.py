@@ -174,6 +174,16 @@ class _ResultPanel(wx.Panel):
 
 class _SaveableResultPanel(_ResultPanel):
 
+    def __init__(self, parent, options, key, result):
+        _ResultPanel.__init__(self, parent, options, key, result)
+
+        self._save_filetypes = []
+        self._save_methods = {}
+
+        self._register_save_method('csv', 'CSV file', self._save_csv)
+        self._register_save_method('xls', 'Excel file', self._save_xls)
+        self._register_save_method('ods', 'Open document file', self._save_xls)
+
     def _init_toolbar(self, sizer):
         # Controls
         toolbar = wx.ToolBar(self)
@@ -197,6 +207,11 @@ class _SaveableResultPanel(_ResultPanel):
 
         return toolbar
 
+    def _register_save_method(self, ext, ext_name, method):
+        filetype = ('%s (*.%s)' % (ext_name, ext), ext)
+        self._save_filetypes.append(filetype)
+        self._save_methods[ext] = method
+
     def dump(self):
         """
         Dumps the result in a tabular format.
@@ -216,18 +231,15 @@ class _SaveableResultPanel(_ResultPanel):
         wx.TheClipboard.Close()
 
     def save(self, *args):
-        filetypes = [('CSV file (*.csv)', 'csv'),
-                     ('Excel file (*.xls)', 'xls'),
-                     ('Open document file (*.ods)', 'ods')]
-        filepath = show_save_filedialog(self, filetypes)
+        filepath = show_save_filedialog(self, self._save_filetypes)
         if not filepath:
             return
 
-        ext = os.path.splitext(filepath)[1]
-        if ext == '.csv':
-            self._save_csv(filepath)
-        else:
-            self._save_xls(filepath)
+        ext = os.path.splitext(filepath)[1][1:]
+        method = self._save_methods.get(ext)
+        print method
+        if method is not None:
+            method(filepath)
 
     def _save_csv(self, filepath):
         with open(filepath, 'w') as fp:
