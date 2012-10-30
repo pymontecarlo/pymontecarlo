@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import sys
 import bisect
+from itertools import izip
 
 # Third party modules.
 import numpy as np
@@ -52,6 +53,9 @@ class _Histogram:
         maxvalue = self._bins[-1]
 
         return "Histogram(min=%s, max=%s, bins=%i)" % (minvalue, maxvalue, steps)
+
+    def __iter__(self):
+        return izip([float('-inf')] + self._bins, self._values)
 
     def __iadd__(self, other):
         if self._bins != other._bins:
@@ -133,6 +137,9 @@ class SumHistogram(_Histogram):
         _Histogram.__init__(self, bins)
 
         self._squares = np.zeros(len(bins) + 1) # + 1 for underflow
+
+    def __iter__(self):
+        return izip([float('-inf')] + self._bins, self._values, self._squares)
 
     def __iadd__(self, other):
         _Histogram.__iadd__(self, other)

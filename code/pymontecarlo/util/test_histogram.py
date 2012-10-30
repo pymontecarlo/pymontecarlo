@@ -40,6 +40,19 @@ class Test_Histogram(TestCase):
         expected = "Histogram(min=1, max=7, bins=4)"
         self.assertEqual(expected, repr(self.h))
 
+    def test__iter__(self):
+        data = list(self.h)
+        self.assertEqual(float('-inf'), data[0][0], 4)
+        self.assertAlmostEqual(0.0, data[0][1], 4)
+        self.assertAlmostEqual(1.0, data[1][0], 4)
+        self.assertAlmostEqual(0.0, data[1][1], 4)
+        self.assertAlmostEqual(3.0, data[2][0], 4)
+        self.assertAlmostEqual(0.0, data[2][1], 4)
+        self.assertAlmostEqual(5.0, data[3][0], 4)
+        self.assertAlmostEqual(0.0, data[3][1], 4)
+        self.assertAlmostEqual(7.0, data[4][0], 4)
+        self.assertAlmostEqual(0.0, data[4][1], 4)
+
     def test__iadd__(self):
         h1 = _Histogram(range(1, 9, 2))
         h1._values[0] = 1
@@ -127,6 +140,24 @@ class TestSumHistogram(TestCase):
 
     def testskeleton(self):
         self.assertTrue(True)
+
+    def test__iter__(self):
+        data = list(self.h)
+        self.assertEqual(float('-inf'), data[0][0], 4)
+        self.assertAlmostEqual(0.0, data[0][1], 4)
+        self.assertAlmostEqual(0.0, data[0][2], 4)
+        self.assertAlmostEqual(1.0, data[1][0], 4)
+        self.assertAlmostEqual(0.0, data[1][1], 4)
+        self.assertAlmostEqual(0.0, data[1][2], 4)
+        self.assertAlmostEqual(3.0, data[2][0], 4)
+        self.assertAlmostEqual(0.0, data[2][1], 4)
+        self.assertAlmostEqual(0.0, data[2][2], 4)
+        self.assertAlmostEqual(5.0, data[3][0], 4)
+        self.assertAlmostEqual(0.0, data[3][1], 4)
+        self.assertAlmostEqual(0.0, data[3][2], 4)
+        self.assertAlmostEqual(7.0, data[4][0], 4)
+        self.assertAlmostEqual(0.0, data[4][1], 4)
+        self.assertAlmostEqual(0.0, data[4][2], 4)
 
     def testadd(self):
         self.h.add(0.0, 0.5)
