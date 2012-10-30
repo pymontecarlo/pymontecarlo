@@ -39,7 +39,6 @@ import logging
 
 # Third party modules.
 import wx
-from wx.lib.embeddedimage import PyEmbeddedImage
 from wx.lib.pubsub import Publisher as pub
 
 # Local modules.
@@ -47,67 +46,14 @@ from pymontecarlo.ui.gui.controller import controller
 from pymontecarlo.ui.gui.output.manager import ResultPanelManager
 from pymontecarlo.ui.gui.output.result import UnknownResultPanel
 from pymontecarlo.ui.gui.configure import ConfigureDialog
+from pymontecarlo.ui.gui.art import ArtProvider
 import pymontecarlo.ui.gui.output.result #@UnusedImport
 
 from wxtools2.tree import PyTreeCtrl
 from wxtools2.menu import popupmenu
 
 # Globals and constants variables.
-
-_ICON_APP = PyEmbeddedImage(
-    "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlw"
-    "SFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoA"
-    "AAAUdEVYdFRpdGxlAFNpeCBTaWRlZCBEaWNlcXL2rQAAACV0RVh0QXV0aG9yAEJyaWFuIEJ1"
-    "cmdlci9XaXJlbGl6YXJkIERlc2lnbgWEk6cAAAAndEVYdERlc2NyaXB0aW9uAFNpbXBsZSBz"
-    "aXgtc2lkZWQgZGljZSAoZDYpLqlJ67cAAABJdEVYdENvcHlyaWdodABQdWJsaWMgRG9tYWlu"
-    "IGh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL3B1YmxpY2RvbWFpbi9Zw/7K"
-    "AAAFxklEQVRYha3XeYxV9RUH8M/v8dhB1mGZAhGBgk5lcYpSBZsCsghKbCIEkQZswLb+QQma"
-    "NlryfA1JtU0MCVolpISyhBbsUKKtpYQYyADDMlBIoQIlKCXD6DAgQnGmzsztH/e94c0CMuhJ"
-    "bnLvPdv3nnN+55wboijyVSiEdAL3Yyw2RFHqfIv0bwdACOmumIxpmIqeGVYF5kVR6q9fO4AQ"
-    "0gUZh9PwIJI3EI2wHD+PotT/bhtACOl2+J7rX3nXLSG9TqWYHUWpUzcTSjTjuEMI6c2oxF/w"
-    "RwzB3VjfAgCFOBRCeu7NhBpEIIT0CFxEbxShP+ZHUWpNht8eH6NzC4DAOvwkilJXvwxAGj/G"
-    "TBzHZjyMf+K0OA33ttB5lk6JU1Ka+7JxCgqRh+2YjQlYgW9hxm04r8YG/BZtsSeE9OIQ0uFm"
-    "AIgrfDlW42eYh6oWOoc/RVHq6ShKPYfB+ANew7shpPMaAAgh3Rd9GhmYi2K8j3H4TwsBPBFC"
-    "+sUQ0gPQA9lj+ag4KtdrIIT0dLxzA0MXxHVxDJvw3RYCydIH2Ji5LiORm4LCZlVi6imuizmY"
-    "KK6LW6Wz+DVG4TviKL6BMuTldrMmAAYO7Kq6ulZZ2RVoJc5fIRbgIFaiXTNOK8SR2oh/YDpe"
-    "Fje0NhmZT3GsCYAZM4YaO3aAAwfKPPXUvQYM6GL16sNef31/Vm4O7sH3xQNoi7hffJa534hd"
-    "eATP4XF0bAbk3ihK1SUghHQf5ENhYb4XXtiusvKafv3ucOHCNSUl57z00rhc5VGZCHTN3E/K"
-    "6K/Hk+LwbhUf5Y7JZMKUKYO9+urEXBvFXD8FhdC3bycffvgp2LHjjGee2apt21YuXvzczp0f"
-    "mTmzINdAD/xNXEzjxI1qO36IriHw0EP9vfHGo8rKlnjvvTkKCnrl6u9uAiCKaN06IQSmT/+m"
-    "06cvmjt3i27d2ikuPmvYsJ4a0UfohqXi9m348N5eeWWiM2d+aufO+QYN6m7Jkm1KSs45evTj"
-    "rN4X2N8EQHn5Vfn5na1a9bgFC+6zbdtc/fvfobT0vGQyoba2rjGAEjyQfSgqmuXIkR+ZMGGg"
-    "5ctL9Ov3milT1lu37qjBg7s7cqQ8K3ooilKfc32m35flLFu2y9q1T5g1620dO7ZWVDTLW28d"
-    "VFVV47HHhtq06ZhTpy5mxfdhTPZh/PiBFi58x6pVhxqgzM/vrGfPDrkRKM7eJEJI90K/+th8"
-    "UefYsQpVVTUuXaoydeoGkycPtmjRGLNnv+3ZZ7+da3uf+Gy7886uunRpa8+eps1yxIjeqqpq"
-    "nDxZmX21O3uTxMjGCslknJnFi8c4f/6qefP+XM+rqPivRCKoq4uqcRSjiXNfXV3rxInKxuaM"
-    "GNHH8eMVamvrJ289gAT24u+5Clu3fmDRoge8+eZB8+eP9PzzD9bzOnVqo64ugsPiRaVzFsDx"
-    "4xVqaprUiZEj+zhypD78J6Mo9Un9x0ZR6koI6Wni4bAADh8ul0gES5c+bNSovqKINm1aKSr6"
-    "lytX6te8BvkfPrx3bo4bRaC3lSvr14DdubwkRFGqBgtDSJ/GrxBKS8+7dKlKMplQXHzWgQNl"
-    "ZswYasWKfVndEnG3qwewcuXBJs7bt08aMqRHswVIM0tpCOknsVbzPT6X7sK7uKd9+6SrV180"
-    "adI6O3acaSA0enS+/fsXyMv7jQsXrsGwKEqdyPKbLKVRlNqM8eKBciP6RLw73g0FBb0kEqHZ"
-    "FFy+XG3Zsl1Z5xdynTcLIANirzi/J5rji/N/PwJxjsvLr6qouNZE8OTJSkuXvh9hh3iQNaCb"
-    "/piEkO4mnnCNF5BfZMD/EvLyOhg0qLuSknONTfwbv8faKEqdbdbHl/0ZhZBug9/h6ZzXj2Cx"
-    "eLVqTJ+Jd4E1UZTa3Qy/ZQBygLyMFOrQXTz9emTYdeIQr8GWbJ+/Jbst+TkNIf0D8ZfPxMnM"
-    "tQbroijVJP5fO4AMiLbi0fuNTLF+Jfo/o3cLsVEiyfEAAAAASUVORK5CYII=")
-
-class ToolBar(wx.ToolBar):
-
-    def __init__(self, parent):
-        wx.ToolBar.__init__(self, parent)
-
-        # Controls
-        bitmap = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR)
-        self.AddSimpleTool(wx.ID_NEW, bitmap, "New simulation(s)")
-
-        bitmap = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
-        self.AddSimpleTool(wx.ID_OPEN, bitmap, "Open options and/or results")
-
-        self.AddSeparator()
-
-        bitmap = wx.ArtProvider.GetBitmap(wx.ART_DELETE, wx.ART_TOOLBAR)
-        self.AddSimpleTool(wx.ID_CLOSE, bitmap, "Close simulation")
-
-        self.Realize()
+from pymontecarlo.ui.gui.art import ART_CLOSE, ART_PREFERENCES, ICON_APP_LOGO
 
 class MainFrame(wx.Frame):
 
@@ -122,23 +68,54 @@ class MainFrame(wx.Frame):
         menu_file = wx.Menu()
         menubar.Append(menu_file, 'File')
 
-        menu_file.Append(wx.ID_NEW, "New simulation(s)")
-        menu_file.Append(wx.ID_OPEN, "Open options and/or results")
+        item = wx.MenuItem(menu_file, wx.ID_NEW, "New simulation(s)")
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR))
+        menu_file.AppendItem(item)
+
+        item = wx.MenuItem(menu_file, wx.ID_OPEN, "Open options and/or results")
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR))
+        menu_file.AppendItem(item)
 
         menu_file.AppendSeparator()
 
-        menu_file.Append(wx.ID_CLOSE, "Close").Enable(False)
-        menu_file.Append(wx.ID_CLOSE_ALL, "Close all").Enable(False)
+        item = wx.MenuItem(menu_file, wx.ID_CLOSE, "Close")
+        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_CLOSE, wx.ART_TOOLBAR))
+        menu_file.AppendItem(item)
+
+        item = wx.MenuItem(menu_file, wx.ID_CLOSE_ALL, "Close all")
+        menu_file.AppendItem(item)
 
         menu_file.AppendSeparator()
 
-        menu_file.Append(wx.ID_PREFERENCES, "Configuration")
+        item = wx.MenuItem(menu_file, wx.ID_PREFERENCES, "Configuration")
+        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_PREFERENCES, wx.ART_TOOLBAR))
+        menu_file.AppendItem(item)
 
-        menu_file.Append(wx.ID_EXIT, "Quit")
+        item = wx.MenuItem(menu_file, wx.ID_EXIT, "Quit")
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_TOOLBAR))
+        menu_file.AppendItem(item)
+
+        menubar.Enable(wx.ID_CLOSE, False)
+        menubar.Enable(wx.ID_CLOSE_ALL, False)
 
         ## Toolbar
-        toolbar = ToolBar(self)
+        toolbar = wx.ToolBar(self)
         self.SetToolBar(toolbar)
+
+        bitmap = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(wx.ID_NEW, bitmap, "New simulation(s)")
+
+        bitmap = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(wx.ID_OPEN, bitmap, "Open options and/or results")
+
+        toolbar.AddSeparator()
+
+        bitmap = wx.ArtProvider.GetBitmap(ART_CLOSE, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(wx.ID_CLOSE, bitmap, "Close")
+
+        toolbar.Realize()
+
+        toolbar.EnableTool(wx.ID_CLOSE, False)
 
         ## Splitter
         self._splitter = wx.SplitterWindow(self)
@@ -256,8 +233,10 @@ def run():
 
     app = wx.PySimpleApp()
 
+    wx.ArtProvider.Push(ArtProvider())
+
     mainframe = MainFrame(parent=None)
-    mainframe.SetIcon(_ICON_APP.GetIcon())
+    mainframe.SetIcon(ICON_APP_LOGO.GetIcon())
 
     mainframe.SetSizeWH(1000, 600)
 
