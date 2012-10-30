@@ -158,7 +158,7 @@ class _PouchouWorker(_Worker):
             results[key] = TimeResult(simulation_time_s=end - start)
 
         # Save results
-        self._results = Results(results)
+        self._results = Results(options, results)
 
         # Remove configuration file
         os.remove(config_filepath)

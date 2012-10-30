@@ -54,5 +54,5 @@ class Importer(object):
                     (key, clasz.__name__)
                 warnings.warn(message, ImporterWarning)
 
-        return Results(results)
+        return Results(options, results)
 
