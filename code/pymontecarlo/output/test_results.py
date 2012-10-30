@@ -21,6 +21,10 @@ import os
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo.input.options import Options
+from pymontecarlo.input.detector import \
+    PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
+
 from pymontecarlo.output.results import Results
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
@@ -35,13 +39,19 @@ class TestResults(TestCase):
         # Temporary directory
         self.tmpdir = tempfile.mkdtemp()
 
+        # Options
+        ops = Options()
+        ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
+        ops.detectors['det2'] = TimeDetector()
+        ops.detectors['det3'] = ElectronFractionDetector()
+
         # Results
         results = {}
         results['det1'] = PhotonIntensityResult()
         results['det2'] = TimeResult()
         results['det3'] = ElectronFractionResult()
 
-        self.results = Results(results)
+        self.results = Results(ops, results)
 
         self.results_zip = os.path.join(os.path.dirname(__file__),
                                         '../testdata/results.zip')
@@ -73,6 +83,6 @@ class TestResults(TestCase):
         results = Results.load(self.results_zip)
         self.assertEqual(6, len(results))
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

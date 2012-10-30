@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import copy
 from collections import Mapping
 from zipfile import ZipFile
 from StringIO import StringIO
@@ -26,6 +27,7 @@ from StringIO import StringIO
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.input.options import Options
 from pymontecarlo.output.manager import ResultManager
 import pymontecarlo.output.result #@UnusedImport
 
@@ -35,24 +37,33 @@ import pymontecarlo.util.progress as progress
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
 
-VERSION = '2'
+VERSION = '3'
 SECTION_KEYS = 'keys'
 KEYS_INI_FILENAME = 'keys.ini'
+OPTIONS_FILENAME = 'options.xml'
 
 class Results(Mapping):
 
-    def __init__(self, results={}):
+    def __init__(self, options, results={}):
         """
         Creates a new container for the results.
         Once created, the results container cannot be modified (i.e. read-only).
+        
+        :arg options: options used to generate these results
+        :type options: :class:`Options`
         
         :arg results: results to be part of this container.
             The results are specified by a key (key of the detector) and a
             :class:`Result <pymontecarlo.result.base.result.Result>` class.
         :type results: :class:`dict`
         """
+        self._options = copy.deepcopy(options)
+
         self._results = {}
-        self._results.update(results)
+        for key, result in results.iteritems():
+            if key not in options.detectors:
+                raise KeyError, 'No detector found for result %s' % key
+            self._results[key] = result
 
     def __repr__(self):
         return '<Results(%s)>' % ', '.join(self._results.keys())
@@ -75,14 +86,26 @@ class Results(Mapping):
             raise IOError, "Incorrect version of results. Only version %s is accepted" % \
                     VERSION
 
+        # Read options
+        task.status = 'Reading %s' % OPTIONS_FILENAME
+
+        try:
+            zipinfo = zipfile.getinfo(OPTIONS_FILENAME)
+        except KeyError:
+            raise IOError, "Zip file (%s) does not contain a %s" % \
+                    (getattr(source, 'name', 'unknown'), OPTIONS_FILENAME)
+
+        options = Options.load(zipfile.open(zipinfo, 'r'))
+
         # Parse keys.ini
+        task.status = 'Reading %s' % KEYS_INI_FILENAME
+
         try:
             zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
         except KeyError:
             raise IOError, "Zip file (%s) does not contain a %s" % \
                     (getattr(source, 'name', 'unknown'), KEYS_INI_FILENAME)
 
-        task.status = 'Reading %s' % KEYS_INI_FILENAME
         config = ConfigParser()
         config.read(zipfile.open(zipinfo, 'r'))
 
@@ -103,7 +126,7 @@ class Results(Mapping):
 
         progress.stop_task(task)
 
-        return cls(results)
+        return cls(options, results)
 
     def save(self, source):
         """
@@ -136,6 +159,12 @@ class Results(Mapping):
         config.write(fp)
         zipfile.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
+        # Save options
+        task.status = 'Saving %s' % OPTIONS_FILENAME
+        fp = StringIO()
+        self._options.save(fp)
+        zipfile.writestr(OPTIONS_FILENAME, fp.getvalue())
+
         zipfile.close()
 
         progress.stop_task(task)
@@ -148,5 +177,12 @@ class Results(Mapping):
 
     def __iter__(self):
         return iter(self._results)
+
+    @property
+    def options(self):
+        """
+        Returns a copy of the options.
+        """
+        return copy.deepcopy(self._options)
 
 

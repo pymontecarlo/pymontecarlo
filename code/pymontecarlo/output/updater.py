@@ -28,11 +28,12 @@ from StringIO import StringIO
 
 # Local modules.
 from pymontecarlo.util.updater import _Updater
+from pymontecarlo.input.options import Options
 from pymontecarlo.output.results import Results
 from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
-from pymontecarlo.output.results import KEYS_INI_FILENAME, VERSION
+from pymontecarlo.output.results import KEYS_INI_FILENAME, OPTIONS_FILENAME
 
 class Updater(_Updater):
 
@@ -44,6 +45,7 @@ class Updater(_Updater):
 
         self._updaters[0] = self._update_noversion
         self._updaters[2] = self._update_version2
+        self._updaters[3] = self._update_version3
 
     def _get_version(self, filepath):
         with ZipFile(filepath, 'r') as zip:
@@ -84,7 +86,7 @@ class Updater(_Updater):
             newzip.writestr(zipinfo, data)
 
         # Add version
-        newzip.comment = 'version=%s' % VERSION
+        newzip.comment = 'version=%s' % '2'
 
         # Remove old zip and replace with new one
         os.remove(filepath)
@@ -93,5 +95,39 @@ class Updater(_Updater):
         oldzip.close()
         newzip.close()
 
+        self._update_version2(filepath)
+
     def _update_version2(self, filepath):
+        logging.debug('Updating from "version 2"')
+
+        # Find options
+        xmlfilepath = os.path.splitext(filepath)[0] + '.xml'
+        if not os.path.exists(xmlfilepath):
+            raise ValueError, 'Update requires an options file saved at %s' % xmlfilepath
+        options = Options.load(xmlfilepath)
+
+        oldzip = ZipFile(filepath, 'r')
+        newzip = ZipFile(filepath + ".new", 'w')
+
+        # Add options file
+        fp = StringIO()
+        options.save(fp)
+        newzip.writestr(OPTIONS_FILENAME, fp.getvalue())
+
+        # Add other files to new zip
+        for zipinfo in oldzip.infolist():
+            data = oldzip.read(zipinfo)
+            newzip.writestr(zipinfo, data)
+
+        # Add version
+        newzip.comment = 'version=%s' % '3'
+
+        # Remove old zip and replace with new one
+        os.remove(filepath)
+        os.rename(filepath + ".new", filepath)
+
+        oldzip.close()
+        newzip.close()
+
+    def _update_version3(self, filepath):
         logging.info('Nothing to update')

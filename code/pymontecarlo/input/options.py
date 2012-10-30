@@ -40,6 +40,8 @@ import pymontecarlo.input.detector #@UnusedImport
 import pymontecarlo.input.limit #@UnusedImport
 import pymontecarlo.input.model #@UnusedImport
 
+FORBIDDEN_DETECTOR_KEYS = ['options', 'keys']
+
 class _Detectors(MutableMapping):
     def __init__(self):
         self._data = {}
@@ -54,6 +56,9 @@ class _Detectors(MutableMapping):
         return self._data.__delitem__(key)
 
     def __setitem__(self, key, value):
+        if key in FORBIDDEN_DETECTOR_KEYS:
+            raise KeyError, 'Detector cannot have the following keys: %s' % \
+                        ', '.join(FORBIDDEN_DETECTOR_KEYS)
         return self._data.__setitem__(key, value)
 
     def __iter__(self):

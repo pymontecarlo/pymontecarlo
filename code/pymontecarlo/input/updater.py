@@ -29,7 +29,6 @@ from pymontecarlo.util.updater import _Updater
 from pymontecarlo.input.options import Options
 
 # Globals and constants variables.
-from pymontecarlo.input.options import VERSION
 
 class Updater(_Updater):
 
@@ -59,7 +58,7 @@ class Updater(_Updater):
         if not root.nsmap and root.tag.startswith('pymontecarlo.'):
             content = open(filepath, 'r').read()
 
-            lookup = {'<pymontecarlo.input.base.options.Options': '<mc:options xmlns:mc="http://pymontecarlo.sf.net" xmlns:mc-pen="http://pymontecarlo.sf.net/penelope" version="' + VERSION + '"',
+            lookup = {'<pymontecarlo.input.base.options.Options': '<mc:options xmlns:mc="http://pymontecarlo.sf.net" xmlns:mc-pen="http://pymontecarlo.sf.net/penelope" version="2"',
                       'pymontecarlo.input.base.options.Options>': 'mc:options>',
 
                       'pymontecarlo.input.base.beam.PencilBeam': 'mc:pencilBeam',
@@ -109,7 +108,7 @@ class Updater(_Updater):
             with open(filepath, 'w') as fp:
                 fp.write(content)
         else:
-            root.set('version', VERSION)
+            root.set('version', '2')
 
             with open(filepath, 'w') as fp:
                 fp.write(etree.tostring(root, pretty_print=True))
@@ -121,7 +120,7 @@ class Updater(_Updater):
         logging.debug('Updating from "version 2"')
 
         root = etree.parse(filepath).getroot()
-        root.set('version', VERSION)
+        root.set('version', '3')
 
         element = list(root.find('beam'))[0]
         element.set('particle', 'electron')
@@ -135,7 +134,7 @@ class Updater(_Updater):
         logging.debug('Updating from "version 3"')
 
         root = etree.parse(filepath).getroot()
-        root.set('version', VERSION)
+        root.set('version', '4')
 
         elements = list(list(root.find('geometry'))[0].find('materials'))
         for element in elements:

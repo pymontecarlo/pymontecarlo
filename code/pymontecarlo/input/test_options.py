@@ -94,6 +94,8 @@ class TestOptions(TestCase):
         dets = self.ops.detectors.findall(ShowersLimit)
         self.assertEqual(0, len(dets))
 
+        self.assertRaises(KeyError, self.ops.detectors.__setitem__, 'options', None)
+
     def testlimits(self):
         self.ops.limits.add(ShowersLimit(1234))
         self.assertEqual(1, len(self.ops.limits))

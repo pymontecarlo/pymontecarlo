@@ -69,6 +69,6 @@ class TestUpdater(TestCase):
 
         self.updater.update(dst)
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
