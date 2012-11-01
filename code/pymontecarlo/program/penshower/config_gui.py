@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import platform
 
 # Third party modules.
 import wx
@@ -39,8 +40,10 @@ class _PenshowerConfigurePanel(ConfigurePanel):
 
         lbl_exe = wx.StaticText(self, label='Path to PENSHOWER executable')
 
-        filetypes = [('Application files (*.exe)', 'exe'),
-                     ('Application files', '*')]
+        if platform.system() == 'Windows':
+            filetypes = [('Application files', 'exe')]
+        else:
+            filetypes = [('Application files', '*')]
         self._brw_exe = FileBrowseCtrl(self, filetypes=filetypes)
 
         # Sizer

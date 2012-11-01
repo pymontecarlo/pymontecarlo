@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import platform
 
 # Third party modules.
 import wx
@@ -36,8 +37,10 @@ class _NistMonteConfigurePanel(ConfigurePanel):
         # Controls
         lbl_java = wx.StaticText(self, label='Path to Java executable')
 
-        filetypes = [('Application files (*.exe)', 'exe'),
-                     ('Application files', '*')]
+        if platform.system() == 'Windows':
+            filetypes = [('Application files', 'exe')]
+        else:
+            filetypes = [('Application files', '*')]
         self._brw_java = FileBrowseCtrl(self, filetypes=filetypes)
 
         lbl_jar = wx.StaticText(self, label='Path to NISTMonte jar')
