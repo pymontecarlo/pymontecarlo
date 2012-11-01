@@ -253,10 +253,12 @@ class transitionset(frozenset, objectxml):
         if len(set(zs)) != 1:
             raise ValueError, "All transitions in a set must have the same atomic number"
 
+        frozenset.__init__(transitions)
+
         self._z = z
         self._name = name
-
-        frozenset.__init__(transitions)
+        self._most_probable = \
+            sorted(self, key=attrgetter('probability'), reverse=True)[0]
 
     def __repr__(self):
         return '<transitionset(%s: %s)>' % (str(self), ', '.join(map(str, sorted(self))))
@@ -300,7 +302,7 @@ class transitionset(frozenset, objectxml):
 
     @property
     def most_probable(self):
-        return sorted(self, key=attrgetter('probability'), reverse=True)[0]
+        return self._most_probable
 
 XMLIO.register('{http://pymontecarlo.sf.net}transitionset', transitionset)
 
