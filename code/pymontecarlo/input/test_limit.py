@@ -82,18 +82,20 @@ class TestUncertaintyLimit(TestCase):
         TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEqual('Cu Ka1', str(self.lim.transition))
+        self.assertEqual(1, len(self.lim.transitions))
+        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
         self.assertAlmostEqual(0.05, self.lim.uncertainty, 4)
 
-    def testtransitionset(self):
-        self.lim.transition = La(29)
-        self.assertEqual('Cu La1', str(self.lim.transition))
+    def testtransitions(self):
+        self.lim.transitions.update(La(29))
+        self.assertEqual(3, len(self.lim.transitions))
 
     def testfrom_xml(self):
         element = self.lim.to_xml()
         lim = UncertaintyLimit.from_xml(element)
 
-        self.assertEqual('Cu Ka1', str(lim.transition))
+        self.assertEqual(1, len(self.lim.transitions))
+        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
         self.assertAlmostEqual(0.05, lim.uncertainty, 4)
 
     def testto_xml(self):

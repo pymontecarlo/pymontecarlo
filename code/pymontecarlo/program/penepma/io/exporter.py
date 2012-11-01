@@ -110,7 +110,9 @@ class Exporter(_Exporter):
     _KEYWORD_NSIMSH = Keyword("NSIMSH", "Desired number of simulated showers")
     _KEYWORD_RSEED = Keyword("RSEED", "Seeds of the random - number generator")
     _KEYWORD_TIME = Keyword("TIME", "Allotted simulation time, in sec")
-    _KEYWORD_XLIM = Keyword('XLIM', "Uncertainty limit")
+    _KEYWORD_XLMTR = Keyword('XLMTR', "Transition(s) for uncertainty limit")
+    _KEYWORD_XLMPD = Keyword('XLMPD', "Photon detector for uncertainty limit")
+    _KEYWORD_XLMUNC = Keyword('XLMUNC', "Uncertainty limit on intensity")
 
     _COMMENT_SKIP = Comment('.')
     _COMMENT_ELECTROBEAM = Comment('>>>>>>>> Electron beam definition.')
@@ -441,14 +443,17 @@ class Exporter(_Exporter):
 
         limit = options.limits.find(UncertaintyLimit)
         if limit:
-            transition = limit.transition
-            text = [transition.z,
-                    transition.dest.index,
-                    transition.src.index,
-                    - 1, # FIXME: Specify detector for uncertainty
-                    limit.uncertainty,
-                    0.0]
-            line = self._KEYWORD_XLIM(text)
+            for transition in limit.transitions:
+                text = [transition.z, transition.dest.index, transition.src.index]
+                line = self._KEYWORD_XLMTR(text)
+                lines.append(line)
+
+            text = [-1] # FIXME: Specify detector for uncertainty
+            line = self._KEYWORD_XLMPD(text)
+            lines.append(line)
+
+            text = [limit.uncertainty, 0.0]
+            line = self._KEYWORD_XLMUNC(text)
             lines.append(line)
 
         lines.append(self._COMMENT_SKIP())

@@ -6,7 +6,7 @@
     <xsd:element name="limit" abstract="true" />
 
     <xsd:complexType name="transitionLimitType">
-        <xsd:sequence>
+        <xsd:sequence minOccurs="1" maxOccurs="unbounded">
             <xsd:element ref="transition" />
         </xsd:sequence>
     </xsd:complexType>

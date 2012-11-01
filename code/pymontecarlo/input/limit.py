@@ -19,7 +19,6 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import attrgetter
 
 # Third party modules.
 
@@ -29,39 +28,37 @@ from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
 
-class _TransitionLimit(Option):
-    def __init__(self, transition):
+class _TransitionsLimit(Option):
+    def __init__(self, transitions):
         Option.__init__(self)
 
-        self.transition = transition
+        self._props['transitions'] = set()
+
+        if hasattr(transitions, '__iter__'):
+            self.transitions.update(transitions)
+        else:
+            self.transitions.add(transitions)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        child = list(element)[0]
-        transition = XMLIO.from_xml(child, *args, **kwargs)
+        transitions = set()
+        for child in list(element):
+            transitions.add(XMLIO.from_xml(child, *args, **kwargs))
 
-        return cls(transition)
+        return cls(transitions)
 
     def __savexml__(self, element, *args, **kwargs):
-        element.append(self.transition.to_xml())
+        for transition in self.transitions:
+            element.append(transition.to_xml())
 
     @property
-    def transition(self):
+    def transitions(self):
         """
-        Transition for the limit.
-        If a :class:`set` or :class:`list` of transitions is given, the
-        transitions with the highest probability is selected.
+        Transitions for the limit.
+        
+        :rtype: :class:`list`
         """
-        return self._props['transition']
-
-    @transition.setter
-    def transition(self, transition):
-        if hasattr(transition, '__iter__'): # set or list of transitions
-            transitions = list(transition)
-            transitions.sort(key=attrgetter('probability'), reverse=True)
-            transition = transitions[0]
-
-        self._props['transition'] = transition
+        return self._props['transitions']
 
 class TimeLimit(Option):
     def __init__(self, time):
@@ -127,26 +124,27 @@ class ShowersLimit(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}showersLimit', ShowersLimit)
 
-class UncertaintyLimit(_TransitionLimit):
-    def __init__(self, transition, uncertainty):
-        _TransitionLimit.__init__(self, transition)
+class UncertaintyLimit(_TransitionsLimit):
+    def __init__(self, transitions, uncertainty):
+        _TransitionsLimit.__init__(self, transitions)
 
         self.uncertainty = uncertainty
 
     def __repr__(self):
-        return '<UncertaintyLimit(transition=%s, uncertainty=%s %%)>' % \
-            (str(self.transition), self.uncertainty * 100.0)
+        return '<UncertaintyLimit(%i transitions, uncertainty=%s %%)>' % \
+            (len(self.transitions), self.uncertainty * 100.0)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        transition = _TransitionLimit.__loadxml__(element, *args, **kwargs).transition
+        transitions = \
+            _TransitionsLimit.__loadxml__(element, *args, **kwargs).transitions
 
         uncertainty = float(element.get('uncertainty'))
 
-        return cls(transition, uncertainty)
+        return cls(transitions, uncertainty)
 
     def __savexml__(self, element, *args, **kwargs):
-        _TransitionLimit.__savexml__(self, element, *args, **kwargs)
+        _TransitionsLimit.__savexml__(self, element, *args, **kwargs)
         element.set('uncertainty', str(self.uncertainty))
 
     @property
