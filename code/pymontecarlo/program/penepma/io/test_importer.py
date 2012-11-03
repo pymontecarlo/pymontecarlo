@@ -25,7 +25,8 @@ from pymontecarlo.input.detector import \
      PhotonIntensityDetector,
      PhiRhoZDetector,
      ElectronFractionDetector,
-     TimeDetector)
+     TimeDetector,
+     ShowersStatisticsDetector)
 from pymontecarlo.program.penepma.io.importer import Importer
 
 # Globals and constants variables.
@@ -203,7 +204,23 @@ class TestImporter(TestCase):
         self.assertAlmostEqual(0.3495e3, result.simulation_time_s, 4)
         self.assertAlmostEqual(1.0 / 0.1508e3, result.simulation_speed_s[0], 4)
 
+    def test_detector_showers_statistics(self):
+        # Create
+        ops = Options(name='test1')
+        ops.beam.energy_eV = 20e3
+        ops.detectors['showers'] = ShowersStatisticsDetector()
 
-if __name__ == '__main__':  #pragma: no cover
+        # Import
+        results = self.i.import_from_dir(ops, self.testdata)
+
+        # Test
+        self.assertEqual(1, len(results))
+
+        result = results['showers']
+
+        self.assertEqual(52730, result.showers)
+
+
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

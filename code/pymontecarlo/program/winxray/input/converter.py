@@ -40,6 +40,7 @@ from pymontecarlo.input.detector import \
      PhotonSpectrumDetector,
      ElectronFractionDetector,
      TimeDetector,
+     ShowersStatisticsDetector,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -57,7 +58,8 @@ class Converter(_Converter):
                  PhotonIntensityDetector,
                  PhotonSpectrumDetector,
                  ElectronFractionDetector,
-                 TimeDetector]
+                 TimeDetector,
+                 ShowersStatisticsDetector]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_czyzewski1990_linear,

@@ -22,7 +22,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
-     ElectronFractionDetector, TrajectoryDetector)
+     ElectronFractionDetector, TrajectoryDetector, ShowersStatisticsDetector)
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -434,6 +434,23 @@ class TestElectronFractionDetector(TestCase):
     def testto_xml(self):
         self.d.to_xml()
 
+class TestShowersStatisticsDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d = ShowersStatisticsDetector()
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testfrom_xml(self):
+        element = self.d.to_xml()
+        ShowersStatisticsDetector.from_xml(element)
+
+    def testto_xml(self):
+        self.d.to_xml()
+
 class TestTrajectoryDetector(TestCase):
 
     def setUp(self):
@@ -458,6 +475,6 @@ class TestTrajectoryDetector(TestCase):
 
         self.assertEqual('false', element.get('secondary'))
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

@@ -32,7 +32,8 @@ from pymontecarlo.output.result import \
      create_intensity_dict,
      create_phirhoz_dict,
      Trajectory,
-     TrajectoryResult)
+     TrajectoryResult,
+     ShowersStatisticsResult)
 from pymontecarlo.util.transition import Transition, K_family
 
 # Globals and constants variables.
@@ -576,6 +577,41 @@ class TestTimeResult(TestCase):
 
         zipfile.close()
 
+class TestShowersStatisticsResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.r = ShowersStatisticsResult(6)
+
+        self.results_zip = os.path.join(os.path.dirname(__file__),
+                                        '../testdata/results.zip')
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual(6, self.r.showers)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det7')
+
+        element = fromstring(zipfile.open('det7.xml', 'r').read())
+
+        self.assertEqual(1, len(element))
+
+        zipfile.close()
+
+    def test__loadzip__(self):
+        zipfile = ZipFile(self.results_zip, 'r')
+        r = ShowersStatisticsResult.__loadzip__(zipfile, 'det7')
+
+        self.assertEqual(6, r.showers)
+
+        zipfile.close()
+
 class TestElectronFractionResult(TestCase):
 
     def setUp(self):
@@ -701,6 +737,6 @@ class TestTrajectoryResult(TestCase):
         trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_BACKSCATTERED))
         self.assertEqual(0, len(trajs))
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

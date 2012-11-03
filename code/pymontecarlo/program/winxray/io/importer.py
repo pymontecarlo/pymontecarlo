@@ -34,6 +34,7 @@ from pymontecarlo.output.result import \
     ElectronFractionResult,
     TimeResult,
     create_intensity_dict,
+    ShowersStatisticsResult,
     )
 from pymontecarlo.input.detector import \
     (
@@ -44,6 +45,7 @@ from pymontecarlo.input.detector import \
      PhotonSpectrumDetector,
      ElectronFractionDetector,
      TimeDetector,
+     ShowersStatisticsDetector,
      )
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.util.element_properties import symbol
@@ -78,6 +80,8 @@ class Importer(_Importer):
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
         self._detector_importers[TimeDetector] = self._detector_time
+        self._detector_importers[ShowersStatisticsDetector] = \
+            self._detector_showers_statistics
 
     def import_from_dir(self, options, path):
         """
@@ -191,3 +195,10 @@ class Importer(_Importer):
         simulation_speed_s = simulation_time_s / wxrresult.numberElectron, 0.0
 
         return TimeResult(simulation_time_s, simulation_speed_s)
+
+    def _detector_showers_statistics(self, options, name, detector, path):
+        wxrresult = GeneralResults(path)
+
+        showers = wxrresult.numberElectron
+
+        return ShowersStatisticsResult(showers)

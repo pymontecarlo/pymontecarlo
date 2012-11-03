@@ -33,6 +33,7 @@ from pymontecarlo.output.result import \
     PhotonSpectrumResult,
     ElectronFractionResult,
     TimeResult,
+    ShowersStatisticsResult,
     PhiRhoZResult,
     create_intensity_dict,
     create_phirhoz_dict,
@@ -47,6 +48,7 @@ from pymontecarlo.input.detector import \
      PhotonIntensityDetector,
      ElectronFractionDetector,
      TimeDetector,
+     ShowersStatisticsDetector,
      )
 from pymontecarlo.util.transition import Transition
 from pymontecarlo.program._penelope.io.importer import \
@@ -71,6 +73,8 @@ class Importer(_Importer):
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
         self._detector_importers[TimeDetector] = self._detector_time
+        self._detector_importers[ShowersStatisticsDetector] = \
+            self._detector_showers_statistics
 
     def _import_results(self, options, path, *args):
         # Find index for each delimited detector
@@ -295,3 +299,10 @@ class Importer(_Importer):
         simulation_speed_s = 1.0 / line['SIM_SPEED'], 0.0
 
         return TimeResult(simulation_time_s, simulation_speed_s)
+
+    def _detector_showers_statistics(self, options, key, detector, path, *args):
+        line = self._read_log(path)
+
+        showers = line['N_ELECTRON']
+
+        return ShowersStatisticsResult(showers)

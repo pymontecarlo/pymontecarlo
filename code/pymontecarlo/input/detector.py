@@ -548,6 +548,14 @@ class ElectronFractionDetector(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}electronFractionDetector', ElectronFractionDetector)
 
+class ShowersStatisticsDetector(Option):
+    """
+    Records number of simulated particles.
+    """
+    pass
+
+XMLIO.register('{http://pymontecarlo.sf.net}showersStatisticsDetector', ShowersStatisticsDetector)
+
 class TrajectoryDetector(Option):
     """
     Records the trajectories of particles.
@@ -574,7 +582,7 @@ class TrajectoryDetector(Option):
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         secondary = True if element.get('secondary') == 'true' else False
-        
+
         return cls(secondary)
 
     def __savexml__(self, element, *args, **kwargs):
@@ -586,7 +594,7 @@ class TrajectoryDetector(Option):
         Whether to simulate secondary particles.
         """
         return self._props['secondary']
-    
+
     @secondary.setter
     def secondary(self, secondary):
         self._props['secondary'] = secondary

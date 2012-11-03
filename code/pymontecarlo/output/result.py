@@ -872,6 +872,45 @@ class TimeResult(_Result):
 
 ResultManager.register('TimeResult', TimeResult)
 
+class ShowersStatisticsResult(_Result):
+
+    def __init__(self, showers=0):
+        """
+        Creates a new result to store statistics about the showers.
+        
+        :arg showers: number of simulated particles
+        """
+        _Result.__init__(self)
+
+        self._showers = int(showers)
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key):
+        element = fromstring(zipfile.open(key + '.xml', 'r').read())
+
+        child = element.find('showers')
+        if child is not None:
+            showers = float(child.get('val', 0))
+        else:
+            showers = 0
+
+        return cls(showers)
+
+    def __savezip__(self, zipfile, key):
+        element = Element('result')
+
+        attr = {'val': str(self.showers)}
+        child = Element('showers', attr)
+        element.append(child)
+
+        zipfile.writestr(key + '.xml', tostring(element))
+
+    @property
+    def showers(self):
+        return self._showers
+
+ResultManager.register('ShowersStatisticsResult', ShowersStatisticsResult)
+
 class ElectronFractionResult(_Result):
 
     def __init__(self, absorbed=(0.0, 0.0),

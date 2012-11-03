@@ -208,6 +208,11 @@
     <xsd:element name="electronFractionDetector" type="detectorType"
         substitutionGroup="detector" />
 
+    <!-- Showers statistics detectors -->
+
+    <xsd:element name="showersStatisticsDetector" type="detectorType"
+        substitutionGroup="detector" />
+
     <!-- Phi-rho-z detectors -->
 
     <xsd:complexType name="phiRhoZDetectorType">

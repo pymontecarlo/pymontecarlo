@@ -47,6 +47,7 @@ from pymontecarlo.input.detector import \
 #     TransmittedElectronPolarAngularDetector
      ElectronFractionDetector,
      TimeDetector,
+     ShowersStatisticsDetector,
      )
 
 # Globals and constants variables.
@@ -68,6 +69,7 @@ class Converter(_Converter):
 #                 TransmittedElectronPolarAngularDetector,
                  ElectronFractionDetector,
                  TimeDetector,
+                 ShowersStatisticsDetector,
                  ]
     LIMITS = [TimeLimit, ShowersLimit, UncertaintyLimit]
 
