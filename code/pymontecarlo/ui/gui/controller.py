@@ -38,7 +38,7 @@ from wxtools2.exception import catch_all
 class _Simulation(object):
 
     def __init__(self, filepath, options, results=None):
-        self._filepath = os.path.abspath(filepath)
+        self._filepath = os.path.splitext(os.path.abspath(filepath))[0]
 
         self._options = options
 
@@ -106,49 +106,49 @@ class _Controller(object):
         pass
 
     def open(self, parent):
-        filetypes = [('Options (*.xml)', 'xml')]
+        filetypes = [('Results (*.zip)', 'zip'), ('Options (*.xml)', 'xml')]
         filepaths = show_open_filedialog(parent, filetypes, self._basedir, True)
 
         for filepath in filepaths:
             self._load(parent, filepath)
             self._basedir = os.path.dirname(filepath)
 
-    def _load(self, parent, options_filepath):
+    def _load(self, parent, filepath):
+        basepath, ext = os.path.splitext(filepath)
+
         # Check if simulation exists
-        if options_filepath in self:
+        if basepath in self:
             show_error_dialog(parent, 'Simulation already loaded',
                               'Duplicate simulation')
             return
 
-        # Load options
-        target = Options.load
-        progress_method = progress.progress
-        status_method = progress.status
-        title = 'Loading options'
-        args = (options_filepath,)
-        with catch_all(parent) as success:
-            options = show_progress_dialog(parent, target, progress_method,
-                                           status_method, title, args)
-        if not success:
-            return
-
-        # Load results
-        results = None
-        results_filepath = os.path.splitext(options_filepath)[0] + '.zip'
-        if os.path.exists(results_filepath):
+        if ext == '.xml':
+            target = Options.load
+            progress_method = progress.progress
+            status_method = progress.status
+            title = 'Loading options'
+            args = (filepath,)
+            with catch_all(parent) as success:
+                options = show_progress_dialog(parent, target, progress_method,
+                                               status_method, title, args)
+                results = None
+            if not success:
+                return
+        elif ext == '.zip':
             target = Results.load
             progress_method = progress.progress
             status_method = progress.status
             title = 'Loading results'
-            args = (results_filepath,)
+            args = (filepath,)
 
             with catch_all(parent) as success:
                 results = show_progress_dialog(parent, target, progress_method,
                                                status_method, title, args)
+                options = results.options
             if not success:
                 return
 
-        sim = _Simulation(options_filepath, options, results)
+        sim = _Simulation(filepath, options, results)
         self.add(sim)
 
 controller = _Controller()
