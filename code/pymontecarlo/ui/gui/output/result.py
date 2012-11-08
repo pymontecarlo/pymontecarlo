@@ -316,6 +316,8 @@ class _TrajectoryResultParameters(object):
         self.collision_ionisation_color = (0.0, 0.0, 0.0)
         self.collision_ionisation_size = 3.0
 
+        self.show_geometry = True
+
 class _TrajectoryResultDialog(wx.Dialog):
 
     def __init__(self, parent, params):
@@ -396,6 +398,9 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._txt_ionisation = FloatSpin(self, size=(40, -1),
                                              min_val=1, max_val=100,
                                              increment=1, digits=1)
+
+        ## Geometry
+        self._chk_geometry = wx.CheckBox(self, label='Show geometry')
 
         # # Buttons
         btn_ok = wx.Button(self, wx.ID_OK)
@@ -481,6 +486,9 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_collision2.Add(self._chk_ionisation, (1, 3), flag=wx.ALIGN_LEFT)
         szr_collision2.Add(self._btn_ionisation, (1, 4), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_collision2.Add(self._txt_ionisation, (1, 5), flag=wx.ALIGN_CENTER_HORIZONTAL)
+
+        ## Geometry
+        sizer.Add(self._chk_geometry, 0, wx.GROW | wx.ALL, 5)
 
         # # Buttons
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -589,6 +597,8 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._btn_ionisation.SetBackgroundColour(_c(params.collision_ionisation_color))
         self._txt_ionisation.SetValue(params.collision_ionisation_size)
 
+        self._chk_geometry.SetValue(params.show_geometry)
+
     def GetParameters(self):
         def _c(color):
             r, g, b = color.Get(False)
@@ -638,6 +648,8 @@ class _TrajectoryResultDialog(wx.Dialog):
         params.collision_ionisation_color = _c(self._btn_ionisation.GetBackgroundColour())
         params.collision_ionisation_size = float(self._txt_ionisation.GetValue())
 
+        params.show_geometry = self._chk_geometry.GetValue()
+
         return params
 
 class _TrajectoryResultGLCanvas(GLCanvas):
@@ -685,7 +697,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
 
         self._glists = []
 
-        # Create new lists
+        # Create trajectory lists
         for i, trajectory in enumerate(self._result):
             if i > self._params.number_trajectories: break
 
@@ -795,7 +807,8 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         for ilist in self._glists:
             GL.glCallList(ilist)
 
-        self._geometrygl.drawgl()
+        if self._params.show_geometry:
+            self._geometrygl.drawgl()
 
     def ResetGL(self):
         GLCanvas.ResetGL(self)
@@ -816,6 +829,9 @@ class TrajectoryResultPanel(_ResultPanel):
     def _init_toolbar(self, sizer):
         # Controls
         toolbar = GLCanvasToolbar(self._canvas)
+
+        toolbar.AddSeparator()
+
         item_options = toolbar.AddSimpleTool(-1, _ICON_OPTIONS.GetBitmap(),
                                              'Setup display options')
         toolbar.Realize()
