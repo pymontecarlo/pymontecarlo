@@ -109,7 +109,7 @@ class TestPhotonIntensityResult(TestCase):
 
         val, err = r.intensity('Cu La')
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(4.378803, err, 4)
+        self.assertAlmostEqual(1.1314, err, 4)
 
         zipfile.close()
 
@@ -159,7 +159,7 @@ class TestPhotonIntensityResult(TestCase):
         # Transition 1 + 3
         val, err = self.r.intensity('Cu La')
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(4.378803, err, 4)
+        self.assertAlmostEqual(1.1314, err, 4)
 
     def testhas_intensity(self):
         self.assertTrue(self.r.has_intensity(self.t1))

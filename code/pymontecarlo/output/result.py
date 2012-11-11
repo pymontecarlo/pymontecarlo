@@ -218,16 +218,15 @@ class PhotonIntensityResult(_Result):
 
         # Retrieve intensity (and its uncertainty)
         absorption_key = EMITTED if absorption else GENERATED
-        total_val = 0.0; total_unc = 0.0
+
+        total_val = 0.0
+        total_unc = 0.0
         for datum in data:
             val, unc = datum[absorption_key][key]
             total_val += val
-            try:
-                total_unc += (unc / val) ** 2
-            except ZeroDivisionError: # if val == 0.0
-                pass
+            total_unc += unc ** 2
 
-        total_unc = sqrt(total_unc) * total_val
+        total_unc = sqrt(total_unc)
 
         return total_val, total_unc
 
