@@ -22,6 +22,8 @@ __license__ = "GPL v3"
 import os
 import csv
 import re
+from operator import itemgetter
+import bisect
 
 # Third party modules.
 import wx
@@ -29,6 +31,7 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 from wx.grid import Grid
 
 from OpenGL import GL
+from OpenGL import GLUT
 
 import numpy as np
 
@@ -316,7 +319,9 @@ class _TrajectoryResultParameters(object):
         self.collision_ionisation_color = (0.0, 0.0, 0.0)
         self.collision_ionisation_size = 3.0
 
+        self.show_trajectories = True
         self.show_geometry = True
+        self.show_scalebar = True
 
 class _TrajectoryResultDialog(wx.Dialog):
 
@@ -324,13 +329,20 @@ class _TrajectoryResultDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, title='Setup display options')
 
         # Controls
-        # # Trajectories
+        ## Trajectories
         lbl_trajectories = wx.StaticText(self, label='Number of trajectories')
 
         self._sld_trajectories = wx.Slider(self)
         self._txt_trajectories = wx.StaticText(self)
 
-        # # Primary
+        ## Visibility
+        box_visibility = wx.StaticBox(self, label='Visibility')
+
+        self._chk_show_trajectories = wx.CheckBox(self, label='Trajectories')
+        self._chk_show_geometry = wx.CheckBox(self, label='Geometry')
+        self._chk_show_scalebar = wx.CheckBox(self, label='Scale bar')
+
+        ## Primary
         box_primary = wx.StaticBox(self, label='Primary trajectories')
 
         self._chk_primary_backscattered = wx.CheckBox(self, label='Backscattered')
@@ -351,7 +363,7 @@ class _TrajectoryResultDialog(wx.Dialog):
                                                min_val=1, max_val=100,
                                                increment=1, digits=1)
 
-        # # Secondary
+        ## Secondary
         box_secondary = wx.StaticBox(self, label='Secondary trajectories')
 
         self._chk_secondary_backscattered = wx.CheckBox(self, label='Backscattered')
@@ -372,7 +384,7 @@ class _TrajectoryResultDialog(wx.Dialog):
                                                min_val=1, max_val=100,
                                                increment=1, digits=1)
 
-        # # Collisions
+        ## Collisions
         box_collision = wx.StaticBox(self, label='Collisions')
 
         self._chk_hard_elastic = wx.CheckBox(self, label='Hard elastic')
@@ -399,10 +411,7 @@ class _TrajectoryResultDialog(wx.Dialog):
                                              min_val=1, max_val=100,
                                              increment=1, digits=1)
 
-        ## Geometry
-        self._chk_geometry = wx.CheckBox(self, label='Show geometry')
-
-        # # Buttons
+        ## Buttons
         btn_ok = wx.Button(self, wx.ID_OK)
         btn_cancel = wx.Button(self, wx.ID_CANCEL)
         btn_default = wx.Button(self, wx.ID_DEFAULT, label='Default')
@@ -410,7 +419,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         # Sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # # Number of trajectories
+        ## Number of trajectories
         szr_ntrajectories = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(szr_ntrajectories, 0, wx.GROW | wx.ALL, 5)
 
@@ -418,11 +427,19 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_ntrajectories.Add(self._sld_trajectories, 1, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         szr_ntrajectories.Add(self._txt_trajectories, 0, wx.ALIGN_CENTER_VERTICAL)
 
-        # # Trajectories
+        ## Visiblity
+        szr_visibilty = wx.StaticBoxSizer(box_visibility, wx.HORIZONTAL)
+        sizer.Add(szr_visibilty, 0, wx.GROW | wx.ALL, 5)
+
+        szr_visibilty.Add(self._chk_show_trajectories, 0, wx.ALL, 5)
+        szr_visibilty.Add(self._chk_show_geometry, 0, wx.ALL, 5)
+        szr_visibilty.Add(self._chk_show_scalebar, 0, wx.ALL, 5)
+
+        ## Trajectories
         szr_trajectories = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(szr_trajectories, 0, wx.GROW)
 
-        # # Primary
+        ## Primary
         szr_primary = wx.StaticBoxSizer(box_primary, wx.VERTICAL)
         szr_trajectories.Add(szr_primary, 1, wx.GROW | wx.ALL, 5)
 
@@ -442,7 +459,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_primary2.Add(self._btn_primary_absorbed, (2, 1), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_primary2.Add(self._txt_primary_absorbed, (2, 2), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
-        # # Secondary
+        ## Secondary
         szr_secondary = wx.StaticBoxSizer(box_secondary, wx.VERTICAL)
         szr_trajectories.Add(szr_secondary, 1, wx.GROW | wx.ALL, 5)
 
@@ -462,7 +479,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_secondary2.Add(self._btn_secondary_absorbed, (2, 1), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_secondary2.Add(self._txt_secondary_absorbed, (2, 2), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
-        # # Collisions
+        ## Collisions
         szr_collision = wx.StaticBoxSizer(box_collision, wx.VERTICAL)
         sizer.Add(szr_collision, 0, wx.GROW | wx.ALL, 5)
 
@@ -487,10 +504,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_collision2.Add(self._btn_ionisation, (1, 4), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_collision2.Add(self._txt_ionisation, (1, 5), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
-        ## Geometry
-        sizer.Add(self._chk_geometry, 0, wx.GROW | wx.ALL, 5)
-
-        # # Buttons
+        ## Buttons
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2.Add(btn_default, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
         sizer2.AddStretchSpacer()
@@ -597,7 +611,9 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._btn_ionisation.SetBackgroundColour(_c(params.collision_ionisation_color))
         self._txt_ionisation.SetValue(params.collision_ionisation_size)
 
-        self._chk_geometry.SetValue(params.show_geometry)
+        self._chk_show_trajectories.SetValue(params.show_trajectories)
+        self._chk_show_geometry.SetValue(params.show_geometry)
+        self._chk_show_scalebar.SetValue(params.show_scalebar)
 
     def GetParameters(self):
         def _c(color):
@@ -648,9 +664,41 @@ class _TrajectoryResultDialog(wx.Dialog):
         params.collision_ionisation_color = _c(self._btn_ionisation.GetBackgroundColour())
         params.collision_ionisation_size = float(self._txt_ionisation.GetValue())
 
-        params.show_geometry = self._chk_geometry.GetValue()
+        params.show_trajectories = self._chk_show_trajectories.GetValue()
+        params.show_geometry = self._chk_show_geometry.GetValue()
+        params.show_scalebar = self._chk_show_scalebar.GetValue()
 
         return params
+
+def _calculate_scale_bar(value, unit, length,
+                            preferred_values=[1, 2, 5, 10, 20, 50, 100, 200, 500]):
+    """
+    
+    """
+    UNITS = {'ym': 1e-24, 'zm': 1e-21, 'am': 1e-18, 'fm': 1e-15, 'pm': 1e-12,
+             'nm': 1e-9, 'um': 1e-6, 'mm': 1e-3, 'm': 1.0, 'km': 1e3, 'Mm': 1e6,
+             'Gm': 1e9, 'Tm': 1e12, 'Pm': 1e15, 'Em': 1e18, 'Zm': 1e21, 'Ym': 1e24}
+
+    if unit not in UNITS:
+        raise ValueError, 'Unknown unit %s' % unit
+
+    # Convert to meters
+    value_m = value * UNITS[unit]
+
+    # Find best units and adjust value
+    unit2, factor = \
+        sorted([(unit, mag) for unit, mag in UNITS.iteritems() if mag <= value_m],
+               key=itemgetter(1))[-1]
+    value2 = value_m / factor
+
+    # Find preferred units and adjust value
+    index = bisect.bisect_right(preferred_values, value2) - 1
+    value3 = float(preferred_values[index])
+
+    # New length
+    length2 = value3 / value2 * length
+
+    return value3, unit2, length2
 
 class _TrajectoryResultGLCanvas(GLCanvas):
 
@@ -682,6 +730,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         GL.glOrtho(-6.0 * ar, 6.0 * ar, -6.0, 6.0, -1e6, 1e6)
 
     def InitGL(self):
+        GLUT.glutInit()
         GLCanvas.InitGL(self)
 
         GL.glEnable(GL.GL_BLEND);
@@ -804,17 +853,42 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         return ilist
 
     def DrawGLObjects(self):
-        for ilist in self._glists:
-            GL.glCallList(ilist)
+        # Trajectories
+        if self._params.show_trajectories:
+            for ilist in self._glists:
+                GL.glCallList(ilist)
 
+        # Geometry
         if self._params.show_geometry:
             self._geometrygl.drawgl()
 
+        # Scale bar
+        if self._params.show_scalebar:
+            length = 3.0
+            scale = length / GL.glGetDoublev(GL.GL_MODELVIEW_MATRIX)[0][0] # um
+            new_scale, new_unit, new_length = _calculate_scale_bar(scale, 'um', length)
+
+            width, height = self.GetClientSizeTuple()
+            x0 = -6.0 * width / height + 0.5
+            y0 = -6.0 + 0.5
+
+            GL.glPushMatrix()
+            GL.glLoadIdentity()
+
+            GL.glColor(0.0, 0.0, 0.0)
+            GL.glRectd(x0, y0 + 0.5, x0 + new_length, y0 + 0.6)
+
+            GL.glRasterPos2f(x0, y0);
+            GLUT.glutBitmapString(GLUT.GLUT_BITMAP_HELVETICA_18,
+                                  '%s %s' % (new_scale, new_unit))
+
+            GL.glPopMatrix()
+
     def ResetGL(self):
         GLCanvas.ResetGL(self)
-        GL.glScale(6, 6, 6)
+        GL.glScale(10, 10, 10)
         GL.glTranslate(0.0, 0.0, 0.5)
-        GL.glRotate(5.0, 1.0, 0.0, 0.0)
+        GL.glRotate(5.0, 1.0, 0.0, 1.0)
 
 class TrajectoryResultPanel(_ResultPanel):
 
