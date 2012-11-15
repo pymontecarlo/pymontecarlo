@@ -987,8 +987,8 @@ class ElectronFractionResult(_Result):
 
 ResultManager.register('ElectronFractionResult', ElectronFractionResult)
 
-EXIT_STATE_BACKSCATTERED = 1
-EXIT_STATE_TRANSMITTED = 2
+EXIT_STATE_TRANSMITTED = 1
+EXIT_STATE_BACKSCATTERED = 2
 EXIT_STATE_ABSORBED = 3
 
 EXIT_STATES = frozenset([EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED,
