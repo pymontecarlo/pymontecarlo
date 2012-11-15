@@ -23,14 +23,14 @@ import os
 
 # Local modules.
 from pymontecarlo import load_settings, load_program, find_programs, get_program_cli
-from pymontecarlo.ui.cli.console import create_console
+from pymontecarlo.ui.cli.console import Console
 from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
 
 def run(argv=None):
     # Initialize
-    console = create_console()
+    console = Console()
     console.init()
 
     console.print_message("Configuration of pyMonteCarlo")

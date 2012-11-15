@@ -33,7 +33,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.runner.runner import Runner
 from pymontecarlo.runner.creator import Creator
 
-from pymontecarlo.ui.cli.console import create_console, ProgressBar
+from pymontecarlo.ui.cli.console import Console, ProgressBar
 
 # Globals and constants variables.
 
@@ -86,7 +86,7 @@ def load_options(filepaths, list_options=[]):
 
 def run(argv=None):
     # Initialize
-    console = create_console()
+    console = Console()
     console.init()
 
     programs = get_programs()

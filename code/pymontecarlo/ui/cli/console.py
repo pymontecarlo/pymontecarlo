@@ -12,10 +12,6 @@
 Generic interface to interact with the command line.
 A console implements easy functions to print error, warning, information 
 messages as well as to retrieve data from the user.
-
-To ensure that the right console is used for the operating system, the
-method :meth:`create_console` should be called instead of the actual console
-constructor.
 """
 
 # Script information for the file.
@@ -28,7 +24,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import sys
-import platform
 import textwrap
 import logging
 import warnings
@@ -498,24 +493,10 @@ class _Console(object):
 
         sys.exit(retcode)
 
-class UnixConsole(_Console):
-    """
-    Console for UNIX-like platform.
-    """
-
-    _COLORS = {COLOR_DEFAULT: 0, COLOR_RED: 31, COLOR_GREEN: 32,
-               COLOR_BLUE: 34, COLOR_YELLOW: 33, COLOR_PURPLE: 35}
-
-    def _pre_print(self, stream, text, color):
-        stream.write("\033[%dm\033[1m" % self._COLORS[color])
-
-    def _post_print(self, stream, text, color):
-        stream.write("\033[0m")
-
-if platform.system() == 'Windows':
+if os.name == 'nt':
     from ctypes import windll, c_ulong
 
-    class WindowsConsole(_Console):
+    class _NTConsole(_Console):
         """
         Console for Windows platform.
         """
@@ -530,26 +511,140 @@ if platform.system() == 'Windows':
             self._handle = windll.Kernel32.GetStdHandle(c_ulong(0xfffffff5))
 
         def _pre_print(self, stream, text, color):
-            windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[color])
+            windll.Kernel32.SetConsoleTextAttribute(self._handle,
+                                                    self._COLORS[color])
 
         def _post_print(self, stream, text, color):
-            windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
+            windll.Kernel32.SetConsoleTextAttribute(self._handle,
+                                                    self._COLORS[COLOR_DEFAULT])
 
         def close(self, retcode=0):
-            windll.Kernel32.SetConsoleTextAttribute(self._handle, self._COLORS[COLOR_DEFAULT])
+            windll.Kernel32.SetConsoleTextAttribute(self._handle,
+                                                    self._COLORS[COLOR_DEFAULT])
             _Console.close(self, retcode)
 
-def create_console(width=80, stdout=sys.stdout, stderr=sys.stderr):
-    """
-    Creates a console based on the platform.
-    
-    :arg width: number of characters in one line [default: 80]
-        Text exceeding this number of characters will be wrapped to multiple
-        lines.
-    :arg stdout: where to write the output [default: ``sys.stdout``]
-    :arg stderr: where to write the error output [default: ``sys.stderr``]
-    """
-    if platform.system() == 'Windows':
-        return WindowsConsole(width, stdout, stderr)
-    else:
-        return UnixConsole(width, stdout, stderr)
+    Console = _NTConsole
+
+#-------------------------------------------------------------------------------
+
+elif os.name == 'posix':
+    import re
+    import readline
+
+    RE_SPACE = re.compile('.*\s+$', re.M)
+
+    COMPLETER_NONE = lambda text, state: None
+
+    readline.set_completer_delims(' \t\n;')
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(COMPLETER_NONE)
+
+    class _PosixConsole(_Console):
+        """
+        Console for UNIX-like platform.
+        """
+
+        _COLORS = {COLOR_DEFAULT: 0, COLOR_RED: 31, COLOR_GREEN: 32,
+                   COLOR_BLUE: 34, COLOR_YELLOW: 33, COLOR_PURPLE: 35}
+
+        def _pre_print(self, stream, text, color):
+            stream.write("\033[%dm\033[1m" % self._COLORS[color])
+
+        def _post_print(self, stream, text, color):
+            stream.write("\033[0m")
+
+        def _complete_boolean(self, text, state):
+            ANSWERS = ['y', 'n']
+
+            buffer = readline.get_line_buffer()
+            line = readline.get_line_buffer().split()
+
+            # show all commands
+            if not line:
+                return [c + ' ' for c in ANSWERS][state]
+
+            # account for last argument ending in a space
+            if RE_SPACE.match(buffer):
+                line.append('')
+
+            # resolve command to the implementation function
+            cmd = line[0].strip()
+            if cmd in ANSWERS:
+                return None
+
+            return [c + ' ' for c in ANSWERS][state]
+
+        def _complete_path(self, text, state):
+            """
+            Generic readline completion entry point.
+            From: http://stackoverflow.com/questions/5637124/tab-completion-in-pythons-raw-input
+            """
+            def _listdir(root):
+                """
+                List directory 'root' appending the path separator to subdirs.
+                """
+                res = []
+                for name in os.listdir(root):
+                    path = os.path.join(root, name)
+                    if os.path.isdir(path):
+                        name += os.sep
+                    res.append(name)
+                return res
+
+            def _complete_path_internal(path=None):
+                """
+                Perform completion of filesystem path.
+                """
+                if not path:
+                    return _listdir('.')
+
+                dirname, rest = os.path.split(path)
+                tmp = dirname if dirname else '.'
+                res = [os.path.join(dirname, p)
+                        for p in _listdir(tmp) if p.startswith(rest)]
+
+                # more than one match, or single match which does not exist (typo)
+                if len(res) > 1 or not os.path.exists(path):
+                    return res
+
+                # resolved to a single directory, so return list of files below it
+                if os.path.isdir(path):
+                    return [os.path.join(path, p) for p in _listdir(path)]
+
+                # exact file match terminates this completion
+                return [path + ' ']
+
+            buffer = readline.get_line_buffer()
+            line = readline.get_line_buffer().split()
+
+            # account for last argument ending in a space
+            if RE_SPACE.match(buffer):
+                line.append('')
+
+            args = '.' if not line else line[-1]
+            return (_complete_path_internal(args) + [None])[state]
+
+        def prompt_boolean(self, question, default=None, validators=[]):
+            readline.set_completer(self._complete_boolean)
+            answer = _Console.prompt_boolean(self, question, default, validators)
+            readline.set_completer(COMPLETER_NONE)
+            return answer
+
+        def prompt_file(self, question, default=None, should_exist=True, validators=[]):
+            readline.set_completer(self._complete_path)
+            answer = _Console.prompt_file(self, question, default, should_exist, validators)
+            readline.set_completer(COMPLETER_NONE)
+            return answer
+
+        def prompt_directory(self, question, default=None, should_exist=True, validators=[]):
+            readline.set_completer(self._complete_path)
+            answer = _Console.prompt_directory(self, question, default, should_exist, validators)
+            readline.set_completer(COMPLETER_NONE)
+            return answer
+
+    Console = _PosixConsole
+
+#-------------------------------------------------------------------------------
+
+else:
+    Console = _Console

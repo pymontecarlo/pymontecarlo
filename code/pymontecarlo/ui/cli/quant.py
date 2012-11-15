@@ -38,7 +38,7 @@ from pymontecarlo.quant.runner.convergor import \
     CompositionConvergor, KRatioConvergor
 from pymontecarlo.quant.runner.calculator import SimpleCalculator, FluorescenceCalculator
 
-from pymontecarlo.ui.cli.console import create_console, ProgressBar
+from pymontecarlo.ui.cli.console import Console, ProgressBar
 
 # Globals and constants variables.
 
@@ -128,7 +128,7 @@ def load_measurements(filepaths, measurements=[]):
 
 def run(argv=None):
     # Initialize
-    console = create_console()
+    console = Console()
     console.init()
 
     programs = get_programs()

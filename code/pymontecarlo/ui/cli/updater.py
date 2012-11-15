@@ -24,7 +24,7 @@ from optparse import OptionParser
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.ui.cli.console import create_console
+from pymontecarlo.ui.cli.console import Console
 from pymontecarlo.input.updater import Updater as OptionsUpdater
 from pymontecarlo.output.updater import Updater as ResultsUpdater
 from pymontecarlo.quant.output.updater import Updater as QuantResultsUpdater
@@ -33,7 +33,7 @@ from pymontecarlo.quant.output.updater import Updater as QuantResultsUpdater
 
 if __name__ == '__main__':
     # Initialize console
-    console = create_console()
+    console = Console()
     console.init()
 
     # Create parser
