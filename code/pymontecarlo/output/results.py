@@ -79,7 +79,7 @@ class Results(Mapping):
         """
         task = progress.start_task("Loading results")
 
-        zipfile = ZipFile(source, 'r')
+        zipfile = ZipFile(source, 'r', allowZip64=True)
 
         # Check version
         if zipfile.comment != 'version=%s' % VERSION:
@@ -136,7 +136,7 @@ class Results(Mapping):
         """
         task = progress.start_task('Saving results')
 
-        zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED)
+        zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED, allowZip64=True)
         zipfile.comment = 'version=%s' % VERSION
 
         # Creates keys.ini
