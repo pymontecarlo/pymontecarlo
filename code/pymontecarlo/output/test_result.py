@@ -33,7 +33,8 @@ from pymontecarlo.output.result import \
      create_phirhoz_dict,
      Trajectory,
      TrajectoryResult,
-     ShowersStatisticsResult)
+     ShowersStatisticsResult,
+     _ChannelsResult)
 from pymontecarlo.util.transition import Transition, K_family
 
 # Globals and constants variables.
@@ -736,6 +737,47 @@ class TestTrajectoryResult(TestCase):
 
         trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_TRANSMITTED))
         self.assertEqual(0, len(trajs))
+
+class Test_ChannelsResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        data = np.array([[0.0, 1.0, 0.1], [1.0, 2.0, 0.2], [2.0, 3.0, 0.3]])
+        self.r = _ChannelsResult(data)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual(3, len(self.r))
+
+        data = self.r.get_data()
+        self.assertAlmostEqual(1.0, data[0][1], 4)
+        self.assertAlmostEqual(0.2, data[1][2], 4)
+
+    def test__loadzip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det8')
+        zipfile.close()
+
+        zipfile = ZipFile(fp, 'r')
+        r = _ChannelsResult.__loadzip__(zipfile, 'det8')
+        zipfile.close()
+
+        self.assertEqual(3, len(r))
+
+        data = r.get_data()
+        self.assertAlmostEqual(1.0, data[0][1], 4)
+        self.assertAlmostEqual(0.2, data[1][2], 4)
+
+    def test__savezip__(self):
+        fp = StringIO()
+        zipfile = ZipFile(fp, 'w')
+        self.r.__savezip__(zipfile, 'det8')
+
+        zipfile.close()
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

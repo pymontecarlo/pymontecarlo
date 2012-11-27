@@ -31,6 +31,7 @@ from StringIO import StringIO
 from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Third party modules.
+import numpy as np
 import h5py
 
 # Local modules.
@@ -1257,3 +1258,66 @@ class TrajectoryHDF5Result(TrajectoryResult):
 
             interactions = dataset[:]
             yield Trajectory(primary, particle, collision, exit_state, interactions)
+
+class _ChannelsResult(_Result):
+
+    def __init__(self, data):
+        """
+        Creates a new result to store a distribution.
+        
+        :arg data: numpy array containing 2 or 3 columns. The first column
+            must be the mid-value of each bin, the second, the probability
+            density in counts/(eV.electron) and the third (optional), the
+            uncertainty on the probability density.
+        """
+        _Result.__init__(self)
+
+        if data.shape[1] < 2:
+            raise ValueError, 'The data must contains at least two columns'
+        if data.shape[1] == 2:
+            data = np.append(data, np.zeros((data.shape[0], 1)), 1)
+
+        self._data = data
+
+    @classmethod
+    def __loadzip__(cls, zipfile, key):
+        data = np.loadtxt(zipfile.open(key + '.csv', 'r'), delimiter=',')
+        return cls(data)
+
+    def __savezip__(self, zipfile, key):
+        fp = StringIO()
+        np.savetxt(fp, self._data, delimiter=',')
+        zipfile.writestr(key + '.csv', fp.getvalue())
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def get_data(self):
+        return np.copy(self._data)
+
+class BackscatteredElectronEnergyResult(_ChannelsResult):
+    """
+    Energy distribution of backscattered electrons.
+    
+    Data columns:
+    
+        1. Mid-energy of each bin (eV)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+    pass
+
+class TransmittedElectronEnergyResult(_ChannelsResult):
+    """
+    Energy distribution of transmitted electrons.
+    
+    Data columns:
+    
+        1. Mid-energy of each bin (eV)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+    pass
