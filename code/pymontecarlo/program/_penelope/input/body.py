@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import warnings
 
 # Third party modules.
 from lxml.etree import Element
@@ -83,8 +84,11 @@ class Body(_Body, Option):
 
     @maximum_step_length_m.setter
     def maximum_step_length_m(self, length):
-        if length < 0 or length > 1e20:
-            raise ValueError, "Length (%s) must be between [0, 1e20]." % length
+        if length > 1e20:
+            warnings.warn('Maximum step length set to maximum value: 1e20')
+            length = 1e20
+        if length < 0:
+            raise ValueError, "Length (%s) must be greater than 0.0." % length
         self._props['maximum step length'] = length
 
 XMLIO.register('{http://pymontecarlo.sf.net/penelope}body', Body)
