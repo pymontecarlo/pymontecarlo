@@ -131,7 +131,7 @@ class _XMLIO(Manager):
         Manager.register_saver(self, tag, klass)
 
     def validate(self, element):
-        exception = None
+        exceptions = []
 
         for prefix in element.nsmap:
             schema = self._schemas.get(prefix)
@@ -141,13 +141,16 @@ class _XMLIO(Manager):
             try:
                 schema.assertValid(element)
             except Exception as ex:
-                exception = ex
+                exceptions.append(ex)
                 continue
 
             return
 
-        if exception is not None:
-            raise exception
+        if exceptions:
+            if len(exceptions) == 1:
+                raise exceptions[0]
+            else:
+                raise Exception, '; '.join(map(str, exceptions))
 
     def from_xml(self, element, validate=False, *args, **kwargs):
         """
