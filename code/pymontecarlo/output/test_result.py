@@ -39,7 +39,7 @@ from pymontecarlo.util.transition import Transition, K_family
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PHOTON
 from pymontecarlo.input.collision import NO_COLLISION, HARD_INELASTIC
-from pymontecarlo.output.result import EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED
+from pymontecarlo.output.result import EXIT_STATE_ABSORBED, EXIT_STATE_TRANSMITTED
 
 class TestPhotonIntensityResult(TestCase):
 
@@ -731,10 +731,10 @@ class TestTrajectoryResult(TestCase):
         trajs = list(r.filter(collisions=HARD_INELASTIC))
         self.assertEqual(246, len(trajs))
 
-        trajs = list(r.filter(exit_states=EXIT_STATE_BACKSCATTERED))
+        trajs = list(r.filter(exit_states=EXIT_STATE_TRANSMITTED))
         self.assertEqual(12, len(trajs))
 
-        trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_BACKSCATTERED))
+        trajs = list(r.filter(is_primary=False, exit_states=EXIT_STATE_TRANSMITTED))
         self.assertEqual(0, len(trajs))
 
 if __name__ == '__main__': #pragma: no cover
