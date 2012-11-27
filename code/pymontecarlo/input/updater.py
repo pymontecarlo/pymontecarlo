@@ -29,6 +29,12 @@ from pymontecarlo.util.updater import _Updater
 from pymontecarlo.input.options import Options
 
 # Globals and constants variables.
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
+from pymontecarlo.input.collision import \
+    (DELTA, HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
+     INNERSHELL_IMPACT_IONISATION, COHERENT_RAYLEIGH_SCATTERING,
+     INCOHERENT_COMPTON_SCATTERING, PHOTOELECTRIC_ABSORPTION,
+     ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 
 class Updater(_Updater):
 
@@ -122,8 +128,35 @@ class Updater(_Updater):
         root = etree.parse(filepath).getroot()
         root.set('version', '3')
 
+        # Update beam
         element = list(root.find('beam'))[0]
         element.set('particle', 'electron')
+
+        # Update interaction forcings
+        _PARTICLES_REF = {1: ELECTRON, 2: PHOTON, 3: POSITRON}
+        _COLLISIONS_REF = {ELECTRON: {2: HARD_ELASTIC,
+                                      3: HARD_INELASTIC,
+                                      4: HARD_BREMSSTRAHLUNG_EMISSION,
+                                      5: INNERSHELL_IMPACT_IONISATION,
+                                      7: DELTA},
+                           PHOTON: {1: COHERENT_RAYLEIGH_SCATTERING,
+                                    2: INCOHERENT_COMPTON_SCATTERING,
+                                    3: PHOTOELECTRIC_ABSORPTION,
+                                    4: ELECTRON_POSITRON_PAIR_PRODUCTION,
+                                    7: DELTA},
+                           POSITRON: {2: HARD_ELASTIC,
+                                      3: HARD_INELASTIC,
+                                      4: HARD_BREMSSTRAHLUNG_EMISSION,
+                                      5: INNERSHELL_IMPACT_IONISATION,
+                                      6: ANNIHILATION,
+                                      7: DELTA}}
+
+        for element in root.iterdescendants('{http://pymontecarlo.sf.net/penelope}interactionForcing'):
+            particle = _PARTICLES_REF[int(element.get('particle'))]
+            element.set('particle', str(particle))
+
+            collision = _COLLISIONS_REF[particle][int(element.get('collision'))]
+            element.set('collision', str(collision))
 
         with open(filepath, 'w') as fp:
             fp.write(etree.tostring(root, pretty_print=True))
