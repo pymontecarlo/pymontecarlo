@@ -34,7 +34,7 @@ from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.input.detector import \
     (
 #     BackscatteredElectronAzimuthalAngularDetector,
-#     BackscatteredElectronEnergyDetector,
+     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
 #     EnergyDepositedSpatialDetector,
      PhiRhoZDetector,
@@ -56,7 +56,7 @@ class Converter(_Converter):
     BEAMS = [GaussianBeam]
     DETECTORS = [
 #                 BackscatteredElectronAzimuthalAngularDetector,
-#                 BackscatteredElectronEnergyDetector,
+                 BackscatteredElectronEnergyDetector,
 #                 BackscatteredElectronPolarAngularDetector,
 #                 EnergyDepositedSpatialDetector,
                  PhiRhoZDetector,

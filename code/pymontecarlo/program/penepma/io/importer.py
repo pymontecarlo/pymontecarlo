@@ -25,6 +25,7 @@ from itertools import izip
 from collections import defaultdict
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.output.result import \
@@ -37,11 +38,12 @@ from pymontecarlo.output.result import \
     PhiRhoZResult,
     create_intensity_dict,
     create_phirhoz_dict,
+    BackscatteredElectronEnergyResult,
     )
 from pymontecarlo.input.detector import \
     (
      _PhotonDelimitedDetector,
-#     BackscatteredElectronEnergyDetector,
+     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
      PhiRhoZDetector,
      PhotonSpectrumDetector,
@@ -59,6 +61,24 @@ from pymontecarlo.program.penepma.input.detector import index_delimited_detector
 from pymontecarlo.output.result import \
     EMITTED, NOFLUORESCENCE, CHARACTERISTIC, BREMSSTRAHLUNG, TOTAL
 
+def _load_dat_files(filepath):
+    bins = []
+    vals = []
+    uncs = []
+
+    with open(filepath, 'r') as fp:
+        for line in fp:
+            line = line.strip()
+            if line.startswith('#'): continue
+            if not line: continue
+            values = line.split()
+
+            bins.append(float(values[0]))
+            vals.append(float(values[1]))
+            uncs.append(float(values[2]))
+
+    return bins, vals, uncs
+
 class Importer(_Importer):
 
     def __init__(self):
@@ -75,6 +95,8 @@ class Importer(_Importer):
         self._detector_importers[TimeDetector] = self._detector_time
         self._detector_importers[ShowersStatisticsDetector] = \
             self._detector_showers_statistics
+        self._detector_importers[BackscatteredElectronEnergyDetector] = \
+            self._detector_backscattered_electron_energy
 
     def _import_results(self, options, path, *args):
         # Find index for each delimited detector
@@ -101,32 +123,10 @@ class Importer(_Importer):
             raise ImporterException, "Data file %s cannot be found" % spect_filepath
 
         # Load characteristic spectrum
-        charact = []
-        charact_unc = []
-
-        with open(charact_filepath, 'r') as fp:
-            for line in fp:
-                line = line.strip()
-                if line.startswith('#'): continue
-                values = line.split()
-
-                charact.append(float(values[1]))
-                charact_unc.append(float(values[2]))
+        _, charact, charact_unc = _load_dat_files(charact_filepath)
 
         # Load total spectrum
-        energies = []
-        total = []
-        total_unc = []
-
-        with open(spect_filepath, 'r') as fp:
-            for line in fp:
-                line = line.strip()
-                if line.startswith('#'): continue
-                values = line.split()
-
-                energies.append(float(values[0]))
-                total.append(float(values[1]))
-                total_unc.append(float(values[2]))
+        energies, total, total_unc = _load_dat_files(spect_filepath)
 
         # Calculate background
         background = [t - c for t, c in izip(total, charact)]
@@ -306,3 +306,14 @@ class Importer(_Importer):
         showers = line['N_ELECTRON']
 
         return ShowersStatisticsResult(showers)
+
+    def _detector_backscattered_electron_energy(self, options, key, detector, path, *args):
+        filepath = os.path.join(path, 'pe-energy-el-back.dat')
+        if not os.path.exists(filepath):
+            raise ImporterException, "Data file %s cannot be found" % filepath
+
+        # Load distributions
+        bins, vals, uncs = _load_dat_files(filepath)
+        data = np.array([bins, vals, uncs]).T
+
+        return BackscatteredElectronEnergyResult(data)

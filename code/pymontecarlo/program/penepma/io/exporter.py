@@ -38,7 +38,8 @@ from pymontecarlo.input.collision import \
      ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.detector import \
-    _PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector
+    (_PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector,
+     BackscatteredElectronEnergyDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 
 from pymontecarlo.util.transition import get_transitions
@@ -280,6 +281,16 @@ class Exporter(_Exporter):
         lines.append(self._COMMENT_EMERGINGDIST())
 
         #FIXME: Add emerging particle detectors
+
+        detectors = options.detectors.findall(BackscatteredElectronEnergyDetector)
+        if not detectors:
+            lines.append(self._COMMENT_SKIP())
+            return
+
+        detector = detectors.values()[0]
+        text = detector.limits_eV[0], detector.limits_eV[1], detector.channels
+        line = self._KEYWORD_NBE(text)
+        lines.append(line)
 
         lines.append(self._COMMENT_SKIP())
 

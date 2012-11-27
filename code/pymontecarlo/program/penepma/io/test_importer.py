@@ -26,7 +26,8 @@ from pymontecarlo.input.detector import \
      PhiRhoZDetector,
      ElectronFractionDetector,
      TimeDetector,
-     ShowersStatisticsDetector)
+     ShowersStatisticsDetector,
+     BackscatteredElectronEnergyDetector)
 from pymontecarlo.program.penepma.io.importer import Importer
 
 # Globals and constants variables.
@@ -219,6 +220,23 @@ class TestImporter(TestCase):
         result = results['showers']
 
         self.assertEqual(52730, result.showers)
+
+    def test_detector_backscattered_electron_energy(self):
+        # Create
+        ops = Options(name='test1')
+        ops.beam.energy_eV = 20e3
+        ops.detectors['bse'] = \
+            BackscatteredElectronEnergyDetector((0.0, 20e3), 100)
+
+        # Import
+        results = self.i.import_from_dir(ops, self.testdata)
+
+        # Test
+        self.assertEqual(1, len(results))
+
+        result = results['bse']
+
+        self.assertEqual(250, len(result))
 
 
 if __name__ == '__main__': #pragma: no cover
