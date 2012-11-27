@@ -1310,6 +1310,8 @@ class BackscatteredElectronEnergyResult(_ChannelsResult):
     """
     pass
 
+ResultManager.register('BackscatteredElectronEnergyResult', BackscatteredElectronEnergyResult)
+
 class TransmittedElectronEnergyResult(_ChannelsResult):
     """
     Energy distribution of transmitted electrons.
@@ -1321,3 +1323,5 @@ class TransmittedElectronEnergyResult(_ChannelsResult):
         3. uncertainty of the probability density (counts/(eV.electron))
     """
     pass
+
+ResultManager.register('TransmittedElectronEnergyResult', TransmittedElectronEnergyResult)
