@@ -22,11 +22,11 @@ __license__ = "GPL v3"
 import logging
 
 # Third party modules.
-import lxml.etree as etree
 
 # Local modules.
 from pymontecarlo.util.updater import _Updater
 from pymontecarlo.input.options import Options
+from pymontecarlo.util.xmlutil import parse, tostring
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
@@ -50,7 +50,7 @@ class Updater(_Updater):
         self._updaters[4] = self._update_version4
 
     def _get_version(self, filepath):
-        root = etree.parse(filepath).getroot()
+        root = parse(filepath).getroot()
         return int(root.get('version', 0))
 
     def _validate(self, filepath):
@@ -59,7 +59,7 @@ class Updater(_Updater):
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')
 
-        root = etree.parse(filepath).getroot()
+        root = parse(filepath).getroot()
 
         if not root.nsmap and root.tag.startswith('pymontecarlo.'):
             content = open(filepath, 'r').read()
@@ -117,7 +117,7 @@ class Updater(_Updater):
             root.set('version', '2')
 
             with open(filepath, 'w') as fp:
-                fp.write(etree.tostring(root, pretty_print=True))
+                fp.write(tostring(root, pretty_print=True))
 
         self._update_version2(filepath)
         self._update_version3(filepath)
@@ -125,7 +125,7 @@ class Updater(_Updater):
     def _update_version2(self, filepath):
         logging.debug('Updating from "version 2"')
 
-        root = etree.parse(filepath).getroot()
+        root = parse(filepath).getroot()
         root.set('version', '3')
 
         # Update beam
@@ -159,14 +159,14 @@ class Updater(_Updater):
             element.set('collision', str(collision))
 
         with open(filepath, 'w') as fp:
-            fp.write(etree.tostring(root, pretty_print=True))
+            fp.write(tostring(root, pretty_print=True))
 
         self._update_version3(filepath)
 
     def _update_version3(self, filepath):
         logging.debug('Updating from "version 3"')
 
-        root = etree.parse(filepath).getroot()
+        root = parse(filepath).getroot()
         root.set('version', '4')
 
         elements = list(list(root.find('geometry'))[0].find('materials'))
@@ -174,7 +174,7 @@ class Updater(_Updater):
             element.set('absorptionEnergyPositron', '50.0')
 
         with open(filepath, 'w') as fp:
-            fp.write(etree.tostring(root, pretty_print=True))
+            fp.write(tostring(root, pretty_print=True))
 
     def _update_version4(self, filepath):
         logging.info('Nothing to update')

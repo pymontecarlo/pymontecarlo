@@ -21,11 +21,10 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.option import Option
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 

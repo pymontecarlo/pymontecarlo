@@ -23,11 +23,10 @@ import math
 from operator import mul
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.option import Option
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PARTICLES

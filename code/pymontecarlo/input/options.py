@@ -21,10 +21,9 @@ __license__ = "GPL v3"
 from collections import MutableMapping, MutableSet
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 from pymontecarlo.input.option import Option
 from pymontecarlo.input.beam import GaussianBeam
 from pymontecarlo.input.material import pure

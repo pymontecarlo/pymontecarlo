@@ -22,14 +22,13 @@ __license__ = "GPL v3"
 from collections import defaultdict
 
 # Third party modules.
-from lxml.etree import Element
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
 from pymontecarlo.input.option import Option
 
 import pymontecarlo.util.element_properties as ep
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 

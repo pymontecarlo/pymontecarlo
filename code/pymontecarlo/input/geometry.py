@@ -23,10 +23,9 @@ from math import pi
 import itertools
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 from pymontecarlo.util.oset import oset
 
 from pymontecarlo.input.option import Option

@@ -22,13 +22,12 @@ __license__ = "GPL v3"
 import warnings
 
 # Third party modules.
-from lxml.etree import Element
 
 # Local modules.
 from pymontecarlo.input.body import Body as _Body, Layer as _Layer
 from pymontecarlo.input.option import Option
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 

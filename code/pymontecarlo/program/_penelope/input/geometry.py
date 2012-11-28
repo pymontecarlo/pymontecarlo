@@ -25,7 +25,6 @@ from itertools import chain
 from operator import methodcaller, attrgetter
 
 # Third party modules.
-from lxml.etree import Element
 from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
                        ParseException, delimitedList, Group, printables, stringEnd)
 
@@ -36,7 +35,7 @@ from pymontecarlo.input.option import Option
 
 from pymontecarlo.program._penelope.input.body import Body
 
-from pymontecarlo.util.xmlutil import objectxml
+from pymontecarlo.util.xmlutil import objectxml, Element
 from pymontecarlo.util.sort import topological_sort
 
 # Globals and constants variables.

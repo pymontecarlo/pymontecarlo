@@ -27,8 +27,6 @@ from lxml.etree import Element, XMLSchema, tostring, parse
 from pymontecarlo.util.manager import Manager
 
 # Globals and constants variables.
-_XSD_IMPORT_TAG = '{http://www.w3.org/2001/XMLSchema}import'
-_XSD_INCLUDE_TAG = '{http://www.w3.org/2001/XMLSchema}include'
 
 class objectxml(object):
 
@@ -133,7 +131,7 @@ class _XMLIO(Manager):
     def validate(self, element):
         exceptions = []
 
-        for prefix in element.nsmap:
+        for prefix in getattr(element, 'nsmap', []):
             schema = self._schemas.get(prefix)
             if schema is None:
                 continue
