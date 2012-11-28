@@ -48,6 +48,8 @@ from pymontecarlo.program._penelope.io.exporter import \
     Exporter as _Exporter, Keyword, Comment, ExporterException, ExporterWarning
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 
+from penelopelib.material import MaterialInfo
+
 # Globals and constants variables.
 MAX_PHOTON_DETECTORS = 25 # Set in penepma.f
 MAX_PRZ = 20 # Set in penepma.f
@@ -259,18 +261,39 @@ class Exporter(_Exporter):
     def _append_interaction_forcing(self, lines, options, geoinfo, matinfos, *args):
         lines.append(self._COMMENT_INTERACTION())
 
+        matinfos = dict(matinfos)
         bodies = sorted(geoinfo[0].get_bodies(), key=attrgetter('_index'))
         for body in bodies:
             if body.material is VACUUM:
                 continue
 
             for intforce in body.interaction_forcings:
-                text = [body._index + 1,
-                        _PARTICLES_REF[intforce.particle],
-                        _COLLISIONS_REF[intforce.particle][intforce.collision],
-                        intforce.forcer,
-                        intforce.weight[0],
-                        intforce.weight[1]]
+                kpar = _PARTICLES_REF[intforce.particle]
+                icol = _COLLISIONS_REF[intforce.particle][intforce.collision]
+                forcer = intforce.forcer
+                wlow = intforce.weight[0]
+                whigh = intforce.weight[1]
+
+                # Recalculate forcer
+                # NOTE: We override PENEPMA calculations of negative forcers,
+                # since PENEPMA uses the absorption energy of electron and
+                # photons to evaluate the mean free path. This skews the
+                # interaction forcings when the absorption energies are not
+                # equal to 50.0 eV.
+                if forcer < 0:
+                    logging.debug('Recalculation of forcer (%s)', forcer)
+
+                    matfilepath = matinfos[body.material]
+                    matinfo = MaterialInfo(matfilepath)
+
+                    e0 = options.beam.energy_eV
+                    plt = matinfo.range_m(e0, kpar)
+                    rmfp = matinfo.meanfreepath_m(e0, kpar, icol)
+                    forcer = abs(forcer) * rmfp / plt
+
+                    logging.debug('New forcer value: %s', forcer)
+
+                text = [body._index + 1, kpar, icol, forcer, wlow, whigh]
                 line = self._KEYWORD_IFORCE(text)
                 lines.append(line)
 
