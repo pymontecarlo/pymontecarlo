@@ -67,7 +67,7 @@ class objectxml(object):
 
         return cls.from_xml(element, validate)
 
-    def save(self, source, validate=True):
+    def save(self, source, validate=True, pretty_print=True):
         """
         Saves this object to a file-object.
         The file-object must correspond to a XML file where the options will 
@@ -78,7 +78,7 @@ class objectxml(object):
             (default: ``True``)
         """
         element = self.to_xml(validate)
-        output = tostring(element, pretty_print=True)
+        output = tostring(element, pretty_print=pretty_print)
 
         self_opened = False
         if not hasattr(source, "write"):
