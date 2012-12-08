@@ -19,20 +19,12 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import csv
-import os
 import bisect
-import tempfile
-import shutil
-import math
 from math import sqrt
 from collections import Iterable, Sized
-from StringIO import StringIO
-from xml.etree.ElementTree import Element, tostring, fromstring
 
 # Third party modules.
 import numpy as np
-import h5py
 
 # Local modules.
 from pymontecarlo.util.transition import from_string
@@ -64,7 +56,11 @@ class _Result(object):
     def __loadzip__(cls, zipfile, key):
         return cls()
 
-    def __savezip__(self, zipfile, key):
+    @classmethod
+    def __loadhdf5__(cls, hdf5file, key):
+        return cls()
+
+    def __savehdf5__(self, hdf5file, key):
         pass
 
 def create_intensity_dict(transition,
@@ -85,15 +81,6 @@ def create_intensity_dict(transition,
             }
 
 class PhotonIntensityResult(_Result):
-    _COLUMNS = ['transition', 'energy (eV)',
-                'generated characteristic', 'generated characteristic unc',
-                'generated bremsstrahlung', 'generated bremsstrahlung unc',
-                'generated no fluorescence', 'generated no fluorescence unc',
-                'generated total', 'generated total unc',
-                'emitted characteristic', 'emitted characteristic unc',
-                'emitted bremsstrahlung', 'emitted bremsstrahlung unc',
-                'emitted no fluorescence', 'emitted no fluorescence unc',
-                'emitted total', 'emitted total unc']
 
     def __init__(self, intensities={}):
         """
@@ -136,27 +123,23 @@ class PhotonIntensityResult(_Result):
         self._intensities = intensities
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        reader = csv.reader(zipfile.open(key + '.csv', 'r'))
-
-        header = reader.next()
-        if header != cls._COLUMNS:
-            raise IOError, 'Header of "%s.csv" is invalid' % key
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
 
         intensities = {}
-        for row in reader:
-            transition = from_string(row[0])
-            # skip row[1] (energy)
 
-            gcf = float(row[2]), float(row[3])
-            gbf = float(row[4]), float(row[5])
-            gnf = float(row[6]), float(row[7])
-            gt = float(row[8]), float(row[9])
+        for transition, dataset in hdf5group.iteritems():
+            transition = from_string(str(transition))
 
-            ecf = float(row[10]), float(row[11])
-            ebf = float(row[12]), float(row[13])
-            enf = float(row[14]), float(row[15])
-            et = float(row[16]), float(row[17])
+            gcf = dataset.attrs['gcf']
+            gbf = dataset.attrs['gbf']
+            gnf = dataset.attrs['gnf']
+            gt = dataset.attrs['gt']
+
+            ecf = dataset.attrs['ecf']
+            ebf = dataset.attrs['ebf']
+            enf = dataset.attrs['enf']
+            et = dataset.attrs['et']
 
             intensities.update(create_intensity_dict(transition,
                                                      gcf, gbf, gnf, gt,
@@ -164,33 +147,21 @@ class PhotonIntensityResult(_Result):
 
         return cls(intensities)
 
-    def __savezip__(self, zipfile, key):
-        fp = StringIO()
-        writer = csv.writer(fp)
-
-        writer.writerow(self._COLUMNS)
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
 
         for transition, intensities in self._intensities.iteritems():
-            row = []
-            row.append(str(transition))
-            if hasattr(transition, 'energy_eV'):
-                row.append(transition.energy_eV)
-            else:
-                row.append(0.0)
+            dataset = hdf5group.create_dataset(str(transition), shape=())
 
-            row.extend(intensities[GENERATED][CHARACTERISTIC])
-            row.extend(intensities[GENERATED][BREMSSTRAHLUNG])
-            row.extend(intensities[GENERATED][NOFLUORESCENCE])
-            row.extend(intensities[GENERATED][TOTAL])
+            dataset.attrs['gcf'] = intensities[GENERATED][CHARACTERISTIC]
+            dataset.attrs['gbf'] = intensities[GENERATED][BREMSSTRAHLUNG]
+            dataset.attrs['gnf'] = intensities[GENERATED][NOFLUORESCENCE]
+            dataset.attrs['gt'] = intensities[GENERATED][TOTAL]
 
-            row.extend(intensities[EMITTED][CHARACTERISTIC])
-            row.extend(intensities[EMITTED][BREMSSTRAHLUNG])
-            row.extend(intensities[EMITTED][NOFLUORESCENCE])
-            row.extend(intensities[EMITTED][TOTAL])
-
-            writer.writerow(row)
-
-        zipfile.writestr(key + '.csv', fp.getvalue())
+            dataset.attrs['ecf'] = intensities[EMITTED][CHARACTERISTIC]
+            dataset.attrs['ebf'] = intensities[EMITTED][BREMSSTRAHLUNG]
+            dataset.attrs['enf'] = intensities[EMITTED][NOFLUORESCENCE]
+            dataset.attrs['et'] = intensities[EMITTED][TOTAL]
 
     def __contains__(self, transition):
         return self.has_intensity(transition)
@@ -392,13 +363,8 @@ class PhotonIntensityResult(_Result):
 ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
 
 class PhotonSpectrumResult(_Result):
-    _COLUMNS = ['energy (eV)',
-                'total', 'total unc',
-                'background', 'background unc']
 
-    def __init__(self, energy_offset_eV, energy_channel_width_eV,
-                        total, total_unc=None,
-                        background=None, background_unc=None):
+    def __init__(self, total, background):
         """
         Stores results from a photon spectrum.
         
@@ -407,133 +373,79 @@ class PhotonSpectrumResult(_Result):
         of the detector collecting the spectrum, the width of the energy 
         channel and the number of simulated electrons.
         
-        :arg energy_offset_eV: energy (in eV) of the first channel.
-        :type energy_offset_eV: :class:`float`
+        :arg total: numpy array containing 2 or 3 columns. The first column
+            must be the mid-energy of each bin in eV, the second, the total intensity
+            in counts/(sr.eV.electron) and the third (optional), the
+            uncertainty on the total intensity.
+            
+        :arg background: numpy array containing 2 or 3 columns. The first column
+            must be the mid-energy of each bin, the second, the background
+            intensity in counts/(sr.eV.electron) and the third (optional), the
+            uncertainty on the background intensity.
+            
+        .. note::
         
-        :arg energy_channel_width_eV: width of each energy channel (in eV)
-        :type energy_channel_width_eV: :class:`float`
-        
-        :arg total: total intensities of each channel in counts / (sr.eV.electron). 
-        :type intensities: :class:`list` of :class:`float`
-        
-        :arg total_unc: uncertainties on the total intensity of each channel in 
-            counts / (sr.eV.electron). 
-            The uncertainties should correspond to 3 sigma statistical 
-            uncertainty.
-            If ``None``, the uncertainty of all channels is set to 0.0.
-        :type intensities_unc: :class:`list` of :class:`float`
-        
-        :arg background: background intensities of each channel in 
-            counts / (sr.eV.electron).
-            The background intensity is the total intensity without the 
-            intensity from the characteristic photons.
-            If ``None``, the background intensities are set to 0.0.
-        :type backgrounds: :class:`list` of :class:`float`
-        
-        :arg background_unc: uncertainties on the background intensity of each 
-            channel in counts / (sr.eV.electron). 
-            The uncertainties should correspond to 3 sigma statistical 
-            uncertainty.
-            If ``None``, the uncertainty of all channels is set to 0.0.
-        :type backgrounds_unc: :class:`list` of :class:`float`
+           The first column of the total and background arrays must be equal.
         """
+        def _check(data):
+            if data.shape[1] < 2:
+                raise ValueError, 'The data must contains at least two columns'
+            if data.shape[1] == 2:
+                data = np.append(data, np.zeros((data.shape[0], 1)), 1)
+
+            return data
+
+        if not np.allclose(total[:, 0], background[:, 0]):
+            raise ValueError, 'Energies are different for the total and background array'
+
         _Result.__init__(self)
 
-        if total_unc is None: total_unc = [0.0] * len(total)
-        if background is None: background = [0.0] * len(total)
-        if background_unc is None: background_unc = [0.0] * len(total)
-
-        if len(total) != len(total_unc):
-            raise ValueError, \
-                'The number of total intensities (%i) must match the number of uncertainties (%i)' % \
-                    (len(total), len(total_unc))
-        if len(background) != len(total):
-            raise ValueError, \
-                'The number of background intensities (%i) must match the number of total intensities (%i)' % \
-                    (len(background), len(total))
-        if len(background) != len(background_unc):
-            raise ValueError, \
-                'The number of background intensities (%i) must match the number of uncertainties (%i)' % \
-                    (len(background), len(background_unc))
-
-        self._energies_eV = [i * float(energy_channel_width_eV) + energy_offset_eV \
-                             for i in range(len(total))]
-        self._total = total
-        self._total_unc = total_unc
-        self._background = background
-        self._background_unc = background_unc
+        self._total = _check(total)
+        self._background = _check(background)
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        reader = csv.reader(zipfile.open(key + '.csv', 'r'))
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
+        total = hdf5group['total']
+        background = hdf5group['background']
+        return cls(total, background)
 
-        header = reader.next()
-        if header != cls._COLUMNS:
-            raise IOError, 'Header of "%s.csv" is invalid' % key
-
-        energies_eV = []
-        total = []
-        total_unc = []
-        background = []
-        background_unc = []
-        for row in reader:
-            energies_eV.append(float(row[0]))
-            total.append(float(row[1]))
-            total_unc.append(float(row[2]))
-            background.append(float(row[3]))
-            background_unc.append(float(row[4]))
-
-        energy_offset_eV = energies_eV[0]
-        energy_channel_width_eV = energies_eV[1] - energies_eV[0]
-
-        return cls(energy_offset_eV, energy_channel_width_eV,
-                   total, total_unc, background, background_unc)
-
-    def __savezip__(self, zipfile, key):
-        fp = StringIO()
-        writer = csv.writer(fp)
-
-        writer.writerow(self._COLUMNS)
-
-        for row in zip(self._energies_eV, self._total, self._total_unc,
-                       self._background, self._background_unc):
-            writer.writerow(row)
-
-        zipfile.writestr(key + '.csv', fp.getvalue())
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
+        hdf5group.create_dataset('total', data=self._total)
+        hdf5group.create_dataset('background', data=self._background)
 
     @property
     def energy_channel_width_eV(self):
         """
         Width of each energy channel in eV.
         """
-        return self._energies_eV[1] - self._energies_eV[0]
+        return self._total[1, 0] - self._total[0, 0]
 
     @property
     def energy_offset_eV(self):
         """
         Energy offset of the spectrum in eV. 
         """
-        return self._energies_eV[0]
+        return self._total[0, 0]
 
     def get_total(self):
         """
-        Returns the energies (in eV), the total intensities (in 
-        counts / (sr.eV.electron) and the 3 sigma uncertainty on the total 
-        intensities.
+        Returns a numpy array where the first column is the mid-energy of each 
+        bin in eV, the second, the total intensity in counts/(sr.eV.electron) 
+        and the third (optional), the uncertainty on the total intensity.
         """
-        # Note: list(...) is used to return a copy of the energies and intensities
-        return list(self._energies_eV), list(self._total), list(self._total_unc)
+        return np.copy(self._total)
 
     def get_background(self):
         """
-        Returns the energies (in eV), the background intensities (in 
-        counts / (sr.eV.electron) and the 3 sigma uncertainty on the background 
-        intensities.
+        Returns a numpy array where the first column is the mid-energy of each 
+        bin in eV, the second, the background intensity in counts/(sr.eV.electron) 
+        and the third (optional), the uncertainty on the background intensity.
         """
-        # Note: list(...) is used to return a copy of the energies and intensities
-        return list(self._energies_eV), list(self._background), list(self._background_unc)
+        return np.copy(self._background)
 
-    def _get_intensity(self, energy_eV, values, uncs):
+    def _get_intensity(self, energy_eV, data):
         """
         Returns the intensity and its uncertainty for the specified 
         energy.
@@ -544,14 +456,14 @@ class PhotonSpectrumResult(_Result):
         :arg values: intensity values
         :arg uncs: uncertainty values
         """
-        if energy_eV >= self._energies_eV[-1] + self.energy_channel_width_eV:
+        if energy_eV >= data[-1, 0] + self.energy_channel_width_eV:
             return 0.0, 0.0 # Above last channel
 
-        index = bisect.bisect_right(self._energies_eV, energy_eV)
+        index = bisect.bisect_right(data[:, 0], energy_eV)
         if not index:
             return 0.0, 0.0 # Below first channel
 
-        return values[index - 1], uncs[index - 1]
+        return data[index - 1, 1:3]
 
     def total_intensity(self, energy_eV):
         """
@@ -562,7 +474,7 @@ class PhotonSpectrumResult(_Result):
     
         :arg energy_eV: energy of interest (in eV).
         """
-        return self._get_intensity(energy_eV, self._total, self._total_unc)
+        return self._get_intensity(energy_eV, self._total)
 
     def background_intensity(self, energy_eV):
         """
@@ -573,37 +485,41 @@ class PhotonSpectrumResult(_Result):
     
         :arg energy_eV: energy of interest (in eV).
         """
-        return self._get_intensity(energy_eV, self._background, self._background_unc)
+        return self._get_intensity(energy_eV, self._background)
 
 ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
 
 def create_phirhoz_dict(transition, gnf=None, gt=None, enf=None, et=None):
     """
-    Values of *gnf*, *gt*, *enf* and *et* must be a :class:`tuple` of three
-    :class:`list` containing:
+    Values of *gnf*, *gt*, *enf* and *et* must be a Numpy array containing two
+    or three columns:
     
         * :math:`\\rho z` values (in kg/m2)
         * intensities
-        * uncertainties on the intensities
-    
-    The values of :math:`\\rho z` must all be positive in ascending order and
-    following a regular interval: :math:`|\\rho z_i - \\rho z_{i+1}| = k`
+        * (optional) uncertainties on the intensities
     """
+    def _check(data):
+        if data.shape[1] < 2:
+            raise ValueError, 'The data must contains at least two columns'
+        if data.shape[1] == 2:
+            data = np.append(data, np.zeros((data.shape[0], 1)), 1)
+
+        return data
+
     dist = {transition: {}}
 
     if gnf is not None:
-        dist[transition].setdefault(GENERATED, {})[NOFLUORESCENCE] = gnf
+        dist[transition].setdefault(GENERATED, {})[NOFLUORESCENCE] = _check(gnf)
     if gt is not None:
-        dist[transition].setdefault(GENERATED, {})[TOTAL] = gt
+        dist[transition].setdefault(GENERATED, {})[TOTAL] = _check(gt)
     if enf is not None:
-        dist[transition].setdefault(EMITTED, {})[NOFLUORESCENCE] = enf
+        dist[transition].setdefault(EMITTED, {})[NOFLUORESCENCE] = _check(enf)
     if et is not None:
-        dist[transition].setdefault(EMITTED, {})[TOTAL] = et
+        dist[transition].setdefault(EMITTED, {})[TOTAL] = _check(et)
 
     return dist
 
 class PhiRhoZResult(_Result):
-    _COLUMNS = ['depth (kg/m2)', 'intensity', 'unc']
 
     def __init__(self, distributions={}):
         """
@@ -616,32 +532,17 @@ class PhiRhoZResult(_Result):
         self._distributions = distributions
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        # Find all phi-rho-z files
-        arcnames = [name for name in zipfile.namelist() if name.startswith(key)]
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
 
-        # Read files
+        # Read datasets
         data = {}
-        for arcname in arcnames:
-            parts = os.path.splitext(arcname)[0].split('+')
-            transition = from_string(parts[-2].replace('_', ' '))
-            suffix = parts[-1]
+        for name, datum in hdf5group.iteritems():
+            parts = name.split('+')
+            transition = from_string(str(parts[0]))
+            suffix = parts[1]
 
-            reader = csv.reader(zipfile.open(arcname, 'r'))
-
-            header = reader.next()
-            if header != cls._COLUMNS:
-                raise IOError, 'Header of "%s.csv" is invalid' % arcname
-
-            zs = []
-            values = []
-            uncs = []
-            for row in reader:
-                zs.append(float(row[0]))
-                values.append(float(row[1]))
-                uncs.append(float(row[2]))
-
-            data.setdefault(transition, {})[suffix] = zs, values, uncs
+            data.setdefault(transition, {})[suffix] = datum
 
         # Construct distributions
         distributions = {}
@@ -650,23 +551,18 @@ class PhiRhoZResult(_Result):
 
         return cls(distributions)
 
-    def __savezip__(self, zipfile, key):
+    def __savehdf5__(self, hdf5file, key):
         distributions = [('gnf', False, False), ('gt', False, True),
                          ('enf', True, False), ('et', True, True)]
 
+        hdf5group = hdf5file.require_group(key)
+
         for suffix, absorption, fluorescence in distributions:
-            for transition, zs, values, uncs in \
+            for transition, distribution in \
                     self.iter_transitions(absorption, fluorescence):
-                fp = StringIO()
-                writer = csv.writer(fp)
 
-                writer.writerow(self._COLUMNS)
-
-                for row in zip(zs, values, uncs):
-                    writer.writerow(row)
-
-                arcname = '+'.join([key, str(transition).replace(' ', '_'), suffix])
-                zipfile.writestr(arcname + '.csv', fp.getvalue())
+                name = str(transition) + "+" + suffix
+                hdf5group.create_dataset(name, data=distribution)
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
@@ -701,14 +597,12 @@ class PhiRhoZResult(_Result):
         """
         Returns the :math:`\\phi(\\rho z)` distribution for the specified 
         transition.
-        Three :class:`list` are returned representing:
+        A Numpy array is returned where the columns are:
             
             * :math:`\\rho z` values (in kg/m2)
             * intensities
             * uncertainties on the intensities
             
-        Each of these three lists have the same number of values.
-        
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)
         :arg absorption: whether to return the distribution with absorption.
@@ -718,20 +612,19 @@ class PhiRhoZResult(_Result):
             If ``True``, :math:`\\phi(\\rho z)` with fluorescence is returned, 
             if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
             
-        :return: :math:`\\rho z` values (in kg/m2), intensities and
-            uncertainties on the intensities
         :raise: :class:`ValueError` if there is no distribution for the 
             specified transition.
             
         Here are examples that will all returned the same values::
         
-            >>> rzs, vals, uncs = result.get(Transition(13, 4, 1))
-            >>> rzs, vals, uncs = result.get('Al Ka1')
+            >>> phirhoz = result.get(Transition(13, 4, 1))
+            >>> rzs = phirhoz[:,0]; vals = phirhoz[:,1]
+            >>> phirhoz = result.get('Al Ka1')
         
         or
         
-            >>> rzs, vals, uncs = result.get(K_family(13))
-            >>> rzs, vals, uncs = result.get('Al K')
+            >>> phirhoz = result.get(K_family(13))
+            >>> phirhoz = result.get('Al K')
         """
         if isinstance(transition, basestring):
             transition = from_string(transition)
@@ -744,11 +637,10 @@ class PhiRhoZResult(_Result):
         absorption_key = EMITTED if absorption else GENERATED
         fluorescence_key = TOTAL if fluorescence else NOFLUORESCENCE
 
-        zs, values, uncs = \
+        distribution = \
             self._distributions[transition][absorption_key][fluorescence_key]
 
-        # Note: list(...) is used to return a copy
-        return list(zs), list(values), list(uncs)
+        return np.copy(distribution)
 
     def integral(self, transition, absorption=True, fluorescence=True):
         """
@@ -766,7 +658,9 @@ class PhiRhoZResult(_Result):
             
         :rtype: :class:`float`
         """
-        rzs, vals, _uncs = self.get(transition, absorption, fluorescence)
+        distribution = self.get(transition, absorption, fluorescence)
+        rzs = distribution[:, 0]
+        vals = distribution[:, 1]
         width = abs(rzs[1] - rzs[0])
         return sum(vals) * width
 
@@ -807,8 +701,8 @@ class PhiRhoZResult(_Result):
             if not self.exists(transition, absorption, fluorescence):
                 continue
 
-            zs, values, uncs = self.get(transition, absorption, fluorescence)
-            yield transition, zs, values, uncs
+            distribution = self.get(transition, absorption, fluorescence)
+            yield transition, distribution
 
 ResultManager.register('PhiRhoZResult', PhiRhoZResult)
 
@@ -831,36 +725,17 @@ class TimeResult(_Result):
         self._simulation_speed_s = simulation_speed_s
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        element = fromstring(zipfile.open(key + '.xml', 'r').read())
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
+        simulation_time_s = hdf5group.attrs['simulation_time_s']
+        simulation_speed_s = hdf5group.attrs['simulation_speed_s']
 
-        child = element.find('time')
-        if child is not None:
-            simulation_time = float(child.get('val', 0.0))
-        else:
-            simulation_time = 0.0
+        return cls(simulation_time_s, simulation_speed_s)
 
-        child = element.find('speed')
-        if child is not None:
-            simulation_speed = \
-                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
-        else:
-            simulation_speed = (0.0, 0.0)
-
-        return cls(simulation_time, simulation_speed)
-
-    def __savezip__(self, zipfile, key):
-        element = Element('result')
-
-        attr = {'val': str(self.simulation_time_s)}
-        child = Element('time', attr)
-        element.append(child)
-
-        attr = dict(zip(['val', 'unc'], map(str, self.simulation_speed_s)))
-        child = Element('speed', attr)
-        element.append(child)
-
-        zipfile.writestr(key + '.xml', tostring(element))
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
+        hdf5group.attrs['simulation_time_s'] = self.simulation_time_s
+        hdf5group.attrs['simulation_speed_s'] = self.simulation_speed_s
 
     @property
     def simulation_time_s(self):
@@ -885,25 +760,14 @@ class ShowersStatisticsResult(_Result):
         self._showers = int(showers)
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        element = fromstring(zipfile.open(key + '.xml', 'r').read())
-
-        child = element.find('showers')
-        if child is not None:
-            showers = float(child.get('val', 0))
-        else:
-            showers = 0
-
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
+        showers = hdf5group.attrs['showers']
         return cls(showers)
 
-    def __savezip__(self, zipfile, key):
-        element = Element('result')
-
-        attr = {'val': str(self.showers)}
-        child = Element('showers', attr)
-        element.append(child)
-
-        zipfile.writestr(key + '.xml', tostring(element))
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
+        hdf5group.attrs['showers'] = self.showers
 
     @property
     def showers(self):
@@ -931,48 +795,19 @@ class ElectronFractionResult(_Result):
         self._transmitted = transmitted
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        element = fromstring(zipfile.open(key + '.xml', 'r').read())
-
-        child = element.find('absorbed')
-        if child is not None:
-            absorbed = \
-                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
-        else:
-            absorbed = (0.0, 0.0)
-
-        child = element.find('backscattered')
-        if child is not None:
-            backscattered = \
-                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
-        else:
-            backscattered = (0.0, 0.0)
-
-        child = element.find('transmitted')
-        if child is not None:
-            transmitted = \
-                float(child.get('val', 0.0)), float(child.get('unc', 0.0))
-        else:
-            transmitted = (0.0, 0.0)
+    def __loadhdf5__(cls, hdf5file, key):
+        hdf5group = hdf5file[key]
+        absorbed = hdf5group.attrs['absorbed']
+        backscattered = hdf5group.attrs['backscattered']
+        transmitted = hdf5group.attrs['transmitted']
 
         return cls(absorbed, backscattered, transmitted)
 
-    def __savezip__(self, zipfile, key):
-        element = Element('result')
-
-        attr = dict(zip(['val', 'unc'], map(str, self.absorbed)))
-        child = Element('absorbed', attr)
-        element.append(child)
-
-        attr = dict(zip(['val', 'unc'], map(str, self.backscattered)))
-        child = Element('backscattered', attr)
-        element.append(child)
-
-        attr = dict(zip(['val', 'unc'], map(str, self.transmitted)))
-        child = Element('transmitted', attr)
-        element.append(child)
-
-        zipfile.writestr(key + '.xml', tostring(element))
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
+        hdf5group.attrs['absorbed'] = self.absorbed
+        hdf5group.attrs['backscattered'] = self.backscattered
+        hdf5group.attrs['transmitted'] = self.transmitted
 
     @property
     def absorbed(self):
@@ -1096,40 +931,39 @@ class TrajectoryResult(_Result, Iterable, Sized):
         self._trajectories = trajectories
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        tmpdir = tempfile.mkdtemp()
-        filename = key + '.h5'
-        zipfile.extract(filename, tmpdir)
+    def __loadhdf5__(cls, hdf5file, key):
+        particles_ref = list(PARTICLES)
+        particles_ref = dict(zip(map(int, particles_ref), particles_ref))
 
-        h5file = h5py.File(os.path.join(tmpdir, filename), 'r')
+        collisions_ref = list(COLLISIONS)
+        collisions_ref = dict(zip(map(int, collisions_ref), collisions_ref))
 
-        return TrajectoryHDF5Result(h5file, tmpdir)
+        trajectories = []
 
-    def __savezip__(self, zipfile, key):
-        # Create temporary folder
-        tmpdir = tempfile.mkdtemp()
-        filepath = os.path.join(tmpdir, key + '.h5')
+        for dataset in hdf5file[key].itervalues():
+            primary = bool(dataset.attrs['primary'])
+            particle = particles_ref[dataset.attrs['particle']]
+            collision = collisions_ref[dataset.attrs['collision']]
+            exit_state = int(dataset.attrs['exit_state'])
+            interactions = dataset[:]
 
-        # Create HDF5 file
-        h5file = h5py.File(filepath, 'w')
-        h5group = h5file.create_group('trajectories')
+            trajectory = Trajectory(primary, particle, collision,
+                                    exit_state, interactions)
+            trajectories.append(trajectory)
 
-        # Save trajectories
-        width = int(math.floor(math.log10(len(self)))) + 1
+        return cls(trajectories)
+
+    def __savehdf5__(self, hdf5file, key):
+        hdf5group = hdf5file.require_group(key)
 
         for index, trajectory in enumerate(self._trajectories):
-            name = 'trajectory%s' % str(index).zfill(width)
-            dataset = h5group.create_dataset(name, data=trajectory.interactions)
+            name = 'trajectory%s' % index
+            dataset = hdf5group.create_dataset(name, data=trajectory.interactions)
 
             dataset.attrs['primary'] = trajectory.is_primary()
-            dataset.attrs['particle'] = str(trajectory.particle)
-            dataset.attrs['collision'] = str(trajectory.collision)
+            dataset.attrs['particle'] = int(trajectory.particle)
+            dataset.attrs['collision'] = int(trajectory.collision)
             dataset.attrs['exit_state'] = trajectory.exit_state
-
-        # Close HDF5, write file to zip, remove temporary folder
-        h5file.close()
-        zipfile.write(filepath, key + '.h5')
-        shutil.rmtree(tmpdir, ignore_errors=True)
 
     def __len__(self):
         return len(self._trajectories)
@@ -1177,88 +1011,6 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
 ResultManager.register('TrajectoryResult', TrajectoryResult)
 
-class TrajectoryHDF5Result(TrajectoryResult):
-
-    def __init__(self, h5file, tmpdir):
-        self._h5file = h5file
-        self._tmpdir = tmpdir
-
-    def __del__(self):
-        self._h5file.close()
-        shutil.rmtree(self._tmpdir, ignore_errors=True)
-
-    def __savezip__(self, zipfile, key):
-        pass
-
-    def __len__(self):
-        return len(self._h5file['trajectories'])
-
-    def __iter__(self):
-        particles_ref = list(PARTICLES)
-        particles_ref = dict(zip(map(str, particles_ref), particles_ref))
-
-        collisions_ref = list(COLLISIONS)
-        collisions_ref = dict(zip(map(str, collisions_ref), collisions_ref))
-
-        for dataset in self._h5file['trajectories'].itervalues():
-            primary = bool(dataset.attrs['primary'])
-            particle = particles_ref.get(dataset.attrs['particle'])
-            collision = collisions_ref.get(dataset.attrs['collision'])
-            exit_state = int(dataset.attrs['exit_state'])
-            interactions = dataset[:]
-
-            yield Trajectory(primary, particle, collision, exit_state, interactions)
-
-    def filter(self, is_primary=[True, False], particles=PARTICLES,
-               collisions=COLLISIONS, exit_states=EXIT_STATES):
-        """
-        Filters the trajectories based on the specified criteria.
-        Each criterion can a single value or a list of accepted values.
-        Returns an iterator.
-        
-        :arg is_primary: whether to include primary particles. Possible values:
-        
-            * ``True``: only primary particles
-            * ``False``: only secondary particles
-            * ``[True, False]``: both primary and secondary particles
-            
-        :type is_primary: :class:`bool` or :class:`list`
-        
-        :arg particles: which particle(s) to include
-        :type particles: :class:`_Particle` or :class:`list`
-        
-        :arg collisions: which collision(s) from which a trajectory initiated to 
-            include. 
-        :type collisions: :class:`_Collision` or :class:`list`
-        
-        :arg exit_states: which exit state(s) of a trajectory to include
-        :type exit_states: :class:`int` or :class:`list`
-        """
-        if not hasattr(is_primary, '__contains__'): is_primary = [is_primary]
-        if not hasattr(particles, '__contains__'): particles = [particles]
-        if not hasattr(collisions, '__contains__'): collisions = [collisions]
-        if not hasattr(exit_states, '__contains__'): exit_states = [exit_states]
-
-        particles_ref = list(PARTICLES)
-        particles_ref = dict(zip(map(str, particles_ref), particles_ref))
-
-        collisions_ref = list(COLLISIONS)
-        collisions_ref = dict(zip(map(str, collisions_ref), collisions_ref))
-
-        for dataset in self._h5file['trajectories'].itervalues():
-            primary = bool(dataset.attrs['primary'])
-            particle = particles_ref.get(dataset.attrs['particle'])
-            collision = collisions_ref.get(dataset.attrs['collision'])
-            exit_state = int(dataset.attrs['exit_state'])
-
-            if primary not in is_primary: continue
-            if particle not in particles: continue
-            if collision not in collisions: continue
-            if exit_state not in exit_states: continue
-
-            interactions = dataset[:]
-            yield Trajectory(primary, particle, collision, exit_state, interactions)
-
 class _ChannelsResult(_Result):
 
     def __init__(self, data):
@@ -1267,8 +1019,8 @@ class _ChannelsResult(_Result):
         
         :arg data: numpy array containing 2 or 3 columns. The first column
             must be the mid-value of each bin, the second, the probability
-            density in counts/(eV.electron) and the third (optional), the
-            uncertainty on the probability density.
+            density and the third (optional), the uncertainty (3 sigma) on 
+            the probability density.
         """
         _Result.__init__(self)
 
@@ -1280,14 +1032,12 @@ class _ChannelsResult(_Result):
         self._data = data
 
     @classmethod
-    def __loadzip__(cls, zipfile, key):
-        data = np.loadtxt(zipfile.open(key + '.csv', 'r'), delimiter=',')
+    def __loadhdf5__(cls, hdf5file, key):
+        data = hdf5file[key]['data']
         return cls(data)
 
-    def __savezip__(self, zipfile, key):
-        fp = StringIO()
-        np.savetxt(fp, self._data, delimiter=',')
-        zipfile.writestr(key + '.csv', fp.getvalue())
+    def __savehdf5__(self, hdf5file, key):
+        hdf5file.require_group(key).create_dataset('data', data=self._data)
 
     def __iter__(self):
         return iter(self._data)

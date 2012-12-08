@@ -32,7 +32,7 @@ class _Updater(object):
     Derived class must implement the method :meth:`_get_version` and registers
     updater function in the :attr:`_updaters` dictionary.
     Updater functions takes only one argument which is the path to the file
-    to be updated.
+    to be updated and must return the path of the updated file.
     The method :meth:`_validate` can also be overridden for validation.
     """
 
@@ -55,7 +55,7 @@ class _Updater(object):
         bak_filepath = self._make_backup(filepath)
         logging.debug("Backup at %s", bak_filepath)
 
-        updater(filepath)
+        filepath = updater(filepath)
         logging.debug("File (%s) was updated", filepath)
 
         if validate:

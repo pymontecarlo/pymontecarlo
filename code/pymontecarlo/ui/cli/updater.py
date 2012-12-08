@@ -37,7 +37,7 @@ if __name__ == '__main__':
     console.init()
 
     # Create parser
-    usage = "%prog [options] [OPTION_FILE.xml or RESULTS_FILE.zip...]"
+    usage = "%prog [options] [OPTION_FILE.xml or RESULTS_FILE.zip or RESULTS_FILE.h5 ...]"
     description = "pyMonteCarlo update tool. This script updates old version " + \
                   "of options or results file to the newer one."
     epilog = "For more information, see http://pymontecarlo.sf.net"
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         if values.quant:
             if ext == '.xml':
                 console.error('No updater for %s' % filepath)
-            elif ext == '.zip':
+            elif ext == '.zip' or ext == '.h5':
                 console.print_info("Updating results %s" % filepath)
                 QuantResultsUpdater().update(filepath)
                 console.print_success("Successfully results %s" % filepath)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 console.print_info("Updating options %s" % filepath)
                 OptionsUpdater().update(filepath)
                 console.print_success("Successfully updated %s" % filepath)
-            elif ext == '.zip':
+            elif ext == '.zip' or ext == '.h5':
                 console.print_info("Updating results %s" % filepath)
                 ResultsUpdater().update(filepath)
                 console.print_success("Successfully results %s" % filepath)

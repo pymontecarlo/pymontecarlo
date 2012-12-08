@@ -119,8 +119,7 @@ class Updater(_Updater):
             with open(filepath, 'w') as fp:
                 fp.write(tostring(root, pretty_print=True))
 
-        self._update_version2(filepath)
-        self._update_version3(filepath)
+        return self._update_version2(filepath)
 
     def _update_version2(self, filepath):
         logging.debug('Updating from "version 2"')
@@ -161,7 +160,7 @@ class Updater(_Updater):
         with open(filepath, 'w') as fp:
             fp.write(tostring(root, pretty_print=True))
 
-        self._update_version3(filepath)
+        return self._update_version3(filepath)
 
     def _update_version3(self, filepath):
         logging.debug('Updating from "version 3"')
@@ -176,5 +175,8 @@ class Updater(_Updater):
         with open(filepath, 'w') as fp:
             fp.write(tostring(root, pretty_print=True))
 
+        return filepath
+
     def _update_version4(self, filepath):
         logging.info('Nothing to update')
+        return filepath

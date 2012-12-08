@@ -123,21 +123,20 @@ class Importer(_Importer):
             raise ImporterException, "Data file %s cannot be found" % spect_filepath
 
         # Load characteristic spectrum
-        _, charact, charact_unc = _load_dat_files(charact_filepath)
+        _, charact_val, charact_unc = _load_dat_files(charact_filepath)
 
         # Load total spectrum
-        energies, total, total_unc = _load_dat_files(spect_filepath)
+        energies, total_val, total_unc = _load_dat_files(spect_filepath)
 
         # Calculate background
-        background = [t - c for t, c in izip(total, charact)]
+        background_val = [t - c for t, c in izip(total_val, charact_val)]
         background_unc = [t + c for t, c in izip(total_unc, charact_unc)]
 
         # Process
-        energy_channel_width_eV = energies[1] - energies[0]
-        energy_offset_eV = energies[0] - energy_channel_width_eV / 2.0
+        total = np.array([energies, total_val, total_unc]).T
+        background = np.array([energies, background_val, background_unc]).T
 
-        return PhotonSpectrumResult(energy_offset_eV, energy_channel_width_eV,
-                                    total, total_unc, background, background_unc)
+        return PhotonSpectrumResult(total, background)
 
     def _detector_photon_intensity(self, options, key, detector, path,
                                    phdets_key_index, phdets_index_keys, *args):
@@ -249,10 +248,10 @@ class Importer(_Importer):
                 value.reverse()
 
             # Assemble data
-            gnf = data['zs'], data['gnf'], data['gnf_unc']
-            gt = data['zfs'], data['gt'], data['gt_unc']
-            enf = data['zs'], data['enf'], data['enf_unc']
-            et = data['zfs'], data['et'], data['et_unc']
+            gnf = np.array([data['zs'], data['gnf'], data['gnf_unc']]).T
+            gt = np.array([data['zfs'], data['gt'], data['gt_unc']]).T
+            enf = np.array([data['zs'], data['enf'], data['enf_unc']]).T
+            et = np.array([data['zfs'], data['et'], data['et_unc']]).T
 
             distributions.update(create_phirhoz_dict(transition, gnf, gt, enf, et))
 

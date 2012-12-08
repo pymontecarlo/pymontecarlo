@@ -23,6 +23,7 @@ import os
 from operator import mul
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.io.importer import Importer as _Importer
@@ -131,23 +132,18 @@ class Importer(_Importer):
         wxrresult = XRaySpectrum(path)
 
         # Retrieve data
-        energies = wxrresult.data[WXRSPC_ENERGY]
-        total = wxrresult.data[WXRSPC_TOTAL]
-        background = wxrresult.data[WXRSPC_BACKGROUND]
-
-        # Calculate energy offset and channel width
-        energy_offset_eV = 0.0
-        energy_channel_width_eV = energies[1] - energies[0]
+        energies = np.array(wxrresult.data[WXRSPC_ENERGY])
+        total = np.array([energies, wxrresult.data[WXRSPC_TOTAL]]).T
+        background = np.array([energies, wxrresult.data[WXRSPC_BACKGROUND]]).T
 
         # Arrange units
         factor = self._get_normalization_factor(options, detector)
-        factor /= energy_channel_width_eV
+        factor /= energies[1] - energies[0]
 
-        total = [val * factor for val in total]
-        background = [val * factor for val in background]
+        total[:, 1] *= factor
+        background[:, 1] *= factor
 
-        return PhotonSpectrumResult(energy_offset_eV, energy_channel_width_eV,
-                                    total=total, background=background)
+        return PhotonSpectrumResult(total, background)
 
     def _detector_phirhoz(self, options, name, detector, path):
         # Read density

@@ -21,26 +21,21 @@ __license__ = "GPL v3"
 # Standard library modules.
 import copy
 from collections import Mapping
-from zipfile import ZipFile
 from StringIO import StringIO
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.input.options import Options
 from pymontecarlo.output.manager import ResultManager
 import pymontecarlo.output.result #@UnusedImport
 
-from pymontecarlo.util.config import ConfigParser
 import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
-from zipfile import ZIP_DEFLATED
 
-VERSION = '3'
-SECTION_KEYS = 'keys'
-KEYS_INI_FILENAME = 'keys.ini'
-OPTIONS_FILENAME = 'options.xml'
+VERSION = '4'
 
 class Results(Mapping):
 
@@ -71,7 +66,7 @@ class Results(Mapping):
     @classmethod
     def load(cls, source):
         """
-        Loads results from a results ZIP.
+        Loads results from a results (HDF5).
         
         :arg source: filepath or file-object
         
@@ -79,50 +74,29 @@ class Results(Mapping):
         """
         task = progress.start_task("Loading results")
 
-        zipfile = ZipFile(source, 'r', allowZip64=True)
+        hdf5file = h5py.File(source, 'r')
 
         # Check version
-        if zipfile.comment != 'version=%s' % VERSION:
+        if hdf5file.attrs['version'] != VERSION:
             raise IOError, "Incorrect version of results. Only version %s is accepted" % \
                     VERSION
 
         # Read options
-        task.status = 'Reading %s' % OPTIONS_FILENAME
+        task.status = 'Reading options'
+        fp = StringIO(hdf5file.attrs['options'])
+        options = Options.load(fp)
 
-        try:
-            zipinfo = zipfile.getinfo(OPTIONS_FILENAME)
-        except KeyError:
-            raise IOError, "Zip file (%s) does not contain a %s" % \
-                    (getattr(source, 'name', 'unknown'), OPTIONS_FILENAME)
-
-        options = Options.load(zipfile.open(zipinfo, 'r'))
-
-        # Parse keys.ini
-        task.status = 'Reading %s' % KEYS_INI_FILENAME
-
-        try:
-            zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
-        except KeyError:
-            raise IOError, "Zip file (%s) does not contain a %s" % \
-                    (getattr(source, 'name', 'unknown'), KEYS_INI_FILENAME)
-
-        config = ConfigParser()
-        config.read(zipfile.open(zipinfo, 'r'))
-
-        # Load each results
-        items = list(getattr(config, SECTION_KEYS))
-
+        # Load each result
         results = {}
-        for i, item in enumerate(items):
-            key, tag = item
-
-            task.progress = float(i) / len(items)
+        for i, key in enumerate(hdf5file):
+            task.progress = float(i) / len(hdf5file)
             task.status = 'Loading %s' % key
 
-            klass = ResultManager.get_class(tag)
-            results[key] = klass.__loadzip__(zipfile, key)
+            hdf5group = hdf5file[key]
+            klass = ResultManager.get_class(hdf5group.attrs['_class'])
+            results[key] = klass.__loadhdf5__(hdf5file, key)
 
-        zipfile.close()
+        hdf5file.close()
 
         progress.stop_task(task)
 
@@ -130,42 +104,35 @@ class Results(Mapping):
 
     def save(self, source):
         """
-        Saves results in a results ZIP.
+        Saves results in a results HDF5.
         
         :arg source: filepath or file-object
         """
         task = progress.start_task('Saving results')
 
-        zipfile = ZipFile(source, 'w', compression=ZIP_DEFLATED, allowZip64=True)
-        zipfile.comment = 'version=%s' % VERSION
+        hdf5file = h5py.File(source, 'w')
+        hdf5file.attrs['version'] = VERSION
 
-        # Creates keys.ini
-        config = ConfigParser()
-        section = config.add_section(SECTION_KEYS)
-
-        # Save each result and update keys.ini
+        # Save each result
         for i, key in enumerate(self.iterkeys()):
             task.progress = float(i) / len(self)
             task.status = 'Saving result(s) for %s' % key
 
             result = self[key]
-            result.__savezip__(zipfile, key)
-            tag = ResultManager.get_tag(result.__class__)
-            setattr(section, key, tag)
 
-        # Save keys.ini in zip
-        task.status = 'Saving %s' % KEYS_INI_FILENAME
-        fp = StringIO()
-        config.write(fp)
-        zipfile.writestr(KEYS_INI_FILENAME, fp.getvalue())
+            hdf5group = hdf5file.create_group(key)
+            tag = ResultManager.get_tag(result.__class__)
+            hdf5group.attrs['_class'] = tag
+
+            result.__savehdf5__(hdf5file, key)
 
         # Save options
-        task.status = 'Saving %s' % OPTIONS_FILENAME
+        task.status = 'Saving options'
         fp = StringIO()
-        self._options.save(fp)
-        zipfile.writestr(OPTIONS_FILENAME, fp.getvalue())
+        self._options.save(fp, pretty_print=False)
+        hdf5file.attrs['options'] = fp.getvalue()
 
-        zipfile.close()
+        hdf5file.close()
 
         progress.stop_task(task)
 

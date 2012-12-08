@@ -46,9 +46,10 @@ class MockUpdater(_Updater):
 
     def _update_noversion(self, filepath):
         open(filepath, 'w').write('Hello')
+        return filepath
 
     def _update_version1(self, filepath):
-        pass
+        return filepath
 
 class Test_Updater(TestCase):
 

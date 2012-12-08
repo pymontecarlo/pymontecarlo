@@ -95,27 +95,21 @@ class TestImporter(TestCase):
         factor = 1000 * 0.459697694132 * 10.0 # Normalization
 
         self.assertAlmostEqual(10.0, result.energy_channel_width_eV, 4)
-        self.assertAlmostEqual(0.0, result.energy_offset_eV, 4)
+        self.assertAlmostEqual(5.0, result.energy_offset_eV, 4)
 
         # Total
-        energies, vals, uncs = result.get_total()
-        self.assertEqual(1000, len(energies))
-        self.assertEqual(1000, len(vals))
-        self.assertEqual(1000, len(uncs))
-
-        self.assertAlmostEqual(1480, energies[148], 4)
-        self.assertAlmostEqual(29489.1 / factor, vals[148], 4)
-        self.assertAlmostEqual(0.0, uncs[148], 4)
+        total = result.get_total()
+        self.assertEqual(1000, len(total))
+        self.assertAlmostEqual(1485, total[148, 0], 4)
+        self.assertAlmostEqual(29489.1 / factor, total[148, 1], 4)
+        self.assertAlmostEqual(0.0, total[148, 2], 4)
 
         # Background
-        energies, vals, uncs = result.get_background()
-        self.assertEqual(1000, len(energies))
-        self.assertEqual(1000, len(vals))
-        self.assertEqual(1000, len(uncs))
-
-        self.assertAlmostEqual(1480, energies[148], 4)
-        self.assertAlmostEqual(194.188 / factor, vals[148], 4)
-        self.assertAlmostEqual(0.0, uncs[148], 4)
+        background = result.get_background()
+        self.assertEqual(1000, len(background))
+        self.assertAlmostEqual(1485, background[148, 0], 4)
+        self.assertAlmostEqual(194.188 / factor, background[148, 1], 4)
+        self.assertAlmostEqual(0.0, background[148, 2], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

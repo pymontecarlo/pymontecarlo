@@ -13,10 +13,10 @@ import unittest
 import logging
 import tempfile
 import shutil
-from zipfile import ZipFile
 import os
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
@@ -53,8 +53,8 @@ class TestResults(TestCase):
 
         self.results = Results(ops, results)
 
-        self.results_zip = os.path.join(os.path.dirname(__file__),
-                                        '../testdata/results.zip')
+        self.results_h5 = os.path.join(os.path.dirname(__file__),
+                                       '../testdata/results.h5')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -65,22 +65,19 @@ class TestResults(TestCase):
         self.assertTrue(True)
 
     def testsave(self):
-        zipfilepath = os.path.join(self.tmpdir, 'results.zip')
-        self.results.save(zipfilepath)
+        h5filepath = os.path.join(self.tmpdir, 'results.h5')
+        self.results.save(h5filepath)
 
-        with open(zipfilepath, 'r') as fp:
-            zipfile = ZipFile(fp, 'r')
+        hdf5file = h5py.File(h5filepath, 'r')
 
-            namelist = zipfile.namelist()
-            self.assertTrue('keys.ini' in namelist)
-            self.assertTrue('det1.csv' in namelist)
-            self.assertTrue('det2.xml' in namelist)
-            self.assertTrue('det3.xml' in namelist)
+        self.assertIn('det1', hdf5file)
+        self.assertIn('det2', hdf5file)
+        self.assertIn('det3', hdf5file)
 
-            zipfile.close()
+        hdf5file.close()
 
     def testload(self):
-        results = Results.load(self.results_zip)
+        results = Results.load(self.results_h5)
         self.assertEqual(6, len(results))
 
 if __name__ == '__main__': #pragma: no cover
