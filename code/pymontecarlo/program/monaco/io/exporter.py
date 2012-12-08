@@ -21,14 +21,17 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import struct
-from operator import itemgetter
+from operator import itemgetter, attrgetter
+import math
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.io.exporter import Exporter as _Exporter
 
 from pymontecarlo.input.geometry import Substrate
+from pymontecarlo.input.limit import ShowersLimit
 
 import pymontecarlo.util.element_properties as ep
 
@@ -54,7 +57,124 @@ class Exporter(_Exporter):
         self._export(options, outputdir)
 
     def _export(self, options, outputdir, *args):
+        self._create_sim_file(options, outputdir, *args)
         self._export_geometry(options, outputdir, *args)
+
+    def _create_sim_file(self, options, outputdir, *args):
+        filepath = os.path.join(outputdir, options.name + '.SIM')
+        with open(filepath, 'wb') as fp:
+            # Header
+            # DELPHI:
+            # s := 0;Sum := 0;
+            # BlockWrite(Sf,VersionCheck,1,w);
+            # BlockWrite(Sf,VERSION,SizeOf(VERSION),w);
+            fp.write(struct.pack('c', 'v'))
+            fp.write(struct.pack('d', 3.2))
+
+            # User
+            # DELPHI:
+            # TmpStrLen := Length(UserStr);
+            # l := 1;   Inc(s,l);BlockWrite(Sf, TmpStrLen, l,w); Inc(Sum, w);
+            # if TmpStrLen<>0 then begin
+            #     l := SizeOf(UserStr); Inc(s,l);BlockWrite(Sf, UserStr, l, w);Inc(Sum, w);
+            #end;
+            fp.write('\x02\x02\x6d\x65\x00')
+
+            # Comment
+            # DELPHI:
+            # TmpStrLen := Length(CommentStr);
+            # l := 1;   Inc(s,l);BlockWrite(Sf, TmpStrLen, l,w); Inc(Sum, w);
+            # if TmpStrLen<>0 then begin
+            #     l := SizeOf(CommentStr); Inc(s,l);BlockWrite(Sf, CommentStr, l, w);Inc(Sum, w);
+            # end;
+            fp.write('\x00')
+
+            # DELPHI: l:=2; Inc(s,l); BlockWrite(Sf,GenNECheck,l,w); Inc(Sum,w);
+            fp.write('\x00\x00')
+
+            # Number of electrons
+            # DELPHI:   l:=4; Inc(s,l); BlockWrite(Sf,NE,l,w);    Inc(Sum,w);
+            showers = options.limits.find(ShowersLimit).showers
+            fp.write(struct.pack('i', showers))
+
+            # Cutoff energy
+            # DELPHI: l:=4; Inc(s,l); BlockWrite(Sf,EM,l,w);    Inc(Sum,w);
+            abs_energy_keV = min(map(attrgetter('absorption_energy_electron_eV'),
+                                     options.geometry.get_materials())) / 1000.0
+            fp.write(struct.pack('f', abs_energy_keV))
+
+            # Secondary electron
+            # DELPHI:   l:=1; Inc(s,l); BlockWrite(Sf,SE,l,w);    Inc(Sum,w);
+            fp.write(struct.pack('b', 1))
+
+            # Strings of number of electrons
+            # DELPHI: l:=1+Length(NEstr); Inc(s,l); Blockwrite(Sf,NEStr,l,w); Inc(Sum,w);
+            showers_str = str(showers)
+            fp.write(struct.pack('b', len(showers_str)))
+            fp.write(showers_str)
+
+            # String of cutoff energy
+            # DELPHI: l:=1+Length(EMstr); Inc(s,l); Blockwrite(Sf,EMStr,l,w); Inc(Sum,w);
+            abs_energy_keV_str = str(abs_energy_keV)
+            fp.write(struct.pack('b', len(abs_energy_keV_str)))
+            fp.write(abs_energy_keV_str)
+
+            # String of secondary electron
+            # DELPHI: l:=1+Length(SEstr); Inc(s,l); Blockwrite(Sf,SEStr,l,w); Inc(Sum,w);
+            fp.write(struct.pack('b', 1))
+            fp.write('Y')
+
+            # N
+            # DELPHI: l:=4; Inc(s,l); BlockWrite(Sf,N,l,w);    Inc(Sum,w);
+            fp.write(struct.pack('i', 1))
+
+            # Stat
+            # DELPHI: l:=N+1; Inc(s,l); BlockWrite(Sf,Stat,l,w); Inc(Sum,w);
+            fp.write('\x00\x03')
+
+            # Beam energy
+            # DELPHI: l:=4*(N+1); Inc(s,l); BlockWrite(Sf,E,l,w);    Inc(Sum,w);
+            energy_keV = options.beam.energy_eV / 1000.0
+            fp.write(struct.pack('f', 1.0))
+            fp.write(struct.pack('f', energy_keV))
+
+            # Tilt
+            # DELPHI: l:=4*(N+1); Inc(s,l); BlockWrite(Sf,T,l,w);    Inc(Sum,w);
+            a = np.array(options.beam.direction)
+            b = np.array([0, 0, -1])
+            angle = math.degrees(np.arccos(np.vdot(a, b) / np.linalg.norm(a)))
+            fp.write(struct.pack('f', 1.0))
+            fp.write(struct.pack('f', angle))
+
+            # Sputtering
+            # DELPHI: l:=4*(N+1); Inc(s,l); BlockWrite(Sf,Sp,l,w);    Inc(Sum,w);
+            sputtering = 0.0
+            fp.write(struct.pack('f', 1.0))
+            fp.write(struct.pack('f', sputtering))
+
+            # String of beam energy
+            # DELPHI:
+            # l:=1;Inc(s,l); TmpStrLen:=length(EStr); Blockwrite(Sf,TmpStrLen,l,w); Inc(Sum,w);
+            # l:=length(Estr);Inc(s,l); Blockwrite(Sf,EStr[1],l,w); Inc(Sum,w);
+            energy_keV_str = str(energy_keV)
+            fp.write(struct.pack('b', len(energy_keV_str)))
+            fp.write(energy_keV_str)
+
+            # String of tilt
+            # DELPHI:
+            # l:=1;Inc(s,l); TmpStrLen:=length(TStr); Blockwrite(Sf,TmpStrLen,l,w); Inc(Sum,w);
+            # l:=length(Tstr);Inc(s,l); Blockwrite(Sf,TStr[1],l,w); Inc(Sum,w);
+            angle_str = str(angle)
+            fp.write(struct.pack('b', len(angle_str)))
+            fp.write(angle_str)
+
+            # String of sputtering
+            # DELPHI:
+            # l:=1;Inc(s,l); TmpStrLen:=length(SpStr); Blockwrite(Sf,TmpStrLen,l,w); Inc(Sum,w);
+            # l:=length(Spstr);Inc(s,l); Blockwrite(Sf,SpStr[1],l,w); Inc(Sum,w);
+            sputtering_str = str(sputtering)
+            fp.write(struct.pack('b', len(sputtering_str)))
+            fp.write(sputtering_str)
 
     def _export_geometry_substrate(self, options, geometry, outputdir, *args):
         composition = sorted(geometry.material.composition.items(), key=itemgetter(0))
@@ -144,5 +264,6 @@ if __name__ == '__main__':
 
     options = Options('test')
     options.geometry.material.composition = {6: 0.4, 13: 0.1, 79: 0.5}
+    options.limits.add(ShowersLimit(1000))
 
     Exporter().export(options, '/tmp')
