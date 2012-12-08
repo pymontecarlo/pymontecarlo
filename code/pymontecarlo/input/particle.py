@@ -25,8 +25,9 @@ __license__ = "GPL v3"
 # Globals and constants variables.
 
 class _Particle(object):
-    def __init__(self, name, charge):
+    def __init__(self, name, index, charge):
         self._name = name
+        self._index = index
         self._charge = charge
 
     def __repr__(self):
@@ -34,6 +35,9 @@ class _Particle(object):
 
     def __str__(self):
         return self._name
+
+    def __int__(self):
+        return self._index
 
     def __copy__(self):
         return self
@@ -45,8 +49,8 @@ class _Particle(object):
     def charge(self):
         return self._charge
 
-ELECTRON = _Particle('electron', -1)
-PHOTON = _Particle('photon', 0)
-POSITRON = _Particle('positron', +1)
+ELECTRON = _Particle('electron', 1, -1)
+PHOTON = _Particle('photon', 2, 0)
+POSITRON = _Particle('positron', 3, +1)
 
 PARTICLES = frozenset([ELECTRON, PHOTON, POSITRON])

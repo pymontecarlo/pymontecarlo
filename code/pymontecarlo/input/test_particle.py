@@ -35,6 +35,11 @@ class TestParticle(TestCase):
         self.assertEqual('photon', str(PHOTON))
         self.assertEqual('positron', str(POSITRON))
 
+    def test__int__(self):
+        self.assertEqual(1, int(ELECTRON))
+        self.assertEqual(2, int(PHOTON))
+        self.assertEqual(3, int(POSITRON))
+
     def test__repr__(self):
         self.assertEqual('<ELECTRON>', repr(ELECTRON))
         self.assertEqual('<PHOTON>', repr(PHOTON))
