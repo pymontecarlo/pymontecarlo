@@ -1,5 +1,5 @@
 [pymontecarlo]
-programs=casino2,nistmonte,penepma,penshower,winxray,pap,xpp
+programs=casino2,nistmonte,penepma,penshower,winxray,pap,xpp,monaco
 
 [penepma]
 dumpp=60
