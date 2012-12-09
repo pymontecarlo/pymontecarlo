@@ -184,7 +184,18 @@ class Exporter(_Exporter):
         with open(filepath, 'wb') as fp:
             # Header
             # DELPHI: s:=6;Blockwrite(Matfile,Typ,6,f);Inc(Sum,f);
-            fp.write('\x02\x02\x02\x00\x02\x01')
+            # 1st Byte: Type = 2 (homogenous bulk)
+            # 2nd Byte: NC = <nr. of elements> (amount of occurring formulae (compounds or elements))
+            # 3rd Byte: NZ = <nr. of elements>
+            # 4th Byte: NP = 0 (nr. of layers)
+            # 5th Byte: CU = 2 (1=at%, 2=wt%)
+            # 6th Byte: MU = 1 (not important for bulk; this is the unit for the layer thickness i.e. 1=mg/cm2, 2=µg/cm2, 3=nm, 4=E14/cm2)
+            fp.write(struct.pack('b', 2))
+            fp.write(struct.pack('b', len(composition)))
+            fp.write(struct.pack('b', len(composition)))
+            fp.write(struct.pack('b', 0))
+            fp.write(struct.pack('b', 2))
+            fp.write(struct.pack('b', 1))
 
             # Write length of element and element
             # DELPHI:
@@ -221,7 +232,7 @@ class Exporter(_Exporter):
             for i, item in enumerate(composition):
                 z = item[0]
                 mass = ep.atomic_mass(z)
-                fp.write(struct.pack('f', mass)) # FIXME: Error here
+                fp.write(struct.pack('f', mass))
                 fp.write('\x00\x00\x00\x00' * i) # Skip 4 bytes
                 fp.write(struct.pack('f', 1.0 / mass))
                 fp.write('\x00\x00\x00\x00' * (len(composition) - i - 1)) # Skip 4 bytes
