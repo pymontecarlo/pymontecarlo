@@ -71,16 +71,17 @@ class Exporter(_Exporter):
             fp.write(struct.pack('c', 'v'))
             fp.write(struct.pack('d', 3.2))
 
-            # User
+            # User: bot
             # DELPHI:
             # TmpStrLen := Length(UserStr);
             # l := 1;   Inc(s,l);BlockWrite(Sf, TmpStrLen, l,w); Inc(Sum, w);
             # if TmpStrLen<>0 then begin
             #     l := SizeOf(UserStr); Inc(s,l);BlockWrite(Sf, UserStr, l, w);Inc(Sum, w);
             #end;
-            fp.write('\x02\x02\x6d\x65\x00')
+            fp.write('\x03\x03')
+            fp.write('bot')
 
-            # Comment
+            # Comment: No comment
             # DELPHI:
             # TmpStrLen := Length(CommentStr);
             # l := 1;   Inc(s,l);BlockWrite(Sf, TmpStrLen, l,w); Inc(Sum, w);
@@ -189,7 +190,7 @@ class Exporter(_Exporter):
             # 3rd Byte: NZ = <nr. of elements>
             # 4th Byte: NP = 0 (nr. of layers)
             # 5th Byte: CU = 2 (1=at%, 2=wt%)
-            # 6th Byte: MU = 1 (not important for bulk; this is the unit for the layer thickness i.e. 1=mg/cm2, 2=µg/cm2, 3=nm, 4=E14/cm2)
+            # 6th Byte: MU = 1 (not important for bulk; this is the unit for the layer thickness)
             fp.write(struct.pack('b', 2))
             fp.write(struct.pack('b', len(composition)))
             fp.write(struct.pack('b', len(composition)))
