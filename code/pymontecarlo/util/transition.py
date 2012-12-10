@@ -56,23 +56,23 @@ _SIEGBAHNS = \
      "L2M5", "L2N2", "L2N3", "L2N5", "L2O2", "L2O3", "L2P2",
      u"L\u03B21", u"L\u03B217", u"L\u03B31", u"L\u03B35", u"L\u03B36",
      u"L\u03B38", u"L\u03B7", u"L\u03BD", "L1M1", "L1N1", "L1N4",
-     "L1O1", "L1O4/L1O5", u"L\u03B210", u"L\u03B23", u"L\u03B24",
+     "L1O1", "L1O4", u"L\u03B210", u"L\u03B23", u"L\u03B24",
      u"L\u03B29", u"L\u03B32", u"L\u03B311", u"L\u03B33", u"L\u03B34",
      u"L\u03B34p", "M1N2", "M1N3", "M2M4", "M2N1", "M2N4", "M2O4",
      "M3M4", "M3M5", "M3N1", "M3N4", "M3O1", "M3O4", "M3O5",
      u"M\u03B3", "M4N3", "M4O2", u"M\u03B2", u"M\u03B62", "M5O3",
-     u"M\u03B11", u"M\u03B12", u"M\u03B61", "N4N6", "N5N6/N5N7"]
+     u"M\u03B11", u"M\u03B12", u"M\u03B61", "N4N6", "N5N6"]
 
 _SIEGBAHNS_NOGREEK = \
     ['Ka1', 'Ka2', 'Kb1', 'Kb2', 'Kb3', 'Kb4', 'Kb5', 'L3N2', 'L3N3', 'L3O2',
      'L3O3', 'L3P1', 'La1', 'La2', 'Lb15', 'Lb2', 'Lb5', 'Lb6', 'Lb7', 'Ll',
      'Ls', 'Lt', 'Lu', 'L2M2', 'L2M5', 'L2N2', 'L2N3', 'L2N5', 'L2O2', 'L2O3',
      'L2P2', 'Lb1', 'Lb17', 'Lg1', 'Lg5', 'Lg6', 'Lg8', 'Le', 'Lv',
-     'L1M1', 'L1N1', 'L1N4', 'L1O1', 'L1O4/L1O5', 'Lb10', 'Lb3', 'Lb4', 'Lb9',
+     'L1M1', 'L1N1', 'L1N4', 'L1O1', 'L1O4', 'Lb10', 'Lb3', 'Lb4', 'Lb9',
      'Lg2', 'Lg11', 'Lg3', 'Lg4', 'Lg4p', 'M1N2', 'M1N3', 'M2M4', 'M2N1',
      'M2N4', 'M2O4', 'M3M4', 'M3M5', 'M3N1', 'M3N4', 'M3O1', 'M3O4', 'M3O5',
      'Mg', 'M4N3', 'M4O2', 'Mb', 'Mz2', 'M5O3', 'Ma1', 'Ma2', 'Mz1',
-     'N4N6', 'N5N6/N5N7']
+     'N4N6', 'N5N6']
 
 class Transition(objectxml):
     def __init__(self, z, src=None, dest=None, siegbahn=None):
@@ -105,6 +105,9 @@ class Transition(objectxml):
                 table = _SIEGBAHNS
             else:
                 table = _SIEGBAHNS_NOGREEK
+
+            # Fix to be compatible with old transition, e.g. N5N6/N6N7
+            if '/' in siegbahn: siegbahn = siegbahn[:siegbahn.index('/')]
 
             try:
                 index = table.index(siegbahn)
@@ -351,6 +354,9 @@ def from_string(s):
 
     z = ep.atomic_number(symbol=words[0])
     notation = words[1]
+
+    # Fix to be compatible with old transition, e.g. N5N6/N6N7
+    if '/' in notation: notation = notation[:notation.index('/')]
 
     if notation in _SIEGBAHNS_NOGREEK: # Transition with Siegbahn notation
         return Transition(z, siegbahn=notation)
