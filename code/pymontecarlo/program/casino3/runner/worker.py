@@ -83,7 +83,7 @@ class Worker(_Worker):
 
         logging.debug('WinX-Ray ended')
 
-    def _save_results(self, options, zipfilepath):
+    def _save_results(self, options, h5filepath):
         pass
 #        dirpath = self._get_dirpath(options)
 #

@@ -86,7 +86,7 @@ class Worker(_Worker):
 
         logging.debug('WinX-Ray ended')
 
-    def _save_results(self, options, zipfilepath):
+    def _save_results(self, options, h5filepath):
         dirpath = self._get_dirpath(options)
 
         resultdirs = [name for name in os.listdir(dirpath) \
@@ -99,15 +99,11 @@ class Worker(_Worker):
         logging.debug('Importing results from WinXRay')
         path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
-        results.save(zipfilepath)
+        results.save(h5filepath)
 
-        # Append all WinXRay results in zip
-        logging.debug('Appending all WinXRay results')
-        zip = ZipFile(zipfilepath, 'a', compression=ZIP_DEFLATED)
-
-        for filename in os.listdir(path):
-            filepath = os.path.join(path, filename)
-            arcname = "raw/%s" % filename
-            zip.write(filepath, arcname)
-
-        zip.close()
+        # Create ZIP with all WinXRay results
+        zipfilepath = os.path.splitext(h5filepath)[0] + '_raw.zip'
+        with ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED) as zipfile:
+            for filename in os.listdir(dirpath):
+                filepath = os.path.join(dirpath, filename)
+                zipfile.write(filepath)

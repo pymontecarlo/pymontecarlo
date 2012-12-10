@@ -108,23 +108,19 @@ class Worker(_Worker):
         if retcode != 0:
             raise RuntimeError, "An error occurred during the simulation"
 
-    def _save_results(self, options, zipfilepath):
+    def _save_results(self, options, h5filepath):
         dirpath = self._get_dirpath(options)
 
         # Import results to pyMonteCarlo
         self._status = 'Importing results'
         results = Importer().import_from_dir(options, dirpath)
-        results.save(zipfilepath)
+        results.save(h5filepath)
 
-        # Append all PENSHOWER results in zip, except pe-trajectories.dat
-        zip = ZipFile(zipfilepath, 'a', compression=ZIP_DEFLATED)
-
-        for filename in os.listdir(dirpath):
-            if filename == 'pe-trajectories.dat':
-                continue
-            filepath = os.path.join(dirpath, filename)
-            arcname = "raw/%s" % filename
-            zip.write(filepath, arcname)
-
-        zip.close()
-
+        # Create ZIP with all PENSHOWER results
+        zipfilepath = os.path.splitext(h5filepath)[0] + '_raw.zip'
+        with ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED) as zipfile:
+            for filename in os.listdir(dirpath):
+                if filename == 'pe-trajectories.dat':
+                    continue
+                filepath = os.path.join(dirpath, filename)
+                zipfile.write(filepath)

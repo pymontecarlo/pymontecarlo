@@ -193,5 +193,5 @@ class _PouchouWorker(_Worker):
 
         return distributions
 
-    def _save_results(self, options, zipfilepath):
-        self._results.save(zipfilepath)
+    def _save_results(self, options, h5filepath):
+        self._results.save(h5filepath)

@@ -124,8 +124,8 @@ class Worker(threading.Thread):
                 options = self._queue_options.get()
 
                 # Check if results already exists
-                zipfilepath = os.path.join(self._outputdir, options.name + ".zip")
-                if os.path.exists(zipfilepath) and not self._overwrite:
+                h5filepath = os.path.join(self._outputdir, options.name + ".h5")
+                if os.path.exists(h5filepath) and not self._overwrite:
                     logging.info('Skipping %s as results already exists', options.name)
                     self._queue_options.task_done()
                     continue
@@ -145,8 +145,8 @@ class Worker(threading.Thread):
 
                 # Save results
                 logging.debug('Started saving results')
-                self._save_results(options, zipfilepath)
-                logging.debug('Results saved at %s', zipfilepath)
+                self._save_results(options, h5filepath)
+                logging.debug('Results saved at %s', h5filepath)
 
                 # Cleanup working directory if needed
                 if not _user_defined_workdir:
@@ -173,7 +173,7 @@ class Worker(threading.Thread):
         """
         raise NotImplementedError
 
-    def _save_results(self, options, zipfilepath):
+    def _save_results(self, options, h5filepath):
         """
         Generates the results from the simulation outputs after the simulation 
         was run and then save them at the specified location.
