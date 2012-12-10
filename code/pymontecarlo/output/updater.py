@@ -47,6 +47,8 @@ from pymontecarlo.output.result import \
      TransmittedElectronEnergyResult, Trajectory, TrajectoryResult)
 
 # Globals and constants variables.
+from zipfile import ZIP_DEFLATED
+
 from pymontecarlo.input.particle import PARTICLES
 from pymontecarlo.input.collision import COLLISIONS
 
@@ -383,10 +385,27 @@ class Updater(_Updater):
 
             return Results(options, results)
 
+        # Update results
         results = _load_results(filepath)
 
         newfilepath = os.path.splitext(filepath)[0] + '.h5'
         results.save(newfilepath)
+
+        # Create raw ZIP
+        oldzip = ZipFile(filepath, 'r')
+
+        if any([filename.startswith('raw/') for filename in oldzip.namelist()]):
+            zipfilepath = os.path.splitext(filepath)[0] + '_raw.zip'
+            newzip = ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED)
+
+            for filename in oldzip.namelist():
+                if not filename.startswith('raw/'): continue
+                data = oldzip.read(filename)
+                newzip.writestr(filename[4:], data)
+
+            newzip.close()
+
+        oldzip.close()
 
         return newfilepath
 
