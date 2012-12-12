@@ -85,7 +85,12 @@ def load_settings(filepaths):
                 settings.read(f)
                 return settings
 
-    raise IOError, "Settings could not be loaded"
+    logging.error("Settings could not be loaded")
+
+    # Default settings
+    settings.add_section('pymontecarlo')
+
+    return settings
 
 ################################################################################
 # Programs
@@ -130,11 +135,12 @@ def load_programs(settings, validate=True):
     """
     programs = set()
 
-    value = getattr(settings.pymontecarlo, 'programs', '')
-    if not value:
-        raise IOError, "No programs are defined in settings"
+    programs_value = getattr(settings.pymontecarlo, 'programs', '')
+    if not programs_value:
+        logging.error("No programs are defined in settings")
+        return programs
 
-    names = getattr(settings.pymontecarlo, 'programs').split(',')
+    names = programs_value.split(',')
     for name in names:
         try:
             program = load_program(name, validate)
