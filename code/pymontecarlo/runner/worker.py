@@ -67,6 +67,7 @@ class Worker(threading.Thread):
         if workdir is not None and not os.path.isdir(workdir):
             raise ValueError, 'Work directory (%s) is not a directory' % workdir
         self._workdir = workdir
+        self._user_defined_workdir = self._workdir is not None
 
         self._overwrite = overwrite
 
@@ -131,12 +132,7 @@ class Worker(threading.Thread):
                     continue
 
                 # Create working directory
-                if self._workdir is None:
-                    self._workdir = tempfile.mkdtemp()
-                    _user_defined_workdir = False
-                    logging.debug('Temporary work directory: %s', self._workdir)
-                else:
-                    _user_defined_workdir = True
+                self._setup_workdir(options)
 
                 # Run
                 logging.debug('Running program specific worker')
@@ -148,11 +144,8 @@ class Worker(threading.Thread):
                 self._save_results(options, h5filepath)
                 logging.debug('Results saved at %s', h5filepath)
 
-                # Cleanup working directory if needed
-                if not _user_defined_workdir:
-                    shutil.rmtree(self._workdir, ignore_errors=True)
-                    logging.debug('Removed temporary work directory: %s', self._workdir)
-                    self._workdir = None
+                # Cleanup
+                self._cleanup(options)
 
                 self._progress = 1.0
                 self._status = 'Completed'
@@ -160,11 +153,13 @@ class Worker(threading.Thread):
                 self._queue_options.task_done()
             except Exception:
                 self.stop()
-
-                if not _user_defined_workdir:
-                    shutil.rmtree(self._workdir, ignore_errors=True)
-
+                self._cleanup(options)
                 self._queue_options.raise_exception()
+
+    def _setup_workdir(self, options):
+        if not self._user_defined_workdir:
+            self._workdir = tempfile.mkdtemp()
+            logging.debug('Temporary work directory: %s', self._workdir)
 
     def _run(self, options):
         """
@@ -179,6 +174,12 @@ class Worker(threading.Thread):
         was run and then save them at the specified location.
         """
         raise NotImplementedError
+
+    def _cleanup(self, options):
+        if not self._user_defined_workdir:
+            shutil.rmtree(self._workdir, ignore_errors=True)
+            logging.debug('Removed temporary work directory: %s', self._workdir)
+            self._workdir = None
 
     def stop(self):
         """
