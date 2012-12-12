@@ -56,14 +56,14 @@ class Worker(_Worker):
         Converter().convert(options)
 
         # Export
-        dirpath = self._get_dirpath(options)
-        if os.listdir(dirpath): # not empty
-            logging.info("Simulation directory (%s) is not empty. It will be empty.", dirpath)
-            shutil.rmtree(dirpath)
-            os.makedirs(dirpath)
+        simdir = os.path.join(dirpath, options.name)
+        if os.path.exists(simdir):
+            logging.info("Simulation directory (%s) exists. It will be empty.", simdir)
+            shutil.rmtree(simdir, ignore_errors=True)
+        os.makedirs(simdir)
 
         # Create .in, .geo and all .mat
-        infilepath = Exporter().export(options, dirpath)
+        infilepath = Exporter().export(options, simdir)
 
         # Save
         logging.debug('Save in file: %s', infilepath)
