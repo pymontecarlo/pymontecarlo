@@ -1,5 +1,5 @@
-Appendix: Running pymontecarlo on Aachen HPC
-============================================
+Running pymontecarlo on Aachen HPC
+==================================
 
 Running simulations using *pymontecarlo* on the Aachen HPC requires a few setup
 steps and to know a few commands.
