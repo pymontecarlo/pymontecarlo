@@ -128,7 +128,7 @@ class Options(Option):
           * :attr:`limits`: limit(s) when to stop the simulation
           * :attr:`models`: simulation models/algorithms
         
-        :arg name: name of the simulation
+        :arg name: name of the simulation (unicode accepted)
         
         By default, the beam is set to a Gaussian beam of 10 nm with an incident
         energy of 1 keV.
@@ -145,10 +145,13 @@ class Options(Option):
         self._props['models'] = _Models()
 
     def __repr__(self):
-        return '<%s(name=%s)>' % (self.__class__.__name__, self.name)
+        return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
 
     def __str__(self):
-        return self.name
+        return str(self.name)
+
+    def __unicode__(self):
+        return unicode(self.name)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -233,7 +236,7 @@ class Options(Option):
     def name(self, name):
         if not name:
             raise ValueError, 'Name cannot be empty'
-        self._props['name'] = str(name)
+        self._props['name'] = unicode(name)
 
     @property
     def beam(self):

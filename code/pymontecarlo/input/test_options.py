@@ -87,6 +87,15 @@ class TestOptions(TestCase):
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
         self.assertAlmostEqual(5678, ops.beam.energy_eV, 4)
 
+    def testname(self):
+        # Test unicode name
+        uname = '\u03b1\u03b2\u03b3'
+        self.ops.name = uname
+
+        self.assertEqual(uname, self.ops.name)
+        self.assertEqual(uname, unicode(self.ops))
+        self.assertEqual(uname, str(self.ops))
+
     def testdetectors(self):
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
         self.assertEqual(1, len(dets))
