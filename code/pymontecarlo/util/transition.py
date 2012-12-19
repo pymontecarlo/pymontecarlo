@@ -385,6 +385,9 @@ def _group(z, name, name_unicode=None):
 
     transitions = filter(methodcaller('exists'), transitions)
 
+    if not transitions:
+        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), name)
+
     return transitionset(z, name, transitions, name_unicode)
 
 def _shell(z, dest):
@@ -396,6 +399,9 @@ def _shell(z, dest):
 
     name = Subshell(z, dest).siegbahn
     transitions = filter(methodcaller('exists'), transitions)
+
+    if not transitions:
+        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), name)
 
     return transitionset(z, name, transitions)
 
