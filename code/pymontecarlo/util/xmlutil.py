@@ -97,6 +97,14 @@ class _XMLIO(Manager):
         self._nsmap = {}
         self._schemas = {}
 
+    def reset(self):
+        """
+        Unregisters all loaders, savers and namespaces
+        """
+        Manager.reset(self)
+        self._nsmap.clear()
+        self._schemas.clear()
+
     def add_namespace(self, prefix, uri, location=None):
         """
         Registers a namespace to be used when loading and saving from/to XML.

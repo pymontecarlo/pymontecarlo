@@ -32,6 +32,13 @@ class Manager(object):
         self._loaders = {}
         self._savers = {}
 
+    def reset(self):
+        """
+        Unregisters all loaders and savers.
+        """
+        self._loaders.clear()
+        self._savers.clear()
+
     def register(self, tag, klass):
         """
         Associates a tag with a class. This class will be used to load the 

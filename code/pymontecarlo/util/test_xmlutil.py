@@ -15,22 +15,38 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
-
-import pymontecarlo.util.xmlutil #@UnusedImport
+from pymontecarlo.util.xmlutil import objectxml, XMLIO
 
 # Globals and constants variables.
 
-class TestModule(TestCase):
+class ObjectXMLMock(objectxml):
+
+    def __init__(self, val):
+        self.val = val
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        val = element.get('val')
+        return cls(val)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('val', str(self.val))
+
+XMLIO.reset()
+XMLIO.register('ObjectXMLMock', ObjectXMLMock)
+
+class Testobjectxml(unittest.TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        unittest.TestCase.setUp(self)
+
+        self.mock1 = ObjectXMLMock('abc')
 
     def tearDown(self):
-        TestCase.tearDown(self)
+        unittest.TestCase.tearDown(self)
 
-    def testskeleton(self):
-        self.assertTrue(True)
+    def testsave(self):
+        self.mock1.save('/tmp/mock.xml')
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

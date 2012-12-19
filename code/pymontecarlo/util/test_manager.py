@@ -43,6 +43,14 @@ class TestManager(TestCase):
     def testskeleton(self):
         self.assertTrue(True)
 
+    def testreset(self):
+        self.manager.register('tag1', Mock1)
+
+        self.manager.reset()
+
+        self.assertEqual(0, len(self.manager._loaders))
+        self.assertEqual(0, len(self.manager._savers))
+
     def testregister_loader(self):
         self.manager.register_loader('tag1', Mock1)
         self.assertEqual(Mock1, self.manager.get_class('tag1'))
