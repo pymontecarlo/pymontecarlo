@@ -188,6 +188,7 @@ class MainFrame(wx.Frame):
 
     def OnClearSimulation(self, message):
         self._tree.clear()
+        self.change_window(wx.Panel(self._splitter))
 
     def OnChangedSimulation(self, message):
         menubar = self.GetMenuBar()
