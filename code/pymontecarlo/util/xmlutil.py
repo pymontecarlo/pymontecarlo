@@ -78,7 +78,8 @@ class objectxml(object):
             (default: ``True``)
         """
         element = self.to_xml(validate)
-        output = tostring(element, pretty_print=pretty_print)
+        output = tostring(element, pretty_print=pretty_print,
+                          encoding="UTF-8", xml_declaration=True)
 
         self_opened = False
         if not hasattr(source, "write"):
