@@ -865,7 +865,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         # Scale bar
         if self._params.show_scalebar:
             length = 3.0
-            scale = length / GL.glGetDoublev(GL.GL_MODELVIEW_MATRIX)[0][0] # um
+            scale = length / self.GetScaling() # um
             new_scale, new_unit, new_length = _calculate_scale_bar(scale, 'um', length)
 
             width, height = self.GetClientSizeTuple()
@@ -885,10 +885,9 @@ class _TrajectoryResultGLCanvas(GLCanvas):
             GL.glPopMatrix()
 
     def ResetGL(self):
-        GLCanvas.ResetGL(self)
-        GL.glScale(10, 10, 10)
-        GL.glTranslate(0.0, 0.0, 0.5)
-        GL.glRotate(5.0, 1.0, 0.0, 1.0)
+        self.SetScaling(25.0, False)
+        self.SetTranslation(0.0, 0.0, 0.5, False)
+        self.SetRotation(-90.1, 0.0, 0.1, False)
 
 class TrajectoryResultPanel(_ResultPanel):
 
