@@ -234,12 +234,12 @@ XMLIO.register('{http://pymontecarlo.sf.net}transition', Transition)
 
 class transitionset(frozenset, objectxml):
 
-    def __new__(cls, z, name, transitions):
+    def __new__(cls, z, name, transitions, name_unicode=None):
         # Required
         # See http://stackoverflow.com/questions/4850370/inheriting-behaviours-for-set-and-frozenset-seem-to-differ
         return frozenset.__new__(cls, transitions)
 
-    def __init__(self, z, name, transitions):
+    def __init__(self, z, name, transitions, name_unicode=None):
         """
         Creates a frozen set (immutable) of transitions.
         The atomic number must be the same for all transitions. 
@@ -247,6 +247,7 @@ class transitionset(frozenset, objectxml):
         :arg z: atomic number of all transitions
         :arg name: name of the set (e.g. ``Ka``)
         :arg transitions: transitions in the set
+        :arg name_unicode: name of the set in unicode
         """
         if not transitions:
             raise ValueError, 'A transitionset must contain at least one transition'
@@ -259,7 +260,9 @@ class transitionset(frozenset, objectxml):
         frozenset.__init__(transitions)
 
         self._z = z
+        self._symbol = ep.symbol(z)
         self._name = name
+        self._name_unicode = name_unicode or name
         self._most_probable = \
             sorted(self, key=attrgetter('probability'), reverse=True)[0]
 
@@ -267,22 +270,27 @@ class transitionset(frozenset, objectxml):
         return '<transitionset(%s: %s)>' % (str(self), ', '.join(map(str, sorted(self))))
 
     def __str__(self):
-        return '%s %s' % (ep.symbol(self._z), self._name)
+        return '%s %s' % (self._symbol, self._name)
+
+    def __unicode__(self):
+        return u"%s %s" % (self._symbol, self._name_unicode)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         z = int(element.get('z'))
         name = element.get('name')
+        name_unicode = element.get('name_unicode')
 
         transitions = []
         for child in element:
             transitions.append(Transition.from_xml(child))
 
-        return cls(z, name, transitions)
+        return cls(z, name, transitions, name_unicode)
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('z', str(self.z))
         element.set('name', str(self._name))
+        element.set('name_unicode', unicode(self._name_unicode))
 
         for transition in self:
             element.append(transition.to_xml())
@@ -368,14 +376,16 @@ def from_string(s):
     else:
         raise ValueError, "Cannot parse transition string: %s" % s
 
-def _group(z, key):
+def _group(z, name, name_unicode=None):
     transitions = []
 
     for siegbahn in _SIEGBAHNS_NOGREEK:
-        if siegbahn.startswith(key):
+        if siegbahn.startswith(name):
             transitions.append(Transition(z, siegbahn=siegbahn))
 
-    return transitionset(z, key, filter(methodcaller('exists'), transitions))
+    transitions = filter(methodcaller('exists'), transitions)
+
+    return transitionset(z, name, transitions, name_unicode)
 
 def _shell(z, dest):
     transitions = []
@@ -385,8 +395,9 @@ def _shell(z, dest):
         transitions.append(Transition(z, src, dest))
 
     name = Subshell(z, dest).siegbahn
+    transitions = filter(methodcaller('exists'), transitions)
 
-    return transitionset(z, name, filter(methodcaller('exists'), transitions))
+    return transitionset(z, name, transitions)
 
 def K_family(z):
     """
@@ -416,49 +427,49 @@ def Ka(z):
     """
     Returns all transitions from the Ka group.
     """
-    return _group(z, 'Ka')
+    return _group(z, 'Ka', 'K\u03b1')
 
 def Kb(z):
     """
     Returns all transitions from the Kb group.
     """
-    return _group(z, 'Kb')
+    return _group(z, 'Kb', 'K\u03b2')
 
 def La(z):
     """
     Returns all transitions from the La group.
     """
-    return _group(z, 'La')
+    return _group(z, 'La', 'L\u03b1')
 
 def Lb(z):
     """
     Returns all transitions from the Lb group.
     """
-    return _group(z, 'Lb')
+    return _group(z, 'Lb', 'L\u03b2')
 
 def Lg(z):
     """
     Returns all transitions from the Lg group.
     """
-    return _group(z, 'Lg')
+    return _group(z, 'Lg', 'L\u03b3')
 
 def Ma(z):
     """
     Returns all transitions from the Ma group.
     """
-    return _group(z, 'Ma')
+    return _group(z, 'Ma', 'M\u03b1')
 
 def Mb(z):
     """
     Returns all transitions from the Mb group.
     """
-    return _group(z, 'Mb')
+    return _group(z, 'Mb', 'M\u03b2')
 
 def Mg(z):
     """
     Returns all transitions from the Mg group.
     """
-    return _group(z, 'Mg')
+    return _group(z, 'Mg', 'M\u03b3')
 
 def LI(z):
     """

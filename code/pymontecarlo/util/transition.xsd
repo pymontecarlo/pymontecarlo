@@ -25,6 +25,7 @@
         
         <xsd:attribute name="z" type="atomicNumberType" use="required" />
         <xsd:attribute name="name" type="xsd:string" use="required" />
+        <xsd:attribute name="name_unicode" type="xsd:string" use="optional" />
     </xsd:complexType>
     
     <xsd:element name="transitionset" type="transitionsetType" />

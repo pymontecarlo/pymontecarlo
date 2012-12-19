@@ -127,7 +127,7 @@ class Testtransitionset(TestCase):
         t1 = Transition(13, 4, 1)
         t2 = Transition(13, 3, 1)
         t3 = Transition(13, 3, 1)
-        self.set = transitionset(13, 'G1', [t1, t2, t3])
+        self.set = transitionset(13, 'G1', [t1, t2, t3], 'G\u03b1')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -147,6 +147,9 @@ class Testtransitionset(TestCase):
     def test__str__(self):
         self.assertEqual('Al G1', str(self.set))
 
+    def test__unicode__(self):
+        self.assertEqual('Al G\u03b1', unicode(self.set))
+
     def test__contains__(self):
         self.assertTrue(Transition(13, 4, 1) in self.set)
         self.assertFalse(Transition(13, 7, 1) in self.set)
@@ -156,6 +159,7 @@ class Testtransitionset(TestCase):
 
         self.assertEqual(13, int(element.get('z')))
         self.assertEqual('G1', element.get('name'))
+        self.assertEqual('G\u03b1', element.get('name_unicode'))
         self.assertEqual(2, len(list(element)))
 
     def testfrom_xml(self):
