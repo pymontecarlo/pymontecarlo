@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`worker` -- Casino 2 worker
+:mod:`worker` -- Monaco worker
 ================================================================================
 
 .. module:: worker
-   :synopsis: Casino 2 worker
+   :synopsis: Monaco worker
 
-.. inheritance-diagram:: pymontecarlo.program.casino2.runner.worker
+.. inheritance-diagram:: pymontecarlo.program.monaco.runner.worker
 
 """
 
@@ -20,16 +20,31 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import ntpath as path
 import struct
+import logging
+import shutil
+import subprocess
+
+import _winreg
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo import get_settings
 
-from pymontecarlo.runner.worker import Worker as _Worker
+from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+
+from pymontecarlo.input.detector import PhotonIntensityDetector
+
+from pymontecarlo.util.transition import Ka, La, Ma
+
+from pymontecarlo.program.monaco.input.converter import Converter
+from pymontecarlo.program.monaco.io.exporter import Exporter
+from pymontecarlo.program.monaco.io.importer import Importer
 
 # Globals and constants variables.
+_WINKEY = r'Software\GfE\Monaco\3.0'
 
 def _create_mcb(monaco_basedir, jobdir):
     """
@@ -39,12 +54,14 @@ def _create_mcb(monaco_basedir, jobdir):
     :arg monaco_basedir: base directory of Monaco program
     :arg jobdir: job directory where the SIM and MAT files are located for a
         given job
+        
+    :return: path to the batch file
     """
     filepath = os.path.join(monaco_basedir, 'MCUTIL', 'MCBAT32.MCB')
     with open(filepath, 'wb') as fp:
         # BStatus
         # DELPHI: BlockWrite(Bf, VersionSign, 1,f);
-        fp.write(struct.pack('b', 255))
+        fp.write(struct.pack('B', 255))
 
         # BVersion
         # DELPHI: BlockWrite(Bf, BVersion, SizeOf(Integer),f);
@@ -52,17 +69,17 @@ def _create_mcb(monaco_basedir, jobdir):
 
         # Bstatus
         # DELPHI: BlockWrite(Bf,BStatus,1,f);
-        fp.write(struct.pack('b', 1))
+        fp.write(struct.pack('b', 2))
 
         # Job 1 Directory
         # DELPHI: l := 1+Length(Job.Dir); Inc(s,l);BlockWrite(Bf,Job.Dir,l,w); Inc(Sum,w);
-        jobdir = os.path.abspath(jobdir)
+        jobdir = path.abspath(jobdir)
         fp.write(struct.pack('b', len(jobdir)))
         fp.write(jobdir)
 
         # Job 1 Name
         # DELPHI: l := 1+Length(Job.Smp); Inc(s,l);BlockWrite(Bf,Job.Smp,l,w); Inc(Sum,w);
-        name = os.path.basename(jobdir)
+        name = path.basename(jobdir)
         fp.write(struct.pack('b', len(name)))
         fp.write(name)
 
@@ -91,11 +108,121 @@ def _create_mcb(monaco_basedir, jobdir):
         # DELPHI: l := 1+Length(Job.InfoStr);Inc(s,l);BlockWrite(Bf,Job.InfoStr,l,w); Inc(Sum,w);
         fp.write('\x00')
 
+    return filepath
+
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
         Runner to run Monaco simulation(s).
+        
+        .. note:: 
+        
+           The work directory cannot be specified for this worker as the work
+           directory must be located in *monaco basedir*/PRB. 
         """
+        self._monaco_basedir = get_settings().monaco.basedir
+        self._mcsim32exe = os.path.join(self._monaco_basedir, 'Mcsim32.exe')
+        self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
+
+        workdir = os.path.join(self._monaco_basedir, 'PRB')
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
-        self._monaco_basedir = get_settings().monaco.basedir
+    def _create(self, options, dirpath):
+        # Convert
+        Converter().convert(options)
+
+        # Create job directory
+        jobdir = os.path.join(dirpath, options.name)
+        if os.path.exists(jobdir):
+            logging.info('Job directory (%s) already exists, so it is removed.', jobdir)
+            shutil.rmtree(jobdir, ignore_errors=True)
+        os.makedirs(jobdir)
+
+        # Export: create MAT and SIM files
+        Exporter().export(options, jobdir)
+
+        return jobdir
+
+    def _run(self, options):
+        # Create job directory and simulation files
+        jobdir = self._create(options, self._workdir)
+
+        # Create batch file
+        batch_filepath = _create_mcb(self._monaco_basedir, jobdir)
+        logging.debug("Creating batch file")
+
+        # Setup registry (in case it is not already set)
+        try:
+            key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, _WINKEY,
+                                  0, _winreg.KEY_ALL_ACCESS)
+        except:
+            key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, _WINKEY)
+        with key:
+            _winreg.SetValueEx(key, "SysPath", 0, _winreg.REG_SZ,
+                               self._monaco_basedir)
+        logging.debug("Setup Monaco path in registry")
+
+        # Launch mcsim32.exe
+        args = [self._mcsim32exe]
+        logging.debug('Launching %s', ' '.join(args))
+
+        self._status = "Running Monaco's mcsim32.exe"
+
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                         cwd=self._monaco_basedir)
+        self._process.wait()
+        self._process = None
+
+        logging.debug("Monaco's mcsim32.exe ended")
+
+        # Remove batch file
+        os.remove(batch_filepath)
+        logging.debug('Remove batch file')
+
+        # Extract intensities
+        dets = options.detectors.findall(PhotonIntensityDetector).values()
+        if dets:
+            det = dets[0]
+
+            # List transitions to extract
+            zs = set()
+            for material in options.geometry.get_materials():
+                zs.update(material.composition.keys())
+
+            transitions = []
+            for z in sorted(zs):
+                for group in [Ka, La, Ma]:
+                    try:
+                        transition = group(z)
+                    except ValueError: # Does not exist
+                        continue
+
+                    if transition.most_probable.energy_eV < options.beam.energy_eV:
+                        transitions.append(str(transition))
+
+            # Launch mccli32.exe
+            args = [self._mccli32exe, options.name,
+                    str(det.takeoffangle_deg)]
+            args += transitions
+            logging.debug('Launching %s', ' '.join(args))
+
+            self._status = "Running Monaco's mccli32.exe"
+
+            self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                             cwd=self._monaco_basedir)
+            self._process.wait()
+            self._process = None
+
+            logging.debug("Monaco's mcsim32.exe ended")
+
+    def _save_results(self, options, h5filepath):
+        jobdir = self._get_dirpath(options)
+
+        results = Importer().import_from_dir(options, jobdir)
+        results.save(h5filepath)
+
+    def _cleanup(self, options):
+        _Worker._cleanup(self, options)
+
+        jobdir = self._get_dirpath(options)
+        shutil.rmtree(jobdir, ignore_errors=True)

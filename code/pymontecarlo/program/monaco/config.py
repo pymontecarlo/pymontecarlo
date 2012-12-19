@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config` -- Casino 2 Monte Carlo program configuration
+:mod:`config` -- Monaco Monte Carlo program configuration
 ================================================================================
 
 .. module:: config
-   :synopsis: Casino 2 Monte Carlo program configuration
+   :synopsis: Monaco Monte Carlo program configuration
 
 """
 
@@ -54,8 +54,8 @@ class _MonacoProgram(Program):
         if not os.path.isfile(mcsim32_exe):
             raise AssertionError, "No Mcsim32.exe in Monaco base directory (%s)" % basedir
 
-        mccorr32_exe = os.path.join(settings.monaco.basedir, 'Mccorr32.exe')
-        if not os.path.isfile(mccorr32_exe):
-            raise AssertionError, "No Mccorr32.exe in Monaco base directory (%s)" % basedir
+        mccli32_exe = os.path.join(settings.monaco.basedir, 'Mccli32.exe')
+        if not os.path.isfile(mccli32_exe):
+            raise AssertionError, "No Mccli32.exe in Monaco base directory (%s)" % basedir
 
 program = _MonacoProgram()

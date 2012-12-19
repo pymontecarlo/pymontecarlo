@@ -32,7 +32,6 @@
             <fileset dir="${src.dir}/pymontecarlo/program/monaco">
                 <include name="**/*.py" />
                 <include name="**/*.xsd" />
-                <include name="io/templates/**" />
                 <exclude name="**/test_*.py" />
             </fileset>
         </copy>

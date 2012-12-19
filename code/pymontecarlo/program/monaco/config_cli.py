@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config_cli` -- Casino 2 Monte Carlo program CLI configuration
+:mod:`config_cli` -- Monaco Monte Carlo program CLI configuration
 ================================================================================
 
 .. module:: config_cli
-   :synopsis: Casino 2 Monte Carlo program CLI configuration
+   :synopsis: Monaco Monte Carlo program CLI configuration
 
 """
 
@@ -40,9 +40,9 @@ class _MonacoCLI(CLI):
             if not os.path.isfile(mcsim32_exe):
                 raise ValueError, "No Mcsim32.exe in Monaco base directory"
 
-            mccorr32_exe = os.path.join(basedir, 'Mccorr32.exe')
-            if not os.path.isfile(mccorr32_exe):
-                raise ValueError, "No Mccorr32.exe in Monaco base directory"
+            mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
+            if not os.path.isfile(mccli32_exe):
+                raise ValueError, "No Mccli32.exe in Monaco base directory"
 
         section.basedir = \
             console.prompt_directory(question, default, should_exist=True,

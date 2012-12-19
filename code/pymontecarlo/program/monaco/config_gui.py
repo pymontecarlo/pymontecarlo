@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config_gui` -- Casino 2 Monte Carlo program GUI configuration
+:mod:`config_gui` -- Monaco Monte Carlo program GUI configuration
 ================================================================================
 
 .. module:: config_gui
-   :synopsis: Casino 2 Monte Carlo program GUI configuration
+   :synopsis: Monaco Monte Carlo program GUI configuration
 
 """
 
@@ -65,9 +65,9 @@ class _MonacoConfigurePanel(ConfigurePanel):
             show_error_dialog(self, "No Mcsim32.exe in Monaco base directory (%s)" % basedir)
             return False
 
-        mccorr32_exe = os.path.join(basedir, 'Mccorr32.exe')
-        if not os.path.isfile(mccorr32_exe):
-            show_error_dialog(self, "No Mccorr32.exe in Monaco base directory (%s)" % basedir)
+        mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
+        if not os.path.isfile(mccli32_exe):
+            show_error_dialog(self, "No Mccli32.exe in Monaco base directory (%s)" % basedir)
             return False
 
         return True

@@ -33,44 +33,30 @@ from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
     (_DelimitedDetector,
-     PhiRhoZDetector,
+#     PhiRhoZDetector,
      PhotonIntensityDetector,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
-     RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS,
-     MASS_ABSORPTION_COEFFICIENT)
+     ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
 
 # Globals and constants variables.
 
 class Converter(_Converter):
     BEAMS = [PencilBeam]
     GEOMETRIES = [Substrate]
-    DETECTORS = [PhiRhoZDetector,
-                 PhotonIntensityDetector]
+    DETECTORS = [PhotonIntensityDetector]
     LIMITS = [ShowersLimit]
-    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
-                                           ELASTIC_CROSS_SECTION.mott_drouin1993,
-                                           ELASTIC_CROSS_SECTION.mott_browning1994,
-                                           ELASTIC_CROSS_SECTION.rutherford],
-              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.gryzinsky,
-                                              IONIZATION_CROSS_SECTION.jakoby],
-              IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.joy_luo1989,
-                                          IONIZATION_POTENTIAL.berger_seltzer1983,
-                                          IONIZATION_POTENTIAL.hovington],
-              RANDOM_NUMBER_GENERATOR.type: [RANDOM_NUMBER_GENERATOR.press1966_rand1,
-                                             RANDOM_NUMBER_GENERATOR.mersenne],
-              DIRECTION_COSINE.type: [DIRECTION_COSINE.soum1979,
-                                      DIRECTION_COSINE.drouin1996],
-              ENERGY_LOSS.type: [ENERGY_LOSS.joy_luo1989],
-              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.henke1993]}
+    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990],
+              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.gryzinsky],
+              IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.springer1967],
+              ENERGY_LOSS.type: [ENERGY_LOSS.bethe1930mod],
+              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989]}
     DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.mott_czyzewski1990,
-                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.casnati1982,
-                      IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.joy_luo1989,
-                      RANDOM_NUMBER_GENERATOR.type: RANDOM_NUMBER_GENERATOR.press1966_rand1,
-                      DIRECTION_COSINE.type: DIRECTION_COSINE.drouin1996,
-                      ENERGY_LOSS.type: ENERGY_LOSS.joy_luo1989,
-                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11}
+                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.gryzinsky,
+                      IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.springer1967,
+                      ENERGY_LOSS.type: ENERGY_LOSS.bethe1930mod,
+                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989}
 
     def _convert_beam(self, options):
         _Converter._convert_beam(self, options)
