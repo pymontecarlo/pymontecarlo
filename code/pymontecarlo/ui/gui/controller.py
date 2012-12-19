@@ -106,7 +106,7 @@ class _Controller(object):
         pass
 
     def open(self, parent):
-        filetypes = [('Results (*.zip)', 'zip'), ('Options (*.xml)', 'xml')]
+        filetypes = [('Results (*.h5)', 'h5'), ('Options (*.xml)', 'xml')]
         filepaths = show_open_filedialog(parent, filetypes, self._basedir, True)
 
         for filepath in filepaths:
@@ -134,7 +134,7 @@ class _Controller(object):
                 results = None
             if not success:
                 return
-        elif ext == '.zip':
+        elif ext == '.h5':
             target = Results.load
             progress_method = progress.progress
             status_method = progress.status
@@ -147,6 +147,8 @@ class _Controller(object):
                 options = results.options
             if not success:
                 return
+        else:
+            raise ValueError, 'Unknown extension'
 
         sim = _Simulation(filepath, options, results)
         self.add(sim)
