@@ -79,7 +79,7 @@ class TestCasino2Exporter(TestCase):
         regionops = simdata.getRegionOptions()
 
         self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
-        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(34.93392125, simops.Beam_Diameter, 4) # FWHM
         self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
 
         self.assertEqual(1, regionops.getNumberRegions())
@@ -139,7 +139,7 @@ class TestCasino2Exporter(TestCase):
         regionops = simdata.getRegionOptions()
 
         self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
-        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(34.93392125, simops.Beam_Diameter, 4) # FWHM
         self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
 
         self.assertEqual(3, regionops.getNumberRegions())
@@ -200,7 +200,7 @@ class TestCasino2Exporter(TestCase):
         regionops = simdata.getRegionOptions()
 
         self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
-        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(34.93392125, simops.Beam_Diameter, 4) # FWHM
         self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
 
         self.assertEqual(3, regionops.getNumberRegions())
@@ -262,7 +262,7 @@ class TestCasino2Exporter(TestCase):
         regionops = simdata.getRegionOptions()
 
         self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
-        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(34.93392125, simops.Beam_Diameter, 4) # FWHM
         self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
 
         self.assertEqual(3, regionops.getNumberRegions())
@@ -321,7 +321,7 @@ class TestCasino2Exporter(TestCase):
         simops = simdata.getSimulationOptions()
 
         self.assertAlmostEqual(1.234, simops.getIncidentEnergy_keV(0), 4)
-        self.assertAlmostEqual(69.8678425, simops.Beam_Diameter, 4) # FWHM
+        self.assertAlmostEqual(34.93392125, simops.Beam_Diameter, 4) # FWHM
         self.assertAlmostEqual(100.0, simops._positionStart_nm, 4)
 
         self.assertEqual(5678, simops.getNumberElectrons())
