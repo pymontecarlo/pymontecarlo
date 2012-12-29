@@ -39,51 +39,56 @@ COLOR_LANTHANIDES = '#6600FF'
 COLOR_ACTINIDES = '#6666FF'
 
 # Elements setup
-_ELEMENTS = {}
-_ELEMENTS[1] = ((0, 0), COLOR_NON_METALS)
+def _setup_elements():
+    e = {}
+    e[1] = ((0, 0), COLOR_NON_METALS)
 
-## Alkali Metals
-for row, z in enumerate([3, 11, 19, 37, 55, 87]):
-    _ELEMENTS[z] = ((row + 1, 0), COLOR_ALKALI_METALS)
+    ## Alkali Metals
+    for row, z in enumerate([3, 11, 19, 37, 55, 87]):
+        e[z] = ((row + 1, 0), COLOR_ALKALI_METALS)
 
-## Alkali Earth Metals
-for row, z in enumerate([4, 12, 20, 38, 56, 88]):
-    _ELEMENTS[z] = ((row + 1, 1), COLOR_ALKALI_EARTH_METALS)
+    ## Alkali Earth Metals
+    for row, z in enumerate([4, 12, 20, 38, 56, 88]):
+        e[z] = ((row + 1, 1), COLOR_ALKALI_EARTH_METALS)
 
-## Transition Metals
-transitions = [range(21, 30 + 1), range(39, 48 + 1),
-               range(71, 80 + 1), range(103, 106 + 1)]
-for row, transitions_row in enumerate(transitions):
-    for col, z in enumerate(transitions_row):
-        _ELEMENTS[z] = ((row + 3, col + 3), COLOR_TRANSITION_METALS)
+    ## Transition Metals
+    transitions = [range(21, 30 + 1), range(39, 48 + 1),
+                   range(71, 80 + 1), range(103, 106 + 1)]
+    for row, transitions_row in enumerate(transitions):
+        for col, z in enumerate(transitions_row):
+            e[z] = ((row + 3, col + 3), COLOR_TRANSITION_METALS)
 
-## Non Metals
-nonmetals = [range(5, 8 + 1), range(14, 16 + 1), range(33, 34 + 1), [52]]
-for row, nonmetals_row in enumerate(nonmetals):
-    for col, z in enumerate(nonmetals_row):
-        _ELEMENTS[z] = ((row + 1, col + 13 + row), COLOR_NON_METALS)
+    ## Non Metals
+    nonmetals = [range(5, 8 + 1), range(14, 16 + 1), range(33, 34 + 1), [52]]
+    for row, nonmetals_row in enumerate(nonmetals):
+        for col, z in enumerate(nonmetals_row):
+            e[z] = ((row + 1, col + 13 + row), COLOR_NON_METALS)
 
-## Other Metals
-othermetals = [[13], range(31, 32 + 1), range(49, 51 + 1), range(81, 84 + 1)]
-for row, othermetals_row in enumerate(othermetals):
-    for col, z in enumerate(othermetals_row):
-        _ELEMENTS[z] = ((row + 2, col + 13), COLOR_OTHER_METALS)
+    ## Other Metals
+    othermetals = [[13], range(31, 32 + 1), range(49, 51 + 1), range(81, 84 + 1)]
+    for row, othermetals_row in enumerate(othermetals):
+        for col, z in enumerate(othermetals_row):
+            e[z] = ((row + 2, col + 13), COLOR_OTHER_METALS)
 
-## Halogens
-for row, z in enumerate([9, 17, 35, 53, 85]):
-    _ELEMENTS[z] = ((row + 1, 17), COLOR_HALOGENS)
+    ## Halogens
+    for row, z in enumerate([9, 17, 35, 53, 85]):
+        e[z] = ((row + 1, 17), COLOR_HALOGENS)
 
-## Inert gas
-for row, z in enumerate([2, 10, 18, 36, 54, 86]):
-    _ELEMENTS[z] = ((row, 18), COLOR_INERT_GAS)
+    ## Inert gas
+    for row, z in enumerate([2, 10, 18, 36, 54, 86]):
+        e[z] = ((row, 18), COLOR_INERT_GAS)
 
-## Lanthanides
-for col, z in enumerate(range(57, 70 + 1)):
-    _ELEMENTS[z] = ((8, col + 3), COLOR_LANTHANIDES)
+    ## Lanthanides
+    for col, z in enumerate(range(57, 70 + 1)):
+        e[z] = ((8, col + 3), COLOR_LANTHANIDES)
 
-## Actinides
-for col, z in enumerate(range(89, 102 + 1)):
-    _ELEMENTS[z] = ((9, col + 3), COLOR_ACTINIDES)
+    ## Actinides
+    for col, z in enumerate(range(89, 102 + 1)):
+        e[z] = ((9, col + 3), COLOR_ACTINIDES)
+
+    return e
+
+_ELEMENTS = _setup_elements()
 
 # Command
 ElementEnterEvent, EVT_ENTER_ELEMENT = wx.lib.newevent.NewCommandEvent()
