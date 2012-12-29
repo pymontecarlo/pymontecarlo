@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 # Write stdout and stderr to file if main is frozen
 import os, sys, imp
 
-os.chdir('/home/ppinard/tmp')
+#os.chdir('/home/ppinard/tmp')
 
 if hasattr(sys, "frozen") or hasattr(sys, "importers") or imp.is_frozen("__main__"):
     filepath = os.path.join(os.path.expanduser('~'), '.pymontecarlo', "stdout.log")
@@ -43,11 +43,9 @@ from wx.lib.pubsub import Publisher as pub
 
 # Local modules.
 from pymontecarlo.ui.gui.controller import controller
-from pymontecarlo.ui.gui.output.manager import ResultPanelManager
-from pymontecarlo.ui.gui.output.result import UnknownResultPanel
+from pymontecarlo.ui.gui.output.result import ResultPanelManager, UnknownResultPanel
 from pymontecarlo.ui.gui.configure import ConfigureDialog
 from pymontecarlo.ui.gui.art import ArtProvider
-import pymontecarlo.ui.gui.output.result #@UnusedImport
 
 from wxtools2.tree import PyTreeCtrl
 from wxtools2.menu import popupmenu
