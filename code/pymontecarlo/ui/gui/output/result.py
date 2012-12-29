@@ -708,7 +708,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         # Variables
         self._result = result
         self._params = _TrajectoryResultParameters(len(result)) # default
-        self._geometrygl = GeometryGLManager.get(options.geometry)
+        self._geometrygl = GeometryGLManager.get(options.geometry.__class__)(options.geometry)
         self._glists = []
 
         # Customization

@@ -28,41 +28,12 @@ from OpenGL import GLU
 # Local modules.
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
+from pymontecarlo.util.manager import ClassManager
 
 # Globals and constants variables.
 from pymontecarlo.ui.gui.color import COLORS
 
-class _GeometryGLManager(object):
-
-    def __init__(self):
-        self._geometries = {}
-
-    def register(self, geometry, geometrygl):
-        """
-        Associates a :class:`_Geometry` class with a :class:`_GeometryGL` class. 
-        
-        Raises :exc:`ValueError` if the specified :class:`_Geometry` is already 
-        associated with a different class. 
-        
-        :arg geometry: geometry class
-        :arg geometrygl: geometry GL class
-        """
-        if geometry in self._geometries and self._geometries.get(geometry) != geometrygl:
-            raise ValueError, 'A geometry GL (%s) is already registered with the geometry (%s).' % \
-                (self._geometries[geometry].__name__, geometry.__name__)
-
-        self._geometries[geometry] = geometrygl
-
-    def get(self, geometry):
-        """
-        Returns a :class:`_GeometrGL` object for the specified geometry.
-        """
-        if geometry.__class__ not in self._geometries:
-            raise ValueError, 'No geometry GL found for geometry (%s). Please register it first.' % \
-                geometry.__class__.__name__
-        return self._geometries[geometry.__class__](geometry)
-
-GeometryGLManager = _GeometryGLManager()
+GeometryGLManager = ClassManager()
 
 class _GeometryGL(object):
 
