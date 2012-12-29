@@ -19,12 +19,14 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import re
 
 # Third party modules.
 
 # Local modules.
 
 # Globals and constants variables.
+_REGEX_CAMEL_CASE = re.compile('([a-z0-9])([A-Z])')
 
 def human_time(time_s):
     """
@@ -56,3 +58,6 @@ def human_time(time_s):
         out.append('%i sec' % time_s)
 
     return ' '.join(out)
+
+def camelcase_to_words(text):
+    return _REGEX_CAMEL_CASE.sub(r'\1 \2', text)

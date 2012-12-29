@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.human import human_time
+from pymontecarlo.util.human import human_time, camelcase_to_words
 
 # Globals and constants variables.
 
@@ -43,6 +43,11 @@ class TestHuman(unittest.TestCase):
         self.assertEqual('1 day 1 hr', human_time(90000))
         self.assertEqual('1 day 1 hr 1 min', human_time(90060))
         self.assertEqual('1 day 1 hr 1 min 1 sec', human_time(90061))
+
+    def testcamelcase_to_words(self):
+        self.assertEqual('Abc Def', camelcase_to_words('AbcDef'))
+        self.assertEqual('Abc DEF', camelcase_to_words('AbcDEF'))
+        self.assertEqual('Abc De F', camelcase_to_words('AbcDeF'))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
