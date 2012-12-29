@@ -45,9 +45,9 @@ from pymontecarlo.output.result import \
     (PhotonIntensityResult, TrajectoryResult, TimeResult, ElectronFractionResult,
      PhotonSpectrumResult)
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
-from pymontecarlo.ui.gui.output.manager import ResultPanelManager
 import pymontecarlo.util.physics as physics
 from pymontecarlo.util.human import human_time
+from pymontecarlo.util.manager import ClassManager
 
 from wxtools2.wxopengl import GLCanvas, GLCanvasToolbar
 from wxtools2.floatspin import FloatSpin
@@ -126,6 +126,8 @@ _ICON_COPY = PyEmbeddedImage(
     "ZTYPVxwGIS5fuoJOp4O9xj4T0Re1B2UjCgM5XHXajjyAiOAHPgLXRaOxh7Z3tLn84OHyWEAQ"
     "BlLXdTAziAhCCOi6rn5CCASBD8/rorG/x73e6anv99cZ/HTh1kI0FlD/Xf+wtb19jZCcfSIN"
     "RGAigmQJKSVkLBFGoXnSO/H9IFh59fJ14fPkH+Ui+1O1qExzAAAAAElFTkSuQmCC")
+
+ResultPanelManager = ClassManager()
 
 class _ResultPanel(wx.Panel):
 
