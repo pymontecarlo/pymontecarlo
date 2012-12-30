@@ -130,7 +130,7 @@ def mass_density(z):
     """
     try:
         return DENSITIES[z - 1]
-    except KeyError:
+    except IndexError:
         return ValueError, "No mass density for atomic number: %i." % z
 
 def atomic_mass(z):
@@ -142,7 +142,7 @@ def atomic_mass(z):
     """
     try:
         return ATOMIC_MASSES[z - 1]
-    except KeyError:
+    except IndexError:
         return ValueError, "No atomic mass for atomic number: %i." % z
 
 def symbol(z):
@@ -153,7 +153,7 @@ def symbol(z):
     """
     try:
         return SYMBOLS[z - 1]
-    except KeyError:
+    except IndexError:
         return ValueError, "Unknown atomic number: %i." % z
 
 def name(z):
@@ -164,7 +164,7 @@ def name(z):
     """
     try:
         return NAMES_EN[z - 1]
-    except KeyError:
+    except IndexError:
         return ValueError, "Unknown atomic number: %i." % z
 
 def atomic_number(symbol=None, name=None):
@@ -190,5 +190,5 @@ def excitation_energy(z):
     """
     try:
         return EXCITATION_ENERGIES[z - 1]
-    except KeyError:
+    except IndexError:
         return ValueError, "No excitation energy for atomic number: %i." % z
