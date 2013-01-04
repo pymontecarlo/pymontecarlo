@@ -542,7 +542,7 @@ class PhiRhoZResult(_Result):
             transition = from_string(str(parts[0]))
             suffix = parts[1]
 
-            data.setdefault(transition, {})[suffix] = datum
+            data.setdefault(transition, {})[suffix] = np.copy(datum)
 
         # Construct distributions
         distributions = {}
