@@ -61,7 +61,27 @@ from pymontecarlo.program.monaco.io.exporter import Exporter
 from pymontecarlo.program.monaco.io.importer import Importer
 
 # Globals and constants variables.
+from pymontecarlo.input.model import \
+    (MASS_ABSORPTION_COEFFICIENT, IONIZATION_CROSS_SECTION,
+     IONIZATION_POTENTIAL)
+
 _WINKEY = r'Software\GfE\Monaco\3.0'
+
+_MASS_ABSORPTION_COEFFICIENT_REF = \
+    {MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989: 1,
+     MASS_ABSORPTION_COEFFICIENT.henke1982: 2}
+
+_IONIZATION_CROSS_SECTION_REF = \
+    {IONIZATION_CROSS_SECTION.gryzinsky_bethe: 1,
+     IONIZATION_CROSS_SECTION.gryzinsky: 2,
+     IONIZATION_CROSS_SECTION.hutchins1974: 3,
+     IONIZATION_CROSS_SECTION.worthington_tomlin1956: 4}
+
+_IONIZATION_POTENTIAL_REF = \
+    {IONIZATION_POTENTIAL.duncumb_decasa1969: 1,
+     IONIZATION_POTENTIAL.gryzinski: 2,
+     IONIZATION_POTENTIAL.springer1967: 3,
+     IONIZATION_POTENTIAL.sternheimer1964: 4}
 
 def _create_mcb(monaco_basedir, jobdir):
     """
@@ -182,9 +202,10 @@ class Worker(_Worker):
         transitions = self._extract_transitions(options)
 
         # Extract intensities if photon intensity detectors
-        detectors = options.detectors.findall(PhotonIntensityDetector).values()
-        for detector in detectors:
-            self._run_intensities(options, detector, transitions)
+        detectors = options.detectors.findall(PhotonIntensityDetector)
+        for detector_key, detector in detectors.iteritems():
+            self._run_intensities(jobdir, options, detector_key, detector,
+                                  transitions)
 
     def _run_batch(self, jobdir):
         # Create batch file
@@ -228,10 +249,21 @@ class Worker(_Worker):
 
     def _run_intensities(self, jobdir, options, detector_key, detector,
                          transitions):
+        # Find models
+        model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
+        mac_id = _MASS_ABSORPTION_COEFFICIENT_REF.get(model, 0)
+
+        model = options.models.find(IONIZATION_CROSS_SECTION.type)
+        ics_id = _IONIZATION_CROSS_SECTION_REF.get(model, 0)
+
+        model = options.models.find(IONIZATION_POTENTIAL.type)
+        ip_id = _IONIZATION_POTENTIAL_REF.get(model, 0)
+
         # Launch mccli32.exe
-        args = [self._mccli32exe, options.name,
-                str(detector.takeoffangle_deg)]
+        args = [self._mccli32exe, "int", options.name,
+                detector.takeoffangle_deg, mac_id, ics_id, ip_id]
         args += transitions
+        args = map(str, args)
         logging.debug('Launching %s', ' '.join(args))
 
         self._status = "Running Monaco's mccli32.exe"

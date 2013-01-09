@@ -226,11 +226,16 @@ IONIZATION_CROSS_SECTION.brown_powell = Model('Brown Powell')
 IONIZATION_CROSS_SECTION.casnati1982 = \
     Model('Casnati 1982', "Casnati82 - E. Casnati, A. Tartari & C. Baraldi, J Phys B15 (1982) 155 as quoted by C. Powell in Ultramicroscopy 28 (1989) 24-31")
 IONIZATION_CROSS_SECTION.gryzinsky = Model('Gryzinsky')
+IONIZATION_CROSS_SECTION.gryzinsky_bethe = Model('Gryzinsky + Bethe')
 IONIZATION_CROSS_SECTION.jakoby = Model('Jakoby')
 IONIZATION_CROSS_SECTION.bote_salvat2008 = \
     Model('Bote and Salvat 2008', 'Bote and Salvat (2008)')
 IONIZATION_CROSS_SECTION.dijkstra_heijliger1998 = \
     Model("Dijkstra and Heijliger 1998 (PROZA96)", "G.F. Bastin, J. M. Dijkstra and H.J.M. Heijligers (1998). X-Ray Spectrometry, 27, pp. 3-10")
+IONIZATION_CROSS_SECTION.worthington_tomlin1956 = \
+    Model('Worthington and Tomlin 1956', 'C.R. Worthington and S.G. Tomlin (1956) The intensity of emission of characteristic x-radiation, Proc. Phys. Soc. A-69, p.401')
+IONIZATION_CROSS_SECTION.hutchins1974 = \
+    Model('Hutchins 1974', 'G.A. Hutchins (1974) Electron Probe Microanalysis, in P.F. Kane and G.B. Larrabee, Characterisation of solid surfaces, Plenum Press, New York, p. 441')
 
 #-------------------------------------------------------------------------------
 
@@ -267,6 +272,7 @@ IONIZATION_POTENTIAL.bloch1933 = \
 IONIZATION_POTENTIAL.sternheimer1964 = \
     Model("Sternheimer 1964", "Sternheimer quoted in Berger MJ, Seltzer S. NASA Technical Publication SP-4012 (1964)")
 IONIZATION_POTENTIAL.hovington = Model('Hovington')
+IONIZATION_POTENTIAL.gryzinski = Model('Gryzinski')
 
 #-------------------------------------------------------------------------------
 
