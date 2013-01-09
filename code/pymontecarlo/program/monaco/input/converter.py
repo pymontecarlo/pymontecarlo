@@ -31,11 +31,7 @@ from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import PencilBeam
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
-    (_DelimitedDetector,
-#     PhiRhoZDetector,
-     PhotonIntensityDetector,
-     )
+from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
@@ -80,38 +76,6 @@ class Converter(_Converter):
             options.geometry.tilt_rad = 0.0
             message = "Geometry cannot be tilted in Monaco, only the beam direction. Tilt set to 0.0 deg."
             warnings.warn(message, ConversionWarning)
-
-    def _convert_detectors(self, options):
-        _Converter._convert_detectors(self, options)
-
-        # There can be only one detector of each type
-        for clasz in self.DETECTORS:
-            if len(options.detectors.findall(clasz)) > 1:
-                raise ConversionException, "There can only one '%s' detector" % clasz.__name__
-
-        # Assert elevation and azimuth of delimited detectors are equal
-        detectors = options.detectors.findall(_DelimitedDetector).values()
-        if not detectors:
-            return
-
-        detector_class = detectors[0].__class__.__name__
-        elevation_rad = detectors[0].elevation_rad
-        azimuth_rad = detectors[0].azimuth_rad
-
-        for detector in detectors[1:]:
-            if abs(elevation_rad[0] - detector.elevation_rad[0]) > 1e-6 or \
-                    abs(elevation_rad[1] - detector.elevation_rad[1]) > 1e-6:
-                raise ConversionException, \
-                    "The elevation of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
-                        (detector_class, str(elevation_rad),
-                         detector.__class__.__name__, str(detector.elevation_rad))
-
-            if abs(azimuth_rad[0] - detector.azimuth_rad[0]) > 1e-6 or \
-                    abs(azimuth_rad[1] - detector.azimuth_rad[1]) > 1e-6:
-                raise ConversionException, \
-                    "The azimuth of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
-                        (detector_class, str(elevation_rad),
-                         detector.__class__.__name__, str(detector.elevation_rad))
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)

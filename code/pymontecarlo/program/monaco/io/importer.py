@@ -58,10 +58,11 @@ class Importer(_Importer):
         return self._import_results(options, jobdir)
 
     def _detector_photon_intensity(self, options, name, detector, jobdir):
-        intensities_filepath = os.path.join(jobdir, 'intensities.txt')
+        intensities_filepath = os.path.join(jobdir, 'intensities_%s.txt' % name)
         if not os.path.exists(intensities_filepath):
             raise ImporterException, \
-                'Result file "intensites.txt" not found in job directory (%s)' % jobdir
+                'Result file "intensites_%s.txt" not found in job directory (%s)' % \
+                    (name, jobdir)
 
         intensities = {}
 

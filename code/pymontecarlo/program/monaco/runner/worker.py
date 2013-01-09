@@ -144,13 +144,6 @@ class Worker(_Worker):
         return jobdir
 
     def _run(self, options):
-        # Create job directory and simulation files
-        jobdir = self._create(options, self._workdir)
-
-        # Create batch file
-        batch_filepath = _create_mcb(self._monaco_basedir, jobdir)
-        logging.debug("Creating batch file")
-
         # Setup registry (in case it is not already set)
         try:
             key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, _WINKEY,
@@ -161,6 +154,25 @@ class Worker(_Worker):
             _winreg.SetValueEx(key, "SysPath", 0, _winreg.REG_SZ,
                                self._monaco_basedir)
         logging.debug("Setup Monaco path in registry")
+
+        # Create job directory and simulation files
+        jobdir = self._create(options, self._workdir)
+
+        # Run simulation (in batch)
+        self._run_batch(jobdir)
+
+        # Extract transitions
+        transitions = self._extract_transitions(options)
+
+        # Extract intensities if photon intensity detectors
+        detectors = options.detectors.findall(PhotonIntensityDetector).values()
+        for detector in detectors:
+            self._run_intensities(options, detector, transitions)
+
+    def _run_batch(self, jobdir):
+        # Create batch file
+        batch_filepath = _create_mcb(self._monaco_basedir, jobdir)
+        logging.debug("Creating batch file")
 
         # Launch mcsim32.exe
         args = [self._mcsim32exe]
@@ -179,41 +191,47 @@ class Worker(_Worker):
         os.remove(batch_filepath)
         logging.debug('Remove batch file')
 
-        # Extract intensities
-        dets = options.detectors.findall(PhotonIntensityDetector).values()
-        if dets:
-            det = dets[0]
+    def _extract_transitions(self, options):
+        zs = set()
+        for material in options.geometry.get_materials():
+            zs.update(material.composition.keys())
 
-            # List transitions to extract
-            zs = set()
-            for material in options.geometry.get_materials():
-                zs.update(material.composition.keys())
+        transitions = []
+        for z in sorted(zs):
+            for group in [Ka, La, Ma]:
+                try:
+                    transition = group(z)
+                except ValueError: # Does not exist
+                    continue
 
-            transitions = []
-            for z in sorted(zs):
-                for group in [Ka, La, Ma]:
-                    try:
-                        transition = group(z)
-                    except ValueError: # Does not exist
-                        continue
+                if transition.most_probable.energy_eV < options.beam.energy_eV:
+                    transitions.append(str(transition))
 
-                    if transition.most_probable.energy_eV < options.beam.energy_eV:
-                        transitions.append(str(transition))
+        return transitions
 
-            # Launch mccli32.exe
-            args = [self._mccli32exe, options.name,
-                    str(det.takeoffangle_deg)]
-            args += transitions
-            logging.debug('Launching %s', ' '.join(args))
+    def _run_intensities(self, jobdir, options, detector_key, detector,
+                         transitions):
+        # Launch mccli32.exe
+        args = [self._mccli32exe, options.name,
+                str(detector.takeoffangle_deg)]
+        args += transitions
+        logging.debug('Launching %s', ' '.join(args))
 
-            self._status = "Running Monaco's mccli32.exe"
+        self._status = "Running Monaco's mccli32.exe"
 
-            self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                             cwd=self._monaco_basedir)
-            self._process.wait()
-            self._process = None
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                         cwd=self._monaco_basedir)
+        self._process.wait()
+        self._process = None
 
-            logging.debug("Monaco's mcsim32.exe ended")
+        logging.debug("Monaco's mcsim32.exe ended")
+
+        # Rename intensities.txt
+        logging.debug("Appending detector key to intensities.txt")
+
+        src_filepath = os.path.join(jobdir, 'intensities.txt')
+        dst_filepath = os.path.join(jobdir, 'intensities_%s.txt' % detector_key)
+        shutil.move(src_filepath, dst_filepath)
 
     def _save_results(self, options, h5filepath):
         jobdir = self._get_dirpath(options)
