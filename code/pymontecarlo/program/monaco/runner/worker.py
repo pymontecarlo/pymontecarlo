@@ -26,7 +26,24 @@ import logging
 import shutil
 import subprocess
 
-import _winreg
+try:
+    import _winreg
+except ImportError:
+    class WinReg:
+        HKEY_CURRENT_USER = None
+        KEY_ALL_ACCESS = None
+        REG_SZ = None
+
+        def OpenKey(self, key, sub_key, res, sam):
+            pass
+
+        def CreateKey(self, key, sub_key):
+            pass
+
+        def SetValueEx(self, key, value_name, reserved, type, value):
+            pass
+
+    _winreg = WinReg()
 
 # Third party modules.
 
