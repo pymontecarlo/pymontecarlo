@@ -84,6 +84,13 @@ class Converter(_Converter):
             message = "Geometry cannot be tilted in Monaco, only the beam direction. Tilt set to 0.0 deg."
             warnings.warn(message, ConversionWarning)
 
+        for material in options.geometry.get_materials():
+            if material.absorption_energy_electron_eV < 200.0:
+                material.absorption_energy_electron_eV = 200.0
+                message = 'Absorption energy of material %s is set to lower limit of Monaco: 200 eV' % \
+                    material.name
+                warnings.warn(message, ConversionWarning)
+
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
 
