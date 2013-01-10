@@ -229,6 +229,11 @@ class Worker(_Worker):
         os.remove(batch_filepath)
         logging.debug('Remove batch file')
 
+        # Check that simulation ran
+        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+        if not os.path.exists(nez_filepath):
+            raise RuntimeError, 'Simulation did not run properly'
+
     def _extract_transitions(self, options):
         zs = set()
         for material in options.geometry.get_materials():
@@ -276,11 +281,10 @@ class Worker(_Worker):
         logging.debug("Monaco's mcsim32.exe ended")
 
         # Rename intensities.txt
-        logging.debug("Appending detector key to intensities.txt")
-
         src_filepath = os.path.join(jobdir, 'intensities.txt')
         dst_filepath = os.path.join(jobdir, 'intensities_%s.txt' % detector_key)
         shutil.move(src_filepath, dst_filepath)
+        logging.debug("Appending detector key to intensities.txt")
 
     def _save_results(self, options, h5filepath):
         jobdir = self._get_dirpath(options)
