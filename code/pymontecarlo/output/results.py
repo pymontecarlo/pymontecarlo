@@ -35,7 +35,7 @@ import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 
-VERSION = '4'
+VERSION = '5'
 
 class Results(Mapping):
 

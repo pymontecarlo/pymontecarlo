@@ -68,6 +68,7 @@ class Updater(_Updater):
         self._updaters[2] = self._update_version2
         self._updaters[3] = self._update_version3
         self._updaters[4] = self._update_version4
+        self._updaters[5] = self._update_version5
 
     def _get_version(self, filepath):
         if is_zipfile(filepath):
@@ -79,7 +80,10 @@ class Updater(_Updater):
             except:
                 return 0
         else:
-            return h5py.File(filepath, 'r').attrs['version']
+            hdf5file = h5py.File(filepath, 'r')
+            version = int(hdf5file.attrs['version'])
+            hdf5file.close()
+            return version
 
     def _validate(self, filepath):
         Results.load(filepath)
@@ -407,8 +411,41 @@ class Updater(_Updater):
 
         oldzip.close()
 
-        return newfilepath
+        return self._update_version4(newfilepath)
 
     def _update_version4(self, filepath):
+        """
+        Update structure of PRZ results in HDF5.
+        """
+        hdf5file = h5py.File(filepath, 'r+')
+
+        # Find PRZ result (if any)
+        przgroups = []
+
+        for result_group in hdf5file.itervalues():
+            if result_group.attrs.get('_class') == 'PhiRhoZResult':
+                przgroups.append(result_group)
+
+        # Convert datasets
+        for przgroup in przgroups:
+            for name, dataset in przgroup.items():
+                if '+' not in name:
+                    continue
+
+                transition, suffix = name.split('+')
+
+                tgroup = przgroup.require_group(transition)
+                tgroup.create_dataset(suffix, data=np.copy(dataset))
+
+                del przgroup[name] # delete dataset
+
+        # Change version
+        hdf5file.attrs['version'] = '5'
+
+        hdf5file.close()
+
+        return self._update_version5(filepath)
+
+    def _update_version5(self, filepath):
         logging.info('Nothing to update')
         return filepath

@@ -35,11 +35,7 @@ class TestUpdater(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-    def testskeleton(self):
-        self.assertTrue(True)
 
     def testupdate_noversion0(self):
         src = os.path.join(self.testdata, 'oldresults0.xml')
@@ -77,6 +73,13 @@ class TestUpdater(TestCase):
     def testupdate_version3(self):
         src = os.path.join(self.testdata, 'oldresults3.zip')
         dst = os.path.join(self.tmpdir, 'oldresults3.zip')
+        shutil.copy(src, dst)
+
+        self.updater.update(dst)
+
+    def testupdate_version4(self):
+        src = os.path.join(self.testdata, 'oldresults4.h5')
+        dst = os.path.join(self.tmpdir, 'oldresults4.h5')
         shutil.copy(src, dst)
 
         self.updater.update(dst)

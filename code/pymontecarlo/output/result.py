@@ -535,14 +535,12 @@ class PhiRhoZResult(_Result):
     def __loadhdf5__(cls, hdf5file, key):
         hdf5group = hdf5file[key]
 
-        # Read datasets
         data = {}
-        for name, datum in hdf5group.iteritems():
-            parts = name.split('+')
-            transition = from_string(str(parts[0]))
-            suffix = parts[1]
+        for transition, group in hdf5group.iteritems():
+            transition = from_string(str(transition))
 
-            data.setdefault(transition, {})[suffix] = np.copy(datum)
+            for suffix, dataset in group.iteritems():
+                data.setdefault(transition, {})[suffix] = np.copy(dataset)
 
         # Construct distributions
         distributions = {}
@@ -552,17 +550,15 @@ class PhiRhoZResult(_Result):
         return cls(distributions)
 
     def __savehdf5__(self, hdf5file, key):
-        distributions = [('gnf', False, False), ('gt', False, True),
-                         ('enf', True, False), ('et', True, True)]
-
         hdf5group = hdf5file.require_group(key)
 
-        for suffix, absorption, fluorescence in distributions:
-            for transition, distribution in \
-                    self.iter_transitions(absorption, fluorescence):
+        for transition in self._distributions.iterkeys():
+            group = hdf5group.create_group(str(transition))
 
-                name = str(transition) + "+" + suffix
-                hdf5group.create_dataset(name, data=distribution)
+            group.create_dataset("gnf", data=self.get(transition, False, False))
+            group.create_dataset("gt", data=self.get(transition, False, True))
+            group.create_dataset("enf", data=self.get(transition, True, False))
+            group.create_dataset("et", data=self.get(transition, True, True))
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """

@@ -434,26 +434,25 @@ class TestPhiRhoZResult(TestCase):
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det5')
 
-
-        phirhoz = hdf5file['det5']['Cu La1+gnf']
+        phirhoz = hdf5file['det5']['Cu La1']['gnf']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
 
-        phirhoz = hdf5file['det5']['Cu La1+gt']
+        phirhoz = hdf5file['det5']['Cu La1']['gt']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
 
-        phirhoz = hdf5file['det5']['Cu La1+enf']
+        phirhoz = hdf5file['det5']['Cu La1']['enf']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.21, phirhoz[0][2], 4)
 
-        phirhoz = hdf5file['det5']['Cu La1+et']
+        phirhoz = hdf5file['det5']['Cu La1']['et']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
