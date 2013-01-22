@@ -350,3 +350,12 @@ MASS_ABSORPTION_COEFFICIENT.thinh_leroux1979 = \
     Model('Thinh and Leroux' , 'Thinh and Leroux (1979)')
 MASS_ABSORPTION_COEFFICIENT.llnl1989 = \
     Model('LLNL Evaluated Photon Data Library', 'Lawrence Livermore National Laboratory. (1989). Tables and graphs of photon-interaction cross sections from 10 eV to 100 GeV derived from the LLNL evaluated photon data library EPDL. Livermore, CA: Cullen, D., Chen, M., Hubbell, J., Perkins, S., Plechaty, E., Rathkopf, J., & Scofield, J..')
+
+#-------------------------------------------------------------------------------
+
+FLUORESCENCE_TYPE = ModelType("fluorescence")
+
+FLUORESCENCE = ModelCategory(FLUORESCENCE_TYPE)
+FLUORESCENCE.none = Model('no fluorescence')
+FLUORESCENCE.fluorescence = Model('fluorescence')
+FLUORESCENCE.fluorescence_compton = Model('fluorescence with Compton')

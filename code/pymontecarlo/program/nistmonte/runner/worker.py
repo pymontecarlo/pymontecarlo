@@ -67,6 +67,7 @@ class Worker(_Worker):
             return # Exit if no options need to be run
 
         args = [self._java_exec]
+        args += ['-Djava.library.path=%s' % os.path.dirname(self._jar_path)] # for native libraries
         args += ['-jar', self._jar_path]
         args += ['-o', self._workdir]
         args += [xmlfilepath]
@@ -89,5 +90,5 @@ class Worker(_Worker):
             raise RuntimeError, "An error occured during the simulation"
 
     def _save_results(self, options, zipfilepath):
-        work_zipfilepath = self._get_filepath(options, self._workdir, 'zip')
-        shutil.copy(work_zipfilepath, zipfilepath)
+        work_h5filepath = self._get_filepath(options, self._workdir, 'h5')
+        shutil.copy(work_h5filepath, zipfilepath)

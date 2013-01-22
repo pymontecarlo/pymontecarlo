@@ -19,12 +19,13 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import warnings
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.converter import \
-    Converter as _Converter, ConversionException
+    Converter as _Converter, ConversionException, ConversionWarning
 
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
@@ -32,38 +33,41 @@ from pymontecarlo.input.geometry import \
     Substrate, MultiLayers, GrainBoundaries
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
-    (_DelimitedDetector,
-     BackscatteredElectronAzimuthalAngularDetector,
-     BackscatteredElectronEnergyDetector,
-     BackscatteredElectronPolarAngularDetector,
+    (
+#     BackscatteredElectronAzimuthalAngularDetector,
+#     BackscatteredElectronEnergyDetector,
+#     BackscatteredElectronPolarAngularDetector,
      PhotonIntensityDetector,
-     PhotonSpectrumDetector,
-     TransmittedElectronAzimuthalAngularDetector,
-     TransmittedElectronEnergyDetector,
-     TransmittedElectronPolarAngularDetector,
+#     PhotonSpectrumDetector,
+#     TransmittedElectronAzimuthalAngularDetector,
+#     TransmittedElectronEnergyDetector,
+#     TransmittedElectronPolarAngularDetector,
      TimeDetector,
-     ElectronFractionDetector)
+#     ElectronFractionDetector
+     )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
-     ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
+     ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT, FLUORESCENCE)
 
 # Globals and constants variables.
 
 class Converter(_Converter):
     BEAMS = [GaussianBeam, PencilBeam]
     GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries]
-    DETECTORS = [BackscatteredElectronAzimuthalAngularDetector,
-                 BackscatteredElectronEnergyDetector,
-                 BackscatteredElectronPolarAngularDetector,
+    DETECTORS = [
+                 #BackscatteredElectronAzimuthalAngularDetector,
+                 #BackscatteredElectronEnergyDetector,
+                 #BackscatteredElectronPolarAngularDetector,
                  #EnergyDepositedSpatialDetector,
                  #PhiRhoZDetector,
                  PhotonIntensityDetector,
-                 PhotonSpectrumDetector,
-                 TransmittedElectronAzimuthalAngularDetector,
-                 TransmittedElectronEnergyDetector,
-                 TransmittedElectronPolarAngularDetector,
+                 #PhotonSpectrumDetector,
+                 #TransmittedElectronAzimuthalAngularDetector,
+                 #TransmittedElectronEnergyDetector,
+                 #TransmittedElectronPolarAngularDetector,
                  TimeDetector,
-                 ElectronFractionDetector]
+                 #ElectronFractionDetector
+                 ]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.rutherford,
@@ -90,12 +94,16 @@ class Converter(_Converter):
                                                  MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11_dtsa,
                                                  MASS_ABSORPTION_COEFFICIENT.henke1993,
                                                  MASS_ABSORPTION_COEFFICIENT.none,
-                                                 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991]}
+                                                 MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991],
+              FLUORESCENCE.type: [FLUORESCENCE.none,
+                                  FLUORESCENCE.fluorescence,
+                                  FLUORESCENCE.fluorescence_compton]}
     DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.elsepa2005,
                       IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.bote_salvat2008,
                       IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.berger_seltzer1983,
                       ENERGY_LOSS.type: ENERGY_LOSS.joy_luo1989,
-                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.chantler2005}
+                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.chantler2005,
+                      FLUORESCENCE.type: FLUORESCENCE.none}
 
 
     def __init__(self):
@@ -110,29 +118,16 @@ class Converter(_Converter):
         if options.beam.particle is not ELECTRON:
             raise ConversionException, "Beam particle must be ELECTRON"
 
-    def _convert_detectors(self, options):
-        _Converter._convert_detectors(self, options)
+        if options.beam.energy_eV < 100:
+            raise ConversionException, "Beam energy must be greater or equal to 100 eV"
 
-        # Assert delimited detector have the same elevation and azimuth angles
-        detectors = options.detectors.findall(_DelimitedDetector).items()
-        if len(detectors) <= 1:
-            return
+        if options.beam.origin_m == (0, 0, 1):
+            options.beam.origin_m = (0, 0, 0.09)
+            message = 'Change origin position to fit inside NISTMonte microscope chamber'
+            warnings.warn(message, ConversionWarning)
 
-        elevation = detectors[0][1].elevation_rad
-        azimuth = detectors[0][1].azimuth_rad
-
-        for key, detector in detectors[1:]:
-            if abs(detector.elevation_rad[0] - elevation[0]) > 1e-6 or \
-                    abs(detector.elevation_rad[1] - elevation[1]) > 1e-6:
-                raise ConversionException, \
-                    "The elevation of the detector '%s' (%s) should be the same as the others (%s)" % \
-                    (key, str(detector.elevation_rad), str(elevation))
-
-            if abs(detector.azimuth_rad[0] - azimuth[0]) > 1e-6 or \
-                    abs(detector.azimuth_rad[1] - azimuth[1]) > 1e-6:
-                raise ConversionException, \
-                    "The azimuth of the detector '%s' (%s) should be the same as the others (%s)" % \
-                    (key, str(detector.azimuth_rad), str(azimuth))
+        if any(map(lambda p: p >= 0.1, options.beam.origin_m)):
+            raise ConversionException, "Origin must be within a sphere with radius of 0.1 m"
 
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)

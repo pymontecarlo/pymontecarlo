@@ -20,7 +20,7 @@ from math import radians
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import PhotonSpectrumDetector
+from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.program.nistmonte.input.converter import Converter, ConversionException
 
@@ -43,18 +43,18 @@ class TestConverter(TestCase):
     def testconvert1(self):
         # Base options
         ops = Options("Test")
+        ops.beam.origin_m = (0.0, 0.0, 0.09)
         ops.limits.add(ShowersLimit(1234))
 
-        det = PhotonSpectrumDetector((radians(35), radians(45)),
-                                     (0, radians(360.0)),
-                                     (0.0, 1234), 100)
+        det = PhotonIntensityDetector((radians(35), radians(45)),
+                                      (0, radians(360.0)))
         ops.detectors['det1'] = det
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
             self.converter.convert(ops)
 
-        self.assertEqual(5, len(ws))
+        self.assertEqual(6, len(ws))
 
         self.assertEqual(1, len(ops.detectors))
 
@@ -62,33 +62,15 @@ class TestConverter(TestCase):
         limit = ops.limits.find(ShowersLimit)
         self.assertEqual(1234, limit.showers)
 
-        self.assertEqual(5, len(ops.models))
+        self.assertEqual(6, len(ops.models))
 
     def testconvert2(self):
         # Base options
         ops = Options("Test")
+        ops.beam.origin_m = (0.0, 0.0, 0.09)
 
         # No showers limit
         self.assertRaises(ConversionException, self.converter.convert, ops)
-
-    def testconvert3(self):
-        # Base options
-        ops = Options("Test")
-        ops.limits.add(ShowersLimit(1234))
-
-        det = PhotonSpectrumDetector((radians(35), radians(45)),
-                                     (0, radians(360.0)),
-                                     (0.0, 1234), 100)
-        ops.detectors['det1'] = det
-
-        det = PhotonSpectrumDetector((radians(30), radians(50)),
-                                     (0, radians(360.0)),
-                                     (0.0, 1234), 100)
-        ops.detectors['det2'] = det
-
-        # Two detectors should have the same elevation
-        self.assertRaises(ConversionException, self.converter.convert, ops)
-
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

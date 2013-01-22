@@ -43,7 +43,7 @@ class _NistMonteConfigurePanel(ConfigurePanel):
             filetypes = [('Application files', '*')]
         self._brw_java = FileBrowseCtrl(self, filetypes=filetypes)
 
-        lbl_jar = wx.StaticText(self, label='Path to NISTMonte jar')
+        lbl_jar = wx.StaticText(self, label='Path to pymontecarlo-nistmonte jar')
 
         filetypes = [('Jar files (*.jar)', 'jar')]
         self._brw_jar = FileBrowseCtrl(self, filetypes=filetypes)
@@ -85,7 +85,7 @@ class _NistMonteConfigurePanel(ConfigurePanel):
             return False
 
         if not self._brw_jar.GetPath():
-            show_error_dialog(self, 'Please specify the NISTMonte jar')
+            show_error_dialog(self, 'Please specify the pymontecarlo-nistmonte jar')
             return False
 
         return True
