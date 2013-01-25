@@ -26,7 +26,10 @@ from pymontecarlo.program._penelope.input.material import pure
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 
 # Globals and constants variables.
-from pymontecarlo.program._penelope.input.geometry import SIDEPOINTER_NEGATIVE, SIDEPOINTER_POSITIVE
+from pymontecarlo.program._penelope.input.geometry import \
+    SIDEPOINTER_NEGATIVE, SIDEPOINTER_POSITIVE
+from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.input.collision import HARD_BREMSSTRAHLUNG_EMISSION
 
 class TestRotation(TestCase):
     GEOFILE = ['  OMEGA=(+1.000000000000000E+00,   0) DEG          (DEFAULT=0.0)',
@@ -330,7 +333,8 @@ class TestModule(TestCase):
 
         self.module2 = Module(mat2)
         self.module2.maximum_step_length_m = 1e4
-        self.module2.interaction_forcings.add(InteractionForcing(1, 1, -4))
+        intforce = InteractionForcing(ELECTRON, HARD_BREMSSTRAHLUNG_EMISSION, -4)
+        self.module2.interaction_forcings.add(intforce)
         self.module2._index = 1
 
         self.module1 = Module(mat1, 'Test')

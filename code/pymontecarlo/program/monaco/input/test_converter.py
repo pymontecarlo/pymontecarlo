@@ -52,7 +52,7 @@ class TestConverter(TestCase):
             self.converter.convert(ops)
 
         # 6 warnings for the default models
-        self.assertEqual(5, len(ws))
+        self.assertEqual(6, len(ws))
 
         # Test
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
