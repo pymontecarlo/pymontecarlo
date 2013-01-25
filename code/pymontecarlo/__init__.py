@@ -29,8 +29,7 @@ from pymontecarlo.util.xmlutil import XMLIO
 # Register XML namespace and schema
 ################################################################################
 
-XMLIO.add_namespace('mc', 'http://pymontecarlo.sf.net',
-                    os.path.join(os.path.dirname(__file__), 'schema.xsd'))
+XMLIO.register_namespace('mc', 'http://pymontecarlo.sf.net')
 
 ################################################################################
 # Settings

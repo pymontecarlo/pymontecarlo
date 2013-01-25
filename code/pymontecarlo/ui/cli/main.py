@@ -82,7 +82,7 @@ def load_options(filepaths, list_options=[]):
             list_options.sort()
             return
 
-        list_options.append(Options.load(filepath, validate=False))
+        list_options.append(Options.load(filepath))
 
 def run(argv=None):
     # Initialize

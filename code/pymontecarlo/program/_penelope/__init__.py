@@ -27,5 +27,4 @@ import os
 from pymontecarlo.util.xmlutil import XMLIO
 
 
-XMLIO.add_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope',
-                    os.path.join(os.path.dirname(__file__), 'schema.xsd'))
+XMLIO.register_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope')

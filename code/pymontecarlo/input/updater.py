@@ -54,7 +54,7 @@ class Updater(_Updater):
         return int(root.get('version', 0))
 
     def _validate(self, filepath):
-        Options.load(filepath, validate=True)
+        Options.load(filepath)
 
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')

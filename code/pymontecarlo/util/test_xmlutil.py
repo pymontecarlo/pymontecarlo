@@ -15,7 +15,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml, XMLIO
+from pymontecarlo.util.xmlutil import objectxml, XMLIO, Element
 
 # Globals and constants variables.
 
@@ -33,7 +33,8 @@ class ObjectXMLMock(objectxml):
         element.set('val', str(self.val))
 
 XMLIO.reset()
-XMLIO.register('ObjectXMLMock', ObjectXMLMock)
+XMLIO.register('{http://test.org}ObjectXMLMock', ObjectXMLMock)
+XMLIO.register_namespace('test', 'http://test.org')
 
 class Testobjectxml(unittest.TestCase):
 
@@ -45,8 +46,18 @@ class Testobjectxml(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    def testsave(self):
-        self.mock1.save('/tmp/mock.xml')
+    def testto_xml(self):
+        element = self.mock1.to_xml()
+        self.assertEqual('{http://test.org}ObjectXMLMock', element.tag)
+        self.assertEqual('abc', element.get('val'))
+
+    def testfrom_xml(self):
+        element = Element('{http://test.org}ObjectXMLMock', val='abc')
+        mock1 = XMLIO.from_xml(element)
+        self.assertEqual('abc', mock1.val)
+
+        element = Element('ObjectXMLMock', val='abc')
+        self.assertRaises(ValueError, XMLIO.from_xml, element)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
