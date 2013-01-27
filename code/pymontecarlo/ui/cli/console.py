@@ -27,6 +27,7 @@ import sys
 import textwrap
 import logging
 import warnings
+import traceback
 
 # Third party modules.
 
@@ -259,6 +260,16 @@ class _Console(object):
         """
         self._print(self._stderr, 'Error: ' + text, color=COLOR_RED)
         if exit: self.close(1)
+
+    def print_exception(self, exc, exit=True):
+        """
+        Prints an error message from an exception.
+        
+        :arg exit: whether to exit the program after writing the error message
+            [default: ``True``]
+        """
+        traceback.print_exc()
+        self.print_error(str(exc), exit)
 
     def print_warn(self, text):
         """

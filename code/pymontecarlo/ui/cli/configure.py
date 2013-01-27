@@ -64,14 +64,14 @@ def run(argv=None):
             try:
                 program = load_program(program_alias, validate=False)
             except Exception as ex:
-                console.print_error(str(ex))
+                console.print_exception(ex)
                 return
 
             cli = get_program_cli(program)
             try:
                 pass
             except Exception as ex:
-                console.print_error(str(ex))
+                console.print_exception(ex)
                 return
 
             cli.configure(console, settings)
