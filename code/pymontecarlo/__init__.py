@@ -16,6 +16,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import logging
+import pkgutil
 
 # Third party modules.
 
@@ -57,7 +58,6 @@ def get_settings():
     filepaths = []
     filepaths.append(os.path.join(os.path.expanduser('~'), '.pymontecarlo',
                                   'settings.cfg'))
-    filepaths.append(os.path.join(os.path.dirname(__file__), 'settings.cfg'))
 
     _settings = load_settings(filepaths)
 
@@ -188,14 +188,16 @@ def find_programs():
     Returns a list of program aliases that could be found in the settings.cfg,
     but may not have been configured.
     """
-    dirpath = os.path.abspath(os.path.dirname(__file__))
-    filepath = os.path.join(dirpath, 'settings.cfg.example')
+    import program
 
-    settings = ConfigParser()
-    with open(filepath, 'r') as fp:
-        settings.read(fp)
+    programs = []
 
-    return settings.pymontecarlo.programs.split(',')
+    for _loader, name, ispkg in pkgutil.walk_packages(program.__path__):
+        if not ispkg: continue
+        if name.startswith('_'): continue
+        programs.append(name)
+
+    return sorted(programs)
 
 def get_program_cli(program):
     """
