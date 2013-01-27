@@ -19,11 +19,10 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
-import sys
 import csv
 
 # Third party modules.
+from pkg_resources import resource_stream #@UnresolvedImport
 
 # Local modules.
 
@@ -45,10 +44,7 @@ class IonizationData(object):
         :arg fileobj: file-object containing the ionization energies.
         """
         if fileobj is None:
-            # Weird bug in Windows when using pkgutil.get_data to retrieve
-            # relaxation_data.csv. This is a quick fix.
-            dirname = os.path.dirname(sys.modules[__name__].__file__)
-            fileobj = open(os.path.join(dirname, 'data/ionization_data.csv'))
+            fileobj = resource_stream(__name__, 'data/ionization_data.csv')
 
         self.data = self._read(fileobj)
 
