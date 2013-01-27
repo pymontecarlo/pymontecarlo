@@ -32,7 +32,6 @@ class ObjectXMLMock(objectxml):
     def __savexml__(self, element, *args, **kwargs):
         element.set('val', str(self.val))
 
-XMLIO.reset()
 XMLIO.register('{http://test.org}ObjectXMLMock', ObjectXMLMock)
 XMLIO.register_namespace('test', 'http://test.org')
 
