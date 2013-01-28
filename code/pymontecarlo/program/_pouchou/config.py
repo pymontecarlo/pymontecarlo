@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`config` -- PAP Monte Carlo program configuration
+:mod:`config` -- Pouchou programs configuration
 ================================================================================
 
 .. module:: config
-   :synopsis: PAP Monte Carlo program configuration
+   :synopsis: Pouchou program configuration
+
+.. inheritance-diagram:: pymontecarlo.program._pouchou.config
 
 """
 
@@ -21,14 +23,13 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program._pouchou.config import _PouchouProgram
-from pymontecarlo.program.xpp.runner.worker import Worker
+from pymontecarlo.program.config import Program
+from pymontecarlo.program._pouchou.input.converter import Converter
 
 # Globals and constants variables.
 
-class _PAPProgram(_PouchouProgram):
+class _PouchouProgram(Program):
 
-    def __init__(self):
-        _PouchouProgram.__init__(self, 'PAP', 'pap', Worker)
+    def __init__(self, name, alias, worker_class):
+        Program.__init__(self, name, alias, Converter, worker_class)
 
-program = _PAPProgram()
