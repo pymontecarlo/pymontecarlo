@@ -243,6 +243,27 @@ def get_program_gui(program):
 
     return mod.config_gui.gui
 
+def get_program_setup(program):
+    """
+    Imports, loads and returns the setup configuration of the specified
+    program.
+    The method raises :exc:`ImportError` exception if:
+    
+      * No ``config_setup.py`` module exists in program package.
+      * No ``setup`` variable exists in ``config_setup.py`` module.
+    
+    :arg program: program configuration object
+    """
+    name = program.alias
+    mod = __import__('pymontecarlo.program.' + name, None, None, ['config_setup'])
+
+    if not hasattr(mod, 'config_setup'):
+        raise ImportError, "Package '%s' does not have a 'config_setup' module." % name
+
+    if not hasattr(mod.config_setup, 'setup'):
+        raise ImportError, "Module 'config_setup' of package '%s' must have a 'setup' attribute" % name
+
+    return mod.config_setup.setup
 
 ################################################################################
 # Reload

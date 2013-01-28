@@ -1,0 +1,4 @@
+exclude .*
+prune .settings
+prune doc
+prune schema
