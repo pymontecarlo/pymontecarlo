@@ -279,7 +279,7 @@ class _TrajectoryResultParameters(object):
 
     def __init__(self, max_trajectories):
         self.max_trajectories = max_trajectories
-        self.number_trajectories = max_trajectories
+        self.number_trajectories = min(500, max_trajectories)
 
         self.primary_backscattered_enabled = True
         self.primary_backscattered_color = (1.0, 0.0, 0.0)
@@ -1326,8 +1326,8 @@ class PhotonSpectrumResultPanel(_SaveableResultPanel):
         fig = Figure()
         ax = fig.add_subplot("111")
 
-        energies_eV, intensities, uncs = self.result.get_total()
-        ax.errorbar(energies_eV, intensities, uncs,
+        total = self.result.get_total()
+        ax.errorbar(total[:, 0], total[:, 1], total[:, 2],
                     fmt='b-', ecolor='#c0d8ff', elinewidth=1)
 
         ax.set_xlabel('Energy (eV)')
