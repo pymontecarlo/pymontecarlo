@@ -406,8 +406,8 @@ class PhotonSpectrumResult(_Result):
     @classmethod
     def __loadhdf5__(cls, hdf5file, key):
         hdf5group = hdf5file[key]
-        total = hdf5group['total']
-        background = hdf5group['background']
+        total = np.copy(hdf5group['total'])
+        background = np.copy(hdf5group['background'])
         return cls(total, background)
 
     def __savehdf5__(self, hdf5file, key):
