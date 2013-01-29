@@ -44,6 +44,7 @@ from pymontecarlo.input.detector import \
 #     TransmittedElectronEnergyDetector,
 #     TransmittedElectronPolarAngularDetector,
      TimeDetector,
+     TrajectoryDetector,
 #     ElectronFractionDetector
      )
 from pymontecarlo.input.model import \
@@ -67,6 +68,7 @@ class Converter(_Converter):
                  #TransmittedElectronEnergyDetector,
                  #TransmittedElectronPolarAngularDetector,
                  TimeDetector,
+                 TrajectoryDetector,
                  #ElectronFractionDetector
                  ]
     LIMITS = [ShowersLimit]
