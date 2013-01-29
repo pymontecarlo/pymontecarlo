@@ -30,6 +30,8 @@ import numpy as np
 from pymontecarlo.util.transition import from_string
 from pymontecarlo.output.manager import ResultManager
 
+import pymontecarlo.util.progress as progress
+
 # Globals and constants variables.
 from pymontecarlo.input.particle import PARTICLES
 from pymontecarlo.input.collision import COLLISIONS
@@ -936,7 +938,13 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
         trajectories = []
 
-        for dataset in hdf5file[key].itervalues():
+        size = float(len(hdf5file[key]))
+        task = progress.start_task()
+        task.status = 'Loading trajectories'
+
+        for i, dataset in enumerate(hdf5file[key].itervalues()):
+            task.progress = i / size
+
             primary = bool(dataset.attrs['primary'])
             particle = particles_ref[dataset.attrs['particle']]
             collision = collisions_ref[dataset.attrs['collision']]
@@ -946,6 +954,8 @@ class TrajectoryResult(_Result, Iterable, Sized):
             trajectory = Trajectory(primary, particle, collision,
                                     exit_state, interactions)
             trajectories.append(trajectory)
+
+        progress.stop_task(task)
 
         return cls(trajectories)
 
