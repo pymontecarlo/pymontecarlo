@@ -25,8 +25,8 @@ import os
 from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.casino2.input.converter import Converter
-from pymontecarlo.program.casino2.io.exporter import Exporter
-from pymontecarlo.program.casino2.io.importer import Importer
+from pymontecarlo.program.casino2.input.exporter import Exporter
+from pymontecarlo.program.casino2.output.importer import Importer
 from pymontecarlo.program.casino2.runner.worker import Worker
 
 # Globals and constants variables.

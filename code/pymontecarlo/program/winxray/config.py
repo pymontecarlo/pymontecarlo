@@ -25,8 +25,8 @@ import os
 from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.winxray.input.converter import Converter
-from pymontecarlo.program.winxray.io.exporter import Exporter
-from pymontecarlo.program.winxray.io.importer import Importer
+from pymontecarlo.program.winxray.input.exporter import Exporter
+from pymontecarlo.program.winxray.output.importer import Importer
 from pymontecarlo.program.winxray.runner.worker import Worker
 
 # Globals and constants variables.

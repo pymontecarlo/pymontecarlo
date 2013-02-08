@@ -33,8 +33,8 @@ from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.program.penepma.input.converter import Converter
-from pymontecarlo.program.penepma.io.exporter import Exporter
-from pymontecarlo.program.penepma.io.importer import Importer
+from pymontecarlo.program.penepma.input.exporter import Exporter
+from pymontecarlo.program.penepma.output.importer import Importer
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED

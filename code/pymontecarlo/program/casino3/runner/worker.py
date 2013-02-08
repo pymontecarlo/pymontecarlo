@@ -32,7 +32,7 @@ from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.program.casino3.input.converter import Converter
 #from pymontecarlo.program.casino3.io.exporter import Exporter
-from pymontecarlo.program.casino3.io.importer import Importer
+from pymontecarlo.program.casino3.output.importer import Importer
 
 
 # Globals and constants variables.

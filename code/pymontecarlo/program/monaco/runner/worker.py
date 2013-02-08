@@ -57,8 +57,8 @@ from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.util.transition import Ka, La, Ma
 
 from pymontecarlo.program.monaco.input.converter import Converter
-from pymontecarlo.program.monaco.io.exporter import Exporter
-from pymontecarlo.program.monaco.io.importer import Importer
+from pymontecarlo.program.monaco.input.exporter import Exporter
+from pymontecarlo.program.monaco.output.importer import Importer
 
 # Globals and constants variables.
 from pymontecarlo.input.model import \

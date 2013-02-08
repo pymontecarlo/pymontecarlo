@@ -25,8 +25,8 @@ import os
 from pymontecarlo import get_settings
 from pymontecarlo.program._penelope.config import _PenelopeProgram
 from pymontecarlo.program.penepma.input.converter import Converter
-from pymontecarlo.program.penepma.io.exporter import Exporter
-from pymontecarlo.program.penepma.io.importer import Importer
+from pymontecarlo.program.penepma.input.exporter import Exporter
+from pymontecarlo.program.penepma.output.importer import Importer
 from pymontecarlo.program.penepma.runner.worker import Worker
 
 # Globals and constants variables.

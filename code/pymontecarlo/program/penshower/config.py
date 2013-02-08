@@ -25,8 +25,8 @@ import os
 from pymontecarlo import get_settings
 from pymontecarlo.program._penelope.config import _PenelopeProgram
 from pymontecarlo.program.penshower.input.converter import Converter
-from pymontecarlo.program.penshower.io.exporter import Exporter
-from pymontecarlo.program.penshower.io.importer import Importer
+from pymontecarlo.program.penshower.input.exporter import Exporter
+from pymontecarlo.program.penshower.output.importer import Importer
 from pymontecarlo.program.penshower.runner.worker import Worker
 
 # Globals and constants variables.

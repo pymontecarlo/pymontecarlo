@@ -25,8 +25,8 @@ import os
 from pymontecarlo import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.monaco.input.converter import Converter
-from pymontecarlo.program.monaco.io.exporter import Exporter
-from pymontecarlo.program.monaco.io.importer import Importer
+from pymontecarlo.program.monaco.input.exporter import Exporter
+from pymontecarlo.program.monaco.output.importer import Importer
 from pymontecarlo.program.monaco.runner.worker import Worker
 
 # Globals and constants variables.

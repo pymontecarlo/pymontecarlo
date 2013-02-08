@@ -33,8 +33,8 @@ from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.program.penshower.input.converter import Converter
-from pymontecarlo.program.penshower.io.exporter import Exporter
-from pymontecarlo.program.penshower.io.importer import Importer
+from pymontecarlo.program.penshower.input.exporter import Exporter
+from pymontecarlo.program.penshower.output.importer import Importer
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
