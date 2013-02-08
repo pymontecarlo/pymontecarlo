@@ -17,7 +17,11 @@
 				</mc:material>
 			</materials>
 			<bodies>
-				<mc:body index="0" material="1"/>
+				<mc-pen:body index="0" material="1" maximumStepLength="1e20">
+                    <interactionForcings>
+                        <mc-pen:interactionForcing particle="1" collision="2" forcer="4" weightMin="0.1" weightMax="1.0" />
+                    </interactionForcings>
+                </mc-pen:body>
 			</bodies>
 		</mc:substrate>
 	</geometry>

@@ -21,6 +21,7 @@ import shutil
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.updater import Updater
+import pymontecarlo.program._penelope.config #@UnusedImport
 
 # Globals and constants variables.
 
@@ -37,9 +38,6 @@ class TestUpdater(TestCase):
         TestCase.tearDown(self)
 
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-    def testskeleton(self):
-        self.assertTrue(True)
 
     def testupdate_noversion0(self):
         src = os.path.join(self.testdata, 'oldoptions0.xml')

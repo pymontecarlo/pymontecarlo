@@ -61,7 +61,8 @@ class Updater(_Updater):
 
         root = parse(filepath).getroot()
 
-        if not root.nsmap and root.tag.startswith('pymontecarlo.'):
+        if not root.tag.startswith("{") and \
+                root.tag.startswith('pymontecarlo.'):
             content = open(filepath, 'r').read()
 
             lookup = {'<pymontecarlo.input.base.options.Options': '<mc:options xmlns:mc="http://pymontecarlo.sf.net" xmlns:mc-pen="http://pymontecarlo.sf.net/penelope" version="2"',
@@ -150,12 +151,17 @@ class Updater(_Updater):
                                       6: ANNIHILATION,
                                       7: DELTA}}
 
-        for element in root.iterdescendants('{http://pymontecarlo.sf.net/penelope}interactionForcing'):
-            particle = _PARTICLES_REF[int(element.get('particle'))]
-            element.set('particle', str(particle))
+        geometry_element = root.find('geometry')[0]
+        bodies_element = geometry_element.find('bodies')[0]
+        intforcings_element = bodies_element.find('interactionForcings')
 
-            collision = _COLLISIONS_REF[particle][int(element.get('collision'))]
-            element.set('collision', str(collision))
+        if intforcings_element is not None:
+            for element in list(intforcings_element):
+                particle = _PARTICLES_REF[int(element.get('particle'))]
+                element.set('particle', str(particle))
+
+                collision = _COLLISIONS_REF[particle][int(element.get('collision'))]
+                element.set('collision', str(collision))
 
         with open(filepath, 'w') as fp:
             fp.write(tostring(root, pretty_print=True))
