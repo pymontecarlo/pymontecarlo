@@ -60,11 +60,6 @@ class _MonacoConfigurePanel(ConfigurePanel):
             show_error_dialog(self, 'Please specify the base directory')
             return False
 
-        mcsim32_exe = os.path.join(basedir, 'Mcsim32.exe')
-        if not os.path.isfile(mcsim32_exe):
-            show_error_dialog(self, "No Mcsim32.exe in Monaco base directory (%s)" % basedir)
-            return False
-
         mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
         if not os.path.isfile(mccli32_exe):
             show_error_dialog(self, "No Mccli32.exe in Monaco base directory (%s)" % basedir)

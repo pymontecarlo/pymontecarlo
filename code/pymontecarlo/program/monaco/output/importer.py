@@ -20,19 +20,21 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import csv
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.output.importer import Importer as _Importer, ImporterException
 
-from pymontecarlo.input.detector import PhotonIntensityDetector
+from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
 
 from pymontecarlo.output.result import \
-    PhotonIntensityResult, create_intensity_dict
+    (PhotonIntensityResult, create_intensity_dict,
+     PhiRhoZResult, create_phirhoz_dict)
 
-import pymontecarlo.util.element_properties as ep
-from pymontecarlo.util.transition import Ka, La, Ma
+from pymontecarlo.util.transition import from_string
 
 # Globals and constants variables.
 
@@ -43,6 +45,7 @@ class Importer(_Importer):
 
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity
+        self._detector_importers[PhiRhoZDetector] = self._detector_phirhoz
 
     def import_from_dir(self, options, jobdir):
         """
@@ -58,26 +61,52 @@ class Importer(_Importer):
         return self._import_results(options, jobdir)
 
     def _detector_photon_intensity(self, options, name, detector, jobdir):
-        intensities_filepath = os.path.join(jobdir, 'intensities_%s.txt' % name)
+        intensities_filepath = os.path.join(jobdir, 'intensities_%s.csv' % name)
         if not os.path.exists(intensities_filepath):
             raise ImporterException, \
-                'Result file "intensites_%s.txt" not found in job directory (%s)' % \
+                'Result file "intensites_%s.csv" not found in job directory (%s)' % \
                     (name, jobdir)
 
         intensities = {}
 
         with open(intensities_filepath, 'r') as fp:
-            for line in fp:
-                line = line.strip()
-                if not line: break
+            reader = csv.DictReader(fp)
+            row = list(reader)[0]
 
-                transitionstr, intensity = line.split(',')
-                symbol, line = transitionstr.split()
-                z = ep.atomic_number(symbol)
-                transition = {'K': Ka, 'L': La, 'M': Ma}[line[0]](z)
+        for transition, intensity in row.iteritems():
+            transition = from_string(transition.strip())
+            enf = (float(intensity.strip()), 0.0)
 
-                enf = (float(intensity), 0.0)
-                intensities.update(create_intensity_dict(transition,
-                                                         enf=enf, et=enf))
-
+            intensities.update(create_intensity_dict(transition, 
+                                                     enf=enf, et=enf))
+            
         return PhotonIntensityResult(intensities)
+
+    def _detector_phirhoz(self, options, name, detector, jobdir):
+        prz_filepath = os.path.join(jobdir, 'phi_%s.csv' % name)
+        if not os.path.exists(prz_filepath):
+            raise ImporterException, \
+                'Result file "phi_%s.csv" not found in job directory (%s)' % \
+                    (name, jobdir)
+
+        with open(prz_filepath, 'r') as fp:
+            reader = csv.reader(fp)
+            header = reader.next()
+
+            data = {}
+            for row in reader:
+                for i, val in enumerate(row):
+                    data.setdefault(header[i], []).append(float(val))
+
+        rzs = np.array(data.pop('rho z'))
+        
+        distributions = {}
+        for transition, values in data.iteritems():
+            transition = from_string(transition.strip())
+
+            enf = np.array([rzs, values]).transpose()
+
+            distributions.update(create_phirhoz_dict(transition,
+                                                     enf=enf, et=enf))
+
+        return PhiRhoZResult(distributions)

@@ -36,10 +36,6 @@ class _MonacoCLI(CLI):
         default = getattr(section, 'basedir', None)
 
         def validator(basedir):
-            mcsim32_exe = os.path.join(basedir, 'Mcsim32.exe')
-            if not os.path.isfile(mcsim32_exe):
-                raise ValueError, "No Mcsim32.exe in Monaco base directory"
-
             mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
             if not os.path.isfile(mccli32_exe):
                 raise ValueError, "No Mccli32.exe in Monaco base directory"

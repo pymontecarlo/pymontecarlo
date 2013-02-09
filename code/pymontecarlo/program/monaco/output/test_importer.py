@@ -20,7 +20,7 @@ from pymontecarlo.program.monaco.output.importer import Importer
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import PhotonIntensityDetector
+from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
 
 # Globals and constants variables.
 
@@ -34,6 +34,7 @@ class TestImporter(unittest.TestCase):
         self.ops.geometry.material.composition = {6: 0.4, 13: 0.6}
         self.ops.geometry.material.absorption_energy_electron_eV = 234
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
+        self.ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 128)
         self.ops.limits.add(ShowersLimit(1234))
 
         self.i = Importer()
@@ -50,12 +51,19 @@ class TestImporter(unittest.TestCase):
         jobdir = os.path.join(self._testdata, 'job1')
         results = self.i.import_from_dir(self.ops, jobdir)
 
-        self.assertEqual(1, len(results))
+        self.assertEqual(2, len(results))
 
         result = results['xray']
         val, unc = result.intensity('Cu La')
         self.assertAlmostEqual(3.473295, val, 4)
         self.assertAlmostEqual(0.0, unc, 4)
+
+        result = results['prz']
+        self.assertTrue(result.exists('Au La', True, False))
+        self.assertTrue(result.exists('Au Ma', True, False))
+
+        self.assertEqual((128, 3), result.get('Au La').shape)
+        self.assertEqual((128, 3), result.get('Au Ma').shape)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

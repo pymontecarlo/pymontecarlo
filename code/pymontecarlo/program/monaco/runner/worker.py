@@ -20,8 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import ntpath as path
-import struct
 import logging
 import shutil
 import subprocess
@@ -52,7 +50,7 @@ from pymontecarlo import get_settings
 
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.input.detector import PhotonIntensityDetector
+from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
 
 from pymontecarlo.util.transition import Ka, La, Ma
 
@@ -83,85 +81,14 @@ _IONIZATION_POTENTIAL_REF = \
      IONIZATION_POTENTIAL.springer1967: 3,
      IONIZATION_POTENTIAL.sternheimer1964: 4}
 
-def _create_mcb(monaco_basedir, jobdir):
-    """
-    Create Monaco batch file. 
-    The batch file is located in *monaco_basedir*\MCUTIL\MCBAT32.MCB.
-    
-    :arg monaco_basedir: base directory of Monaco program
-    :arg jobdir: job directory where the SIM and MAT files are located for a
-        given job
-        
-    :return: path to the batch file
-    """
-    filepath = os.path.join(monaco_basedir, 'MCUTIL', 'MCBAT32.MCB')
-    with open(filepath, 'wb') as fp:
-        # BStatus
-        # DELPHI: BlockWrite(Bf, VersionSign, 1,f);
-        fp.write(struct.pack('B', 255))
-
-        # BVersion
-        # DELPHI: BlockWrite(Bf, BVersion, SizeOf(Integer),f);
-        fp.write(struct.pack('i', 1))
-
-        # Bstatus
-        # DELPHI: BlockWrite(Bf,BStatus,1,f);
-        fp.write(struct.pack('b', 2))
-
-        # Job 1 Directory
-        # DELPHI: l := 1+Length(Job.Dir); Inc(s,l);BlockWrite(Bf,Job.Dir,l,w); Inc(Sum,w);
-        jobdir = path.abspath(jobdir)
-        fp.write(struct.pack('b', len(jobdir)))
-        fp.write(jobdir)
-
-        # Job 1 Name
-        # DELPHI: l := 1+Length(Job.Smp); Inc(s,l);BlockWrite(Bf,Job.Smp,l,w); Inc(Sum,w);
-        name = path.basename(jobdir)
-        fp.write(struct.pack('b', len(name)))
-        fp.write(name)
-
-        # Job 1 Status
-        # DELPHI: l := 1; Inc(s,l);BlockWrite(Bf,Job.Status,l,w); Inc(Sum,w);
-        fp.write(struct.pack('b', 3))
-
-        # Job 1 Standard
-        # DELPHI: l := 1; Inc(s,l);BlockWrite(Bf,Job.Std,l,w); Inc(Sum,w);
-        fp.write(struct.pack('b', 1))
-
-        # Job 1 Version
-        # DELPHI: l := SizeOf(Integer); Inc(s,l);BlockWrite(Bf,Job.Version,l,w); Inc(Sum,w);
-        fp.write(struct.pack('i', 1))
-
-        # Job 1 DateTime
-        # DELPHI: l := SizeOf(TDateTime); Inc(s,l);BlockWrite(Bf,Job.DateTime,l,w);Inc(Sum,w);
-        fp.write('\x54\x9e\x3f\xd0\x53\x1c\xe4\x40')
-
-        # Job 1 User
-        # DELPHI: l := 1+Length(Job.UserStr);Inc(s,l);BlockWrite(Bf,Job.UserStr,l,w); Inc(Sum,w);
-        fp.write(struct.pack('b', 3))
-        fp.write('bot')
-
-        # Job 1 Info
-        # DELPHI: l := 1+Length(Job.InfoStr);Inc(s,l);BlockWrite(Bf,Job.InfoStr,l,w); Inc(Sum,w);
-        fp.write('\x00')
-
-    return filepath
-
 class Worker(_Worker):
     def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
         """
         Runner to run Monaco simulation(s).
-        
-        .. note:: 
-        
-           The work directory cannot be specified for this worker as the work
-           directory must be located in *monaco basedir*/PRB. 
         """
         self._monaco_basedir = get_settings().monaco.basedir
-        self._mcsim32exe = os.path.join(self._monaco_basedir, 'Mcsim32.exe')
         self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
 
-        workdir = os.path.join(self._monaco_basedir, 'PRB')
         _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
 
     def _create(self, options, dirpath):
@@ -172,7 +99,7 @@ class Worker(_Worker):
         jobdir = os.path.join(dirpath, options.name)
         if os.path.exists(jobdir):
             logging.info('Job directory (%s) already exists, so it is removed.', jobdir)
-            shutil.rmtree(jobdir, ignore_errors=True)
+            shutil.rmtree(jobdir)
         os.makedirs(jobdir)
 
         # Export: create MAT and SIM files
@@ -180,8 +107,7 @@ class Worker(_Worker):
 
         return jobdir
 
-    def _run(self, options):
-        # Setup registry (in case it is not already set)
+    def _setup_registry(self):
         try:
             key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, _WINKEY,
                                   0, _winreg.KEY_ALL_ACCESS)
@@ -192,11 +118,15 @@ class Worker(_Worker):
                                self._monaco_basedir)
         logging.debug("Setup Monaco path in registry")
 
+    def _run(self, options):
+        # Setup registry (in case it is not already set)
+        self._setup_registry()
+
         # Create job directory and simulation files
         jobdir = self._create(options, self._workdir)
 
         # Run simulation (in batch)
-        self._run_batch(jobdir)
+        self._run_simulation(options, jobdir)
 
         # Extract transitions
         transitions = self._extract_transitions(options)
@@ -207,27 +137,26 @@ class Worker(_Worker):
             self._run_intensities(jobdir, options, detector_key, detector,
                                   transitions)
 
-    def _run_batch(self, jobdir):
-        # Create batch file
-        batch_filepath = _create_mcb(self._monaco_basedir, jobdir)
-        logging.debug("Creating batch file")
+        # Extract phi-rho-zs if phi-rho-z detectors
+        detectors = options.detectors.findall(PhiRhoZDetector)
+        for detector_key, detector in detectors.iteritems():
+            self._run_phirhozs(jobdir, options, detector_key, detector,
+                               transitions)
 
-        # Launch mcsim32.exe
-        args = [self._mcsim32exe]
+    def _run_simulation(self, options, jobdir):
+        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
+        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
+        args = [self._mccli32exe, 'sim', mat_filepath, sim_filepath, jobdir]
         logging.debug('Launching %s', ' '.join(args))
 
-        self._status = "Running Monaco's mcsim32.exe"
+        self._status = "Running Monaco's mccli32.exe"
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
                                          cwd=self._monaco_basedir)
         self._process.wait()
         self._process = None
 
-        logging.debug("Monaco's mcsim32.exe ended")
-
-        # Remove batch file
-        os.remove(batch_filepath)
-        logging.debug('Remove batch file')
+        logging.debug("Monaco's mccli32.exe ended")
 
         # Check that simulation ran
         nez_filepath = os.path.join(jobdir, 'NEZ.1')
@@ -254,6 +183,11 @@ class Worker(_Worker):
 
     def _run_intensities(self, jobdir, options, detector_key, detector,
                          transitions):
+        # Paths
+        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
+        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
+        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+
         # Find models
         model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
         mac_id = _MASS_ABSORPTION_COEFFICIENT_REF.get(model, 0)
@@ -265,7 +199,8 @@ class Worker(_Worker):
         ip_id = _IONIZATION_POTENTIAL_REF.get(model, 0)
 
         # Launch mccli32.exe
-        args = [self._mccli32exe, "int", options.name,
+        args = [self._mccli32exe, "int",
+                mat_filepath, sim_filepath, nez_filepath, jobdir,
                 detector.takeoffangle_deg, mac_id, ics_id, ip_id]
         args += transitions
         args = map(str, args)
@@ -278,22 +213,62 @@ class Worker(_Worker):
         self._process.wait()
         self._process = None
 
-        logging.debug("Monaco's mcsim32.exe ended")
+        logging.debug("Monaco's mccli32.exe ended")
 
         # Rename intensities.txt
-        src_filepath = os.path.join(jobdir, 'intensities.txt')
-        dst_filepath = os.path.join(jobdir, 'intensities_%s.txt' % detector_key)
+        src_filepath = os.path.join(jobdir, 'intensities.csv')
+        if not os.path.exists(src_filepath):
+            raise RuntimeError, 'Could not extract intensities'
+
+        dst_filepath = os.path.join(jobdir, 'intensities_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)
-        logging.debug("Appending detector key to intensities.txt")
+        logging.debug("Appending detector key to intensities.csv")
+
+    def _run_phirhozs(self, jobdir, options, detector_key, detector,
+                      transitions):
+        # Paths
+        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
+        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
+        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+
+        # Find models
+        model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
+        mac_id = _MASS_ABSORPTION_COEFFICIENT_REF.get(model, 0)
+
+        model = options.models.find(IONIZATION_CROSS_SECTION.type)
+        ics_id = _IONIZATION_CROSS_SECTION_REF.get(model, 0)
+
+        model = options.models.find(IONIZATION_POTENTIAL.type)
+        ip_id = _IONIZATION_POTENTIAL_REF.get(model, 0)
+
+        # Launch mccli32.exe
+        args = [self._mccli32exe, "phi",
+                mat_filepath, sim_filepath, nez_filepath, jobdir,
+                detector.takeoffangle_deg, mac_id, ics_id, ip_id]
+        args += transitions
+        args = map(str, args)
+        logging.debug('Launching %s', ' '.join(args))
+
+        self._status = "Running Monaco's mccli32.exe"
+
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                         cwd=self._monaco_basedir)
+        self._process.wait()
+        self._process = None
+
+        logging.debug("Monaco's mccli32.exe ended")
+
+        # Rename intensities.txt
+        src_filepath = os.path.join(jobdir, 'phi.csv')
+        if not os.path.exists(src_filepath):
+            raise RuntimeError, 'Could not extract phi-rho-z'
+
+        dst_filepath = os.path.join(jobdir, 'phi_%s.csv' % detector_key)
+        shutil.move(src_filepath, dst_filepath)
+        logging.debug("Appending detector key to phi.csv")
 
     def _save_results(self, options, h5filepath):
         jobdir = self._get_dirpath(options)
 
         results = Importer().import_from_dir(options, jobdir)
         results.save(h5filepath)
-
-    def _cleanup(self, options):
-        _Worker._cleanup(self, options)
-
-        jobdir = self._get_dirpath(options)
-        shutil.rmtree(jobdir, ignore_errors=True)
