@@ -93,5 +93,8 @@ class Updater(_Updater):
         oldzip.close()
         newzip.close()
 
+        return filepath
+
     def _update_version2(self, filepath):
         logging.info('Nothing to update')
+        return filepath

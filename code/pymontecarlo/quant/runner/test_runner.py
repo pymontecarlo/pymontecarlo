@@ -87,8 +87,7 @@ class TestRunner(unittest.TestCase):
         self.assertAlmostEqual(0.21069, composition[29], 4)
         self.assertAlmostEqual(0.78931, composition[79], 4)
 
-        self.assertEqual(1, results.iterations)
-        self.assertEqual(1, len(results.compositions))
+        self.assertEqual(results.iterations, len(results.compositions))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

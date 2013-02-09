@@ -272,7 +272,7 @@ class Worker(threading.Thread):
         intensities = {}
 
         for transition in transitions:
-            filename = 'std%i.zip' % transition.z
+            filename = 'std%i.h5' % transition.z
             filepath = os.path.join(self._workdir, filename)
             results = SimResults.load(filepath)
 
@@ -287,7 +287,7 @@ class Worker(threading.Thread):
         """
         intensities = {}
 
-        filename = 'iteration%i.zip' % index
+        filename = 'iteration%i.h5' % index
         filepath = os.path.join(self._workdir, filename)
         results = SimResults.load(filepath)
 
