@@ -272,6 +272,25 @@ class Material(Option):
         self._props['composition'] = self.__calculate_composition(composition)
 
     @property
+    def composition_atomic(self):
+        """
+        Returns the composition of this material.
+        The composition is specified by a dictionary.
+        The keys are atomic numbers and values are atomic fractions.
+        """
+        composition = {}
+
+        for z, weightfraction in self.composition.iteritems():
+            composition[z] = weightfraction / ep.atomic_mass(z)
+
+        totalfraction = sum(composition.values())
+
+        for z, fraction in composition.iteritems():
+            composition[z] = fraction / totalfraction
+
+        return composition
+
+    @property
     def density_kg_m3(self):
         """
         Density of this material in kg/m3.

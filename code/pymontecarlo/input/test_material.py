@@ -171,6 +171,25 @@ class TestMaterial(TestCase):
         # ValueError: Incorrect total fraction
         self.assertRaises(ValueError, self.m.__setattr__, 'composition', {29: 0.7, 30: 0.7})
 
+    def testcomposition_atomic(self):
+        # Vacuum
+        self.m.composition = {}
+        self.assertEqual({}, self.m.composition_atomic)
+
+        # Wildcard
+        self.m.composition = {29: 0.7, 30: '?'}
+        self.assertTrue(self.m.composition_atomic.has_key(29))
+        self.assertAlmostEqual(0.70594, self.m.composition_atomic[29], 4)
+        self.assertTrue(self.m.composition_atomic.has_key(30))
+        self.assertAlmostEqual(0.29405, self.m.composition_atomic[30], 4)
+
+        # Multiple wildcards
+        self.m.composition = {29: '?', 30: '?'}
+        self.assertTrue(self.m.composition_atomic.has_key(29))
+        self.assertAlmostEqual(0.50711, self.m.composition_atomic[29], 4)
+        self.assertTrue(self.m.composition_atomic.has_key(30))
+        self.assertAlmostEqual(0.49289, self.m.composition_atomic[30], 4)
+
     def testdensity_kg_m3(self):
         # Negative density
         self.m.density_kg_m3 = -1
