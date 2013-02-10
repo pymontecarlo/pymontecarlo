@@ -52,8 +52,6 @@ class BeamWizardPage(WizardPage):
         lbltype.SetFont(font)
         getter = lambda t: camelcase_to_words(t.__name__[:-4])
         self._cbtype = PyComboBox(self, getter)
-        self._cbtype.append(PencilBeam)
-        self._cbtype.append(GaussianBeam)
 
         self._panel = wx.Panel(self)
 
@@ -71,6 +69,10 @@ class BeamWizardPage(WizardPage):
 
         # Bind
         self.Bind(wx.EVT_COMBOBOX, self.OnType, self._cbtype)
+
+        # Add beams
+        self._cbtype.extend(wizard.available_beams)
+        self._cbtype.selection = self._cbtype[0]
 
     def OnType(self, event):
         beam_class = self._cbtype.selection
@@ -93,6 +95,9 @@ class BeamWizardPage(WizardPage):
     def Validate(self):
         return form_validate(self._panel)
 
+    def GetBeams(self):
+        return self._panel.GetBeams()
+
 class PencilBeamPanel(wx.Panel):
 
     def __init__(self, parent):
@@ -107,6 +112,7 @@ class PencilBeamPanel(wx.Panel):
 
         ## Energy
         lblenergy = wx.StaticText(self, label='Incident energy (keV)')
+        lblenergy.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0.001, float('inf')))
         self._txtenergy = FloatRangeTextCtrl(self, name='Incident energy',
                                              validator=validator)
@@ -116,16 +122,19 @@ class PencilBeamPanel(wx.Panel):
         boxorigin = wx.StaticBox(self, label="Start position (nm)")
 
         lblx = wx.StaticText(self, label='x')
+        lblx.SetForegroundColour(wx.BLUE)
         self._txtx = FloatRangeTextCtrl(self, name='x position',
                                         validator=FloatRangeTextValidator())
         self._txtx.SetValues([0.0])
 
         lbly = wx.StaticText(self, label='y')
+        lbly.SetForegroundColour(wx.BLUE)
         self._txty = FloatRangeTextCtrl(self, name='y position',
                                         validator=FloatRangeTextValidator())
         self._txty.SetValues([0.0])
 
         lblz = wx.StaticText(self, label='z')
+        lblz.SetForegroundColour(wx.BLUE)
         self._txtz = FloatRangeTextCtrl(self, name='z position',
                                         validator=FloatRangeTextValidator())
         self._txtz.SetValues([1e9])
@@ -138,21 +147,25 @@ class PencilBeamPanel(wx.Panel):
         self._rdbvector.SetValue(True)
 
         lblu = wx.StaticText(self, label='u')
+        lblu.SetForegroundColour(wx.BLUE)
         self._txtu = FloatRangeTextCtrl(self, name='u direction',
                                         validator=FloatRangeTextValidator())
         self._txtu.SetValues([0.0])
 
         lblv = wx.StaticText(self, label='v')
+        lblv.SetForegroundColour(wx.BLUE)
         self._txtv = FloatRangeTextCtrl(self, name='v direction',
                                         validator=FloatRangeTextValidator())
         self._txtv.SetValues([0.0])
 
         lblw = wx.StaticText(self, label='w')
+        lblw.SetForegroundColour(wx.BLUE)
         self._txtw = FloatRangeTextCtrl(self, name='z direction',
                                         validator=FloatRangeTextValidator())
         self._txtw.SetValues([-1])
 
         lblpolar = wx.StaticText(self, label=u'Inclination (\u00b0)')
+        lblpolar.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0, 180))
         self._txtpolar = FloatRangeTextCtrl(self, name='inclination',
                                             validator=validator)
@@ -160,6 +173,7 @@ class PencilBeamPanel(wx.Panel):
         self._txtpolar.Enable(False)
 
         lblazimuth = wx.StaticText(self, label=u'Azimuth (\u00b0)')
+        lblazimuth.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0, 360))
         self._txtazimuth = FloatRangeTextCtrl(self, name='azimuth',
                                               validator=validator)
@@ -168,6 +182,7 @@ class PencilBeamPanel(wx.Panel):
 
         ## Aperture
         lblaperture = wx.StaticText(self, label=u'Aperture (\u00b0)')
+        lblaperture.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0, 90))
         self._txtaperture = FloatRangeTextCtrl(self, name='aperture',
                                                validator=validator)
@@ -293,6 +308,7 @@ class GaussianBeamPanel(PencilBeamPanel):
 
         # Controls
         lbldiameter = wx.StaticText(self, label='Diameter (nm)')
+        lbldiameter.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0.0, float('inf')))
         self._txtdiameter = FloatRangeTextCtrl(self, name='diameter',
                                                validator=validator)
