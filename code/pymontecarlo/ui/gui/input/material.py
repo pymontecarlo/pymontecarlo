@@ -19,14 +19,14 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 # Third party modules.
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
 
 # Local modules.
-from wxtools2.list import PyListCtrl, Column
+from wxtools2.list import PyListCtrl, Column, EVT_LIST_CHANGED, wxEVT_LIST_CHANGED
 from wxtools2.menu import popupmenu
 from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
@@ -39,7 +39,8 @@ from pymontecarlo.input.material import \
 from pymontecarlo.ui.gui.util.periodictable import PeriodicTableDialog
 
 # Globals and constants variables.
-from pymontecarlo.ui.gui.art import ART_LIST_ADD, ART_LIST_REMOVE, ART_LIST_CLEAR
+from pymontecarlo.ui.gui.art import \
+    ART_LIST_ADD, ART_LIST_REMOVE, ART_LIST_CLEAR, ART_LIST_EDIT
 
 _ICON_CALC = PyEmbeddedImage("iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAGWAAABlgBH4cC6gAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAQdEVYdFRpdGxlAENhbGN1bGF0b3IeSkheAAAAFHRFWHRBdXRob3IASmFrdWIgU3RlaW5lcub79y8AAABJdEVYdENvcHlyaWdodABQdWJsaWMgRG9tYWluIGh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL3B1YmxpY2RvbWFpbi9Zw/7KAAADsElEQVQ4jZ2Vy28bVRSHvzt3PI5nJrZnHBMnJG0S+hKNwqIholRdsoLyP0J33SB1wzILFLFCJJVCK5UmRJXzsseOPH7N614Wqd04NVRwpFnM0bnf/ek3Z84RWmtGsb6+btm27fM/w3Gc5vb2dgogRuCNjQ3vyZPvf7tz905x2qEr9wN6Sg52f989e/Fi98H29vbQHCV939/c3Npa3dnZwZDyPynVaBAGX3390N7Z+WUFeDUGSynF2dk599fv4rqS13/uTYX0un0K9gzDQYSUkplCno31R7w5eEuz2TRGdebVQ1Ec4VcqDAYBnU4wFXzwpo5pSlqtDhftkEePvyCKIxzH4fysLaaCsyyjP+jje/Osra5PBa+u3H9Xq5DSQAgD23aonzSJouG4bgxO05Qkjvnx6TO++/YbFhYWkcbHvc6yjP0/XvPT8595/PDhh2AAK2fRal/ww9NnHwVeDyEEWis1eh+bnaYpwhBsPdikXC5hGBLDMD7+CIFdsLl5YxmdqXEDTige9AfYdoHFapXFapWy59MKmqgsw3ZcBsMhSRKRzxew8nkG/R5ojTAM8jMF1JXGHisefbi3R3+x9OkiC7V5Tk/qFGddbt++Rb8XorOEz+/dI0sihv0eKzeW2fpyk5vLS5iGuKpxUnESJ6RZRqPRQCmFAC4uLlBKkaQpWZpyenpKHMfkCzbFYhHHcXAch1a7jXpv8SRYoZktlmi32whDUP1knqBxTjMI8CtzdMOQZrNJqeyRpCl7e3tYlkWSJPiVuQnFBtei3w1ZXl5ioVajHQS4rsvqygrdsIPKUtbW1hj0e0gzh5mzsB0H23EJe32ujo4JxVop0jRFKYXWmiRJ0HqGLMvI0nTcPUop0jjm9q3P8DyPVqtF/fjknz0GcIsljo9PEAIq1SrtVkDY7eJ5Ht1uj3q9ju04DKMYy7KwLAvTNC/7OHvv8YQVWmui4YDZWRfbtgnDDtIw8D2PXq9HHEeUy2WGgwFaa6SUOI6DnDINP/A4TRJ838f3fZIoolgsUiqV0EqRM01KpRJCCEwzRxRFBEFAHMcImOjjsRVaa6GVJpfPc3h4CIA/N0ej0SBotZh1XcKwy8HhIXnLQkrJ/v4+pmmilKLsVwAt4jjOTYDDMJS5nJnV5mtScLkjlNbYzuy7OaApepWxZZdRRggBWl92hCbrdDruBPjly5e/ztdqz8vl8g0NE7+Rvr6DpuQF6Eaj8ero6OgAruw8ACFEHigC1lTSv0cKhFrrPsDf67q55FA43HwAAAAASUVORK5CYII=")
 
@@ -79,7 +80,7 @@ class MaterialDialog(wx.Dialog):
         self.SetSizeHints(500, 600)
 
         # Variables
-        self._retval = None
+        self._material = material
 
         # Controls
         ## Name
@@ -193,8 +194,8 @@ class MaterialDialog(wx.Dialog):
 
     def _calculate(self):
         """
-        Calculates composition, name and density based on the user selection and
-        returns a material.
+        Calculates composition, name and density based on the user selection.
+        Updates internal material (:var:`_material`) and graphical interface.
         """
         composition = {}
         for row in self._lstelements:
@@ -240,8 +241,9 @@ class MaterialDialog(wx.Dialog):
         self._txtdensity.SetValue(str(mat.density_kg_m3))
 
         for i, row in enumerate(self._lstelements):
-            self._lstelements[i] = _ElementRow(row.z, mat.composition[row.z],
-                                               mat.composition_atomic[row.z])
+            self._lstelements[i] = \
+                _ElementRow(row.z, mat.composition[row.z],
+                            mat.composition_atomic[row.z])
 
         return mat
 
@@ -371,18 +373,122 @@ class MaterialDialog(wx.Dialog):
     def OnOk(self, event):
         mat = self._calculate()
         if mat is None:
-            self._retval = None
             event.StopPropagation()
         else:
-            self._retval = mat
+            if self._material is None:
+                self._material = mat
+            else:
+                self._material.name = mat.name
+                self._material.composition = mat.composition
+                self._material.density_kg_m3 = mat.density_kg_m3
             event.Skip()
 
     def GetMaterial(self):
         """
-        Returns the successfully created material. A new material object is
-        always returned even in edit mode.
+        Returns the successfully created material or the edited material.
         """
-        return self._retval
+        return self._material
+
+from wxtools2.list import PyListCtrlValidator
+
+class MaterialListCtrl(wx.Panel):
+
+    def __init__(self, parent):
+        """
+        List control to add materials.
+        """
+        wx.Panel.__init__(self, parent)
+
+        # Controls
+        ## List control
+        columns = [Column('Material(s)', attrgetter('name'))]
+        validator = PyListCtrlValidator(False)
+        self._lst = PyListCtrl(self, columns, validator=validator,
+                               name='materials')
+
+        ## Action buttons
+        toolbar = wx.ToolBar(self)
+
+        self._TOOL_ADD = wx.NewId()
+        bitmap = wx.ArtProvider_GetBitmap(ART_LIST_ADD, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(self._TOOL_ADD, bitmap, "Add material")
+
+        self._TOOL_REMOVE = wx.NewId()
+        bitmap = wx.ArtProvider_GetBitmap(ART_LIST_REMOVE, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(self._TOOL_REMOVE, bitmap,
+                              "Remove selected material")
+
+        self._TOOL_CLEAR = wx.NewId()
+        bitmap = wx.ArtProvider_GetBitmap(ART_LIST_CLEAR, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(self._TOOL_CLEAR, bitmap, "Remove all materials")
+
+        self._TOOL_EDIT = wx.NewId()
+        bitmap = wx.ArtProvider_GetBitmap(ART_LIST_EDIT, wx.ART_TOOLBAR)
+        toolbar.AddSimpleTool(self._TOOL_EDIT, bitmap, "Edit material")
+
+        toolbar.Realize()
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(self._lst, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(toolbar, 0, wx.ALIGN_RIGHT)
+
+        self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(wx.EVT_TOOL, self.OnAdd, id=self._TOOL_ADD)
+        self.Bind(wx.EVT_TOOL, self.OnRemove, id=self._TOOL_REMOVE)
+        self.Bind(wx.EVT_TOOL, self.OnClear, id=self._TOOL_CLEAR)
+        self.Bind(wx.EVT_TOOL, self.OnEdit, id=self._TOOL_EDIT)
+
+        self.Bind(EVT_LIST_CHANGED, self._OnListChanged, self._lst)
+
+    def OnAdd(self, event):
+        dialog = MaterialDialog(self.GetParent())
+
+        if dialog.ShowModal() == wx.ID_OK:
+            material = dialog.GetMaterial()
+            self._lst.append(material)
+
+        dialog.Destroy()
+
+    def OnRemove(self, event):
+        if not self._lst: # No materials
+            return
+
+        if not self._lst.selection:
+            show_exclamation_dialog(self, "Please select a material to delete")
+            return
+
+        del self._lst.selection
+
+    def OnClear(self, event):
+        self._lst.clear()
+
+    def OnEdit(self, event):
+        if not self._lst: # No materials
+            return
+
+        if not self._lst.selection:
+            show_exclamation_dialog(self, "Please select a material to edit")
+            return
+
+        dialog = MaterialDialog(self.GetParent(), self._lst.selection)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            material = dialog.GetMaterial()
+            self._lst[self._lst.index(material)] = material # update
+
+        dialog.Destroy()
+
+    def _OnListChanged(self, event):
+        # Wrapper
+        event = wx.PyCommandEvent(wxEVT_LIST_CHANGED, self.GetId())
+        self.GetEventHandler().ProcessEvent(event)
+
+    def GetMaterials(self):
+        return list(self._lst) # copy
 
 if __name__ == '__main__':
     from pymontecarlo.ui.gui.art import ArtProvider
