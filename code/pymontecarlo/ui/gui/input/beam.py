@@ -314,6 +314,7 @@ class GaussianBeamPanel(PencilBeamPanel):
         self._txtdiameter = FloatRangeTextCtrl(self, name='diameter',
                                                validator=validator)
         self._txtdiameter.SetValues([10.0])
+        self._txtdiameter.MoveAfterInTabOrder(self._txtenergy)
 
         # Sizer
         sizer = self.GetSizer()
