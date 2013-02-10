@@ -93,7 +93,8 @@ def _calculate_composition(composition):
 
     # Check total fraction
     totalfraction = sum(composition3.values())
-    if (totalfraction - 1.0) > 1e-6:
+    print totalfraction, abs(totalfraction - 1.0)
+    if abs(totalfraction - 1.0) > 1e-6:
         raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
 
     return composition3
