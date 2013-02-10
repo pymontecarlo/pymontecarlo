@@ -93,7 +93,6 @@ def _calculate_composition(composition):
 
     # Check total fraction
     totalfraction = sum(composition3.values())
-    print totalfraction, abs(totalfraction - 1.0)
     if abs(totalfraction - 1.0) > 1e-6:
         raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
 
@@ -155,13 +154,13 @@ def _generate_name(composition):
     :type composition: :class:`dict`
     """
     composition_atomic = _calculate_composition_atomic(composition)
-    
+
     symbols = []
     fractions = []
     for z in sorted(composition_atomic.keys(), reverse=True):
         symbols.append(ep.symbol(z))
         fractions.append(int(composition_atomic[z] * 100.0))
-    
+
     # Find gcd of the fractions
     smallest_gcd = 100
     if len(fractions) >= 2:
