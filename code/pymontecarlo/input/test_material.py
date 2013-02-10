@@ -141,10 +141,6 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
 
     def testcomposition(self):
-        # Vacuum
-        self.m.composition = {}
-        self.assertEqual({}, self.m.composition)
-
         # Wildcard
         self.m.composition = {29: 0.7, 30: '?'}
         self.assertTrue(self.m.composition.has_key(29))
@@ -172,10 +168,6 @@ class TestMaterial(TestCase):
         self.assertRaises(ValueError, self.m.__setattr__, 'composition', {29: 0.7, 30: 0.7})
 
     def testcomposition_atomic(self):
-        # Vacuum
-        self.m.composition = {}
-        self.assertEqual({}, self.m.composition_atomic)
-
         # Wildcard
         self.m.composition = {29: 0.7, 30: '?'}
         self.assertTrue(self.m.composition_atomic.has_key(29))

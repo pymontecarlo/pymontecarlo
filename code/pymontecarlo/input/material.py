@@ -20,6 +20,8 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from collections import defaultdict
+from fractions import gcd
+from itertools import combinations
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
@@ -31,6 +33,152 @@ import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
+
+def _calculate_composition(composition):
+    """
+    Returns a valid composition :class:`dict`.
+    Replaces wildcards and ensures that the total fraction is equal to 1.0.
+    
+    :arg composition: composition in weight fraction. 
+        The composition is specified by a dictionary.
+        The key can either be the atomic number or the symbol of the element.
+        It will automatically be converted to the atomic number.
+        The value is the weight fraction between ]0.0, 1.0] or ``?`` 
+        indicating that the weight fraction is unknown and shall be 
+        automatically calculated to make the total weight fraction equal 
+        to 1.0. 
+    :type composition: :class:`dict`
+    """
+    if not composition:
+        raise ValueError, 'No elements defined'
+
+    composition2 = {}
+    for element, fraction in composition.iteritems():
+        # Replace symbol by atomic number
+        if isinstance(element, basestring): # symbol
+            element = ep.atomic_number(symbol=element)
+
+        # Atomic number check
+        if element <= 0 or element > 96:
+            raise ValueError, "Atomic number (%i) must be between [1, 96]" % element
+
+        # Fraction check
+        if fraction != '?':
+            fraction = float(fraction)
+            if fraction <= 0.0 or fraction > 1.0:
+                raise ValueError, "Fraction (%s) must be between ]0.0, 1.0]" % fraction
+
+        composition2[element] = fraction
+
+    # Replace wildcard
+    totalfraction = 0.0
+    countwildcard = 0
+    for fraction in composition2.values():
+        if fraction == '?':
+            countwildcard += 1
+        else:
+            totalfraction += fraction
+
+    if countwildcard > 0:
+        if totalfraction < 1.0:
+            wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
+        else:
+            raise ValueError, 'Wild card(s) could not be replaced since total fraction is already 1.0'
+
+    composition3 = {}
+    for z, fraction in composition2.iteritems():
+        if fraction == '?':
+            fraction = wildcardfraction
+        composition3[z] = fraction
+
+    # Check total fraction
+    totalfraction = sum(composition3.values())
+    if (totalfraction - 1.0) > 1e-6:
+        raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
+
+    return composition3
+
+def _calculate_composition_atomic(composition):
+    """
+    Returns a composition :class:`dict` where the values are atomic fractions.
+    
+    :arg composition: composition in weight fraction. 
+        The composition is specified by a dictionary.
+        The key are atomic numbers and the values weight fractions.
+        No wildcard are accepted.
+    :type composition: :class:`dict`
+    """
+    composition2 = {}
+
+    for z, weightfraction in composition.iteritems():
+        composition2[z] = weightfraction / ep.atomic_mass(z)
+
+    totalfraction = sum(composition2.values())
+
+    for z, fraction in composition2.iteritems():
+        composition2[z] = fraction / totalfraction
+
+    return composition2
+
+def _calculate_density(composition):
+    """
+    Returns an estimate density from the composition using the pure element
+    density and this equation.
+    
+    .. math::
+    
+       \\frac{1}{\\rho} = \\sum{\\frac{1}{\\rho_i}}
+    
+    :arg composition: composition in weight fraction. 
+        The composition is specified by a dictionary.
+        The key are atomic numbers and the values weight fractions.
+        No wildcard are accepted.
+    :type composition: :class:`dict`
+    """
+    density = 0.0
+
+    for z, fraction in composition.iteritems():
+        density += fraction / ep.mass_density(z)
+
+    return 1.0 / density
+
+def _generate_name(composition):
+    """
+    Generates a name from the composition. 
+    The name is generated on the basis of a classical chemical formula.
+    
+    :arg composition: composition in weight fraction. 
+        The composition is specified by a dictionary.
+        The key are atomic numbers and the values weight fractions.
+        No wildcard are accepted.
+    :type composition: :class:`dict`
+    """
+    composition_atomic = _calculate_composition_atomic(composition)
+    
+    symbols = []
+    fractions = []
+    for z in sorted(composition_atomic.keys(), reverse=True):
+        symbols.append(ep.symbol(z))
+        fractions.append(int(composition_atomic[z] * 100.0))
+    
+    # Find gcd of the fractions
+    smallest_gcd = 100
+    if len(fractions) >= 2:
+        gcds = []
+        for a, b in combinations(fractions, 2):
+            gcds.append(gcd(a, b))
+        smallest_gcd = min(gcds)
+
+    # Write formula
+    name = ''
+    for symbol, fraction in zip(symbols, fractions):
+        fraction /= smallest_gcd
+        if fraction == 1:
+            name += "%s" % symbol
+        else:
+            name += '%s%i' % (symbol, fraction)
+
+    return name
 
 def composition_from_formula(formula):
     """
@@ -193,60 +341,6 @@ class Material(Option):
         element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
         element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
 
-    def __calculate_composition(self, composition):
-        composition2 = {}
-        for element, fraction in composition.iteritems():
-            # Replace symbol by atomic number
-            if isinstance(element, basestring): # symbol
-                element = ep.atomic_number(symbol=element)
-
-            # Atomic number check
-            if element <= 0 or element > 96:
-                raise ValueError, "Atomic number (%i) must be between [1, 96]" % element
-
-            # Fraction check
-            if fraction != '?':
-                if fraction <= 0 or fraction > 1.0:
-                    raise ValueError, "Fraction (%s) must be between ]0.0, 1.0]" % fraction
-
-            composition2[element] = fraction
-
-        # Replace wildcard
-        totalfraction = 0.0
-        countwildcard = 0
-        for fraction in composition2.values():
-            if fraction == '?':
-                countwildcard += 1
-            else:
-                totalfraction += fraction
-
-        if countwildcard > 0:
-            if totalfraction < 1.0:
-                wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
-            else:
-                wildcardfraction = 0.0
-
-        composition3 = {}
-        for z, fraction in composition2.iteritems():
-            if fraction == '?':
-                fraction = wildcardfraction
-            composition3[z] = fraction
-
-        # Check total fraction
-        totalfraction = sum(composition3.values())
-        if (totalfraction - 1.0) > 1e-6:
-            raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
-
-        return composition3
-
-    def __calculate_density(self):
-        density = 0.0
-
-        for z, fraction in self.composition.iteritems():
-            density += fraction / ep.mass_density(z)
-
-        return 1.0 / density
-
     @property
     def name(self):
         """
@@ -269,7 +363,10 @@ class Material(Option):
 
     @composition.setter
     def composition(self, composition):
-        self._props['composition'] = self.__calculate_composition(composition)
+        composition = _calculate_composition(composition)
+        self._props['composition'] = composition
+        self._props['composition_atomic'] = \
+            _calculate_composition_atomic(composition)
 
     @property
     def composition_atomic(self):
@@ -278,17 +375,7 @@ class Material(Option):
         The composition is specified by a dictionary.
         The keys are atomic numbers and values are atomic fractions.
         """
-        composition = {}
-
-        for z, weightfraction in self.composition.iteritems():
-            composition[z] = weightfraction / ep.atomic_mass(z)
-
-        totalfraction = sum(composition.values())
-
-        for z, fraction in composition.iteritems():
-            composition[z] = fraction / totalfraction
-
-        return composition
+        return self._props['composition_atomic']
 
     @property
     def density_kg_m3(self):
@@ -298,7 +385,7 @@ class Material(Option):
         if self.has_density_defined():
             return self._props['density']
         else:
-            return self.__calculate_density()
+            return _calculate_density(self.composition)
 
     @density_kg_m3.setter
     def density_kg_m3(self, density):
@@ -387,6 +474,10 @@ class _Vacuum(Option):
 
     @property
     def composition(self):
+        return {}
+
+    @property
+    def composition_atomic(self):
         return {}
 
     @property
