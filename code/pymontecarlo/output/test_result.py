@@ -78,7 +78,7 @@ class TestPhotonIntensityResult(TestCase):
         self.assertTrue(True)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det1')
 
@@ -104,6 +104,7 @@ class TestPhotonIntensityResult(TestCase):
         self.assertAlmostEqual(0.8, dataset.attrs['et'][1], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -287,7 +288,7 @@ class TestPhotonSpectrumResult(TestCase):
         self.assertAlmostEqual(0.5, self.r.energy_channel_width_eV, 4)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det4')
 
@@ -306,6 +307,7 @@ class TestPhotonSpectrumResult(TestCase):
         self.assertAlmostEqual(0.05, spectrum[0][2], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -430,7 +432,7 @@ class TestPhiRhoZResult(TestCase):
         self.assertTrue(True)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det5')
 
@@ -459,6 +461,7 @@ class TestPhiRhoZResult(TestCase):
         self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -563,7 +566,7 @@ class TestTimeResult(TestCase):
         self.assertAlmostEqual(0.5, self.r.simulation_speed_s[1], 4)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det2')
 
@@ -572,6 +575,7 @@ class TestTimeResult(TestCase):
         self.assertAlmostEqual(0.5, hdf5file['det2'].attrs['simulation_speed_s'][1], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -602,13 +606,14 @@ class TestShowersStatisticsResult(TestCase):
         self.assertEqual(6, self.r.showers)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det7')
 
         self.assertEqual(6, hdf5file['det7'].attrs['showers'])
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -642,7 +647,7 @@ class TestElectronFractionResult(TestCase):
         self.assertAlmostEqual(0.3, self.r.transmitted[1], 4)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det3')
 
@@ -654,6 +659,7 @@ class TestElectronFractionResult(TestCase):
         self.assertAlmostEqual(0.3, hdf5file['det3'].attrs['transmitted'][1], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -697,7 +703,7 @@ class TestTrajectoryResult(TestCase):
         self.assertEqual(5, trajectory.interactions.shape[1])
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det6')
 
@@ -711,6 +717,7 @@ class TestTrajectoryResult(TestCase):
         self.assertEqual(2, len(dataset))
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):
@@ -752,7 +759,7 @@ class Test_ChannelsResult(TestCase):
         self.assertAlmostEqual(0.2, data[1][2], 4)
 
     def test__savehdf5__(self):
-        _, filepath = tempfile.mkstemp('.h5')
+        fd, filepath = tempfile.mkstemp('.h5')
         hdf5file = h5py.File(filepath, 'w')
         self.r.__savehdf5__(hdf5file, 'det8')
 
@@ -761,6 +768,7 @@ class Test_ChannelsResult(TestCase):
         self.assertAlmostEqual(0.2, dataset[1][2], 4)
 
         hdf5file.close()
+        os.close(fd)
         os.remove(filepath)
 
     def test__loadhdf5__(self):

@@ -117,12 +117,12 @@ class Updater(_Updater):
         # Add version
         newzip.comment = 'version=%s' % '2'
 
+        oldzip.close()
+        newzip.close()
+
         # Remove old zip and replace with new one
         os.remove(filepath)
         os.rename(filepath + ".new", filepath)
-
-        oldzip.close()
-        newzip.close()
 
         return self._update_version2(filepath)
 
@@ -151,12 +151,12 @@ class Updater(_Updater):
         # Add version
         newzip.comment = 'version=%s' % '3'
 
+        oldzip.close()
+        newzip.close()
+
         # Remove old zip and replace with new one
         os.remove(filepath)
         os.rename(filepath + ".new", filepath)
-
-        oldzip.close()
-        newzip.close()
 
         return self._update_version3(filepath)
 

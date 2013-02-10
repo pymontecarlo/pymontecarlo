@@ -86,12 +86,12 @@ class Updater(_Updater):
         # Add version
         newzip.comment = 'version=%s' % VERSION
 
+        oldzip.close()
+        newzip.close()
+
         # Remove old zip and replace with new one
         os.remove(filepath)
         os.rename(filepath + ".new", filepath)
-
-        oldzip.close()
-        newzip.close()
 
         return filepath
 
