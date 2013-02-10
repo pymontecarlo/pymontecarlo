@@ -26,15 +26,15 @@ import wx
 import numpy as np
 
 # Local modules.
-from wxtools2.wizard import WizardPage
 from wxtools2.combobox import PyComboBox
-from wxtools2.validator import form_validate
 from wxtools2.floattext import FloatRangeTextCtrl, FloatRangeTextValidator
 
 from pymontecarlo.input.beam import PencilBeam, GaussianBeam
 
 from pymontecarlo.util.manager import ClassManager
 from pymontecarlo.util.human import camelcase_to_words
+
+from pymontecarlo.ui.gui.input.wizardpage import WizardPage
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import PARTICLES, ELECTRON
@@ -70,8 +70,17 @@ class BeamWizardPage(WizardPage):
         # Bind
         self.Bind(wx.EVT_COMBOBOX, self.OnType, self._cbtype)
 
-        # Add beams
-        self._cbtype.extend(wizard.available_beams)
+        # Add types
+        for clasz in wizard.available_beams:
+            try:
+                BeamPanelManager.get(clasz)
+            except KeyError:
+                continue
+            self._cbtype.append(clasz)
+
+        if not self._cbtype: # Empty
+            raise ValueError, 'No beam panel found'
+
         self._cbtype.selection = self._cbtype[0]
 
     def OnType(self, event):
@@ -92,11 +101,8 @@ class BeamWizardPage(WizardPage):
         self._sizer.Layout()
         self.Thaw()
 
-    def Validate(self):
-        return form_validate(self._panel)
-
-    def GetBeams(self):
-        return self._panel.GetBeams()
+    def get_options(self):
+        return self._panel.get_beams()
 
 class PencilBeamPanel(wx.Panel):
 
@@ -114,7 +120,7 @@ class PencilBeamPanel(wx.Panel):
         lblenergy = wx.StaticText(self, label='Incident energy (keV)')
         lblenergy.SetForegroundColour(wx.BLUE)
         validator = FloatRangeTextValidator(range=(0.001, float('inf')))
-        self._txtenergy = FloatRangeTextCtrl(self, name='Incident energy',
+        self._txtenergy = FloatRangeTextCtrl(self, name='incident energy',
                                              validator=validator)
         self._txtenergy.SetValues([15.0])
 
@@ -252,12 +258,7 @@ class PencilBeamPanel(wx.Panel):
         self.Bind(wx.EVT_RADIOBUTTON, self.OnDirection, self._rdbangle)
 
     def OnValueChanged(self, event):
-        try:
-            beams = self.GetBeams()
-        except:
-            beams = []
-
-        self.GetTopLevelParent().SetSimulationCount(len(beams))
+        self.GetParent().OnValueChanged(event)
 
     def OnDirection(self, event):
         self._txtu.Enable(self._rdbvector.GetValue())
@@ -266,7 +267,7 @@ class PencilBeamPanel(wx.Panel):
         self._txtpolar.Enable(self._rdbangle.GetValue())
         self._txtazimuth.Enable(self._rdbangle.GetValue())
 
-    def GetBeams(self):
+    def get_beams(self):
         particle = self._cbparticle.selection
         energies = np.array(self._txtenergy.GetValues()) * 1e3
         xs = np.array(self._txtx.GetValues()) * 1e-9
@@ -330,7 +331,7 @@ class GaussianBeamPanel(PencilBeamPanel):
         # Bind
         self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txtdiameter)
 
-    def GetBeams(self):
+    def get_beams(self):
         particle = self._cbparticle.selection
         energies = np.array(self._txtenergy.GetValues()) * 1e3
         diameters = np.array(self._txtdiameter.GetValues()) * 1e-9

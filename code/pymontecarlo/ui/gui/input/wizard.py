@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from operator import methodcaller, mul
 
 # Third party modules.
 import wx
@@ -27,6 +28,7 @@ import wx
 from wxtools2.wizard import Wizard
 
 from pymontecarlo.ui.gui.input.beam import BeamWizardPage
+from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
 
 # Globals and constants variables.
 
@@ -51,18 +53,17 @@ class NewSimulationWizard(Wizard):
         self._szr_buttons.Insert(0, self._lblcount, flag=wx.ALIGN_CENTER_VERTICAL)
 
         # Pages
-        self.pages.append(BeamWizardPage(self))
+        self._page_beam = BeamWizardPage(self)
+        self.pages.append(self._page_beam)
+
+        self._page_geometry = GeometryWizardPage(self)
+        self.pages.append(self._page_geometry)
 
     def _get_classes(self, programs, attr):
         classes = set()
-
         for program in programs:
             converter = program.converter_class
             classes |= set(getattr(converter, attr))
-
-        if not classes:
-            raise ValueError, 'No %s classes found' % attr
-
         return classes
 
     @property
@@ -81,7 +82,15 @@ class NewSimulationWizard(Wizard):
     def available_limits(self):
         return self._available_limits
 
-    def SetSimulationCount(self, count):
+    def OnValueChanged(self, event=None):
+        try:
+            counts = map(len, map(methodcaller('get_options'), self._pages))
+        except:
+            count = 0
+        else:
+            counts = [count for count in counts if count >= 1]
+            count = reduce(mul, counts, 1)
+
         if count > 1:
             label = '%i simulations defined' % count
         else:
@@ -89,9 +98,11 @@ class NewSimulationWizard(Wizard):
         self._lblcount.SetLabel(label)
 
 if __name__ == '__main__': #pragma: no cover
+    from pymontecarlo.ui.gui.art import ArtProvider
     from pymontecarlo.program.nistmonte.config import program as nistmonte
 
     app = wx.PySimpleApp()
+    wx.ArtProvider.Push(ArtProvider())
 
     programs = [nistmonte]
     wiz = NewSimulationWizard(None, programs)
