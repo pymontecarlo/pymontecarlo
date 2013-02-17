@@ -33,7 +33,7 @@ class _MonacoSetup(Setup):
         packages = \
             ['pymontecarlo.program.monaco',
              'pymontecarlo.program.monaco.input',
-             'pymontecarlo.program.monaco.io',
+             'pymontecarlo.program.monaco.output',
              'pymontecarlo.program.monaco.runner']
 
         Setup.__init__(self, packages)

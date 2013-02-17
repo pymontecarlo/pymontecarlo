@@ -39,7 +39,7 @@ class _PenelopeSetup(Setup):
         if packages is None: packages = []
         packages += ['pymontecarlo.program._penelope',
                      'pymontecarlo.program._penelope.input',
-                     'pymontecarlo.program._penelope.io',
+                     'pymontecarlo.program._penelope.output',
                      'penelopelib']
 
         if package_dir is None: package_dir = {}

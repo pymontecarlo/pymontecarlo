@@ -33,7 +33,7 @@ class _PenepmaSetup(_PenelopeSetup):
         packages = \
             ['pymontecarlo.program.penepma',
              'pymontecarlo.program.penepma.input',
-             'pymontecarlo.program.penepma.io',
+             'pymontecarlo.program.penepma.output',
              'pymontecarlo.program.penepma.runner']
 
         _PenelopeSetup.__init__(self, packages)

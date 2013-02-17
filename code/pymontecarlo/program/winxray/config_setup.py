@@ -36,7 +36,7 @@ class _WinXRaySetup(Setup):
     def __init__(self):
         packages = ['pymontecarlo.program.winxray',
                     'pymontecarlo.program.winxray.input',
-                    'pymontecarlo.program.winxray.io',
+                    'pymontecarlo.program.winxray.output',
                     'pymontecarlo.program.winxray.runner',
                     'winxrayTools.Configuration',
                     'winxrayTools.ResultsFile']

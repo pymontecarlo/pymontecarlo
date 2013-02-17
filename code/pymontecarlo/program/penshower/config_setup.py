@@ -33,7 +33,7 @@ class _PenshowerSetup(_PenelopeSetup):
         packages = \
             ['pymontecarlo.program.penshower',
              'pymontecarlo.program.penshower.input',
-             'pymontecarlo.program.penshower.io',
+             'pymontecarlo.program.penshower.output',
              'pymontecarlo.program.penshower.runner']
 
         _PenelopeSetup.__init__(self, packages)

@@ -36,7 +36,7 @@ class _Casino2Setup(Setup):
         packages = \
             ['pymontecarlo.program.casino2',
              'pymontecarlo.program.casino2.input',
-             'pymontecarlo.program.casino2.io',
+             'pymontecarlo.program.casino2.output',
              'pymontecarlo.program.casino2.runner',
              'casinoTools.FileFormat.casino2']
         py_modules = \

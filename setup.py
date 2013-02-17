@@ -13,6 +13,7 @@ import re
 from ConfigParser import SafeConfigParser
 
 # Third party modules.
+import setuptools
 from cx_Freeze import setup, Executable
 
 # Local modules.
@@ -23,7 +24,6 @@ from pymontecarlo import find_programs, load_program, get_program_setup
 # Collect options
 packages = ['pymontecarlo',
             'pymontecarlo.input',
-            'pymontecarlo.io',
             'pymontecarlo.output',
             'pymontecarlo.program',
             'pymontecarlo.runner',
