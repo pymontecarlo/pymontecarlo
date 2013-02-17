@@ -17,6 +17,13 @@ __version__ = "0.1"
 __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
+__all__ = ['Cuboids2D',
+           'GrainBoundaries',
+           'Inclusion',
+           'MultiLayers',
+           'Sphere',
+           'Substrate']
+
 # Standard library modules.
 from operator import attrgetter
 from math import pi
