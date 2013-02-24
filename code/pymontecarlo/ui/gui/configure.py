@@ -20,16 +20,13 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import re
 from operator import attrgetter
 
 # Third party modules.
 import wx
 
 # Local modules.
-from pymontecarlo.settings import load_settings, reload_settings
-from pymontecarlo.programs import load_program, get_program_gui, find_programs
-from pymontecarlo.util.config import ConfigParser
+from pymontecarlo.settings import load_settings, reload_settings, Settings
 
 from wxtools2.combobox import PyComboBox
 from wxtools2.list import PyListCtrl, Column
@@ -48,16 +45,16 @@ class ConfigureDialog(wx.Dialog):
         if os.path.exists(self._filepath):
             self._settings = load_settings([self._filepath])
         else:
-            self._settings = ConfigParser() # Empty settings
+            self._settings = Settings() # Empty settings
 
-        available_programs = sorted(find_programs())
+        available_programs = sorted(self._settings.get_available_programs())
         self._program_panels = {}
 
         # Controls
         ## Available programs
         lbl_available_programs = wx.StaticText(self, label='Available programs')
 
-        self._cb_available_programs = PyComboBox(self)
+        self._cb_available_programs = PyComboBox(self, attrgetter('name'))
         self._cb_available_programs.extend(available_programs)
 
         btn_activate = wx.Button(self, label='Activate')
@@ -111,16 +108,12 @@ class ConfigureDialog(wx.Dialog):
 
         # Load settings
         if 'pymontecarlo' in self._settings:
-            program_string = getattr(self._settings.pymontecarlo, 'programs').strip()
-            if program_string:
-                program_aliases = re.split(r'[^,;\s]*', program_string)
-                for program_alias in sorted(program_aliases):
-                    self.activate_program(program_alias)
+            for program in sorted(self._settings.get_programs()):
+                self.activate_program(program)
 
-    def activate_program(self, program_alias):
+    def activate_program(self, program):
         with catch_all(self) as success:
-            program = load_program(program_alias, validate=False)
-            gui = get_program_gui(program)
+            gui = self._settings.get_program_gui(program)
         if not success:
             return
 
@@ -128,14 +121,14 @@ class ConfigureDialog(wx.Dialog):
         self._program_panels.setdefault(program, panel)
 
         self._lst_selected_programs.append(program)
-        self._cb_available_programs.remove(program_alias)
+        self._cb_available_programs.remove(program)
 
         self._lst_selected_programs.selection = program
 
     def deactivate_program(self, program):
         self._lst_selected_programs.remove(program)
         self._program_panels.pop(program)
-        self._cb_available_programs.append(program.alias)
+        self._cb_available_programs.append(program)
         self._cb_available_programs.sort()
 
         del self._lst_selected_programs.selection
@@ -159,11 +152,11 @@ class ConfigureDialog(wx.Dialog):
         self.Thaw()
 
     def OnActivate(self, event):
-        program_alias = self._cb_available_programs.selection
-        if program_alias is None:
+        program = self._cb_available_programs.selection
+        if program is None:
             return
 
-        self.activate_program(program_alias)
+        self.activate_program(program)
 
     def OnDeactivate(self, event):
         if not self._lst_selected_programs:

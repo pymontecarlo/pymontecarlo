@@ -22,10 +22,8 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.settings import load_settings
-from pymontecarlo.programs import find_programs, load_program, get_program_cli
+from pymontecarlo.settings import load_settings, Settings
 from pymontecarlo.ui.cli.console import Console
-from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
 
@@ -51,24 +49,18 @@ def run(argv=None):
         console.print_message("No settings.cfg was found. This wizard will help you create one.")
         console.print_message("The settings.cfg will be saved in %s" % filepath)
 
-        settings = ConfigParser() # Empty settings
+        settings = Settings() # Empty settings
 
     console.print_line()
 
     # Programs
     programs = []
 
-    for program_alias in find_programs():
+    for program_alias in settings.get_available_program_aliases():
         answer = \
             console.prompt_boolean("Do you want to setup %s?" % program_alias, True)
         if answer:
-            try:
-                program = load_program(program_alias, validate=False)
-            except Exception as ex:
-                console.print_exception(ex)
-                return
-
-            cli = get_program_cli(program)
+            cli = settings.get_program_cli(program_alias)
             try:
                 pass
             except Exception as ex:
@@ -77,7 +69,7 @@ def run(argv=None):
 
             cli.configure(console, settings)
 
-            programs.append(program.alias)
+            programs.append(program_alias)
         else:
             if program_alias in settings:
                 delattr(settings, program_alias)
