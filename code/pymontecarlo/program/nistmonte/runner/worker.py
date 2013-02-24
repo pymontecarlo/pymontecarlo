@@ -27,7 +27,7 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 

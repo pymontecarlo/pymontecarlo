@@ -82,14 +82,21 @@ class NewSimulationWizard(Wizard):
     def available_limits(self):
         return self._available_limits
 
+    def OnPrev(self, event):
+        Wizard.OnPrev(self, event)
+        self.OnValueChanged()
+
+    def OnNext(self, event):
+        Wizard.OnNext(self, event)
+        self.OnValueChanged()
+
     def OnValueChanged(self, event=None):
         try:
-            counts = map(len, map(methodcaller('get_options'), self._pages))
+            pages = self._pages[:self._pages.index(self._pages.selection) + 1]
+            counts = map(len, map(methodcaller('get_options'), pages))
+            count = reduce(mul, counts, 1)
         except:
             count = 0
-        else:
-            counts = [count for count in counts if count >= 1]
-            count = reduce(mul, counts, 1)
 
         if count > 1:
             label = '%i simulations defined' % count
@@ -100,11 +107,12 @@ class NewSimulationWizard(Wizard):
 if __name__ == '__main__': #pragma: no cover
     from pymontecarlo.ui.gui.art import ArtProvider
     from pymontecarlo.program.nistmonte.config import program as nistmonte
+    from pymontecarlo.program.penepma.config import program as penepma
 
     app = wx.PySimpleApp()
     wx.ArtProvider.Push(ArtProvider())
 
-    programs = [nistmonte]
+    programs = [nistmonte, penepma]
     wiz = NewSimulationWizard(None, programs)
 
     wiz.ShowModal()

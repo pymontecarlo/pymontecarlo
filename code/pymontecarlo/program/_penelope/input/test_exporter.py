@@ -21,7 +21,7 @@ from nose.plugins.attrib import attr
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \

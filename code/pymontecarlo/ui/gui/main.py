@@ -67,17 +67,17 @@ class MainFrame(wx.Frame):
         menubar.Append(menu_file, 'File')
 
         item = wx.MenuItem(menu_file, wx.ID_NEW, "New simulation(s)")
-        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR))
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_MENU))
         menu_file.AppendItem(item)
 
         item = wx.MenuItem(menu_file, wx.ID_OPEN, "Open options and/or results")
-        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR))
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_MENU))
         menu_file.AppendItem(item)
 
         menu_file.AppendSeparator()
 
         item = wx.MenuItem(menu_file, wx.ID_CLOSE, "Close")
-        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_CLOSE, wx.ART_TOOLBAR))
+        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_CLOSE, wx.ART_MENU))
         menu_file.AppendItem(item)
 
         item = wx.MenuItem(menu_file, wx.ID_CLOSE_ALL, "Close all")
@@ -86,11 +86,11 @@ class MainFrame(wx.Frame):
         menu_file.AppendSeparator()
 
         item = wx.MenuItem(menu_file, wx.ID_PREFERENCES, "Configuration")
-        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_PREFERENCES, wx.ART_TOOLBAR))
+        item.SetBitmap(wx.ArtProvider.GetBitmap(ART_PREFERENCES, wx.ART_MENU))
         menu_file.AppendItem(item)
 
         item = wx.MenuItem(menu_file, wx.ID_EXIT, "Quit")
-        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_TOOLBAR))
+        item.SetBitmap(wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_MENU))
         menu_file.AppendItem(item)
 
         menubar.Enable(wx.ID_CLOSE, False)

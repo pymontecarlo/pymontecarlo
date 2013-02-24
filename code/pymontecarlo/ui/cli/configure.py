@@ -22,7 +22,8 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import load_settings, load_program, find_programs, get_program_cli
+from pymontecarlo.settings import load_settings
+from pymontecarlo.programs import find_programs, load_program, get_program_cli
 from pymontecarlo.ui.cli.console import Console
 from pymontecarlo.util.config import ConfigParser
 

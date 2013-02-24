@@ -25,7 +25,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.program.casino2.input.converter import Converter
 from pymontecarlo.program.casino2.input.exporter import Exporter
 from pymontecarlo.runner.worker import Worker as _Worker

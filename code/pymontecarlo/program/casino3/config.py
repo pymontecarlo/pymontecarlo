@@ -22,7 +22,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.program.config import Program
 from pymontecarlo.program.casino3.input.converter import Converter
 #from pymontecarlo.program.casino3.io.exporter import Exporter

@@ -27,7 +27,7 @@ from optparse import OptionParser, OptionGroup
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_programs
+from pymontecarlo.programs import get_programs
 
 from pymontecarlo.quant.input.measurement import Measurement
 from pymontecarlo.quant.runner.runner import Runner

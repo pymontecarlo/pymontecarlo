@@ -28,7 +28,7 @@ from operator import attrgetter, mul
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 
 from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 from pymontecarlo.input.collision import \

@@ -20,15 +20,27 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import math
+import copy
+from itertools import product
 
 # Third party modules.
 from OpenGL import GL
 from OpenGL import GLU
+import wx
+import numpy as np
 
 # Local modules.
+from wxtools2.combobox import PyComboBox
+from wxtools2.floattext import FloatRangeTextCtrl, FloatRangeTextValidator
+from wxtools2.list import EVT_LIST_CHANGED
+
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.util.manager import ClassManager
+from pymontecarlo.util.human import camelcase_to_words
+
+from pymontecarlo.ui.gui.input.material import MaterialListCtrl
+from pymontecarlo.ui.gui.input.wizardpage import WizardPage
 
 # Globals and constants variables.
 from pymontecarlo.ui.gui.color import COLORS
@@ -251,3 +263,202 @@ class SphereGL(_GeometryGL):
         GLU.gluDeleteQuadric(self._qobj)
 
 GeometryGLManager.register(Sphere, SphereGL)
+
+#------------------------------------------------------------------------------
+
+GeometryPanelManager = ClassManager()
+
+class GeometryWizardPage(WizardPage):
+
+    def __init__(self, wizard):
+        WizardPage.__init__(self, wizard, 'Geometry definition')
+
+        # Controls
+        ## Type
+        lbltype = wx.StaticText(self, label='Type')
+        font = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.NORMAL, wx.BOLD)
+        lbltype.SetFont(font)
+        getter = lambda t: camelcase_to_words(t.__name__)
+        self._cbtype = PyComboBox(self, getter)
+
+        ## Type panel
+        self._panel = wx.Panel(self)
+
+        ## Tilt
+        lbltilt = wx.StaticText(self, label=u'Tilt (\u00b0)')
+        lbltilt.SetForegroundColour(wx.BLUE)
+        validator = FloatRangeTextValidator(range=(-180.0, 180.0))
+        self._txttilt = FloatRangeTextCtrl(self, name='tilt',
+                                           validator=validator)
+        self._txttilt.SetValues([0.0])
+
+        ## Rotation
+        lblrotation = wx.StaticText(self, label=u'Rotation (\u00b0)')
+        lblrotation.SetForegroundColour(wx.BLUE)
+        validator = FloatRangeTextValidator(range=(-180.0, 180.0))
+        self._txtrotation = FloatRangeTextCtrl(self, name='rotation',
+                                               validator=validator)
+        self._txtrotation.SetValues([0.0])
+
+        # Sizer
+        self._sizer = wx.BoxSizer(wx.VERTICAL)
+
+        szr_type = wx.BoxSizer(wx.HORIZONTAL)
+        self._sizer.Add(szr_type, 0, wx.EXPAND | wx.ALL, 5)
+        szr_type.Add(lbltype, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_type.Add(self._cbtype, 1, wx.GROW)
+
+        self._sizer.Add(self._panel, 1, wx.EXPAND | wx.ALL, 5)
+
+        szr_extra = wx.GridBagSizer(5, 5)
+        self._sizer.Add(szr_extra, 0, wx.GROW | wx.ALL, 5)
+        szr_extra.AddGrowableCol(1)
+        szr_extra.Add(lbltilt, pos=(0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        szr_extra.Add(self._txttilt, pos=(0, 1), flag=wx.GROW)
+        szr_extra.Add(lblrotation, pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        szr_extra.Add(self._txtrotation, pos=(1, 1), flag=wx.GROW)
+
+        self.SetSizer(self._sizer)
+
+        # Bind
+        self.Bind(wx.EVT_COMBOBOX, self.OnType, self._cbtype)
+
+        self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txttilt)
+        self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txtrotation)
+
+        # Add types
+        for clasz in wizard.available_geometries:
+            try:
+                GeometryPanelManager.get(clasz)
+            except KeyError:
+                continue
+            self._cbtype.append(clasz)
+
+        if not self._cbtype: # Empty
+            raise ValueError, 'No geometry panel found'
+
+        self._cbtype.selection = self._cbtype[0]
+
+    def OnType(self, event):
+        clasz = self._cbtype.selection
+        panel_class = GeometryPanelManager.get(clasz)
+
+        oldpanel = self._panel
+        panel = panel_class(self)
+
+        self.Freeze()
+
+        self._sizer.Replace(oldpanel, panel)
+        panel.Show()
+
+        oldpanel.Destroy()
+        self._panel = panel
+
+        self._sizer.Layout()
+        self.Thaw()
+
+    def get_options(self):
+        tilts = np.radians(self._txttilt.GetValues())
+        rotations = np.radians(self._txtrotation.GetValues())
+        panel_geometries = self._panel.get_geometries()
+
+        geometries = []
+        for panel_geometry, tilt, rotation in \
+                product(panel_geometries, tilts, rotations):
+            geometry = copy.copy(panel_geometry)
+            geometry.tilt_rad = tilt
+            geometry.rotation_rad = rotation
+            geometries.append(geometry)
+
+        return geometries
+
+class SubstratePanel(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # Controls
+        self._lstmaterials = MaterialListCtrl(self)
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self._lstmaterials, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstmaterials)
+
+    def OnValueChanged(self, event):
+        self.GetParent().OnValueChanged(event)
+
+    def get_geometries(self):
+        geometries = []
+
+        for material in self._lstmaterials.GetMaterials():
+            geometry = Substrate(material)
+            geometries.append(geometry)
+
+        return geometries
+
+GeometryPanelManager.register(Substrate, SubstratePanel)
+
+class InclusionPanel(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # Controls
+        lbldiameter = wx.StaticText(self, label='Inclusion diameter (nm)')
+        lbldiameter.SetForegroundColour(wx.BLUE)
+        validator = FloatRangeTextValidator(range=(0.0001, float('inf')))
+        self._txtdiameter = FloatRangeTextCtrl(self, name='inclusion diameter',
+                                               validator=validator)
+        self._txtdiameter.SetValues([100.0])
+
+        lblsubstrate = wx.StaticText(self, label='Substrate')
+        lblsubstrate.SetForegroundColour(wx.BLUE)
+        self._lstsubstrate = MaterialListCtrl(self)
+
+        lblinclusion = wx.StaticText(self, label='Inclusion')
+        lblinclusion.SetForegroundColour(wx.BLUE)
+        self._lstinclusion = MaterialListCtrl(self)
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        szr_diameter = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(szr_diameter, 0, wx.EXPAND)
+        szr_diameter.Add(lbldiameter, 0, wx.ALIGN_CENTER_VERTICAL)
+        szr_diameter.Add(self._txtdiameter, 1, wx.GROW | wx.LEFT, 5)
+
+        sizer.Add(lblsubstrate, 0, wx.TOP, 20)
+        sizer.Add(self._lstsubstrate, 1, wx.EXPAND)
+        sizer.Add(lblinclusion, 0, wx.TOP, 20)
+        sizer.Add(self._lstinclusion, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txtdiameter)
+        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstsubstrate)
+        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstinclusion)
+
+    def OnValueChanged(self, event):
+        self.GetParent().OnValueChanged(event)
+
+    def get_geometries(self):
+        diameters = np.array(self._txtdiameter.GetValues()) * 1e-9
+
+        geometries = []
+
+        for substrate, inclusion, diameter in \
+                product(self._lstsubstrate.GetMaterials(),
+                        self._lstinclusion.GetMaterials(),
+                        diameters):
+            geometry = Inclusion(substrate, inclusion, diameter)
+            geometries.append(geometry)
+
+        return geometries
+
+GeometryPanelManager.register(Inclusion, InclusionPanel)

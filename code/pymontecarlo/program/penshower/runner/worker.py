@@ -28,7 +28,7 @@ from zipfile import ZipFile
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 

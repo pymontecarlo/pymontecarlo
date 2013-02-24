@@ -25,7 +25,7 @@ import unittest
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import load_settings, _set_settings
+from pymontecarlo.settings import load_settings, _set_settings
 
 # Globals and constants variables.
 

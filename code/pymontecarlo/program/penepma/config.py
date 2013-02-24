@@ -22,7 +22,7 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.program._penelope.config import _PenelopeProgram
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program.penepma.input.exporter import Exporter

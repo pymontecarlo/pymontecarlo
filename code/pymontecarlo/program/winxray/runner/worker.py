@@ -27,7 +27,7 @@ from zipfile import ZipFile
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import get_settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.program.winxray.input.converter import Converter

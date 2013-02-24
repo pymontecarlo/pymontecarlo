@@ -1,6 +1,11 @@
+syntax: glob
+
 build.prop
 code/pymontecarlo/testdata/settings.cfg
-/*.pyc
+code/pavement.cfg
+*.pyc
 build/
 dist/
-pyMonteCarlo.egg-info/
+*.egg-info
+code/pymontecarlo/program/*/build
+code/pymontecarlo/program/*/dist

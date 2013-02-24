@@ -20,13 +20,15 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import re
 from operator import attrgetter
 
 # Third party modules.
 import wx
 
 # Local modules.
-from pymontecarlo import load_settings, load_program, get_program_gui, find_programs, reload
+from pymontecarlo.settings import load_settings, reload_settings
+from pymontecarlo.programs import load_program, get_program_gui, find_programs
 from pymontecarlo.util.config import ConfigParser
 
 from wxtools2.combobox import PyComboBox
@@ -109,9 +111,11 @@ class ConfigureDialog(wx.Dialog):
 
         # Load settings
         if 'pymontecarlo' in self._settings:
-            program_aliases = getattr(self._settings.pymontecarlo, 'programs', '').split(',')
-            for program_alias in sorted(program_aliases):
-                self.activate_program(program_alias)
+            program_string = getattr(self._settings.pymontecarlo, 'programs').strip()
+            if program_string:
+                program_aliases = re.split(r'[^,;\s]*', program_string)
+                for program_alias in sorted(program_aliases):
+                    self.activate_program(program_alias)
 
     def activate_program(self, program_alias):
         with catch_all(self) as success:
@@ -203,7 +207,7 @@ class ConfigureDialog(wx.Dialog):
         message = 'Configuration saved in %s' % self._filepath
         show_exclamation_dialog(self, message, 'Configuration')
 
-        reload() # Reload settings and programs
+        reload_settings() # Reload settings and programs
 
         self.EndModal(wx.ID_OK)
 
@@ -215,6 +219,7 @@ if __name__ == '__main__':
 
     dialog = ConfigureDialog(None)
     dialog.ShowModal()
+    dialog.Destroy()
 
     app.MainLoop()
 
