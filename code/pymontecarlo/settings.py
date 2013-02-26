@@ -79,7 +79,7 @@ class Settings(ConfigParser):
             logging.error("No programs are defined in settings")
             return ()
 
-        return tuple(re.split(r'[^,;\s]*', programs_value))
+        return tuple(re.findall(r'[^,;\s]+', programs_value))
 
     def get_programs(self):
         programs = []
