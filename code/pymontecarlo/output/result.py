@@ -846,10 +846,17 @@ class Trajectory(object):
         :arg exit_state: exit state flag (backscattered, transmitted or absorbed)
         
         :arg interactions: two-dimensional array where each row corresponds
-            to an interaction of the particle. The first three columns must
-            be the x, y and z position (in m) of the interaction, the fourth
-            column, the energy at the position (in eV) and the fifth, the type 
-            of collision. The array can contain more columns.
+            to an interaction of the particle. The columns are defined as 
+            follows:
+            
+                #. x position (in m)
+                #. y position (in m)
+                #. z position (in m)
+                #. energy at position (in eV)
+                #. type of collision
+                #. region
+            
+            The array can contain more columns.
         :type: :class:`ndarray`
         """
         self._primary = primary

@@ -39,6 +39,7 @@ import xlwt
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
+import matplotlib.cm as cm
 
 # Local modules.
 from pymontecarlo.output.result import \
@@ -61,6 +62,7 @@ from pymontecarlo.output.result import \
 from pymontecarlo.input.collision import \
     (HARD_ELASTIC, HARD_INELASTIC, HARD_BREMSSTRAHLUNG_EMISSION,
      INNERSHELL_IMPACT_IONISATION)
+from pymontecarlo.ui.gui.color import COLORS
 
 _REGEX_CAMEL_CASE = re.compile('([a-z0-9])([A-Z])')
 
@@ -276,10 +278,15 @@ class _SaveableResultPanel(_ResultPanel):
         book.save(filepath)
 
 class _TrajectoryResultParameters(object):
+    COLOURING_EXIT_STATE = 'Exit state'
+    COLOURING_ENERGY = 'Energy'
+    COLOURING_REGION = 'Region'
 
     def __init__(self, max_trajectories):
         self.max_trajectories = max_trajectories
         self.number_trajectories = min(500, max_trajectories)
+
+        self.colouring = self.COLOURING_EXIT_STATE
 
         self.primary_backscattered_enabled = True
         self.primary_backscattered_color = (1.0, 0.0, 0.0)
@@ -321,6 +328,11 @@ class _TrajectoryResultParameters(object):
         self.collision_ionisation_color = (0.0, 0.0, 0.0)
         self.collision_ionisation_size = 3.0
 
+        self.energy_colormap = 'jet'
+        self.energy_width = 3.0
+
+        self.region_width = 3.0
+
         self.show_trajectories = True
         self.show_geometry = True
         self.show_scalebar = True
@@ -337,6 +349,15 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._sld_trajectories = wx.Slider(self)
         self._txt_trajectories = wx.StaticText(self)
 
+        ## Colouring
+        lbl_colouring = wx.StaticText(self, label='Colouring')
+
+        self._cb_colouring = PyComboBox(self)
+        self._cb_colouring.append(_TrajectoryResultParameters.COLOURING_EXIT_STATE)
+        self._cb_colouring.append(_TrajectoryResultParameters.COLOURING_ENERGY)
+        self._cb_colouring.append(_TrajectoryResultParameters.COLOURING_REGION)
+        self._cb_colouring.selection = _TrajectoryResultParameters.COLOURING_EXIT_STATE
+
         ## Visibility
         box_visibility = wx.StaticBox(self, label='Visibility')
 
@@ -344,7 +365,10 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._chk_show_geometry = wx.CheckBox(self, label='Geometry')
         self._chk_show_scalebar = wx.CheckBox(self, label='Scale bar')
 
-        ## Primary
+        ## Exit state
+        box_exit_state = wx.StaticBox(self, label='Exit state')
+
+        ### Primary
         box_primary = wx.StaticBox(self, label='Primary trajectories')
 
         self._chk_primary_backscattered = wx.CheckBox(self, label='Backscattered')
@@ -365,7 +389,7 @@ class _TrajectoryResultDialog(wx.Dialog):
                                                min_val=1, max_val=100,
                                                increment=1, digits=1)
 
-        ## Secondary
+        ### Secondary
         box_secondary = wx.StaticBox(self, label='Secondary trajectories')
 
         self._chk_secondary_backscattered = wx.CheckBox(self, label='Backscattered')
@@ -385,6 +409,29 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._txt_secondary_absorbed = FloatSpin(self, size=(40, -1),
                                                min_val=1, max_val=100,
                                                increment=1, digits=1)
+
+        ## Energy
+        box_energy = wx.StaticBox(self, label='Energy')
+
+        lbl_colormap = wx.StaticText(self, label='Colour')
+
+        self._cb_energy_colormap = PyComboBox(self)
+        cmaps = [cmap for cmap in cm.cmap_d.keys() if cmap.islower()]
+        self._cb_energy_colormap.extend(sorted(cmaps))
+        self._cb_energy_colormap.selection = 'jet'
+
+        lbl_energy_width = wx.StaticText(self, label='Width')
+        self._txt_energy_width = FloatSpin(self, size=(40, -1),
+                                           min_val=1, max_val=100,
+                                           increment=1, digits=1)
+
+        ## Region
+        box_region = wx.StaticBox(self, label='Region')
+
+        lbl_region_width = wx.StaticText(self, label='Width')
+        self._txt_region_width = FloatSpin(self, size=(40, -1),
+                                           min_val=1, max_val=100,
+                                           increment=1, digits=1)
 
         ## Collisions
         box_collision = wx.StaticBox(self, label='Collisions')
@@ -421,15 +468,21 @@ class _TrajectoryResultDialog(wx.Dialog):
         # Sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
 
+        ## Sizer 2
+        sizer2 = wx.GridBagSizer(5, 5)
+        sizer2.AddGrowableCol(1)
+        sizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
+
         ## Number of trajectories
-        szr_ntrajectories = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(szr_ntrajectories, 0, wx.GROW | wx.ALL, 5)
+        sizer2.Add(lbl_trajectories, pos=(0, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer2.Add(self._sld_trajectories, pos=(0, 1), flag=wx.EXPAND | wx.ALIGN_CENTER_VERTICAL)
+        sizer2.Add(self._txt_trajectories, pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
 
-        szr_ntrajectories.Add(lbl_trajectories, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        szr_ntrajectories.Add(self._sld_trajectories, 1, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        szr_ntrajectories.Add(self._txt_trajectories, 0, wx.ALIGN_CENTER_VERTICAL)
+        ## Colouring
+        sizer2.Add(lbl_colouring, pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer2.Add(self._cb_colouring, pos=(1, 1), flag=wx.ALIGN_CENTER_VERTICAL)
 
-        ## Visiblity
+        ## Visibility
         szr_visibilty = wx.StaticBoxSizer(box_visibility, wx.HORIZONTAL)
         sizer.Add(szr_visibilty, 0, wx.GROW | wx.ALL, 5)
 
@@ -437,13 +490,13 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_visibilty.Add(self._chk_show_geometry, 0, wx.ALL, 5)
         szr_visibilty.Add(self._chk_show_scalebar, 0, wx.ALL, 5)
 
-        ## Trajectories
-        szr_trajectories = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(szr_trajectories, 0, wx.GROW)
+        ## Exit state
+        szr_exit_state = wx.StaticBoxSizer(box_exit_state, wx.HORIZONTAL)
+        sizer.Add(szr_exit_state, 0, wx.GROW | wx.ALL, 5)
 
-        ## Primary
+        ### Primary
         szr_primary = wx.StaticBoxSizer(box_primary, wx.VERTICAL)
-        szr_trajectories.Add(szr_primary, 1, wx.GROW | wx.ALL, 5)
+        szr_exit_state.Add(szr_primary, 1, wx.GROW | wx.ALL, 5)
 
         szr_primary2 = wx.GridBagSizer(5, 5)
         szr_primary2.AddGrowableCol(0)
@@ -461,9 +514,9 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_primary2.Add(self._btn_primary_absorbed, (2, 1), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_primary2.Add(self._txt_primary_absorbed, (2, 2), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
-        ## Secondary
+        ### Secondary
         szr_secondary = wx.StaticBoxSizer(box_secondary, wx.VERTICAL)
-        szr_trajectories.Add(szr_secondary, 1, wx.GROW | wx.ALL, 5)
+        szr_exit_state.Add(szr_secondary, 1, wx.GROW | wx.ALL, 5)
 
         szr_secondary2 = wx.GridBagSizer(5, 5)
         szr_secondary2.AddGrowableCol(0)
@@ -481,11 +534,31 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_secondary2.Add(self._btn_secondary_absorbed, (2, 1), flag=wx.ALIGN_CENTER_HORIZONTAL)
         szr_secondary2.Add(self._txt_secondary_absorbed, (2, 2), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
+        ## Sizer 3
+        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(sizer3, 0, wx.EXPAND)
+
+        ## Energy
+        szr_energy = wx.StaticBoxSizer(box_energy, wx.HORIZONTAL)
+        sizer3.Add(szr_energy, 1, wx.GROW | wx.ALL, 5)
+
+        szr_energy.Add(lbl_colormap, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_energy.Add(self._cb_energy_colormap, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 15)
+        szr_energy.Add(lbl_energy_width, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_energy.Add(self._txt_energy_width, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        ## Region
+        szr_region = wx.StaticBoxSizer(box_region, wx.HORIZONTAL)
+        sizer3.Add(szr_region, 1, wx.GROW | wx.ALL, 5)
+
+        szr_region.Add(lbl_region_width, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        szr_region.Add(self._txt_region_width, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
         ## Collisions
         szr_collision = wx.StaticBoxSizer(box_collision, wx.VERTICAL)
         sizer.Add(szr_collision, 0, wx.GROW | wx.ALL, 5)
 
-        szr_collision2 = wx.GridBagSizer(5, 4)
+        szr_collision2 = wx.GridBagSizer(5, 5)
         szr_collision2.AddGrowableCol(0)
         szr_collision2.AddGrowableCol(3)
         szr_collision.Add(szr_collision2, 0, wx.GROW | wx.ALL, 5)
@@ -507,25 +580,27 @@ class _TrajectoryResultDialog(wx.Dialog):
         szr_collision2.Add(self._txt_ionisation, (1, 5), flag=wx.ALIGN_CENTER_HORIZONTAL)
 
         ## Buttons
-        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2.Add(btn_default, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
-        sizer2.AddStretchSpacer()
+        szr_buttons = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(szr_buttons, 0, wx.GROW)
 
-        sizer3 = wx.StdDialogButtonSizer()
-        sizer3.AddButton(btn_ok)
-        sizer3.AddButton(btn_cancel)
-        sizer3.SetAffirmativeButton(btn_ok)
-        sizer3.SetCancelButton(btn_cancel)
-        sizer3.Realize()
-        sizer2.Add(sizer3, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
+        szr_buttons.Add(btn_default, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL)
+        szr_buttons.AddStretchSpacer()
 
-        sizer.Add(sizer2, 0, wx.GROW)
+        szr_stdbuttons = wx.StdDialogButtonSizer()
+        szr_buttons.Add(szr_stdbuttons, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
+        szr_stdbuttons.AddButton(btn_ok)
+        szr_stdbuttons.AddButton(btn_cancel)
+        szr_stdbuttons.SetAffirmativeButton(btn_ok)
+        szr_stdbuttons.SetCancelButton(btn_cancel)
+        szr_stdbuttons.Realize()
 
         self.SetSizer(sizer)
         self.Fit()
 
         # Bind
         self.Bind(wx.EVT_SCROLL, self.OnTrajectories, self._sld_trajectories)
+
+        self.Bind(wx.EVT_COMBOBOX, self.OnColouring, self._cb_colouring)
 
         self.Bind(wx.EVT_BUTTON, self.OnColor, self._btn_primary_backscattered)
         self.Bind(wx.EVT_BUTTON, self.OnColor, self._btn_primary_transmitted)
@@ -547,6 +622,36 @@ class _TrajectoryResultDialog(wx.Dialog):
 
     def OnTrajectories(self, event):
         self._txt_trajectories.SetLabel(str(self._sld_trajectories.GetValue()))
+
+    def OnColouring(self, event):
+        colouring = self._cb_colouring.selection
+        exit_state = colouring == _TrajectoryResultParameters.COLOURING_EXIT_STATE
+        energy = colouring == _TrajectoryResultParameters.COLOURING_ENERGY
+        region = colouring == _TrajectoryResultParameters.COLOURING_REGION
+
+        self._chk_primary_absorbed.Enable(exit_state)
+        self._btn_primary_absorbed.Enable(exit_state)
+        self._txt_primary_absorbed.Enable(exit_state)
+        self._chk_primary_backscattered.Enable(exit_state)
+        self._btn_primary_backscattered.Enable(exit_state)
+        self._txt_primary_backscattered.Enable(exit_state)
+        self._chk_primary_transmitted.Enable(exit_state)
+        self._btn_primary_transmitted.Enable(exit_state)
+        self._txt_primary_transmitted.Enable(exit_state)
+        self._chk_secondary_absorbed.Enable(exit_state)
+        self._btn_secondary_absorbed.Enable(exit_state)
+        self._txt_secondary_absorbed.Enable(exit_state)
+        self._chk_secondary_backscattered.Enable(exit_state)
+        self._btn_secondary_backscattered.Enable(exit_state)
+        self._txt_secondary_backscattered.Enable(exit_state)
+        self._chk_secondary_transmitted.Enable(exit_state)
+        self._btn_secondary_transmitted.Enable(exit_state)
+        self._txt_secondary_transmitted.Enable(exit_state)
+
+        self._cb_energy_colormap.Enable(energy)
+        self._txt_energy_width.Enable(energy)
+
+        self._txt_region_width.Enable(region)
 
     def OnColor(self, event):
         data = wx.ColourData()
@@ -572,6 +677,8 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._sld_trajectories.SetRange(0, params.max_trajectories)
         self._sld_trajectories.SetValue(params.number_trajectories)
         self._txt_trajectories.SetLabel(str(params.number_trajectories))
+
+        self._cb_colouring.selection = params.colouring
 
         self._chk_primary_backscattered.SetValue(params.primary_backscattered_enabled)
         self._btn_primary_backscattered.SetBackgroundColour(_c(params.primary_backscattered_color))
@@ -613,6 +720,11 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._btn_ionisation.SetBackgroundColour(_c(params.collision_ionisation_color))
         self._txt_ionisation.SetValue(params.collision_ionisation_size)
 
+        self._cb_energy_colormap.selection = params.energy_colormap
+        self._txt_energy_width.SetValue(params.energy_width)
+
+        self._txt_region_width.SetValue(params.region_width)
+
         self._chk_show_trajectories.SetValue(params.show_trajectories)
         self._chk_show_geometry.SetValue(params.show_geometry)
         self._chk_show_scalebar.SetValue(params.show_scalebar)
@@ -625,6 +737,8 @@ class _TrajectoryResultDialog(wx.Dialog):
         params = _TrajectoryResultParameters(self._sld_trajectories.GetMax())
 
         params.number_trajectories = self._sld_trajectories.GetValue()
+
+        params.colouring = self._cb_colouring.selection
 
         params.primary_backscattered_enabled = self._chk_primary_backscattered.GetValue()
         params.primary_backscattered_color = _c(self._btn_primary_backscattered.GetBackgroundColour())
@@ -665,6 +779,11 @@ class _TrajectoryResultDialog(wx.Dialog):
         params.collision_ionisation_enabled = self._chk_ionisation.GetValue()
         params.collision_ionisation_color = _c(self._btn_ionisation.GetBackgroundColour())
         params.collision_ionisation_size = float(self._txt_ionisation.GetValue())
+
+        params.energy_colormap = self._cb_energy_colormap.selection
+        params.energy_width = float(self._txt_energy_width.GetValue())
+
+        params.region_width = float(self._txt_region_width.GetValue())
 
         params.show_trajectories = self._chk_show_trajectories.GetValue()
         params.show_geometry = self._chk_show_geometry.GetValue()
@@ -708,6 +827,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         GLCanvas.__init__(self, parent)
 
         # Variables
+        self._options = options
         self._result = result
         self._params = _TrajectoryResultParameters(len(result)) # default
         self._geometrygl = GeometryGLManager.get(options.geometry.__class__)(options.geometry)
@@ -753,72 +873,56 @@ class _TrajectoryResultGLCanvas(GLCanvas):
             if i > self._params.number_trajectories: break
 
             # Trajectory
-            color = None
-            width = 0
+            ilist = None
+            colouring = self._params.colouring
+            if colouring == _TrajectoryResultParameters.COLOURING_EXIT_STATE:
+                ilist = self._CreateExitStateTrajectoryList(trajectory)
+            elif colouring == _TrajectoryResultParameters.COLOURING_REGION:
+                ilist = self._CreateRegionTrajectoryList(trajectory)
+            elif colouring == _TrajectoryResultParameters.COLOURING_ENERGY:
+                ilist = self._CreateEnergyTrajectoryList(trajectory)
 
-            exit_state = trajectory.exit_state
-            interactions = trajectory.interactions
-
-            if trajectory.is_primary():
-                if exit_state == EXIT_STATE_BACKSCATTERED and \
-                        self._params.primary_backscattered_enabled:
-                    color = self._params.primary_backscattered_color
-                    width = self._params.primary_backscattered_width
-                elif exit_state == EXIT_STATE_TRANSMITTED and \
-                        self._params.primary_transmitted_enabled:
-                    color = self._params.primary_transmitted_color
-                    width = self._params.primary_transmitted_width
-                elif exit_state == EXIT_STATE_ABSORBED and \
-                        self._params.primary_absorbed_enabled:
-                    color = self._params.primary_absorbed_color
-                    width = self._params.primary_absorbed_width
-            else:
-                if exit_state == EXIT_STATE_BACKSCATTERED and \
-                        self._params.secondary_backscattered_enabled:
-                    color = self._params.secondary_backscattered_color
-                    width = self._params.secondary_backscattered_width
-                elif exit_state == EXIT_STATE_TRANSMITTED and \
-                        self._params.secondary_transmitted_enabled:
-                    color = self._params.secondary_transmitted_color
-                    width = self._params.secondary_transmitted_width
-                elif exit_state == EXIT_STATE_ABSORBED and \
-                        self._params.secondary_absorbed_enabled:
-                    color = self._params.secondary_absorbed_color
-                    width = self._params.secondary_absorbed_width
-
-            if color is None:
-                continue
-
-            ilist = self._CreateTrajectoryList(color, width, interactions)
-            self._glists.append(ilist)
+            if ilist is not None:
+                self._glists.append(ilist)
 
             # Collision
-            if self._params.collision_hard_elastic_enabled:
-                color = self._params.collision_hard_elastic_color
-                size = self._params.collision_hard_elastic_size
-                collision = HARD_ELASTIC
-                ilist = self._CreateCollisionList(color, size, collision, interactions)
-                self._glists.append(ilist)
-            if self._params.collision_hard_inelastic_enabled:
-                color = self._params.collision_hard_inelastic_color
-                size = self._params.collision_hard_inelastic_size
-                collision = HARD_INELASTIC
-                ilist = self._CreateCollisionList(color, size, collision, interactions)
-                self._glists.append(ilist)
-            if self._params.collision_bremsstrahlung_enabled:
-                color = self._params.collision_bremsstrahlung_color
-                size = self._params.collision_bremsstrahlung_size
-                collision = HARD_BREMSSTRAHLUNG_EMISSION
-                ilist = self._CreateCollisionList(color, size, collision, interactions)
-                self._glists.append(ilist)
-            if self._params.collision_ionisation_enabled:
-                color = self._params.collision_ionisation_color
-                size = self._params.collision_ionisation_size
-                collision = INNERSHELL_IMPACT_IONISATION
-                ilist = self._CreateCollisionList(color, size, collision, interactions)
-                self._glists.append(ilist)
+            self._glists.extend(self._CreateCollisionLists(trajectory))
 
-    def _CreateTrajectoryList(self, color, width, interactions):
+    def _CreateExitStateTrajectoryList(self, trajectory):
+        color = None
+        width = 0
+        exit_state = trajectory.exit_state
+
+        if trajectory.is_primary():
+            if exit_state == EXIT_STATE_BACKSCATTERED and \
+                    self._params.primary_backscattered_enabled:
+                color = self._params.primary_backscattered_color
+                width = self._params.primary_backscattered_width
+            elif exit_state == EXIT_STATE_TRANSMITTED and \
+                    self._params.primary_transmitted_enabled:
+                color = self._params.primary_transmitted_color
+                width = self._params.primary_transmitted_width
+            elif exit_state == EXIT_STATE_ABSORBED and \
+                    self._params.primary_absorbed_enabled:
+                color = self._params.primary_absorbed_color
+                width = self._params.primary_absorbed_width
+        else:
+            if exit_state == EXIT_STATE_BACKSCATTERED and \
+                    self._params.secondary_backscattered_enabled:
+                color = self._params.secondary_backscattered_color
+                width = self._params.secondary_backscattered_width
+            elif exit_state == EXIT_STATE_TRANSMITTED and \
+                    self._params.secondary_transmitted_enabled:
+                color = self._params.secondary_transmitted_color
+                width = self._params.secondary_transmitted_width
+            elif exit_state == EXIT_STATE_ABSORBED and \
+                    self._params.secondary_absorbed_enabled:
+                color = self._params.secondary_absorbed_color
+                width = self._params.secondary_absorbed_width
+
+        if color is None:
+            return
+
         ilist = GL.glGenLists(1)
         GL.glNewList(ilist, GL.GL_COMPILE)
         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
@@ -826,6 +930,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         GL.glColor(*color)
         GL.glLineWidth(width)
 
+        interactions = trajectory.interactions
         vertices = np.ravel(interactions[1:, 0:3]) * 1e6
         GL.glVertexPointer(3, GL.GL_FLOAT, 0, vertices)
         GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(vertices) / 3)
@@ -834,6 +939,95 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         GL.glEndList()
 
         return ilist
+
+    def _CreateRegionTrajectoryList(self, trajectory):
+        interactions = trajectory.interactions
+
+        ilist = GL.glGenLists(1)
+        GL.glNewList(ilist, GL.GL_COMPILE)
+        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+
+        GL.glLineWidth(self._params.region_width)
+
+        vertices = np.ravel(interactions[1:, 0:3]) * 1e6
+        GL.glVertexPointer(3, GL.GL_FLOAT, 0, vertices)
+
+        regions = interactions[:, 5].astype(int)
+        colors = np.zeros((len(regions), 3))
+        for i, region in enumerate(regions):
+            colors[i] = COLORS[region + 15]
+
+        GL.glColorPointer(3, GL.GL_FLOAT, 0, np.ravel(colors))
+
+        GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(vertices) / 3)
+
+        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEndList()
+
+        return ilist
+
+    def _CreateEnergyTrajectoryList(self, trajectory):
+        interactions = trajectory.interactions
+
+        ilist = GL.glGenLists(1)
+        GL.glNewList(ilist, GL.GL_COMPILE)
+        GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+
+        GL.glLineWidth(self._params.energy_width)
+
+        vertices = np.ravel(interactions[1:, 0:3]) * 1e6
+        GL.glVertexPointer(3, GL.GL_FLOAT, 0, vertices)
+
+        max_energy = self._options.beam.energy_eV
+        energies = np.copy(interactions[:, 3]) / max_energy
+        cmap = cm.get_cmap(self._params.energy_colormap)
+        colors = np.zeros((len(energies), 4))
+        for i, energy in enumerate(energies):
+            colors[i] = cmap(energy)
+
+        GL.glColorPointer(4, GL.GL_FLOAT, 0, np.ravel(colors))
+
+        GL.glDrawArrays(GL.GL_LINE_STRIP, 0, len(vertices) / 3)
+
+        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        GL.glEndList()
+
+        return ilist
+
+    def _CreateCollisionLists(self, trajectory):
+        glists = []
+        interactions = trajectory.interactions
+
+        if self._params.collision_hard_elastic_enabled:
+            color = self._params.collision_hard_elastic_color
+            size = self._params.collision_hard_elastic_size
+            collision = HARD_ELASTIC
+            ilist = self._CreateCollisionList(color, size, collision, interactions)
+            glists.append(ilist)
+        if self._params.collision_hard_inelastic_enabled:
+            color = self._params.collision_hard_inelastic_color
+            size = self._params.collision_hard_inelastic_size
+            collision = HARD_INELASTIC
+            ilist = self._CreateCollisionList(color, size, collision, interactions)
+            glists.append(ilist)
+        if self._params.collision_bremsstrahlung_enabled:
+            color = self._params.collision_bremsstrahlung_color
+            size = self._params.collision_bremsstrahlung_size
+            collision = HARD_BREMSSTRAHLUNG_EMISSION
+            ilist = self._CreateCollisionList(color, size, collision, interactions)
+            glists.append(ilist)
+        if self._params.collision_ionisation_enabled:
+            color = self._params.collision_ionisation_color
+            size = self._params.collision_ionisation_size
+            collision = INNERSHELL_IMPACT_IONISATION
+            ilist = self._CreateCollisionList(color, size, collision, interactions)
+            glists.append(ilist)
+
+        return glists
 
     def _CreateCollisionList(self, color, size, collision, interactions):
         cols = interactions[:, 4] == int(collision)
