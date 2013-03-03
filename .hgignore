@@ -1,11 +1,13 @@
 syntax: glob
 
-build.prop
-code/pymontecarlo/testdata/settings.cfg
-code/pavement.cfg
 *.pyc
-build/
-dist/
 *.egg-info
-code/pymontecarlo/program/*/build
-code/pymontecarlo/program/*/dist
+pavement.cfg
+
+src/core/pymontecarlo/testdata/settings.cfg
+src/core/build
+src/core/dist
+src/programs/*/build
+src/programs/*/dist
+
+lib/*
