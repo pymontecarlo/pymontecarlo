@@ -51,16 +51,13 @@ setup(name="pyMonteCarlo-PENELOPE",
       cmdclass={'clean': clean},
 
       entry_points={'pymontecarlo.program':
-                        'penepma=pymontecarlo.program.penepma.config:program',
+                        ['penepma=pymontecarlo.program.penepma.config:program',
+                         'penshower=pymontecarlo.program.penshower.config:program'],
                     'pymontecarlo.program.cli':
-                        'penepma=pymontecarlo.program.penepma.config_cli:cli',
+                        ['penepma=pymontecarlo.program.penepma.config_cli:cli',
+                         'penshower=pymontecarlo.program.penshower.config_cli:cli'],
                     'pymontecarlo.program.gui':
-                        'penepma=pymontecarlo.program.penepma.config_gui:gui',
-                    'pymontecarlo.program':
-                        'penshower=pymontecarlo.program.penshower.config:program',
-                    'pymontecarlo.program.cli':
-                        'penshower=pymontecarlo.program.penshower.config_cli:cli',
-                    'pymontecarlo.program.gui':
-                        'penshower=pymontecarlo.program.penshower.config_gui:gui', }
+                        ['penepma=pymontecarlo.program.penepma.config_gui:gui',
+                         'penshower=pymontecarlo.program.penshower.config_gui:gui'], }
 )
 
