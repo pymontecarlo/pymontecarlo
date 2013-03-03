@@ -27,7 +27,7 @@ from optparse import OptionParser, OptionGroup
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.programs import get_programs
+from pymontecarlo.settings import get_settings
 
 from pymontecarlo.quant.input.measurement import Measurement
 from pymontecarlo.quant.runner.runner import Runner
@@ -131,7 +131,7 @@ def run(argv=None):
     console = Console()
     console.init()
 
-    programs = get_programs()
+    programs = get_settings().get_programs()
 
     parser = create_parser(programs)
 
