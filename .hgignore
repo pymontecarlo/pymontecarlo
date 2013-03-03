@@ -2,7 +2,7 @@ syntax: glob
 
 *.pyc
 *.egg-info
-pavement.cfg
+pavement*.cfg
 
 src/core/pymontecarlo/testdata/settings.cfg
 src/core/build
@@ -11,3 +11,4 @@ src/programs/*/build
 src/programs/*/dist
 
 lib/*
+dist/*
