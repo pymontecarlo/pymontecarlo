@@ -33,7 +33,9 @@ setup(name="pyMonteCarlo-NISTMonte",
                    'Topic :: Scientific/Engineering',
                    'Topic :: Scientific/Engineering :: Physics'],
 
-      packages=['pymontecarlo.program.nistmonte',
+      packages=['pymontecarlo',
+                'pymontecarlo.program',
+                'pymontecarlo.program.nistmonte',
                 'pymontecarlo.program.nistmonte.input',
                 'pymontecarlo.program.nistmonte.runner'],
 
