@@ -117,7 +117,7 @@ EXCITATION_ENERGIES = \
      810.0, 823.0, 823.0, 830.0, 825.0, 794.0, 827.0, 826.0, 841.0, 847.0,
      878.0, 890.0, 902.0, 921.0, 934.0, 939.0, 952.0, 966.0, 980.0]
 
-def mass_density(z):
+def mass_density_kg_m3(z):
     """
     Returns the mass density (in kg/m3).
     From: Tableau periodique des elements, Sargent-Welch scientifique Canada Limitee.
@@ -129,19 +129,19 @@ def mass_density(z):
     :arg z: atomic number (1-96)
     """
     try:
-        return DENSITIES[z - 1]
+        return DENSITIES[z - 1] * 1000.0
     except IndexError:
         return ValueError, "No mass density for atomic number: %i." % z
 
-def atomic_mass(z):
+def atomic_mass_kg_mol(z):
     """
-    Returns the atomic mass (in g/mol).
+    Returns the atomic mass (in kg/mol).
     From: Tableau periodique des elements, Sargent-Welch scientifique Canada Limitee.
     
     :arg z: atomic number (1-106)
     """
     try:
-        return ATOMIC_MASSES[z - 1]
+        return ATOMIC_MASSES[z - 1] / 1000.0
     except IndexError:
         return ValueError, "No atomic mass for atomic number: %i." % z
 

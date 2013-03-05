@@ -86,7 +86,7 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(1, regionops.getNumberRegions())
         region = regionops.getRegion(0)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(79 in elements)
@@ -147,7 +147,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(0)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(79 in elements)
@@ -155,7 +155,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(1)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(13 in elements)
@@ -163,7 +163,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(2)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(29 in elements)
@@ -208,7 +208,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(0)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(29 in elements)
@@ -216,7 +216,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(1)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(13 in elements)
@@ -224,7 +224,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(2)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(79 in elements)
@@ -270,7 +270,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(0)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat1.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(79 in elements)
@@ -278,7 +278,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(1)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat2.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(29 in elements)
@@ -286,7 +286,7 @@ class TestCasino2Exporter(TestCase):
 
         region = regionops.getRegion(2)
         elements = map(attrgetter('Z'), region.getElements())
-        self.assertAlmostEqual(mat3.density_kg_m3, region.Rho, 4)
+        self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
         self.assertTrue(13 in elements)

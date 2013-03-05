@@ -73,7 +73,7 @@ def _setup_region_material(region, material):
     region.update() # Calculate number of elements, mean atomic number
 
     region.User_Density = True
-    region.Rho = material.density_kg_m3
+    region.Rho = material.density_kg_m3 / 1000.0 # g/cm3
     region.Name = material.name
 
 class Exporter(_Exporter):

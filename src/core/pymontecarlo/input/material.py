@@ -116,7 +116,7 @@ def _calculate_composition_atomic(composition):
     composition2 = {}
 
     for z, weightfraction in composition.iteritems():
-        composition2[z] = weightfraction / ep.atomic_mass(z)
+        composition2[z] = weightfraction / ep.atomic_mass_kg_mol(z)
 
     totalfraction = sum(composition2.values())
 
@@ -143,7 +143,7 @@ def _calculate_density(composition):
     density = 0.0
 
     for z, fraction in composition.iteritems():
-        density += fraction / ep.mass_density(z)
+        density += fraction / ep.mass_density_kg_m3(z)
 
     return 1.0 / density
 
@@ -213,14 +213,14 @@ def composition_from_formula(formula):
     # Calculate total atomic mass
     totalatomicmass = 0.0
     for z, atomicfraction in zip(zs, atomicfractions):
-        atomicmass = ep.atomic_mass(z)
+        atomicmass = ep.atomic_mass_kg_mol(z)
         totalatomicmass += atomicfraction * atomicmass
 
     # Create composition
     composition = defaultdict(float)
 
     for z, atomicfraction in zip(zs, atomicfractions):
-        atomicmass = ep.atomic_mass(z)
+        atomicmass = ep.atomic_mass_kg_mol(z)
         weightfraction = atomicfraction * atomicmass / totalatomicmass
 
         composition[z] += weightfraction

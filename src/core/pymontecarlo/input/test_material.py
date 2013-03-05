@@ -67,7 +67,7 @@ class TestModule(TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
 
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
@@ -119,7 +119,7 @@ class TestMaterial(TestCase):
         self.assertTrue(self.m.composition.has_key(29))
         self.assertAlmostEqual(1.0, self.m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, self.m.density_kg_m3, 4)
+        self.assertAlmostEqual(8.96, self.m.density_kg_m3 / 1000.0, 4)
 
         self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
@@ -134,7 +134,7 @@ class TestMaterial(TestCase):
         self.assertTrue(m.composition.has_key(29))
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertAlmostEqual(8.96, m.density_kg_m3, 4)
+        self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
 
         self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
         self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
@@ -185,7 +185,7 @@ class TestMaterial(TestCase):
     def testdensity_kg_m3(self):
         # Negative density
         self.m.density_kg_m3 = -1
-        self.assertAlmostEqual(8.96, self.m.density_kg_m3, 4)
+        self.assertAlmostEqual(8.96, self.m.density_kg_m3 / 1000.0, 4)
 
         # User defined density
         self.m.density_kg_m3 = 1.0
@@ -222,7 +222,7 @@ class TestMaterial(TestCase):
         self.assertEqual(29, int(children[0].get('z')))
         self.assertAlmostEqual(1.0, float(children[0].get('weightFraction')), 4)
 
-        self.assertAlmostEqual(8.96, float(element.get('density')), 4)
+        self.assertAlmostEqual(8.96, float(element.get('density')) / 1000.0, 4)
 
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyElectron')), 4)
         self.assertAlmostEqual(50, float(element.get('absorptionEnergyPhoton')), 4)

@@ -34,10 +34,10 @@ class TestModule(TestCase):
         self.assertTrue(True)
 
     def testmass_density(self):
-        self.assertAlmostEqual(7.1900, ep.mass_density(24))
+        self.assertAlmostEqual(7.1900, ep.mass_density_kg_m3(24) / 1000.0)
 
     def testatomic_mass(self):
-        self.assertAlmostEqual(51.996000, ep.atomic_mass(24))
+        self.assertAlmostEqual(51.996000, ep.atomic_mass_kg_mol(24) * 1000.0)
 
     def testsymbol(self):
         self.assertEquals('Al', ep.symbol(13))

@@ -179,7 +179,7 @@ class Exporter(_Exporter):
 
     def _export_geometry_substrate(self, options, geometry, outputdir, *args):
         composition = sorted(geometry.material.composition.items(), key=itemgetter(0))
-        density_g_cm3 = geometry.material.density_kg_m3
+        density_g_cm3 = geometry.material.density_kg_m3 / 1000.0
 
         filepath = os.path.join(outputdir, options.name + '.MAT')
         with open(filepath, 'wb') as fp:
@@ -211,7 +211,7 @@ class Exporter(_Exporter):
             # Write molar mass
             # DELPHI: l:=4*Nc;Inc(s,l);Blockwrite(Matfile,AC[1],l,f);Inc(Sum,f);
             for z, _wf in composition:
-                mass = ep.atomic_mass(z)
+                mass = ep.atomic_mass_kg_mol(z) * 1000.0
                 fp.write(struct.pack('f', mass))
 
             # Write atomic number
@@ -227,19 +227,19 @@ class Exporter(_Exporter):
             # end;
             fp.write('\x00\x00\x00\x00') # Skip 4 bytes
             for z, _wf in composition:
-                mass = ep.atomic_mass(z)
+                mass = ep.atomic_mass_kg_mol(z) * 1000.0
                 fp.write(struct.pack('f', mass))
 
             for i, item in enumerate(composition):
                 z = item[0]
-                mass = ep.atomic_mass(z)
+                mass = ep.atomic_mass_kg_mol(z) * 1000.0
                 fp.write(struct.pack('f', mass))
                 fp.write('\x00\x00\x00\x00' * i) # Skip 4 bytes
                 fp.write(struct.pack('f', 1.0 / mass))
                 fp.write('\x00\x00\x00\x00' * (len(composition) - i - 1)) # Skip 4 bytes
 
             # DELPHI: Inc(s,l);BlockWrite(Matfile,GM,l,f);Inc(Sum,f);
-            gs = [wf / ep.atomic_mass(z) for z, wf in composition]
+            gs = [wf / (ep.atomic_mass_kg_mol(z) * 1000.0) for z, wf in composition]
             g0 = 1.0 / sum(gs)
             fp.write(struct.pack('f', g0))
             for g in gs:

@@ -40,8 +40,8 @@ def kanaya_okayama(composition, energy):
     r = 0.0;
 
     for z, fraction in composition.iteritems():
-        dr = (0.0276 * ep.atomic_mass(z) * (energy / 1000.0) ** 1.67) / \
-            (z ** 0.89 * ep.mass_density(z))
+        dr = (0.0276 * (ep.atomic_mass_kg_mol(z) * 1000.0) * (energy / 1000.0) ** 1.67) / \
+            (z ** 0.89 * (ep.mass_density_kg_m3(z) / 1000.0))
         r += fraction / (dr * 1e-6)
 
     return 1.0 / r;

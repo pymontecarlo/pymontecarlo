@@ -88,7 +88,7 @@ class TestExporter(TestCase):
         zs, _wfs = wxrops.getElements()
         self.assertTrue(79 in zs)
         self.assertTrue(47 in zs)
-        self.assertAlmostEqual(mat.density_kg_m3, wxrops.getMeanDensity_g_cm3(), 4)
+        self.assertAlmostEqual(mat.density_kg_m3 / 1000.0, wxrops.getMeanDensity_g_cm3(), 4)
         self.assertAlmostEqual(123, wxrops.getMinimumElectronEnergy_eV(), 4)
 
         self.assertTrue(wxrops.isComputeBSEDistribution())
