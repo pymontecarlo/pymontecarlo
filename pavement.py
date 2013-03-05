@@ -75,7 +75,7 @@ def _call_dependency_setups(*args):
 
     # PENELOPE
     projectdir = config.get('projects', 'penelope')
-    filepath = os.path.join(projectdir, 'setup.py')
+    filepath = os.path.join(projectdir, 'src', 'setup.py')
     _call_setup(filepath, *args)
 
 def _call_all_setups(*args):
