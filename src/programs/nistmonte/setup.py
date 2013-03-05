@@ -46,6 +46,8 @@ setup(name="pyMonteCarlo-NISTMonte",
                     'pymontecarlo.program.cli':
                         'nistmonte=pymontecarlo.program.nistmonte.config_cli:cli',
                     'pymontecarlo.program.gui':
-                        'nistmonte=pymontecarlo.program.nistmonte.config_gui:gui', }
+                        'nistmonte=pymontecarlo.program.nistmonte.config_gui:gui', },
+
+      test_suite='nose.collector',
 )
 

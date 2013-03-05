@@ -51,6 +51,8 @@ setup(name="pyMonteCarlo-Casino2",
                     'pymontecarlo.program.cli':
                         'casino2=pymontecarlo.program.casino2.config_cli:cli',
                     'pymontecarlo.program.gui':
-                        'casino2=pymontecarlo.program.casino2.config_gui:gui', }
+                        'casino2=pymontecarlo.program.casino2.config_gui:gui', },
+      
+      test_suite='nose.collector',
 )
 

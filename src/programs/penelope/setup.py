@@ -60,6 +60,8 @@ setup(name="pyMonteCarlo-PENELOPE",
                          'penshower=pymontecarlo.program.penshower.config_cli:cli'],
                     'pymontecarlo.program.gui':
                         ['penepma=pymontecarlo.program.penepma.config_gui:gui',
-                         'penshower=pymontecarlo.program.penshower.config_gui:gui'], }
+                         'penshower=pymontecarlo.program.penshower.config_gui:gui'], },
+
+      test_suite='nose.collector',
 )
 

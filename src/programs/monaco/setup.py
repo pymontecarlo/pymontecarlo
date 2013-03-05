@@ -47,6 +47,8 @@ setup(name="pyMonteCarlo-MONACO",
                     'pymontecarlo.program.cli':
                         'monaco=pymontecarlo.program.monaco.config_cli:cli',
                     'pymontecarlo.program.gui':
-                        'monaco=pymontecarlo.program.monaco.config_gui:gui', }
+                        'monaco=pymontecarlo.program.monaco.config_gui:gui', },
+      
+      test_suite='nose.collector',
 )
 

@@ -50,6 +50,8 @@ setup(name="pyMonteCarlo-WinXRay",
                     'pymontecarlo.program.cli':
                         'winxray=pymontecarlo.program.winxray.config_cli:cli',
                     'pymontecarlo.program.gui':
-                        'winxray=pymontecarlo.program.winxray.config_gui:gui', }
+                        'winxray=pymontecarlo.program.winxray.config_gui:gui', },
+
+      test_suite='nose.collector',
 )
 

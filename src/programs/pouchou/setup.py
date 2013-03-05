@@ -57,6 +57,8 @@ setup(name="pyMonteCarlo-Pouchou",
                          'xpp=pymontecarlo.program.xpp.config_cli:cli'],
                     'pymontecarlo.program.gui':
                         ['pap=pymontecarlo.program.pap.config_gui:gui',
-                         'xpp=pymontecarlo.program.xpp.config_gui:gui'], }
+                         'xpp=pymontecarlo.program.xpp.config_gui:gui'], },
+
+      test_suite='nose.collector',
 )
 
