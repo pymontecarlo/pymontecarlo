@@ -19,13 +19,14 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 __all__ = ['PencilBeam',
-           'GaussianBeam']
+           'GaussianBeam',
+           'tilt_beam']
 
 # Standard library modules.
 import math
-from operator import mul
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.input.option import Option
@@ -142,17 +143,15 @@ class PencilBeam(Option):
         """
         Angle of the beam with respect to the positive z-axis.
         """
-        direction = self.direction
-        norm = math.sqrt(sum(map(mul, direction, direction)))
-        return math.acos(direction[2] / norm);
+        norm = np.linalg.norm(self.direction)
+        return math.acos(self.direction[2] / norm);
 
     @property
     def direction_azimuth_rad(self):
         """
         Angle of the beam with respect to the positive x-axis in the x-y plane.
         """
-        direction = self.direction
-        return math.atan2(direction[1], direction[0]);
+        return math.atan2(self.direction[1], self.direction[0]);
 
     @property
     def aperture_rad(self):
@@ -223,14 +222,12 @@ def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     s = math.sin(angle_rad)
 
     if axis.lower() == 'x':
-        r = [[1, 0, 0], [0, c, -s], [0, s, c]]
+        r = np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
     elif axis.lower() == 'y':
-        r = [[c, 0, s], [0, 1, 0], [-s, 0, c]]
+        r = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
     elif axis.lower() == 'z':
-        r = [[c, -s, 0], [s, c, 0], [0, 0, 1]]
+        r = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
     else:
         raise ValueError, "Unknown axis: %s" % axis
 
-    return [sum(map(mul, r[0], direction)),
-            sum(map(mul, r[1], direction)),
-            sum(map(mul, r[2], direction))]
+    return np.dot(r, direction)
