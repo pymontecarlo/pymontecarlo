@@ -8,14 +8,58 @@ __copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
+import sys
 
 # Third party modules.
 from setuptools import setup
+from cx_Freeze.dist import Distribution, build, build_exe
+from cx_Freeze.freezer import Executable
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
 
 # Globals and constants variables.
+
+packages = ['pymontecarlo',
+            'pymontecarlo.input',
+            'pymontecarlo.output',
+            'pymontecarlo.program',
+            'pymontecarlo.runner',
+            'pymontecarlo.ui',
+            'pymontecarlo.ui.cli',
+            'pymontecarlo.util']
+
+namespace_packages = ['pymontecarlo',
+                      'pymontecarlo.program']
+
+build_exe_options = {"packages": packages,
+                     "namespace_packages": namespace_packages,
+                     "excludes": ["Tkinter"],
+                     "includes": ["wx", "wx.lib.pubsub"],
+                     "init_script": os.path.abspath('initscripts/Console.py')}
+
+cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
+                   'pymontecarlo-cli': 'pymontecarlo.ui.cli.main:run'}
+gui_executables = {'pymontecarlo': 'pymontecarlo.ui.gui.main:run'}
+
+entry_points = {}
+entry_points['console_scripts'] = \
+    ['%s = %s' % item for item in cli_executables.items()]
+entry_points['gui_scripts'] = \
+    ['%s = %s' % item for item in cli_executables.items()]
+
+def _make_executable(target_name, script, gui=False):
+    path = os.path.join(*script.split(":")[0].split('.')) + '.py'
+    if sys.platform == "win32": target_name += '.exe'
+    base = "Win32GUI" if sys.platform == "win32" and gui else None
+    return Executable(path, targetName=target_name, base=base)
+
+executables = []
+for target_name, script in cli_executables.items():
+    executables.append(_make_executable(target_name, script, False))
+for target_name, script in gui_executables.items():
+    executables.append(_make_executable(target_name, script, True))
 
 setup(name="pyMonteCarlo",
       version='0.1',
@@ -33,29 +77,21 @@ setup(name="pyMonteCarlo",
                    'Topic :: Scientific/Engineering',
                    'Topic :: Scientific/Engineering :: Physics'],
 
-      packages=['pymontecarlo',
-                'pymontecarlo.input',
-                'pymontecarlo.output',
-                'pymontecarlo.program',
-                'pymontecarlo.runner',
-                'pymontecarlo.ui',
-                'pymontecarlo.ui.cli',
-                'pymontecarlo.util'],
+      packages=packages,
       package_data={'pymontecarlo.util': ['data/*']},
+      namespace_packages=namespace_packages,
 
-      cmdclass={'clean': clean},
+      distclass=Distribution,
+      cmdclass={'clean': clean, "build": build, "build_exe": build_exe},
 
       setup_requires=['nose>=1.0'],
-      install_requires=['pyparsing >=1.5.2, <2.0', 'numpy>=1.6.1',
+      install_requires=['pyparsing >=1.5.2, <2.0', 'numpy>=1.5',
                         'h5py>=2.0.1', 'matplotlib>=1.1'],
 
-      namespace_packages=['pymontecarlo', 'pymontecarlo.program'],
+      entry_points=entry_points,
+      executables=executables,
 
-      entry_points={'console_scripts':
-                    ['pymontecarlo-configure = pymontecarlo.ui.cli.configure:run',
-                     'pymontecarlo-cli = pymontecarlo.ui.cli.main:run', ]},
-
-      command_options={'bdist_bbfreeze': {'include_py': (None, True)}},
+      options={"build_exe": build_exe_options},
 
       test_suite='nose.collector',
 )
