@@ -131,7 +131,7 @@ def sdist():
     Builds source distribution from pymontecarlo and programs.
     """
     dist_dir = os.path.abspath(os.path.join(os.curdir, 'dist'))
-    _call_all_setups('bdist_egg', '-d', dist_dir)
+    _call_all_setups('sdist', '-d', dist_dir)
 
 @task
 def bdist_egg():
