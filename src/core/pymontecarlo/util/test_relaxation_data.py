@@ -37,12 +37,18 @@ class TestRelaxationData(TestCase):
         self.assertEquals(97, len(relaxation_data.data))
 #
     def testenergy_eV(self):
-        # Test Al Ka1.
-        self.assertEquals(1.48671e3, relaxation_data.energy_eV(13, [4, 1]))
+        # Al Ka1.
+        self.assertAlmostEquals(1.48671e3, relaxation_data.energy_eV(13, [4, 1]), 4)
+
+        # Li Ka1
+        self.assertAlmostEquals(52.0, relaxation_data.energy_eV(3, [4, 1]), 4)
 
     def testprobability(self):
-        # Test Al Ka1.
-        self.assertAlmostEquals(2.45528e-2, relaxation_data.probability(13, [4, 1]), 4)
+        # Al Ka1.
+        self.assertAlmostEquals(2.45528e-2, relaxation_data.probability(13, [4, 1]), 6)
+
+        # Li Ka1
+        self.assertAlmostEquals(1.06e-4, relaxation_data.probability(3, [4, 1]), 6)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
