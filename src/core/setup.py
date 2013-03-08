@@ -47,7 +47,7 @@ entry_points = {}
 entry_points['console_scripts'] = \
     ['%s = %s' % item for item in cli_executables.items()]
 entry_points['gui_scripts'] = \
-    ['%s = %s' % item for item in cli_executables.items()]
+    ['%s = %s' % item for item in gui_executables.items()]
 
 def _make_executable(target_name, script, gui=False):
     path = os.path.join(*script.split(":")[0].split('.')) + '.py'
