@@ -32,14 +32,14 @@ import numpy as np
 # Local modules.
 from wxtools2.combobox import PyComboBox
 from wxtools2.floattext import FloatRangeTextCtrl, FloatRangeTextValidator
-from wxtools2.list import EVT_LIST_CHANGED
 
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
 from pymontecarlo.util.manager import ClassManager
 from pymontecarlo.util.human import camelcase_to_words
 
-from pymontecarlo.ui.gui.input.material import MaterialListCtrl
+from pymontecarlo.ui.gui.input.material import \
+    MaterialListCtrl, EVT_LIST_MATERIAL_ADDED, EVT_LIST_MATERIAL_DELETED
 from pymontecarlo.ui.gui.input.wizardpage import WizardPage
 
 # Globals and constants variables.
@@ -387,7 +387,8 @@ class SubstratePanel(wx.Panel):
         self.SetSizer(sizer)
 
         # Bind
-        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstmaterials)
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstmaterials)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstmaterials)
 
     def OnValueChanged(self, event):
         self.GetParent().OnValueChanged(event)
@@ -441,8 +442,10 @@ class InclusionPanel(wx.Panel):
 
         # Bind
         self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txtdiameter)
-        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstsubstrate)
-        self.Bind(EVT_LIST_CHANGED, self.OnValueChanged, self._lstinclusion)
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstsubstrate)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstsubstrate)
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstinclusion)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstinclusion)
 
     def OnValueChanged(self, event):
         self.GetParent().OnValueChanged(event)

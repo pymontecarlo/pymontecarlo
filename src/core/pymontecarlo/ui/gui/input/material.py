@@ -27,7 +27,7 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 
 # Local modules.
 from wxtools2.list import \
-    PyListCtrl, StaticColumn, TextCtrlColumn, EVT_LIST_CHANGED, wxEVT_LIST_CHANGED
+    PyListCtrl, StaticColumn, TextCtrlColumn, PyListCtrlValidator
 from wxtools2.menu import popupmenu
 from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
@@ -388,7 +388,38 @@ class MaterialDialog(wx.Dialog):
         """
         return self._material
 
-from wxtools2.list import PyListCtrlValidator
+wxEVT_LIST_MATERIAL_DELETING = wx.NewEventType()
+EVT_LIST_MATERIAL_DELETING = wx.PyEventBinder(wxEVT_LIST_MATERIAL_DELETING, 1)
+
+wxEVT_LIST_MATERIAL_DELETED = wx.NewEventType()
+EVT_LIST_MATERIAL_DELETED = wx.PyEventBinder(wxEVT_LIST_MATERIAL_DELETED, 1)
+
+wxEVT_LIST_MATERIAL_ADDING = wx.NewEventType()
+EVT_LIST_MATERIAL_ADDING = wx.PyEventBinder(wxEVT_LIST_MATERIAL_ADDING, 1)
+
+wxEVT_LIST_MATERIAL_ADDED = wx.NewEventType()
+EVT_LIST_MATERIAL_ADDED = wx.PyEventBinder(wxEVT_LIST_MATERIAL_ADDED, 1)
+
+wxEVT_LIST_MATERIAL_MODIFYING = wx.NewEventType()
+EVT_LIST_MATERIAL_MODIFYING = wx.PyEventBinder(wxEVT_LIST_MATERIAL_MODIFYING, 1)
+
+wxEVT_LIST_MATERIAL_MODIFIED = wx.NewEventType()
+EVT_LIST_MATERIAL_MODIFIED = wx.PyEventBinder(wxEVT_LIST_MATERIAL_MODIFIED, 1)
+
+class MaterialEvent(wx.PyCommandEvent):
+
+    def __init__(self, eventType=wx.wxEVT_NULL, id=0, material=None):
+        wx.PyCommandEvent.__init__(self, eventType, id)
+        self.Material = material
+
+    def GetMaterial(self):
+        return self.Material
+
+class NotifyMaterialEvent(MaterialEvent, wx.NotifyEvent):
+
+    def __init__(self, eventType=wx.wxEVT_NULL, id=0, material=None):
+        MaterialEvent.__init__(self, eventType, id, material)
+        wx.NotifyEvent.__init__(self, eventType, id)
 
 class MaterialListCtrl(wx.Panel):
 
@@ -441,16 +472,38 @@ class MaterialListCtrl(wx.Panel):
         self.Bind(wx.EVT_TOOL, self.OnClear, id=self._TOOL_CLEAR)
         self.Bind(wx.EVT_TOOL, self.OnEdit, id=self._TOOL_EDIT)
 
-        self.Bind(EVT_LIST_CHANGED, self._OnListChanged, self._lst)
-
     def OnAdd(self, event):
         dialog = MaterialDialog(self.GetParent())
 
         if dialog.ShowModal() == wx.ID_OK:
             material = dialog.GetMaterial()
+
+            event = NotifyMaterialEvent(wxEVT_LIST_MATERIAL_ADDING,
+                                        self.GetId(), material)
+            if self.GetEventHandler().ProcessEvent(event) and \
+                    not event.IsAllowed():
+                dialog.Destroy()
+                return # Veto
+
             self._lst.append(material)
 
+            event = MaterialEvent(wxEVT_LIST_MATERIAL_ADDED, self.GetId(),
+                                  material)
+            self.GetEventHandler().ProcessEvent(event)
+
         dialog.Destroy()
+
+    def _delmaterial(self, material):
+        event = NotifyMaterialEvent(wxEVT_LIST_MATERIAL_DELETING, self.GetId(),
+                                    material)
+        if self.GetEventHandler().ProcessEvent(event) and not event.IsAllowed():
+            return # Veto
+
+        del self._lst[self._lst.index(material)]
+
+        event = MaterialEvent(wxEVT_LIST_MATERIAL_DELETED, self.GetId(),
+                              material)
+        self.GetEventHandler().ProcessEvent(event)
 
     def OnRemove(self, event):
         if not self._lst: # No materials
@@ -460,10 +513,11 @@ class MaterialListCtrl(wx.Panel):
             show_exclamation_dialog(self, "Please select a material to delete")
             return
 
-        del self._lst.selection
+        self._delmaterial(self._lst.selection)
 
     def OnClear(self, event):
-        self._lst.clear()
+        for material in list(self._lst):
+            self._delmaterial(material)
 
     def OnEdit(self, event):
         if not self._lst: # No materials
@@ -473,6 +527,11 @@ class MaterialListCtrl(wx.Panel):
             show_exclamation_dialog(self, "Please select a material to edit")
             return
 
+        event = NotifyMaterialEvent(wxEVT_LIST_MATERIAL_MODIFYING, self.GetId(),
+                                    self._lst.selection)
+        if self.GetEventHandler().ProcessEvent(event) and not event.IsAllowed():
+            return # Veto
+
         dialog = MaterialDialog(self.GetParent(), self._lst.selection)
 
         if dialog.ShowModal() == wx.ID_OK:
@@ -481,9 +540,8 @@ class MaterialListCtrl(wx.Panel):
 
         dialog.Destroy()
 
-    def _OnListChanged(self, event):
-        # Wrapper
-        event = wx.PyCommandEvent(wxEVT_LIST_CHANGED, self.GetId())
+        event = MaterialEvent(wxEVT_LIST_MATERIAL_MODIFIED, self.GetId(),
+                              material)
         self.GetEventHandler().ProcessEvent(event)
 
     def GetMaterials(self):
