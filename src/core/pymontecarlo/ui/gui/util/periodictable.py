@@ -207,9 +207,9 @@ class PeriodicTableDialog(wx.Dialog):
         text = u''
 
         text += 'Common name: %s\n' % ep.name(z)
-        text += 'Molar mass: %s g/cm3\n' % ep.atomic_mass(z)
+        text += 'Molar mass: %s g/cm3\n' % (ep.atomic_mass_kg_mol(z) * 1000.0,)
         try:
-            text += 'Density: %s g/cm3\n' % ep.mass_density(z)
+            text += 'Density: %s g/cm3\n' % (ep.mass_density_kg_m3(z) / 1000.0,)
         except:
             pass
 

@@ -29,7 +29,7 @@ import wx
 from pymontecarlo.settings import load_settings, reload_settings, Settings
 
 from wxtools2.combobox import PyComboBox
-from wxtools2.list import PyListCtrl, Column
+from wxtools2.list import PyListCtrl, StaticColumn
 from wxtools2.exception import catch_all
 from wxtools2.dialog import show_exclamation_dialog
 
@@ -60,7 +60,7 @@ class ConfigureDialog(wx.Dialog):
         btn_activate = wx.Button(self, label='Activate')
 
         ## Selected programs
-        columns = [Column("Selection", attrgetter('name'))]
+        columns = [StaticColumn("Selection", attrgetter('name'))]
         self._lst_selected_programs = PyListCtrl(self, columns,
                                                  multiple_selection=False)
         self._selected_panel = wx.Panel(self)

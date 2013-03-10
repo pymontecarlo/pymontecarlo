@@ -26,7 +26,8 @@ import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
 
 # Local modules.
-from wxtools2.list import PyListCtrl, Column, EVT_LIST_CHANGED, wxEVT_LIST_CHANGED
+from wxtools2.list import \
+    PyListCtrl, StaticColumn, TextCtrlColumn, EVT_LIST_CHANGED, wxEVT_LIST_CHANGED
 from wxtools2.menu import popupmenu
 from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
@@ -98,14 +99,12 @@ class MaterialDialog(wx.Dialog):
         self._chkdensityuserdefined.SetValue(False)
 
         ## Elements
-        def _setter(row, val):
-            row[1] = val
-        columns = [Column('Element', lambda row: ep.symbol(row.z)),
-                   Column('Weight fraction', lambda row: str(row.weightfraction),
-                          lambda row, val: setattr(row, 'weightfraction', val),
-                          width=200),
-                   Column('Atomic fraction', lambda row: str(row.atomicfraction),
-                          width=200)]
+        columns = [StaticColumn('Element', lambda row: ep.symbol(row.z), width=150),
+                   TextCtrlColumn('Weight fraction', lambda row: str(row.weightfraction),
+                                  lambda row, val: setattr(row, 'weightfraction', val),
+                                  width=150),
+                   StaticColumn('Atomic fraction', lambda row: str(row.atomicfraction),
+                                width=150)]
         self._lstelements = PyListCtrl(self, columns, multiple_selection=True)
 
         ## Action buttons
@@ -401,7 +400,7 @@ class MaterialListCtrl(wx.Panel):
 
         # Controls
         ## List control
-        columns = [Column('Material(s)', attrgetter('name'))]
+        columns = [StaticColumn('Material(s)', attrgetter('name'), width= -3)]
         validator = PyListCtrlValidator(False)
         self._lst = PyListCtrl(self, columns, validator=validator,
                                name='materials')
