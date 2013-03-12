@@ -12,6 +12,7 @@
 <path>/pymontecarlo/src/programs/winxray</path>
 <path>/pymontecarlo/src/programs/monaco</path>
 <path>/pymontecarlo/src/core</path>
+<path>/pymontecarlo/src/exp</path>
 </pydev_pathproperty>
 
 
