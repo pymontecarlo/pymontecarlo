@@ -67,6 +67,13 @@ class TestUpdater(TestCase):
 
         self.updater.update(dst)
 
+    def testupdate_noversion4(self):
+        src = os.path.join(self.testdata, 'oldoptions4.xml')
+        dst = os.path.join(self.tmpdir, 'oldoptions4.xml')
+        shutil.copy(src, dst)
+
+        self.updater.update(dst)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

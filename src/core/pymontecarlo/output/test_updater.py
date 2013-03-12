@@ -84,6 +84,13 @@ class TestUpdater(TestCase):
 
         self.updater.update(dst)
 
+    def testupdate_version5(self):
+        src = os.path.join(self.testdata, 'oldresults5.h5')
+        dst = os.path.join(self.tmpdir, 'oldresults5.h5')
+        shutil.copy(src, dst)
+
+        self.updater.update(dst)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

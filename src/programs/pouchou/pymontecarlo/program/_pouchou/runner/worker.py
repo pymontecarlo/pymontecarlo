@@ -32,10 +32,10 @@ from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.util.transition import get_transitions
 from pymontecarlo.input.model import MASS_ABSORPTION_COEFFICIENT
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, PhiRhoZDetector, TimeDetector
+    PhotonIntensityDetector, PhotonDepthDetector, TimeDetector
 from pymontecarlo.output.result import \
-    (PhotonIntensityResult, PhiRhoZResult, TimeResult,
-     create_intensity_dict, create_phirhoz_dict)
+    (PhotonIntensityResult, PhotonDepthResult, TimeResult,
+     create_intensity_dict, create_photondist_dict)
 from pymontecarlo.output.results import Results
 
 from PouchouPichoirModels.models.XRayTransition import XRayTransition
@@ -143,12 +143,12 @@ class _PouchouWorker(_Worker):
                                                     energy_keV, transitions)
             results[key] = PhotonIntensityResult(intensities)
 
-        dets = options.detectors.findall(PhiRhoZDetector)
+        dets = options.detectors.findall(PhotonDepthDetector)
         if dets:
             key, detector = dets.items()[0]
             distributions = self._compute_prz(model, detector, elements,
                                               energy_keV, transitions)
-            results[key] = PhiRhoZResult(distributions)
+            results[key] = PhotonDepthResult(distributions)
 
         end = time.time()
 
@@ -187,9 +187,9 @@ class _PouchouWorker(_Worker):
             zs, values, _chis = model.computePhiRhoZDistribution(detector.channels)
             uncs = [0.0] * len(zs)
 
-            distributions.update(create_phirhoz_dict(transition,
-                                                     enf=(zs, values, uncs),
-                                                     et=(zs, values, uncs)))
+            distributions.update(create_photondist_dict(transition,
+                                                        enf=(zs, values, uncs),
+                                                        et=(zs, values, uncs)))
 
         return distributions
 

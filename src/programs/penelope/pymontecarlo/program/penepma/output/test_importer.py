@@ -23,7 +23,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     (PhotonSpectrumDetector,
      PhotonIntensityDetector,
-     PhiRhoZDetector,
+     PhotonDepthDetector,
      ElectronFractionDetector,
      TimeDetector,
      ShowersStatisticsDetector,
@@ -116,7 +116,7 @@ class TestImporter(TestCase):
         ops = Options(name='test1')
         ops.beam.energy_eV = 20e3
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
+            PhotonDepthDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
 
         # Import
         results = self.i.import_from_dir(ops, self.testdata)

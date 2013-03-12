@@ -21,8 +21,9 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
-     PhotonSpectrumDetector, PhiRhoZDetector, TimeDetector,
-     ElectronFractionDetector, TrajectoryDetector, ShowersStatisticsDetector)
+     PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
+     TimeDetector, ElectronFractionDetector, TrajectoryDetector,
+     ShowersStatisticsDetector)
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.
@@ -359,13 +360,13 @@ class TestPhotonSpectrumDetector(TestCase):
         self.assertAlmostEqual(56.78, float(element.get('limit_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
 
-class TestPhiRhoZDetector(TestCase):
+class TestPhotonDepthDetector(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
 
-        self.d = PhiRhoZDetector((radians(35), radians(45)),
-                                 (0, radians(360.0)), 1000)
+        self.d = PhotonDepthDetector((radians(35), radians(45)),
+                                     (0, radians(360.0)), 1000)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -378,12 +379,53 @@ class TestPhiRhoZDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhiRhoZDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
+        expected = '<PhotonDepthDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
         element = self.d.to_xml()
-        d = PhiRhoZDetector.from_xml(element)
+        d = PhotonDepthDetector.from_xml(element)
+
+        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
+        self.assertEqual(1000, d.channels)
+
+    def testto_xml(self):
+        element = self.d.to_xml()
+
+        self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
+        self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
+        self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
+        self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
+        self.assertEqual(1000, int(element.get('channels')))
+
+class TestPhotonRadialDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d = PhotonRadialDetector((radians(35), radians(45)),
+                                      (0, radians(360.0)), 1000)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertEqual(1000, self.d.channels)
+
+    def test__repr__(self):
+        expected = '<PhotonRadialDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
+        self.assertEquals(expected, repr(self.d))
+
+    def testfrom_xml(self):
+        element = self.d.to_xml()
+        d = PhotonRadialDetector.from_xml(element)
 
         self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
         self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)

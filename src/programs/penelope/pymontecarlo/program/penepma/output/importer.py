@@ -35,9 +35,9 @@ from pymontecarlo.output.result import \
     ElectronFractionResult,
     TimeResult,
     ShowersStatisticsResult,
-    PhiRhoZResult,
+    PhotonDepthResult,
     create_intensity_dict,
-    create_phirhoz_dict,
+    create_photondist_dict,
     BackscatteredElectronEnergyResult,
     )
 from pymontecarlo.input.detector import \
@@ -45,7 +45,7 @@ from pymontecarlo.input.detector import \
      _PhotonDelimitedDetector,
      BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
-     PhiRhoZDetector,
+     PhotonDepthDetector,
      PhotonSpectrumDetector,
      PhotonIntensityDetector,
      ElectronFractionDetector,
@@ -88,8 +88,8 @@ class Importer(_Importer):
             self._detector_photon_spectrum
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity
-        self._detector_importers[PhiRhoZDetector] = \
-            self._detector_phirhoz
+        self._detector_importers[PhotonDepthDetector] = \
+            self._detector_photondepth
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
         self._detector_importers[TimeDetector] = self._detector_time
@@ -201,8 +201,8 @@ class Importer(_Importer):
 
         return PhotonIntensityResult(intensities)
 
-    def _detector_phirhoz(self, options, key, detector, path,
-                          phdets_key_index, phdets_index_keys, *args):
+    def _detector_photondepth(self, options, key, detector, path,
+                              phdets_key_index, phdets_index_keys, *args):
         index = phdets_key_index[key] + 1
 
         # Find data files
@@ -253,9 +253,9 @@ class Importer(_Importer):
             enf = np.array([data['zs'], data['enf'], data['enf_unc']]).T
             et = np.array([data['zfs'], data['et'], data['et_unc']]).T
 
-            distributions.update(create_phirhoz_dict(transition, gnf, gt, enf, et))
+            distributions.update(create_photondist_dict(transition, gnf, gt, enf, et))
 
-        return PhiRhoZResult(distributions)
+        return PhotonDepthResult(distributions)
 
     def _read_log(self, path):
         """

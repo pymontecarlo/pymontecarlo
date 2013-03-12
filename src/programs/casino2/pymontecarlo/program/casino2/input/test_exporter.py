@@ -26,7 +26,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     (BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, PhotonIntensityDetector,
-     PhiRhoZDetector)
+     PhotonDepthDetector)
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.material import Material
 from pymontecarlo.input.geometry import GrainBoundaries, MultiLayers
@@ -69,7 +69,7 @@ class TestCasino2Exporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
+            PhotonDepthDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
 
         # Export to CAS
         casfile = self.e.export(ops)
@@ -347,7 +347,7 @@ class TestCasino2Exporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(55)), (0, radians(360.0)), 750)
+            PhotonDepthDetector((radians(30), radians(55)), (0, radians(360.0)), 750)
 
         # Test
         self.assertRaises(ExporterException, self.e.export, ops)

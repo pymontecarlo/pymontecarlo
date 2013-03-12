@@ -35,7 +35,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
-     PhiRhoZDetector,
+     PhotonDepthDetector,
      PhotonIntensityDetector,
      PhotonSpectrumDetector,
      ElectronFractionDetector,
@@ -54,7 +54,7 @@ class Converter(_Converter):
     GEOMETRIES = [Substrate]
     DETECTORS = [BackscatteredElectronEnergyDetector,
                  BackscatteredElectronPolarAngularDetector,
-                 PhiRhoZDetector,
+                 PhotonDepthDetector,
                  PhotonIntensityDetector,
                  PhotonSpectrumDetector,
                  ElectronFractionDetector,

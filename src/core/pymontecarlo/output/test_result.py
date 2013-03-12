@@ -24,11 +24,11 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.output.result import \
     (PhotonIntensityResult,
      PhotonSpectrumResult,
-     PhiRhoZResult,
+     PhotonDepthResult,
      TimeResult,
      ElectronFractionResult,
      create_intensity_dict,
-     create_phirhoz_dict,
+     create_photondist_dict,
      Trajectory,
      TrajectoryResult,
      ShowersStatisticsResult,
@@ -391,7 +391,7 @@ class TestPhotonSpectrumResult(TestCase):
         self.assertAlmostEqual(0.0, val, 4)
         self.assertAlmostEqual(0.0, unc, 4)
 #
-class TestPhiRhoZResult(TestCase):
+class TestPhotonDepthResultResult(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
@@ -418,9 +418,9 @@ class TestPhiRhoZResult(TestCase):
         et_uncs = [0.31, 0.32, 0.33, 0.34]
         et = np.array([et_zs, et_values, et_uncs]).T
 
-        distributions = create_phirhoz_dict(self.t1, gnf, gt, enf, et)
+        distributions = create_photondist_dict(self.t1, gnf, gt, enf, et)
 
-        self.r = PhiRhoZResult(distributions)
+        self.r = PhotonDepthResult(distributions)
 
         self.results_h5 = os.path.join(os.path.dirname(__file__), '..',
                                        'testdata', 'results', 'phirhoz.h5')
@@ -466,7 +466,7 @@ class TestPhiRhoZResult(TestCase):
 
     def test__loadhdf5__(self):
         hdf5file = h5py.File(self.results_h5, 'r')
-        r = PhiRhoZResult.__loadhdf5__(hdf5file, 'det5')
+        r = PhotonDepthResult.__loadhdf5__(hdf5file, 'det5')
 
         phirhoz = r.get(self.t1, absorption=False, fluorescence=False)
         self.assertEqual((4, 3), phirhoz.shape)

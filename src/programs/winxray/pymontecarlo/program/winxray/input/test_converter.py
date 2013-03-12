@@ -22,7 +22,7 @@ from pymontecarlo.program.winxray.input.converter import Converter, ConversionEx
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
 from pymontecarlo.input.detector import \
-    (BackscatteredElectronEnergyDetector, PhotonSpectrumDetector, PhiRhoZDetector,
+    (BackscatteredElectronEnergyDetector, PhotonSpectrumDetector, PhotonDepthDetector,
      PhotonIntensityDetector, TransmittedElectronEnergyDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit
 from pymontecarlo.input.model import \
@@ -126,7 +126,7 @@ class TestConverter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy = 100e3
-        ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 1000)
+        ops.detectors['prz'] = PhotonDepthDetector((0, 1), (2, 3), 1000)
         ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         ops.limits.add(ShowersLimit(5678))
 

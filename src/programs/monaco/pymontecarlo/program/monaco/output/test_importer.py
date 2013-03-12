@@ -20,7 +20,8 @@ from pymontecarlo.program.monaco.output.importer import Importer
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
+from pymontecarlo.input.detector import \
+    PhotonIntensityDetector, PhotonDepthDetector
 
 # Globals and constants variables.
 
@@ -34,7 +35,7 @@ class TestImporter(unittest.TestCase):
         self.ops.geometry.material.composition = {6: 0.4, 13: 0.6}
         self.ops.geometry.material.absorption_energy_electron_eV = 234
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
-        self.ops.detectors['prz'] = PhiRhoZDetector((0, 1), (2, 3), 128)
+        self.ops.detectors['prz'] = PhotonDepthDetector((0, 1), (2, 3), 128)
         self.ops.limits.add(ShowersLimit(1234))
 
         self.i = Importer()

@@ -48,6 +48,7 @@ class Updater(_Updater):
         self._updaters[2] = self._update_version2
         self._updaters[3] = self._update_version3
         self._updaters[4] = self._update_version4
+        self._updaters[5] = self._update_version5
 
     def _get_version(self, filepath):
         root = parse(filepath).getroot()
@@ -181,8 +182,23 @@ class Updater(_Updater):
         with open(filepath, 'w') as fp:
             fp.write(tostring(root, pretty_print=True))
 
-        return filepath
+        return self._update_version4(filepath)
 
     def _update_version4(self, filepath):
+        logging.debug('Updating from "version 4"')
+
+        root = parse(filepath).getroot()
+        root.set('version', '5')
+
+        for element in root.find('detectors'):
+            if element.tag == '{http://pymontecarlo.sf.net}phiRhoZDetector':
+                element.tag = '{http://pymontecarlo.sf.net}photonDepthDetector'
+
+        with open(filepath, 'w') as fp:
+            fp.write(tostring(root, pretty_print=True))
+
+        return self._update_version5(filepath)
+
+    def _update_version5(self, filepath):
         logging.info('Nothing to update')
         return filepath

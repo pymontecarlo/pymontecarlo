@@ -31,7 +31,8 @@ from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import PencilBeam
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
+from pymontecarlo.input.detector import \
+    PhotonIntensityDetector, PhotonDepthDetector
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
@@ -41,7 +42,7 @@ from pymontecarlo.input.model import \
 class Converter(_Converter):
     BEAMS = [PencilBeam]
     GEOMETRIES = [Substrate]
-    DETECTORS = [PhotonIntensityDetector, PhiRhoZDetector]
+    DETECTORS = [PhotonIntensityDetector, PhotonDepthDetector]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990],
               IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.gryzinsky,
@@ -94,7 +95,7 @@ class Converter(_Converter):
     def _convert_detectors(self, options):
         _Converter._convert_detectors(self, options)
         
-        for key, det in options.detectors.findall(PhiRhoZDetector).iteritems():
+        for key, det in options.detectors.findall(PhotonDepthDetector).iteritems():
             if det.channels != 128:
                 message = "Number of channels of PhiRhoZ detector (%s) is set to 128" % key
                 warnings.warn(message, ConversionWarning)

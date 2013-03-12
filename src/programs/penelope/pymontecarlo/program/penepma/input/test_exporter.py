@@ -26,7 +26,7 @@ from pymontecarlo.input.collision import HARD_ELASTIC
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, PhotonSpectrumDetector, PhiRhoZDetector
+    PhotonIntensityDetector, PhotonSpectrumDetector, PhotonDepthDetector
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 from pymontecarlo.program.penepma.input.exporter import Exporter, ExporterException
@@ -64,7 +64,7 @@ class TestPenelopeExporter(TestCase):
         ops.detectors['spectrum'] = \
             PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)), (0, 1000), 500)
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(0), radians(90)), (0, radians(360.0)), 500)
+            PhotonDepthDetector((radians(0), radians(90)), (0, radians(360.0)), 500)
         ops.limits.add(TimeLimit(100))
 
         # Export
@@ -102,9 +102,9 @@ class TestPenelopeExporter(TestCase):
         ops.beam.energy_eV = 30e3
         ops.limits.add(TimeLimit(100))
         ops.detectors['prz1'] = \
-            PhiRhoZDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
+            PhotonDepthDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
         ops.detectors['prz2'] = \
-            PhiRhoZDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
+            PhotonDepthDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
 
         self.c.convert(ops)
 
@@ -120,7 +120,7 @@ class TestPenelopeExporter(TestCase):
 
         for i in range(MAX_PRZ + 1):
             ops.detectors['det%i' % i] = \
-                PhiRhoZDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
+                PhotonDepthDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
 
         self.c.convert(ops)
         self.assertRaises(ExporterException, self.e.export, ops, self.tmpdir)
@@ -132,7 +132,7 @@ class TestPenelopeExporter(TestCase):
 
         for i in range(10):
             ops.detectors['det%i' % i] = \
-                PhiRhoZDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
+                PhotonDepthDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
 
         self.c.convert(ops)
 

@@ -50,7 +50,7 @@ from pymontecarlo.settings import get_settings
 
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
+from pymontecarlo.input.detector import PhotonIntensityDetector, PhotonDepthDetector
 
 from pymontecarlo.util.transition import Ka, La, Ma
 
@@ -138,7 +138,7 @@ class Worker(_Worker):
                                   transitions)
 
         # Extract phi-rho-zs if phi-rho-z detectors
-        detectors = options.detectors.findall(PhiRhoZDetector)
+        detectors = options.detectors.findall(PhotonDepthDetector)
         for detector_key, detector in detectors.iteritems():
             self._run_phirhozs(jobdir, options, detector_key, detector,
                                transitions)

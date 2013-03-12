@@ -36,7 +36,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
-     PhiRhoZDetector,
+     PhotonDepthDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      ElectronFractionDetector,
@@ -93,8 +93,8 @@ class Exporter(_Exporter):
             self._detector_backscattered_electron_polar_angular
         self._detector_exporters[TransmittedElectronEnergyDetector] = \
             self._detector_transmitted_electron_energy
-        self._detector_exporters[PhiRhoZDetector] = \
-            self._detector_phirhoz
+        self._detector_exporters[PhotonDepthDetector] = \
+            self._detector_photondepth
         self._detector_exporters[PhotonIntensityDetector] = \
             self._detector_photon_intensity
         self._detector_exporters[ElectronFractionDetector] = \
@@ -294,7 +294,7 @@ class Exporter(_Exporter):
         simops.DbangMin = math.degrees(detector.limits_rad[0]) # deg
         simops.DbangMax = math.degrees(detector.limits_rad[1]) # deg
 
-    def _detector_phirhoz(self, options, name, detector, simdata, simops):
+    def _detector_photondepth(self, options, name, detector, simdata, simops):
         # FIXME: Casino freezes when this value is set
         #simops.NbreCoucheRX = detector.channels
         simops.FEmissionRX = 1 # Simulate x-ray

@@ -31,7 +31,7 @@ from pymontecarlo.output.result import \
     (
     PhotonIntensityResult,
     PhotonSpectrumResult,
-    PhiRhoZResult,
+    PhotonDepthResult,
     ElectronFractionResult,
     TimeResult,
     create_intensity_dict,
@@ -41,7 +41,7 @@ from pymontecarlo.input.detector import \
     (
 #     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
-     PhiRhoZDetector,
+     PhotonDepthDetector,
      PhotonIntensityDetector,
      PhotonSpectrumDetector,
      ElectronFractionDetector,
@@ -76,8 +76,8 @@ class Importer(_Importer):
             self._detector_photon_intensity
         self._detector_importers[PhotonSpectrumDetector] = \
             self._detector_photon_spectrum
-        self._detector_importers[PhiRhoZDetector] = \
-            self._detector_phirhoz
+        self._detector_importers[PhotonDepthDetector] = \
+            self._detector_photondepth
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
         self._detector_importers[TimeDetector] = self._detector_time
@@ -145,12 +145,7 @@ class Importer(_Importer):
 
         return PhotonSpectrumResult(total, background)
 
-    def _detector_phirhoz(self, options, name, detector, path):
-        # Read density
-        wxrresult = GeneralResults(path)
-        density_kg_m3 = wxrresult.getMeanDensity_g_cm3() / 1000.0
-
-        # Read phirhoz
+    def _detector_photondepth(self, options, name, detector, path):
         wxrresult = CharateristicPhirhoz(path)
         distributions = {}
 
@@ -159,23 +154,23 @@ class Importer(_Importer):
                 for xrayline in data[z]:
                     transition = from_string(symbol(z) + " " + xrayline)
 
-                    zs, vals, uncs = data[z][xrayline]
-                    zs = [val * 1e-9 * density_kg_m3 for val in zs]
+                    dist = np.array(data[z][xrayline]).T
+
+                    # Convert z values in meters
+                    dist[:, 0] *= -1e-9
 
                     # WinXRay starts from the bottom to the top
                     # The order must be reversed
-                    zs.reverse()
-                    vals.reverse()
-                    uncs.reverse()
+                    dist = dist[::-1]
 
                     dists.setdefault(transition, {}).setdefault(key, {})
-                    dists[transition][key][NOFLUORESCENCE] = (zs, vals, uncs)
-                    dists[transition][key][TOTAL] = (zs, vals, uncs)
+                    dists[transition][key][NOFLUORESCENCE] = dist
+                    dists[transition][key][TOTAL] = dist
 
         _extract(wxrresult.getPhirhozs('Generated'), GENERATED, distributions)
         _extract(wxrresult.getPhirhozs('Emitted'), EMITTED, distributions)
 
-        return PhiRhoZResult(distributions)
+        return PhotonDepthResult(distributions)
 
     def _detector_electron_fraction(self, options, name, detector, path):
         wxrresult = BseResults(path)

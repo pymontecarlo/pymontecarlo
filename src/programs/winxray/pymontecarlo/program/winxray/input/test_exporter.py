@@ -25,7 +25,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     (BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, PhotonIntensityDetector,
-     PhiRhoZDetector, PhotonSpectrumDetector)
+     PhotonDepthDetector, PhotonSpectrumDetector)
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.material import Material
 from pymontecarlo.input.model import \
@@ -71,7 +71,7 @@ class TestExporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
+            PhotonDepthDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
 
         # Export to WinX-Ray options
         with warnings.catch_warnings(record=True) as ws:
@@ -169,7 +169,7 @@ class TestExporter(TestCase):
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
-            PhiRhoZDetector((radians(30), radians(50)), (0, radians(360.0)), 750)
+            PhotonDepthDetector((radians(30), radians(50)), (0, radians(360.0)), 750)
 
         # Test
         self.assertRaises(ExporterException, self.e.export, ops)

@@ -38,7 +38,7 @@ from pymontecarlo.input.collision import \
      ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.detector import \
-    (_PhotonDelimitedDetector, PhotonSpectrumDetector, PhiRhoZDetector,
+    (_PhotonDelimitedDetector, PhotonSpectrumDetector, PhotonDepthDetector,
      BackscatteredElectronEnergyDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 
@@ -387,7 +387,7 @@ class Exporter(_Exporter):
                                      phdets_key_index, phdets_index_keys, *args):
         lines.append(self._COMMENT_PHIRHOZ())
 
-        detectors = options.detectors.findall(PhiRhoZDetector)
+        detectors = options.detectors.findall(PhotonDepthDetector)
         if not detectors:
             lines.append(self._COMMENT_SKIP())
             return

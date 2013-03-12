@@ -491,12 +491,12 @@ class PhotonSpectrumResult(_Result):
 
 ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
 
-def create_phirhoz_dict(transition, gnf=None, gt=None, enf=None, et=None):
+def create_photondist_dict(transition, gnf=None, gt=None, enf=None, et=None):
     """
     Values of *gnf*, *gt*, *enf* and *et* must be a Numpy array containing two
     or three columns:
     
-        * :math:`\\rho z` values (in kg/m2)
+        * abscissa values
         * intensities
         * (optional) uncertainties on the intensities
     """
@@ -521,14 +521,15 @@ def create_phirhoz_dict(transition, gnf=None, gt=None, enf=None, et=None):
 
     return dist
 
-class PhiRhoZResult(_Result):
+class _PhotonDistributionResult(_Result):
 
     def __init__(self, distributions={}):
         """
-        Creates a new result to store :math:`\\phi(\\rho z)` distributions.
+        Creates a new result to store photon distributions.
         
         :arg distributions: :class:`dict` containing the distributions.
-            One should use :func:`.create_phirhoz_dict` to create the dictionary
+            One should use :func:`.create_photondist_dict` to create the 
+            dictionary
         """
         _Result.__init__(self)
         self._distributions = distributions
@@ -547,7 +548,7 @@ class PhiRhoZResult(_Result):
         # Construct distributions
         distributions = {}
         for transition, datum in data.iteritems():
-            distributions.update(create_phirhoz_dict(transition, **datum))
+            distributions.update(create_photondist_dict(transition, **datum))
 
         return cls(distributions)
 
@@ -564,8 +565,8 @@ class PhiRhoZResult(_Result):
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
-        Returns whether the result contains a :math:`\\phi(\\rho z)`
-        distribution for the specified transition.
+        Returns whether the result contains a photon distribution for 
+        the specified transition.
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.get`)
@@ -593,36 +594,24 @@ class PhiRhoZResult(_Result):
 
     def get(self, transition, absorption=True, fluorescence=True):
         """
-        Returns the :math:`\\phi(\\rho z)` distribution for the specified 
-        transition.
+        Returns the photon distribution for the specified transition.
         A Numpy array is returned where the columns are:
             
-            * :math:`\\rho z` values (in kg/m2)
+            * abscissa values
             * intensities
             * uncertainties on the intensities
             
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)
         :arg absorption: whether to return the distribution with absorption.
-            If ``True``, emitted :math:`\\phi(\\rho z)` is returned, 
-            if ``False`` generated :math:`\\phi(\\rho z)`.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
         :arg fluorescence: whether to return the distribution with fluorescence.
-            If ``True``, :math:`\\phi(\\rho z)` with fluorescence is returned, 
-            if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
             
         :raise: :class:`ValueError` if there is no distribution for the 
             specified transition.
-            
-        Here are examples that will all returned the same values::
-        
-            >>> phirhoz = result.get(Transition(13, 4, 1))
-            >>> rzs = phirhoz[:,0]; vals = phirhoz[:,1]
-            >>> phirhoz = result.get('Al Ka1')
-        
-        or
-        
-            >>> phirhoz = result.get(K_family(13))
-            >>> phirhoz = result.get('Al K')
         """
         if isinstance(transition, basestring):
             transition = from_string(transition)
@@ -642,17 +631,17 @@ class PhiRhoZResult(_Result):
 
     def integral(self, transition, absorption=True, fluorescence=True):
         """
-        Returns the integral over the phi-rho-z for the specified transition 
-        in kg/m2.
+        Returns the integral over the photon distribution for the 
+        specified transition.
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)
-        :arg absorption: whether to use the :math:`\\phi(\\rho z)` with 
-            absorption. If ``True``, emitted :math:`\\phi(\\rho z)` is used, 
-            if ``False`` generated :math:`\\phi(\\rho z)`.
-        :arg fluorescence: whether to use math:`\\phi(\\rho z)` with 
-            fluorescence. If ``True``, :math:`\\phi(\\rho z)` with fluorescence 
-            is used, if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
             
         :rtype: :class:`float`
         """
@@ -662,16 +651,108 @@ class PhiRhoZResult(_Result):
         width = abs(rzs[1] - rzs[0])
         return sum(vals) * width
 
+    def iter_transitions(self, absorption=True, fluorescence=True):
+        """
+        Returns an iterator returning a tuple of the:
+
+          * transition
+          * abscissa values
+          * intensities
+          * uncertainties on the intensities
+        
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+        """
+        for transition in self._distributions:
+            if not self.exists(transition, absorption, fluorescence):
+                continue
+
+            distribution = self.get(transition, absorption, fluorescence)
+            yield transition, distribution
+
+class PhotonDepthResult(_PhotonDistributionResult):
+
+    def exists(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns whether the result contains a photon depth distribution for 
+        the specified transition.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples in :meth:`.get`)
+        :arg absorption: distribution with absorption. If ``True``, emitted 
+            distribution is returned, if ``False`` generated distribution.
+        :arg fluorescence: distribution with fluorescence. If ``True``, 
+            distribution with fluorescence is returned, if ``False`` 
+            distribution without fluorescence.
+        """
+        return _PhotonDistributionResult.exists(self, transition, absorption, fluorescence)
+
+    def get(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the photon depth distribution for the specified transition.
+        A Numpy array is returned where the columns are:
+            
+            * z values (in meters)
+            * intensities
+            * uncertainties on the intensities
+            
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+            
+        :raise: :class:`ValueError` if there is no distribution for the 
+            specified transition.
+            
+        Here are examples that will all returned the same values::
+        
+            >>> pz = result.get(Transition(13, 4, 1))
+            >>> zs = pz[:,0]; vals = pz[:,1]
+            >>> pz = result.get('Al Ka1')
+        
+        or
+        
+            >>> pz = result.get(K_family(13))
+            >>> pz = result.get('Al K')
+        """
+        return _PhotonDistributionResult.get(self, transition, absorption, fluorescence)
+
+    def integral(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the integral over the photon depth distribution for the 
+        specified transition (in meters).
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+            
+        :rtype: :class:`float`
+        """
+        return _PhotonDistributionResult.integral(self, transition, absorption, fluorescence)
+
     def fchi(self, transition, fluorescence=True):
         """
-        Returns the ratio between the emitted over the generated phi-rho-zs for 
-        the specified transition.
+        Returns the ratio between the emitted over the generated photon depth 
+        distribution for the specified transition.
         
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples)
         :arg fluorescence: whether to return the distribution with fluorescence.
-            If ``True``, :math:`\\phi(\\rho z)` with fluorescence is used, 
-            if ``False`` :math:`\\phi(\\rho z)` without fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
             
         :rtype: :class:`float`
         """
@@ -684,25 +765,109 @@ class PhiRhoZResult(_Result):
         Returns an iterator returning a tuple of the:
 
           * transition
-          * depths (in kg/m2)
+          * depths (in meters)
           * intensities
           * uncertainties on the intensities
         
         :arg absorption: whether to return the distribution with absorption.
-            If ``True``, emitted intensity is returned, if ``False`` generated
-            intensity.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
         :arg fluorescence: whether to return the distribution with fluorescence.
-            If ``True``, intensity with fluorescence is returned, if ``False``
-            intensity without fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
         """
-        for transition in self._distributions:
-            if not self.exists(transition, absorption, fluorescence):
-                continue
+        return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
 
-            distribution = self.get(transition, absorption, fluorescence)
-            yield transition, distribution
+ResultManager.register('PhotonDepthResult', PhotonDepthResult)
 
-ResultManager.register('PhiRhoZResult', PhiRhoZResult)
+class PhotonRadialResult(_PhotonDistributionResult):
+
+    def exists(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns whether the result contains a photon radial distribution for 
+        the specified transition.
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples in :meth:`.get`)
+        :arg absorption: distribution with absorption. If ``True``, emitted 
+            distribution is returned, if ``False`` generated distribution.
+        :arg fluorescence: distribution with fluorescence. If ``True``, 
+            distribution with fluorescence is returned, if ``False`` 
+            distribution without fluorescence.
+        """
+        return _PhotonDistributionResult.exists(self, transition, absorption, fluorescence)
+
+    def get(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the photon depth distribution for the specified transition.
+        A Numpy array is returned where the columns are:
+            
+            * radius values (in meters)
+            * intensities (normalized by area)
+            * uncertainties on the intensities
+            
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+            
+        :raise: :class:`ValueError` if there is no distribution for the 
+            specified transition.
+            
+        Here are examples that will all returned the same values::
+        
+            >>> pz = result.get(Transition(13, 4, 1))
+            >>> zs = pz[:,0]; vals = pz[:,1]
+            >>> pz = result.get('Al Ka1')
+        
+        or
+        
+            >>> pz = result.get(K_family(13))
+            >>> pz = result.get('Al K')
+        """
+        return _PhotonDistributionResult.get(self, transition, absorption, fluorescence)
+
+    def integral(self, transition, absorption=True, fluorescence=True):
+        """
+        Returns the integral over the photon radial distribution for the 
+        specified transition (in meters).
+        
+        :arg transition: transition or set of transitions or name of the
+            transition or transitions set (see examples)
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+            
+        :rtype: :class:`float`
+        """
+        return _PhotonDistributionResult.integral(self, transition, absorption, fluorescence)
+
+    def iter_transitions(self, absorption=True, fluorescence=True):
+        """
+        Returns an iterator returning a tuple of the:
+
+          * transition
+          * radial (in meters)
+          * intensities (normalized by area)
+          * uncertainties on the intensities
+        
+        :arg absorption: whether to return the distribution with absorption.
+            If ``True``, emitted photon depth distribution is returned, 
+            if ``False`` generated photon depth distribution.
+        :arg fluorescence: whether to return the distribution with fluorescence.
+            If ``True``, photon depth distribution with fluorescence is returned, 
+            if ``False`` photon depth distribution without fluorescence.
+        """
+        return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
+
+ResultManager.register('PhotonRadialResult', PhotonRadialResult)
 
 class TimeResult(_Result):
 

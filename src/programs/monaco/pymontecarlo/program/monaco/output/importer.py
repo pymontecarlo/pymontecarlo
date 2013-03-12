@@ -28,11 +28,12 @@ import numpy as np
 # Local modules.
 from pymontecarlo.output.importer import Importer as _Importer, ImporterException
 
-from pymontecarlo.input.detector import PhotonIntensityDetector, PhiRhoZDetector
+from pymontecarlo.input.detector import \
+    PhotonIntensityDetector, PhotonDepthDetector
 
 from pymontecarlo.output.result import \
     (PhotonIntensityResult, create_intensity_dict,
-     PhiRhoZResult, create_phirhoz_dict)
+     PhotonDepthResult, create_photondist_dict)
 
 from pymontecarlo.util.transition import from_string
 
@@ -45,7 +46,7 @@ class Importer(_Importer):
 
         self._detector_importers[PhotonIntensityDetector] = \
             self._detector_photon_intensity
-        self._detector_importers[PhiRhoZDetector] = self._detector_phirhoz
+        self._detector_importers[PhotonDepthDetector] = self._detector_photondepth
 
     def import_from_dir(self, options, jobdir):
         """
@@ -82,7 +83,7 @@ class Importer(_Importer):
             
         return PhotonIntensityResult(intensities)
 
-    def _detector_phirhoz(self, options, name, detector, jobdir):
+    def _detector_photondepth(self, options, name, detector, jobdir):
         prz_filepath = os.path.join(jobdir, 'phi_%s.csv' % name)
         if not os.path.exists(prz_filepath):
             raise ImporterException, \
@@ -106,7 +107,7 @@ class Importer(_Importer):
 
             enf = np.array([rzs, values]).transpose()
 
-            distributions.update(create_phirhoz_dict(transition,
-                                                     enf=enf, et=enf))
+            distributions.update(create_photondist_dict(transition,
+                                                        enf=enf, et=enf))
 
-        return PhiRhoZResult(distributions)
+        return PhotonDepthResult(distributions)

@@ -32,7 +32,7 @@ from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 # Globals and constants variables.
-VERSION = '4'
+VERSION = '5'
 
 # Load submodules to register XML loader and saver
 import pymontecarlo.input.beam #@UnusedImport
@@ -160,8 +160,8 @@ class Options(Option):
         # Check version
         version = element.get('version')
         if version != VERSION:
-            raise IOError, "Incorrect version of options. Only version %s is accepted" % \
-                    VERSION
+            raise IOError, "Incorrect version of options %s. Only version %s is accepted" % \
+                    (version, VERSION)
 
         options = cls(element.get('name'))
 

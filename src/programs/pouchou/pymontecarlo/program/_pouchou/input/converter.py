@@ -33,7 +33,7 @@ from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.detector import \
     (PhotonIntensityDetector,
      TimeDetector,
-     PhiRhoZDetector)
+     PhotonDepthDetector)
 from pymontecarlo.input.model import MASS_ABSORPTION_COEFFICIENT
 
 # Globals and constants variables.
@@ -41,7 +41,7 @@ from pymontecarlo.input.model import MASS_ABSORPTION_COEFFICIENT
 class Converter(_Converter):
     BEAMS = [PencilBeam]
     GEOMETRIES = [Substrate]
-    DETECTORS = [PhiRhoZDetector,
+    DETECTORS = [PhotonDepthDetector,
                  PhotonIntensityDetector,
                  TimeDetector]
     LIMITS = []
@@ -84,7 +84,7 @@ class Converter(_Converter):
             raise ConversionException, "Too many photon intensity detectors. Only one is accepted"
 
         # Assert that there is only one PhiRhoZDetector
-        detectors = options.detectors.findall(PhiRhoZDetector)
+        detectors = options.detectors.findall(PhotonDepthDetector)
         if len(detectors) > 1:
             raise ConversionException, "Too many phi-rho-z detectors. Only one is accepted"
 

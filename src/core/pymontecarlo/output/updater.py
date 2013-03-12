@@ -38,11 +38,12 @@ from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.util.transition import from_string
 
 from pymontecarlo.input.options import Options
+from pymontecarlo.input.updater import Updater as OptionsUpdater
 
 from pymontecarlo.output.results import Results
 from pymontecarlo.output.result import \
     (PhotonIntensityResult, create_intensity_dict, PhotonSpectrumResult,
-     PhiRhoZResult, create_phirhoz_dict, TimeResult, ShowersStatisticsResult,
+     PhotonDepthResult, create_photondist_dict, TimeResult, ShowersStatisticsResult,
      ElectronFractionResult, BackscatteredElectronEnergyResult,
      TransmittedElectronEnergyResult, Trajectory, TrajectoryResult)
 
@@ -55,6 +56,28 @@ from pymontecarlo.input.collision import COLLISIONS
 SECTION_KEYS = 'keys'
 KEYS_INI_FILENAME = 'keys.ini'
 OPTIONS_FILENAME = 'options.xml'
+
+def _update_options(source):
+    logging.info('Update options')
+
+    # Open temporary file and write options in it.
+    fd, tmpfilepath = tempfile.mkstemp('.xml')
+    with open(tmpfilepath, 'w') as fp:
+        fp.write(source)
+
+    # Update
+    OptionsUpdater().update(tmpfilepath)
+
+    # Read options and update HDF5
+    with open(tmpfilepath, 'r') as fp:
+        source = fp.read()
+
+    # Close temporary file and remove it
+    os.close(fd)
+    os.remove(tmpfilepath)
+    os.remove(tmpfilepath + '.bak')
+
+    return source
 
 class Updater(_Updater):
 
@@ -69,6 +92,7 @@ class Updater(_Updater):
         self._updaters[3] = self._update_version3
         self._updaters[4] = self._update_version4
         self._updaters[5] = self._update_version5
+        self._updaters[6] = self._update_version6
 
     def _get_version(self, filepath):
         if is_zipfile(filepath):
@@ -133,7 +157,10 @@ class Updater(_Updater):
         xmlfilepath = os.path.splitext(filepath)[0] + '.xml'
         if not os.path.exists(xmlfilepath):
             raise ValueError, 'Update requires an options file saved at %s' % xmlfilepath
-        options = Options.load(xmlfilepath)
+        with open(xmlfilepath, 'r') as fp:
+            source = fp.read()
+        source = _update_options(source)
+        options = Options.load(StringIO(source))
 
         oldzip = ZipFile(filepath, 'r')
         newzip = ZipFile(filepath + ".new", 'w')
@@ -243,9 +270,9 @@ class Updater(_Updater):
             # Construct distributions
             distributions = {}
             for transition, datum in data.iteritems():
-                distributions.update(create_phirhoz_dict(transition, **datum))
+                distributions.update(create_photondist_dict(transition, **datum))
 
-            return PhiRhoZResult(distributions)
+            return PhotonDepthResult(distributions)
 
         manager['PhiRhoZResult'] = _load_phirhoz
 
@@ -364,8 +391,10 @@ class Updater(_Updater):
             except KeyError:
                 raise IOError, "Zip file (%s) does not contain a %s" % \
                         (filepath, OPTIONS_FILENAME)
-
-            options = Options.load(zipfile.open(zipinfo, 'r'))
+            with zipfile.open(zipinfo, 'r') as fp:
+                source = fp.read()
+            source = _update_options(source)
+            options = Options.load(StringIO(source))
 
             # Parse keys.ini
             try:
@@ -417,6 +446,8 @@ class Updater(_Updater):
         """
         Update structure of PRZ results in HDF5.
         """
+        logging.debug('Updating from "version 4"')
+
         hdf5file = h5py.File(filepath, 'r+')
 
         # Find PRZ result (if any)
@@ -447,5 +478,32 @@ class Updater(_Updater):
         return self._update_version5(filepath)
 
     def _update_version5(self, filepath):
+        logging.debug('Updating from "version 5"')
+
+        hdf5file = h5py.File(filepath, 'r+')
+
+        hdf5file.attrs['version'] = '6' # Change version
+
+        for result_group in hdf5file.itervalues():
+            if result_group.attrs.get('_class') == 'PhiRhoZResult':
+                result_group.attrs['_class'] = 'PhotonDepthResult'
+
+        hdf5file.close()
+
+        return self._update_version6(filepath)
+
+    def _update_version6(self, filepath):
         logging.info('Nothing to update')
+        return self._update_options(filepath)
+
+    def _update_options(self, filepath):
+        logging.info('Update options')
+
+        hdf5file = h5py.File(filepath, 'r+')
+
+        source = _update_options(hdf5file.attrs['options'])
+        hdf5file.attrs['options'] = source
+
+        hdf5file.close()
+
         return filepath

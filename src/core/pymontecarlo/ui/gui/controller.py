@@ -23,12 +23,15 @@ import os
 from operator import attrgetter
 
 # Third party modules.
+import wx
 from wx.lib.pubsub import Publisher as pub
 
 # Local modules.
+from pymontecarlo.settings import get_settings
 from pymontecarlo.input.options import Options
 from pymontecarlo.output.results import Results
 import pymontecarlo.util.progress as progress
+from pymontecarlo.ui.gui.input.wizard import NewSimulationWizard
 
 from wxtools2.dialog import show_open_filedialog, show_progress_dialog, show_error_dialog
 from wxtools2.exception import catch_all
@@ -103,7 +106,21 @@ class _Controller(object):
         pub.sendMessage('controller.simulation.clear')
 
     def create(self, parent):
-        pass
+        programs = sorted(get_settings().get_programs(), key=attrgetter('name'))
+        choices = map(attrgetter('name'), programs)
+        message = "Please select the program(s) with which the new simulation\nshould be compatible"
+        caption = "New simulation"
+
+        dialog = wx.MultiChoiceDialog(parent, message, caption, choices)
+        if dialog.ShowModal() != wx.ID_OK:
+            dialog.Destroy()
+            return
+
+        selections = [programs[i] for i in dialog.GetSelections()]
+        dialog.Destroy()
+
+        wizard = NewSimulationWizard(parent, selections)
+        wizard.ShowModal()
 
     def open(self, parent):
         filetypes = [('Results (*.h5)', 'h5'), ('Options (*.xml)', 'xml')]
