@@ -43,7 +43,7 @@ def create_parser(programs):
                   "with different Monte Carlo programs from the same interface." + \
                   "After the simulations, the results are automatically saved " + \
                   "in the output directory."
-    epilog = "For more information, see http://pymontecarlo.sf.net"
+    epilog = "For more information, see http://pymontecarlo.bitbucket.org"
 
     parser = OptionParser(usage="%prog [options] [OPTION_FILE...]",
                           description=description, epilog=epilog)

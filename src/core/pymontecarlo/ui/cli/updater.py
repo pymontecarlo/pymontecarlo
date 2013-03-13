@@ -27,7 +27,6 @@ from optparse import OptionParser
 from pymontecarlo.ui.cli.console import Console
 from pymontecarlo.input.updater import Updater as OptionsUpdater
 from pymontecarlo.output.updater import Updater as ResultsUpdater
-from pymontecarlo.quant.output.updater import Updater as QuantResultsUpdater
 
 # Globals and constants variables.
 
@@ -40,14 +39,12 @@ if __name__ == '__main__':
     usage = "%prog [options] [OPTION_FILE.xml or RESULTS_FILE.zip or RESULTS_FILE.h5 ...]"
     description = "pyMonteCarlo update tool. This script updates old version " + \
                   "of options or results file to the newer one."
-    epilog = "For more information, see http://pymontecarlo.sf.net"
+    epilog = "For more information, see http://pymontecarlo.bitbucket.org"
 
     parser = OptionParser(usage=usage, description=description, epilog=epilog)
 
     parser.add_option('-v', '--verbose', dest='verbose', default=False,
                       action='store_true', help='Debug mode')
-    parser.add_option('-q', '--quant', dest='quant', default=False,
-                      action='store_true', help='Update quantification input and output')
 
     # Parse arguments
     (values, args) = parser.parse_args()
@@ -64,26 +61,16 @@ if __name__ == '__main__':
 
         ext = os.path.splitext(filepath)[1]
 
-        if values.quant:
-            if ext == '.xml':
-                console.error('No updater for %s' % filepath)
-            elif ext == '.zip' or ext == '.h5':
-                console.print_info("Updating results %s" % filepath)
-                QuantResultsUpdater().update(filepath)
-                console.print_success("Successfully results %s" % filepath)
-            else:
-                console.error('Unknown extension %s' % ext)
+        if ext == '.xml':
+            console.print_info("Updating options %s" % filepath)
+            OptionsUpdater().update(filepath)
+            console.print_success("Successfully updated %s" % filepath)
+        elif ext == '.zip' or ext == '.h5':
+            console.print_info("Updating results %s" % filepath)
+            ResultsUpdater().update(filepath)
+            console.print_success("Successfully results %s" % filepath)
         else:
-            if ext == '.xml':
-                console.print_info("Updating options %s" % filepath)
-                OptionsUpdater().update(filepath)
-                console.print_success("Successfully updated %s" % filepath)
-            elif ext == '.zip' or ext == '.h5':
-                console.print_info("Updating results %s" % filepath)
-                ResultsUpdater().update(filepath)
-                console.print_success("Successfully results %s" % filepath)
-            else:
-                console.error('Unknown extension %s' % ext)
+            console.error('Unknown extension %s' % ext)
 
     console.close()
 

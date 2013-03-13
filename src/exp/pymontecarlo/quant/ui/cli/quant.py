@@ -46,7 +46,7 @@ def create_parser(programs):
     description = "pyMonteCarlo Command Line Interface. Quantify experimental " + \
                   "k-ratios using analytical or Monte Carlo programs from the " + \
                   "same interface. "
-    epilog = "For more information, see http://pymontecarlo.sf.net"
+    epilog = "For more information, see http://pymontecarlo.bitbucket.org"
 
     parser = OptionParser(usage="%prog [options] [measurement files...]",
                           description=description, epilog=epilog)
