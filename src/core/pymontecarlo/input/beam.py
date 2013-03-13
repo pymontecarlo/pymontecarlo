@@ -20,7 +20,9 @@ __license__ = "GPL v3"
 
 __all__ = ['PencilBeam',
            'GaussianBeam',
-           'tilt_beam']
+           'tilt_beam',
+           'convert_diameter_fwhm_to_sigma',
+           'convert_diameter_sigma_to_fwhm']
 
 # Standard library modules.
 import math
@@ -231,3 +233,25 @@ def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
         raise ValueError, "Unknown axis: %s" % axis
 
     return np.dot(r, direction)
+
+def convert_diameter_fwhm_to_sigma(diameter):
+    """
+    Converts a beam diameter expressed as 2-sigma of a Gaussian distribution 
+    (radius = sigma) to a beam diameter expressed as the full with at half 
+    maximum (FWHM).
+    
+    :arg diameter: FWHM diameter.
+    """
+    # d_{FWHM} = 1.177411 (2\sigma)
+    return diameter / 1.177411
+
+def convert_diameter_sigma_to_fwhm(diameter):
+    """
+    Converts a beam diameter expressed as the full with at half maximum (FWHM)
+    to a beam diameter expressed as 2-sigma of a Gaussian distribution 
+    (radius = sigma).
+    
+    :arg diameter: 2-sigma diameter diameter.
+    """
+    # d_{FWHM} = 1.177411 (2\sigma)
+    return diameter * 1.177411

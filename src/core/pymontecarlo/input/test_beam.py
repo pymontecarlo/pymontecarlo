@@ -18,7 +18,9 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.beam import PencilBeam, GaussianBeam, tilt_beam
+from pymontecarlo.input.beam import \
+    (PencilBeam, GaussianBeam, tilt_beam,
+     convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm)
 from pymontecarlo.input.particle import POSITRON
 
 # Globals and constants variables.
@@ -49,6 +51,12 @@ class TestModule(TestCase):
         actuals = tilt_beam(math.pi / 2, axis='z', direction=(0, 0, -1))
         for expected, actual in zip(expecteds, actuals):
             self.assertAlmostEqual(expected, actual, 4)
+
+    def testconvert_diameter_fwhm_to_sigma(self):
+        self.assertAlmostEqual(0.849321, convert_diameter_fwhm_to_sigma(1.0), 4)
+
+    def testconvert_diameter_sigma_to_fwhm(self):
+        self.assertAlmostEqual(1.0, convert_diameter_sigma_to_fwhm(0.849321), 4)
 
 class TestPencilBeam(TestCase):
 
