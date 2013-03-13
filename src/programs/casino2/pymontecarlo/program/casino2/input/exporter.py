@@ -37,6 +37,7 @@ from pymontecarlo.input.detector import \
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      PhotonDepthDetector,
+     PhotonRadialDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      ElectronFractionDetector,
@@ -95,6 +96,8 @@ class Exporter(_Exporter):
             self._detector_transmitted_electron_energy
         self._detector_exporters[PhotonDepthDetector] = \
             self._detector_photondepth
+        self._detector_exporters[PhotonRadialDetector] = \
+            self._detector_photonradial
         self._detector_exporters[PhotonIntensityDetector] = \
             self._detector_photon_intensity
         self._detector_exporters[ElectronFractionDetector] = \
@@ -298,6 +301,10 @@ class Exporter(_Exporter):
         # FIXME: Casino freezes when this value is set
         #simops.NbreCoucheRX = detector.channels
         simops.FEmissionRX = 1 # Simulate x-ray
+    
+    def _detector_photonradial(self,  options, name, detector, simdata, simops):
+        simops.FEmissionRX = 1 # Simulate x-rays
+        # FIXME: Simulation options parameters for the number of channels radially
 
     def _detector_photon_intensity(self, options, name, detector, simdata, simops):
         simops.FEmissionRX = 1 # Simulate x-rays

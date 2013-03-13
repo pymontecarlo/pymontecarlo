@@ -21,7 +21,8 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.casino2.output.importer import Importer
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, ElectronFractionDetector
+    (PhotonIntensityDetector, ElectronFractionDetector,
+     PhotonDepthDetector, PhotonRadialDetector)
 
 # Globals and constants variables.
 
@@ -33,6 +34,8 @@ class TestCasino2Importer(TestCase):
         self.ops = Options()
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['fraction'] = ElectronFractionDetector()
+        self.ops.detectors['photondepth'] = PhotonDepthDetector((0, 1), (2, 3), 500)
+        self.ops.detectors['photonradial'] = PhotonRadialDetector((0, 1), (2, 3), 500)
 
         filepath = os.path.join(os.path.dirname(__file__),
                                 '../testdata/result1.cas')
@@ -63,6 +66,34 @@ class TestCasino2Importer(TestCase):
         val, unc = result.backscattered
         self.assertAlmostEqual(0.017436, val, 5)
         self.assertAlmostEqual(0.0, unc, 4)
+
+    def test_detector_photondepth(self):
+        self.assertTrue('photondepth' in self.results)
+
+        result = self.results['photondepth']
+
+        self.assertEqual(11, len(list(result.iter_transitions())))
+
+        pz = result.get('Au MV')
+        self.assertEqual(499, len(pz[:, 0]))
+        self.assertAlmostEqual(0.0, pz[-1, 0], 9)
+        self.assertAlmostEqual(-1.425e-7, pz[0, 0], 9)
+        self.assertAlmostEqual(1.0019390, pz[-1, 1], 4)
+        self.assertAlmostEqual(0.0, pz[0, 1], 4)
+
+    def test_detector_photonradial(self):
+        self.assertTrue('photonradial' in self.results)
+
+        result = self.results['photonradial']
+
+        self.assertEqual(11, len(list(result.iter_transitions())))
+
+        pr = result.get('Zn LIII')
+        self.assertEqual(499, len(pr[:, 0]))
+        self.assertAlmostEqual(1.422144e-7, pr[-1, 0], 9)
+        self.assertAlmostEqual(0.0, pr[0, 0], 9)
+        self.assertAlmostEqual(0.00011869, pr[-1, 1] / 1e18, 4)
+        self.assertAlmostEqual(188.53822, pr[0, 1] / 1e18, 4)
 
 if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.ERROR)
