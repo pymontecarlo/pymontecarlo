@@ -49,6 +49,11 @@ class TestSubshell(TestCase):
             x = getattr(self, "x%i" % i)
             self.assertEqual(_IUPACS[i - 1], x.iupac)
 
+    def testiupac_latex(self):
+        self.assertEqual('K', self.x1.iupac_latex)
+        self.assertEqual('L$_1$', self.x2.iupac_latex)
+        self.assertEqual('OUTER', self.x30.iupac_latex)
+
     def testsiegbahn(self):
         for i in range(1, 31):
             x = getattr(self, "x%i" % i)

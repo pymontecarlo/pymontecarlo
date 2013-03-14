@@ -179,6 +179,13 @@ class Transition(objectxml):
     atomicnumber = z
 
     @property
+    def symbol(self):
+        """
+        Symbol of the element of this transition.
+        """
+        return self._symbol
+
+    @property
     def src(self):
         """
         Source shell of this transition.
@@ -200,11 +207,39 @@ class Transition(objectxml):
         return self._iupac
 
     @property
+    def iupac_latex(self):
+        """
+        IUPAC symbol of this transition formatted for LaTeX.
+        """
+        s = ''
+        for c in self.iupac:
+            s += "$_%s$" % c if c.isdigit() else c
+        return s
+
+    @property
     def siegbahn(self):
         """
         Seigbahn symbol of this transition.
         """
         return self._siegbahn
+
+    @property
+    def siegbahn_latex(self):
+        """
+        Seigbahn symbol of this transition formatted for LaTeX.
+        """
+        s = ''
+        for c in self.siegbahn:
+            s += "$_%s$" % c if c.isdigit() else c
+
+        s = s.replace(u'\u03B1', r'$\alpha$')
+        s = s.replace(u'\u03B2', r'$\beta$')
+        s = s.replace(u'\u03B3', r'$\gamma$')
+        s = s.replace(u'\u03B6', r'$\zeta$')
+
+        s = s.replace('$$', '')
+
+        return str(s)
 
     @property
     def siegbahn_nogreek(self):

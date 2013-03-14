@@ -75,6 +75,11 @@ class TestTransition(TestCase):
             self.assertEqual(13, x.z)
             self.assertEqual(13, x.atomicnumber)
 
+    def testsymbol(self):
+        for i in range(len(_SUBSHELLS)):
+            x = getattr(self, "x%i" % i)
+            self.assertEqual('Al', x.symbol)
+
     def testsrc(self):
         for i, shells in enumerate(_SUBSHELLS):
             x = getattr(self, "x%i" % i)
@@ -92,10 +97,23 @@ class TestTransition(TestCase):
             dest = Subshell(13, shells[1])
             self.assertEqual('-'.join([dest.iupac, src.iupac]), x.iupac)
 
+    def testiupac_latex(self):
+        for i, shells in enumerate(_SUBSHELLS):
+            x = getattr(self, "x%i" % i)
+            src = Subshell(13, shells[0])
+            dest = Subshell(13, shells[1])
+            self.assertEqual('-'.join([dest.iupac_latex, src.iupac_latex]), x.iupac_latex)
+
     def testsiegbahn(self):
         for i, siegbahn in enumerate(_SIEGBAHNS):
             x = getattr(self, "x%i" % i)
             self.assertEqual(siegbahn, x.siegbahn)
+
+    def testsiegbahn_latex(self):
+        self.assertEqual(r"K$\alpha_1$", self.x0.siegbahn_latex)
+        self.assertEqual(r"K$\beta_1$", self.x2.siegbahn_latex)
+        self.assertEqual(r"L$\gamma_1$", Transition(13, siegbahn='Lg1').siegbahn_latex)
+        self.assertEqual(r"M$\zeta_1$", Transition(13, siegbahn='Mz1').siegbahn_latex)
 
     def testsiegbahn_nogreek(self):
         for i, siegbahn in enumerate(_SIEGBAHNS_NOGREEK):
