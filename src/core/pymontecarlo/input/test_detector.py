@@ -22,6 +22,7 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
      _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
+     PhotonEmissionMapDetector,
      TimeDetector, ElectronFractionDetector, TrajectoryDetector,
      ShowersStatisticsDetector)
 from pymontecarlo.util.xmlutil import XMLIO
@@ -441,6 +442,53 @@ class TestPhotonRadialDetector(TestCase):
         self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
         self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
         self.assertEqual(1000, int(element.get('channels')))
+
+class TestPhotonEmissionMapDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d = PhotonEmissionMapDetector((radians(35), radians(45)),
+                                           (0, radians(360.0)), 5, 6, 7)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertEqual(5, self.d.xbins)
+        self.assertEqual(6, self.d.ybins)
+        self.assertEqual(7, self.d.zbins)
+
+    def test__repr__(self):
+        expected = '<PhotonEmissionMapDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, bins=(5, 6, 7))>'
+        self.assertEquals(expected, repr(self.d))
+
+    def testfrom_xml(self):
+        element = self.d.to_xml()
+        d = PhotonEmissionMapDetector.from_xml(element)
+
+        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
+        self.assertEqual(5, d.xbins)
+        self.assertEqual(6, d.ybins)
+        self.assertEqual(7, d.zbins)
+
+    def testto_xml(self):
+        element = self.d.to_xml()
+
+        self.assertAlmostEqual(radians(35), float(element.get('elevation_min')), 4)
+        self.assertAlmostEqual(radians(45), float(element.get('elevation_max')), 4)
+        self.assertAlmostEqual(0, float(element.get('azimuth_min')), 4)
+        self.assertAlmostEqual(radians(360.0), float(element.get('azimuth_max')), 4)
+        self.assertEqual(5, int(element.get('xbins')))
+        self.assertEqual(6, int(element.get('ybins')))
+        self.assertEqual(7, int(element.get('zbins')))
 
 class TestTimeDetector(TestCase):
 

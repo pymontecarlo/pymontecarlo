@@ -29,6 +29,7 @@ __all__ = ['BackscatteredElectronAzimuthalAngularDetector',
            'PhotonIntensityDetector',
            'PhotonPolarAngularDetector',
            'PhotonSpectrumDetector',
+           'PhotonEmissionMapDetector',
            'ShowersStatisticsDetector',
            'TimeDetector',
            'TrajectoryDetector',
@@ -571,6 +572,71 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
         element.set('channels', str(self.channels))
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonRadialDetector', PhotonRadialDetector)
+
+class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
+    def __init__(self, elevation_rad, azimuth_rad, xbins, ybins, zbins):
+        _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+
+        self.xbins = xbins
+        self.ybins = ybins
+        self.zbins = zbins
+
+    def __repr__(self):
+        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, bins=(%s, %s, %s))>' % \
+            (self.__class__.__name__,
+             self.elevation_rad[0], self.elevation_rad[1],
+             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.xbins, self.ybins, self.zbins)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
+        xbins = int(element.get('xbins'))
+        ybins = int(element.get('ybins'))
+        zbins = int(element.get('zbins'))
+        return cls(delimited.elevation_rad, delimited.azimuth_rad,
+                   xbins, ybins, zbins)
+
+    def __savexml__(self, element, *args, **kwargs):
+        _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
+        element.set('xbins', str(self.xbins))
+        element.set('ybins', str(self.ybins))
+        element.set('zbins', str(self.zbins))
+
+    @property
+    def xbins(self):
+        return self._props['xbins']
+
+    @xbins.setter
+    def xbins(self, bins):
+        if bins < 1:
+            raise ValueError, \
+                "Number of bins (%s) must be greater or equal to 1." % bins
+        self._props['xbins'] = int(bins)
+
+    @property
+    def ybins(self):
+        return self._props['ybins']
+
+    @ybins.setter
+    def ybins(self, bins):
+        if bins < 1:
+            raise ValueError, \
+                "Number of bins (%s) must be greater or equal to 1." % bins
+        self._props['ybins'] = int(bins)
+
+    @property
+    def zbins(self):
+        return self._props['zbins']
+
+    @zbins.setter
+    def zbins(self, bins):
+        if bins < 1:
+            raise ValueError, \
+                "Number of bins (%s) must be greater or equal to 1." % bins
+        self._props['zbins'] = int(bins)
+
+XMLIO.register('{http://pymontecarlo.sf.net}photonEmissionMapDetector', PhotonEmissionMapDetector)
 
 class PhotonIntensityDetector(_PhotonDelimitedDetector):
     pass
