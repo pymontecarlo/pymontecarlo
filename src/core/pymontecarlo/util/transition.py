@@ -340,6 +340,13 @@ class transitionset(frozenset, objectxml):
     atomicnumber = z
 
     @property
+    def symbol(self):
+        """
+        Symbol of the element of this transition.
+        """
+        return self._symbol
+
+    @property
     def name(self):
         """
         Name of this transition set.
@@ -468,31 +475,31 @@ def Ka(z):
     """
     Returns all transitions from the Ka group.
     """
-    return _group(z, 'Ka', 'K\u03b1')
+    return _group(z, 'Ka', u'K\u03b1')
 
 def Kb(z):
     """
     Returns all transitions from the Kb group.
     """
-    return _group(z, 'Kb', 'K\u03b2')
+    return _group(z, 'Kb', u'K\u03b2')
 
 def La(z):
     """
     Returns all transitions from the La group.
     """
-    return _group(z, 'La', 'L\u03b1')
+    return _group(z, 'La', u'L\u03b1')
 
 def Lb(z):
     """
     Returns all transitions from the Lb group.
     """
-    return _group(z, 'Lb', 'L\u03b2')
+    return _group(z, 'Lb', u'L\u03b2')
 
 def Lg(z):
     """
     Returns all transitions from the Lg group.
     """
-    return _group(z, 'Lg', 'L\u03b3')
+    return _group(z, 'Lg', u'L\u03b3')
 
 def Ma(z):
     """
@@ -504,13 +511,13 @@ def Mb(z):
     """
     Returns all transitions from the Mb group.
     """
-    return _group(z, 'Mb', 'M\u03b2')
+    return _group(z, 'Mb', u'M\u03b2')
 
 def Mg(z):
     """
     Returns all transitions from the Mg group.
     """
-    return _group(z, 'Mg', 'M\u03b3')
+    return _group(z, 'Mg', u'M\u03b3')
 
 def LI(z):
     """
