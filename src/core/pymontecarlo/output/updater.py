@@ -36,6 +36,7 @@ import numpy as np
 from pymontecarlo.util.updater import _Updater
 from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.util.transition import from_string
+import pymontecarlo.util.hdf5util as hdf5util
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.updater import Updater as OptionsUpdater
@@ -103,11 +104,33 @@ class Updater(_Updater):
                 return int(comment.split('=')[1])
             except:
                 return 0
-        else:
+        elif os.path.splitext(filepath)[1] == '.h5':
             hdf5file = h5py.File(filepath, 'r')
             version = int(hdf5file.attrs['version'])
             hdf5file.close()
             return version
+        else:
+            raise ValueError, "Unknown file format: %s" % filepath
+
+    def _make_backup(self, filepath):
+        bak_filepath = _Updater._make_backup(self, filepath)
+        if os.path.splitext(filepath)[1] != '.h5':
+            return bak_filepath
+
+        # Special check for HDF5 file created in Java
+        # The HDF5 has to be re-saved to allow modifications
+        hdf5file_original = h5py.File(bak_filepath, 'r+')
+
+        try:
+            hdf5file_original.attrs['version'] = hdf5file_original.attrs['version']
+        except:
+            hdf5file_copy = h5py.File(filepath, 'w')
+            hdf5util.copy(hdf5file_original, hdf5file_copy)
+            hdf5file_copy.close()
+        finally:
+            hdf5file_original.close()
+
+        return bak_filepath
 
     def _validate(self, filepath):
         Results.load(filepath)
