@@ -20,11 +20,12 @@ from pymontecarlo.util.transition import \
     (Transition, get_transitions, transitionset, from_string,
      K_family, L_family, M_family, N_family,
      Ka, Kb, La, Lb, Lg, Ma, Mb, Mg,
-     LI, LII, LIII, MI, MII, MIII, MIV, MV)
+     LI, LII, LIII, MI, MII, MIII, MIV, MV,
+     iupac2latex, siegbahn2latex, _siegbahn_unicode_to_ascii)
 from pymontecarlo.util.subshell import Subshell
 
 # Globals and constants variables.
-from pymontecarlo.util.transition import _SUBSHELLS, _SIEGBAHNS_NOGREEK, _SIEGBAHNS
+from pymontecarlo.util.transition import _SUBSHELLS, _SIEGBAHNS
 
 
 class TestTransition(TestCase):
@@ -53,7 +54,8 @@ class TestTransition(TestCase):
         self.assertEqual("Al La1", str(x))
 
     def test__str__(self):
-        for i, siegbahn in enumerate(_SIEGBAHNS_NOGREEK):
+        for i, siegbahn in enumerate(_SIEGBAHNS):
+            siegbahn = _siegbahn_unicode_to_ascii(siegbahn)
             x = getattr(self, "x%i" % i)
             self.assertEqual("Al " + siegbahn, str(x))
 
@@ -97,26 +99,14 @@ class TestTransition(TestCase):
             dest = Subshell(13, shells[1])
             self.assertEqual('-'.join([dest.iupac, src.iupac]), x.iupac)
 
-    def testiupac_latex(self):
-        for i, shells in enumerate(_SUBSHELLS):
-            x = getattr(self, "x%i" % i)
-            src = Subshell(13, shells[0])
-            dest = Subshell(13, shells[1])
-            self.assertEqual('-'.join([dest.iupac_latex, src.iupac_latex]), x.iupac_latex)
-
     def testsiegbahn(self):
         for i, siegbahn in enumerate(_SIEGBAHNS):
             x = getattr(self, "x%i" % i)
             self.assertEqual(siegbahn, x.siegbahn)
 
-    def testsiegbahn_latex(self):
-        self.assertEqual(r"K$\alpha_1$", self.x0.siegbahn_latex)
-        self.assertEqual(r"K$\beta_1$", self.x2.siegbahn_latex)
-        self.assertEqual(r"L$\gamma_1$", Transition(13, siegbahn='Lg1').siegbahn_latex)
-        self.assertEqual(r"M$\zeta_1$", Transition(13, siegbahn='Mz1').siegbahn_latex)
-
     def testsiegbahn_nogreek(self):
-        for i, siegbahn in enumerate(_SIEGBAHNS_NOGREEK):
+        for i, siegbahn in enumerate(_SIEGBAHNS):
+            siegbahn = _siegbahn_unicode_to_ascii(siegbahn)
             x = getattr(self, "x%i" % i)
             self.assertEqual(siegbahn, x.siegbahn_nogreek)
 
@@ -145,7 +135,7 @@ class Testtransitionset(TestCase):
         t1 = Transition(13, 4, 1)
         t2 = Transition(13, 3, 1)
         t3 = Transition(13, 3, 1)
-        self.set = transitionset(13, 'G1', [t1, t2, t3], 'G\u03b1')
+        self.set = transitionset(13, u'G\u03b1', 'G1-H(2,3)', [t1, t2, t3])
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -157,16 +147,16 @@ class Testtransitionset(TestCase):
     def test__init__(self):
         t1 = Transition(13, 4, 1)
         t2 = Transition(14, 3, 1)
-        self.assertRaises(ValueError, transitionset, 13, 'G1', [t1, t2])
+        self.assertRaises(ValueError, transitionset, 13, u'G\u03b1', 'G1-H(2,3)', [t1, t2])
 
     def test__repr__(self):
-        self.assertEqual('<transitionset(Al G1: Al Ka1, Al Ka2)>', repr(self.set))
+        self.assertEqual('<transitionset(Al Ga: Al Ka1, Al Ka2)>', repr(self.set))
 
     def test__str__(self):
-        self.assertEqual('Al G1', str(self.set))
+        self.assertEqual('Al Ga', str(self.set))
 
     def test__unicode__(self):
-        self.assertEqual('Al G\u03b1', unicode(self.set))
+        self.assertEqual(u'Al G\u03b1', unicode(self.set))
 
     def test__contains__(self):
         self.assertTrue(Transition(13, 4, 1) in self.set)
@@ -176,8 +166,8 @@ class Testtransitionset(TestCase):
         element = self.set.to_xml()
 
         self.assertEqual(13, int(element.get('z')))
-        self.assertEqual('G1', element.get('name'))
-        self.assertEqual('G\u03b1', element.get('name_unicode'))
+        self.assertEqual('G1-H(2,3)', element.get('iupac'))
+        self.assertEqual(u'G\u03b1', element.get('siegbahn'))
         self.assertEqual(2, len(list(element)))
 
     def testfrom_xml(self):
@@ -190,8 +180,14 @@ class Testtransitionset(TestCase):
     def testmost_probable(self):
         self.assertEqual(Transition(13, 4, 1), self.set.most_probable)
 
-    def testname(self):
-        self.assertEqual('G1', self.set.name)
+    def testsiegbahn(self):
+        self.assertEqual(u'G\u03b1', self.set.siegbahn)
+
+    def testsiegbahn_nogreek(self):
+        self.assertEqual(u'Ga', self.set.siegbahn_nogreek)
+
+    def testiupac(self):
+        self.assertEqual('G1-H(2,3)', self.set.iupac)
 
 class TestModule(TestCase):
 
@@ -286,6 +282,19 @@ class TestModule(TestCase):
         # M
         transitions = set() | MI(79) | MII(79) | MIII(79) | MIV(79) | MV(79)
         self.assertEqual(M_family(79), transitions)
+
+    def testsiegbahn2latex(self):
+        self.assertEqual(r"K$\alpha_{1}$", siegbahn2latex(Transition(13, siegbahn='Ka1')))
+        self.assertEqual(r"K$\beta_{1}$", siegbahn2latex(Transition(13, siegbahn='Kb1')))
+        self.assertEqual(r"L$\gamma_{1}$", siegbahn2latex(Transition(13, siegbahn='Lg1')))
+        self.assertEqual(r"M$\zeta_{1}$", siegbahn2latex(Transition(13, siegbahn='Mz1')))
+
+    def testiupac2latex(self):
+        self.assertEqual(r"K-L$_{3}$", iupac2latex(Transition(13, siegbahn='Ka1')))
+        self.assertEqual(r"K-M$_{3}$", iupac2latex(Transition(13, siegbahn='Kb1')))
+        self.assertEqual(r"L$_{2}$-N$_{4}$", iupac2latex(Transition(13, siegbahn='Lg1')))
+        self.assertEqual(r"M$_{4,5}$-N$_{2,3}$", iupac2latex('M(4,5)-N(2,3)'))
+        self.assertEqual('G$_{1}$-H$_{2,3}$', iupac2latex('G1-H(2,3)'))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

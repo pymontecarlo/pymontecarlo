@@ -20,8 +20,10 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from operator import methodcaller, attrgetter
+import string
 
 # Third party modules.
+from pyparsing import Word, Group, Optional, OneOrMore, QuotedString, Literal
 
 # Local modules.
 from pymontecarlo.util.xmlutil import objectxml, XMLIO
@@ -31,6 +33,79 @@ from pymontecarlo.util.relaxation_data import relaxation_data
 
 # Globals and constants variables.
 _ZGETTER = attrgetter('z')
+
+_level = Optional(QuotedString("(", endQuoteChar=")") | Word(string.digits))
+_shell = Group(Word(string.ascii_uppercase) + _level)
+_iupac_pattern = _shell + Literal('-') + OneOrMore(_shell)
+
+def iupac2latex(iupac):
+    """
+    Formats IUPAC symbol for LaTeX.
+    
+    :arg iupac: string of an IUPAC symbol, transition or transitionset 
+    """
+    if not isinstance(iupac, basestring):
+        iupac = getattr(iupac, 'iupac')
+
+    s = ''
+    for parts in _iupac_pattern.parseString(iupac):
+        if len(parts) == 2:
+            s += '%s$_{%s}$' % tuple(parts)
+        else:
+            s += ''.join(parts)
+
+    return s
+
+def siegbahn2latex(siegbahn):
+    """
+    Formats Siegbahn symbol for LaTeX.
+    
+    :arg siegbahn: string of a Siegbahn symbol, transition or transitionset 
+    """
+    if not isinstance(siegbahn, basestring):
+        siegbahn = getattr(siegbahn, 'siegbahn')
+
+    s = ''
+    for c in siegbahn:
+        s += "$_{%s}$" % c if c.isdigit() else c
+
+    s = s.replace(u'\u03B1', r'$\alpha$')
+    s = s.replace(u'\u03B2', r'$\beta$')
+    s = s.replace(u'\u03B3', r'$\gamma$')
+    s = s.replace(u'\u03B6', r'$\zeta$')
+    s = s.replace(u'\u03B7', r'$\eta$')
+    s = s.replace(u'\u03BD', r'$\nu')
+    s = s.replace(u'\u2113', r'$l$')
+
+    s = s.replace('$$', '')
+
+    return str(s)
+
+def _siegbahn_ascii_to_unicode(siegbahn):
+    """
+    Replaces some ascii characters in Siegbahn with unicode characters.
+    """
+    siegbahn = siegbahn.replace('a', u'\u03B1')
+    siegbahn = siegbahn.replace('b', u'\u03B2')
+    siegbahn = siegbahn.replace('g', u'\u03B3')
+    siegbahn = siegbahn.replace('z', u'\u03B6')
+    siegbahn = siegbahn.replace('n', u'\u03B7')
+    siegbahn = siegbahn.replace('v', u'\u03BD')
+    siegbahn = siegbahn.replace('l', u'\u2113')
+    return siegbahn
+
+def _siegbahn_unicode_to_ascii(siegbahn):
+    """
+    Replaces unicode characters in Siegbahn with ascii characters.
+    """
+    siegbahn = siegbahn.replace(u'\u03B1', 'a')
+    siegbahn = siegbahn.replace(u'\u03B2', 'b')
+    siegbahn = siegbahn.replace(u'\u03B3', 'g')
+    siegbahn = siegbahn.replace(u'\u03B6', 'z')
+    siegbahn = siegbahn.replace(u'\u03B7', 'n')
+    siegbahn = siegbahn.replace(u'\u03BD', 'v')
+    siegbahn = siegbahn.replace(u'\u2113', 'l')
+    return siegbahn
 
 """
 Subshells (source -> destination) of all transitions.
@@ -63,18 +138,58 @@ _SIEGBAHNS = \
      u"M\u03B3", "M4N3", "M4O2", u"M\u03B2", u"M\u03B62", "M5O3",
      u"M\u03B11", u"M\u03B12", u"M\u03B61", "N4N6", "N5N6"]
 
-_SIEGBAHNS_NOGREEK = \
-    ['Ka1', 'Ka2', 'Kb1', 'Kb2', 'Kb3', 'Kb4', 'Kb5', 'L3N2', 'L3N3', 'L3O2',
-     'L3O3', 'L3P1', 'La1', 'La2', 'Lb15', 'Lb2', 'Lb5', 'Lb6', 'Lb7', 'Ll',
-     'Ls', 'Lt', 'Lu', 'L2M2', 'L2M5', 'L2N2', 'L2N3', 'L2N5', 'L2O2', 'L2O3',
-     'L2P2', 'Lb1', 'Lb17', 'Lg1', 'Lg5', 'Lg6', 'Lg8', 'Le', 'Lv',
-     'L1M1', 'L1N1', 'L1N4', 'L1O1', 'L1O4', 'Lb10', 'Lb3', 'Lb4', 'Lb9',
-     'Lg2', 'Lg11', 'Lg3', 'Lg4', 'Lg4p', 'M1N2', 'M1N3', 'M2M4', 'M2N1',
-     'M2N4', 'M2O4', 'M3M4', 'M3M5', 'M3N1', 'M3N4', 'M3O1', 'M3O4', 'M3O5',
-     'Mg', 'M4N3', 'M4O2', 'Mb', 'Mz2', 'M5O3', 'Ma1', 'Ma2', 'Mz1',
-     'N4N6', 'N5N6']
+class _BaseTransition(objectxml):
 
-class Transition(objectxml):
+    def __init__(self, z, siegbahn, iupac):
+        self._z = z
+        self._symbol = ep.symbol(z)
+        self._siegbahn = siegbahn
+        self._iupac = iupac
+
+    def __str__(self):
+        return "%s %s" % (self.symbol, self.siegbahn_nogreek)
+
+    def __unicode__(self):
+        return u"%s %s" % (self.symbol, self.siegbahn)
+
+    @property
+    def z(self):
+        """
+        Atomic number of this transition.
+        """
+        return self._z
+
+    atomicnumber = z
+
+    @property
+    def symbol(self):
+        """
+        Symbol of the element of this transition.
+        """
+        return self._symbol
+
+    @property
+    def iupac(self):
+        """
+        IUPAC symbol of this transition.
+        """
+        return self._iupac
+
+    @property
+    def siegbahn(self):
+        """
+        Seigbahn symbol of this transition.
+        """
+        return self._siegbahn
+
+    @property
+    def siegbahn_nogreek(self):
+        """
+        Seigbahn symbol of this transition (greek characters removed).
+        """
+        return _siegbahn_unicode_to_ascii(self.siegbahn)
+
+class Transition(_BaseTransition):
     def __init__(self, z, src=None, dest=None, siegbahn=None):
         """
         Creates a new transition from a source and destination subshells 
@@ -101,16 +216,13 @@ class Transition(objectxml):
             except ValueError:
                 raise ValueError, "Unknown transition (%s -> %s)" % (src, dest)
         elif siegbahn is not None:
-            if isinstance(siegbahn, unicode):
-                table = _SIEGBAHNS
-            else:
-                table = _SIEGBAHNS_NOGREEK
+            siegbahn = _siegbahn_ascii_to_unicode(siegbahn)
 
             # Fix to be compatible with old transition, e.g. N5N6/N6N7
             if '/' in siegbahn: siegbahn = siegbahn[:siegbahn.index('/')]
 
             try:
-                index = table.index(siegbahn)
+                index = _SIEGBAHNS.index(siegbahn)
             except ValueError:
                 raise ValueError, "Unknown transition (%s)" % siegbahn
         else:
@@ -121,24 +233,17 @@ class Transition(objectxml):
 
         self._src = Subshell(z, src)
         self._dest = Subshell(z, dest)
-        self._iupac = '-'.join([self._dest.iupac, self._src.iupac])
-        self._siegbahn = unicode(_SIEGBAHNS[index])
-        self._siegbahn_nogreek = _SIEGBAHNS_NOGREEK[index]
-        self._z = z
-        self._symbol = ep.symbol(z)
+
+        siegbahn = unicode(_SIEGBAHNS[index])
+        iupac = '-'.join([self._dest.iupac, self._src.iupac])
+        _BaseTransition.__init__(self, z, siegbahn, iupac)
 
         self._energy_eV = relaxation_data.energy_eV(z, (src, dest))
         self._probability = relaxation_data.probability(z, (src, dest))
         self._exists = relaxation_data.exists(z, (src, dest))
 
     def __repr__(self):
-        return '<Transition(%s %s)>' % (self._symbol, self._siegbahn_nogreek)
-
-    def __str__(self):
-        return "%s %s" % (self._symbol, self._siegbahn_nogreek)
-
-    def __unicode__(self):
-        return u"%s %s" % (self._symbol, self._siegbahn)
+        return '<Transition(%s %s)>' % (self.symbol, self.siegbahn_nogreek)
 
     def __eq__(self, other):
         return self._index == other._index and self._z == other._z
@@ -170,22 +275,6 @@ class Transition(objectxml):
         element.set('dest', str(self.dest.index))
 
     @property
-    def z(self):
-        """
-        Atomic number of this transition.
-        """
-        return self._z
-
-    atomicnumber = z
-
-    @property
-    def symbol(self):
-        """
-        Symbol of the element of this transition.
-        """
-        return self._symbol
-
-    @property
     def src(self):
         """
         Source shell of this transition.
@@ -198,55 +287,6 @@ class Transition(objectxml):
         Destination shell of this transition.
         """
         return self._dest
-
-    @property
-    def iupac(self):
-        """
-        IUPAC symbol of this transition.
-        """
-        return self._iupac
-
-    @property
-    def iupac_latex(self):
-        """
-        IUPAC symbol of this transition formatted for LaTeX.
-        """
-        s = ''
-        for c in self.iupac:
-            s += "$_%s$" % c if c.isdigit() else c
-        return s
-
-    @property
-    def siegbahn(self):
-        """
-        Seigbahn symbol of this transition.
-        """
-        return self._siegbahn
-
-    @property
-    def siegbahn_latex(self):
-        """
-        Seigbahn symbol of this transition formatted for LaTeX.
-        """
-        s = ''
-        for c in self.siegbahn:
-            s += "$_%s$" % c if c.isdigit() else c
-
-        s = s.replace(u'\u03B1', r'$\alpha$')
-        s = s.replace(u'\u03B2', r'$\beta$')
-        s = s.replace(u'\u03B3', r'$\gamma$')
-        s = s.replace(u'\u03B6', r'$\zeta$')
-
-        s = s.replace('$$', '')
-
-        return str(s)
-
-    @property
-    def siegbahn_nogreek(self):
-        """
-        Seigbahn symbol of this transition (greek characters removed).
-        """
-        return self._siegbahn_nogreek
 
     @property
     def energy_eV(self):
@@ -263,18 +303,21 @@ class Transition(objectxml):
         return self._probability
 
     def exists(self):
+        """
+        Whether this transition exists.
+        """
         return self._exists
 
 XMLIO.register('{http://pymontecarlo.sf.net}transition', Transition)
 
-class transitionset(frozenset, objectxml):
+class transitionset(frozenset, _BaseTransition):
 
-    def __new__(cls, z, name, transitions, name_unicode=None):
+    def __new__(cls, z, siegbahn, iupac, transitions):
         # Required
         # See http://stackoverflow.com/questions/4850370/inheriting-behaviours-for-set-and-frozenset-seem-to-differ
         return frozenset.__new__(cls, transitions)
 
-    def __init__(self, z, name, transitions, name_unicode=None):
+    def __init__(self, z, siegbahn, iupac, transitions):
         """
         Creates a frozen set (immutable) of transitions.
         The atomic number must be the same for all transitions. 
@@ -293,65 +336,33 @@ class transitionset(frozenset, objectxml):
             raise ValueError, "All transitions in a set must have the same atomic number"
 
         frozenset.__init__(transitions)
+        _BaseTransition.__init__(self, z, siegbahn, iupac)
 
-        self._z = z
-        self._symbol = ep.symbol(z)
-        self._name = name
-        self._name_unicode = name_unicode or name
         self._most_probable = \
             sorted(self, key=attrgetter('probability'), reverse=True)[0]
 
     def __repr__(self):
         return '<transitionset(%s: %s)>' % (str(self), ', '.join(map(str, sorted(self))))
 
-    def __str__(self):
-        return '%s %s' % (self._symbol, self._name)
-
-    def __unicode__(self):
-        return u"%s %s" % (self._symbol, self._name_unicode)
-
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         z = int(element.get('z'))
-        name = element.get('name')
-        name_unicode = element.get('name_unicode')
+        siegbahn = element.get('siegbahn')
+        iupac = element.get('iupac')
 
         transitions = []
         for child in element:
             transitions.append(Transition.from_xml(child))
 
-        return cls(z, name, transitions, name_unicode)
+        return cls(z, siegbahn, iupac, transitions)
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('z', str(self.z))
-        element.set('name', str(self._name))
-        element.set('name_unicode', unicode(self._name_unicode))
+        element.set('siegbahn', self.siegbahn)
+        element.set('iupac', self.iupac)
 
         for transition in self:
             element.append(transition.to_xml())
-
-    @property
-    def z(self):
-        """
-        Atomic number of this transition set.
-        """
-        return self._z
-
-    atomicnumber = z
-
-    @property
-    def symbol(self):
-        """
-        Symbol of the element of this transition.
-        """
-        return self._symbol
-
-    @property
-    def name(self):
-        """
-        Name of this transition set.
-        """
-        return self._name
 
     @property
     def most_probable(self):
@@ -408,7 +419,9 @@ def from_string(s):
     # Fix to be compatible with old transition, e.g. N5N6/N6N7
     if '/' in notation: notation = notation[:notation.index('/')]
 
-    if notation in _SIEGBAHNS_NOGREEK: # Transition with Siegbahn notation
+    notation = _siegbahn_ascii_to_unicode(notation)
+
+    if notation in _SIEGBAHNS: # Transition with Siegbahn notation
         return Transition(z, siegbahn=notation)
     elif '-' in notation: # Transition with IUPAC notation
         dest, src = notation.split('-')
@@ -418,106 +431,108 @@ def from_string(s):
     else:
         raise ValueError, "Cannot parse transition string: %s" % s
 
-def _group(z, name, name_unicode=None):
+def _group(z, siegbahn, iupac):
     transitions = []
 
-    for siegbahn in _SIEGBAHNS_NOGREEK:
-        if siegbahn.startswith(name):
-            transitions.append(Transition(z, siegbahn=siegbahn))
+    for ssiegbahn in _SIEGBAHNS:
+        if ssiegbahn.startswith(siegbahn):
+            transitions.append(Transition(z, siegbahn=ssiegbahn))
 
     transitions = filter(methodcaller('exists'), transitions)
 
     if not transitions:
-        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), name)
+        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), iupac)
 
-    return transitionset(z, name, transitions, name_unicode)
+    return transitionset(z, siegbahn, iupac, transitions)
 
 def _shell(z, dest):
+    subshell = Subshell(z, dest)
+    siegbahn = subshell.siegbahn
+    iupac = subshell.iupac
+
     transitions = []
 
     for src, ddest in _SUBSHELLS:
         if ddest != dest: continue
         transitions.append(Transition(z, src, dest))
 
-    name = Subshell(z, dest).siegbahn
     transitions = filter(methodcaller('exists'), transitions)
-
     if not transitions:
-        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), name)
+        raise ValueError, 'No transition for %s %s' % (ep.symbol(z), iupac)
 
-    return transitionset(z, name, transitions)
+    return transitionset(z, siegbahn, iupac, transitions)
 
 def K_family(z):
     """
     Returns all transitions from the K family.
     """
-    return _group(z, 'K')
+    return _group(z, 'K', 'K')
 
 def L_family(z):
     """
     Returns all transitions from the L family.
     """
-    return _group(z, 'L')
+    return _group(z, 'L', 'L')
 
 def M_family(z):
     """
     Returns all transitions from the M family.
     """
-    return _group(z, 'M')
+    return _group(z, 'M', 'M')
 
 def N_family(z):
     """
     Returns all transitions from the N family.
     """
-    return _group(z, 'N')
+    return _group(z, 'N', 'N')
 
 def Ka(z):
     """
     Returns all transitions from the Ka group.
     """
-    return _group(z, 'Ka', u'K\u03b1')
+    return _group(z, u'K\u03b1', 'K-L(2,3)')
 
 def Kb(z):
     """
     Returns all transitions from the Kb group.
     """
-    return _group(z, 'Kb', u'K\u03b2')
+    return _group(z, u'K\u03b2', 'K-M(2-5)N(2-5)')
 
 def La(z):
     """
     Returns all transitions from the La group.
     """
-    return _group(z, 'La', u'L\u03b1')
+    return _group(z, u'L\u03b1', 'L3-M(4,5)')
 
 def Lb(z):
     """
     Returns all transitions from the Lb group.
     """
-    return _group(z, 'Lb', u'L\u03b2')
+    return _group(z, u'L\u03b2', 'L(1-3)-M(2-5)N(1,4-7)O(1,4-5)')
 
 def Lg(z):
     """
     Returns all transitions from the Lg group.
     """
-    return _group(z, 'Lg', u'L\u03b3')
+    return _group(z, u'L\u03b3', 'L(1,2)-N(1-6)O(1-3)')
 
 def Ma(z):
     """
     Returns all transitions from the Ma group.
     """
-    return _group(z, 'Ma', 'M\u03b1')
+    return _group(z, u'M\u03b1', 'M5-N(6,7)')
 
 def Mb(z):
     """
     Returns all transitions from the Mb group.
     """
-    return _group(z, 'Mb', u'M\u03b2')
+    return _group(z, u'M\u03b2', 'M4-N6')
 
 def Mg(z):
     """
     Returns all transitions from the Mg group.
     """
-    return _group(z, 'Mg', u'M\u03b3')
+    return _group(z, u'M\u03b3', 'M3-N5')
 
 def LI(z):
     """
@@ -568,7 +583,8 @@ def MV(z):
     return _shell(z, 9)
 
 _TRANSITIONSETS = {'K': K_family, 'L': L_family, 'M': M_family,
-                   'Ka': Ka, 'Kb': Kb, 'La': La, 'Lb': Lb, 'Lg':Lg,
-                   'Ma': Ma, 'Mb': Mb, 'Mg': Mg,
+                   u'K\u03b1': Ka, u'K\u03b2': Kb,
+                   u'L\u03b1': La, u'L\u03b2': Lb, u'L\u03b3': Lg,
+                   u'M\u03b1': Ma, u'M\u03b2': Mb, u'M\u03b3': Mg,
                    'LI': LI, 'LII': LII, 'LIII': LIII,
                    'MI': MI, 'MII': MII, 'MIII': MIII, 'MIV': MIV, 'MV': MV}

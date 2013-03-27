@@ -160,16 +160,6 @@ class Subshell(object):
         return self._iupac
 
     @property
-    def iupac_latex(self):
-        """
-        IUPAC symbol of this subshell formatted for LaTeX.
-        """
-        s = ''
-        for c in self.iupac:
-            s += "$_%s$" % c if c.isdigit() else c
-        return s
-
-    @property
     def siegbahn(self):
         """
         Siegbahn symbol of this subshell.
