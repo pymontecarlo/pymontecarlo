@@ -139,22 +139,3 @@ class Converter(object):
                     (model_type, model)
                 warnings.warn(message, ConversionWarning)
 
-class PassConverter(Converter):
-    """
-    Converter that allows any beam, geometry, detector, limit and models.
-    """
-
-    def _convert_beam(self, options):
-        pass
-
-    def _convert_geometry(self, options):
-        pass
-
-    def _convert_detectors(self, options):
-        pass
-
-    def _convert_limits(self, options):
-        pass
-
-    def _convert_models(self, options):
-        pass
