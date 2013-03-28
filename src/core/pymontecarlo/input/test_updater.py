@@ -21,7 +21,6 @@ import shutil
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.updater import Updater
-import pymontecarlo.program._penelope.config #@UnusedImport
 
 # Globals and constants variables.
 
@@ -54,6 +53,11 @@ class TestUpdater(TestCase):
         self.updater.update(dst)
 
     def testupdate_noversion2(self):
+        try:
+            import pymontecarlo.program._penelope.config #@UnusedImport
+        except:
+            return
+
         src = os.path.join(self.testdata, 'oldoptions2.xml')
         dst = os.path.join(self.tmpdir, 'oldoptions2.xml')
         shutil.copy(src, dst)
