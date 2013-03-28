@@ -40,7 +40,8 @@ build_exe_options = {"packages": packages,
                      "init_script": os.path.abspath('initscripts/Console.py')}
 
 cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
-                   'pymontecarlo-cli': 'pymontecarlo.ui.cli.main:run'}
+                   'pymontecarlo-cli': 'pymontecarlo.ui.cli.main:run',
+                   'pymontecarlo-updater': 'pymontecarlo.ui.cli.updater:run'}
 gui_executables = {'pymontecarlo': 'pymontecarlo.ui.gui.main:run'}
 
 entry_points = {}

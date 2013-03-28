@@ -30,7 +30,7 @@ from pymontecarlo.output.updater import Updater as ResultsUpdater
 
 # Globals and constants variables.
 
-if __name__ == '__main__':
+def run(argv=None):
     # Initialize console
     console = Console()
     console.init()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                       action='store_true', help='Debug mode')
 
     # Parse arguments
-    (values, args) = parser.parse_args()
+    (values, args) = parser.parse_args(argv)
 
     if values.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -74,3 +74,5 @@ if __name__ == '__main__':
 
     console.close()
 
+if __name__ == '__main__':
+    run()
