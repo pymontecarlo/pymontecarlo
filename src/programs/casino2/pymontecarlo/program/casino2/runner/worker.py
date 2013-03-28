@@ -33,27 +33,23 @@ from pymontecarlo.runner.worker import Worker as _Worker
 # Globals and constants variables.
 
 class Worker(_Worker):
-    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
+    def __init__(self):
         """
         Runner to run Casino2 simulation(s).
         """
-        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
+        _Worker.__init__(self)
 
         self._executable = get_settings().casino2.exe
         if not os.path.isfile(self._executable):
             raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
         logging.debug('Casino 2 executable: %s', self._executable)
 
-    def _create(self, options, dirpath):
+    def create(self, options, outputdir):
         # Convert
         Converter().convert(options)
 
         # Export
-        simfilepath = self._get_filepath(options, dirpath, 'sim')
-        if os.path.exists(simfilepath) and not self._overwrite:
-            logging.info('Skipping %s as it already exists', simfilepath)
-            return
-
+        simfilepath = os.path.join(outputdir, options.name + '.sim')
         simfile = Exporter().export(options)
 
         # Save
@@ -62,6 +58,6 @@ class Worker(_Worker):
 
         return simfilepath
 
-    def _run(self, options):
+    def run(self, options, outputdir, workdir):
         raise NotImplementedError, "Simulations with Casino2 cannot be directly run. " + \
             "Please use the create method to create the .sim files and run them in Casino 2."

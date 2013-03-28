@@ -22,7 +22,6 @@ __license__ = "GPL v3"
 import os
 import subprocess
 import logging
-import shutil
 
 # Third party modules.
 
@@ -30,15 +29,16 @@ import shutil
 from pymontecarlo.settings import get_settings
 from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+from pymontecarlo.output.results import Results
 
 # Globals and constants variables.
 
 class Worker(_Worker):
-    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
+    def __init__(self):
         """
         Runner to run NISTMonte simulation(s).
         """
-        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
+        _Worker.__init__(self)
 
         self._java_exec = get_settings().nistmonte.java
         if not os.path.isfile(self._java_exec):
@@ -50,26 +50,24 @@ class Worker(_Worker):
             raise IOError, 'pyMonteCarlo jar (%s) cannot be found' % self._jar_path
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
 
-    def _create(self, options, dirpath):
+    def create(self, options, outputdir):
         # Convert
         Converter().convert(options)
 
         # Save
-        filepath = self._get_filepath(options, dirpath, 'xml')
+        filepath = os.path.join(outputdir, options.name + '.xml')
         options.save(filepath)
         logging.debug('Save options to: %s', filepath)
 
         return filepath
 
-    def _run(self, options):
-        xmlfilepath = self._create(options, self._workdir)
-        if not xmlfilepath:
-            return # Exit if no options need to be run
+    def run(self, options, outputdir, workdir):
+        xmlfilepath = self.create(options, workdir)
 
         args = [self._java_exec]
         args += ['-Djava.library.path=%s' % os.path.dirname(self._jar_path)] # for native libraries
         args += ['-jar', self._jar_path]
-        args += ['-o', self._workdir]
+        args += ['-o', workdir]
         args += [xmlfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
@@ -87,8 +85,10 @@ class Worker(_Worker):
         self._process = None
 
         if retcode != 0:
-            raise RuntimeError, "An error occured during the simulation"
+            raise RuntimeError, "An error occurred during the simulation"
 
-    def _save_results(self, options, zipfilepath):
-        work_h5filepath = self._get_filepath(options, self._workdir, 'h5')
-        shutil.copy(work_h5filepath, zipfilepath)
+        h5filepath = os.path.join(workdir, options.name + '.h5')
+        if not os.path.exists(h5filepath):
+            raise RuntimeError, 'No results found'
+
+        return Results.load(h5filepath)

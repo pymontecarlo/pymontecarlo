@@ -39,11 +39,12 @@ from pymontecarlo.program.winxray.output.importer import Importer
 from zipfile import ZIP_DEFLATED
 
 class Worker(_Worker):
-    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
+
+    def __init__(self):
         """
         Runner to run WinX-Ray simulation(s).
         """
-        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
+        _Worker.__init__(self)
 
         self._executable = get_settings().winxray.exe
         if not os.path.isfile(self._executable):
@@ -53,25 +54,25 @@ class Worker(_Worker):
         self._executable_dir = os.path.dirname(self._executable)
         logging.debug('WinX-Ray directory: %s', self._executable_dir)
 
-    def _create(self, options, dirpath):
+    def create(self, options, outputdir, setpath=False):
         # Convert
         Converter().convert(options)
 
         # Export
         wxrops = Exporter().export(options)
 
-        if dirpath == self._workdir:
-            wxrops.setResultsPath(self._get_dirpath(options))
+        if setpath:
+            wxrops.setResultsPath(outputdir)
 
         # Save
-        filepath = self._get_filepath(options, dirpath, 'wxc')
+        filepath = os.path.join(outputdir, options.name + '.wxc')
         wxrops.write(filepath)
         logging.debug('Save wxc file: %s', filepath)
 
         return filepath
 
-    def _run(self, options):
-        wxcfilepath = self._create(options, self._workdir)
+    def run(self, options, outputdir, workdir):
+        wxcfilepath = self.create(options, workdir, True)
 
         # Launch
         args = [self._executable, wxcfilepath]
@@ -86,24 +87,25 @@ class Worker(_Worker):
 
         logging.debug('WinX-Ray ended')
 
-    def _save_results(self, options, h5filepath):
-        dirpath = self._get_dirpath(options)
+        return self._extract_results(options, outputdir, workdir)
 
-        resultdirs = [name for name in os.listdir(dirpath) \
-                      if os.path.isdir(os.path.join(dirpath, name)) ]
+    def _extract_results(self, options, outputdir, workdir):
+        resultdirs = [name for name in os.listdir(workdir) \
+                      if os.path.isdir(os.path.join(workdir, name)) ]
         resultdirs.sort()
         if not resultdirs:
-            raise IOError, 'Cannot find results directories in %s' % dirpath
+            raise IOError, 'Cannot find results directories in %s' % workdir
 
         # Import results to pyMonteCarlo
         logging.debug('Importing results from WinXRay')
-        path = os.path.join(dirpath, resultdirs[-1]) # Take last result folder
+        path = os.path.join(workdir, resultdirs[-1]) # Take last result folder
         results = Importer().import_from_dir(options, path)
-        results.save(h5filepath)
 
         # Create ZIP with all WinXRay results
-        zipfilepath = os.path.splitext(h5filepath)[0] + '_raw.zip'
+        zipfilepath = os.path.join(outputdir, options.name + '.zip')
         with ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED) as zipfile:
-            for filename in os.listdir(dirpath):
-                filepath = os.path.join(dirpath, filename)
+            for filename in os.listdir(workdir):
+                filepath = os.path.join(workdir, filename)
                 zipfile.write(filepath)
+
+        return results

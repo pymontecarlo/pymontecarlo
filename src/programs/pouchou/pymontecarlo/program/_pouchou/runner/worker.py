@@ -83,28 +83,24 @@ class _PouchouWorker(_Worker):
 
         return fileobj.name
 
-    def _reset(self):
-        _Worker._reset(self)
-        self._results = None
-
-    def _create(self, options, dirpath):
+    def create(self, options, outputdir):
         # Convert
         Converter().convert(options)
 
         # Save
-        filepath = self._get_filepath(options, dirpath, 'xml')
+        filepath = os.path.join(outputdir, options.name + '.xml')
         options.save(filepath)
         logging.debug('Save options to: %s', filepath)
 
         return filepath
 
-    def _run(self, options):
+    def run(self, options, outputdir, workdir):
         # Create configuration
         config_filepath = self._create_configuration_file()
         logging.debug("Configuration filepath: %s", config_filepath)
 
         # Create PAP object
-        self._create(options, self._workdir)
+        self.create(options, workdir)
         macmodel = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
         model = self._MODEL_CLASS(None, None, None, None,
                                   configurationFile=config_filepath,
@@ -157,12 +153,11 @@ class _PouchouWorker(_Worker):
             key = dets.keys()[0]
             results[key] = TimeResult(simulation_time_s=end - start)
 
-        # Save results
-        self._results = Results(options, results)
-
         # Remove configuration file
         os.remove(config_filepath)
         logging.debug("Remove configuration filepath")
+
+        return Results(options, results)
 
     def _compute_intensities(self, model, detector, elements, energy_keV, transitions):
         intensities = {}
@@ -192,6 +187,3 @@ class _PouchouWorker(_Worker):
                                                         et=(zs, values, uncs)))
 
         return distributions
-
-    def _save_results(self, options, h5filepath):
-        self._results.save(h5filepath)

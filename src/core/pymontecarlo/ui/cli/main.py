@@ -30,8 +30,8 @@ from optparse import OptionParser, OptionGroup
 from pymontecarlo.settings import get_settings
 from pymontecarlo.input.options import Options
 
-from pymontecarlo.runner.runner import Runner
-from pymontecarlo.runner.creator import Creator
+from pymontecarlo.runner.runner import LocalRunner
+from pymontecarlo.runner.creator import LocalCreator
 
 from pymontecarlo.ui.cli.console import Console, ProgressBar
 
@@ -116,13 +116,13 @@ def run(argv=None):
 
     overwrite = not values.skip
 
-    aliases = map(attrgetter('alias'), programs)
-    selected_programs = [alias for alias in aliases if getattr(values, alias)]
-    if not selected_programs:
+    aliases = dict(zip(map(attrgetter('alias'), programs), programs))
+    selected_aliases = [alias for alias in aliases if getattr(values, alias)]
+    if not selected_aliases:
         console.print_error("Please select one Monte Carlo program")
-    if len(selected_programs) > 1:
+    if len(selected_aliases) > 1:
         console.print_error("Please select only one Monte Carlo program")
-    selected_program = selected_programs[0]
+    selected_program = aliases[selected_aliases[0]]
 
     list_options = []
     try:
@@ -134,13 +134,10 @@ def run(argv=None):
         console.print_error("Please specify at least one options file")
 
     # Setup
-    worker_classes = dict(zip(aliases, map(attrgetter('worker_class'), programs)))
-    worker_class = worker_classes[selected_program]
-
     if values.create:
-        runner = Creator(worker_class, outputdir, overwrite, nbprocesses)
+        runner = LocalCreator(selected_program, outputdir, overwrite, nbprocesses)
     else:
-        runner = Runner(worker_class, outputdir, workdir, overwrite, nbprocesses)
+        runner = LocalRunner(selected_program, outputdir, workdir, overwrite, nbprocesses)
 
     progressbar = ProgressBar(console, len(list_options))
     if not quiet: progressbar.start()

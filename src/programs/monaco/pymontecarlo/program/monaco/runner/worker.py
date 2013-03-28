@@ -82,25 +82,28 @@ _IONIZATION_POTENTIAL_REF = \
      IONIZATION_POTENTIAL.sternheimer1964: 4}
 
 class Worker(_Worker):
-    def __init__(self, queue_options, outputdir, workdir=None, overwrite=True):
+    def __init__(self):
         """
         Runner to run Monaco simulation(s).
         """
+        _Worker.__init__(self)
+
         self._monaco_basedir = get_settings().monaco.basedir
         self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
 
-        _Worker.__init__(self, queue_options, outputdir, workdir, overwrite)
-
-    def _create(self, options, dirpath):
+    def create(self, options, outputdir, createdir=True):
         # Convert
         Converter().convert(options)
 
         # Create job directory
-        jobdir = os.path.join(dirpath, options.name)
-        if os.path.exists(jobdir):
-            logging.info('Job directory (%s) already exists, so it is removed.', jobdir)
-            shutil.rmtree(jobdir)
-        os.makedirs(jobdir)
+        if createdir:
+            jobdir = os.path.join(outputdir, options.name)
+            if os.path.exists(jobdir):
+                logging.info('Job directory (%s) already exists, so it is removed.', jobdir)
+                shutil.rmtree(jobdir)
+            os.makedirs(jobdir)
+        else:
+            jobdir = outputdir
 
         # Export: create MAT and SIM files
         Exporter().export(options, jobdir)
@@ -118,15 +121,15 @@ class Worker(_Worker):
                                self._monaco_basedir)
         logging.debug("Setup Monaco path in registry")
 
-    def _run(self, options):
+    def run(self, options, outputdir, workdir):
         # Setup registry (in case it is not already set)
         self._setup_registry()
 
         # Create job directory and simulation files
-        jobdir = self._create(options, self._workdir)
+        self.create(options, workdir, False)
 
         # Run simulation (in batch)
-        self._run_simulation(options, jobdir)
+        self._run_simulation(options, workdir)
 
         # Extract transitions
         transitions = self._extract_transitions(options)
@@ -134,19 +137,21 @@ class Worker(_Worker):
         # Extract intensities if photon intensity detectors
         detectors = options.detectors.findall(PhotonIntensityDetector)
         for detector_key, detector in detectors.iteritems():
-            self._run_intensities(jobdir, options, detector_key, detector,
+            self._run_intensities(workdir, options, detector_key, detector,
                                   transitions)
 
         # Extract phi-rho-zs if phi-rho-z detectors
         detectors = options.detectors.findall(PhotonDepthDetector)
         for detector_key, detector in detectors.iteritems():
-            self._run_phirhozs(jobdir, options, detector_key, detector,
+            self._run_phirhozs(workdir, options, detector_key, detector,
                                transitions)
 
-    def _run_simulation(self, options, jobdir):
-        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
-        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
-        args = [self._mccli32exe, 'sim', mat_filepath, sim_filepath, jobdir]
+        return self._extract_results(options, outputdir, workdir)
+
+    def _run_simulation(self, options, workdir):
+        mat_filepath = os.path.join(workdir, options.name + '.MAT')
+        sim_filepath = os.path.join(workdir, options.name + '.SIM')
+        args = [self._mccli32exe, 'sim', mat_filepath, sim_filepath, workdir]
         logging.debug('Launching %s', ' '.join(args))
 
         self._status = "Running Monaco's mccli32.exe"
@@ -159,7 +164,7 @@ class Worker(_Worker):
         logging.debug("Monaco's mccli32.exe ended")
 
         # Check that simulation ran
-        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+        nez_filepath = os.path.join(workdir, 'NEZ.1')
         if not os.path.exists(nez_filepath):
             raise RuntimeError, 'Simulation did not run properly'
 
@@ -181,12 +186,12 @@ class Worker(_Worker):
 
         return transitions
 
-    def _run_intensities(self, jobdir, options, detector_key, detector,
+    def _run_intensities(self, workdir, options, detector_key, detector,
                          transitions):
         # Paths
-        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
-        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
-        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+        mat_filepath = os.path.join(workdir, options.name + '.MAT')
+        sim_filepath = os.path.join(workdir, options.name + '.SIM')
+        nez_filepath = os.path.join(workdir, 'NEZ.1')
 
         # Find models
         model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
@@ -200,7 +205,7 @@ class Worker(_Worker):
 
         # Launch mccli32.exe
         args = [self._mccli32exe, "int",
-                mat_filepath, sim_filepath, nez_filepath, jobdir,
+                mat_filepath, sim_filepath, nez_filepath, workdir,
                 detector.takeoffangle_deg, mac_id, ics_id, ip_id]
         args += transitions
         args = map(str, args)
@@ -216,20 +221,20 @@ class Worker(_Worker):
         logging.debug("Monaco's mccli32.exe ended")
 
         # Rename intensities.txt
-        src_filepath = os.path.join(jobdir, 'intensities.csv')
+        src_filepath = os.path.join(workdir, 'intensities.csv')
         if not os.path.exists(src_filepath):
             raise RuntimeError, 'Could not extract intensities'
 
-        dst_filepath = os.path.join(jobdir, 'intensities_%s.csv' % detector_key)
+        dst_filepath = os.path.join(workdir, 'intensities_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)
         logging.debug("Appending detector key to intensities.csv")
 
-    def _run_phirhozs(self, jobdir, options, detector_key, detector,
+    def _run_phirhozs(self, workdir, options, detector_key, detector,
                       transitions):
         # Paths
-        mat_filepath = os.path.join(jobdir, options.name + '.MAT')
-        sim_filepath = os.path.join(jobdir, options.name + '.SIM')
-        nez_filepath = os.path.join(jobdir, 'NEZ.1')
+        mat_filepath = os.path.join(workdir, options.name + '.MAT')
+        sim_filepath = os.path.join(workdir, options.name + '.SIM')
+        nez_filepath = os.path.join(workdir, 'NEZ.1')
 
         # Find models
         model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
@@ -243,7 +248,7 @@ class Worker(_Worker):
 
         # Launch mccli32.exe
         args = [self._mccli32exe, "phi",
-                mat_filepath, sim_filepath, nez_filepath, jobdir,
+                mat_filepath, sim_filepath, nez_filepath, workdir,
                 detector.takeoffangle_deg, mac_id, ics_id, ip_id]
         args += transitions
         args = map(str, args)
@@ -259,16 +264,14 @@ class Worker(_Worker):
         logging.debug("Monaco's mccli32.exe ended")
 
         # Rename intensities.txt
-        src_filepath = os.path.join(jobdir, 'phi.csv')
+        src_filepath = os.path.join(workdir, 'phi.csv')
         if not os.path.exists(src_filepath):
             raise RuntimeError, 'Could not extract phi-rho-z'
 
-        dst_filepath = os.path.join(jobdir, 'phi_%s.csv' % detector_key)
+        dst_filepath = os.path.join(workdir, 'phi_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)
         logging.debug("Appending detector key to phi.csv")
 
-    def _save_results(self, options, h5filepath):
-        jobdir = self._get_dirpath(options)
+    def _extract_results(self, options, outputdir, workdir):
+        return Importer().import_from_dir(options, workdir)
 
-        results = Importer().import_from_dir(options, jobdir)
-        results.save(h5filepath)
