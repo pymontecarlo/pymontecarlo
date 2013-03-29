@@ -307,7 +307,7 @@ class _Console(object):
         """
         self._print(self._stdout, "-" * self._width)
 
-    def _prompt(self, question, default=None, validators=[]):
+    def _prompt(self, question, default=None, validators=None):
         """
         Prints a question and retrieve the answer.
         If no answer is given and a default value is given, the default value
@@ -324,6 +324,9 @@ class _Console(object):
         :arg default: default value when no answer is given
         :arg validators: :class:`list` of functions
         """
+        if validators is None:
+            validators = []
+
         text = self._PROMPT_PREFIX + question
         if default: text += ' [%s]' % default
         text += ": "
@@ -346,7 +349,7 @@ class _Console(object):
 
         return answer
 
-    def prompt_text(self, question, default=None, validators=[]):
+    def prompt_text(self, question, default=None, validators=None):
         """
         Prompts for a textual value. 
         Any answer is accepted, except an empty string.
@@ -356,6 +359,9 @@ class _Console(object):
         :arg validators: :class:`list` of functions
         """
         # Validators
+        if validators is None:
+            validators = []
+
         def _nonempty(answer):
             if not answer:
                 raise ValueError, 'Please enter some text.'
@@ -364,7 +370,7 @@ class _Console(object):
         # Prompt
         return self._prompt(question, default, validators)
 
-    def prompt_boolean(self, question, default=None, validators=[]):
+    def prompt_boolean(self, question, default=None, validators=None):
         """
         Prompts for a boolean value. 
         Only the following answers are accepted: ``y``, ``yes``, ``n``, ``no``
@@ -378,6 +384,9 @@ class _Console(object):
         :rtype: :class:`bool`
         """
         # Validators
+        if validators is None:
+            validators = []
+
         def _boolean(answer):
             if answer.upper() not in ('Y', 'YES', 'N', 'NO'):
                 raise ValueError, "Please enter either 'y' or 'n'"
@@ -391,7 +400,8 @@ class _Console(object):
         answer = self.prompt_text(question, default, validators)
         return answer.upper() in ('Y', 'YES')
 
-    def prompt_file(self, question, default=None, should_exist=True, validators=[]):
+    def prompt_file(self, question, default=None,
+                    should_exist=True, ext=None, mode=None, validators=None):
         """
         Prompts for a path to a file.
         If the ``should_exist`` flag is ``True``, the answer is valid if the
@@ -402,9 +412,26 @@ class _Console(object):
         :arg default: default path when no answer is given
         :arg should_exist: whether to check if the specified path is a valid
             path to a file [default: ``True``]
+        :arg ext: required extension of the file (e.g. ``.py``)
+        :arg mode: required access mode (see :meth:`os.access`)
         :arg validators: :class:`list` of functions
         """
         # Validators
+        if validators is None:
+            validators = []
+
+        if ext is not None:
+            def _extension(answer):
+                if os.path.splitext(answer)[1] != ext:
+                    raise ValueError, "Wrong extension: %s" % ext
+            validators.append(_extension)
+
+        if mode is not None:
+            def _mode(answer):
+                if not os.access(answer, mode):
+                    raise ValueError, "Wrong access mode"
+            validators.append(_mode)
+
         def _exists(answer):
             if should_exist and not os.path.isfile(answer):
                 raise ValueError, "Please enter an existing file"
@@ -415,7 +442,8 @@ class _Console(object):
 
         return os.path.abspath(answer)
 
-    def prompt_directory(self, question, default=None, should_exist=True, validators=[]):
+    def prompt_directory(self, question, default=None, should_exist=True,
+                         validators=None):
         """
         Prompts for a path to a directory.
         If the ``should_exist`` flag is ``True``, the answer is valid if the
@@ -429,6 +457,9 @@ class _Console(object):
         :arg validators: :class:`list` of functions
         """
         # Validators
+        if validators is None:
+            validators = []
+
         def _exists(answer):
             if should_exist and not os.path.isdir(answer):
                 raise ValueError, "Please enter an existing file"
@@ -439,7 +470,7 @@ class _Console(object):
 
         return os.path.abspath(answer)
 
-    def prompt_float(self, question, default=None, validators=[]):
+    def prompt_float(self, question, default=None, validators=None):
         """
         Prompts for a float value. 
         An answer is valid if it can be converted to a float.
@@ -451,6 +482,9 @@ class _Console(object):
         :rtype: :class:`float`
         """
         # Validators
+        if validators is None:
+            validators = []
+
         def _float(answer):
             try:
                 answer = float(answer)
@@ -463,7 +497,7 @@ class _Console(object):
         # Prompt
         return float(self.prompt_text(question, default, validators))
 
-    def prompt_int(self, question, default=None, validators=[]):
+    def prompt_int(self, question, default=None, validators=None):
         """
         Prompts for a integer value. 
         An answer is valid if it can be converted to a integer.
@@ -475,6 +509,9 @@ class _Console(object):
         :rtype: :class:`int`
         """
         # Validators
+        if validators is None:
+            validators = []
+
         def _int(answer):
             try:
                 answer = int(answer)
@@ -635,19 +672,21 @@ elif os.name == 'posix':
             args = '.' if not line else line[-1]
             return (_complete_path_internal(args) + [None])[state]
 
-        def prompt_boolean(self, question, default=None, validators=[]):
+        def prompt_boolean(self, question, default=None, validators=None):
             readline.set_completer(self._complete_boolean)
             answer = _Console.prompt_boolean(self, question, default, validators)
             readline.set_completer(COMPLETER_NONE)
             return answer
 
-        def prompt_file(self, question, default=None, should_exist=True, validators=[]):
+        def prompt_file(self, question, default=None,
+                        should_exist=True, ext=None, mode=None, validators=None):
             readline.set_completer(self._complete_path)
-            answer = _Console.prompt_file(self, question, default, should_exist, validators)
+            answer = _Console.prompt_file(self, question, default, should_exist,
+                                          ext, mode, validators)
             readline.set_completer(COMPLETER_NONE)
             return answer
 
-        def prompt_directory(self, question, default=None, should_exist=True, validators=[]):
+        def prompt_directory(self, question, default=None, should_exist=True, validators=None):
             readline.set_completer(self._complete_path)
             answer = _Console.prompt_directory(self, question, default, should_exist, validators)
             readline.set_completer(COMPLETER_NONE)
