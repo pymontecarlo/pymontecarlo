@@ -57,8 +57,9 @@ def run(argv=None):
     programs = []
 
     for program_alias in settings.get_available_program_aliases():
+        default = program_alias in settings.get_program_aliases()
         answer = \
-            console.prompt_boolean("Do you want to setup %s?" % program_alias, True)
+            console.prompt_boolean("Do you want to setup %s?" % program_alias, default)
         if answer:
             cli = settings.get_program_cli(program_alias)
             try:
