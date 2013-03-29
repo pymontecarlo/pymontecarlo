@@ -46,6 +46,8 @@ class _NISTMonteProgram(Program):
         java = settings.nistmonte.java
         if not os.path.isfile(java):
             raise AssertionError, "Specified Java executable (%s) does not exist" % java
+        if not os.access(java, os.X_OK):
+            raise AssertionError, "Specified Java executable (%s) is not executable" % java
 
         if 'jar' not in settings.nistmonte:
             raise AssertionError, "Missing 'jar' option in 'nistmonte' section of settings"
@@ -53,5 +55,7 @@ class _NISTMonteProgram(Program):
         jar = settings.nistmonte.jar
         if not os.path.isfile(jar):
             raise AssertionError, "Specified jar path (%s) does not exist" % jar
+        if os.path.splitext(jar) != '.jar':
+            raise AssertionError, "Specified jar path (%s) is not a jar" % jar
 
 program = _NISTMonteProgram()

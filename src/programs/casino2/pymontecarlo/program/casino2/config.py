@@ -49,5 +49,7 @@ class _CasinoProgram(Program):
         exe = settings.casino2.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified Casino 2 executable (%s) does not exist" % exe
+        if not os.access(exe, os.X_OK):
+            raise AssertionError, "Specified Casino 2 executable (%s) is not executable" % exe
 
 program = _CasinoProgram()

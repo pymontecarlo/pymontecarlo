@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 import platform
 
 # Third party modules.
@@ -82,6 +83,9 @@ class _NistMonteConfigurePanel(ConfigurePanel):
 
         if not self._brw_java.GetPath():
             show_error_dialog(self, 'Please specify the Java executable')
+            return False
+        if not os.access(self._brw_java.GetPath(), os.X_OK):
+            show_error_dialog(self, 'Specified file is not executable')
             return False
 
         if not self._brw_jar.GetPath():

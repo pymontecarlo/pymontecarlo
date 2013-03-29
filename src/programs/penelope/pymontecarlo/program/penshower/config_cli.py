@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
 
@@ -39,6 +40,7 @@ class _PenshowerCLI(CLI):
         # exe
         question = 'Path to PENSHOWER executable'
         default = getattr(section, 'exe', None)
-        section.exe = console.prompt_file(question, default, should_exist=True)
+        section.exe = console.prompt_file(question, default,
+                                          should_exist=True, mode=os.X_OK)
 
 cli = _PenshowerCLI()

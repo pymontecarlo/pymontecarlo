@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
 
@@ -34,11 +35,12 @@ class _NISTMonteCLI(CLI):
         question = 'Path to Java executable'
         default = getattr(section, 'java', None)
         section.java = \
-            console.prompt_file(question, default, should_exist=True)
+            console.prompt_file(question, default, should_exist=True, mode=os.X_OK)
 
         # jar
         question = 'Path to pymontecarlo-nistmonte jar'
         default = getattr(section, 'jar', None)
-        section.jar = console.prompt_file(question, default, should_exist=True)
+        section.jar = \
+            console.prompt_file(question, default, should_exist=True, ext='.jar')
 
 cli = _NISTMonteCLI()

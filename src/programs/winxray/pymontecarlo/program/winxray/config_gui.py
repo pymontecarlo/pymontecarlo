@@ -17,6 +17,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
 import wx
@@ -57,6 +58,9 @@ class _WinXRayConfigurePanel(ConfigurePanel):
 
         if not self._brw_exe.GetPath():
             show_error_dialog(self, 'Please specify the WinXRay path')
+            return False
+        if not os.access(self._brw_exe.GetPath(), os.X_OK):
+            show_error_dialog(self, 'Specified file is not executable')
             return False
 
         return True

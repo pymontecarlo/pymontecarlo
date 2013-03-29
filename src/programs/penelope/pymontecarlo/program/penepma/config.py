@@ -55,5 +55,7 @@ class _PenepmaProgram(_PenelopeProgram):
         exe = settings.penepma.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified PENEPMA executable (%s) does not exist" % exe
+        if not os.access(exe, os.X_OK):
+            raise AssertionError, "Specified PENEPMA executable (%s) is not executable" % exe
 
 program = _PenepmaProgram()

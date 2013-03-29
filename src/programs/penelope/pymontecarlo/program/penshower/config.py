@@ -55,5 +55,7 @@ class _PenshowerProgram(_PenelopeProgram):
         exe = settings.penshower.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified PENSHOWER executable (%s) does not exist" % exe
+        if not os.access(exe, os.X_OK):
+            raise AssertionError, "Specified PENSHOWER executable (%s) is not executable" % exe
 
 program = _PenshowerProgram()

@@ -49,5 +49,7 @@ class _WinXRayProgram(Program):
         exe = settings.winxray.exe
         if not os.path.isfile(exe):
             raise AssertionError, "Specified WinXRay executable (%s) does not exist" % exe
+        if not os.access(exe, os.X_OK):
+            raise AssertionError, "Specified WinXRay executable (%s) is not executable" % exe
 
 program = _WinXRayProgram()
