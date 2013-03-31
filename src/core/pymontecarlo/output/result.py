@@ -48,15 +48,11 @@ class _Result(object):
     Base class of all results. 
     A result is a read-only class where results of a detector are stored.
     
-    Derived classes must implement :meth:`__loadzip__` and :meth:`__savezip__`
-    which respectively load and save the result to a ZIP file.
+    Derived classes must implement :meth:`__loadhdf5__` and :meth:`__savehdf5__`
+    which respectively load and save the result to a HDF5 file.
     
     Each result class must be register in the ResultManager.
     """
-
-    @classmethod
-    def __loadzip__(cls, zipfile, key):
-        return cls()
 
     @classmethod
     def __loadhdf5__(cls, hdf5file, key):
@@ -1253,3 +1249,31 @@ class TransmittedElectronEnergyResult(_ChannelsResult):
     pass
 
 ResultManager.register('TransmittedElectronEnergyResult', TransmittedElectronEnergyResult)
+
+class BackscatteredElectronPolarAngularResult(_ChannelsResult):
+    """
+    Angular distribution of backscattered electrons.
+    
+    Data columns:
+    
+        1. Mid-angle of each bin (rad)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+    pass
+
+ResultManager.register('BackscatteredElectronPolarAngularResult', BackscatteredElectronPolarAngularResult)
+
+class BackscatteredElectronRadialResult(_ChannelsResult):
+    """
+    Radial distribution of backscattered electrons.
+    
+    Data columns:
+    
+        1. Mid-distance of each bin (meters)
+        2. probability density, area normalized (counts/(eV.electron.m2))
+        3. uncertainty of the probability density (counts/(eV.electron.m2))
+    """
+    pass
+
+ResultManager.register('BackscatteredElectronRadialResult', BackscatteredElectronRadialResult)
