@@ -186,9 +186,36 @@ class _DelimitedDetector(Option):
         return math.degrees(self.takeoffangle_rad)
 
 class _ChannelsDetector(Option):
-    def __init__(self, extremums=(float('-inf'), float('inf'))):
+    def __init__(self, channels):
         Option.__init__(self)
+        self.channels = channels
 
+    def __repr__(self):
+        return '<%s(channels=%s)>' % (self.__class__.__name__, self.channels)
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        channels = int(element.get('channels'))
+        return cls(channels)
+
+    def __savexml__(self, element, *args, **kwargs):
+        element.set('channels', str(self.channels))
+
+    @property
+    def channels(self):
+        return self._props['channels']
+
+    @channels.setter
+    def channels(self, channels):
+        if channels < 1:
+            raise ValueError, \
+                "Number of channels (%s) must be greater or equal to 1." % channels
+        self._props['channels'] = int(channels)
+
+class _DelimitedChannelsDetector(_ChannelsDetector):
+
+    def __init__(self, extremums=(float('-inf'), float('inf'))):
+        _ChannelsDetector.__init__(self, 1)
         self._extremums = extremums
 
     def __repr__(self):
@@ -221,17 +248,6 @@ class _ChannelsDetector(Option):
                 (high, self._extremums[0], self._extremums[1])
 
         self._props['limits'] = min(low, high), max(low, high)
-
-    @property
-    def channels(self):
-        return self._props['channels']
-
-    @channels.setter
-    def channels(self, channels):
-        if channels < 1:
-            raise ValueError, \
-                "Number of channels (%s) must be greater or equal to 1." % channels
-        self._props['channels'] = int(channels)
 
 class _SpatialDetector(Option):
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins,
@@ -369,9 +385,9 @@ class _SpatialDetector(Option):
                 "Number of bins in z (%s) must be greater or equal to 1." % bins
         self._props['zbins'] = int(bins)
 
-class _EnergyDetector(_ChannelsDetector):
+class _EnergyDetector(_DelimitedChannelsDetector):
     def __init__(self, limits_eV, channels):
-        _ChannelsDetector.__init__(self, (0.0, float('inf')))
+        _DelimitedChannelsDetector.__init__(self, (0.0, float('inf')))
 
         self.limits_eV = limits_eV
         self.channels = channels
@@ -398,9 +414,9 @@ class _ElectronRangeDetector(_RangeDetector):
 class _PhotonRangeDetector(_RangeDetector):
     pass
 
-class _AngularDetector(_ChannelsDetector):
+class _AngularDetector(_DelimitedChannelsDetector):
     def __init__(self, channels, limits_rad, extremums):
-        _ChannelsDetector.__init__(self, extremums)
+        _DelimitedChannelsDetector.__init__(self, extremums)
 
         self.limits_rad = limits_rad
         self.channels = channels
@@ -468,6 +484,11 @@ class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
 
 XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
 
+class BackscatteredElectronRadialDetector(_ChannelsDetector):
+    pass
+
+XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronRadialDetector', BackscatteredElectronRadialDetector)
+
 class PhotonPolarAngularDetector(_PolarAngularDetector):
     pass
 
@@ -521,11 +542,8 @@ XMLIO.register('{http://pymontecarlo.sf.net}photonSpectrumDetector', PhotonSpect
 
 class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation_rad, azimuth_rad, channels):
-        # Note: Using ChannelsDetector without setting any variable for the limits
-        _ChannelsDetector.__init__(self, (float('-inf'), 0))
+        _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
-
-        self.channels = channels
 
     def __repr__(self):
         return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, channels=%s)>' % \
@@ -537,22 +555,19 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-        channels = int(element.get('channels'))
-        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels)
+        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
+        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels.channels)
 
     def __savexml__(self, element, *args, **kwargs):
         _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-        element.set('channels', str(self.channels))
+        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonDepthDetector', PhotonDepthDetector)
 
 class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation_rad, azimuth_rad, channels):
-        # Note: Using ChannelsDetector without setting any variable for the limits
-        _ChannelsDetector.__init__(self, (float('-inf'), 0))
+        _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
-
-        self.channels = channels
 
     def __repr__(self):
         return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, channels=%s)>' % \
@@ -564,12 +579,12 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-        channels = int(element.get('channels'))
-        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels)
+        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
+        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels.channels)
 
     def __savexml__(self, element, *args, **kwargs):
         _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-        element.set('channels', str(self.channels))
+        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonRadialDetector', PhotonRadialDetector)
 

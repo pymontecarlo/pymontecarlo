@@ -19,8 +19,9 @@ from math import radians
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.detector import \
-    (_DelimitedDetector, _ChannelsDetector, _SpatialDetector,
-     _EnergyDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
+    (_DelimitedDetector, _ChannelsDetector, _DelimitedChannelsDetector,
+     _SpatialDetector, _EnergyDetector,
+     _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector,
      TimeDetector, ElectronFractionDetector, TrajectoryDetector,
@@ -32,6 +33,7 @@ from pymontecarlo.util.xmlutil import XMLIO
 # Only required for testing
 XMLIO.register('_DelimitedDetector', _DelimitedDetector)
 XMLIO.register('_ChannelsDetector', _ChannelsDetector)
+XMLIO.register('_DelimitedChannelsDetector', _DelimitedChannelsDetector)
 XMLIO.register('_SpatialDetector', _SpatialDetector)
 XMLIO.register('_EnergyDetector', _EnergyDetector)
 XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
@@ -102,7 +104,23 @@ class Test_ChannelsDetector(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.d = _ChannelsDetector((10, 60))
+        self.d = _ChannelsDetector(10)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testchannels(self):
+        self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
+
+class Test_DelimitedChannelsDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d = _DelimitedChannelsDetector((10, 60))
 
     def tearDown(self):
         TestCase.tearDown(self)
