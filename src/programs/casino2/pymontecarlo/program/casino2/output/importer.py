@@ -33,16 +33,24 @@ from pymontecarlo.output.result import \
     PhotonDepthResult,
     PhotonRadialResult,
     create_photondist_dict,
+    BackscatteredElectronEnergyResult,
+    TransmittedElectronEnergyResult,
+    BackscatteredElectronPolarAngularResult,
+    BackscatteredElectronRadialResult,
+    TrajectoryResult,
+    Trajectory,
     )
 from pymontecarlo.input.detector import \
     (
-#     BackscatteredElectronEnergyDetector,
-#     BackscatteredElectronPolarAngularDetector,
+     BackscatteredElectronEnergyDetector,
+     BackscatteredElectronPolarAngularDetector,
+     BackscatteredElectronRadialDetector,
      PhotonDepthDetector,
      PhotonRadialDetector,
      PhotonIntensityDetector,
      ElectronFractionDetector,
-#     TransmittedElectronEnergyDetector,
+     TransmittedElectronEnergyDetector,
+     TrajectoryDetector,
      )
 from pymontecarlo.util.transition import K_family, LIII, MV
 
@@ -51,7 +59,11 @@ from casinoTools.FileFormat.casino2.File import File
 # Globals and constants variables.
 from casinoTools.FileFormat.casino2.Element import \
     LINE_K, LINE_L, LINE_M, GENERATED as CAS_GENERATED, EMITTED as CAS_EMITTED
-from pymontecarlo.output.result import GENERATED, EMITTED, NOFLUORESCENCE, TOTAL
+from pymontecarlo.output.result import \
+    (GENERATED, EMITTED, NOFLUORESCENCE, TOTAL,
+     EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED)
+from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.input.collision import NO_COLLISION
 
 LINE_LOOKUP = {LINE_K: K_family, LINE_L: LIII, LINE_M: MV}
 
@@ -68,6 +80,16 @@ class Importer(_Importer):
             self._detector_photon_radial
         self._detector_importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
+        self._detector_importers[BackscatteredElectronEnergyDetector] = \
+            self._detector_backscattered_electron_energy
+        self._detector_importers[TransmittedElectronEnergyDetector] = \
+            self._detector_transmitted_electron_energy
+        self._detector_importers[BackscatteredElectronPolarAngularDetector] = \
+            self._detector_backscattered_electron_polar_angular
+        self._detector_importers[BackscatteredElectronRadialDetector] = \
+            self._detector_backscattered_electron_radial
+        self._detector_importers[TrajectoryDetector] = \
+            self._detector_trajectory
 
     def import_from_cas(self, options, fileobj):
         # Read cas
@@ -182,5 +204,62 @@ class Importer(_Importer):
         bse_intensity = simdata.getSimulationResults().BE_Intensity[0]
         return ElectronFractionResult(backscattered=(bse_intensity, 0.0))
 
+    def _detector_backscattered_electron_energy(self, options, name, detector, simdata):
+        graphdata = simdata.getSimulationResults().getBackscatteredEnergyDistribution()
 
+        data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
+        data[:, 0] *= 1000.0 # keV to eV
 
+        return BackscatteredElectronEnergyResult(data)
+
+    def _detector_transmitted_electron_energy(self, options, name, detector, simdata):
+        graphdata = simdata.getSimulationResults().getTransmittedEnergyDistribution()
+
+        data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
+        data[:, 0] *= 1000.0 # keV to eV
+
+        return TransmittedElectronEnergyResult(data)
+
+    def _detector_backscattered_electron_polar_angular(self, options, name, detector, simdata):
+        graphdata = simdata.getSimulationResults().getBackscatteredAngleDistribution()
+
+        data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
+        data[:, 0] = np.deg2rad(data[:, 0]) # deg to rad
+
+        return BackscatteredElectronPolarAngularResult(data)
+
+    def _detector_backscattered_electron_radial(self, options, name, detector, simdata):
+        graphdata = simdata.getSimulationResults().getSurfaceRadiusBseDistribution()
+
+        data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
+        data[:, 0] *= 1e-9 # nm to m
+        data[:, 1] *= 1e9 ** 2# nm2 to m2
+
+        return BackscatteredElectronRadialResult(data)
+
+    def _detector_trajectory(self, options, name, detector, simdata):
+        trajdata = simdata.getTrajectoriesData()
+        trajectories = []
+
+        for castrajectory in trajdata.getTrajectories():
+            events = castrajectory.getScatteringEvents()
+            interactions = np.empty((len(events), 6), dtype='float')
+
+            for i, event in enumerate(events):
+                x = event.X * 1e-9
+                y = event.Y * 1e-9
+                z = -event.Z * 1e-9
+                e = event.E * 1e3
+                interactions[i] = [x, y, z, e, -1, event.id]
+
+            if castrajectory.isBackscattered():
+                exit_state = EXIT_STATE_BACKSCATTERED
+            elif castrajectory.isTransmitted():
+                exit_state = EXIT_STATE_TRANSMITTED
+            else:
+                exit_state = EXIT_STATE_ABSORBED
+
+            trajectory = Trajectory(True, ELECTRON, NO_COLLISION, exit_state, interactions)
+            trajectories.append(trajectory)
+
+        return TrajectoryResult(trajectories)

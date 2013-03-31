@@ -36,11 +36,13 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
+     BackscatteredElectronRadialDetector,
      PhotonDepthDetector,
      PhotonRadialDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      ElectronFractionDetector,
+     TrajectoryDetector,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -55,10 +57,12 @@ class Converter(_Converter):
     DETECTORS = [BackscatteredElectronEnergyDetector,
                  TransmittedElectronEnergyDetector,
                  BackscatteredElectronPolarAngularDetector,
+                 BackscatteredElectronRadialDetector,
                  ElectronFractionDetector,
                  PhotonDepthDetector,
                  PhotonRadialDetector,
-                 PhotonIntensityDetector]
+                 PhotonIntensityDetector,
+                 TrajectoryDetector]
     LIMITS = [ShowersLimit]
     MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_drouin1993,

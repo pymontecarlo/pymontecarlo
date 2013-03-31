@@ -25,8 +25,8 @@ from pymontecarlo.program.casino2.input.exporter import \
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     (BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
-     BackscatteredElectronPolarAngularDetector, PhotonIntensityDetector,
-     PhotonDepthDetector)
+     BackscatteredElectronPolarAngularDetector, BackscatteredElectronRadialDetector,
+     PhotonIntensityDetector, PhotonDepthDetector, TrajectoryDetector)
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.material import Material
 from pymontecarlo.input.geometry import GrainBoundaries, MultiLayers
@@ -70,6 +70,9 @@ class TestCasino2Exporter(TestCase):
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
         ops.detectors['prz'] = \
             PhotonDepthDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
+        ops.detectors['bseradial'] = \
+            BackscatteredElectronRadialDetector(126)
+        ops.detectors['trajs'] = TrajectoryDetector()
 
         # Export to CAS
         casfile = self.e.export(ops)
@@ -112,6 +115,13 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(125, simops.NbPointDBANG)
         self.assertAlmostEqual(-90.0, simops.DbangMin, 4)
         self.assertAlmostEqual(90.0, simops.DbangMax, 4)
+
+        self.assertTrue(simops.FDrsr)
+        self.assertFalse(simops.FDrsrLog)
+        self.assertEqual(126, simops.NbPointDRSR)
+
+        self.assertTrue(simops.Memory_Keep)
+        self.assertEqual(5678, simops.Electron_Display)
 
         self.assertTrue(simops.FEmissionRX)
 

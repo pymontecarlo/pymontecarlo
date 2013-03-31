@@ -36,12 +36,14 @@ from pymontecarlo.input.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
+     BackscatteredElectronRadialDetector,
      PhotonDepthDetector,
      PhotonRadialDetector,
      PhotonIntensityDetector,
      TransmittedElectronEnergyDetector,
      ElectronFractionDetector,
      equivalent_opening,
+     TrajectoryDetector,
      )
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
@@ -92,6 +94,8 @@ class Exporter(_Exporter):
             self._detector_backscattered_electron_energy
         self._detector_exporters[BackscatteredElectronPolarAngularDetector] = \
             self._detector_backscattered_electron_polar_angular
+        self._detector_exporters[BackscatteredElectronRadialDetector] = \
+            self._detector_backscattered_electron_radial
         self._detector_exporters[TransmittedElectronEnergyDetector] = \
             self._detector_transmitted_electron_energy
         self._detector_exporters[PhotonDepthDetector] = \
@@ -102,6 +106,8 @@ class Exporter(_Exporter):
             self._detector_photon_intensity
         self._detector_exporters[ElectronFractionDetector] = \
             self._detector_electron_fraction
+        self._detector_exporters[TrajectoryDetector] = \
+            self._detector_trajectory
 
         self._limit_exporters[ShowersLimit] = self._limit_showers
 
@@ -239,6 +245,7 @@ class Exporter(_Exporter):
     def _export_detectors(self, options, simdata, simops):
         simops.RangeFinder = 3 # Fixed range
         simops.FEmissionRX = 0 # Do not simulate x-rays
+        simops.Memory_Keep = 0 # Do not save trajectories
 
         _Exporter._export_detectors(self, options, simdata, simops)
 
@@ -297,12 +304,20 @@ class Exporter(_Exporter):
         simops.DbangMin = math.degrees(detector.limits_rad[0]) # deg
         simops.DbangMax = math.degrees(detector.limits_rad[1]) # deg
 
+    def _detector_backscattered_electron_radial(self, options, name,
+                                                detector, simdata, simops):
+        simops.FDrsr = 1
+        simops.FDrsrLog = 0
+        simops.NbPointDRSR = detector.channels
+#        simops.DrsrMax =
+#        simops.DrsrMin =
+
     def _detector_photondepth(self, options, name, detector, simdata, simops):
         # FIXME: Casino freezes when this value is set
         #simops.NbreCoucheRX = detector.channels
         simops.FEmissionRX = 1 # Simulate x-ray
-    
-    def _detector_photonradial(self,  options, name, detector, simdata, simops):
+
+    def _detector_photonradial(self, options, name, detector, simdata, simops):
         simops.FEmissionRX = 1 # Simulate x-rays
         # FIXME: Simulation options parameters for the number of channels radially
 
@@ -311,6 +326,11 @@ class Exporter(_Exporter):
 
     def _detector_electron_fraction(self, options, name, detector, simdata, simops):
         pass
+
+    def _detector_trajectory(self, options, name, detector, simdata, simops):
+        simops.Memory_Keep = 1
+        simops.Electron_Display = options.limits.find(ShowersLimit).showers
+#        simops.Electron_Save = 5 # Save interval (min)
 
     def _limit_showers(self, options, limit, simdata, simops):
         simops.setNumberElectrons(limit.showers)
