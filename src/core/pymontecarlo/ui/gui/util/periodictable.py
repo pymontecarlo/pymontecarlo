@@ -83,7 +83,8 @@ def _setup_elements():
         e[z] = ((8, col + 3), COLOR_LANTHANIDES)
 
     ## Actinides
-    for col, z in enumerate(range(89, 102 + 1)):
+#    for col, z in enumerate(range(89, 102 + 1)):
+    for col, z in enumerate(range(89, 96 + 1)): # Limit range to actual available data
         e[z] = ((9, col + 3), COLOR_ACTINIDES)
 
     return e
