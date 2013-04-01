@@ -383,9 +383,10 @@ class Inclusion(_Geometry):
 XMLIO.register('{http://pymontecarlo.sf.net}inclusion', Inclusion)
 
 class _Layered(_Geometry):
-    def __init__(self, layers=[]):
+    def __init__(self, layers=None):
         _Geometry.__init__(self)
 
+        if layers is None: layers = []
         self._props['layers'] = oset(layers) # copy
 
     @classmethod
@@ -452,7 +453,7 @@ class _Layered(_Geometry):
         return set(self.layers) # copy
 
 class MultiLayers(_Layered):
-    def __init__(self, substrate_material=None, layers=[]):
+    def __init__(self, substrate_material=None, layers=None):
         """
         Creates a multi-layers geometry. 
         The layers are assumed to be in the x-y plane (normal parallel to z).
@@ -554,7 +555,7 @@ class MultiLayers(_Layered):
 XMLIO.register('{http://pymontecarlo.sf.net}multiLayers', MultiLayers)
 
 class GrainBoundaries(_Layered):
-    def __init__(self, left_material, right_material, layers=[]):
+    def __init__(self, left_material, right_material, layers=None):
         """
         Creates a grain boundaries geometry.
         It consists of 0 or many layers in the y-z plane (normal parallel to x)
