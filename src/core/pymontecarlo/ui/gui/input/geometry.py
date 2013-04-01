@@ -41,6 +41,9 @@ from pymontecarlo.util.human import camelcase_to_words
 from pymontecarlo.ui.gui.input.material import \
     MaterialListCtrl, EVT_LIST_MATERIAL_ADDED, EVT_LIST_MATERIAL_DELETED
 from pymontecarlo.ui.gui.input.wizardpage import WizardPage
+from pymontecarlo.ui.gui.input.body import \
+    (LayersListCtrl, EVT_LIST_LAYER_ADDED, EVT_LIST_LAYER_DELETED,
+     EVT_LIST_LAYER_MODIFIED)
 
 # Globals and constants variables.
 from pymontecarlo.ui.gui.color import COLORS
@@ -419,11 +422,11 @@ class InclusionPanel(wx.Panel):
 
         lblsubstrate = wx.StaticText(self, label='Substrate')
         lblsubstrate.SetForegroundColour(wx.BLUE)
-        self._lstsubstrate = MaterialListCtrl(self)
+        self._lstsubstrate = MaterialListCtrl(self, name="susbstrate material")
 
         lblinclusion = wx.StaticText(self, label='Inclusion')
         lblinclusion.SetForegroundColour(wx.BLUE)
-        self._lstinclusion = MaterialListCtrl(self)
+        self._lstinclusion = MaterialListCtrl(self, name="inclusion material")
 
         # Sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -465,3 +468,126 @@ class InclusionPanel(wx.Panel):
         return geometries
 
 GeometryPanelManager.register(Inclusion, InclusionPanel)
+
+class MultiLayersPanel(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # Controls
+        lbllayers = wx.StaticText(self, label='Layers')
+        lbllayers.SetForegroundColour(wx.BLUE)
+        self._lstlayers = LayersListCtrl(self, allow_empty=False)
+
+        lblsubstrate = wx.StaticText(self, label='Substrate (optional)')
+        lblsubstrate.SetForegroundColour(wx.BLUE)
+        self._lstsubstrate = \
+            MaterialListCtrl(self, name="substrate", allow_empty=True)
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(lbllayers, 0)
+        sizer.Add(self._lstlayers, 2, wx.EXPAND)
+        sizer.Add(lblsubstrate, 0, wx.TOP, 20)
+        sizer.Add(self._lstsubstrate, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstsubstrate)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstsubstrate)
+        self.Bind(EVT_LIST_LAYER_ADDED, self.OnValueChanged, self._lstlayers)
+        self.Bind(EVT_LIST_LAYER_DELETED, self.OnValueChanged, self._lstlayers)
+        self.Bind(EVT_LIST_LAYER_MODIFIED, self.OnValueChanged, self._lstlayers)
+
+    def OnValueChanged(self, event):
+        self.GetParent().OnValueChanged(event)
+
+    def get_geometries(self):
+        layers_combs = []
+        for materials, thicknesses in self._lstlayers.GetLayers():
+            layers_combs.append(list(product(materials, thicknesses)))
+        substrates = self._lstsubstrate.GetMaterials()
+        if not substrates:
+            substrates = [None]
+
+        geometries = []
+
+        for layers, substrate in product(product(*layers_combs), substrates):
+            geometry = MultiLayers(substrate)
+            for material, thickness in layers:
+                geometry.add_layer(material, thickness * 1e-9)
+            geometries.append(geometry)
+
+        return geometries
+
+GeometryPanelManager.register(MultiLayers, MultiLayersPanel)
+
+class GrainBoundariesPanel(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # Controls
+        lblleftmaterial = wx.StaticText(self, label='Left substrate')
+        lblleftmaterial.SetForegroundColour(wx.BLUE)
+        self._lstleftmaterial = \
+            MaterialListCtrl(self, name="left substrate", allow_empty=False)
+
+        lbllayers = wx.StaticText(self, label='Layers')
+        lbllayers.SetForegroundColour(wx.BLUE)
+        self._lstlayers = LayersListCtrl(self, allow_empty=True)
+
+        lblrightmaterial = wx.StaticText(self, label='Right substrate')
+        lblrightmaterial.SetForegroundColour(wx.BLUE)
+        self._lstrightmaterial = \
+            MaterialListCtrl(self, name="right substrate", allow_empty=False)
+
+        # Sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(lblleftmaterial, 0)
+        sizer.Add(self._lstleftmaterial, 1, wx.EXPAND)
+        sizer.Add(lbllayers, 0, wx.TOP, 5)
+        sizer.Add(self._lstlayers, 1, wx.EXPAND)
+        sizer.Add(lblrightmaterial, 0, wx.TOP, 5)
+        sizer.Add(self._lstrightmaterial, 1, wx.EXPAND)
+
+        self.SetSizer(sizer)
+
+        # Bind
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstleftmaterial)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstleftmaterial)
+        self.Bind(EVT_LIST_LAYER_ADDED, self.OnValueChanged, self._lstlayers)
+        self.Bind(EVT_LIST_LAYER_DELETED, self.OnValueChanged, self._lstlayers)
+        self.Bind(EVT_LIST_LAYER_MODIFIED, self.OnValueChanged, self._lstlayers)
+        self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstrightmaterial)
+        self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstrightmaterial)
+
+    def OnValueChanged(self, event):
+        self.GetParent().OnValueChanged(event)
+
+    def get_geometries(self):
+        layers_combs = []
+        for materials, thicknesses in self._lstlayers.GetLayers():
+            layers_combs.append(list(product(materials, thicknesses)))
+        if not layers_combs:
+            layers_combs.append([(None, 0.0)])
+
+        leftmaterials = self._lstleftmaterial.GetMaterials()
+        rightmaterials = self._lstrightmaterial.GetMaterials()
+
+        geometries = []
+
+        for left_material, layers, right_material in \
+                product(leftmaterials, product(*layers_combs), rightmaterials):
+            geometry = GrainBoundaries(left_material, right_material)
+            for material, thickness in layers:
+                if material is None: continue
+                geometry.add_layer(material, thickness * 1e-9)
+            geometries.append(geometry)
+
+        return geometries
+
+GeometryPanelManager.register(GrainBoundaries, GrainBoundariesPanel)

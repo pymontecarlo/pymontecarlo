@@ -218,7 +218,7 @@ class MaterialDialog(wx.Dialog):
         # Density
         if self._chkdensityuserdefined.IsChecked():
             try:
-                density_kg_m3 = float(self._txtdensity.GetValue())
+                density_kg_m3 = float(self._txtdensity.GetValue()) * 1000.0
             except ValueError:
                 show_error_dialog(self, "Density is not a number")
                 return
@@ -237,7 +237,7 @@ class MaterialDialog(wx.Dialog):
 
         # Update dialog
         self._txtname.SetValue(mat.name)
-        self._txtdensity.SetValue(str(mat.density_kg_m3))
+        self._txtdensity.SetValue(str(mat.density_kg_m3 / 1000.0))
 
         for i, row in enumerate(self._lstelements):
             self._lstelements[i] = \
@@ -252,7 +252,7 @@ class MaterialDialog(wx.Dialog):
         self._chknameauto.SetValue(False)
 
         if material.has_density_defined():
-            self._txtdensity.SetValue(str(material.density_kg_m3))
+            self._txtdensity.SetValue(str(material.density_kg_m3 / 1000.0))
             self._txtdensity.Enable(True)
             self._chkdensityuserdefined.SetValue(True)
         else:
@@ -423,7 +423,7 @@ class NotifyMaterialEvent(MaterialEvent, wx.NotifyEvent):
 
 class MaterialListCtrl(wx.Panel):
 
-    def __init__(self, parent):
+    def __init__(self, parent, name="materials", allow_empty=False):
         """
         List control to add materials.
         """
@@ -432,9 +432,8 @@ class MaterialListCtrl(wx.Panel):
         # Controls
         ## List control
         columns = [StaticColumn('Material(s)', attrgetter('name'), width= -3)]
-        validator = PyListCtrlValidator(False)
-        self._lst = PyListCtrl(self, columns, validator=validator,
-                               name='materials')
+        self._lst = PyListCtrl(self, columns, name=name)
+        self._lst.SetValidator(PyListCtrlValidator(allow_empty))
 
         ## Action buttons
         toolbar = wx.ToolBar(self)
@@ -546,6 +545,10 @@ class MaterialListCtrl(wx.Panel):
 
     def GetMaterials(self):
         return list(self._lst) # copy
+
+    def SetMaterials(self, materials):
+        self._lst.clear()
+        self._lst.extend(materials)
 
 if __name__ == '__main__':
     from pymontecarlo.ui.gui.art import ArtProvider
