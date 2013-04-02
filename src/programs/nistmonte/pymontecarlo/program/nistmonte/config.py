@@ -55,7 +55,7 @@ class _NISTMonteProgram(Program):
         jar = settings.nistmonte.jar
         if not os.path.isfile(jar):
             raise AssertionError, "Specified jar path (%s) does not exist" % jar
-        if os.path.splitext(jar) != '.jar':
+        if os.path.splitext(jar)[1] != '.jar':
             raise AssertionError, "Specified jar path (%s) is not a jar" % jar
 
 program = _NISTMonteProgram()
