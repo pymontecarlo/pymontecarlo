@@ -418,6 +418,7 @@ def from_string(s):
 
     # Fix to be compatible with old transition, e.g. N5N6/N6N7
     if '/' in notation: notation = notation[:notation.index('/')]
+    if notation == 'Le': notation = 'Ln'
 
     notation = _siegbahn_ascii_to_unicode(notation)
 
