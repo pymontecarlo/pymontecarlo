@@ -24,6 +24,7 @@ from optparse import OptionParser
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.settings import get_settings
 from pymontecarlo.ui.cli.console import Console
 from pymontecarlo.input.updater import Updater as OptionsUpdater
 from pymontecarlo.output.updater import Updater as ResultsUpdater
@@ -31,7 +32,10 @@ from pymontecarlo.output.updater import Updater as ResultsUpdater
 # Globals and constants variables.
 
 def run(argv=None):
-    # Initialize console
+    # Initialise programs
+    get_settings().get_programs()
+
+    # Initialise console
     console = Console()
     console.init()
 
