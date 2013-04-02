@@ -78,29 +78,29 @@ class Results(Mapping):
 
         hdf5file = h5py.File(source, 'r')
 
-        # Check version
-        if hdf5file.attrs['version'] != VERSION:
-            raise IOError, "Incorrect version of results. Only version %s is accepted" % \
-                    VERSION
+        try:
+            # Check version
+            if hdf5file.attrs['version'] != VERSION:
+                raise IOError, "Incorrect version of results. Only version %s is accepted" % \
+                        VERSION
 
-        # Read options
-        task.status = 'Reading options'
-        fp = StringIO(hdf5file.attrs['options'])
-        options = Options.load(fp)
+            # Read options
+            task.status = 'Reading options'
+            fp = StringIO(hdf5file.attrs['options'])
+            options = Options.load(fp)
 
-        # Load each result
-        results = {}
-        for i, key in enumerate(hdf5file):
-            task.progress = float(i) / len(hdf5file)
-            task.status = 'Loading %s' % key
+            # Load each result
+            results = {}
+            for i, key in enumerate(hdf5file):
+                task.progress = float(i) / len(hdf5file)
+                task.status = 'Loading %s' % key
 
-            hdf5group = hdf5file[key]
-            klass = ResultManager.get_class(hdf5group.attrs['_class'])
-            results[key] = klass.__loadhdf5__(hdf5file, key)
-
-        hdf5file.close()
-
-        progress.stop_task(task)
+                hdf5group = hdf5file[key]
+                klass = ResultManager.get_class(hdf5group.attrs['_class'])
+                results[key] = klass.__loadhdf5__(hdf5file, key)
+        finally:
+            hdf5file.close()
+            progress.stop_task(task)
 
         return cls(options, results)
 
