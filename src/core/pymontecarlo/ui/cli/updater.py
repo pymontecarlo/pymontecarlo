@@ -70,7 +70,7 @@ def run(argv=None):
             ResultsUpdater().update(filepath)
             console.print_success("Successfully results %s" % filepath)
         else:
-            console.error('Unknown extension %s' % ext)
+            console.print_error('Unknown extension %s' % ext)
 
     console.close()
 
