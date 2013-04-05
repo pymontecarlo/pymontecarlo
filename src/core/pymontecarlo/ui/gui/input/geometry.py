@@ -375,10 +375,21 @@ class GeometryWizardPage(WizardPage):
 
         return geometries
 
-class SubstratePanel(wx.Panel):
+class _GeometryPanel(wx.Panel):
 
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
+
+    def OnValueChanged(self, event):
+        self.GetParent().OnValueChanged(event)
+
+    def get_geometries(self):
+        return []
+
+class SubstratePanel(_GeometryPanel):
+
+    def __init__(self, parent):
+        _GeometryPanel.__init__(self, parent)
 
         # Controls
         self._lstmaterials = MaterialListCtrl(self)
@@ -393,9 +404,6 @@ class SubstratePanel(wx.Panel):
         self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstmaterials)
         self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstmaterials)
 
-    def OnValueChanged(self, event):
-        self.GetParent().OnValueChanged(event)
-
     def get_geometries(self):
         geometries = []
 
@@ -407,10 +415,10 @@ class SubstratePanel(wx.Panel):
 
 GeometryPanelManager.register(Substrate, SubstratePanel)
 
-class InclusionPanel(wx.Panel):
+class InclusionPanel(_GeometryPanel):
 
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
+        _GeometryPanel.__init__(self, parent)
 
         # Controls
         lbldiameter = wx.StaticText(self, label='Inclusion diameter (nm)')
@@ -450,9 +458,6 @@ class InclusionPanel(wx.Panel):
         self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstinclusion)
         self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstinclusion)
 
-    def OnValueChanged(self, event):
-        self.GetParent().OnValueChanged(event)
-
     def get_geometries(self):
         diameters = np.array(self._txtdiameter.GetValues()) * 1e-9
 
@@ -469,10 +474,10 @@ class InclusionPanel(wx.Panel):
 
 GeometryPanelManager.register(Inclusion, InclusionPanel)
 
-class MultiLayersPanel(wx.Panel):
+class MultiLayersPanel(_GeometryPanel):
 
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
+        _GeometryPanel.__init__(self, parent)
 
         # Controls
         lbllayers = wx.StaticText(self, label='Layers')
@@ -501,9 +506,6 @@ class MultiLayersPanel(wx.Panel):
         self.Bind(EVT_LIST_LAYER_DELETED, self.OnValueChanged, self._lstlayers)
         self.Bind(EVT_LIST_LAYER_MODIFIED, self.OnValueChanged, self._lstlayers)
 
-    def OnValueChanged(self, event):
-        self.GetParent().OnValueChanged(event)
-
     def get_geometries(self):
         layers_combs = []
         for materials, thicknesses in self._lstlayers.GetLayers():
@@ -524,10 +526,10 @@ class MultiLayersPanel(wx.Panel):
 
 GeometryPanelManager.register(MultiLayers, MultiLayersPanel)
 
-class GrainBoundariesPanel(wx.Panel):
+class GrainBoundariesPanel(_GeometryPanel):
 
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
+        _GeometryPanel.__init__(self, parent)
 
         # Controls
         lblleftmaterial = wx.StaticText(self, label='Left substrate')
@@ -564,9 +566,6 @@ class GrainBoundariesPanel(wx.Panel):
         self.Bind(EVT_LIST_LAYER_MODIFIED, self.OnValueChanged, self._lstlayers)
         self.Bind(EVT_LIST_MATERIAL_ADDED, self.OnValueChanged, self._lstrightmaterial)
         self.Bind(EVT_LIST_MATERIAL_DELETED, self.OnValueChanged, self._lstrightmaterial)
-
-    def OnValueChanged(self, event):
-        self.GetParent().OnValueChanged(event)
 
     def get_geometries(self):
         layers_combs = []
