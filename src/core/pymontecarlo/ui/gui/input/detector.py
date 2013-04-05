@@ -134,6 +134,7 @@ class DetectorWizardPage(WizardPage):
                 DetectorDialogManager.get(clasz)
             except KeyError:
                 warnings.warn("No dialog for detector %s" % clasz.__name__)
+                continue
             self._cbtype.append(clasz)
 
         if self._cbtype:

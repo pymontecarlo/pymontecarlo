@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 import copy
+import warnings
 from itertools import product
 
 # Third party modules.
@@ -334,6 +335,7 @@ class GeometryWizardPage(WizardPage):
             try:
                 GeometryPanelManager.get(clasz)
             except KeyError:
+                warnings.warn("No panel for geometry %s" % clasz.__name__)
                 continue
             self._cbtype.append(clasz)
 

@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import warnings
 from itertools import product
 
 # Third party modules.
@@ -75,6 +76,7 @@ class BeamWizardPage(WizardPage):
             try:
                 BeamPanelManager.get(clasz)
             except KeyError:
+                warnings.warn("No panel for beam %s" % clasz.__name__)
                 continue
             self._cbtype.append(clasz)
 
