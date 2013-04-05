@@ -20,8 +20,8 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import math
-from operator import itemgetter
 import warnings
+from operator import itemgetter, attrgetter
 
 # Third party modules.
 import wx
@@ -129,7 +129,7 @@ class DetectorWizardPage(WizardPage):
         self.Bind(EVT_LIST_ROW_ACTIVATED, self.OnEdit, self._lstdetectors)
 
         # Add types
-        for clasz in wizard.available_detectors:
+        for clasz in sorted(wizard.available_detectors, key=attrgetter('__name__')):
             try:
                 DetectorDialogManager.get(clasz)
             except KeyError:
@@ -272,6 +272,11 @@ class _DetectorDialog(wx.Dialog):
 
     def _modify_detector(self):
         pass
+
+    def get_options(self):
+        wizardpage = self.GetParent()
+        wizard = wizardpage.GetParent()
+        return wizard.get_options()
 
     def Validate(self):
         return form_validate(self)
@@ -451,6 +456,9 @@ class _EnergyDetectorDialog(_BoundedChannelsDetectorDialog):
     def __init__(self, parent, key=None, detector=None):
         _BoundedChannelsDetectorDialog.__init__(self, parent, (0.0, None),
                                                   'eV', key, detector)
+
+        maxvalue = max(map(attrgetter('beam.energy_eV'), self.get_options()))
+        self._txtlimit_max.SetValue(maxvalue)
 
 class _AngularDetectorDialog(_BoundedChannelsDetectorDialog):
 
@@ -705,7 +713,7 @@ class PhotonEmissionMapDetectorDialog(_DelimitedDetectorDialog):
 DetectorDialogManager.register(PhotonEmissionMapDetector, PhotonEmissionMapDetectorDialog)
 
 class ShowersStatisticsDetectorDialog(_DetectorDialog):
-    
+
     def _create_detector(self):
         return ShowersStatisticsDetector()
 

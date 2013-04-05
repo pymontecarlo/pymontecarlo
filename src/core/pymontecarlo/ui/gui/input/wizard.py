@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from operator import methodcaller, mul
+from itertools import product
 
 # Third party modules.
 import wx
@@ -30,6 +31,8 @@ from wxtools2.wizard import Wizard
 from pymontecarlo.ui.gui.input.beam import BeamWizardPage
 from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
 from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
+
+from pymontecarlo.input.options import Options
 
 # Globals and constants variables.
 
@@ -93,6 +96,22 @@ class NewSimulationWizard(Wizard):
     def OnNext(self, event):
         Wizard.OnNext(self, event)
         self.OnValueChanged()
+
+    def get_options(self):
+        beams = self._page_beam.get_options()
+        geometries = self._page_geometry.get_options()
+        detectors = self._page_detector.get_options()
+        
+        list_options = []
+        for beam, geometry in product(beams, geometries):
+            options = Options()
+            options.beam = beam
+            options.geometry = geometry
+            options.detectors.update(detectors)
+
+            list_options.append(options)
+
+        return list_options
 
     def OnValueChanged(self, event=None):
         try:
