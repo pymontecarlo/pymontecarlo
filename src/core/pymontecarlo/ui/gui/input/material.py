@@ -27,7 +27,8 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 
 # Local modules.
 from wxtools2.list import \
-    PyListCtrl, StaticColumn, TextCtrlColumn, PyListCtrlValidator
+    (PyListCtrl, StaticColumn, TextCtrlColumn, PyListCtrlValidator,
+     EVT_LIST_ROW_ACTIVATED)
 from wxtools2.menu import popupmenu
 from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
@@ -470,6 +471,7 @@ class MaterialListCtrl(wx.Panel):
         self.Bind(wx.EVT_TOOL, self.OnRemove, id=self._TOOL_REMOVE)
         self.Bind(wx.EVT_TOOL, self.OnClear, id=self._TOOL_CLEAR)
         self.Bind(wx.EVT_TOOL, self.OnEdit, id=self._TOOL_EDIT)
+        self.Bind(EVT_LIST_ROW_ACTIVATED, self.OnEdit, self._lst)
 
     def OnAdd(self, event):
         dialog = MaterialDialog(self.GetParent())
