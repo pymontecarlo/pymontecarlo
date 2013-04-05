@@ -60,23 +60,27 @@ def _call_dependency_setups(*args):
     """
     # casinoTools
     projectdir = config.get('projects', 'casinoTools')
-    filepath = os.path.join(projectdir, 'setup_casino2.py')
-    _call_setup(filepath, *args)
+    if projectdir:
+        filepath = os.path.join(projectdir, 'setup_casino2.py')
+        _call_setup(filepath, *args)
 
     # winxrayTools
     projectdir = config.get('projects', 'winxrayTools')
-    filepath = os.path.join(projectdir, 'setup.py')
-    _call_setup(filepath, *args)
+    if projectdir:
+        filepath = os.path.join(projectdir, 'setup.py')
+        _call_setup(filepath, *args)
 
     # PouchouPichoirModels
     projectdir = config.get('projects', 'PouchouPichoirModels')
-    filepath = os.path.join(projectdir, 'setup.py')
-    _call_setup(filepath, *args)
+    if projectdir:
+        filepath = os.path.join(projectdir, 'setup.py')
+        _call_setup(filepath, *args)
 
     # PENELOPE
     projectdir = config.get('projects', 'penelope')
-    filepath = os.path.join(projectdir, 'src', 'setup.py')
-    _call_setup(filepath, *args)
+    if projectdir:
+        filepath = os.path.join(projectdir, 'src', 'setup.py')
+        _call_setup(filepath, *args)
 
 def _call_all_setups(*args):
     """
