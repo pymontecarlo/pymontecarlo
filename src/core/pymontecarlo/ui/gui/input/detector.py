@@ -137,8 +137,10 @@ class DetectorWizardPage(WizardPage):
                 continue
             self._cbtype.append(clasz)
 
-        if self._cbtype:
-            self._cbtype.selection = self._cbtype[0]
+        if not self._cbtype:
+            raise RuntimeError, "No detectors available"
+
+        self._cbtype.selection = self._cbtype[0]
 
     def OnAdd(self, event):
         clasz = self._cbtype.selection

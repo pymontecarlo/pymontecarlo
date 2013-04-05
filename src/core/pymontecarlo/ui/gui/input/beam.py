@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import warnings
 from itertools import product
+from operator import attrgetter
 
 # Third party modules.
 import wx
@@ -72,7 +73,7 @@ class BeamWizardPage(WizardPage):
         self.Bind(wx.EVT_COMBOBOX, self.OnType, self._cbtype)
 
         # Add types
-        for clasz in wizard.available_beams:
+        for clasz in sorted(wizard.available_beams, key=attrgetter('__name__')):
             try:
                 BeamPanelManager.get(clasz)
             except KeyError:

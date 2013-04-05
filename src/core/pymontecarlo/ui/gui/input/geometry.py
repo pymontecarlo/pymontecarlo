@@ -23,6 +23,7 @@ import math
 import copy
 import warnings
 from itertools import product
+from operator import attrgetter
 
 # Third party modules.
 from OpenGL import GL
@@ -331,7 +332,7 @@ class GeometryWizardPage(WizardPage):
         self.Bind(wx.EVT_TEXT, self.OnValueChanged, self._txtrotation)
 
         # Add types
-        for clasz in wizard.available_geometries:
+        for clasz in sorted(wizard.available_geometries, key=attrgetter('__name__')):
             try:
                 GeometryPanelManager.get(clasz)
             except KeyError:
