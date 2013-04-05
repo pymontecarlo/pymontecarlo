@@ -29,6 +29,7 @@ from wxtools2.wizard import Wizard
 
 from pymontecarlo.ui.gui.input.beam import BeamWizardPage
 from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
+from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
 
 # Globals and constants variables.
 
@@ -58,6 +59,9 @@ class NewSimulationWizard(Wizard):
 
         self._page_geometry = GeometryWizardPage(self)
         self.pages.append(self._page_geometry)
+
+        self._page_detector = DetectorWizardPage(self)
+        self.pages.append(self._page_detector)
 
     def _get_classes(self, programs, attr):
         classes = set()
@@ -108,11 +112,12 @@ if __name__ == '__main__': #pragma: no cover
     from pymontecarlo.ui.gui.art import ArtProvider
     from pymontecarlo.program.nistmonte.config import program as nistmonte
     from pymontecarlo.program.penepma.config import program as penepma
+    from pymontecarlo.program.casino2.config import program as casino2
 
     app = wx.PySimpleApp()
     wx.ArtProvider.Push(ArtProvider())
 
-    programs = [nistmonte, penepma]
+    programs = [nistmonte, penepma, casino2]
     wiz = NewSimulationWizard(None, programs)
 
     wiz.ShowModal()

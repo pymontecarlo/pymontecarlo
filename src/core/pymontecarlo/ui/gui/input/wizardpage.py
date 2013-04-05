@@ -33,7 +33,7 @@ class WizardPage(_WizardPage):
     def __init__(self, wizard, title):
         _WizardPage.__init__(self, wizard, title)
 
-    def OnValueChanged(self, event):
+    def OnValueChanged(self, event=None):
         self.GetParent().OnValueChanged(event)
 
     def Validate(self):
