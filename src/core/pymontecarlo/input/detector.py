@@ -45,6 +45,7 @@ import math
 # Local modules.
 from pymontecarlo.input.option import Option
 from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -69,7 +70,15 @@ def equivalent_opening(det1, det2, places=6):
 
     return True
 
-class _DelimitedDetector(Option):
+class _Detector(Option):
+    
+    def __repr__(self):
+        return '<%s()>' % self.__class__.__name__
+
+    def __unicode__(self):
+        return '%s' % camelcase_to_words(self.__class__.__name__)
+
+class _DelimitedDetector(_Detector):
     def __init__(self, elevation_rad, azimuth_rad):
         """
         Creates a new detector.
@@ -91,7 +100,7 @@ class _DelimitedDetector(Option):
         :arg azimuth_rad: azimuth limits
         :type azimuth_rad: :class:`tuple`
         """
-        Option.__init__(self)
+        _Detector.__init__(self)
 
         self.elevation_rad = elevation_rad
         self.azimuth_rad = azimuth_rad
@@ -99,6 +108,18 @@ class _DelimitedDetector(Option):
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg)>' % \
             (self.__class__.__name__,
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1])
+
+    def __str__(self):
+        return '%s (elevation=%s to %s deg, azimuth=%s to %s deg)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1])
+
+    def __unicode__(self):
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0)' % \
+            (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg[0], self.elevation_deg[1],
              self.azimuth_deg[0], self.azimuth_deg[1])
 
@@ -185,13 +206,17 @@ class _DelimitedDetector(Option):
     def takeoffangle_deg(self):
         return math.degrees(self.takeoffangle_rad)
 
-class _ChannelsDetector(Option):
+class _ChannelsDetector(_Detector):
     def __init__(self, channels):
-        Option.__init__(self)
+        _Detector.__init__(self)
         self.channels = channels
 
     def __repr__(self):
         return '<%s(channels=%s)>' % (self.__class__.__name__, self.channels)
+
+    def __unicode__(self):
+        return '%s (channels=%s)' % \
+            (camelcase_to_words(self.__class__.__name__), self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -212,7 +237,7 @@ class _ChannelsDetector(Option):
                 "Number of channels (%s) must be greater or equal to 1." % channels
         self._props['channels'] = int(channels)
 
-class _DelimitedChannelsDetector(_ChannelsDetector):
+class _BoundedChannelsDetector(_ChannelsDetector):
 
     def __init__(self, extremums=(float('-inf'), float('inf'))):
         _ChannelsDetector.__init__(self, 1)
@@ -240,6 +265,8 @@ class _DelimitedChannelsDetector(_ChannelsDetector):
     def _set_limits(self, limits):
         low, high = limits
 
+        if abs(high - low) < TOLERANCE:
+            raise ValueError, "Upper and lower limits are equal"
         if low < self._extremums[0] - TOLERANCE or low > self._extremums[1] + TOLERANCE:
             raise ValueError, "Lower limit (%s) must be between [%s, %s]." % \
                 (low, self._extremums[0], self._extremums[1])
@@ -249,12 +276,15 @@ class _DelimitedChannelsDetector(_ChannelsDetector):
 
         self._props['limits'] = min(low, high), max(low, high)
 
-class _SpatialDetector(Option):
+    def _get_limits(self):
+        return self._props['limits']
+
+class _SpatialDetector(_Detector):
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins,
                  xextremums=(float('-inf'), float('inf')),
                  yextremums=(float('-inf'), float('inf')),
                  zextremums=(float('-inf'), float('inf'))):
-        Option.__init__(self)
+        _Detector.__init__(self)
 
         self._xextremums = xextremums
         self._yextremums = yextremums
@@ -274,6 +304,13 @@ class _SpatialDetector(Option):
              self.xlimits_m[0], self.xlimits_m[1], self.xbins,
              self.ylimits_m[0], self.ylimits_m[1], self.ybins,
              self.zlimits_m[0], self.zlimits_m[1], self.zbins)
+
+    def __unicode__(self):
+        return "%s (x=%s to %s nm (%s), y=%s to %s nm (%s), z=%s to %s nm (%s))" % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.xlimits_m[0] * 1e9, self.xlimits_m[1] * 1e9, self.xbins,
+             self.ylimits_m[0] * 1e9, self.ylimits_m[1] * 1e9, self.ybins,
+             self.zlimits_m[0] * 1e9, self.zlimits_m[1] * 1e9, self.zbins)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -385,9 +422,9 @@ class _SpatialDetector(Option):
                 "Number of bins in z (%s) must be greater or equal to 1." % bins
         self._props['zbins'] = int(bins)
 
-class _EnergyDetector(_DelimitedChannelsDetector):
+class _EnergyDetector(_BoundedChannelsDetector):
     def __init__(self, limits_eV, channels):
-        _DelimitedChannelsDetector.__init__(self, (0.0, float('inf')))
+        _BoundedChannelsDetector.__init__(self, (0.0, float('inf')))
 
         self.limits_eV = limits_eV
         self.channels = channels
@@ -396,9 +433,14 @@ class _EnergyDetector(_DelimitedChannelsDetector):
         return "<%s(limits=%s to %s eV, channels=%s)>" % \
             (self.__class__.__name__, self.limits_eV[0], self.limits_eV[1], self.channels)
 
+    def __unicode__(self):
+        return '%s (limits=%s to %s eV, channels=%s)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.limits_eV[0], self.limits_eV[1], self.channels)
+
     @property
     def limits_eV(self):
-        return self._props['limits']
+        return self._get_limits()
 
     @limits_eV.setter
     def limits_eV(self, limits):
@@ -414,9 +456,9 @@ class _ElectronRangeDetector(_RangeDetector):
 class _PhotonRangeDetector(_RangeDetector):
     pass
 
-class _AngularDetector(_DelimitedChannelsDetector):
+class _AngularDetector(_BoundedChannelsDetector):
     def __init__(self, channels, limits_rad, extremums):
-        _DelimitedChannelsDetector.__init__(self, extremums)
+        _BoundedChannelsDetector.__init__(self, extremums)
 
         self.limits_rad = limits_rad
         self.channels = channels
@@ -424,6 +466,11 @@ class _AngularDetector(_DelimitedChannelsDetector):
     def __repr__(self):
         return "<%s(limits=%s to %s rad, channels=%s)>" % \
             (self.__class__.__name__, self.limits_rad[0], self.limits_rad[1], self.channels)
+
+    def __unicode__(self):
+        return u"%s (limits=%s to %s \u00b0, channels=%s)>" % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.limits_deg[0], self.limits_deg[1], self.channels)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -435,11 +482,19 @@ class _AngularDetector(_DelimitedChannelsDetector):
 
     @property
     def limits_rad(self):
-        return self._props['limits']
+        return self._get_limits()
 
     @limits_rad.setter
     def limits_rad(self, limits):
         self._set_limits(limits)
+
+    @property
+    def limits_deg(self):
+        return tuple(map(math.degrees, self.limits_rad))
+
+    @limits_deg.setter
+    def limits_deg(self, limits):
+        self.limits_rad = map(math.radians, limits)
 
 class _PolarAngularDetector(_AngularDetector):
     def __init__(self, channels, limits_rad=(-HALFPI, HALFPI)):
@@ -519,10 +574,18 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
         _EnergyDetector.__init__(self, limits_eV, channels)
 
     def __repr__(self):
-        return "<%s(elevation=%s to %s rad, azimuth=%s to %s rad, limits=%s to %s eV, channels=%s)>" % \
+        return "<%s(elevation=%s to %s deg, azimuth=%s to %s deg, limits=%s to %s eV, channels=%s)>" % \
             (self.__class__.__name__,
-             self.elevation_rad[0], self.elevation_rad[1],
-             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.limits_eV[0], self.limits_eV[1],
+             self.channels)
+
+    def __unicode__(self):
+        return u"%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, limits=%s to %s eV, channels=%s)" % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
              self.limits_eV[0], self.limits_eV[1],
              self.channels)
 
@@ -546,10 +609,17 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, channels=%s)>' % \
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
             (self.__class__.__name__,
-             self.elevation_rad[0], self.elevation_rad[1],
-             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.channels)
+
+    def __unicode__(self):
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
              self.channels)
 
     @classmethod
@@ -570,10 +640,17 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, channels=%s)>' % \
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
             (self.__class__.__name__,
-             self.elevation_rad[0], self.elevation_rad[1],
-             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.channels)
+
+    def __unicode__(self):
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+            (self.__class__.__name__,
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
              self.channels)
 
     @classmethod
@@ -597,10 +674,17 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
         self.zbins = zbins
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s rad, azimuth=%s to %s rad, bins=(%s, %s, %s))>' % \
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, bins=(%s, %s, %s))>' % \
             (self.__class__.__name__,
-             self.elevation_rad[0], self.elevation_rad[1],
-             self.azimuth_rad[0], self.azimuth_rad[1],
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.xbins, self.ybins, self.zbins)
+
+    def __unicode__(self):
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, bins=(%s, %s, %s))' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg[0], self.elevation_deg[1],
+             self.azimuth_deg[0], self.azimuth_deg[1],
              self.xbins, self.ybins, self.zbins)
 
     @classmethod
@@ -658,7 +742,7 @@ class PhotonIntensityDetector(_PhotonDelimitedDetector):
 
 XMLIO.register('{http://pymontecarlo.sf.net}photonIntensityDetector', PhotonIntensityDetector)
 
-class TimeDetector(Option):
+class TimeDetector(_Detector):
     """
     Records simulation time and speed (electron simulated /s).
     """
@@ -666,7 +750,7 @@ class TimeDetector(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}timeDetector', TimeDetector)
 
-class ElectronFractionDetector(Option):
+class ElectronFractionDetector(_Detector):
     """
     Records backscattered, transmitted and absorbed fraction of primary electrons.
     """
@@ -674,7 +758,7 @@ class ElectronFractionDetector(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}electronFractionDetector', ElectronFractionDetector)
 
-class ShowersStatisticsDetector(Option):
+class ShowersStatisticsDetector(_Detector):
     """
     Records number of simulated particles.
     """
@@ -682,7 +766,7 @@ class ShowersStatisticsDetector(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}showersStatisticsDetector', ShowersStatisticsDetector)
 
-class TrajectoryDetector(Option):
+class TrajectoryDetector(_Detector):
     """
     Records the trajectories of particles.
     """
@@ -698,12 +782,17 @@ class TrajectoryDetector(Option):
         :arg secondary: whether to simulate secondary particles
         :type secondary: :class:`bool`
         """
-        Option.__init__(self)
+        _Detector.__init__(self)
         self.secondary = secondary
 
     def __repr__(self):
         prep = 'with' if self.secondary else 'without'
         return '<%s(%s secondary particles)>' % (self.__class__.__name__, prep)
+
+    def __unicode__(self):
+        prep = 'with' if self.secondary else 'without'
+        return '%s (%s secondary particles)' % \
+            (camelcase_to_words(self.__class__.__name__), prep)
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):

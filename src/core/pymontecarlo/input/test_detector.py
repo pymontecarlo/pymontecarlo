@@ -19,7 +19,7 @@ from math import radians
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.detector import \
-    (_DelimitedDetector, _ChannelsDetector, _DelimitedChannelsDetector,
+    (_DelimitedDetector, _ChannelsDetector, _BoundedChannelsDetector,
      _SpatialDetector, _EnergyDetector,
      _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
@@ -33,7 +33,7 @@ from pymontecarlo.util.xmlutil import XMLIO
 # Only required for testing
 XMLIO.register('_DelimitedDetector', _DelimitedDetector)
 XMLIO.register('_ChannelsDetector', _ChannelsDetector)
-XMLIO.register('_DelimitedChannelsDetector', _DelimitedChannelsDetector)
+XMLIO.register('_BoundedChannelsDetector', _BoundedChannelsDetector)
 XMLIO.register('_SpatialDetector', _SpatialDetector)
 XMLIO.register('_EnergyDetector', _EnergyDetector)
 XMLIO.register('_PolarAngularDetector', _PolarAngularDetector)
@@ -115,12 +115,12 @@ class Test_ChannelsDetector(TestCase):
     def testchannels(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
 
-class Test_DelimitedChannelsDetector(TestCase):
+class Test_BoundedChannelsDetector(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
 
-        self.d = _DelimitedChannelsDetector((10, 60))
+        self.d = _BoundedChannelsDetector((10, 60))
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -353,7 +353,7 @@ class TestPhotonSpectrumDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhotonSpectrumDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, limits=12.34 to 56.78 eV, channels=1000)>'
+        expected = '<PhotonSpectrumDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, limits=12.34 to 56.78 eV, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
@@ -398,7 +398,7 @@ class TestPhotonDepthDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhotonDepthDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
+        expected = '<PhotonDepthDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
@@ -439,7 +439,7 @@ class TestPhotonRadialDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhotonRadialDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, channels=1000)>'
+        expected = '<PhotonRadialDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
@@ -482,7 +482,7 @@ class TestPhotonEmissionMapDetector(TestCase):
         self.assertEqual(7, self.d.zbins)
 
     def test__repr__(self):
-        expected = '<PhotonEmissionMapDetector(elevation=0.610865238198 to 0.785398163397 rad, azimuth=0 to 6.28318530718 rad, bins=(5, 6, 7))>'
+        expected = '<PhotonEmissionMapDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, bins=(5, 6, 7))>'
         self.assertEquals(expected, repr(self.d))
 
     def testfrom_xml(self):
