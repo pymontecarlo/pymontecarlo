@@ -31,6 +31,7 @@ from wxtools2.wizard import Wizard
 from pymontecarlo.ui.gui.input.beam import BeamWizardPage
 from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
 from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
+from pymontecarlo.ui.gui.input.limit import LimitWizardPage
 
 from pymontecarlo.input.options import Options
 
@@ -65,6 +66,9 @@ class NewSimulationWizard(Wizard):
 
         self._page_detector = DetectorWizardPage(self)
         self.pages.append(self._page_detector)
+
+        self._page_limit = LimitWizardPage(self)
+        self.pages.append(self._page_limit)
 
     def _get_classes(self, programs, attr):
         classes = set()
@@ -101,13 +105,18 @@ class NewSimulationWizard(Wizard):
         beams = self._page_beam.get_options()
         geometries = self._page_geometry.get_options()
         detectors = self._page_detector.get_options()
+        limits = self._page_limit.get_options()
         
         list_options = []
         for beam, geometry in product(beams, geometries):
             options = Options()
             options.beam = beam
             options.geometry = geometry
-            options.detectors.update(detectors)
+            if detectors:
+                options.detectors.update(detectors[0])
+            if limits:
+                for limit in limits[0]:
+                    options.limits.add(limit)
 
             list_options.append(options)
 
