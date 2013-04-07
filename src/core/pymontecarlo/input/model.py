@@ -18,7 +18,8 @@ __version__ = "0.1"
 __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
-__all__ = ['BREMSSTRAHLUNG_EMISSION',
+__all__ = ['get_all_models',
+           'BREMSSTRAHLUNG_EMISSION',
            'DIRECTION_COSINE',
            'ELASTIC_CROSS_SECTION',
            'ENERGY_LOSS',
