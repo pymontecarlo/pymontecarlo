@@ -30,8 +30,7 @@ from optparse import OptionParser, OptionGroup
 from pymontecarlo.settings import get_settings
 from pymontecarlo.input.options import Options
 
-from pymontecarlo.runner.runner import LocalRunner
-from pymontecarlo.runner.creator import LocalCreator
+from pymontecarlo.runner.local import LocalRunner, LocalCreator
 
 from pymontecarlo.ui.cli.console import Console, ProgressBar
 

@@ -17,34 +17,12 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.runner import LocalRunner
+from pymontecarlo.runner.platformlsf import PlatformLSFRemoteRunner
 from pymontecarlo.program.test_config import DummyProgram
 
 from pymontecarlo.input import Options
 
 # Globals and constants variables.
-
-class TestLocalRunner(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.tmpdir = tempfile.mkdtemp()
-
-        program = DummyProgram()
-        self.runner = LocalRunner(program, self.tmpdir)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-    def testrun(self):
-        self.runner.put(Options('test1'))
-        self.runner.put(Options('test2'))
-
-        self.runner.start()
-
-        self.assertEqual(2, len(self.runner.get_results()))
 
 #class TestPlatformLSFRemoteRunner(unittest.TestCase):
 #
