@@ -181,7 +181,7 @@ class LimitWizardPage(WizardPage):
 
     def get_options(self):
         if not self._lstlimits:
-            return []
+            return [[]]
 
         groups = {}
         for limit in self._lstlimits:

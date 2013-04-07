@@ -32,6 +32,7 @@ from pymontecarlo.ui.gui.input.beam import BeamWizardPage
 from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
 from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
 from pymontecarlo.ui.gui.input.limit import LimitWizardPage
+from pymontecarlo.ui.gui.input.model import ModelWizardPage
 
 from pymontecarlo.input.options import Options
 
@@ -48,6 +49,12 @@ class NewSimulationWizard(Wizard):
         self._available_geometries = self._get_classes(programs, 'GEOMETRIES')
         self._available_detectors = self._get_classes(programs, 'DETECTORS')
         self._available_limits = self._get_classes(programs, 'LIMITS')
+
+        self._available_models = {}
+        for program in programs:
+            converter = program.converter_class
+            for modeltype, models in converter.MODELS.iteritems():
+                self._available_models.setdefault(modeltype, set()).update(models)
 
         # Controls
         self._lblcount = wx.StaticText(self, label='1 simulation defined')
@@ -69,6 +76,9 @@ class NewSimulationWizard(Wizard):
 
         self._page_limit = LimitWizardPage(self)
         self.pages.append(self._page_limit)
+
+        self._page_model = ModelWizardPage(self)
+        self.pages.append(self._page_model)
 
     def _get_classes(self, programs, attr):
         classes = set()
@@ -93,6 +103,10 @@ class NewSimulationWizard(Wizard):
     def available_limits(self):
         return self._available_limits
 
+    @property
+    def available_models(self):
+        return self._available_models
+
     def OnPrev(self, event):
         Wizard.OnPrev(self, event)
         self.OnValueChanged()
@@ -105,18 +119,21 @@ class NewSimulationWizard(Wizard):
         beams = self._page_beam.get_options()
         geometries = self._page_geometry.get_options()
         detectors = self._page_detector.get_options()
-        limits = self._page_limit.get_options()
-        
+        list_limits = self._page_limit.get_options()
+        list_models = self._page_model.get_options()
+
         list_options = []
-        for beam, geometry in product(beams, geometries):
+        for beam, geometry, limits, models in \
+                product(beams, geometries, list_limits, list_models):
             options = Options()
             options.beam = beam
             options.geometry = geometry
             if detectors:
                 options.detectors.update(detectors[0])
-            if limits:
-                for limit in limits[0]:
-                    options.limits.add(limit)
+            for limit in limits:
+                options.limits.add(limit)
+            for model in models:
+                options.models.add(model)
 
             list_options.append(options)
 
