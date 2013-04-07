@@ -143,7 +143,7 @@ class ConsoleLoggingHandler(logging.Handler):
             levelno = record.levelno
 
             if levelno >= logging.ERROR:
-                self._console.print_error(msg)
+                self._console.print_error(msg, False)
             elif levelno >= logging.WARNING:
                 self._console.print_warn(msg)
             elif levelno >= logging.INFO:

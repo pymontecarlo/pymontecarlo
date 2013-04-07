@@ -19,17 +19,16 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
 from operator import attrgetter
 
 # Third party modules.
 import wx
 
 # Local modules.
-from pymontecarlo.settings import load_settings, reload_settings, Settings
+from pymontecarlo.settings import get_settings
 
 from wxtools2.combobox import PyComboBox
-from wxtools2.list import PyListCtrl, StaticColumn
+from wxtools2.list import PyListCtrl, StaticColumn, EVT_LIST_ROW_SELECTED
 from wxtools2.exception import catch_all
 from wxtools2.dialog import show_exclamation_dialog
 
@@ -41,11 +40,7 @@ class ConfigureDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent=parent, title='Configuration', size=(500, 300))
 
         # Variables
-        self._filepath = os.path.join(os.path.expanduser('~'), '.pymontecarlo', 'settings.cfg')
-        if os.path.exists(self._filepath):
-            self._settings = load_settings([self._filepath])
-        else:
-            self._settings = Settings() # Empty settings
+        self._settings = get_settings()
 
         available_programs = sorted(self._settings.get_available_programs())
         self._program_panels = {}
@@ -60,9 +55,8 @@ class ConfigureDialog(wx.Dialog):
         btn_activate = wx.Button(self, label='Activate')
 
         ## Selected programs
-        columns = [StaticColumn("Selection", attrgetter('name'))]
-        self._lst_selected_programs = PyListCtrl(self, columns,
-                                                 multiple_selection=False)
+        columns = [StaticColumn("Selection", attrgetter('name'), width= -3)]
+        self._lst_selected_programs = PyListCtrl(self, columns)
         self._selected_panel = wx.Panel(self)
 
         btn_deactivate = wx.Button(self, label='Deactivate')
@@ -104,12 +98,11 @@ class ConfigureDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnDeactivate, btn_deactivate)
         self.Bind(wx.EVT_BUTTON, self.OnOk, btn_ok)
         self.Bind(wx.EVT_BUTTON, self.OnCancel, btn_cancel)
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSelection, self._lst_selected_programs)
+        self.Bind(EVT_LIST_ROW_SELECTED, self.OnSelection, self._lst_selected_programs)
 
-        # Load settings
-        if 'pymontecarlo' in self._settings:
-            for program in sorted(self._settings.get_programs()):
-                self.activate_program(program)
+        # Load programs
+        for program in sorted(self._settings.get_programs()):
+            self.activate_program(program)
 
     def activate_program(self, program):
         with catch_all(self) as success:
@@ -187,20 +180,8 @@ class ConfigureDialog(wx.Dialog):
             selected_programs.append(program.alias)
 
         # Save settings
-        section = self._settings.add_section('pymontecarlo')
-        section.programs = ','.join(selected_programs)
-
-        dirname = os.path.dirname(self._filepath)
-        if not os.path.exists(dirname):
-            os.mkdir(dirname)
-
-        with open(self._filepath, 'w') as fileobj:
-            self._settings.write(fileobj)
-
-        message = 'Configuration saved in %s' % self._filepath
-        show_exclamation_dialog(self, message, 'Configuration')
-
-        reload_settings() # Reload settings and programs
+        self._settings.write(selected_programs)
+        show_exclamation_dialog(self, 'Configuration saved', 'Configuration')
 
         self.EndModal(wx.ID_OK)
 

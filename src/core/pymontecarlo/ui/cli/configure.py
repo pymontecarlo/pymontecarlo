@@ -17,12 +17,11 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.settings import load_settings, Settings
+from pymontecarlo.settings import get_settings
 from pymontecarlo.ui.cli.console import Console
 
 # Globals and constants variables.
@@ -36,22 +35,7 @@ def run(argv=None):
     console.print_line()
 
     # Find settings.cfg
-    filepath = os.path.join(os.path.expanduser('~'), '.pymontecarlo', 'settings.cfg')
-    if os.path.exists(filepath):
-        console.print_message("A settings.cfg was found in '%s'" % filepath)
-
-        answer = console.prompt_boolean("Do you want to overwrite these settings?", False)
-        if not answer:
-            console.close()
-
-        settings = load_settings([filepath])
-    else:
-        console.print_message("No settings.cfg was found. This wizard will help you create one.")
-        console.print_message("The settings.cfg will be saved in %s" % filepath)
-
-        settings = Settings() # Empty settings
-
-    console.print_line()
+    settings = get_settings()
 
     # Programs
     programs = []
@@ -78,15 +62,8 @@ def run(argv=None):
         console.print_line()
 
     # Save
-    settings.add_section('pymontecarlo').programs = ','.join(programs)
-
-    dirname = os.path.dirname(filepath)
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
-
-    with open(filepath, 'w') as fileobj:
-        settings.write(fileobj)
-    console.print_success("Settings saved in %s" % filepath)
+    settings.write(programs)
+    console.print_success("Settings saved")
 
     # Finalize
     console.close()

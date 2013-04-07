@@ -76,7 +76,6 @@ class Settings(ConfigParser):
         """
         programs_value = getattr(self.pymontecarlo, 'programs', '')
         if not programs_value:
-            logging.error("No programs are defined in settings")
             return ()
 
         return tuple(re.findall(r'[^,;\s]+', programs_value))
@@ -160,6 +159,19 @@ class Settings(ConfigParser):
 
         raise ValueError, 'Program GUI %s not found' % alias
 
+    def write(self, selected_program_aliasses=[]):
+        section = self.add_section('pymontecarlo')
+        section.programs = ','.join(selected_program_aliasses)
+
+        dirpath = os.path.join(os.path.expanduser('~'), '.pymontecarlo')
+        if not os.path.exists(dirpath):
+            os.mkdir(dirpath)
+
+        with open(os.path.join(dirpath, 'settings.cfg'), 'w') as fileobj:
+            ConfigParser.write(self, fileobj)
+
+        reload_settings()
+
 _settings = None
 
 def get_settings():
@@ -207,8 +219,6 @@ def load_settings(filepaths):
             with open(filepath, 'r') as f:
                 settings.read(f)
                 return settings
-
-    logging.error("Settings could not be loaded")
 
     return settings
 
