@@ -112,15 +112,15 @@ class _Controller(object):
         caption = "New simulation"
 
         dialog = wx.MultiChoiceDialog(parent, message, caption, choices)
-        if dialog.ShowModal() != wx.ID_OK:
-            dialog.Destroy()
-            return
+        if dialog.ShowModal() == wx.ID_OK:
+            selections = [programs[i] for i in dialog.GetSelections()]
 
-        selections = [programs[i] for i in dialog.GetSelections()]
+            if selections:
+                wizard = NewSimulationWizard(parent, selections)
+                wizard.ShowModal()
+                wizard.Destroy()
+
         dialog.Destroy()
-
-        wizard = NewSimulationWizard(parent, selections)
-        wizard.ShowModal()
 
     def open(self, parent):
         filetypes = [('Results (*.h5)', 'h5'), ('Options (*.xml)', 'xml')]

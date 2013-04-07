@@ -79,7 +79,8 @@ class MaterialDialog(wx.Dialog):
         :arg material: material to edit. ``None`` to create new.
         """
         wx.Dialog.__init__(self, parent, title='Material')
-        self.SetSizeHints(500, 600)
+        self.SetSizeWH(500, 600)
+        self.CenterOnParent()
 
         # Variables
         self._material = material

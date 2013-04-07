@@ -48,6 +48,7 @@ class LayerDialog(wx.Dialog):
         """
         wx.Dialog.__init__(self, parent, title='Layer')
         self.SetSizeHints(500, 250)
+        self.CenterOnParent()
 
         # Variables
         self._layer = layer

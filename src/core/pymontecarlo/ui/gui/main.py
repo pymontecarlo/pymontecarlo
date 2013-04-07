@@ -49,6 +49,7 @@ from pymontecarlo.ui.gui.art import ArtProvider
 
 from wxtools2.tree import PyTreeCtrl
 from wxtools2.menu import popupmenu
+from wxtools2.display import center_on_primary_screen
 
 # Globals and constants variables.
 from pymontecarlo.ui.gui.art import ART_CLOSE, ART_PREFERENCES, ICON_APP_LOGO
@@ -236,8 +237,8 @@ def run():
 
     mainframe = MainFrame(parent=None)
     mainframe.SetIcon(ICON_APP_LOGO.GetIcon())
-
     mainframe.SetSizeWH(1000, 600)
+    center_on_primary_screen(mainframe)
 
     mainframe.Show()
 
