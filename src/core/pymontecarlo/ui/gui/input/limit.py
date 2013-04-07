@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import warnings
 from operator import attrgetter
+from itertools import product
 
 # Third party modules.
 import wx
@@ -134,7 +135,6 @@ class LimitWizardPage(WizardPage):
         if dialog.ShowModal() == wx.ID_OK:
             limit = dialog.GetLimit()
             self._lstlimits.append(limit)
-            self._cbtype.remove(clasz) # Remove class from selection
 
         dialog.Destroy()
 
@@ -152,15 +152,10 @@ class LimitWizardPage(WizardPage):
 
         del self._lstlimits[self._lstlimits.index(limit)]
 
-        self._cbtype.append(limit.__class__) # Class available for selection
-
         self.OnValueChanged()
 
     def OnClear(self, event):
-        for i, limit in enumerate(list(self._lstlimits)):
-            del self._lstlimits[i]
-            self._cbtype.append(limit.__class__)
-
+        self._lstlimits.clear()
         self.OnValueChanged()
 
     def OnEdit(self, event):
@@ -187,7 +182,16 @@ class LimitWizardPage(WizardPage):
     def get_options(self):
         if not self._lstlimits:
             return []
-        return [set(self._lstlimits)]
+
+        groups = {}
+        for limit in self._lstlimits:
+            groups.setdefault(limit.__class__, []).append(limit)
+        
+        combs = []
+        for limits in product(*groups.values()):
+            combs.append(set(limits))
+
+        return combs
 
 class _LimitDialog(wx.Dialog):
 
