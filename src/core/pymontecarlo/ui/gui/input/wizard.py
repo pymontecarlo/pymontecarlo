@@ -33,6 +33,7 @@ from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
 from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
 from pymontecarlo.ui.gui.input.limit import LimitWizardPage
 from pymontecarlo.ui.gui.input.model import ModelWizardPage
+from pymontecarlo.ui.gui.input.verification import VerificationWizardPage
 
 from pymontecarlo.input.options import Options
 
@@ -42,9 +43,12 @@ class NewSimulationWizard(Wizard):
 
     def __init__(self, parent, programs):
         Wizard.__init__(self, parent, 'New simulation(s)')
-        self.SetSizeHints(500, 700)
+        self.SetSizeWH(500, 700)
+        self.CenterOnParent()
 
         # Variables
+        self._programs = programs
+
         self._available_beams = self._get_classes(programs, 'BEAMS')
         self._available_geometries = self._get_classes(programs, 'GEOMETRIES')
         self._available_detectors = self._get_classes(programs, 'DETECTORS')
@@ -80,12 +84,19 @@ class NewSimulationWizard(Wizard):
         self._page_model = ModelWizardPage(self)
         self.pages.append(self._page_model)
 
+        self._page_verification = VerificationWizardPage(self)
+        self.pages.append(self._page_verification)
+
     def _get_classes(self, programs, attr):
         classes = set()
         for program in programs:
             converter = program.converter_class
             classes |= set(getattr(converter, attr))
         return classes
+
+    @property
+    def programs(self):
+        return self._programs
 
     @property
     def available_beams(self):
@@ -140,12 +151,17 @@ class NewSimulationWizard(Wizard):
         return list_options
 
     def OnValueChanged(self, event=None):
+        pages = [self._page_beam, self._page_geometry, self._page_detector,
+                 self._page_limit, self._page_model]
+        maxpage = min(self._pages.index(self._pages.selection) + 1, len(pages))
+        pages = pages[:maxpage] # Only consider pages up to current page
+
         try:
-            pages = self._pages[:self._pages.index(self._pages.selection) + 1]
             counts = map(len, map(methodcaller('get_options'), pages))
-            count = reduce(mul, counts, 1)
         except:
             count = 0
+        else:
+            count = reduce(mul, counts, 1)
 
         if count > 1:
             label = '%i simulations defined' % count
