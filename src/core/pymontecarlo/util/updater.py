@@ -62,6 +62,8 @@ class _Updater(object):
             self._validate(filepath)
             logging.debug("File (%s) is valid", filepath)
 
+        return filepath
+
     def _make_backup(self, filepath):
         """
         Creates a copy of the specified file.

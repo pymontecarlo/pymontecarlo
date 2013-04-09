@@ -67,11 +67,11 @@ def run(argv=None):
 
         if ext == '.xml':
             console.print_info("Updating options %s" % filepath)
-            OptionsUpdater().update(filepath)
+            filepath = OptionsUpdater().update(filepath)
             console.print_success("Successfully updated %s" % filepath)
         elif ext == '.zip' or ext == '.h5':
             console.print_info("Updating results %s" % filepath)
-            ResultsUpdater().update(filepath)
+            filepath = ResultsUpdater().update(filepath)
             console.print_success("Successfully results %s" % filepath)
         else:
             console.print_error('Unknown extension %s' % ext)
