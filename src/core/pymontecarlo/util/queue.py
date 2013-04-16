@@ -40,7 +40,8 @@ class Queue(_Queue):
             traceback.print_exception(*self._exc_info)
             raise self._exc_info[1]
 
-        return self.unfinished_tasks == 0 and self.empty()
+        with self.all_tasks_done:
+            return not self.unfinished_tasks
 
     def raise_exception(self):
         self._exc_info = sys.exc_info()
