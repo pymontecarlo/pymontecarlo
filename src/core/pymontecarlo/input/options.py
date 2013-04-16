@@ -68,6 +68,13 @@ class _Detectors(MutableMapping):
     def findall(self, clasz):
         return dict([(key, obj) for key, obj in self.iteritems() if isinstance(obj, clasz)])
 
+    def find(self, detector):
+        for key, val in self.iteritems():
+            if detector is val:
+                return key
+
+        raise ValueError, 'Detector not found: %s' % detector
+
 class _Limits(MutableSet):
     def __init__(self):
         self._data = {}

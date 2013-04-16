@@ -100,6 +100,9 @@ class TestOptions(TestCase):
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
         self.assertEqual(1, len(dets))
 
+        key = self.ops.detectors.find(dets.values()[0])
+        self.assertEqual('bse', key)
+
         dets = self.ops.detectors.findall(ShowersLimit)
         self.assertEqual(0, len(dets))
 
