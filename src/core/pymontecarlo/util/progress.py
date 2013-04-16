@@ -60,13 +60,10 @@ class Task:
 
     @progress.setter
     def progress(self, value):
-        self._lock.acquire()
-        try:
+        with self._lock:
             if value < 0: value = 0.0
             if value > 1: value = 1.0
             self._progress = float(value)
-        finally:
-            self._lock.release()
 
     @property
     def status(self):
@@ -78,12 +75,9 @@ class Task:
 
     @status.setter
     def status(self, text):
-        self._lock.acquire()
-        try:
+        with self._lock:
             if text is None: text = ''
             self._status = str(text)
-        finally:
-            self._lock.release()
 
 _PROGRESS_GETTER = attrgetter('progress')
 
@@ -101,14 +95,11 @@ class ProgressTracker:
             on its creation order.
         :type alias: :class:`str`
         """
-        self._lock.acquire()
-        try:
+        with self._lock:
             if not alias: alias = 'Task %i' % len(self._tasks)
             task = Task(alias)
             self._tasks.append(task)
-        finally:
-            self._lock.release()
-        return task
+            return task
 
     def stop_task(self, task):
         """
@@ -116,33 +107,25 @@ class ProgressTracker:
         If the stops was previously stopped, no exception is raised.
         A task cannot be started again after being stopped.
         """
-        self._lock.acquire()
-        try:
-            self._tasks.remove(task)
-        except:
-            pass
-        finally:
-            self._lock.release()
+        with self._lock:
+            try:
+                self._tasks.remove(task)
+            except:
+                pass
 
     def stop_all(self):
         """
         Stops all running tasks.
         """
-        self._lock.acquire()
-        try:
+        with self._lock:
             self._tasks = []
-        finally:
-            self._lock.release()
 
     def is_running(self):
         """
         Returns whether at least one task is alive.
         """
-        self._lock.acquire()
-        try:
+        with self._lock:
             return len(self._tasks) > 0
-        finally:
-            self._lock.release()
 
     def progress(self):
         """
@@ -150,24 +133,17 @@ class ProgressTracker:
         The progress is a value between 0.0 and 1.0, inclusively.
         If more than one task is running, the average progress is returned.
         """
-        self._lock.acquire()
-        try:
+        with self._lock:
             if not self._tasks: return 0.0
             return sum(map(_PROGRESS_GETTER, self._tasks)) / len(self._tasks)
-        finally:
-            self._lock.release()
-        return progress
 
     def status(self):
         """
         Returns the status of the task with the highest progress.
         """
-        self._lock.acquire()
-        try:
+        with self._lock:
             if not self._tasks: return ''
             return sorted(self._tasks, reverse=True)[0].status
-        finally:
-            self._lock.release()
 
 root = ProgressTracker()
 
