@@ -92,26 +92,9 @@ class TestMeasurement(TestCase):
         element = self.m.to_xml()
         self.assertEqual(1, len(element.findall('kratio')))
 
-    def testcreate_unknown_options(self):
-        unkgeometry = Substrate(pure(49))
-        options = self.m.create_unknown_options('meas', unkgeometry)
-        self.assertEqual('meas', options.name)
-
     def testcreate_standard_options(self):
         list_options = self.m.create_standard_options('std')
         self.assertEqual(1, len(list_options))
-
-    def testextract_unknown_intensities(self):
-        unkgeometry = Substrate(pure(49))
-        options = self.m.create_unknown_options('meas', unkgeometry)
-
-        intensities = create_intensity_dict(Ka(29), et=(4.0, 0.0))
-        results = Results(options, {'xray': PhotonIntensityResult(intensities)})
-
-        unkintensities = self.m.extract_unknown_intensities(results)
-
-        self.assertEqual(1, len(unkintensities))
-        self.assertAlmostEqual(4.0, unkintensities[0], 4)
 
     def testextract_standard_intensities(self):
         list_options = self.m.create_standard_options('std')
@@ -126,6 +109,25 @@ class TestMeasurement(TestCase):
 
         self.assertEqual(1, len(stdintensities))
         self.assertAlmostEqual(8.0, stdintensities[0], 4)
+
+    def testcreate_unknown_options(self):
+        unkgeometry = Substrate(pure(49))
+        options = self.m.create_unknown_options('meas', unkgeometry)
+        self.assertEqual('meas', options.name)
+
+    def testextract_unknown_intensities(self):
+        unkgeometry = Substrate(pure(49))
+        options = self.m.create_unknown_options('meas', unkgeometry)
+
+        intensities = create_intensity_dict(Ka(29), et=(4.0, 0.0))
+        results = Results(options, {'xray': PhotonIntensityResult(intensities)})
+
+        unkintensities = self.m.extract_unknown_intensities(results)
+
+        self.assertEqual(1, len(unkintensities))
+        self.assertAlmostEqual(4.0, unkintensities[0], 4)
+
+
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

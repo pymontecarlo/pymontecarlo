@@ -26,11 +26,10 @@ from operator import attrgetter
 import numpy as np
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
 
 # Globals and constants variables.
 
-class Experiment(objectxml):
+class Experiment(object):
 
     def __init__(self, geometry, measurements, parameters):
         """
