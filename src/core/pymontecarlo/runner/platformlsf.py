@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import re
 import posixpath
 from datetime import timedelta
+import logging
 
 # Third party modules.
 
@@ -84,12 +85,14 @@ class _PlatformLSFRemoteDispatcher(_RemoteRunnerDispatcher):
 
                 command = 'bsub < %s' % bsub_filepath
                 _, stdout, _ = self._client.exec_command(command)
+                logging.debug('"%s" sent', command)
 
                 stdout = list(stdout)
                 if not stdout:
                     raise IOError, "Problem in submitting job"
 
                 jobid = int(self._JOBID_PATTERN.findall(stdout[0])[0])
+                logging.debug("jobid: %i", jobid)
                 jobids.add(jobid)
                 self._jobids.add(jobid) # Add to allow job kill on exception
         finally:

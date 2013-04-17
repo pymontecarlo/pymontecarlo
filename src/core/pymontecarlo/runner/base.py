@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import copy
 import logging
 import threading
+import atexit
 from Queue import Empty
 
 # Third party modules.
@@ -51,6 +52,8 @@ class _Runner(object):
         self._options_names = []
         self._queue_options = Queue()
         self._queue_results = Queue()
+
+        atexit.register(self.close) # Ensures that the runner is properly close
 
     @property
     def program(self):
@@ -90,13 +93,21 @@ class _Runner(object):
 
     def stop(self):
         """
-        Stops all running simulations.
+        Stops all running simulations. 
+        The simulations can be restarted by calling :meth:`start`.
+        """
+        raise NotImplementedError
+
+    def close(self):
+        """
+        Stops all running simulations and closes the runner. 
+        The runner cannot be restarted after calling :meth:`close`.
         """
         raise NotImplementedError
 
     def is_alive(self):
         """
-        Returns whether all options in the queue were simulated.
+        Returns whether simulations are being executed.
         """
         return not self._queue_options.are_all_tasks_done()
 
@@ -105,7 +116,6 @@ class _Runner(object):
         Blocks until all options have been simulated.
         """
         self._queue_options.join()
-        self.stop()
         self._options_names[:] = [] # clear
 
     def get_results(self):
@@ -152,7 +162,13 @@ class _RunnerDispatcher(threading.Thread):
         """
         Stops running simulation.
         """
-        threading.Thread.__init__(self)
+        pass
+
+    def close(self):
+        """
+        Stops running simulation and closes this dispatcher.
+        """
+        pass
 
     def report(self):
         """

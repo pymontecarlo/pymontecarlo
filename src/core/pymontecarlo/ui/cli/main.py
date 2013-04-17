@@ -141,6 +141,7 @@ def run(argv=None):
     progressbar = ProgressBar(console, len(list_options))
     if not quiet: progressbar.start()
 
+    # Start simulation
     for options in list_options:
         runner.put(options)
 
@@ -154,7 +155,7 @@ def run(argv=None):
     except Exception as ex:
         console.print_exception(ex)
 
-    runner.stop()
+    runner.close()
     if not quiet: progressbar.close()
 
     # Clean up

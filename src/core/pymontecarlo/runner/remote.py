@@ -25,6 +25,7 @@ import fnmatch
 import logging
 import posixpath
 from Queue import Empty
+import threading
 
 # Third party modules.
 import paramiko
@@ -43,23 +44,24 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
                  connection_dict, remote_workdir, local_outputdir):
         _RunnerDispatcher.__init__(self, program, queue_options, queue_results)
 
-        self._connection_dict = connection_dict
         self._remote_workdir = remote_workdir
         self._local_outputdir = local_outputdir
 
+        self._client = paramiko.SSHClient()
+        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._client.connect(**connection_dict)
+
         self._jobids = set()
+
+        self._close_event = threading.Event()
+        self._closed_event = threading.Event()
 
     def start(self):
         self._jobids.clear()
-
-        self._client = paramiko.SSHClient()
-        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self._client.connect(**self._connection_dict)
-
         _RunnerDispatcher.start(self)
 
     def run(self):
-        while True:
+        while not self._close_event.is_set():
             try:
                 # Try to get all available options
                 options_list = []
@@ -90,8 +92,11 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
                 # Delay
                 time.sleep(1.0)
             except:
-                self.stop()
+                self._queue_options.task_done()
                 self._queue_options.raise_exception()
+                self.stop()
+
+        self._closed_event.set()
 
     def _transfer_options(self, options_list):
         """
@@ -102,6 +107,7 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
 
             # Make work directory
             command = 'mkdir -p "%s"' % self._remote_workdir
+            logging.debug('"%s" sent', command)
             _, _, stderr = self._client.exec_command(command)
             stderr = list(stderr)
             if stderr:
@@ -193,8 +199,12 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
     def stop(self):
         self._stop_simulations(self._jobids)
         self._jobids.clear()
+
+    def close(self):
+        self.stop()
+        self._close_event.set()
+        self._closed_event.wait()
         self._client.close()
-        _RunnerDispatcher.stop(self)
 
     def report(self):
         pending, running, _ = self._progress_simulations(self._jobids)
@@ -219,7 +229,15 @@ class _RemoteRunner(_Runner):
         return self._local_outputdir
 
     def start(self):
-        self._dispatcher.start()
+        if self._dispatcher is None:
+            raise RuntimeError, 'Runner is closed'
+
+        if not self._dispatcher.is_alive():
+            self._dispatcher.start()
 
     def stop(self):
         self._dispatcher.stop()
+
+    def close(self):
+        self._dispatcher.close()
+        self._dispatcher = None

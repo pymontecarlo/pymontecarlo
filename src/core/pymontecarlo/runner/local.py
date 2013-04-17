@@ -23,6 +23,8 @@ import os
 import logging
 import tempfile
 import shutil
+import threading
+import Queue
 
 # Third party modules.
 
@@ -51,11 +53,17 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
 
         self._overwrite = overwrite
 
+        self._close_event = threading.Event()
+        self._closed_event = threading.Event()
+
     def run(self):
-        while True:
+        while not self._close_event.is_set():
             try:
                 # Retrieve options
-                options = self._queue_options.get()
+                try:
+                    options = self._queue_options.get(timeout=1)
+                except Queue.Empty:
+                    continue
 
                 # Check if results already exists
                 h5filepath = os.path.join(self._outputdir, options.name + ".h5")
@@ -85,8 +93,11 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
 
                 self._queue_options.task_done()
             except:
-                self.stop()
+                self._queue_options.task_done()
                 self._queue_options.raise_exception()
+                self.stop()
+
+        self._closed_event.set()
 
     def _setup_workdir(self):
         if not self._user_defined_workdir:
@@ -101,7 +112,11 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
 
     def stop(self):
         self._worker.stop()
-        _RunnerDispatcher.stop(self)
+
+    def close(self):
+        self._worker.stop()
+        self._close_event.set()
+        self._closed_event.wait()
 
     def report(self):
         return self._worker.report()
@@ -137,19 +152,21 @@ class LocalRunner(_Runner):
 
         if nbprocesses < 1:
             raise ValueError, "Number of processes must be greater or equal to 1."
-        self._nbprocesses = nbprocesses
 
         if not os.path.isdir(outputdir):
             raise ValueError, 'Output directory (%s) is not a directory' % outputdir
-        self._outputdir = outputdir
 
         if workdir is not None and not os.path.isdir(workdir):
             raise ValueError, 'Work directory (%s) is not a directory' % workdir
-        self._workdir = workdir
-
-        self._overwrite = overwrite
 
         self._dispatchers = []
+        for _ in range(nbprocesses):
+            dispatcher = \
+                _LocalRunnerDispatcher(self.program,
+                                       self._queue_options, self._queue_results,
+                                       outputdir, workdir, overwrite)
+            dispatcher.daemon = True
+            self._dispatchers.append(dispatcher)
 
     @property
     def outputdir(self):
@@ -159,44 +176,24 @@ class LocalRunner(_Runner):
         return self._outputdir
 
     def start(self):
-        """
-        Starts running the simulations.
-        """
-        if self._dispatchers:
-            raise RuntimeError, 'Already started'
+        if not self._dispatchers:
+            raise RuntimeError, "Runner is closed"
 
-        # Create dispatchers
-        self._dispatchers = []
-        for _ in range(self._nbprocesses):
-            dispatcher = \
-                _LocalRunnerDispatcher(self.program,
-                                       self._queue_options, self._queue_results,
-                                       self._outputdir, self._workdir,
-                                       self._overwrite)
-            self._dispatchers.append(dispatcher)
-
-            dispatcher.daemon = True
-            dispatcher.start()
-            logging.debug('Started dispatcher: %s', dispatcher.name)
+        for dispatcher in self._dispatchers:
+            if not dispatcher.is_alive():
+                dispatcher.start()
+                logging.debug('Started dispatcher: %s', dispatcher.name)
 
     def stop(self):
-        """
-        Stops all dispatchers and closes the current runner.
-        """
         for dispatcher in self._dispatchers:
             dispatcher.stop()
+
+    def close(self):
+        for dispatcher in self._dispatchers:
+            dispatcher.close()
         self._dispatchers = []
 
     def report(self):
-        """
-        Returns a tuple of:
-        
-          * counter of completed simulations
-          * the progress of *one* of the currently running simulations 
-              (between 0.0 and 1.0)
-          * text indicating the status of *one* of the currently running 
-              simulations
-        """
         completed, progress, status = _Runner.report(self)
 
         for dispatcher in self._dispatchers:

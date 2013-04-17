@@ -36,15 +36,36 @@ class TestLocalRunner(unittest.TestCase):
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
+        self.runner.close()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testrun(self):
+        # Run two options
+        self.runner.start()
         self.runner.put(Options('test1'))
         self.runner.put(Options('test2'))
+        self.assertEqual(2, len(self.runner.get_results()))
 
+        # Run another options
+        self.runner.put(Options('test3'))
+        self.assertEqual(1, len(self.runner.get_results()))
+
+        # Stop and restart
+        self.runner.stop()
+        self.runner.start()
+        self.runner.put(Options('test4'))
+        self.assertEqual(1, len(self.runner.get_results()))
+
+        # Close and cannot restart
+        self.runner.close()
+        self.assertRaises(RuntimeError, self.runner.start)
+
+    def testrun_exception(self):
         self.runner.start()
 
-        self.assertEqual(2, len(self.runner.get_results()))
+        self.runner.put(Options('error'))
+
+        self.assertRaises(RuntimeError, self.runner.join)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
