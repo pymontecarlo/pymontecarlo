@@ -139,6 +139,12 @@ class _DelimitedDetector(_Detector):
         element.set('azimuth_min', str(self.azimuth_rad[0]))
         element.set('azimuth_max', str(self.azimuth_rad[1]))
 
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad):
+        elevation_rad = (takeoffangle_rad - opening_rad, takeoffangle_rad + opening_rad)
+        azimuth_rad = (0.0, 2.0 * math.pi)
+        return cls(elevation_rad, azimuth_rad)
+
     @property
     def elevation_rad(self):
         return self._props['elevation']

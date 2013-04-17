@@ -70,6 +70,19 @@ class Test_DelimitedDetector(TestCase):
         expected = '<_DelimitedDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg)>'
         self.assertEquals(expected, repr(self.d))
 
+    def testannular(self):
+        det = _DelimitedDetector.annular(radians(40), radians(5))
+
+        self.assertAlmostEqual(radians(35), det.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), det.elevation_rad[1], 4)
+        self.assertAlmostEqual(35, det.elevation_deg[0], 2)
+        self.assertAlmostEqual(45, det.elevation_deg[1], 2)
+
+        self.assertAlmostEqual(0, det.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), det.azimuth_rad[1], 4)
+        self.assertAlmostEqual(0, det.azimuth_deg[0], 2)
+        self.assertAlmostEqual(360.0, det.azimuth_deg[1], 2)
+
     def testfrom_xml(self):
         element = self.d.to_xml()
         d = _DelimitedDetector.from_xml(element)
