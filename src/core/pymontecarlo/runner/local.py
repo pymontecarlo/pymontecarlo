@@ -96,6 +96,7 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
                 self._queue_options.task_done()
                 self._queue_options.raise_exception()
                 self.stop()
+                break
 
         self._closed_event.set()
 
@@ -165,7 +166,6 @@ class LocalRunner(_Runner):
                 _LocalRunnerDispatcher(self.program,
                                        self._queue_options, self._queue_results,
                                        outputdir, workdir, overwrite)
-            dispatcher.daemon = True
             self._dispatchers.append(dispatcher)
 
     @property
@@ -184,14 +184,18 @@ class LocalRunner(_Runner):
                 dispatcher.start()
                 logging.debug('Started dispatcher: %s', dispatcher.name)
 
+        logging.debug('Runner started')
+
     def stop(self):
         for dispatcher in self._dispatchers:
             dispatcher.stop()
+        logging.debug('Runner stopped')
 
     def close(self):
         for dispatcher in self._dispatchers:
             dispatcher.close()
         self._dispatchers = []
+        logging.debug('Runner closed')
 
     def report(self):
         completed, progress, status = _Runner.report(self)

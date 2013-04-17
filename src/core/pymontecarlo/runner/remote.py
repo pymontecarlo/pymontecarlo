@@ -222,7 +222,6 @@ class _RemoteRunner(_Runner):
             dispatcher_class(program, self._queue_options, self._queue_results,
                              connection_dict, remote_workdir, local_outputdir,
                              **dispatcher_kwargs)
-        self._dispatcher.daemon = True
 
     @property
     def outputdir(self):
@@ -235,9 +234,13 @@ class _RemoteRunner(_Runner):
         if not self._dispatcher.is_alive():
             self._dispatcher.start()
 
+        logging.debug("Runner started")
+
     def stop(self):
         self._dispatcher.stop()
+        logging.debug("Runner stopped")
 
     def close(self):
         self._dispatcher.close()
         self._dispatcher = None
+        logging.debug("Runner closed")
