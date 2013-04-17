@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 from operator import methodcaller, attrgetter
 import string
+from itertools import izip_longest
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore, QuotedString, Literal
@@ -255,8 +256,7 @@ class Transition(_BaseTransition):
         c = cmp(self._z, other._z)
         if c != 0:
             return c
-
-        return cmp(self._index, other._index)
+        return -1 * cmp(self._index, other._index)
 
     def __hash__(self):
         return hash(('Transition', self._z, self._index))
@@ -343,6 +343,33 @@ class transitionset(frozenset, _BaseTransition):
 
     def __repr__(self):
         return '<transitionset(%s: %s)>' % (str(self), ', '.join(map(str, sorted(self))))
+
+    def __cmp__(self, other):
+        c = cmp(self._z, other._z)
+        if c != 0:
+            return c
+
+        indexes = sorted(map(attrgetter('_index'), self))
+        other_indexes = sorted(map(attrgetter('_index'), other))
+        for index, other_index in \
+                izip_longest(indexes, other_indexes, fillvalue=79):
+            c = cmp(index, other_index)
+            if c != 0:
+                return -1 * c
+
+        return 0
+
+    def __gt__(self, other):
+        return NotImplemented # Revert to __cmp__
+
+    def __lt__(self, other):
+        return NotImplemented # Revert to __cmp__
+
+    def __ge__(self, other):
+        return NotImplemented # Revert to __cmp__
+
+    def __le__(self, other):
+        return NotImplemented # Revert to __cmp__
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):

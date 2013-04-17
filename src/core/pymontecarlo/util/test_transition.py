@@ -64,6 +64,11 @@ class TestTransition(TestCase):
             x = getattr(self, "x%i" % i)
             self.assertEqual("Al " + siegbahn, unicode(x))
 
+    def test__cmp__(self):
+        self.assertGreater(Transition(13, 4, 1), Transition(6, 4, 1))
+        self.assertGreater(Transition(13, 4, 1), Transition(13, 9, 4))
+        self.assertEqual(Transition(13, 4, 1), Transition(13, 4, 1))
+
     def testfrom_xml(self):
         element = self.x0.to_xml()
         x0 = Transition.from_xml(element)
@@ -150,7 +155,7 @@ class Testtransitionset(TestCase):
         self.assertRaises(ValueError, transitionset, 13, u'G\u03b1', 'G1-H(2,3)', [t1, t2])
 
     def test__repr__(self):
-        self.assertEqual('<transitionset(Al Ga: Al Ka1, Al Ka2)>', repr(self.set))
+        self.assertEqual('<transitionset(Al Ga: Al Ka2, Al Ka1)>', repr(self.set))
 
     def test__str__(self):
         self.assertEqual('Al Ga', str(self.set))
@@ -161,6 +166,17 @@ class Testtransitionset(TestCase):
     def test__contains__(self):
         self.assertTrue(Transition(13, 4, 1) in self.set)
         self.assertFalse(Transition(13, 7, 1) in self.set)
+
+    def test__cmp__(self):
+        other = transitionset(6, u'G\u03b1', 'G1-H(2,3)', [Transition(6, 4, 1)])
+        self.assertGreater(self.set, other)
+
+        other = transitionset(13, u'G\u03b1', 'G1-H(2,3)', [Transition(13, 4, 1), Transition(13, 3, 1)])
+        self.assertEquals(self.set, other)
+
+        other2 = transitionset(13, u'G\u03b1', 'G1-H(2,3)', [Transition(13, 4, 1)])
+        self.assertLess(other2, other)
+        self.assertGreater(other, other2)
 
     def testto_xml(self):
         element = self.set.to_xml()
