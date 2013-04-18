@@ -46,30 +46,35 @@ class Reconstructor(object):
         self._experiment = experiment
         self._eps_diff = eps_diff
 
-    def reconstruct(self):
+    def reconstruct(self, x0, ref=None):
         """
         Starts reconstruction.
         Returns the reconstructed geometry and the simulated k-ratios.
+        
+        :arg x0: initial guess for the parameters
+        :arg ref: `None`: take the k-ratios from the experiment as a reference
+            or pass a list of values for the parameters to use simulated
+            intensities as a reference
         """
-        self._simulator.runner.start()
-
-        stdintensities = self._simulator.simulate_std()
-        reference_kratios = self._experiment.reference_kratios
+        
+        if not ref:
+            reference_kratios = self._experiment.reference_kratios
+            stdintensities = self._simulator.simulate_std()
+        else:
+            reference_kratios = self._simulator.simulate([ref])
+            stdintensities = np.ones(len(reference_kratios))
 
         func = self.get_targetfunction(stdintensities, reference_kratios)
         fhandler = _FunctionHandler(func, self._eps_diff)
 
-        initial_values = self._experiment.parameters_initial_values
         constraints = self._experiment.parameters_constraints
 
         x_opt, F_opt = \
             self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
-                                     initial_values, constraints)
-        
-        self.simulator.runner.close()
+                                     x0, constraints)
         
         geometry_opt = self._experiment.create_geometry(x_opt)
-
+        
         return geometry_opt, x_opt, F_opt
     
     def get_targetfunction(self, stdintensities, reference_kratios):
@@ -92,7 +97,7 @@ class Reconstructor(object):
             :arg list_values: :class:`list` containing arrays. Each array specifies
             the value of the parameters
             """
-            list_unkintensities = self._run_unknowns(list_values)
+            list_unkintensities = self._simulator.simulate(list_values)
 
             list_diff = []
             for unkintensities in list_unkintensities:

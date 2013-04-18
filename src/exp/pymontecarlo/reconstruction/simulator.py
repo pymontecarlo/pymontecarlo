@@ -54,7 +54,9 @@ class Simulator(object):
         """
         list_options = self._experiment.create_unknown_options(list_values)
         map(self._runner.put, list_options)
-
+        
+        self._runner.start()
+        
         while self._runner.is_alive():
             print self._runner.report()
             time.sleep(1)
@@ -62,6 +64,8 @@ class Simulator(object):
         list_results = self._runner.get_results()
         list_unkintensities = \
             self._experiment.extract_unknown_intensities(list_results)
+            
+        self._runner.stop()
 
         return list_unkintensities
 
@@ -72,12 +76,16 @@ class Simulator(object):
         """
         list_options = self._experiment.create_standard_options()
         map(self._runner.put, list_options)
-
+        
+        self._runner.start()
+        
         while self._runner.is_alive():
             print self._runner.report()
             time.sleep(1)
 
         list_results = self._runner.get_results()
         stdintensities = self._experiment.extract_standard_intensities(list_results)
-
+        
+        self._runner.stop()
+        
         return stdintensities

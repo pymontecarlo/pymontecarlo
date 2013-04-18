@@ -111,7 +111,7 @@ class Measurement(objectxml):
             child.append(grandchild)
 
             element.append(child)
-
+    
     def add_kratio(self, transition, val, unc=0.0, standard=None):
         """
         Adds an experimental k-ratio to this measurement.
@@ -176,6 +176,9 @@ class Measurement(objectxml):
         for _transition, kratio in sorted(self._kratios.iteritems()):
             vals.append(kratio[0])
         return vals
+    
+    def get_transitions(self):
+        return [transition for transition in sorted(self._kratios.iterkeys())]
 
     def create_standard_options(self, basename):
         """
@@ -224,7 +227,7 @@ class Measurement(objectxml):
 
     def extract_unknown_intensities(self, results):
         """
-        Extracts the intensities from the simulatione of the unknown of this
+        Extracts the intensities from the simulation of the unknown of this
         measurements.
         Returns an array with the intensities.
         The value ordering and length of the array are equal to the one returned 
@@ -239,5 +242,5 @@ class Measurement(objectxml):
             intensities.append(val)
 
         return intensities
-
+    
 XMLIO.register('{http://pymontecarlo.sf.net}measurement', Measurement)

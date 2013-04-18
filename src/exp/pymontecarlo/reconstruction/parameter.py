@@ -28,7 +28,7 @@ __license__ = "GPL v3"
 
 class Parameter(object):
 
-    def __init__(self, getter, setter, val0,
+    def __init__(self, getter, setter,
                  minval=float('-inf'), maxval=float('inf')):
         """
         Creates a parameter 
@@ -39,7 +39,6 @@ class Parameter(object):
         :arg setter: function to set this parameter inside the geometry.
             The function should take two arguments: a geometry object and the 
             value of the parameter to be updated.
-        :arg val0: initial value
         :arg minval: lower allowable limit of the value of this parameter
         :arg maxval: upper allowable limit of the value of this parameter
         """
@@ -51,10 +50,6 @@ class Parameter(object):
             raise ValueError, "Setter function must be callable"
         self._setter = setter
 
-        if val0 < minval or val0 > maxval:
-            raise ValueError, "Initial value outside limits: %s" % val0
-        self._val0 = val0
-
         self._minval = minval
         self._maxval = maxval
 
@@ -63,6 +58,7 @@ class Parameter(object):
         """
         Function to get the value of this parameter.
         """
+        
         return self._getter
 
     @property
@@ -70,14 +66,13 @@ class Parameter(object):
         """
         Function to set this parameter inside the geometry.
         """
-        return self._setter
-
-    @property
-    def initial_value(self):
-        """
-        Initial value of this parameter.
-        """
-        return self._val0
+        
+        def _setter(geometry, val):
+            if val < self._minval or val > self._maxval:
+                raise ValueError, "Initial value outside limits: %s" % val
+            self._setter(geometry, val)
+            
+        return _setter
 
     @property
     def constraints(self):

@@ -50,13 +50,6 @@ class Experiment(object):
         return np.array(vals)
 
     @property
-    def parameters_initial_values(self):
-        """
-        Initial values of the parameters.
-        """
-        return map(attrgetter('initial_value'), self._parameters)
-
-    @property
     def parameters_constraints(self):
         """
         Minimum and maximum value of the parameters.
