@@ -62,6 +62,13 @@ class Experiment(object):
         Minimum and maximum value of the parameters.
         """
         return map(attrgetter('constraints'), self._parameters)
+    
+    @property
+    def parameters_getters(self):
+        """
+        Callable getter functions of the parameters.
+        """
+        return map(attrgetter('getter'), self._parameters)
 
     def create_standard_options(self):
         """

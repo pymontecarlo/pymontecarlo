@@ -23,7 +23,6 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import objectxml
 
 # Globals and constants variables.
 
