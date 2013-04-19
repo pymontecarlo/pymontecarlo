@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 __all__ = ['Options']
 
 # Standard library modules.
+import uuid
 from collections import MutableMapping, MutableSet, Sequence
 
 # Third party modules.
@@ -348,14 +349,68 @@ class OptionsSequence(Sequence, objectxml):
 
     def __init__(self):
         self._list_options = []
-        self._params = []
+        self._list_params = []
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
-        return super(OptionsSequence, cls).__loadxml__(element, *args, **kwargs)
+        # Check version
+        version = element.get('version')
+        if version != cls.VERSION:
+            raise IOError, "Incorrect version of options sequence %s. Only version %s is accepted" % \
+                    (version, cls.VERSION)
+
+        # Identifiers
+        identifiers = element.get('identifiers').split(',')
+
+        # Read options
+        list_options = {}
+        list_params = {}
+
+        for child in element.iter('{http://pymontecarlo.sf.net}options'):
+            identifier = child.get('uuid')
+
+            options = Options.from_xml(child)
+            list_options[identifier] = options
+            
+            params = {}
+            for grandchild in child.iter('param'):
+                key = grandchild.get('key')
+                value = float(grandchild.get('value'))
+                params[key] = value
+
+            list_params[identifier] = params
+
+        # Build sequence
+        options_seq = cls()
+
+        if len(identifiers) != len(list_options):
+            raise IOError, 'Number of identifiers do not match number of options'
+
+        for identifier in identifiers:
+            options_seq.append(list_options[identifier], **list_params[identifier])
+
+        return options_seq
 
     def __savexml__(self, element, *args, **kwargs):
-        objectxml.__savexml__(self, element, *args, **kwargs)
+        element.set('version', self.VERSION)
+
+        identifiers = []
+        for options, params in zip(self._list_options, self._list_params):
+            identifier = uuid.uuid4().hex
+            identifiers.append(identifier)
+
+            child = options.to_xml()
+            child.set('uuid', identifier)
+
+            for key, value in params.iteritems():
+                grandchild = Element('param')
+                grandchild.set('key', str(key))
+                grandchild.set('value', str(value))
+                child.append(grandchild)
+
+            element.append(child)
+
+        element.set('identifiers', ','.join(identifiers))
 
     def __repr__(self):
         return '<%s(%i options)>' % (self.__class__.__name__, len(self))
@@ -367,13 +422,15 @@ class OptionsSequence(Sequence, objectxml):
         return self._list_options[index]
 
     def __delitem__(self, index):
-        pass
+        del self._list_options[index]
+        del self._list_params[index]
 
     def append(self, options, **params):
         self.insert(len(self), options, **params)
 
     def insert(self, index, options, **params):
-        pass
+        self._list_options.insert(index, options)
+        self._list_params.insert(index, params.copy())
 
     def remove(self, options):
         del self[self.index(options)]
@@ -385,6 +442,8 @@ class OptionsSequence(Sequence, objectxml):
 
     def get_parameter(self, index, key, default=None):
         try:
-            return self._params[index][key]
+            return self._list_params[index][key]
         except KeyError:
             return default
+
+XMLIO.register('{http://pymontecarlo.sf.net}optionsSequence', OptionsSequence)
