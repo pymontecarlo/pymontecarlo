@@ -115,6 +115,8 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
         self._worker.stop()
 
     def close(self):
+        if not self.is_alive():
+            return
         self._worker.stop()
         self._close_event.set()
         self._closed_event.wait()
