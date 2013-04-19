@@ -22,7 +22,7 @@ __all__ = ['Results']
 
 # Standard library modules.
 import copy
-from collections import Mapping
+from collections import Mapping, Sequence
 from StringIO import StringIO
 
 # Third party modules.
@@ -37,9 +37,8 @@ import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 
-VERSION = '6'
-
 class Results(Mapping):
+    VERSION = '6'
 
     def __init__(self, options, results={}):
         """
@@ -80,9 +79,9 @@ class Results(Mapping):
 
         try:
             # Check version
-            if hdf5file.attrs['version'] != VERSION:
+            if hdf5file.attrs['version'] != cls.VERSION:
                 raise IOError, "Incorrect version of results. Only version %s is accepted" % \
-                        VERSION
+                        cls.VERSION
 
             # Read options
             task.status = 'Reading options'
@@ -113,7 +112,7 @@ class Results(Mapping):
         task = progress.start_task('Saving results')
 
         hdf5file = h5py.File(source, 'w')
-        hdf5file.attrs['version'] = VERSION
+        hdf5file.attrs['version'] = self.VERSION
 
         # Save each result
         for i, key in enumerate(self.iterkeys()):
@@ -154,4 +153,37 @@ class Results(Mapping):
         """
         return copy.deepcopy(self._options)
 
+class ResultsSequence(Sequence):
+    VERSION = '1'
 
+    def __init__(self, list_results, params=None):
+        self._list_results = list(list_results) # copy
+
+        if params is not None :
+            if len(list_results) != len(params):
+                raise ValueError, "Number of parameters should match the number of results"
+        else:
+            params = [{}] * len(list_results)
+        self._params = params
+
+    @classmethod
+    def load(cls, filepath):
+        pass
+
+    def save(self, filepath):
+        pass
+
+    def __repr__(self):
+        return '<%s(%i results)>' % (self.__class__.__name__, len(self))
+
+    def __len__(self):
+        return len(self._list_results)
+
+    def __getitem__(self, index):
+        return self._list_results[index]
+
+    def get_parameter(self, index, key, default=None):
+        try:
+            return self._params[index][key]
+        except KeyError:
+            return default

@@ -20,19 +20,18 @@ __license__ = "GPL v3"
 __all__ = ['Options']
 
 # Standard library modules.
-from collections import MutableMapping, MutableSet
+from collections import MutableMapping, MutableSet, Sequence
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import XMLIO, Element
+from pymontecarlo.util.xmlutil import XMLIO, Element, objectxml
 from pymontecarlo.input.option import Option
 from pymontecarlo.input.beam import GaussianBeam
 from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 # Globals and constants variables.
-VERSION = '5'
 
 # Load submodules to register XML loader and saver
 import pymontecarlo.input.beam #@UnusedImport
@@ -125,6 +124,8 @@ class _Models(MutableSet):
         return self._data.items()
 
 class Options(Option):
+    VERSION = '5'
+
     def __init__(self, name='Untitled'):
         """
         Options for a simulation.
@@ -166,9 +167,9 @@ class Options(Option):
     def __loadxml__(cls, element, *args, **kwargs):
         # Check version
         version = element.get('version')
-        if version != VERSION:
+        if version != cls.VERSION:
             raise IOError, "Incorrect version of options %s. Only version %s is accepted" % \
-                    (version, VERSION)
+                    (version, cls.VERSION)
 
         options = cls(element.get('name'))
 
@@ -206,7 +207,7 @@ class Options(Option):
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('name', self.name)
-        element.set('version', VERSION)
+        element.set('version', self.VERSION)
 
         child = Element('beam')
         child.append(self.beam.to_xml())
@@ -341,3 +342,49 @@ class Options(Option):
         return self._props['models']
 
 XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
+
+class OptionsSequence(Sequence, objectxml):
+    VERSION = "1"
+
+    def __init__(self):
+        self._list_options = []
+        self._params = []
+
+    @classmethod
+    def __loadxml__(cls, element, *args, **kwargs):
+        return super(OptionsSequence, cls).__loadxml__(element, *args, **kwargs)
+
+    def __savexml__(self, element, *args, **kwargs):
+        objectxml.__savexml__(self, element, *args, **kwargs)
+
+    def __repr__(self):
+        return '<%s(%i options)>' % (self.__class__.__name__, len(self))
+
+    def __len__(self):
+        return len(self._list_options)
+
+    def __getitem__(self, index):
+        return self._list_options[index]
+
+    def __delitem__(self, index):
+        pass
+
+    def append(self, options, **params):
+        self.insert(len(self), options, **params)
+
+    def insert(self, index, options, **params):
+        pass
+
+    def remove(self, options):
+        del self[self.index(options)]
+
+    def pop(self, index= -1):
+        v = self[index]
+        del self[index]
+        return v
+
+    def get_parameter(self, index, key, default=None):
+        try:
+            return self._params[index][key]
+        except KeyError:
+            return default

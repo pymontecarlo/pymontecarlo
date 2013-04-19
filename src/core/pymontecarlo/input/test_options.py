@@ -18,7 +18,7 @@ import copy
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
+from pymontecarlo.input.options import Options, OptionsSequence
 from pymontecarlo.input.detector import BackscatteredElectronEnergyDetector
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.model import ELASTIC_CROSS_SECTION, ELASTIC_CROSS_SECTION_TYPE
@@ -140,6 +140,20 @@ class TestOptions(TestCase):
 
         children = list(element.find('models'))
         self.assertEqual(1, len(children))
+
+class TestOptionsSequence(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.ops = OptionsSequence()
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -25,7 +25,7 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 
-from pymontecarlo.output.results import Results
+from pymontecarlo.output.results import Results, ResultsSequence
 from pymontecarlo.output.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
 
@@ -79,6 +79,20 @@ class TestResults(TestCase):
     def testload(self):
         results = Results.load(self.results_h5)
         self.assertEqual(6, len(results))
+
+class TestResultsSequence(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        results = []
+        self.results = ResultsSequence(results)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
