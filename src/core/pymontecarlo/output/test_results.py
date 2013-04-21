@@ -58,7 +58,6 @@ class TestResults(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testskeleton(self):
@@ -85,14 +84,73 @@ class TestResultsSequence(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        results = []
-        self.results = ResultsSequence(results)
+        self.tmpdir = tempfile.mkdtemp()
+
+        # Results 1
+        ops = Options(name='test1')
+        ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
+        ops.detectors['det2'] = TimeDetector()
+        ops.detectors['det3'] = ElectronFractionDetector()
+
+        results = {}
+        results['det1'] = PhotonIntensityResult()
+        results['det2'] = TimeResult()
+        results['det3'] = ElectronFractionResult()
+
+        results1 = Results(ops, results)
+
+        # Results 2
+        ops = Options(name='test2')
+        ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
+
+        results = {}
+        results['det1'] = PhotonIntensityResult()
+
+        results2 = Results(ops, results)
+
+        # Sequence
+        list_results = [results1, results2]
+        list_params = [{'param1': 3.0, 'param2': 4}, {'param1': 5.0}]
+        self.results_seq = ResultsSequence(list_results, list_params)
 
     def tearDown(self):
         TestCase.tearDown(self)
+#        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def testskeleton(self):
-        self.assertTrue(True)
+    def test__len__(self):
+        self.assertEqual(2, len(self.results_seq))
+
+    def test__repr__(self):
+        self.assertEqual('<ResultsSequence(2 results)>', repr(self.results_seq))
+
+    def test__getitem__(self):
+        self.assertEqual('test1', self.results_seq[0].options.name)
+        self.assertEqual('test2', self.results_seq[1].options.name)
+        self.assertRaises(IndexError, self.results_seq.__getitem__, 2)
+
+    def testparameters(self):
+        self.assertAlmostEqual(3.0, self.results_seq.params[0]['param1'], 4)
+        self.assertEqual(4, self.results_seq.params[0]['param2'])
+        self.assertAlmostEqual(5.0, self.results_seq.params[1]['param1'], 4)
+        self.assertRaises(KeyError, self.results_seq.params[1].__getitem__, 'param2')
+        self.assertAlmostEqual(6.0, self.results_seq.params[1].get('param2', 6.0), 4)
+
+    def testsave_load(self):
+        # Save
+        filepath = os.path.join(self.tmpdir, 'results.h5')
+        self.results_seq.save(filepath)
+
+        # Load
+        results_seq = ResultsSequence.load(filepath)
+
+        # Test
+        self.assertEqual('test1', results_seq[0].options.name)
+        self.assertEqual('test2', results_seq[1].options.name)
+        self.assertRaises(IndexError, results_seq.__getitem__, 2)
+
+        self.assertAlmostEqual(3.0, results_seq.params[0]['param1'], 4)
+        self.assertEqual(4, results_seq.params[0]['param2'])
+        self.assertAlmostEqual(5.0, results_seq.params[1]['param1'], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
