@@ -350,9 +350,6 @@ class _OptionsSequenceParameters(Sequence):
     def __init__(self):
         self._list_params = []
 
-    def __repr__(self):
-        return '<%s(%i options)>' % (self.__class__.__name__, len(self))
-
     def __len__(self):
         return len(self._list_params)
 

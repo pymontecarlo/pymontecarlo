@@ -191,7 +191,7 @@ class TestOptionsSequence(TestCase):
         self.assertEqual('test2', self.ops_seq[0].name)
         self.assertAlmostEqual(5.0, self.ops_seq.params[0]['param1'], 4)
 
-    def testget_parameter(self):
+    def testparameters(self):
         self.assertAlmostEqual(3.0, self.ops_seq.params[0]['param1'], 4)
         self.assertEqual(4, self.ops_seq.params[0]['param2'])
         self.assertAlmostEqual(5.0, self.ops_seq.params[1]['param1'], 4)
