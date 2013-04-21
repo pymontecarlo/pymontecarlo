@@ -21,6 +21,7 @@ __all__ = ['Options']
 
 # Standard library modules.
 import uuid
+import ast
 from collections import MutableMapping, MutableSet, Sequence
 
 # Third party modules.
@@ -359,6 +360,34 @@ class _OptionsSequenceParameters(Sequence):
         return self._list_params[index]
 
 class OptionsSequence(Sequence, objectxml):
+    """
+    :class:`.OptionsSequence` is a container of several :class:`.Options`.
+    It preserves the order of the options.
+    If a :class:`SequenceRunner` is used to simulate the options sequence, this
+    order will also be preserved in the resultant :class:`.ResultsSequence`.
+    
+    The class works like any other :class:`list` object, except that an options
+    cannot be replaced by another options on the fly (:meth:`__setitem__`). 
+    To replace an options, the user should remove the old options and insert
+    a new one.
+    
+    The class also allows some parameter values to be associated with each 
+    options.
+    Keyword arguments can be passed to the :meth:`append` and :meth:`insert`
+    methods::
+    
+        >>> ops_seq.append(ops1, param1=1.0, param2=3.0)
+    
+    The parameters are saved in a dictionary for each options.
+    Note that options can have different parameters. 
+    Parameters can be retrieved and modified using the property 
+    :attr:`parameters`::
+    
+        >>> ops_seq.parameters[0]['param1'] = 2.0
+        >>> ops_seq.parameters[0]['param1']
+        >>> 2.0
+    
+    """
     VERSION = "1"
 
     def __init__(self):
@@ -385,11 +414,15 @@ class OptionsSequence(Sequence, objectxml):
 
             options = Options.from_xml(child)
             list_options[identifier] = options
-            
+
             params = {}
             for grandchild in child.iter('param'):
                 key = grandchild.get('key')
-                value = float(grandchild.get('value'))
+                value = grandchild.get('value')
+                try:
+                    value = ast.literal_eval(value) # Parse to Python object
+                except ValueError:
+                    pass
                 params[key] = value
 
             list_params[identifier] = params

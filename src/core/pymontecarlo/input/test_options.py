@@ -148,7 +148,7 @@ class TestOptionsSequence(TestCase):
 
         self.ops_seq = OptionsSequence()
 
-        self.ops_seq.append(Options('test1'), param1=3.0, param2=4.0)
+        self.ops_seq.append(Options('test1'), param1=3.0, param2=4)
         self.ops_seq.append(Options('test2'), param1=5.0)
 
     def tearDown(self):
@@ -193,7 +193,7 @@ class TestOptionsSequence(TestCase):
 
     def testget_parameter(self):
         self.assertAlmostEqual(3.0, self.ops_seq.params[0]['param1'], 4)
-        self.assertAlmostEqual(4.0, self.ops_seq.params[0]['param2'], 4)
+        self.assertEqual(4, self.ops_seq.params[0]['param2'])
         self.assertAlmostEqual(5.0, self.ops_seq.params[1]['param1'], 4)
         self.assertRaises(KeyError, self.ops_seq.params[1].__getitem__, 'param2')
         self.assertAlmostEqual(6.0, self.ops_seq.params[1].get('param2', 6.0), 4)
@@ -211,7 +211,7 @@ class TestOptionsSequence(TestCase):
         self.assertEqual('test1', ops_seq[0].name)
         self.assertEqual('test2', ops_seq[1].name)
         self.assertAlmostEqual(3.0, ops_seq.params[0]['param1'], 4)
-        self.assertAlmostEqual(4.0, ops_seq.params[0]['param2'], 4)
+        self.assertEqual(4, ops_seq.params[0]['param2'])
         self.assertAlmostEqual(5.0, ops_seq.params[1]['param1'], 4)
 
 if __name__ == '__main__': #pragma: no cover
