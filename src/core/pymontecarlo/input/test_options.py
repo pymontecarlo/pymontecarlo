@@ -168,17 +168,17 @@ class TestOptionsSequence(TestCase):
     def test__delitem__(self):
         del self.ops_seq[0]
         self.assertEqual('test2', self.ops_seq[0].name)
-        self.assertAlmostEqual(5.0, self.ops_seq.get_parameter(0, 'param1'), 4)
+        self.assertAlmostEqual(5.0, self.ops_seq.params[0]['param1'], 4)
 
     def testappend(self):
         self.ops_seq.append(Options('test3'), param2=6.0)
         self.assertEqual('test3', self.ops_seq[2].name)
-        self.assertAlmostEqual(6.0, self.ops_seq.get_parameter(2, 'param2'), 4)
+        self.assertAlmostEqual(6.0, self.ops_seq.params[2]['param2'], 4)
 
     def testinsert(self):
         self.ops_seq.insert(1, Options('test3'), param2=6.0)
         self.assertEqual('test3', self.ops_seq[1].name)
-        self.assertAlmostEqual(6.0, self.ops_seq.get_parameter(1, 'param2'), 4)
+        self.assertAlmostEqual(6.0, self.ops_seq.params[1]['param2'], 4)
 
     def testremove(self):
         ops = Options('test3')
@@ -189,14 +189,14 @@ class TestOptionsSequence(TestCase):
     def testpop(self):
         self.ops_seq.pop(0)
         self.assertEqual('test2', self.ops_seq[0].name)
-        self.assertAlmostEqual(5.0, self.ops_seq.get_parameter(0, 'param1'), 4)
+        self.assertAlmostEqual(5.0, self.ops_seq.params[0]['param1'], 4)
 
     def testget_parameter(self):
-        self.assertAlmostEqual(3.0, self.ops_seq.get_parameter(0, 'param1'), 4)
-        self.assertAlmostEqual(4.0, self.ops_seq.get_parameter(0, 'param2'), 4)
-        self.assertAlmostEqual(5.0, self.ops_seq.get_parameter(1, 'param1'), 4)
-        self.assertIsNone(self.ops_seq.get_parameter(1, 'param2'))
-        self.assertAlmostEqual(6.0, self.ops_seq.get_parameter(1, 'param2', 6.0), 4)
+        self.assertAlmostEqual(3.0, self.ops_seq.params[0]['param1'], 4)
+        self.assertAlmostEqual(4.0, self.ops_seq.params[0]['param2'], 4)
+        self.assertAlmostEqual(5.0, self.ops_seq.params[1]['param1'], 4)
+        self.assertRaises(KeyError, self.ops_seq.params[1].__getitem__, 'param2')
+        self.assertAlmostEqual(6.0, self.ops_seq.params[1].get('param2', 6.0), 4)
 
     def testto_xml(self):
         element = self.ops_seq.to_xml()
@@ -210,9 +210,9 @@ class TestOptionsSequence(TestCase):
 
         self.assertEqual('test1', ops_seq[0].name)
         self.assertEqual('test2', ops_seq[1].name)
-        self.assertAlmostEqual(3.0, ops_seq.get_parameter(0, 'param1'), 4)
-        self.assertAlmostEqual(4.0, ops_seq.get_parameter(0, 'param2'), 4)
-        self.assertAlmostEqual(5.0, ops_seq.get_parameter(1, 'param1'), 4)
+        self.assertAlmostEqual(3.0, ops_seq.params[0]['param1'], 4)
+        self.assertAlmostEqual(4.0, ops_seq.params[0]['param2'], 4)
+        self.assertAlmostEqual(5.0, ops_seq.params[1]['param1'], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

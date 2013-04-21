@@ -344,12 +344,26 @@ class Options(Option):
 
 XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
 
+class _OptionsSequenceParameters(Sequence):
+
+    def __init__(self):
+        self._list_params = []
+
+    def __repr__(self):
+        return '<%s(%i options)>' % (self.__class__.__name__, len(self))
+
+    def __len__(self):
+        return len(self._list_params)
+
+    def __getitem__(self, index):
+        return self._list_params[index]
+
 class OptionsSequence(Sequence, objectxml):
     VERSION = "1"
 
     def __init__(self):
         self._list_options = []
-        self._list_params = []
+        self._params = _OptionsSequenceParameters()
 
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
@@ -395,7 +409,7 @@ class OptionsSequence(Sequence, objectxml):
         element.set('version', self.VERSION)
 
         identifiers = []
-        for options, params in zip(self._list_options, self._list_params):
+        for options, params in zip(self, self._params):
             identifier = uuid.uuid4().hex
             identifiers.append(identifier)
 
@@ -423,14 +437,14 @@ class OptionsSequence(Sequence, objectxml):
 
     def __delitem__(self, index):
         del self._list_options[index]
-        del self._list_params[index]
+        del self._params._list_params[index]
 
     def append(self, options, **params):
         self.insert(len(self), options, **params)
 
     def insert(self, index, options, **params):
         self._list_options.insert(index, options)
-        self._list_params.insert(index, params.copy())
+        self._params._list_params.insert(index, params.copy())
 
     def remove(self, options):
         del self[self.index(options)]
@@ -440,10 +454,10 @@ class OptionsSequence(Sequence, objectxml):
         del self[index]
         return v
 
-    def get_parameter(self, index, key, default=None):
-        try:
-            return self._list_params[index][key]
-        except KeyError:
-            return default
+    @property
+    def parameters(self):
+        return self._params
+
+    params = parameters
 
 XMLIO.register('{http://pymontecarlo.sf.net}optionsSequence', OptionsSequence)
