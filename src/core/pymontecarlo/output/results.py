@@ -181,9 +181,25 @@ class _ResultsSequenceParameters(Sequence):
         return len(self._list_params)
 
     def __getitem__(self, index):
-        return self._list_params[index]
+        return self._list_params[index].copy()
 
 class ResultsSequence(Sequence):
+    """
+    :class:`.ResultsSequence` is a container of several :class:`.Results`.
+    It preserves the order of the results.
+    
+    The class works like an immutable :class:`list` object. 
+    
+    The class also contains parameter values associated to each results.
+    The parameters are saved in a dictionary for each results.
+    Note that results can have different parameters. 
+    Parameters are immutable; they cannot be modified.
+    Parameters can be retrieved using the property :attr:`parameters`::
+    
+        >>> results_seq.parameters[0]['param1']
+        >>> 2.0
+    """
+
     VERSION = '1'
 
     def __init__(self, list_results, list_params=None):

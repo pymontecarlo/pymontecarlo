@@ -135,6 +135,9 @@ class TestResultsSequence(TestCase):
         self.assertRaises(KeyError, self.results_seq.params[1].__getitem__, 'param2')
         self.assertAlmostEqual(6.0, self.results_seq.params[1].get('param2', 6.0), 4)
 
+        self.results_seq.params[0]['param1'] = 99.9 # Not store
+        self.assertAlmostEqual(3.0, self.results_seq.params[0]['param1'], 4)
+
     def testsave_load(self):
         # Save
         filepath = os.path.join(self.tmpdir, 'results.h5')
