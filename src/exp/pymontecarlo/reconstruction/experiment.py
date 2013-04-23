@@ -12,15 +12,14 @@
 """
 
 # Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
+__author__ = "Niklas Mevenkamp"
+__email__ = "niklas.mevenkamp@rwth-aachen.de"
 __version__ = "0.1"
-__copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
+__copyright__ = "Copyright (c) 2013 Niklas Mevenkamp"
 __license__ = "GPL v3"
 
 # Standard library modules.
 import copy
-from operator import attrgetter
 
 # Third party modules.
 import numpy as np
@@ -29,148 +28,147 @@ import numpy as np
 
 # Globals and constants variables.
 
+class ExperimentCreator(object):
+    
+    def __init__(self, base_experiment, parameters):
+        """
+        Creates an experiment creator that can change the given base experiment's
+        geometry based on the specified parameters.
+        
+        :arg base_experiment: fully specified experiment that should be used as a prototype
+        :arg parameters: list of parameter objects used to change the geometry of the experiment
+        """
+        
+        self._base_experiment = base_experiment
+        self._parameters = parameters
+        self._iterator = 0
+        
+    def get_experiment(self, values):
+        """
+        Returns an experiment fully specified by the given values using previously defined parameters.
+        
+        :arg values: list of values for the parameters
+        """
+        
+        experiment = copy.deepcopy(self._base_experiment)
+        
+        # Add name extension
+        self._iterator += 1
+        experiment._name += "_" + self._iterator
+        
+        # Set values
+        experiment._values = values
+        
+        # Set geometry based on the given values
+        for measurement in experiment.get_measurements():
+            for parameter, value in zip(self._parameters, values):
+                parameter.setter(measurement.options.geometry, value)
+                
+        return experiment
+    
+    def get_constraints(self):
+        """
+        Returns a list of tuples with the lower and upper bounds of the parameters.
+        """
+        
+        list_constraints = []
+        for parameter in self._parameters:
+            list_constraints.append([parameter.constraints])
+            
+        return list_constraints
+    
 class Experiment(object):
 
-    def __init__(self, geometry, measurements, parameters):
+    def __init__(self, name, measurements, values):
         """
         Creates a new experiment.
+        
+        :arg name: name of the experiment
+        :arg measurements: measurements executed during this experiment
+        :arg values: values of the parameters used to create this experiment
         """
-        self._basegeometry = copy.deepcopy(geometry)
-        self._measurements = list(measurements) # copy
-        self._parameters = list(parameters) # copy
-
-    @property
-    def reference_kratios(self):
-        """
-        An array of the reference values.
-        """
-        vals = []
-        for measurement in self._measurements:
-            vals.extend(measurement.get_kratios())
-        return np.array(vals)
-
-    @property
-    def parameters_constraints(self):
-        """
-        Minimum and maximum value of the parameters.
-        """
-        return map(attrgetter('constraints'), self._parameters)
+        self._name = name
+        self._measurements = measurements
+        self._values = values
     
-    @property
-    def parameters_getters(self):
+    def get_kratios(self):
         """
-        Callable getter functions of the parameters.
+        Returns a a numpy array with the k-ratios from all measuerments.
+        The k-ratios are ordered primarily by measurement and secondarily by transition.
         """
-        return map(attrgetter('getter'), self._parameters)
-
-    def create_standard_options(self):
-        """
-        Creates the options to simulate the standards of all measurements.
-        """
-        list_options = []
-
-        for i, measurement in enumerate(self._measurements):
-            basename = '%i' % i
-            list_options.extend(measurement.create_standard_options(basename))
-
-        return list_options
-
-    def extract_standard_intensities(self, list_results):
-        """
-        Extracts the intensities from the simulations of the standards of 
-        all measurements.
-        Returns an array with the intensities.
-        The value ordering and length of the array are equal to the one returned 
-        by :attr:`reference_kratios`.
-        """
-        intensities = []
-
-        # Extract name from results options
-        dict_results = {}
-        for results in list_results:
-            dict_results[results.options.name] = results
-
-        for i, measurement in enumerate(self._measurements):
-            basename = '%i' % i
-            intensities.extend(measurement.extract_standard_intensities(basename, dict_results))
-
-        return np.array(intensities)
-
-    def create_geometry(self, values):
-        """
-        Returns a new geometry object where the parameters values have been
-        applied.
         
-        :arg values: array containing the value of each parameter
+        return np.array([measurement.get_kratios() for measurement in self._measurements])
+    
+    def set_kratios(self, list_dict_kratios):
         """
-        if len(values) != len(self._parameters):
-            raise ValueError, "Incorrect number of values, should be %i" % len(self._parameters)
-
-        geometry = copy.deepcopy(self._basegeometry)
-
-        for parameter, value in zip(self._parameters, values):
-            parameter.setter(geometry, value)
-
-        return geometry
-
-    def create_unknown_options(self, list_values):
-        """
-        Returns a :class:`list` of options to simulate for one iteration.
-        The options included those required for the unknown and standard 
-        simulations.
-        The options are setup based on the specified parameters values and the
-        base options specified for each measurement.
+        Manually set the kratios measured in the experiment by giving a list with dictionaries
+        containing the transitions and kratios of each measurement.
         
-        .. important::
+        :arg list_dict_kratios: a list with dictionaries of the form {transition: kratio}
+            for all measurements of this experiment
+            (the list has to be ordered by measurement)
+        """
         
-           Each options is given a special name that should not be changed.
-           This name is required for the :meth:`extract_unknown_intensities`
-           method to work properly.
-           
-        :arg list_values: :class:`list` containing arrays. Each array specifies
-            the value of the parameters
+        for dict_kratios, measurement in zip(list_dict_kratios, self._measurements):
+            measurement.set_kratios(dict_kratios)
+    
+    def _set_kratios(self, list_kratios):
         """
-        list_options = []
-
-        for i, values in enumerate(list_values):
-            unkgeometry = self.create_geometry(values)
-
-            for j, measurement in enumerate(self._measurements):
-                basename = '%i-%i' % (i, j)
-                list_options.append(measurement.create_unknown_options(basename, unkgeometry))
-
-        return list_options
-
-    def extract_unknown_intensities(self, list_results):
-        """
-        Extracts the intensities from the simulations of the unknowns of all
-        measurements.
-        Returns a :class:`list` of arrays. 
-        Each array corresponds to the intensities of a set of value of the
-        parameters.
-        The value ordering and length of each array are equal to the one 
-        returned by :attr:`reference_kratios`.
+        Manually set the kratios measured in the experiment by giving a sorted list of k-ratios.
         
-        :arg list_results: :class:`list` of results
+        :arg list_kratios: a list with k-ratios for all measurements of this experiment
+            (the list must be ordered primarily by measurement and secondarily by transition)
         """
-        # Extract name from results options
-        dict_results = {}
-        maxseries = float('-inf')
-        for results in list_results:
-            name = results.options.name
-            maxseries = max(maxseries, int(name.split('-')[0]))
-            dict_results[name] = results
-
-        # Extract values
-        list_intensities = []
-        for i in range(maxseries + 1):
-            intensities = []
-
-            for j, measurement in enumerate(self._measurements):
-                name = '%i-%i' % (i, j)
-                results = dict_results[name]
-                intensities.extend(measurement.extract_unknown_intensities(results))
-
-            list_intensities.append(np.array(intensities))
-
-        return list_intensities
+        
+        for measurement in self._measurements:
+            dict_kratios = {}
+            for transition in measurement.get_transitions():
+                dict_kratios[transition] = list_kratios.pop(0)
+            measurement.set_kratios(dict_kratios)
+        
+    def get_values(self):
+        """
+        Returns the list of values of the parameters that were used to create this experiment.
+        """
+        
+        return self._values()
+    
+    def get_geometry(self):
+        """
+        Returns the geometry of this experiment.
+        """
+        
+        return self._measurements()[0].get_options().geometry
+        
+    def get_measurements(self):
+        """
+        Returns a list with all measurements. The list has the same order as the one
+        given when the class was instantiated.
+        """
+        
+        return self._measurements()
+    
+    def standards_simulated(self):
+        """
+        Returns `True` if all standards of all measurements have been simulated.
+        """
+        
+        return [measurement.standards_simulated() for measurement in self.get_measurements()].all()
+    
+    def load(self, path):
+        """
+        Loads an experiment from a file specified by the given path.
+        
+        :arg path: path to an experiment file
+        """
+        #TODO
+        pass
+        
+    def save(self, path):
+        """
+        Saves an experiment to a file at the specified path.
+        
+        :arg path: location where the experiment should be saved
+        """
+        #TODO
+        pass
