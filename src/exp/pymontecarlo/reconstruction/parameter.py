@@ -28,23 +28,16 @@ __license__ = "GPL v3"
 
 class Parameter(object):
 
-    def __init__(self, getter, setter,
-                 minval=float('-inf'), maxval=float('inf')):
+    def __init__(self, setter, minval=float('-inf'), maxval=float('inf')):
         """
         Creates a parameter 
-        
-        :arg getter: function to get the value of this parameter from a 
-            geometry. The function should take one argument, a geometry object,
-            and returns the value of this parameter.
+
         :arg setter: function to set this parameter inside the geometry.
-            The function should take two arguments: a geometry object and the 
+            The function should take two arguments: a geometry object and the
             value of the parameter to be updated.
         :arg minval: lower allowable limit of the value of this parameter
         :arg maxval: upper allowable limit of the value of this parameter
         """
-        if not callable(getter):
-            raise ValueError, "Getter function must be callable"
-        self._getter = getter
 
         if not callable(setter):
             raise ValueError, "Setter function must be callable"
@@ -52,14 +45,6 @@ class Parameter(object):
 
         self._minval = minval
         self._maxval = maxval
-
-    @property
-    def getter(self):
-        """
-        Function to get the value of this parameter.
-        """
-        
-        return self._getter
 
     @property
     def setter(self):
