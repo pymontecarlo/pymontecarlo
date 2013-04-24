@@ -18,6 +18,9 @@ __copyright__ = "Copyright (c) 2013 Niklas Mevenkamp"
 __license__ = "GPL v3"
 
 # Standard library modules
+import copy
+import glob
+import os
 
 # Third party modules
 from scipy.interpolate.interpolate import interp2d
@@ -47,13 +50,13 @@ class ExperimentRunner(_Runner):
         
         # Put options of the measurements
         for measurement in experiment.get_measurements():
-            if not measurement.simulated():
-                options = measurement.get_options()
+            if not measurement.simulated_unk():
+                options = copy.deepcopy(measurement.get_options())
                 self._lookup[options.uuid] = {'type': 'unk', 'measurement': measurement} 
                 self._runner.put(options)
             if measurement.has_standards() and not measurement.simulated_std():
                 for transition in measurement.get_transitions():
-                    options = measurement.get_options_std(transition)
+                    options = copy.deepcopy(measurement.get_options_std(transition))
                     self._lookup[options.uuid] = \
                         {'type': 'std', 'measurement': measurement, 'transition': transition}
 
@@ -64,7 +67,7 @@ class ExperimentRunner(_Runner):
         self._runner.stop()
 
     def close(self):
-        self._runner.stop()
+        self._runner.close()
 
     def is_alive(self):
         return self._runner.is_alive()
@@ -112,17 +115,17 @@ class ExperimentInterp2DRunner(_Runner):
         self._spline = self._get_spline(self._data)
     
     @classmethod
-    def load(cls, list_paths):
+    def load(cls, dir_path):
         """
         Creates a new interpolation runner that can interpolate k-ratios that were
         measured in experiments with different values of the same parameters.
         Note: Interpolation is only available for experiments with 2 parameters.
         
-        :arg list_paths: a list of paths to experiment files.
+        :arg dir_path: path pointing to the directory where the experiment files are located
         """
         
         list_experiments_data = []
-        for path in list_paths:
+        for path in glob.glob(os.path.join(dir_path, "*.h5")):
             list_experiments_data.append(Experiment.load(path))
             
         return cls(list_experiments_data)
@@ -155,7 +158,8 @@ class ExperimentInterp2DRunner(_Runner):
         return list_experiments
     
     def report(self):
-        pass
+        completed = len(self._list_experiments)
+        return completed, 0, ''
     
     def _calc_kratios(self, experiment):
         x = experiment.get_values()
