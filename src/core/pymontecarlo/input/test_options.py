@@ -58,8 +58,12 @@ class TestOptions(TestCase):
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
 
     def testfrom_xml(self):
+        uuid = self.ops.uuid
         element = self.ops.to_xml()
         ops = Options.from_xml(element)
+
+        self.assertEqual("Test", ops.name)
+        self.assertEqual(uuid, ops.uuid)
 
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
 
@@ -78,10 +82,30 @@ class TestOptions(TestCase):
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
 
     def testcopy(self):
+        uuid = self.ops.uuid
+        ops = copy.copy(self.ops)
+
+        self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertEqual(self.ops.beam, ops.beam)
+
+        self.assertNotEqual(uuid, ops.uuid)
+        self.assertEqual(uuid, self.ops.uuid)
+
+        ops.beam.energy_eV = 5678
+        self.assertAlmostEqual(5678, self.ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(5678, ops.beam.energy_eV, 4)
+
+    def testdeepcopy(self):
+        uuid = self.ops.uuid
         ops = copy.deepcopy(self.ops)
+
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
         self.assertNotEqual(self.ops.beam, ops.beam)
+
+        self.assertNotEqual(uuid, ops.uuid)
+        self.assertEqual(uuid, self.ops.uuid)
 
         ops.beam.energy_eV = 5678
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
@@ -95,6 +119,10 @@ class TestOptions(TestCase):
         self.assertEqual(uname, self.ops.name)
         self.assertEqual(uname, unicode(self.ops))
         self.assertEqual(uname, str(self.ops))
+
+    def testuuid(self):
+        uuid = self.ops.uuid
+        self.assertEqual(uuid, self.ops.uuid)
 
     def testdetectors(self):
         dets = self.ops.detectors.findall(BackscatteredElectronEnergyDetector)
@@ -124,6 +152,8 @@ class TestOptions(TestCase):
         element = self.ops.to_xml()
 
         self.assertEqual('Test', element.get('name'))
+
+        self.assertIsNone(element.get('uuid'))
 
         children = list(element.find('beam'))
         self.assertEqual(1, len(children))

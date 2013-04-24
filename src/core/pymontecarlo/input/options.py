@@ -22,6 +22,7 @@ __all__ = ['Options']
 # Standard library modules.
 import uuid
 import ast
+import copy
 from collections import MutableMapping, MutableSet, Sequence
 
 # Third party modules.
@@ -150,8 +151,9 @@ class Options(Option):
         Option.__init__(self)
 
         self.name = name
-        self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
-        self.geometry = Substrate(pure(79)) # Au substrate
+        self._uuid = None
+        self._props['beam'] = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
+        self._props['geometry'] = Substrate(pure(79)) # Au substrate
         self._props['detectors'] = _Detectors()
         self._props['limits'] = _Limits()
         self._props['models'] = _Models()
@@ -165,6 +167,25 @@ class Options(Option):
     def __unicode__(self):
         return unicode(self.name)
 
+    def __copy__(self):
+        cls = self.__class__
+        options = cls.__new__(cls)
+        options.__dict__.update(self.__dict__)
+        options._uuid = None
+        return options
+
+    def __deepcopy__(self, memo=None):
+        cls = self.__class__
+        options = cls.__new__(cls)
+        memo[id(self)] = options
+
+        for k, v in self.__dict__.items():
+            setattr(options, k, copy.deepcopy(v, memo))
+
+        options._uuid = None
+
+        return options
+
     @classmethod
     def __loadxml__(cls, element, *args, **kwargs):
         # Check version
@@ -174,6 +195,9 @@ class Options(Option):
                     (version, cls.VERSION)
 
         options = cls(element.get('name'))
+
+        # UUID
+        options._uuid = element.get('uuid')
 
         # Beam
         parent = element.find("beam")
@@ -209,6 +233,7 @@ class Options(Option):
 
     def __savexml__(self, element, *args, **kwargs):
         element.set('name', self.name)
+        if self._uuid: element.set('uuid', self.uuid)
         element.set('version', self.VERSION)
 
         child = Element('beam')
@@ -249,6 +274,15 @@ class Options(Option):
         if not name:
             raise ValueError, 'Name cannot be empty'
         self._props['name'] = unicode(name)
+
+    @property
+    def uuid(self):
+        """
+        Unique identifier for this object.
+        """
+        if self._uuid is None:
+            self._uuid = uuid.uuid4().hex
+        return self._uuid
 
     @property
     def beam(self):
@@ -407,9 +441,9 @@ class OptionsSequence(Sequence, objectxml):
         list_params = {}
 
         for child in element.iter('{http://pymontecarlo.sf.net}options'):
-            identifier = child.get('uuid')
-
             options = Options.from_xml(child)
+
+            identifier = options.uuid
             list_options[identifier] = options
 
             params = {}
@@ -440,11 +474,9 @@ class OptionsSequence(Sequence, objectxml):
 
         identifiers = []
         for options, params in zip(self, self._params):
-            identifier = uuid.uuid4().hex
-            identifiers.append(identifier)
+            identifiers.append(options.uuid)
 
             child = options.to_xml()
-            child.set('uuid', identifier)
 
             for key, value in params.iteritems():
                 grandchild = Element('param')
@@ -473,6 +505,8 @@ class OptionsSequence(Sequence, objectxml):
         self.insert(len(self), options, **params)
 
     def insert(self, index, options, **params):
+        if options in self:
+            raise ValueError, "Options already added"
         self._list_options.insert(index, options)
         self._params._list_params.insert(index, params.copy())
 
