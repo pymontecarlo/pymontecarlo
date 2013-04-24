@@ -46,7 +46,6 @@ class Reconstructor(object):
         """
         
         self._experimentrunner = experimentrunner
-        self._simulate_standards(experiment)
         self._experimentcreator = ExperimentCreator(experiment, parameters)
         self._optimizer = optimizer
         self._eps_diff = eps_diff
@@ -64,15 +63,19 @@ class Reconstructor(object):
             (if you want to use this, set ref_experiment to `None`)
         """
         
+        #TODO: ask if standards need to be simulated
+        if not self._experimentcreator._base_experiment.simulated_std():
+            self._experimentcreator._base_experiment = self._simulate_standards(self._experimentcreator._base_experiment)
+        
         if not ref_experiment and not ref_x:
             raise ValueError, 'No reference specified'
         
         if ref_experiment:
-            self._ref = ref_experiment
+            self._ref_experiment = ref_experiment
         else:
-            self._ref = self._experimentcreator.get_experiment(ref_x)
+            self._ref_experiment = self._experimentcreator.get_experiment(ref_x)
 
-        fgetter = FunctionGetter(self._experimentcreator, self._experimentrunner, self._ref)
+        fgetter = FunctionGetter(self._experimentcreator, self._experimentrunner, self._ref_experiment)
         fhandler = FunctionHandler(fgetter.get_func(), self._eps_diff)
 
         x_opt, F_opt = \
@@ -84,19 +87,25 @@ class Reconstructor(object):
         return geometry_opt, x_opt, F_opt
     
     def _simulate_standards(self, experiment):
-        if not experiment.standards_simulated():
+        if not experiment.simulated_std():
+            # Pretend that the experiment has simulated unknowns
+            for measurement in experiment.get_measurements():
+                measurement.results_unk = True
+            
             self._experimentrunner.put(experiment)
             self._experimentrunner.start()
             
             while self._experimentrunner.is_alive():
-                print self._runner.report()
+                print self._experimentrunner.report()
                 time.sleep(1)
                 
             experiment = self._experimentrunner.get_results()[0]
             
-            self._experimentrunner.stop()
-    
-    
+            # Revert the above
+            for measurement in experiment.get_measurements():
+                measurement.results_unk = None
+                        
+            return experiment    
     
 class FunctionGetter(object):
     
