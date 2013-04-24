@@ -20,15 +20,22 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import copy
+from operator import itemgetter
 
 # Third party modules.
 import numpy as np
+import h5py
 
 # Local modules.
+from pymontecarlo.reconstruction.measurement import Measurement
+
+import pymontecarlo.util.xmlutil as xmlutil
 
 # Globals and constants variables.
 
 class ExperimentCreator(object):
+    
+    VERSION = '1'
     
     def __init__(self, base_experiment, parameters):
         """
@@ -53,20 +60,19 @@ class ExperimentCreator(object):
         if not len(values) == len(self._parameters):
             raise ValueError, 'Dimension of given values does not match with parameters of the base experiment'
         
-        experiment = copy.deepcopy(self._base_experiment)
-        
-        # Add name extension
+        # Create new name using name extension and iterator
         self._iterator += 1
-        experiment._name += "_" + self._iterator
+        name = self._base_experiment._name + "_" + self._iterator
+        
+        # Set geometry based on the given values
+        geometry = copy.deepcopy(self._base_experiment.get_geometry())
+        for parameter, value in zip(self._parameters, values):
+            parameter.setter(geometry, value)
+            
+        experiment = Experiment(name, geometry, self._base_experiment.get_measurements())
         
         # Set values
         experiment._values = values
-        
-        # Set geometry based on the given values
-        geometry = experiment.get_geometry()
-        for parameter, value in zip(self._parameters, values):
-            parameter.setter(geometry, value)
-        experiment.set_geometry(geometry)
                 
         return experiment
     
@@ -90,13 +96,16 @@ class Experiment(object):
         :arg name: name of the experiment
         :arg measurements: a list of easurements executed during this experiment
         """
-        self._name = name
-        self._geometry = geometry
-        self._measurements = measurements
+        self._name = copy.deepcopy(name)
+        self._geometry = copy.deepcopy(geometry)
+        self._measurements = copy.deepcopy(measurements)
         self._values = None
         
         # Override geometry in measurements to make sure they all use the same one
-        self.set_geometry(geometry)        
+        for measurement in self.get_measurements():
+            measurement.get_options_unk().geometry = self._geometry
+            for transition in measurement.get_transitions():
+                measurement.get_options_std(transition).geometry = self._geometry      
     
     @property
     def name(self):
@@ -131,8 +140,8 @@ class Experiment(object):
         Returns the list of values of the parameters that were used to create this experiment.
         """
         
-        if self._values == None:
-            raise ValueError, 'This experiment has not been created using parameters'
+        if self._values is None:
+            raise ValueError, 'No values available (probably experiment has not been created using parameters)'
         
         return self._values()
     
@@ -142,18 +151,6 @@ class Experiment(object):
         """
         
         return self._geometry
-    
-    def set_geometry(self, geometry):
-        """
-        Set the geometry of this experiment.
-        
-        :arg geometry: geometry of the sample observed in this experiment
-        """
-        
-        self._geometry = geometry
-        
-        for measurement in self.get_measurements():
-            measurement.get_options().geometry = self._geometry
         
     def get_measurements(self):
         """
@@ -169,14 +166,14 @@ class Experiment(object):
         standard materials have been specified.
         """
         
-        return [measurement.has_standards() for measurement in self._measurements].all()
+        return all([measurement.has_standards() for measurement in self._measurements])
     
-    def simulated(self):
+    def simulated_unk(self):
         """
         Returns `True`iff all unknowns of all measurements have been simulated.
         """
         
-        return [measurement.simulated() for measurement in self.get_measurements()].all()
+        return [measurement.simulated_unk() for measurement in self.get_measurements()].all()
     
     def simulated_std(self):
         """
@@ -186,14 +183,46 @@ class Experiment(object):
         return [measurement.simulated_std() for measurement in self.get_measurements()].all()
     
     @classmethod
-    def load(self, path):
+    def load(cls, path):
         """
         Loads an experiment from a file specified by the given path.
         
         :arg path: path to an experiment file
         """
-        #TODO
-        pass
+        hdf5file = h5py.File(path, "r")
+        
+        try:
+            if hdf5file.attrs['version'] != cls.VERSION:
+                raise IOError, "Incorrect version of experiment. Only version %s is accepted" % \
+                        cls.VERSION
+            
+            # Name
+            name = hdf5file.attrs['name']
+            
+            # Geometry
+            element = xmlutil.parse(hdf5file.attrs['geometry'])
+            geometry = xmlutil.XMLIO.from_xml(element)
+            
+            # Measurements
+            measurements = {}
+            for groupname, hdf5group in hdf5file.iteritems():
+                measurement_id = int(groupname.split('-')[1])
+                measurement = Measurement._load(hdf5group)
+                measurements[measurement_id] = measurement
+            
+            measurements = measurements.items()
+            measurements.sort(key=itemgetter(0))
+            measurements = map(itemgetter(1), measurements)
+            
+            # Values
+            values = hdf5file.attrs['values']
+            
+            # Experiment
+            exp = cls(name, geometry, measurements)
+            exp._values = values
+            return exp
+        finally:
+            hdf5file.close()
         
     def save(self, path):
         """
@@ -201,5 +230,19 @@ class Experiment(object):
         
         :arg path: location where the experiment should be saved
         """
-        #TODO
-        pass
+        hdf5file = h5py.File(path, 'w')
+        
+        try:
+            hdf5file.attrs['version'] = self.VERSION
+            
+            hdf5file.attrs['name'] = self.name
+            
+            hdf5file.attrs['geometry'] = xmlutil.tostring(self.get_geometry().to_xml(), pretty_print=False)
+            
+            for i, measurement in enumerate(self.get_measurements()):
+                hdf5group = hdf5file.create_group("measurement-%i" % i)
+                measurement._save(hdf5group)
+            
+            hdf5file.attrs['values'] = self.get_values()
+        finally:
+            hdf5file.close()
