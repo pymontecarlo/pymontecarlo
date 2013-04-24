@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import uuid
+import copy
 
 # Third party modules.
 
@@ -39,7 +40,8 @@ class SequenceRunner(_Runner):
     def put(self, options_seq):
         options_seq_id = uuid.uuid4()
         for pos, options in enumerate(options_seq):
-            self._lookup[options.uuid] = (options_seq_id, pos)        
+            options = copy.deepcopy(options)
+            self._lookup[options.uuid] = {'options_seq_id': options_seq_id, 'position': pos}
             self._runner.put(options)
 
     def start(self):
@@ -64,21 +66,16 @@ class SequenceRunner(_Runner):
         # Create dictionary where results are sorted by sequence id
         dict_results = {}
         for results in list_all_results:
-            options_seq_id = self._lookup[results.options.uuid][0]
-            if not options_seq_id in dict_results:
-                dict_results[options_seq_id] = {}
-            else:
-                dict_results[options_seq_id].append(results)
+            options_seq_id = self._lookup[results.options.uuid]['options_seq_id']
+            dict_results.setdefault(options_seq_id, []).append(results)
         
         # Create ResultsSequence objects by sorting the lists in the dictionary
         for list_results in dict_results:
-            pos = lambda x: self._lookup[x.options.uuid][1]
+            pos = lambda x: self._lookup[x.options.uuid]['position']
             list_results = sorted(list_results, key=pos)
             list_results_seq.append(ResultsSequence(list_results))
         
-        # Delete all used options from the lookup
-        for results in list_all_results:
-            del self._lookup[results.options.uuid]
+        self._lookup.clear()
                 
         return list_results_seq
     
