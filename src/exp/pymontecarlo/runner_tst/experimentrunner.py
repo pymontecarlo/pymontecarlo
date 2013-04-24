@@ -51,7 +51,7 @@ class ExperimentRunner(_Runner):
                 options = measurement.get_options()
                 self._lookup[options.uuid] = {'type': 'unk', 'measurement': measurement} 
                 self._runner.put(options)
-            if not measurement.simulated_std():
+            if measurement.has_standards() and not measurement.simulated_std():
                 for transition in measurement.get_transitions():
                     options = measurement.get_options_std(transition)
                     self._lookup[options.uuid] = \

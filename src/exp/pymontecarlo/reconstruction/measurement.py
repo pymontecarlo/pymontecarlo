@@ -180,5 +180,6 @@ class Measurement(object):
         
         options = copy.deepcopy(self._options)
         options.geometry = self._standards_material[transition]
+        # TODO: is standards material a geometry?
             
         return options

@@ -50,6 +50,9 @@ class ExperimentCreator(object):
         :arg values: list of values for the parameters
         """
         
+        if not len(values) == len(self._parameters):
+            raise ValueError, 'Dimension of given values does not match with parameters of the base experiment'
+        
         experiment = copy.deepcopy(self._base_experiment)
         
         # Add name extension
@@ -60,9 +63,10 @@ class ExperimentCreator(object):
         experiment._values = values
         
         # Set geometry based on the given values
-        for measurement in experiment.get_measurements():
-            for parameter, value in zip(self._parameters, values):
-                parameter.setter(measurement.options.geometry, value)
+        geometry = experiment.get_geometry()
+        for parameter, value in zip(self._parameters, values):
+            parameter.setter(geometry, value)
+        experiment.set_geometry(geometry)
                 
         return experiment
     
@@ -73,23 +77,34 @@ class ExperimentCreator(object):
         
         list_constraints = []
         for parameter in self._parameters:
-            list_constraints.append([parameter.constraints])
+            list_constraints.append(parameter.constraints)
             
         return list_constraints
     
 class Experiment(object):
 
-    def __init__(self, name, measurements, values):
+    def __init__(self, name, geometry, measurements):
         """
         Creates a new experiment.
         
         :arg name: name of the experiment
-        :arg measurements: measurements executed during this experiment
-        :arg values: values of the parameters used to create this experiment
+        :arg measurements: a list of easurements executed during this experiment
         """
         self._name = name
+        self._geometry = geometry
         self._measurements = measurements
-        self._values = values
+        self._values = None
+        
+        # Override geometry in measurements to make sure they all use the same one
+        self.set_geometry(geometry)        
+    
+    @property
+    def name(self):
+        """
+        Returns the name of this experiment.
+        """
+        
+        return self._name
     
     def get_kratios(self):
         """
@@ -99,37 +114,25 @@ class Experiment(object):
         
         return np.array([measurement.get_kratios() for measurement in self._measurements])
     
-    def set_kratios(self, list_dict_kratios):
-        """
-        Manually set the kratios measured in the experiment by giving a list with dictionaries
-        containing the transitions and kratios of each measurement.
-        
-        :arg list_dict_kratios: a list with dictionaries of the form {transition: kratio}
-            for all measurements of this experiment
-            (the list has to be ordered by measurement)
-        """
-        
-        for dict_kratios, measurement in zip(list_dict_kratios, self._measurements):
-            measurement.set_kratios(dict_kratios)
-    
     def _set_kratios(self, list_kratios):
         """
-        Manually set the kratios measured in the experiment by giving a sorted list of k-ratios.
+        Manually set all k-ratios measured in the experiment by giving a sorted list of k-ratios.
         
         :arg list_kratios: a list with k-ratios for all measurements of this experiment
             (the list must be ordered primarily by measurement and secondarily by transition)
         """
         
         for measurement in self._measurements:
-            dict_kratios = {}
             for transition in measurement.get_transitions():
-                dict_kratios[transition] = list_kratios.pop(0)
-            measurement.set_kratios(dict_kratios)
+                measurement.set_kratio(transition, list_kratios.pop(0))
         
     def get_values(self):
         """
         Returns the list of values of the parameters that were used to create this experiment.
         """
+        
+        if self._values == None:
+            raise ValueError, 'This experiment has not been created using parameters'
         
         return self._values()
     
@@ -138,7 +141,19 @@ class Experiment(object):
         Returns the geometry of this experiment.
         """
         
-        return self._measurements()[0].get_options().geometry
+        return self._geometry
+    
+    def set_geometry(self, geometry):
+        """
+        Set the geometry of this experiment.
+        
+        :arg geometry: geometry of the sample observed in this experiment
+        """
+        
+        self._geometry = geometry
+        
+        for measurement in self.get_measurements():
+            measurement.get_options().geometry = self._geometry
         
     def get_measurements(self):
         """
@@ -146,15 +161,31 @@ class Experiment(object):
         given when the class was instantiated.
         """
         
-        return self._measurements()
+        return self._measurements
     
-    def standards_simulated(self):
+    def has_standards(self):
         """
-        Returns `True` if all standards of all measurements have been simulated.
+        Returns 'True' iff for all transistions of all measurements
+        standard materials have been specified.
         """
         
-        return [measurement.standards_simulated() for measurement in self.get_measurements()].all()
+        return [measurement.has_standards() for measurement in self._measurements].all()
     
+    def simulated(self):
+        """
+        Returns `True`iff all unknowns of all measurements have been simulated.
+        """
+        
+        return [measurement.simulated() for measurement in self.get_measurements()].all()
+    
+    def simulated_std(self):
+        """
+        Returns `True` iff all standards of all measurements have been simulated.
+        """
+        
+        return [measurement.simulated_std() for measurement in self.get_measurements()].all()
+    
+    @classmethod
     def load(self, path):
         """
         Loads an experiment from a file specified by the given path.
