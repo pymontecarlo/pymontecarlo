@@ -45,7 +45,7 @@ class Measurement(object):
         self._kratios = None
         self._results = None
         self._results_std = {}
-        self._standards = {}
+        self._standards_material = {}
         
         # Select and store detector key
         detectors = self._options.detectors.findall(PhotonIntensityDetector).values()
@@ -55,18 +55,18 @@ class Measurement(object):
             raise ValueError, "Detector not included in options: %s" % detector
         self._detector_key = self._options.detectors.find(detector)
     
-    def set_kratio(self, dict_kratios):
+    def set_kratio(self, transition, kratio):
         """
-        Manually set all k-ratios for this measurement.
+        Manually set the k-ratio of the given transition for this measurement.
         
-        :arg kratios: a dictionary of the form {transition: kratio}
+        :arg transition: transition of the k-ratio that is begin set
+        :arg kratio: k-ratio to be manually set for this measurement
         """
         
-        transitions = [transition for transition, _kratio in dict_kratios.iteritems()]
-        if not sorted(transitions) == sorted(self._transitions):
-            raise ValueError, 'Transitions of this measurement and the given k-ratios do not match'
+        if not transition in self._transitions:
+            raise ValueError, 'Given transition "%s" not observed in this measurement' % transition
         
-        self._kratios = dict_kratios
+        self._kratios[transition] = kratio
     
     def get_kratios(self):
         """
@@ -74,46 +74,60 @@ class Measurement(object):
         The list is sorted by the transition of the k-ratios.
         """
         
-        vals = []
+        kratios = []
         if self._kratios: # k-ratios have been manually set
             for _transition, kratio in sorted(self._kratios.iteritems()):
-                vals.append(kratio)
+                kratios.append(kratio)
         else: # extract k-ratios from the simulated results
-            if not self._results or (self._standards and not self._results_std):
-                raise ValueError, 'Tried to extract kratios from results' \
-                    + ' but unknowns and/or standards have not been simulated'
+            if not self.simulated():
+                raise ValueError, 'k-ratios were neither simulated nor manually set'
             if not self._detector_key:
-                raise ValueError, 'No detector has been specified'
+                raise ValueError, 'Cannot extract k-ratios! No detector has been specified.'
             
-            for transition in sorted(self._transitions):
+            for transition in self.get_transitions():
                 unk_val, _unc = self._results[self._detector_key].intensity(transition)
-                std_val, _unc = self._results_std[transition][self._detector_key].intensity(transition)
-                vals.append(unk_val / std_val)
+                if self.simulated_std():
+                    std_val, _unc = self._results_std[transition][self._detector_key].intensity(transition)
+                else:
+                    std_val = 1.0
+                kratios.append(unk_val / std_val)
         
-        return vals
-        
-    def set_standards(self, dict_standards):
+        return kratios
+    
+    def set_standard(self, transition, material=None):
         """
         Set standards for all transitions.
         
-        :arg standards_dict: dictionary of the form {transition: material}
-            specifying which material was used to measure the transition's standard intensity 
-            (If material is ``None`` it is replaced with a pure material of the 
-            element in the specified transition.)
+        :arg transition: transition that the given standard corresponds to
+        :arg material: material of the standard
+            (if material is `None` the material is assumed to be pure bulk
+            of the element corresponding to the given transition)
         :type material: instance of :class:`._Material`
-        
         """
-        transitions = [transition for transition, _standard in dict_standards.iteritems()]
-        if not sorted(transitions) == sorted(self._transitions):
-            raise ValueError, 'Transitions of this measurement and the given standards do not match'
         
-        for transition, standard in dict_standards.iteritems():
-            if standard is None:
-                standard = pure(transition.z)
-                
-        self._dict_standards = dict_standards
+        if not transition in self._transitions:
+            raise ValueError, 'Given transition "%s" is not observed in this measurement' % transition
         
-    def standards_simulated(self):
+        if material == None:
+            material = pure(transition.z)
+        
+        self._standards_material[transition] = material
+    
+    def has_standards(self):
+        """
+        Returns 'True' iff standards have been specified for this measurement.
+        """
+        
+        return len(self._standards_material) == len(self._transitions)
+    
+    def simulated(self):
+        """
+        Returns `True` iff the unknown options have been simulated.
+        """
+        
+        return self._results == True
+    
+    def simulated_std(self):
         """
         Returns `True` iff all standards have been simulated.
         """
@@ -153,3 +167,18 @@ class Measurement(object):
         """
         
         return self._options
+    
+    def get_options_std(self, transition):
+        """
+        Returns an the options object for the standard of the given transition.
+        
+        :arg transition: transition of the standard whose options object should be returned
+        """
+        
+        if not transition in self._standards_material:
+            raise ValueError, 'No standard material specified for transition "%s"' % transition
+        
+        options = copy.deepcopy(self._options)
+        options.geometry = self._standards_material[transition]
+            
+        return options
