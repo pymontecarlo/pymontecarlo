@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import uuid
-from operator import attrgetter
 
 # Third party modules.
 
