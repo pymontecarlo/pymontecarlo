@@ -90,9 +90,9 @@ class Measurement(object):
             meas.set_kratio(transitionutil.from_string(transition), kratio)
 
         # Unknown result
-        # TODO: measurements might have no results
-        results_unk = Results._load(hdf5parent['results_unk'])
-        meas.put_results_unk(results_unk)
+        if 'results_unk' in hdf5parent:
+            results_unk = Results._load(hdf5parent['results_unk'])
+            meas.put_results_unk(results_unk)
 
         # Standard results
         for transition, hdf5group in hdf5parent['results_std'].iteritems():
@@ -124,9 +124,9 @@ class Measurement(object):
         for transition, kratio in self._kratios.iteritems():
             hdf5group.attrs[str(transition)] = kratio
 
-        # TODO: measurements might have no results
-        hdf5group = hdf5parent.create_group("results_unk")
-        self._results_unk._save(hdf5group)
+        if self._results_unk:
+            hdf5group = hdf5parent.create_group("results_unk")
+            self._results_unk._save(hdf5group)
 
         hdf5group = hdf5parent.create_group("results_std")
         for transition, results in self._results_std.iteritems():
