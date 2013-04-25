@@ -47,6 +47,12 @@ def _call_core_setup(*args):
     """
     _call_setup(os.path.join('src', 'core', 'setup.py'), *args)
 
+def _call_exp_setup(*args):
+    """
+    Calls setup.py of experimental.
+    """
+    _call_setup(os.path.join('src', 'exp', 'setup.py'), *args)
+
 def _call_program_setups(*args):
     """
     Calls setup.py of all programs.
@@ -87,6 +93,7 @@ def _call_all_setups(*args):
     Calls setup.py of pymontecarlo core and all programs.
     """
     _call_dependency_setups(*args)
+    _call_exp_setup(*args)
     _call_core_setup(*args)
     _call_program_setups(*args)
 
@@ -104,6 +111,7 @@ def purge():
     """
     # NOTE: Dependencies do not have purge option
     _call_core_setup('clean', '--purge')
+    _call_exp_setup('clean', '--purge')
     _call_program_setups('clean', '--purge')
 
 @task
@@ -124,9 +132,11 @@ def develop(options):
     # Core and programs
     if not uninstall:
         _call_core_setup('develop', *args)
+        _call_exp_setup('develop', *args)
         _call_program_setups('develop', *args)
     else:
         _call_program_setups('develop', *args)
+        _call_exp_setup('develop', *args)
         _call_core_setup('develop', *args)
 
 @task

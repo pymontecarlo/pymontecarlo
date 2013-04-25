@@ -31,7 +31,8 @@ packages = ['pymontecarlo',
             'pymontecarlo.util']
 
 namespace_packages = ['pymontecarlo',
-                      'pymontecarlo.program']
+                      'pymontecarlo.program',
+                      'pymontecarlo.runner']
 
 build_exe_options = {"packages": packages,
                      "namespace_packages": namespace_packages,
