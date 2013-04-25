@@ -37,8 +37,6 @@ import pymontecarlo.util.xmlutil as xmlutil
 
 class ExperimentCreator(object):
     
-    VERSION = '1'
-    
     def __init__(self, base_experiment, parameters):
         """
         Creates an experiment creator that can change the given base experiment's
@@ -90,7 +88,9 @@ class ExperimentCreator(object):
         return list_constraints
     
 class Experiment(object):
-
+    
+    VERSION = '1'
+    
     def __init__(self, name, geometry, measurements):
         """
         Creates a new experiment.
@@ -106,8 +106,9 @@ class Experiment(object):
         # Override geometry in measurements to make sure they all use the same one
         for measurement in self.get_measurements():
             measurement.get_options_unk().geometry = self._geometry
-            for transition in measurement.get_transitions():
-                measurement.get_options_std(transition).geometry = self._geometry      
+            if measurement.has_standards():
+                for transition in measurement.get_transitions():
+                    measurement.get_options_std(transition).geometry = self._geometry
     
     @property
     def name(self):
@@ -301,9 +302,6 @@ class ResultsConverter(object):
             
             results = Results.load(path)
             experiment = self.convert(results, transitions, getters, detector)
-            
-            # Rename results file (i.e. save a backup)
-            path_bak = os.path.splitext(path)[0] + "_bkp.h5"
-            os.rename(path, path_bak)
-            
+
+            os.rename(path, path + ".bak")            
             experiment.save(path)

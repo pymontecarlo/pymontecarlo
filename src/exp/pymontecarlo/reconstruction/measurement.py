@@ -57,7 +57,7 @@ class Measurement(object):
         self._results_unk = None
         self._results_std = {} 
         self._standards_material = {}
-        self._detector_key = self._get_detector_key(self._options_unk, detector)
+        self._detector_key = self._select_detector_key(self._options_unk, detector)
         
     @classmethod
     def load(cls, filepath):
@@ -265,7 +265,7 @@ class Measurement(object):
             
         return options
     
-    def _get_detector_key(self, options, detector=None):
+    def _select_detector_key(self, options, detector=None):
         detectors = options.detectors.findall(PhotonIntensityDetector).values()
         if detector is None and len(detectors) == 1:
             detector = detectors[0]
