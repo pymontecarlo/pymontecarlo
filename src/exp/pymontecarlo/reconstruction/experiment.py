@@ -146,7 +146,7 @@ class Experiment(object):
         if self._values is None:
             raise ValueError, 'No values available (probably experiment has not been created using parameters)'
         
-        return self._values()
+        return self._values
     
     def get_geometry(self):
         """
@@ -275,6 +275,7 @@ class ResultsConverter(object):
         
         # Create experiment
         measurement = Measurement(results.options, transitions, detector)
+        measurement.put_results_unk(results)
         experiment = Experiment(results.options.name, results.options.geometry, [measurement])
         
         # Extract variables
@@ -303,5 +304,5 @@ class ResultsConverter(object):
             results = Results.load(path)
             experiment = self.convert(results, transitions, getters, detector)
 
-            os.rename(path, path + ".bak")            
+            os.rename(path, path + ".bak")
             experiment.save(path)
