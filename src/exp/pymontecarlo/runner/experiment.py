@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`experimentrunner` -- Adaptors to run experiments.
+:mod:`experimentrunner` -- Runners to run experiments.
 ================================================================================
 
-.. module:: experimentrunner
+.. module:: experiment
    :synopsis: Runners to run experiments
 
-.. inheritance-diagram:: pymontecarlo.runner_tst.experimentrunner
+.. inheritance-diagram:: pymontecarlo.runner.experiment
 
 """
 # Script information for the file.
