@@ -124,7 +124,11 @@ class Experiment(object):
         The k-ratios are ordered primarily by measurement and secondarily by transition.
         """
         
-        return np.array([measurement.get_kratios() for measurement in self._measurements])
+        kratios = np.array([])
+        for measurement in self.get_measurements():
+            kratios = np.hstack((kratios, measurement.get_kratios()))
+            
+        return kratios
     
     def _set_kratios(self, list_kratios):
         """
@@ -203,6 +207,7 @@ class Experiment(object):
             name = hdf5file.attrs['name']
             
             # Geometry
+            # TODO: xmlutil.parse expects path to an XML file as an argument
             element = xmlutil.parse(hdf5file.attrs['geometry'])
             geometry = xmlutil.XMLIO.from_xml(element)
             
@@ -238,7 +243,7 @@ class Experiment(object):
         try:
             hdf5file.attrs['version'] = self.VERSION
             
-            hdf5file.attrs['name'] = self.name
+            hdf5file.attrs['name'] = str(self.name)
             
             hdf5file.attrs['geometry'] = xmlutil.tostring(self.get_geometry().to_xml(), pretty_print=False)
             

@@ -38,6 +38,8 @@ import pymontecarlo.util.transition as transitionutil
 
 # Globals and constants variables.
 
+
+
 class Measurement(object):
 
     VERSION = '1'
@@ -73,7 +75,8 @@ class Measurement(object):
         if hdf5parent.attrs['version'] != cls.VERSION:
             raise IOError, "Incorrect version of measurement. Only version %s is accepted" % \
                     cls.VERSION
-
+        
+        # TODO: xmlutil.parse expects path to an XML file as an argument
         element = xmlutil.parse(hdf5parent.attrs['options_unk'])
         options_unk = Options.from_xml(element)
 
@@ -101,6 +104,7 @@ class Measurement(object):
 
         # Standards
         for transition, attrvalue in hdf5parent['standards'].attrs.iteritems():
+            # TODO: xmlutil.parse expects path to an XML file as an argument
             material = Material.from_xml(xmlutil.parse(attrvalue))
             meas.set_standard(transitionutil.from_string(transition), material)
 
