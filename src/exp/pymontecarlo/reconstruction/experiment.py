@@ -20,6 +20,8 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import copy
+import os
+import glob
 from operator import itemgetter
 
 # Third party modules.
@@ -28,7 +30,7 @@ import h5py
 
 # Local modules.
 from pymontecarlo.reconstruction.measurement import Measurement
-
+from pymontecarlo.output.results import Results
 import pymontecarlo.util.xmlutil as xmlutil
 
 # Globals and constants variables.
@@ -246,3 +248,62 @@ class Experiment(object):
             hdf5file.attrs['values'] = self.get_values()
         finally:
             hdf5file.close()
+
+class ResultsConverter(object):
+    
+    def __init__(self):
+        """
+        Creates a ResultsConverter that converts Results *.h5 files
+        that belong to single simulations to Experiment *.h5 files.
+        """
+        
+        pass
+    
+    def convert(self, results, transitions, getters=None, detector=None):
+        """
+        Converts a Results object corresponding to a single simulation to
+        an Experiment object with a single measurement.
+        
+        :arg results: Results object to be converted
+        :arg transitions: list of transitions that should be extracted from the simulation
+        :arg getters: list of callable functions that extract the variables of the parameters
+            (set to `None` if the results were not created using a parameterized geometry)
+            Each getter function should take one argument, a geometry object, and
+            return the value of the corresponding parameter.
+        """
+        
+        # Create experiment
+        measurement = Measurement(results.options, transitions, detector)
+        experiment = Experiment(results.options.name, results.options.geometry, [measurement])
+        
+        # Extract variables
+        if getters is not None:
+            experiment._values = [getter(results.options.geometry) for getter in getters]
+            
+        return experiment
+    
+    def convert_dir(self, dir_path, transitions, getters=None, detector=None):
+        """
+        Loads all Results *.h5 files in the given folder, converts them
+        to Experiment objects and saves them.
+        (Results objects are kept as a backup.)
+        
+        :arg dir_path: path to the folder containing the Results *.h5 files to be converted
+        :arg transitions: list of transitions that should be extracted from the simulation
+        :arg getters: list of callable functions that extract the variables of the parameters
+            (set to `None` if the results were not created using a parameterized geometry)
+            Each getter function should take one argument, a geometry object, and
+            return the value of the corresponding parameter.
+        """
+        
+        for path in glob.glob(os.path.join(dir_path, "*.h5")):
+            #TODO: check type of the *.h5 file (Results or Experiment)
+            
+            results = Results.load(path)
+            experiment = self.convert(results, transitions, getters, detector)
+            
+            # Rename results file (i.e. save a backup)
+            path_bak = os.path.splitext(path)[0] + "_bkp.h5"
+            os.rename(path, path_bak)
+            
+            experiment.save(path)

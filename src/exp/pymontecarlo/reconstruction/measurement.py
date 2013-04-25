@@ -57,14 +57,7 @@ class Measurement(object):
         self._results_unk = None
         self._results_std = {} 
         self._standards_material = {}
-        
-        # Select and store detector key
-        detectors = self._options.detectors.findall(PhotonIntensityDetector).values()
-        if detector is None and len(detectors) == 1:
-            detector = detectors[0]
-        if detector not in detectors:
-            raise ValueError, "Detector not included in options: %s" % detector
-        self._detector_key = self._options.detectors.find(detector)
+        self._detector_key = self._get_detector_key(self._options_unk, detector)
         
     @classmethod
     def load(cls, filepath):
@@ -271,3 +264,12 @@ class Measurement(object):
         options.geometry = Substrate(self._standards_material[transition])
             
         return options
+    
+    def _get_detector_key(self, options, detector=None):
+        detectors = options.detectors.findall(PhotonIntensityDetector).values()
+        if detector is None and len(detectors) == 1:
+            detector = detectors[0]
+        if detector not in detectors:
+            raise ValueError, "Detector not included in options: %s" % detector
+        
+        return options.detectors.find(detector)
