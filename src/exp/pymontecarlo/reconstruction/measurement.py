@@ -53,7 +53,7 @@ class Measurement(object):
         
         self._options_unk = copy.deepcopy(options)
         self._transitions = sorted(transitions)
-        self._kratios = None
+        self._kratios = {}
         self._results_unk = None
         self._results_std = {} 
         self._standards_material = {}
@@ -90,6 +90,7 @@ class Measurement(object):
             meas.set_kratio(transitionutil.from_string(transition), kratio)
         
         # Unknown result
+        # TODO: measurements might have no results
         results_unk = Results._load(hdf5parent['results_unk'])
         meas.put_results_unk(results_unk)
         
@@ -123,6 +124,7 @@ class Measurement(object):
         for transition, kratio in self._kratios.iteritems():
             hdf5group.attrs[unicode(transition)] = kratio
         
+        # TODO: measurements might have no results
         hdf5group = hdf5parent.create_group("results_unk")
         self._results_unk._save(hdf5group)
         
