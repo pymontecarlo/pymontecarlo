@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import copy
+from StringIO import StringIO
 
 # Third party modules.
 import numpy as np
@@ -75,10 +76,9 @@ class Measurement(object):
         if hdf5parent.attrs['version'] != cls.VERSION:
             raise IOError, "Incorrect version of measurement. Only version %s is accepted" % \
                     cls.VERSION
-        
-        # TODO: xmlutil.parse expects path to an XML file as an argument
-        element = xmlutil.parse(hdf5parent.attrs['options_unk'])
-        options_unk = Options.from_xml(element)
+
+        fp = StringIO(hdf5parent.attrs['options_unk'])
+        options_unk = Options.load(fp)
 
         transitions = [transitionutil.from_string(transition) \
                             for transition in hdf5parent.attrs['transitions']]
@@ -104,8 +104,8 @@ class Measurement(object):
 
         # Standards
         for transition, attrvalue in hdf5parent['standards'].attrs.iteritems():
-            # TODO: xmlutil.parse expects path to an XML file as an argument
-            material = Material.from_xml(xmlutil.parse(attrvalue))
+            fp = StringIO(xmlutil.parse(attrvalue))
+            material = Material.load(fp)
             meas.set_standard(transitionutil.from_string(transition), material)
 
         return meas
