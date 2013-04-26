@@ -209,7 +209,7 @@ class Experiment(object):
 
             # Geometry
             fp = StringIO(hdf5file.attrs['geometry'])
-            element = xmlutil.parse(fp)
+            element = xmlutil.parse(fp).getroot()
             geometry = xmlutil.XMLIO.from_xml(element)
 
             # Measurements
