@@ -107,7 +107,7 @@ class ExperimentInterp2DRunner(_Runner):
         
         :arg list_experiments_data: a list of experiment objects used as data for interpolation
         """
-        _Runner.__init__(self)
+        _Runner.__init__(self, None)
         self._list_experiments = []
         self._list_experiments_data = list_experiments_data
         
