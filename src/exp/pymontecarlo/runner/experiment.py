@@ -18,6 +18,7 @@ __copyright__ = "Copyright (c) 2013 Niklas Mevenkamp"
 __license__ = "GPL v3"
 
 # Standard library modules
+import logging
 import copy
 import glob
 import os
@@ -107,6 +108,7 @@ class ExperimentInterp2DRunner(_Runner):
         
         :arg list_experiments_data: a list of experiment objects used as data for interpolation
         """
+        
         _Runner.__init__(self, None)
         self._list_experiments = []
         self._list_experiments_data = list_experiments_data
@@ -167,6 +169,8 @@ class ExperimentInterp2DRunner(_Runner):
         return self._spline(x[0], x[1])
         
     def _collect_data(self, list_experiments_data):
+        logging.info("Interp2DRunner: loading data...")
+        
         xs, ys, zs = [], [], []
         for experiment in list_experiments_data:
             x = experiment.get_values()
@@ -177,6 +181,8 @@ class ExperimentInterp2DRunner(_Runner):
             xs.append(x[0])
             ys.append(x[1])
             zs.append(experiment.get_kratios())
+        
+        logging.info("Interp2DRunner: data loaded.")
         
         return {'xs': xs, 'ys': ys, 'zs': zs}
     
