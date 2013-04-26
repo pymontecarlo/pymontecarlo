@@ -63,9 +63,10 @@ class Reconstructor(object):
             (if you want to use this, set ref_experiment to `None`)
         """
         
-        #TODO: ask if standards need to be simulated
-        if not self._experimentcreator._base_experiment.simulated_std():
-            self._experimentcreator._base_experiment = self._simulate_standards(self._experimentcreator._base_experiment)
+        # TODO: interp2Drunner can't simulate standards yet
+        base_experiment = self._experimentcreator._base_experiment
+        if base_experiment.has_standards() and not base_experiment.simulated_std():
+            self._experimentcreator._base_experiment = self._simulate_standards(base_experiment)
         
         if not ref_experiment and not ref_x:
             raise ValueError, 'No reference specified'
@@ -74,9 +75,13 @@ class Reconstructor(object):
             self._ref_experiment = ref_experiment
         else:
             self._ref_experiment = self._experimentcreator.get_experiment(ref_x)
+            self._experimentrunner.put(self._ref_experiment)
+            self._experimentrunner.start()
+            self._ref_experiment = self._experimentrunner.get_results()[0]            
 
-        fgetter = FunctionGetter(self._experimentcreator, self._experimentrunner, self._ref_experiment)
-        fhandler = FunctionHandler(fgetter.get_func(), self._eps_diff)
+        fgetter = FunctionGetter()
+        func = fgetter.get_func(self._experimentcreator, self._experimentrunner, self._ref_experiment)
+        fhandler = FunctionHandler(func, self._eps_diff)
 
         x_opt, F_opt = \
             self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
