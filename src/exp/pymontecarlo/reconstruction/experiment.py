@@ -63,7 +63,7 @@ class ExperimentCreator(object):
 
         # Create new name using name extension and iterator
         self._iterator += 1
-        name = self._base_experiment._name + "_" + self._iterator
+        name = self._base_experiment._name + "_" + str(self._iterator)
 
         # Set geometry based on the given values
         geometry = copy.deepcopy(self._base_experiment.get_geometry())
@@ -181,14 +181,14 @@ class Experiment(object):
         Returns `True`iff all unknowns of all measurements have been simulated.
         """
 
-        return [measurement.simulated_unk() for measurement in self.get_measurements()].all()
+        return all([measurement.simulated_unk() for measurement in self.get_measurements()])
 
     def simulated_std(self):
         """
         Returns `True` iff all standards of all measurements have been simulated.
         """
 
-        return [measurement.simulated_std() for measurement in self.get_measurements()].all()
+        return all([measurement.simulated_std() for measurement in self.get_measurements()])
 
     @classmethod
     def load(cls, path):
