@@ -8,7 +8,6 @@
    :synopsis: Runners to run experiments
 
 .. inheritance-diagram:: pymontecarlo.runner.experiment
-
 """
 # Script information for the file.
 __author__ = "Niklas Mevenkamp"
@@ -29,7 +28,6 @@ from scipy.interpolate.interpolate import interp2d
 # Local modules
 from pymontecarlo.runner.base import _Runner
 from pymontecarlo.reconstruction.experiment import Experiment
-
 
 
 class ExperimentRunner(_Runner):
@@ -126,9 +124,14 @@ class ExperimentInterp2DRunner(_Runner):
         :arg dir_path: path pointing to the directory where the experiment files are located
         """
         
+        # TOOD: Why is the logger not recognized here opposing to optimizer.py
+        #logging.info("Interp2DRunner: Loading data...")
+        
         list_experiments_data = []
         for path in glob.glob(os.path.join(dir_path, "*.h5")):
             list_experiments_data.append(Experiment.load(path))
+            
+        #logging.info("Interp2DRunner: Data loaded.")
             
         return cls(list_experiments_data)
         
@@ -168,21 +171,17 @@ class ExperimentInterp2DRunner(_Runner):
         
         return self._spline(x[0], x[1])
         
-    def _collect_data(self, list_experiments_data):
-        logging.info("Interp2DRunner: loading data...")
-        
+    def _collect_data(self, list_experiments_data):        
         xs, ys, zs = [], [], []
         for experiment in list_experiments_data:
             x = experiment.get_values()
             
             if len(x) <> 2:
-                raise ValueError, "Number of paramaters is not equal to two (length is %s)." % len(x)
+                raise ValueError, "Number of paramaters (%s) is not equal to two." % len(x)
             
             xs.append(x[0])
             ys.append(x[1])
             zs.append(experiment.get_kratios())
-        
-        logging.info("Interp2DRunner: data loaded.")
         
         return {'xs': xs, 'ys': ys, 'zs': zs}
     
