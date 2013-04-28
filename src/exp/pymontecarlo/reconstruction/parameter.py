@@ -54,7 +54,7 @@ class Parameter(object):
         
         def _setter(geometry, val):
             if val < self._minval or val > self._maxval:
-                raise ValueError, "Initial value outside limits: %s" % val
+                raise ValueError, "Value outside limits: %s" % val
             self._setter(geometry, val)
             
         return _setter
