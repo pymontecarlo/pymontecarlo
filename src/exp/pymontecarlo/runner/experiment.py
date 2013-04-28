@@ -23,7 +23,7 @@ import glob
 import os
 
 # Third party modules
-from scipy.interpolate.interpolate import interp2d
+from scipy.interpolate import SmoothBivariateSpline
 
 # Local modules
 from pymontecarlo.runner.base import _Runner
@@ -126,13 +126,15 @@ class ExperimentInterp2DRunner(_Runner):
         
         # TOOD: Why is the logger not recognized here opposing to optimizer.py
         #logging.info("Interp2DRunner: Loading data...")
+        print "Interp2DRunner: Loading data..."
         
         list_experiments_data = []
         for path in glob.glob(os.path.join(dir_path, "*.h5")):
             list_experiments_data.append(Experiment.load(path))
             
         #logging.info("Interp2DRunner: Data loaded.")
-            
+        print "Interp2DRunner: Data loaded."
+        
         return cls(list_experiments_data)
         
     def put(self, experiment):
@@ -171,7 +173,7 @@ class ExperimentInterp2DRunner(_Runner):
         
         return self._spline(x[0], x[1])
         
-    def _collect_data(self, list_experiments_data):        
+    def _collect_data(self, list_experiments_data):
         xs, ys, zs = [], [], []
         for experiment in list_experiments_data:
             x = experiment.get_values()
@@ -182,6 +184,10 @@ class ExperimentInterp2DRunner(_Runner):
             xs.append(x[0])
             ys.append(x[1])
             zs.append(experiment.get_kratios())
+            
+        if len(xs) <> len(zs) or len(ys) <> len(zs):
+            raise ValueError, 'Wrong data format:' \
+                + ' lengths of individual coordinate lists do not match.'
         
         return {'xs': xs, 'ys': ys, 'zs': zs}
     
@@ -192,9 +198,9 @@ class ExperimentInterp2DRunner(_Runner):
         
         splines = []
         for i in range(0,len(zs[0])):
-            splines.append(interp2d(xs, ys, [z[i] for z in zs], kind='cubic'))
+            splines.append(SmoothBivariateSpline(xs, ys, [z[i] for z in zs]))
         
         def _spline(x, y):
-            return [spline(x, y)[0] for spline in splines]
+            return [spline(x, y)[0][0] for spline in splines]
         
         return _spline
