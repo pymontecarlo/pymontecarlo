@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2013 Niklas Mevenkamp"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import logging
 import copy
 import os
 import glob
@@ -312,3 +313,5 @@ class ResultsConverter(object):
 
             os.rename(path, path + ".bak")
             experiment.save(path)
+            
+            logging.info('Converted results "%s" to experiment.' % results.options.name)
