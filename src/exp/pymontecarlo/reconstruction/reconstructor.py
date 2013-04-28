@@ -77,7 +77,10 @@ class Reconstructor(object):
             self._ref_experiment = self._experimentcreator.get_experiment(ref_x)
             self._experimentrunner.put(self._ref_experiment)
             self._experimentrunner.start()
-            self._ref_experiment = self._experimentrunner.get_results()[0]            
+            while self._experimentrunner.is_alive():
+                print self._experimentrunner.report()
+                time.sleep(1)
+            self._ref_experiment = self._experimentrunner.get_results()[0]
 
         fgetter = FunctionGetter()
         func = fgetter.get_func(self._experimentcreator, self._experimentrunner, self._ref_experiment)
@@ -140,6 +143,7 @@ class FunctionGetter(object):
             while experimentrunner.is_alive():
                 print experimentrunner.report()
                 time.sleep(1)
+                print "Running.."
                 
             list_experiments = experimentrunner.get_results()
             
