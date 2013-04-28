@@ -39,19 +39,22 @@ class ExperimentRunner(_Runner):
         :arg runner: instance of a runner class that can run options objects
         """
         
-        _Runner.__init__(self)
+        _Runner.__init__(self, None)
         self._runner = runner
         self._lookup = {}
 
     def put(self, experiment):
-        if experiment.name in [exp.name for exp in self._list_experiments]:
-            raise ValueError, "An experiment with the same name is already in the queue"
+        # TODO: check if experiment has already been put (or get rid of this), below code snippet does not work
+        #if experiment.name in [exp.name for exp in self._list_experiments]:
+        #    raise ValueError, "An experiment with the same name is already in the queue"
         
         # Put options of the measurements
         for measurement in experiment.get_measurements():
             if not measurement.simulated_unk():
-                options = copy.deepcopy(measurement.get_options())
-                self._lookup[options.uuid] = {'type': 'unk', 'measurement': measurement} 
+                options = copy.deepcopy(measurement.get_options_unk())
+                options_uuid = options.uuid
+                self._lookup[options_uuid] = {'type': 'unk', 'measurement': measurement}
+                print options_uuid
                 self._runner.put(options)
             if measurement.has_standards() and not measurement.simulated_std():
                 for transition in measurement.get_transitions():
@@ -80,6 +83,7 @@ class ExperimentRunner(_Runner):
         list_results = self._runner.get_results()
         
         for results in list_results:
+            print results.options.uuid
             lookup = self._lookup[results.options.uuid]
             if lookup['type'] == 'unk':
                 lookup['measurement'].put_results(results)
@@ -95,7 +99,7 @@ class ExperimentRunner(_Runner):
         return list_experiments
     
     def report(self):
-        self._runner.report()
+        return self._runner.report()
     
 class ExperimentInterp2DRunner(_Runner):
     def __init__(self, list_experiments_data):
