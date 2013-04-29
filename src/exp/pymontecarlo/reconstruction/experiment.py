@@ -104,6 +104,13 @@ class Experiment(object):
         self._geometry = copy.deepcopy(geometry)
         self._measurements = copy.deepcopy(measurements)
         self._values = None
+        
+        # Give names to the options files (to avoid conflicts in the actual runner)
+        for it, measurement in enumerate(self.get_measurements()):
+            measurement.get_options_unk().name = self._name + "_options_unk_" + str(it)
+            if measurement.has_standards():
+                for it2, transition in enumerate(measurement.get_transitions()):
+                    measurement.get_options_std(transition).name = self._name + "_options_std_" + str(it) + "_" + str(it2)
 
         # Override geometry in measurements to make sure they all use the same one
         for measurement in self.get_measurements():
@@ -306,8 +313,8 @@ class ResultsConverter(object):
         """
 
         for path in glob.glob(os.path.join(dir_path, "*.h5")):
-            #TODO: check type of the *.h5 file (Results or Experiment)
-
+            #TODO: check type of the *.h5 file (Results or Experiment)            
+            
             results = Results.load(path)
             experiment = self.convert(results, transitions, getters, detector)
 
