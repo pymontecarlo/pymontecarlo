@@ -65,25 +65,29 @@ class _Runner(object):
     def put(self, options):
         """
         Puts an options in queue.
+        The options are copied to ensure that the options cannot be modified
+        after being in queue.
         
         An :exc:`ValueError` is raised if an options with the same name was
-        already added. This error is raised has options with the same name 
-        would lead to results been overwritten.
+        already added. 
+        This error is raised as options with the same name would lead to 
+        results been overwritten.
         
-        .. note::
-        
-           A copy of the options is put in queue
-           
         :arg options: options to be added to the queue
+        
+        :return: UUID of the options as put inside queue
         """
         name = options.name
         if name in self._options_names:
             raise ValueError, 'An options with the name (%s) was already added' % name
 
-        self._queue_options.put(copy.deepcopy(options))
+        options = copy.deepcopy(options)
+        self._queue_options.put(options)
         self._options_names.append(name)
 
         logging.debug('Options "%s" put in queue', name)
+
+        return options.uuid
 
     def start(self):
         """
@@ -123,8 +127,10 @@ class _Runner(object):
         Returns the results from the simulations.
         This is a blocking method which calls :meth:`join` before returning
         the results.
+        The order of the results may not match the order in which they were
+        put in queue.
         
-        :rtype: :class:`list`
+        :rtype: :class:`list` of :class:`.Results`
         """
         self.join()
 
