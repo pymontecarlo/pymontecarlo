@@ -55,6 +55,7 @@ class Results(Mapping):
         :type results: :class:`dict`
         """
         self._options = copy.deepcopy(options)
+        self._uuid = options.uuid
 
         self._results = {}
         for key, result in results.iteritems():
@@ -171,6 +172,13 @@ class Results(Mapping):
         Returns a copy of the options.
         """
         return copy.deepcopy(self._options)
+
+    @property
+    def options_uuid(self):
+        """
+        Returns UUID of original options.
+        """
+        return self._uuid
 
 class _ResultsSequenceParameters(Sequence):
 

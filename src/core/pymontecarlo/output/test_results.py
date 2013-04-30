@@ -40,10 +40,10 @@ class TestResults(TestCase):
         self.tmpdir = tempfile.mkdtemp()
 
         # Options
-        ops = Options()
-        ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
-        ops.detectors['det2'] = TimeDetector()
-        ops.detectors['det3'] = ElectronFractionDetector()
+        self.ops = Options()
+        self.ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
+        self.ops.detectors['det2'] = TimeDetector()
+        self.ops.detectors['det3'] = ElectronFractionDetector()
 
         # Results
         results = {}
@@ -51,7 +51,7 @@ class TestResults(TestCase):
         results['det2'] = TimeResult()
         results['det3'] = ElectronFractionResult()
 
-        self.results = Results(ops, results)
+        self.results = Results(self.ops, results)
 
         self.results_h5 = os.path.join(os.path.dirname(__file__),
                                        '../testdata/results.h5')
@@ -78,6 +78,12 @@ class TestResults(TestCase):
     def testload(self):
         results = Results.load(self.results_h5)
         self.assertEqual(6, len(results))
+
+    def testoptions_uuid(self):
+        self.assertEqual(self.ops.uuid, self.results.options_uuid)
+
+    def testoptions(self):
+        self.assertIsNot(self.ops, self.results.options)
 
 class TestResultsSequence(TestCase):
 
