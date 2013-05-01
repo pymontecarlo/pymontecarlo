@@ -53,13 +53,13 @@ class ExperimentRunner(_Runner):
             if not measurement.simulated_unk():
                 options = measurement.get_options_unk()
                 options_uuid = self._runner.put(options)
-                self._lookup[options_uuid] = {'type': 'unk', 'measurement': measurement}
-                print options_uuid
+                self._lookup[options_uuid] = {'experiment': experiment, 'type': 'unk', 'measurement': measurement}
             if measurement.has_standards() and not measurement.simulated_std():
                 for transition in measurement.get_transitions():
-                    options = copy.deepcopy(measurement.get_options_std(transition))
-                    self._lookup[options.uuid] = \
-                        {'type': 'std', 'measurement': measurement, 'transition': transition}
+                    options = measurement.get_options_std(transition)
+                    options_uuid = self._runner.put(options)
+                    self._lookup[options_uuid] = \
+                        {'experiment': experiment, 'type': 'std', 'measurement': measurement, 'transition': transition}
 
     def start(self):
         self._runner.start()
@@ -82,10 +82,10 @@ class ExperimentRunner(_Runner):
         list_results = self._runner.get_results()
 
         for results in list_results:
-            print results.options.uuid
-            lookup = self._lookup[results.options.uuid]
+            options_uuid = results.options_uuid
+            lookup = self._lookup[options_uuid]
             if lookup['type'] == 'unk':
-                lookup['measurement'].put_results(results)
+                lookup['measurement'].put_results_unk(results)
             if lookup['type'] == 'std':
                 lookup['measurement'].put_results_std(lookup['transition'], results)
 
@@ -93,7 +93,7 @@ class ExperimentRunner(_Runner):
             if not lookup['experiment'].name in list_experiment_names:
                 list_experiment_names.append(lookup['experiment'].name)
                 list_experiments.append(lookup['experiment'])
-            del self._lookup[results.options.uuid]
+            del self._lookup[options_uuid]
 
         return list_experiments
 
