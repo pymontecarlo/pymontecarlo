@@ -258,7 +258,7 @@ class Measurement(object):
 
     def get_options_std(self, transition):
         """
-        Returns an the options object for the standard of the given transition.
+        Returns the options object for the standard of the given transition.
         
         :arg transition: transition of the standard whose options object should be returned
         """
@@ -270,6 +270,25 @@ class Measurement(object):
         options.geometry = Substrate(self._standards_material[transition])
 
         return options
+    
+    def get_results_unk(self):
+        """
+        Returns the results object specifying the results of the measurement on the unkown sample.
+        """
+        
+        return self._results_unk
+    
+    def get_results_std(self, transition):
+        """
+        Returns the results object specifying the results of the measurement on the standard of the given transition.
+        
+        :arg transition: transition of the standard whose results object should be returned
+        """
+        
+        if not transition in self._standards_material:
+            raise ValueError, 'No standard material specified for transition "%s"' % transition
+        
+        return self._results_std[transition]
 
     def _select_detector_key(self, options, detector=None):
         detectors = options.detectors.findall(PhotonIntensityDetector).values()
