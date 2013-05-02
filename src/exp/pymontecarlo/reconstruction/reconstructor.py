@@ -143,7 +143,6 @@ class FunctionGetter(object):
             while experimentrunner.is_alive():
                 print experimentrunner.report()
                 time.sleep(1)
-                print "Running.."
                 
             list_experiments = experimentrunner.get_results()
             
