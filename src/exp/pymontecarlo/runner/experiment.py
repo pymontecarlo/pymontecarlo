@@ -23,6 +23,7 @@ import glob
 import os
 
 # Third party modules
+import numpy as np
 from scipy.interpolate import SmoothBivariateSpline
 
 # Local modules
@@ -170,6 +171,17 @@ class ExperimentInterp2DRunner(_Runner):
     def report(self):
         completed = len(self._list_experiments)
         return completed, 0, ''
+    
+    def get_average_running_time(self):
+        running_times = []
+        for experiment in self._list_experiments_data:
+            for measurement in experiment.get_measurements():
+                results = measurement.get_results_unk()
+                #if hasattr(results, 'time'):
+                running_times.append(results['time'].simulation_time_s)
+                #else:
+                #    raise ValueError, "Running times were not detected in experiments specified as data."
+        return np.mean(running_times)
 
     def _calc_kratios(self, experiment):
         x = experiment.get_values()
