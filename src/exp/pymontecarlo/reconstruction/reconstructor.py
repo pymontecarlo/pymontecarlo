@@ -50,7 +50,7 @@ class Reconstructor(object):
         self._optimizer = optimizer
         self._eps_diff = eps_diff
 
-    def reconstruct(self, x0, ref_experiment, ref_x=None):
+    def reconstruct(self, x0, ref_experiment, ref_x=None, rel_err=None):
         """
         Starts reconstruction.
         Returns the reconstructed geometry and the simulated k-ratios.
@@ -61,6 +61,8 @@ class Reconstructor(object):
         :arg ref_x: list of values from which a reference experiment will be created
             and simulated
             (if you want to use this, set ref_experiment to `None`)
+        :arg rel_err: if you know ref_x, you can use rel_err to stop the iteration
+            when the rel. error w.r.t. ref_x is less than rel_err
         """
         
         # TODO: interp2Drunner can't simulate standards yet
@@ -85,14 +87,19 @@ class Reconstructor(object):
         fgetter = FunctionGetter()
         func = fgetter.get_func(self._experimentcreator, self._experimentrunner, self._ref_experiment)
         fhandler = FunctionHandler(func, self._eps_diff)
-
-        x_opt, F_opt = \
-            self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
-                                     x0, self._experimentcreator.get_constraints())
+        
+        if ref_x and rel_err:
+            x_opt, F_opt, f_evals, exit_code = \
+                self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
+                                         x0, self._experimentcreator.get_constraints(), (ref_x, rel_err))
+        else:
+            x_opt, F_opt, f_evals, exit_code = \
+                self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
+                                         x0, self._experimentcreator.get_constraints())
         
         geometry_opt = self._experimentcreator.get_experiment(x_opt).get_geometry()
         
-        return geometry_opt, x_opt, F_opt
+        return geometry_opt, x_opt, F_opt, f_evals, exit_code
     
     def _simulate_standards(self, experiment):
         if not experiment.simulated_std():
