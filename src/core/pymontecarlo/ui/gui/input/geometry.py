@@ -36,7 +36,7 @@ from wxtools2.combobox import PyComboBox
 from wxtools2.floattext import FloatRangeTextCtrl, FloatRangeTextValidator
 
 from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, ThinGrainBoundaries
 from pymontecarlo.util.manager import ClassManager
 from pymontecarlo.util.human import camelcase_to_words
 
@@ -240,6 +240,37 @@ class GrainBoundariesGL(_GeometryGL):
         GLU.gluDeleteQuadric(self._qobj)
 
 GeometryGLManager.register(GrainBoundaries, GrainBoundariesGL)
+
+class ThinGrainBoundariesGL(GrainBoundariesGL):
+
+    def initgl(self):
+        GrainBoundariesGL.initgl(self)
+
+        # Bottom substrate
+        substrate_radius = 1.0
+        color_substrate = COLORS[10] + (0.5,)
+
+        self._qobj2 = GLU.gluNewQuadric()
+
+        self._bottom = GL.glGenLists(1)
+        GL.glNewList(self._bottom, GL.GL_COMPILE)
+        GL.glColor(*color_substrate)
+        GLU.gluDisk(self._qobj2, 0, substrate_radius, 36, 1)
+        GL.glEndList()
+
+    def _drawgl(self):
+        GrainBoundariesGL._drawgl(self)
+
+        GL.glPushMatrix()
+        GL.glTranslate(0.0, 0.0, -self.geometry.thickness_m * 1e6)
+        GL.glCallList(self._bottom)
+        GL.glPopMatrix()
+
+    def destroygl(self):
+        GrainBoundariesGL.destroygl(self)
+        GLU.gluDeleteQuadric(self._qobj2)
+
+GeometryGLManager.register(ThinGrainBoundaries, ThinGrainBoundariesGL)
 
 class SphereGL(_GeometryGL):
 
