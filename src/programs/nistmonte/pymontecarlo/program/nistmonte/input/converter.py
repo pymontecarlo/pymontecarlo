@@ -30,7 +30,7 @@ from pymontecarlo.input.converter import \
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
 from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, ThinGrainBoundaries
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
     (
@@ -57,7 +57,7 @@ from pymontecarlo.input.model import \
 
 class Converter(_Converter):
     BEAMS = [GaussianBeam, PencilBeam]
-    GEOMETRIES = [Substrate, Inclusion, MultiLayers, GrainBoundaries]
+    GEOMETRIES = [Substrate, Inclusion, MultiLayers, GrainBoundaries, ThinGrainBoundaries]
     DETECTORS = [
                  #BackscatteredElectronAzimuthalAngularDetector,
                  #BackscatteredElectronEnergyDetector,
