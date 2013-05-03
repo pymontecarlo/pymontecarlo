@@ -45,6 +45,7 @@ import matplotlib.cm as cm
 from pymontecarlo.output.result import \
     (PhotonIntensityResult, TrajectoryResult, TimeResult, ElectronFractionResult,
      PhotonSpectrumResult)
+from pymontecarlo.ui.gui.input.beam import BeamGLManager
 from pymontecarlo.ui.gui.input.geometry import GeometryGLManager
 import pymontecarlo.util.physics as physics
 from pymontecarlo.util.human import human_time
@@ -334,6 +335,7 @@ class _TrajectoryResultParameters(object):
         self.region_width = 3.0
 
         self.show_trajectories = True
+        self.show_beam = True
         self.show_geometry = True
         self.show_scalebar = True
 
@@ -362,6 +364,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         box_visibility = wx.StaticBox(self, label='Visibility')
 
         self._chk_show_trajectories = wx.CheckBox(self, label='Trajectories')
+        self._chk_show_beam = wx.CheckBox(self, label='Beam')
         self._chk_show_geometry = wx.CheckBox(self, label='Geometry')
         self._chk_show_scalebar = wx.CheckBox(self, label='Scale bar')
 
@@ -487,6 +490,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         sizer.Add(szr_visibilty, 0, wx.GROW | wx.ALL, 5)
 
         szr_visibilty.Add(self._chk_show_trajectories, 0, wx.ALL, 5)
+        szr_visibilty.Add(self._chk_show_beam, 0, wx.ALL, 5)
         szr_visibilty.Add(self._chk_show_geometry, 0, wx.ALL, 5)
         szr_visibilty.Add(self._chk_show_scalebar, 0, wx.ALL, 5)
 
@@ -726,6 +730,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         self._txt_region_width.SetValue(params.region_width)
 
         self._chk_show_trajectories.SetValue(params.show_trajectories)
+        self._chk_show_beam.SetValue(params.show_beam)
         self._chk_show_geometry.SetValue(params.show_geometry)
         self._chk_show_scalebar.SetValue(params.show_scalebar)
 
@@ -786,6 +791,7 @@ class _TrajectoryResultDialog(wx.Dialog):
         params.region_width = float(self._txt_region_width.GetValue())
 
         params.show_trajectories = self._chk_show_trajectories.GetValue()
+        params.show_beam = self._chk_show_beam.GetValue()
         params.show_geometry = self._chk_show_geometry.GetValue()
         params.show_scalebar = self._chk_show_scalebar.GetValue()
 
@@ -830,6 +836,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         self._options = options
         self._result = result
         self._params = _TrajectoryResultParameters(len(result)) # default
+        self._beamgl = BeamGLManager.get(options.beam.__class__)(options.beam)
         self._geometrygl = GeometryGLManager.get(options.geometry.__class__)(options.geometry)
         self._glists = []
 
@@ -858,6 +865,7 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         GL.glEnable(GL.GL_BLEND);
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
+        self._beamgl.initgl()
         self._geometrygl.initgl()
         self.ResetGLBuffer()
 
@@ -1053,6 +1061,10 @@ class _TrajectoryResultGLCanvas(GLCanvas):
         if self._params.show_trajectories:
             for ilist in self._glists:
                 GL.glCallList(ilist)
+
+        # Beam
+        if self._params.show_beam:
+            self._beamgl.drawgl()
 
         # Geometry
         if self._params.show_geometry:
