@@ -19,7 +19,7 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.geometry import \
     (_Geometry, Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere,
-     Cuboids2D)
+     Cuboids2D, ThinGrainBoundaries)
 from pymontecarlo.input.material import pure, VACUUM
 from pymontecarlo.input.body import Body, Layer
 
@@ -510,6 +510,167 @@ class TestGrainBoundaries(TestCase):
 
         layers = element.get('layers').split(',')
         self.assertEqual(2, len(layers))
+
+class TestThinGrainBoundaries(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.g1 = ThinGrainBoundaries(pure(29), pure(30), 500.0)
+        self.l1 = self.g1.add_layer(pure(31), 500.0)
+
+        mat = pure(29)
+        self.g2 = ThinGrainBoundaries(mat, pure(30), 400.0)
+        self.l2 = self.g2.add_layer(mat, 100.0)
+        self.l3 = self.g2.add_layer(pure(32), 200.0)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        # Grain boundaries 1
+        self.assertEqual('Copper', str(self.g1.left_material))
+        self.assertEqual('Zinc', str(self.g1.right_material))
+
+        self.assertEqual(1, len(self.g1.layers))
+        self.assertEqual('Gallium', str(self.g1.layers[0].material))
+
+        self.assertAlmostEqual(500.0, self.g1.thickness_m, 4)
+
+        # Grain boundaries 2
+        self.assertEqual('Copper', str(self.g2.left_material))
+        self.assertEqual('Zinc', str(self.g2.right_material))
+
+        self.assertEqual(2, len(self.g2.layers))
+        self.assertEqual('Copper', str(self.g2.layers[0].material))
+        self.assertEqual('Germanium', str(self.g2.layers[1].material))
+
+        self.assertAlmostEqual(400.0, self.g2.thickness_m, 4)
+
+    def testfrom_xml(self):
+        # Grain boundaries 1
+        self.g1.tilt_rad = 1.1
+        self.g1.rotation_rad = 2.2
+        element = self.g1.to_xml()
+        g = GrainBoundaries.from_xml(element)
+
+        self.assertEqual('Copper', str(g.left_material))
+        self.assertEqual('Zinc', str(g.right_material))
+
+        self.assertEqual(1, len(g.layers))
+        self.assertEqual('Gallium', str(g.layers[0].material))
+
+        self.assertAlmostEqual(1.1, g.tilt_rad, 4)
+        self.assertAlmostEqual(2.2, g.rotation_rad, 4)
+
+        self.assertAlmostEqual(500.0, g.thickness_m, 4)
+
+        # Grain boundaries 2
+        element = self.g2.to_xml()
+        g = GrainBoundaries.from_xml(element)
+
+        self.assertEqual('Copper', str(g.left_material))
+        self.assertEqual('Zinc', str(g.right_material))
+
+        self.assertEqual(2, len(g.layers))
+        self.assertEqual('Copper', str(g.layers[0].material))
+        self.assertEqual('Germanium', str(g.layers[1].material))
+
+        self.assertAlmostEqual(0.0, g.tilt_rad, 4)
+        self.assertAlmostEqual(0.0, g.rotation_rad, 4)
+
+        self.assertAlmostEqual(400.0, g.thickness_m, 4)
+
+    def testleft_body(self):
+        self.assertEqual(self.g1.left_material, self.g1.left_body.material)
+
+    def testright_body(self):
+        self.assertEqual(self.g1.right_material, self.g1.right_body.material)
+
+    def testget_bodies(self):
+        self.assertEqual(3, len(self.g1.get_bodies()))
+
+    def testget_dimensions(self):
+        # Grain boundaries 1
+        dim = self.g1.get_dimensions(self.g1.left_body)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.g1.right_body)
+        self.assertAlmostEqual(250.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertAlmostEqual(-250.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        # Grain boundaries 2
+        dim = self.g2.get_dimensions(self.g2.left_body)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.g2.right_body)
+        self.assertAlmostEqual(150.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertAlmostEqual(-150.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(-50.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l3)
+        self.assertAlmostEqual(-50.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+    def testto_xml(self):
+        # Grain boundaries 1
+        element = self.g1.to_xml()
+
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(3, len(list(element.find('bodies'))))
+
+        layers = element.get('layers').split(',')
+        self.assertEqual(1, len(layers))
+
+        self.assertAlmostEqual(500, float(element.get('thickness')), 4)
+
+        # Grain boundaries 2
+        element = self.g2.to_xml()
+
+        self.assertEqual(3, len(list(element.find('materials'))))
+        self.assertEqual(4, len(list(element.find('bodies'))))
+
+        layers = element.get('layers').split(',')
+        self.assertEqual(2, len(layers))
+
+        self.assertAlmostEqual(400, float(element.get('thickness')), 4)
 
 class TestSphere(TestCase):
 

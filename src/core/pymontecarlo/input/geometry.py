@@ -661,6 +661,85 @@ class GrainBoundaries(_Layered):
 
 XMLIO.register('{http://pymontecarlo.sf.net}grainBoundaries', GrainBoundaries)
 
+class ThinGrainBoundaries(GrainBoundaries):
+    def __init__(self, left_material, right_material, thickness_m, layers=None):
+        """
+        Creates a thin film consisting of a grain boundaries geometry.
+        It consists of 0 or many layers in the y-z plane (normal parallel to x)
+        simulating interfaces between different materials.
+        If no layer is defined, the geometry is a couple.
+        
+        :arg left_material: material on the left side
+        :arg right_material: material on the right side
+        :arg thickness_m: thickness of the geometry (in meters)
+        :arg layers: :class:`list` of :class:`.Layer`
+        """
+        GrainBoundaries.__init__(self, left_material, right_material, layers)
+        self.thickness_m = thickness_m
+
+    def __repr__(self):
+        return '<ThinGrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i, thickness=%s m)>' % \
+            (str(self.left_material), str(self.right_material),
+             len(self.layers), self.thickness_m)
+
+    @classmethod
+    def __loadxml__(cls, element):
+        gb = GrainBoundaries.__loadxml__(element)
+        thickness_m = float(element.get('thickness'))
+
+        obj = cls(VACUUM, VACUUM, thickness_m, gb.layers)
+        obj._props['left'] = gb.left_body
+        obj._props['right'] = gb.right_body
+        obj.tilt_rad = gb.tilt_rad
+        obj.rotation_rad = gb.rotation_rad
+
+        return obj
+
+    def __savexml__(self, element, *args, **kwargs):
+        GrainBoundaries.__savexml__(self, element, *args, **kwargs)
+
+        element.set('thickness', str(self.thickness_m))
+
+    @property
+    def thickness_m(self):
+        """
+        Thickness of geometry (in meters).
+        """
+        return self._props['thickness']
+
+    @thickness_m.setter
+    def thickness_m(self, thickness_m):
+        if thickness_m <= 0:
+            raise ValueError, 'Thickness must be greater than 0'
+        self._props['thickness'] = thickness_m
+
+    def get_dimensions(self, body):
+        thicknesses = map(_THICKNESS_GETTER, self.layers)
+
+        positions = []
+        if thicknesses: # simple couple
+            middle = sum(thicknesses) / 2.0
+            for i in range(len(thicknesses)):
+                positions.append(sum(thicknesses[:i]) - middle)
+            positions.append(positions[-1] + thicknesses[-1])
+        else:
+            positions.append(0.0)
+
+        zmin = -self.thickness_m
+
+        if body is self.left_body:
+            return _Dimension(xmax=positions[0], zmax=0, zmin=zmin)
+        elif body is self.right_body:
+            return _Dimension(xmin=positions[-1], zmax=0, zmin=zmin)
+        elif body in self.layers:
+            index = self.layers.index(body)
+            return _Dimension(xmin=positions[index], xmax=positions[index + 1], 
+                              zmax=0, zmin=zmin)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
+XMLIO.register('{http://pymontecarlo.sf.net}thinGrainBoundaries', ThinGrainBoundaries)
+
 class Sphere(_Geometry):
 
     def __init__(self, material, diameter_m):
