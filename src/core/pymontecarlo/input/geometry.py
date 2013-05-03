@@ -19,6 +19,7 @@ __license__ = "GPL v3"
 
 __all__ = ['Cuboids2D',
            'GrainBoundaries',
+           'ThinGrainBoundaries',
            'Inclusion',
            'MultiLayers',
            'Sphere',
