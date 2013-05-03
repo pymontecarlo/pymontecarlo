@@ -179,8 +179,10 @@ class ConfigureDialog(wx.Dialog):
             panel.save(self._settings)
             selected_programs.append(program.alias)
 
+        self._settings.pymontecarlo.programs = ','.join(selected_programs)
+
         # Save settings
-        self._settings.write(selected_programs)
+        self._settings.write()
         show_exclamation_dialog(self, 'Configuration saved', 'Configuration')
 
         self.EndModal(wx.ID_OK)

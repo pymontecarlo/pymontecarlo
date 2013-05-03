@@ -143,7 +143,10 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnConfiguration, id=wx.ID_PREFERENCES)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
 
+        self.Bind(wx.EVT_CLOSE, self.OnExit)
+
     def OnExit(self, event=None):
+        controller.close()
         wx.Exit()
 
     def OnConfiguration(self, event):

@@ -159,10 +159,7 @@ class Settings(ConfigParser):
 
         raise ValueError, 'Program GUI %s not found' % alias
 
-    def write(self, selected_program_aliasses=[]):
-        section = self.add_section('pymontecarlo')
-        section.programs = ','.join(selected_program_aliasses)
-
+    def write(self):
         dirpath = os.path.join(os.path.expanduser('~'), '.pymontecarlo')
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)

@@ -77,7 +77,7 @@ class _Controller(object):
 
     def __init__(self):
         self._simulations = set()
-        self._basedir = os.getcwd()
+        self._basedir = getattr(get_settings().pymontecarlo, 'basedir', os.getcwd())
 
     def __len__(self):
         return len(self._simulations)
@@ -169,6 +169,11 @@ class _Controller(object):
 
         sim = _Simulation(filepath, options, results)
         self.add(sim)
+
+    def close(self):
+        settings = get_settings()
+        settings.pymontecarlo.basedir = self._basedir
+        settings.write()
 
 controller = _Controller()
 

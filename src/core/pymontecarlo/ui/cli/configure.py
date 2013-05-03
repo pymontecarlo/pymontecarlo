@@ -61,8 +61,10 @@ def run(argv=None):
 
         console.print_line()
 
+    settings.pymontecarlo.programs = ','.join(programs)
+
     # Save
-    settings.write(programs)
+    settings.write()
     console.print_success("Settings saved")
 
     # Finalize
