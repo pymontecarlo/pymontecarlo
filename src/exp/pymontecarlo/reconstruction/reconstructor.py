@@ -154,7 +154,8 @@ class FunctionGetter(object):
             list_experiments = experimentrunner.get_results()
             
             list_diff = []
-            for experiment in list_experiments:
+            
+            for experiment in sorted(list_experiments, key=lambda x: x.name):
                 list_diff.append(experiment.get_kratios() - ref_experiment.get_kratios())
                 
             experimentrunner.stop()
