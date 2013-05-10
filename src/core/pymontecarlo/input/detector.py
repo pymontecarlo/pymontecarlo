@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 __all__ = ['BackscatteredElectronAzimuthalAngularDetector',
            'BackscatteredElectronEnergyDetector',
            'BackscatteredElectronPolarAngularDetector',
+           'BackscatteredElectronRadialDetector',
            'ElectronFractionDetector',
            'EnergyDepositedSpatialDetector',
            'PhotonDepthDetector',
