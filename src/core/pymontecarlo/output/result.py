@@ -1207,7 +1207,7 @@ class _ChannelsResult(_Result):
 
     @classmethod
     def __loadhdf5__(cls, hdf5file, key):
-        data = hdf5file[key]['data']
+        data = np.copy(hdf5file[key]['data'])
         return cls(data)
 
     def __savehdf5__(self, hdf5file, key):
