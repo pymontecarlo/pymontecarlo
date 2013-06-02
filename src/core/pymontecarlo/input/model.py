@@ -327,8 +327,8 @@ ENERGY_LOSS_TYPE = ModelType('energy loss')
 
 ENERGY_LOSS = ModelCategory(ENERGY_LOSS_TYPE)
 ENERGY_LOSS.joy_luo1989 = Model('Joy and Luo 1989', 'Joy and Luo (1989)')
-#ENERGY_LOSS.bethe1930 = \
-#    Model("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
+ENERGY_LOSS.bethe1930 = \
+    Model("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.bethe1930mod = \
     Model("Modified Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.joy_luo_lowney = Model('Joy and Luo + Lowney')
