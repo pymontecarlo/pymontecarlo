@@ -21,8 +21,8 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.detector import \
-   (_EnergyDetector, _ElectronRangeDetector, _PhotonRangeDetector)
+from pymontecarlo.input.parameter import iter_values
+from pymontecarlo.input.detector import _EnergyDetector
 
 # Globals and constants variables.
 
@@ -67,16 +67,13 @@ def ensure_emax(options, emax=None):
 
     return emax
 
-def adjust_range(options, safety_factor=1.5):
+def expand(options):
     """
-    Adjusts the photon and electron ranges of all the detectors based on the
     
     """
-    energy = options.beam.energy
+    prm_values = {}
 
-    for detector in options.detectors.values():
-        if isinstance(detector, _ElectronRangeDetector):
-            pass
-        elif isinstance(detector, _PhotonRangeDetector):
-            transition = detector.transition
-            pass
+    for baseobj, name, value in iter_values(options):
+        prm_values.setdefault((baseobj, name), []).append(value)
+
+    print prm_values

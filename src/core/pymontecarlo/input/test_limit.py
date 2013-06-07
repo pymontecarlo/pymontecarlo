@@ -34,17 +34,18 @@ class TestTimeLimit(TestCase):
 
     def testskeleton(self):
         self.assertEqual(123, self.lim.time_s)
+        self.assertAlmostEqual(2.05, self.lim.time_min, 3)
 
-    def testfrom_xml(self):
-        element = self.lim.to_xml()
-        lim = TimeLimit.from_xml(element)
-
-        self.assertEqual(123, lim.time_s)
-
-    def testto_xml(self):
-        element = self.lim.to_xml()
-
-        self.assertEqual(123, int(element.get('time')))
+#    def testfrom_xml(self):
+#        element = self.lim.to_xml()
+#        lim = TimeLimit.from_xml(element)
+#
+#        self.assertEqual(123, lim.time_s)
+#
+#    def testto_xml(self):
+#        element = self.lim.to_xml()
+#
+#        self.assertEqual(123, int(element.get('time')))
 
 class TestShowersLimit(TestCase):
 
@@ -59,16 +60,16 @@ class TestShowersLimit(TestCase):
     def testskeleton(self):
         self.assertEqual(123, self.lim.showers)
 
-    def testfrom_xml(self):
-        element = self.lim.to_xml()
-        lim = ShowersLimit.from_xml(element)
-
-        self.assertEqual(123, lim.showers)
-
-    def testto_xml(self):
-        element = self.lim.to_xml()
-
-        self.assertEqual(123, int(element.get('showers')))
+#    def testfrom_xml(self):
+#        element = self.lim.to_xml()
+#        lim = ShowersLimit.from_xml(element)
+#
+#        self.assertEqual(123, lim.showers)
+#
+#    def testto_xml(self):
+#        element = self.lim.to_xml()
+#
+#        self.assertEqual(123, int(element.get('showers')))
 
 class TestUncertaintyLimit(TestCase):
 
@@ -90,23 +91,23 @@ class TestUncertaintyLimit(TestCase):
         self.lim.transitions.update(La(29))
         self.assertEqual(3, len(self.lim.transitions))
 
-    def testfrom_xml(self):
-        element = self.lim.to_xml()
-        lim = UncertaintyLimit.from_xml(element)
-
-        self.assertEqual(1, len(self.lim.transitions))
-        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
-        self.assertAlmostEqual(0.05, lim.uncertainty, 4)
-
-    def testto_xml(self):
-        element = self.lim.to_xml()
-
-        child = list(element)[0]
-        self.assertEqual(29, int(child.get('z')))
-        self.assertEqual(4, int(child.get('src')))
-        self.assertEqual(1, int(child.get('dest')))
-
-        self.assertAlmostEqual(0.05, float(element.get('uncertainty')), 4)
+#    def testfrom_xml(self):
+#        element = self.lim.to_xml()
+#        lim = UncertaintyLimit.from_xml(element)
+#
+#        self.assertEqual(1, len(self.lim.transitions))
+#        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
+#        self.assertAlmostEqual(0.05, lim.uncertainty, 4)
+#
+#    def testto_xml(self):
+#        element = self.lim.to_xml()
+#
+#        child = list(element)[0]
+#        self.assertEqual(29, int(child.get('z')))
+#        self.assertEqual(4, int(child.get('src')))
+#        self.assertEqual(1, int(child.get('dest')))
+#
+#        self.assertAlmostEqual(0.05, float(element.get('uncertainty')), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

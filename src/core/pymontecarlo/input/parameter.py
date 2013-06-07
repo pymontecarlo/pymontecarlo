@@ -21,18 +21,29 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 from abc import ABCMeta, abstractmethod
+import collections
+import copy
+from operator import itemgetter
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.multipleloop import combine
 
 # Globals and constants variables.
 
 class ParameterizedMetaClass(type):
 
     def __new__(cls, clsname, bases, methods):
-        # Attach attribute names to parameters
+
         parameters = {}
+
+        # Parameters from parents
+        parents = [b for b in bases if isinstance(b, ParameterizedMetaClass)]
+        for base in parents:
+            parameters.update(base.__parameters__)
+
+        # Attach attribute names to parameters
         for key, value in methods.items():
             if isinstance(value, Parameter):
                 value._new(cls, clsname, bases, methods, key)
@@ -43,11 +54,62 @@ class ParameterizedMetaClass(type):
 
         return type.__new__(cls, clsname, bases, methods)
 
-class _ValueWrapper(object):
+class _ParameterValuesWrapper(object):
 
     def __init__(self, values):
-        self._values = values
+        self._values = tuple(values)
         self._frozen = False
+
+    def __repr__(self):
+        format = '<%s(%s, frozen)>' if self.is_frozen() else '<%s(%s)>'
+        return format % (self.__class__.__name__, str(self._values))
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def __len__(self):
+        return len(self._values)
+
+    def __add__(self, other):
+        if self.is_frozen():
+            raise ValueError, "Frozen parameter"
+        return self.__class__([v + other for v in self._values])
+
+    def __sub__(self, other):
+        if self.is_frozen():
+            raise ValueError, "Frozen parameter"
+        return self.__class__([v - other for v in self._values])
+
+    def __mul__(self, other):
+        if self.is_frozen():
+            raise ValueError, "Frozen parameter"
+        return self.__class__([v * other for v in self._values])
+
+    def __div__(self, other):
+        if self.is_frozen():
+            raise ValueError, "Frozen parameter"
+        return self.__class__([v / other for v in self._values])
+
+    def __eq__(self, other):
+        return all([v == other for v in self._values])
+
+    def __ne__(self, other):
+        return all([v != other for v in self._values])
+
+    def __lt__(self, other):
+        return all([v < other for v in self._values])
+
+    def __le__(self, other):
+        return all([v <= other for v in self._values])
+
+    def __gt__(self, other):
+        return all([v > other for v in self._values])
+
+    def __ge__(self, other):
+        return all([v >= other for v in self._values])
+
+    def __contains__(self, item):
+        return all([item in v for v in self._values])
 
     def get(self):
         if len(self._values) == 1:
@@ -61,39 +123,49 @@ class _ValueWrapper(object):
     def is_frozen(self):
         return self._frozen
 
-_PassValueWrapper = _ValueWrapper(())
+_PASS_WRAPPER = _ParameterValuesWrapper(())
 
 class Parameter(object):
 
-    def __init__(self, validator=None, doc=None):
+    def __init__(self, validators=None, doc=None):
         self._name = None
         self.__doc__ = doc
 
-        if validator is None:
-            validator = PassValidator()
-        self._validator = validator
+        if validators is None:
+            validators = [PassValidator()]
+        if not hasattr(validators, '__iter__'):
+            validators = [validators]
+        self._validators = validators
 
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.name)
 
     def __get__(self, obj, objtype=None):
+        return self._get_wrapper(obj, objtype).get()
+    
+    def _get_wrapper(self, obj, objtype=None):
         if not obj.__dict__.has_key(self.name):
             raise AttributeError, "No value"
-
-        wrapper = obj.__dict__[self.name]
-        return wrapper.get()
+        return obj.__dict__[self.name]
 
     def __set__(self, obj, values):
-        if obj.__dict__.get(self.name, _PassValueWrapper).is_frozen():
+        obj.__dict__[self.name] = self._create_wrapper(obj, values)
+    
+    def _create_wrapper(self, obj, values):
+        if obj.__dict__.get(self.name, _PASS_WRAPPER).is_frozen():
             raise AttributeError, "Frozen parameter"
 
         if not isinstance(values, list):
             values = (values,)
 
+        valid_values = []
         for value in values:
-            self._validator.validate(value)
+            valid_value = value
+            for validator in self._validators:
+                valid_value = validator.validate(valid_value)
+            valid_values.append(valid_value)
 
-        obj.__dict__[self.name] = _ValueWrapper(values)
+        return _ParameterValuesWrapper(valid_values)
 
     def _new(self, cls, clsname, bases, methods, name):
         self._name = name
@@ -115,34 +187,94 @@ class ParameterAlias(object):
         return '<%s(%s)>' % (self.__class__.__name__, self._alias.name)
 
     def __get__(self, obj, objtype=None):
-        return self._alias.__get__(obj, objtype)
+        return self._get_wrapper(obj, objtype).get()
 
-    def __set__(self, obj, value):
-        self._alias.__set__(obj, value)
-
-class AngleDegParameterAlias(ParameterAlias):
-
-    def __get__(self, obj, objtype=None):
-        values = ParameterAlias.__get__(self, obj, objtype)
-
-        if isinstance(values, tuple):
-            return tuple(map(math.degrees, values))
-        else:
-            return math.degrees(values)
+    def _get_wrapper(self, obj, objtype=None):
+        return self._alias._get_wrapper(obj, objtype)
 
     def __set__(self, obj, values):
-        if not isinstance(values, list):
-            values = (values,)
-        values = map(math.radians, values)
-        ParameterAlias.__set__(self, obj, values)
+        obj.__dict__[self._alias.name] = self._create_wrapper(obj, values)
+
+    def _create_wrapper(self, obj, values):
+        return self._alias._create_wrapper(obj, values)
+
+class FactorParameterAlias(ParameterAlias):
+    """
+    Multiplies the set value(s) by the specified factor before passing them 
+    to the alias parameter and divides the returned value(s) from the
+    alias parameter by the specified factor.
+    """
+
+    def __init__(self, alias, factor):
+            ParameterAlias.__init__(self, alias)
+            self._factor = factor
+
+    def _get_wrapper(self, obj, objtype=None):
+        return ParameterAlias._get_wrapper(self, obj, objtype) / self._factor
+
+    def _create_wrapper(self, obj, values):
+        return ParameterAlias._create_wrapper(self, obj, values) * self._factor
 
 class AngleParameter(Parameter):
-
+    
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
         methods[name + '_rad'] = parameter
-        methods[name + '_deg'] = AngleDegParameterAlias(parameter)
+        methods[name + '_deg'] = FactorParameterAlias(parameter, math.pi / 180.0)
         Parameter._new(self, cls, clsname, bases, methods, name + '_rad')
+
+class UnitParameter(Parameter):
+    
+    _prefix = {'y': 1e-24, # yocto
+               'z': 1e-21, # zepto
+               'a': 1e-18, # atto
+               'f': 1e-15, # femto
+               'p': 1e-12, # pico
+               'n': 1e-9, # nano
+               'u': 1e-6, # micro
+               'm': 1e-3, # mili
+               'c': 1e-2, # centi
+               'd': 1e-1, # deci
+               'k': 1e3, # kilo
+               'M': 1e6, # mega
+               'G': 1e9, # giga
+               'T': 1e12, # tera
+               'P': 1e15, # peta
+               'E': 1e18, # exa
+               'Z': 1e21, # zetta
+               'Y': 1e24} # yotta
+    
+    def __init__(self, unit, validators=None, doc=None):
+        Parameter.__init__(self, validators, doc)
+        self._unit = unit
+
+    def _new(self, cls, clsname, bases, methods, name):
+        parameter = methods.pop(name)
+        methods[name + '_' + self._unit] = parameter
+        
+        for prefix, factor in self._prefix.iteritems():
+            methods['%s_%s%s' % (name, prefix, self._unit)] = \
+                FactorParameterAlias(parameter, factor)
+
+        Parameter._new(self, cls, clsname, bases, methods, name + "_" + self._unit)
+
+class TimeParameter(Parameter):
+
+    _factors = {'year': 31536000.0,
+                'month': 2628000.0,
+                'day': 86400.0,
+                'hr': 3600.0,
+                'min': 60.0,
+                's': 1.0}
+
+    def _new(self, cls, clsname, bases, methods, name):
+        parameter = methods.pop(name)
+
+        for unit, factor in self._factors.iteritems():
+            methods['%s_%s' % (name, unit)] = \
+                FactorParameterAlias(parameter, factor)
+
+        Parameter._new(self, cls, clsname, bases, methods, name + '_s')
 
 class _Validator(object):
 
@@ -155,7 +287,7 @@ class _Validator(object):
 class PassValidator(_Validator):
 
     def validate(self, value):
-        pass
+        return value
 
 class SimpleValidator(_Validator):
 
@@ -167,7 +299,8 @@ class SimpleValidator(_Validator):
 
     def validate(self, value):
         if not self._func(value):
-            raise ValueError, self._message or "Invalid value"
+            raise ValueError, self._message or "Invalid value(s)"
+        return value
 
 class EnumValidator(_Validator):
 
@@ -176,7 +309,8 @@ class EnumValidator(_Validator):
 
     def validate(self, value):
         if value not in self._constants:
-            raise ValueError, "Incorrect value, possible values: " + str(self._constants)
+            raise ValueError, "Incorrect value(s), possible values: " + str(self._constants)
+        return value
 
 class LengthValidator(_Validator):
 
@@ -186,46 +320,69 @@ class LengthValidator(_Validator):
     def validate(self, value):
         if len(value) != self._length:
             raise ValueError, "Value must be of length %i." % self._length
+        return value
+
+class CastValidator(_Validator):
+    
+    def __init__(self, cls):
+        self._cls = cls
+    
+    def validate(self, value):
+        if isinstance(value, collections.Mapping):
+            return self._cls(**value)
+        elif isinstance(value, collections.Iterable):
+            return self._cls(*value)
+        else:
+            return self._cls(value)
+
+def iter_parameters(obj):
+    for name, parameter in getattr(obj, '__parameters__', {}).iteritems():
+        wrapper = obj.__dict__.get(name, [])
+
+        for value in wrapper:
+            if hasattr(value, '__parameters__'):
+                for x in iter_parameters(value):
+                    yield x
+
+        yield obj, name, parameter
+
+def iter_values(obj, keep_frozen=True):
+    for name in getattr(obj, '__parameters__', {}).iterkeys():
+        wrapper = obj.__dict__.get(name)
+        if not wrapper:
+            continue
+        if wrapper.is_frozen() and not keep_frozen:
+            continue
+
+        for value in wrapper:
+            if hasattr(value, '__parameters__'):
+                for x in iter_values(value, keep_frozen):
+                    yield x
+            else:
+                yield obj, name, value
 
 def freeze(obj):
-    for parameter in obj.__parameters__.itervalues():
-        parameter.freeze(obj)
+    for baseobj, name, _value in iter_parameters(obj):
+        wrapper = baseobj.__dict__.get(name)
+        if not wrapper: # Create empty wrapper to be frozen
+            baseobj.__dict__[name] = _ParameterValuesWrapper(())
+        baseobj.__parameters__[name].freeze(baseobj)
 
-#class Test(object):
-#
-#    __metaclass__ = ParameterizedMetaClass
-#
-#    x = Parameter(5.0, doc='x parameter')
-#    y = AngleParameter(6.0)
-#
-#class Test2(object):
-#
-#    __metaclass__ = ParameterizedMetaClass
-#
-#    a = Parameter(5.0, doc='x parameter')
-#
-#class Test3(object):
-#
-#    __metaclass__ = ParameterizedMetaClass
-#
-#    h = Parameter(5.0, doc='x parameter')
-#
-#test1 = Test()
-#test2 = Test2()
-#test3 = Test3()
-#test4 = Test3()
-##print map(id, test1.__parameters__)
-##print map(id, test2.__parameters__)
-##
-#test1.x = test2
-#test2.a = [test3, test4]
-#test3.h = [1999, 20001]
-##print test1.x, test2.x
-#
-#for s in walk(test1):
-#    print s
+def expand(obj):
+    obj = copy.deepcopy(obj)
 
+    prm_values = {}
+    for baseobj, name, value in iter_values(obj, keep_frozen=False):
+        prm_values.setdefault((baseobj, name), []).append(value)
 
-#for parameter in test.__parameters__:
-#    print parameter, list(iter(parameter))
-#print test.__class__.__dict__
+    combinations, names, _varied = combine(prm_values)
+    baseobjs = map(itemgetter(0), names)
+    names = map(itemgetter(1), names)
+
+    objs = []
+    for combination in combinations:
+        for baseobj, name, value in zip(baseobjs, names, combination):
+            setattr(baseobj, name, value)
+        objs.append(copy.deepcopy(obj))
+
+    return objs

@@ -24,7 +24,7 @@ __all__ = ['composition_from_formula',
            'VACUUM']
 
 # Standard library modules.
-from collections import defaultdict
+from collections import defaultdict, MutableMapping
 from fractions import gcd
 from itertools import combinations
 
@@ -32,10 +32,12 @@ from itertools import combinations
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
-from pymontecarlo.input.option import Option
+from pymontecarlo.input.parameter import ParameterizedMetaClass, Parameter, UnitParameter, SimpleValidator
+
+
 
 import pymontecarlo.util.element_properties as ep
-from pymontecarlo.util.xmlutil import XMLIO, Element
+#from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 
@@ -256,7 +258,28 @@ def pure(z,
                     absorption_energy_electron_eV, absorption_energy_photon_eV,
                     absorption_energy_positron_eV)
 
-class Material(Option):
+_energy_validator = \
+    SimpleValidator(lambda e: e >= 0.0,
+                    'Energy must be greater or equal to 0.0')
+
+class Material(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
+    name = Parameter(doc="Name")
+
+
+
+    absorption_energy_electron = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the electrons")
+    absorption_energy_photon = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the photons")
+    absorption_energy_positron = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the positrons")
+
     def __init__(self, name, composition, density_kg_m3=None,
                  absorption_energy_electron_eV=50.0,
                  absorption_energy_photon_eV=50.0,
@@ -295,8 +318,6 @@ class Material(Option):
             in this material.
         :type absorption_energy_positron_eV: :class:`float`
         """
-        Option.__init__(self)
-
         self.name = name
         self.composition = composition
         self.density_kg_m3 = density_kg_m3
@@ -315,47 +336,36 @@ class Material(Option):
     def __str__(self):
         return self.name
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        name = element.get('name')
-
-        composition = {}
-        for child in iter(element.find('composition')):
-            composition[int(child.get('z'))] = float(child.get('weightFraction'))
-
-        density_kg_m3 = float(element.get('density'))
-
-        abs_electron_eV = float(element.get('absorptionEnergyElectron'))
-        abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
-        abs_positron_eV = float(element.get('absorptionEnergyPositron'))
-
-        return cls(name, composition, density_kg_m3,
-                   abs_electron_eV, abs_photon_eV, abs_positron_eV)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('name', self.name)
-
-        child = Element('composition')
-        for z, fraction in self.composition.iteritems():
-            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
-        element.append(child)
-
-        element.set('density', str(self.density_kg_m3))
-
-        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
-        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
-        element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
-
-    @property
-    def name(self):
-        """
-        Name of the material.
-        """
-        return self._props['name']
-
-    @name.setter
-    def name(self, name):
-        self._props['name'] = name
+#    @classmethod
+#    def __loadxml__(cls, element, *args, **kwargs):
+#        name = element.get('name')
+#
+#        composition = {}
+#        for child in iter(element.find('composition')):
+#            composition[int(child.get('z'))] = float(child.get('weightFraction'))
+#
+#        density_kg_m3 = float(element.get('density'))
+#
+#        abs_electron_eV = float(element.get('absorptionEnergyElectron'))
+#        abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
+#        abs_positron_eV = float(element.get('absorptionEnergyPositron'))
+#
+#        return cls(name, composition, density_kg_m3,
+#                   abs_electron_eV, abs_photon_eV, abs_positron_eV)
+#
+#    def __savexml__(self, element, *args, **kwargs):
+#        element.set('name', self.name)
+#
+#        child = Element('composition')
+#        for z, fraction in self.composition.iteritems():
+#            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
+#        element.append(child)
+#
+#        element.set('density', str(self.density_kg_m3))
+#
+#        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
+#        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
+#        element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
 
     @property
     def composition(self):
@@ -408,53 +418,10 @@ class Material(Option):
         density = self._props['density']
         return density is not None and density >= 0.0
 
-    @property
-    def absorption_energy_electron_eV(self):
-        """
-        Absorption energy of the electrons in this material.
-        """
-        return self._props['absorption energy electron']
+#XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
 
-    @absorption_energy_electron_eV.setter
-    def absorption_energy_electron_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy electron'] = energy
-
-    @property
-    def absorption_energy_photon_eV(self):
-        """
-        Absorption energy of the photons in this material.
-        """
-        return self._props['absorption energy photon']
-
-    @absorption_energy_photon_eV.setter
-    def absorption_energy_photon_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy photon'] = energy
-
-    @property
-    def absorption_energy_positron_eV(self):
-        """
-        Absorption energy of the positrons in this material.
-        """
-        return self._props['absorption energy positron']
-
-    @absorption_energy_positron_eV.setter
-    def absorption_energy_positron_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy positron'] = energy
-
-XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
-
-class _Vacuum(Option):
+class _Vacuum(object):
     def __init__(self):
-        Option.__init__(self)
         self._index = 0
 
     def __repr__(self):
@@ -494,4 +461,4 @@ class _Vacuum(Option):
 
 VACUUM = _Vacuum()
 
-XMLIO.register('{http://pymontecarlo.sf.net}vacuum', _Vacuum)
+#XMLIO.register('{http://pymontecarlo.sf.net}vacuum', _Vacuum)

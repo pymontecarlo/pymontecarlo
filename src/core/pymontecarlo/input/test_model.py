@@ -102,20 +102,20 @@ class TestModel(TestCase):
         self.assertFalse(self.m1 != Model('name1', 'ref1'))
         self.assertTrue(self.m2 != Model('name2'))
 
-    def testfrom_xml(self):
-        element = self.m2.to_xml()
-        m2 = Model.from_xml(element)
-
-        self.assertEqual('name2', m2.name)
-        self.assertEqual('', m2.reference)
-        self.assertEqual(self.mtype, m2.type)
-
-    def testto_xml(self):
-        self.assertRaises(IOError, self.m1.to_xml)
-
-        element = self.m2.to_xml()
-        self.assertEqual('name2', element.get('name'))
-        self.assertEqual(str(self.mtype), element.get('type'))
+#    def testfrom_xml(self):
+#        element = self.m2.to_xml()
+#        m2 = Model.from_xml(element)
+#
+#        self.assertEqual('name2', m2.name)
+#        self.assertEqual('', m2.reference)
+#        self.assertEqual(self.mtype, m2.type)
+#
+#    def testto_xml(self):
+#        self.assertRaises(IOError, self.m1.to_xml)
+#
+#        element = self.m2.to_xml()
+#        self.assertEqual('name2', element.get('name'))
+#        self.assertEqual(str(self.mtype), element.get('type'))
 
 class TestModelCategory(TestCase):
 

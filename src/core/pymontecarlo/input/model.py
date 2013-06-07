@@ -37,8 +37,8 @@ import collections
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlutil import XMLIO
-from pymontecarlo.input.option import Option
+#from pymontecarlo.util.xmlutil import XMLIO
+#from pymontecarlo.input.option import Option
 
 # Globals and constants variables.
 
@@ -103,10 +103,9 @@ class __NoModelType(ModelType):
 
 NO_MODEL_TYPE = __NoModelType()
 
-class Model(Option):
-    def __init__(self, name, reference=''):
-        Option.__init__(self)
+class Model(object):
 
+    def __init__(self, name, reference=''):
         self._name = name
         self._reference = reference
         self._type = NO_MODEL_TYPE
@@ -164,7 +163,7 @@ class Model(Option):
             raise ValueError, "No type. Model is unregistered."
         return self._type
 
-XMLIO.register('{http://pymontecarlo.sf.net}model', Model)
+#XMLIO.register('{http://pymontecarlo.sf.net}model', Model)
 
 class ModelCategory(collections.Set):
 
