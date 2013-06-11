@@ -24,6 +24,7 @@ from abc import ABCMeta, abstractmethod
 import collections
 import copy
 from operator import itemgetter
+import types
 
 # Third party modules.
 
@@ -340,29 +341,38 @@ def iter_parameters(obj):
         wrapper = obj.__dict__.get(name, [])
 
         for value in wrapper:
-            if hasattr(value, '__parameters__'):
-                for x in iter_parameters(value):
-                    yield x
+            # Go one level deeper for sequences and mappings
+            if isinstance(value, collections.Sequence):
+                for item in value:
+                    for x in iter_parameters(item):
+                        yield x
+            elif isinstance(value, collections.Mapping):
+                for val in value.itervalues():
+                    for x in iter_parameters(val):
+                        yield x
+            
+            for x in iter_parameters(value):
+                yield x
 
         yield obj, name, parameter
 
 def iter_values(obj, keep_frozen=True):
-    for name in getattr(obj, '__parameters__', {}).iterkeys():
-        wrapper = obj.__dict__.get(name)
-        if not wrapper:
+    for baseobj, name, parameter in iter_parameters(obj):
+        try:
+            wrapper = parameter._get_wrapper(baseobj)
+        except AttributeError: # No value
             continue
+    
         if wrapper.is_frozen() and not keep_frozen:
             continue
 
         for value in wrapper:
             if hasattr(value, '__parameters__'):
-                for x in iter_values(value, keep_frozen):
-                    yield x
-            else:
-                yield obj, name, value
+                continue
+            yield baseobj, name, value
 
 def freeze(obj):
-    for baseobj, name, _value in iter_parameters(obj):
+    for baseobj, name, _parameter in iter_parameters(obj):
         wrapper = baseobj.__dict__.get(name)
         if not wrapper: # Create empty wrapper to be frozen
             baseobj.__dict__[name] = _ParameterValuesWrapper(())

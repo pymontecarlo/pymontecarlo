@@ -34,16 +34,21 @@ class ParametrizedObject(object):
     param5 = AngleParameter(doc="Parameter5")
     param6 = UnitParameter("m", doc='Parameter6 (in meters)')
 
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
+
         self.param3 = 99
         self.__parameters__['param3'].freeze(self)
+
+    def __repr__(self):
+        return '<ParameterizedObject(%s)>' % self.name
 
 class TestParameter(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.obj = ParametrizedObject()
+        self.obj = ParametrizedObject('obj')
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -99,23 +104,40 @@ class TestParameter(unittest.TestCase):
         self.assertAlmostEqual(0.0008965, self.obj.param6_km, 8)
 
     def testiter_parameters(self):
-        subparam1 = ParametrizedObject()
-        subparam1.param1 = [88, 108]
-        self.obj.param1 = [subparam1]
+        subobj1 = ParametrizedObject('subobj1')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = [subobj1]
         
         self.assertEqual(10, len(list(iter_parameters(self.obj))))
 
+        # List of parameters
+        subobj1 = ParametrizedObject('subobj1')
+        subobj2 = ParametrizedObject('subobj2')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = [[subobj1, subobj2]]
+
+        self.assertEqual(15, len(list(iter_parameters(self.obj))))
+
+        # Dict of parameters
+        subobj1 = ParametrizedObject('subobj1')
+        subobj2 = ParametrizedObject('subobj2')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = {'subobj1': subobj1, 'subobj2': subobj2}
+
+        self.assertEqual(15, len(list(iter_parameters(self.obj))))
+
     def testiter_values(self):
-        subparam1 = ParametrizedObject()
-        subparam1.param1 = [88, 108]
-        self.obj.param1 = [subparam1]
+        subobj1 = ParametrizedObject('subobj1')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = [subobj1]
 
         self.assertEqual(4, len(list(iter_values(self.obj))))
+        self.assertEqual(2, len(list(iter_values(self.obj, keep_frozen=False))))
     
     def testfreeze(self):
-        subparam1 = ParametrizedObject()
-        subparam1.param1 = [88, 108]
-        self.obj.param1 = [subparam1]
+        subobj1 = ParametrizedObject('subobj1')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = [subobj1]
 
         freeze(self.obj)
 
@@ -136,9 +158,9 @@ class TestParameter(unittest.TestCase):
         self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_mm', 0)
 
     def testexpand(self):
-        subparam1 = ParametrizedObject()
-        subparam1.param1 = [88, 108]
-        self.obj.param1 = [subparam1]
+        subobj1 = ParametrizedObject('subobj1')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = [subobj1]
 
         objs = expand(self.obj)
 
