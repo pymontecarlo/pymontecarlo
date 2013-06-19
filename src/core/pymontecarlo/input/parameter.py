@@ -21,10 +21,9 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 from abc import ABCMeta, abstractmethod
-import collections
+from collections import Sequence, Mapping, Iterable
 import copy
 from operator import itemgetter
-import types
 
 # Third party modules.
 
@@ -329,9 +328,9 @@ class CastValidator(_Validator):
         self._cls = cls
     
     def validate(self, value):
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             return self._cls(**value)
-        elif isinstance(value, collections.Iterable):
+        elif isinstance(value, Iterable):
             return self._cls(*value)
         else:
             return self._cls(value)
@@ -342,17 +341,17 @@ def iter_parameters(obj):
 
         for value in wrapper:
             # Go one level deeper for sequences and mappings
-            if isinstance(value, collections.Sequence):
+            if isinstance(value, Sequence):
                 for item in value:
                     for x in iter_parameters(item):
                         yield x
-            elif isinstance(value, collections.Mapping):
+            elif isinstance(value, Mapping):
                 for val in value.itervalues():
                     for x in iter_parameters(val):
                         yield x
-            
-            for x in iter_parameters(value):
-                yield x
+            else:
+                for x in iter_parameters(value):
+                    yield x
 
         yield obj, name, parameter
 
@@ -367,16 +366,17 @@ def iter_values(obj, keep_frozen=True):
             continue
 
         for value in wrapper:
-            if hasattr(value, '__parameters__'):
+            if hasattr(value, '__parameters__') or \
+                    isinstance(value, (Sequence, Mapping)):
                 continue
             yield baseobj, name, value
 
 def freeze(obj):
-    for baseobj, name, _parameter in iter_parameters(obj):
+    for baseobj, name, parameter in iter_parameters(obj):
         wrapper = baseobj.__dict__.get(name)
         if not wrapper: # Create empty wrapper to be frozen
             baseobj.__dict__[name] = _ParameterValuesWrapper(())
-        baseobj.__parameters__[name].freeze(baseobj)
+        parameter.freeze(baseobj)
 
 def expand(obj):
     obj = copy.deepcopy(obj)
