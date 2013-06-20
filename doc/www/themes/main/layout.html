@@ -1,0 +1,74 @@
+{#
+    sphinxdoc/layout.html
+    ~~~~~~~~~~~~~~~~~~~~~
+
+    Sphinx layout template for the sphinxdoc theme.
+
+    :copyright: Copyright 2007-2010 by the Sphinx team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+#}
+{% extends "basic/layout.html" %}
+
+{%- macro relbarmod() %}
+    <div class="related">
+      <ul>
+        {%- block rootrellink %}
+          <li><a href="{{ pathto(master_doc) }}">home</a></li>
+          <li><a href="{{ pathto('features') }}">features</a></li>
+          <li><a href="{{ pathto('documentation') }}">documentation</a></li>
+          <li><a href="{{ pathto('examples') }}">examples</a></li>
+          <li><a href="{{ pathto('collaboration') }}">collaboration</a></li>
+          <li><a href="{{ pathto('download') }}">download</a></li>
+        {%- endblock %}
+        {%- block relbaritems %} {% endblock %}
+      </ul>
+    </div>
+{%- endmacro %}
+{%- macro navbar() %}
+    <div class="navbar">
+        <ul>
+            {% if prev %}
+                <li><a href="{{ prev.link|e }}">prev</a>
+            {% endif %}
+            {% if parents %}
+                <li><a href="{{ parents[-1].link|e }}">up</a></li>
+            {% endif %}
+            {% if next %}
+                <li><a href="{{ next.link|e }}">next</a></li>
+            {% endif %}
+       </ul>
+    </div>
+{%- endmacro %}
+
+{%- block header %}
+    <div class="header">
+       pyMonteCarlo
+    </div>
+{% endblock %}
+
+{%- block relbar1 %}{{ relbarmod() }}{% endblock %}
+{%- block relbar2 %}{% endblock %}
+
+{% block sidebar1 %}{{ navbar() }}{% endblock %}
+{% block sidebar2 %}{% endblock %}
+
+{%- block footer %}
+    <div class="footer">
+    <a href="https://bitbucket.org/pymontecarlo/pymontecarlo"><img src="{{ pathto('_static/bitbucket.png', 1) }}" width="113" height="25" alt="pyMonteCarlo at Bitbucket.org" /></a>
+    <br/>
+    {%- if show_copyright %}
+      {%- if hasdoc('copyright') %}
+        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
+      {%- else %}
+        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+      {%- endif %}
+    {%- endif %}
+    {%- if last_updated %}
+      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+    {%- endif %}
+    {%- if show_sphinx %}
+      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
+    {%- endif %}
+    </div>
+{%- endblock %}
+

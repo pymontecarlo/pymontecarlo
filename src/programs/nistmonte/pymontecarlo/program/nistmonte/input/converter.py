@@ -96,7 +96,7 @@ class Converter(_Converter):
                                           IONIZATION_POTENTIAL.wilson1941,
                                           IONIZATION_POTENTIAL.zeller1975],
               ENERGY_LOSS.type: [ENERGY_LOSS.joy_luo1989,
-                                #ENERGY_LOSS.bethe1930,
+                                 ENERGY_LOSS.bethe1930,
                                  ENERGY_LOSS.bethe1930mod],
               MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.chantler2005,
                                                  MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11,

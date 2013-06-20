@@ -181,7 +181,7 @@ class Worker(_Worker):
                 except ValueError: # Does not exist
                     continue
 
-                if transition.most_probable.energy_eV < options.beam.energy_eV:
+                if transition.most_probable.dest.ionization_energy_eV < options.beam.energy_eV:
                     transitions.append(str(transition))
 
         return transitions
