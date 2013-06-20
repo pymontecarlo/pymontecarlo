@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 from abc import ABCMeta, abstractmethod
-from collections import Sequence, Mapping, Iterable
+from collections import MutableSet, MutableMapping, Mapping, Iterable
 import copy
 from operator import itemgetter
 
@@ -35,7 +35,6 @@ from pymontecarlo.util.multipleloop import combine
 class ParameterizedMetaClass(type):
 
     def __new__(cls, clsname, bases, methods):
-
         parameters = {}
 
         # Parameters from parents
@@ -73,22 +72,26 @@ class _ParameterValuesWrapper(object):
     def __add__(self, other):
         if self.is_frozen():
             raise ValueError, "Frozen parameter"
-        return self.__class__([v + other for v in self._values])
+        return self.__class__([v + other if v is not None else None \
+                               for v in self._values])
 
     def __sub__(self, other):
         if self.is_frozen():
             raise ValueError, "Frozen parameter"
-        return self.__class__([v - other for v in self._values])
+        return self.__class__([v - other if v is not None else None \
+                               for v in self._values])
 
     def __mul__(self, other):
         if self.is_frozen():
             raise ValueError, "Frozen parameter"
-        return self.__class__([v * other for v in self._values])
+        return self.__class__([v * other if v is not None else None \
+                               for v in self._values])
 
     def __div__(self, other):
         if self.is_frozen():
             raise ValueError, "Frozen parameter"
-        return self.__class__([v / other for v in self._values])
+        return self.__class__([v / other if v is not None else None \
+                               for v in self._values])
 
     def __eq__(self, other):
         return all([v == other for v in self._values])
@@ -197,6 +200,83 @@ class ParameterAlias(object):
 
     def _create_wrapper(self, obj, values):
         return self._alias._create_wrapper(obj, values)
+
+class ParameterizedMutableSet(MutableSet):
+
+    def __init__(self, validators=None):
+        self._validators = validators
+        self.__parameters__ = {}
+
+    def __repr__(self):
+        valstr = ', '.join(map(str, self))
+        return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __len__(self):
+        return len(self.__parameters__)
+
+    def __iter__(self):
+        for parameter in self.__parameters__.itervalues():
+            yield parameter.__get__(self)
+
+    def __contains__(self, item):
+        return self._get_key(item) in self.__parameters__
+
+    def _get_key(self, item):
+        return hash(item)
+
+    def add(self, item):
+        key = self._get_key(item)
+
+        try:
+            parameter = self.__parameters__[key]
+        except KeyError:
+            parameter = Parameter(self._validators)
+            parameter._name = key
+            self.__parameters__[key] = parameter
+
+        parameter.__set__(self, item)
+
+    def discard(self, item):
+        key = self._get_key(item)
+        if key not in self.__parameters__:
+            raise KeyError
+        return self.__parameters__[key].__get__(self)
+
+class ParameterizedMutableMapping(MutableMapping):
+
+    def __init__(self, validators=None):
+        self._validators = validators
+        self.__parameters__ = {}
+
+    def __repr__(self):
+        valstr = ', '.join(['%s: %s' % item for item in self.items()])
+        return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __len__(self):
+        return len(self.__parameters__)
+
+    def __getitem__(self, key):
+        if key not in self.__parameters__:
+            raise KeyError
+        return self.__parameters__[key].__get__(self)
+
+    def __delitem__(self, key):
+        if key not in self.__parameters__:
+            raise KeyError
+        return self.__parameters__.pop(key)
+
+    def __setitem__(self, key, value):
+        try:
+            parameter = self.__parameters__[key]
+        except KeyError:
+            parameter = Parameter(self._validators)
+            parameter._name = key
+            self.__parameters__[key] = parameter
+
+        parameter.__set__(self, value)
+
+    def __iter__(self):
+        return iter(self.__parameters__)
 
 class FactorParameterAlias(ParameterAlias):
     """
@@ -340,18 +420,8 @@ def iter_parameters(obj):
         wrapper = obj.__dict__.get(name, [])
 
         for value in wrapper:
-            # Go one level deeper for sequences and mappings
-            if isinstance(value, Sequence):
-                for item in value:
-                    for x in iter_parameters(item):
-                        yield x
-            elif isinstance(value, Mapping):
-                for val in value.itervalues():
-                    for x in iter_parameters(val):
-                        yield x
-            else:
-                for x in iter_parameters(value):
-                    yield x
+            for x in iter_parameters(value):
+                yield x
 
         yield obj, name, parameter
 
@@ -366,8 +436,7 @@ def iter_values(obj, keep_frozen=True):
             continue
 
         for value in wrapper:
-            if hasattr(value, '__parameters__') or \
-                    isinstance(value, (Sequence, Mapping)):
+            if hasattr(value, '__parameters__'):
                 continue
             yield baseobj, name, value
 
@@ -382,17 +451,28 @@ def expand(obj):
     obj = copy.deepcopy(obj)
 
     prm_values = {}
-    for baseobj, name, value in iter_values(obj, keep_frozen=False):
-        prm_values.setdefault((baseobj, name), []).append(value)
+    baseobj_ids = {}
+    for baseobj, _name, parameter in iter_parameters(obj):
+        try:
+            wrapper = parameter._get_wrapper(baseobj)
+        except AttributeError: # No value
+            continue
+
+        if wrapper.is_frozen():
+            continue
+
+        baseobj_id = id(baseobj) # Use id in case baseobj is not hashable
+        prm_values[(baseobj_id, parameter)] = list(wrapper)
+        baseobj_ids[baseobj_id] = baseobj
 
     combinations, names, _varied = combine(prm_values)
-    baseobjs = map(itemgetter(0), names)
-    names = map(itemgetter(1), names)
+    baseobjs = map(baseobj_ids.get, map(itemgetter(0), names))
+    parameters = map(itemgetter(1), names)
 
     objs = []
     for combination in combinations:
-        for baseobj, name, value in zip(baseobjs, names, combination):
-            setattr(baseobj, name, value)
+        for baseobj, parameter, value in zip(baseobjs, parameters, combination):
+            parameter.__set__(baseobj, value)
         objs.append(copy.deepcopy(obj))
 
     return objs

@@ -19,7 +19,8 @@ import math
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, SimpleValidator,
      ParameterAlias, AngleParameter, UnitParameter,
-     iter_parameters, iter_values, freeze, expand)
+     iter_parameters, iter_values, freeze, expand,
+     ParameterizedMutableMapping, ParameterizedMutableSet)
 
 # Globals and constants variables.
 
@@ -104,28 +105,11 @@ class TestParameter(unittest.TestCase):
         self.assertAlmostEqual(0.0008965, self.obj.param6_km, 8)
 
     def testiter_parameters(self):
-        # Sub-object
         subobj1 = ParametrizedObject('subobj1')
         subobj1.param1 = [88, 108]
         self.obj.param1 = [subobj1]
         
         self.assertEqual(10, len(list(iter_parameters(self.obj))))
-
-    def testiter_parameters_list(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = [[subobj1, subobj2]]
-
-        self.assertEqual(15, len(list(iter_parameters(self.obj))))
-
-    def testiter_parameters_dict(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = {'subobj1': subobj1, 'subobj2': subobj2}
-
-        self.assertEqual(15, len(list(iter_parameters(self.obj))))
 
     def testiter_values(self):
         subobj1 = ParametrizedObject('subobj1')
@@ -133,24 +117,6 @@ class TestParameter(unittest.TestCase):
         self.obj.param1 = [subobj1]
 
         self.assertEqual(4, len(list(iter_values(self.obj))))
-        self.assertEqual(2, len(list(iter_values(self.obj, keep_frozen=False))))
-
-    def testiter_values_list(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = [[subobj1, subobj2]]
-
-        self.assertEqual(5, len(list(iter_values(self.obj))))
-        self.assertEqual(2, len(list(iter_values(self.obj, keep_frozen=False))))
-
-    def testiter_values_dict(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = {'subobj1': subobj1, 'subobj2': subobj2}
-
-        self.assertEqual(5, len(list(iter_values(self.obj))))
         self.assertEqual(2, len(list(iter_values(self.obj, keep_frozen=False))))
 
     def testfreeze(self):
@@ -176,86 +142,6 @@ class TestParameter(unittest.TestCase):
         self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_m', 0)
         self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_mm', 0)
 
-    def testfreeze_list(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = [[subobj1, subobj2]]
-
-        freeze(self.obj)
-
-        self.assertRaises(AttributeError, setattr, self.obj, 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[0], 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1[1], 'param6_mm', 0)
-
-    def testfreeze_dict(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj2 = ParametrizedObject('subobj2')
-        subobj1.param1 = [88, 108]
-        self.obj.param1 = {'subobj1': subobj1, 'subobj2': subobj2}
-
-        freeze(self.obj)
-
-        self.assertRaises(AttributeError, setattr, self.obj, 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj, 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1, 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj1'], 'param6_mm', 0)
-
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param1', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param2', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param3', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param4', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param5_rad', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param6_m', 0)
-        self.assertRaises(AttributeError, setattr, self.obj.param1['subobj2'], 'param6_mm', 0)
-
     def testexpand(self):
         subobj1 = ParametrizedObject('subobj1')
         subobj1.param1 = [88, 108]
@@ -269,27 +155,22 @@ class TestParameter(unittest.TestCase):
         self.assertEqual(88, objs[0].param1.param1)
         self.assertEqual(108, objs[1].param1.param1)
 
-    def testexpand_list(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj1.param1 = [88, 108]
-        subobj2 = ParametrizedObject('subobj2')
-        subobj2.param1 = [88, 108]
-        self.obj.param1 = [[subobj1, subobj2]]
+    def testparametrized_mutable_mapping(self):
+        d = ParameterizedMutableMapping()
+        d['a'] = [1.0, 4.0, 9.0]
+        d[0] = [6]
+        self.obj.param1 = d
 
-        objs = expand(self.obj)
+        self.assertEqual(7, len(list(iter_parameters(self.obj))))
+        self.assertEqual(4, len(list(iter_values(self.obj, keep_frozen=False))))
 
-        self.assertEqual(4, len(objs))
+    def testparametrized_mutable_set(self):
+        s = ParameterizedMutableSet()
+        s.add(4.0)
+        self.obj.param1 = s
 
-    def testexpand_dict(self):
-        subobj1 = ParametrizedObject('subobj1')
-        subobj1.param1 = [88, 108]
-        subobj2 = ParametrizedObject('subobj2')
-        subobj2.param1 = [88, 108]
-        self.obj.param1 = {'subobj1': subobj1, 'subobj2': subobj2}
-
-        objs = expand(self.obj)
-
-        self.assertEqual(4, len(objs))
+        self.assertEqual(6, len(list(iter_parameters(self.obj))))
+        self.assertEqual(1, len(list(iter_values(self.obj, keep_frozen=False))))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
