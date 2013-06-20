@@ -21,110 +21,56 @@ __all__ = ['Options']
 
 # Standard library modules.
 import uuid
-import ast
-import copy
-from collections import MutableMapping, MutableSet, Sequence
 
 # Third party modules.
 
 # Local modules.
 #from pymontecarlo.util.xmlutil import XMLIO, Element, objectxml
-from pymontecarlo.input.parameter import ParameterizedMetaClass, Parameter, SimpleValidator
+from pymontecarlo.input.parameter import ParameterizedMetaClass, Parameter, SimpleValidator, ParameterizedMutableMapping, ParameterizedMutableSet
 from pymontecarlo.input.beam import GaussianBeam
 from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 # Globals and constants variables.
 
-# Load submodules to register XML loader and saver
-import pymontecarlo.input.beam #@UnusedImport
-import pymontecarlo.input.geometry #@UnusedImport
-import pymontecarlo.input.detector #@UnusedImport
-import pymontecarlo.input.limit #@UnusedImport
-import pymontecarlo.input.model #@UnusedImport
-
 FORBIDDEN_DETECTOR_KEYS = ['options', 'keys']
 
-class _Detectors(MutableMapping):
-    def __init__(self):
-        self._data = {}
-
-    def __len__(self):
-        return self._data.__len__()
-
-    def __getitem__(self, key):
-        return self._data.__getitem__(key)
-
-    def __delitem__(self, key):
-        return self._data.__delitem__(key)
+class _Detectors(ParameterizedMutableMapping):
 
     def __setitem__(self, key, value):
         if key in FORBIDDEN_DETECTOR_KEYS:
             raise KeyError, 'Detector cannot have the following keys: %s' % \
                         ', '.join(FORBIDDEN_DETECTOR_KEYS)
-        return self._data.__setitem__(key, value)
+        return ParameterizedMutableMapping.__setitem__(self, key, value)
 
-    def __iter__(self):
-        return self._data.__iter__()
+    def iterclass(self, clasz):
+        for key, parameter in self.__parameters__.iteritems():
+            wrapper = parameter._get_wrapper(self)
+            for detector in wrapper:
+                if isinstance(detector, clasz):
+                    yield key, detector
 
-    def findall(self, clasz):
-        return dict([(key, obj) for key, obj in self.iteritems() if isinstance(obj, clasz)])
+class _Limits(ParameterizedMutableSet):
 
-    def find(self, detector):
-        for key, val in self.iteritems():
-            if detector is val:
-                return key
+    def _get_key(self, item):
+        return hash(item.__class__)
 
-        raise ValueError, 'Detector not found: %s' % detector
+    def iterclass(self, clasz):
+        parameter = self.__parameters__[hash(clasz)]
+        wrapper = parameter._get_wrapper(self)
+        return iter(wrapper)
 
-class _Limits(MutableSet):
-    def __init__(self):
-        self._data = {}
-
-    def __len__(self):
-        return self._data.__len__()
-
-    def __iter__(self):
-        return self._data.values().__iter__()
-
-    def __contains__(self, item):
-        return item in self._data.values()
-
-    def add(self, item):
-        key = hash(item.__class__)
-        self._data[key] = item
-
-    def discard(self, item):
-        self._data.pop(hash(item.__class__))
-
-    def find(self, clasz, default=None):
-        return self._data.get(hash(clasz), default)
-
-class _Models(MutableSet):
-    def __init__(self):
-        self._data = {}
-
-    def __len__(self):
-        return self._data.__len__()
-
-    def __iter__(self):
-        return self._data.values().__iter__()
-
-    def __contains__(self, item):
-        return item in self._data.values()
-
-    def add(self, item):
-        key = item.type
-        self._data[key] = item
-
-    def discard(self, item):
-        self._data.pop(item.type)
+class _Models(ParameterizedMutableSet):
+    
+    def _get_key(self, item):
+        return item.type
 
     def find(self, type, default=None):
-        return self._data.get(type, default)
+        return self.__parameters__.get(type, default).__get__(self)
 
-    def items(self):
-        return self._data.items()
+    def iteritems(self):
+        for type, parameter in self.__parameters__.iteritems():
+            yield type, parameter.__get__(self)
 
 _name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
 
@@ -184,25 +130,11 @@ class Options(object):
 
     def __unicode__(self):
         return unicode(self.name)
-
-    def __copy__(self):
-        cls = self.__class__
-        options = cls.__new__(cls)
-        options.__dict__.update(self.__dict__)
-        options._uuid = None
-        return options
-
-    def __deepcopy__(self, memo=None):
-        cls = self.__class__
-        options = cls.__new__(cls)
-        memo[id(self)] = options
-
-        for k, v in self.__dict__.items():
-            setattr(options, k, copy.deepcopy(v, memo))
-
-        options._uuid = None
-
-        return options
+    
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['_uuid'] = None
+        return state
 
 #    @classmethod
 #    def __loadxml__(cls, element, *args, **kwargs):
