@@ -118,7 +118,7 @@ class _ParameterValuesWrapper(object):
         if len(self._values) == 1:
             return self._values[0]
         else:
-            return self._values
+            return list(self._values)
 
     def freeze(self):
         self._frozen = True

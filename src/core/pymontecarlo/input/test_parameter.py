@@ -64,7 +64,7 @@ class TestParameter(unittest.TestCase):
         self.assertEqual(6, self.obj.param1)
 
         self.obj.param1 = [6, 5, 7]
-        self.assertEqual((6, 5, 7), self.obj.param1)
+        self.assertEqual([6, 5, 7], self.obj.param1)
 
     def testparam2(self):
         self.assertRaises(ValueError, setattr, self.obj, 'param2', -1)
@@ -151,7 +151,7 @@ class TestParameter(unittest.TestCase):
 
         self.assertEqual(2, len(objs))
 
-        self.assertEqual((88, 108), self.obj.param1.param1)
+        self.assertEqual([88, 108], self.obj.param1.param1)
         self.assertEqual(88, objs[0].param1.param1)
         self.assertEqual(108, objs[1].param1.param1)
 
