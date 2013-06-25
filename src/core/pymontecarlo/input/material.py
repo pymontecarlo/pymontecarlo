@@ -70,7 +70,7 @@ def _calculate_composition(composition):
         # Fraction check
         if fraction != '?':
             fraction = float(fraction)
-            if fraction <= 0.0 or fraction > 1.0:
+            if fraction < 0.0 or fraction > 1.0:
                 raise ValueError, "Fraction (%s) must be between ]0.0, 1.0]" % fraction
 
         composition2[element] = fraction
@@ -85,7 +85,7 @@ def _calculate_composition(composition):
             totalfraction += fraction
 
     if countwildcard > 0:
-        if totalfraction < 1.0:
+        if totalfraction <= 1.0:
             wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
         else:
             raise ValueError, 'Wild card(s) could not be replaced since total fraction is already 1.0'
