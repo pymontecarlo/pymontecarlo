@@ -120,6 +120,9 @@ class _ParameterValuesWrapper(object):
         else:
             return list(self._values)
 
+    def get_list(self):
+        return list(self._values)
+
     def freeze(self):
         self._frozen = True
 
@@ -203,9 +206,16 @@ class ParameterAlias(object):
 
 class ParameterizedMutableSet(MutableSet):
 
-    def __init__(self, validators=None):
+    def __init__(self, values=None, validators=None):
         self._validators = validators
         self.__parameters__ = {}
+
+        if values:
+            if not isinstance(values, list):
+                values = [values]
+
+            for value in values:
+                self.add(value)
 
     def __repr__(self):
         valstr = ', '.join(map(str, self))
@@ -234,7 +244,12 @@ class ParameterizedMutableSet(MutableSet):
             parameter._name = key
             self.__parameters__[key] = parameter
 
-        parameter.__set__(self, item)
+        try:
+            values = parameter._get_wrapper(self).get_list()
+        except AttributeError:
+            values = []
+        values.append(item)
+        parameter.__set__(self, values)
 
     def discard(self, item):
         key = self._get_key(item)
