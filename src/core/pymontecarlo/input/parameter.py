@@ -34,6 +34,10 @@ from pymontecarlo.util.multipleloop import combine
 # Globals and constants variables.
 
 class ParameterizedMetaClass(type):
+    """
+    Meta class that automatically registered parameters defined in the class
+    header.
+    """
 
     def __new__(cls, clsname, bases, methods):
         parameters = {}
@@ -55,6 +59,11 @@ class ParameterizedMetaClass(type):
         return type.__new__(cls, clsname, bases, methods)
 
 class _ParameterValuesWrapper(object):
+    """
+    Class where values of parameters are saved. 
+    This wrapper is required to allow single or list of values to be retrieved
+    and to freeze the modification of values.
+    """
 
     def __init__(self, values):
         self._values = tuple(values)
@@ -116,18 +125,31 @@ class _ParameterValuesWrapper(object):
         return all([item in v for v in self._values])
 
     def get(self):
+        """
+        Returns a list of values if more than one value is defined, or a single
+        value is only one value is defined.
+        """
         if len(self._values) == 1:
             return self._values[0]
         else:
             return list(self._values)
 
     def get_list(self):
+        """
+        Returns a list of values.
+        """
         return list(self._values)
 
     def freeze(self):
+        """
+        Disables the modification of the values.
+        """
         self._frozen = True
 
     def is_frozen(self):
+        """
+        Returns whether the values can be modified.
+        """
         return self._frozen
 
 _PASS_WRAPPER = _ParameterValuesWrapper(())
@@ -135,6 +157,17 @@ _PASS_WRAPPER = _ParameterValuesWrapper(())
 class Parameter(object):
 
     def __init__(self, validators=None, doc=None):
+        """
+        Creates a new parameter.
+        The name of the parameter is defined by the variable this object
+        will point to.
+        The values assigned to this parameter are validated using the
+        specified validators.
+        
+        :arg validators: list of :class:`_Validator` derived classes 
+            that ensures that the value(s) entered are valid.
+        :arg doc: documentation of this parameter
+        """
         self._name = None
         self.__doc__ = doc
 
@@ -187,6 +220,18 @@ class Parameter(object):
 class FrozenParameter(Parameter):
 
     def __init__(self, klass_or_value, doc=None, args=(), kwargs=None):
+        """
+        Creates a frozen parameter.
+        Either the frozen value of this parameter should be specified, or
+        a class which will be instantiated when the parameter is first 
+        retrieved.
+        
+        :arg klass_or_value: frozen class or value
+        :arg doc: documentation
+        :arg args: arguments to be passed to the class during instantiation
+        :arg kwargs: keyword-arguments to be passed to the class 
+            during instantiation
+        """
         Parameter.__init__(self, None, doc)
 
         self._value = klass_or_value
@@ -210,8 +255,16 @@ class FrozenParameter(Parameter):
 class ParameterAlias(object):
 
     def __init__(self, alias, doc=None):
-        self.__doc__ = doc
+        """
+        Creates an alias of a parameter.
+        If the value of the alias is modified, the value of the original
+        parameter will also be modified.
+        
+        :arg alias: original parameter
+        :arg doc: documentation
+        """
         self._alias = alias
+        self.__doc__ = doc
 
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self._alias.name)
@@ -335,6 +388,21 @@ class FactorParameterAlias(ParameterAlias):
         return ParameterAlias._create_wrapper(self, obj, values) * self._factor
 
 class AngleParameter(Parameter):
+    """
+    Automatically defined two parameters to specified an angle value in
+    radians or degrees::
+    
+        class Object(object):
+            
+            __metaclass__ = ParameterizedMetaClass
+            
+            angle = AngleParameter()
+        
+        obj = Object()
+        obj.angle_rad = math.pi
+        print obj.angle_deg # 180.0
+    
+    """
     
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
@@ -343,6 +411,20 @@ class AngleParameter(Parameter):
         Parameter._new(self, cls, clsname, bases, methods, name + '_rad')
 
 class UnitParameter(Parameter):
+    """
+    Automatically defined all possible unit prefix (M, k, d, etc.) for 
+    a quantity::
+    
+        class Object(object):
+            
+            __metaclass__ = ParameterizedMetaClass
+            
+            distance = UnitParameter('m')
+        
+        obj = Object()
+        obj.distance_cm = 156
+        print obj.distance_m # 1.56
+    """
     
     _prefix = {'y': 1e-24, # yocto
                'z': 1e-21, # zepto
@@ -378,6 +460,20 @@ class UnitParameter(Parameter):
         Parameter._new(self, cls, clsname, bases, methods, name + "_" + self._unit)
 
 class TimeParameter(Parameter):
+    """
+    Automatically defined all possible time prefix (s, min, hr, etc.) for 
+    a quantity::
+    
+        class Object(object):
+            
+            __metaclass__ = ParameterizedMetaClass
+            
+            duration = TimeParameter()
+        
+        obj = Object()
+        obj.duration_s = 78
+        print obj.duration_min # 1.3
+    """
 
     _factors = {'year': 31536000.0,
                 'month': 2628000.0,
@@ -401,9 +497,16 @@ class _Validator(object):
 
     @abstractmethod
     def validate(self, value):
+        """
+        Raises a :exc:`ValueError` if the value is not valid.
+        The methods must return the value.
+        """
         raise NotImplementedError
 
 class PassValidator(_Validator):
+    """
+    Pass validator. Value is always valid.
+    """
 
     def validate(self, value):
         return value
@@ -411,6 +514,14 @@ class PassValidator(_Validator):
 class SimpleValidator(_Validator):
 
     def __init__(self, func, message=None):
+        """
+        Function validator.
+        
+        :arg func: function that returns ``True`` if the value is valid.
+            The function takes only one argument, the value.
+        :arg message: message to be passed to the exception if the value
+            is not valid
+        """
         if not callable(func):
             raise ValueError, "Validation function must be callable"
         self._func = func
@@ -424,6 +535,11 @@ class SimpleValidator(_Validator):
 class EnumValidator(_Validator):
 
     def __init__(self, constants):
+        """
+        Validates that the value is within the specified constant values.
+        
+        :arg constants: constant values
+        """
         self._constants = tuple(constants)
 
     def validate(self, value):
@@ -434,6 +550,11 @@ class EnumValidator(_Validator):
 class LengthValidator(_Validator):
 
     def __init__(self, length):
+        """
+        Validates the length of the value.
+        
+        :arg length: required length of the value
+        """
         self._length = length
 
     def validate(self, value):
@@ -444,6 +565,9 @@ class LengthValidator(_Validator):
 class CastValidator(_Validator):
     
     def __init__(self, cls):
+        """
+        Casts the specified class to the value.
+        """
         self._cls = cls
     
     def validate(self, value):
@@ -455,6 +579,16 @@ class CastValidator(_Validator):
             return self._cls(value)
 
 def iter_parameters(obj):
+    """
+    Recursively iterates over all parameters defined in the specified object.
+    The method yields:
+    
+        * the name of the parameter
+        * the parameter object
+        * the object contains the parameter
+        
+    :arg obj: object containing parameters
+    """
     for name, parameter in getattr(obj, '__parameters__', {}).iteritems():
         wrapper = obj.__dict__.get(name, [])
 
@@ -462,10 +596,22 @@ def iter_parameters(obj):
             for x in iter_parameters(value):
                 yield x
 
-        yield obj, name, parameter
+        yield name, parameter, obj
 
 def iter_values(obj, keep_frozen=True):
-    for baseobj, name, parameter in iter_parameters(obj):
+    """
+    Recursively iterates over all values defined for all parameters in the
+    specified object.
+    The method yields:
+    
+        * the object from which the value belongs
+        * the name of the parameter with this value
+        * the value
+    
+    :arg obj: object containing parameters
+    :arg keep_frozen: whether to return frozen values
+    """
+    for name, parameter, baseobj in iter_parameters(obj):
         try:
             wrapper = parameter._get_wrapper(baseobj)
         except AttributeError: # No value
@@ -480,18 +626,30 @@ def iter_values(obj, keep_frozen=True):
             yield baseobj, name, value
 
 def freeze(obj):
-    for baseobj, name, parameter in iter_parameters(obj):
+    """
+    Recursively freezes all parameters in the specified object.
+    
+    :arg obj: object containing parameters
+    """
+    for name, parameter, baseobj in iter_parameters(obj):
         wrapper = baseobj.__dict__.get(name)
         if not wrapper: # Create empty wrapper to be frozen
             baseobj.__dict__[name] = _ParameterValuesWrapper(())
         parameter.freeze(baseobj)
 
 def expand(obj):
+    """
+    Returns a list of the specified object where only one value is defined
+    for each parameter.
+    The function computes all possible combinations of parameter/values.
+    
+    :arg obj: object containing parameters
+    """
     obj = copy.deepcopy(obj)
 
     prm_values = {}
     baseobj_ids = {}
-    for baseobj, _name, parameter in iter_parameters(obj):
+    for _name, parameter, baseobj in iter_parameters(obj):
         try:
             wrapper = parameter._get_wrapper(baseobj)
         except AttributeError: # No value
