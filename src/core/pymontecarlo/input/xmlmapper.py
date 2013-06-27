@@ -29,7 +29,7 @@ from pymontecarlo.util.mathutil import vector2d, vector3d
 
 # Globals and constants variables.
 
-class ParametrizedAttribute(Attribute):
+class ParameterizedAttribute(Attribute):
     
     def __init__(self, objattr, type_, xmlname=None, *args, **kwargs):
         Attribute.__init__(self, objattr, type_, xmlname, True, *args, **kwargs)
@@ -46,7 +46,7 @@ class ParametrizedAttribute(Attribute):
         values = wrapper.get_list()
         return map(self.type_.to_xml, values)
 
-class ParametrizedElement(Element):
+class ParameterizedElement(Element):
 
     def __init__(self, objattr, type_, xmlname=None, *args, **kwargs):
         Element.__init__(self, objattr, type_, xmlname, True, *args, **kwargs)
@@ -63,7 +63,7 @@ class ParametrizedElement(Element):
         values = wrapper.get_list()
         return map(self.type_.to_xml, values)
 
-class ParametrizedElementDict(ElementDict):
+class ParameterizedElementDict(ElementDict):
 
     def __init__(self, objattr, keytype, valuetype, xmlname=None,
                  keyxmlname='_key', valuexmlname='value',

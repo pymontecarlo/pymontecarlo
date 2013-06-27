@@ -37,7 +37,7 @@ from pymontecarlo.input.parameter import \
 from pymontecarlo.util.mathutil import vector3d
 
 from pymontecarlo.input.xmlmapper import \
-    mapper, ParametrizedAttribute, ParametrizedElement, PythonType, UserType
+    mapper, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
 from pymontecarlo.input.particle import ParticleType
 
 # Globals and constants variables.
@@ -95,11 +95,11 @@ class PencilBeam(object):
         return math.atan2(self.direction[1], self.direction[0]);
 
 mapper.register(PencilBeam, '{http://pymontecarlo.sf.net}pencilBeam',
-                ParametrizedAttribute('energy_eV', PythonType(float), 'energy'),
-                ParametrizedAttribute('particle', ParticleType()),
-                ParametrizedElement('origin_m', UserType(vector3d), 'origin'),
-                ParametrizedElement('direction', UserType(vector3d)),
-                ParametrizedAttribute('aperture_rad', PythonType(float), 'aperture'))
+                ParameterizedAttribute('energy_eV', PythonType(float), 'energy'),
+                ParameterizedAttribute('particle', ParticleType()),
+                ParameterizedElement('origin_m', UserType(vector3d), 'origin'),
+                ParameterizedElement('direction', UserType(vector3d)),
+                ParameterizedAttribute('aperture_rad', PythonType(float), 'aperture'))
 
 _diameter_validator = \
     SimpleValidator(lambda d: d >= 0, "Diameter must be equal or greater than 0")
@@ -120,7 +120,7 @@ class GaussianBeam(PencilBeam):
             (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
 
 mapper.register(GaussianBeam, '{http://pymontecarlo.sf.net}gaussianBeam',
-                ParametrizedAttribute('diameter_m', PythonType(float), 'diameter'))
+                ParameterizedAttribute('diameter_m', PythonType(float), 'diameter'))
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """
