@@ -67,7 +67,7 @@ class _GeometryGL(object):
     def drawgl(self):
         GL.glPushMatrix()
 
-        GL.glRotate(math.degrees(self.geometry.tilt_rad), 1.0, 0.0, 0.0)
+        GL.glRotate(math.degrees(self.geometry.tilt_rad), -1.0, 0.0, 0.0)
         GL.glRotate(math.degrees(self.geometry.rotation_rad), 0.0, 0.0, 1.0)
 
         self._drawgl()
