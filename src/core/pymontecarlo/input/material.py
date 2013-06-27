@@ -34,11 +34,14 @@ from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
 from pymontecarlo.input.parameter import \
-    (ParameterizedMetaClass, Parameter, UnitParameter, SimpleValidator,
-     ParameterizedMutableMapping, FactorParameterAlias, expand)
+    (ParameterizedMetaClass, Parameter, UnitParameter, FrozenParameter,
+     SimpleValidator, ParameterizedMutableMapping, FactorParameterAlias,
+     expand, freeze)
+from pymontecarlo.input.xmlmapper import \
+    (mapper, Attribute, ParameterizedAttribute, ParameterizedElementDict,
+     _XMLType, PythonType)
 
 import pymontecarlo.util.element_properties as ep
-#from pymontecarlo.util.xmlutil import XMLIO, Element
 
 # Globals and constants variables.
 
@@ -205,7 +208,7 @@ class _Composition(ParameterizedMutableMapping):
     def __init__(self):
         validator = SimpleValidator(lambda wf: 0.0 <= wf <= 1.0 or wf == '?',
                                     'Weight fraction must be within [0.0, 1.0]')
-        ParameterizedMutableMapping.__init__(self, [validator])
+        ParameterizedMutableMapping.__init__(self, validators=[validator])
 
     def __setitem__(self, key, value):
         if isinstance(key, StringTypes):
@@ -255,6 +258,16 @@ class _Composition(ParameterizedMutableMapping):
         for z, wfs in zs.iteritems():
             self[z] = wfs
 
+class _WeightFractionXMLType(_XMLType):
+    
+    def to_xml(self, value):
+        return str(value)
+
+    def from_xml(self, value):
+        if value != '?':
+            value = float(value)
+        return value
+
 class _DensityParameter(Parameter):
     
     def __init__(self, doc="Density"):
@@ -278,7 +291,8 @@ class Material(object):
 
     name = Parameter(doc="Name")
 
-    composition = Parameter(doc="Composition")
+    composition = FrozenParameter(_Composition, "Composition")
+
     density = _DensityParameter()
 
     absorption_energy_electron = \
@@ -331,8 +345,6 @@ class Material(object):
         """
         self.name = name
 
-        self.composition = _Composition()
-        self.__parameters__['composition'].freeze(self)
         self.composition.update(composition)
 
         self.density_kg_m3 = density_kg_m3
@@ -350,37 +362,6 @@ class Material(object):
 
     def __str__(self):
         return self.name
-
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        name = element.get('name')
-#
-#        composition = {}
-#        for child in iter(element.find('composition')):
-#            composition[int(child.get('z'))] = float(child.get('weightFraction'))
-#
-#        density_kg_m3 = float(element.get('density'))
-#
-#        abs_electron_eV = float(element.get('absorptionEnergyElectron'))
-#        abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
-#        abs_positron_eV = float(element.get('absorptionEnergyPositron'))
-#
-#        return cls(name, composition, density_kg_m3,
-#                   abs_electron_eV, abs_photon_eV, abs_positron_eV)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('name', self.name)
-#
-#        child = Element('composition')
-#        for z, fraction in self.composition.iteritems():
-#            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
-#        element.append(child)
-#
-#        element.set('density', str(self.density_kg_m3))
-#
-#        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
-#        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
-#        element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
 
     def calculate(self):
         self.composition.calculate()
@@ -400,17 +381,31 @@ class Material(object):
         density = self.density_kg_m3
         return density is not None and density >= 0.0
 
-#XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
+mapper.register(Material, '{http://pymontecarlo.sf.net}material',
+                ParameterizedAttribute('name', PythonType(str)),
+                ParameterizedElementDict('composition', PythonType(int), _WeightFractionXMLType(),
+                                        keyxmlname='z', valuexmlname='element'),
+                ParameterizedAttribute('density_kg_m3', PythonType(float), 'density'),
+                ParameterizedAttribute('absorption_energy_electron_eV', PythonType(float), 'absorption_energy_electron'),
+                ParameterizedAttribute('absorption_energy_photon_eV', PythonType(float), 'absorption_energy_photon'),
+                ParameterizedAttribute('absorption_energy_positron_eV', PythonType(float), 'absorption_energy_positron'),
+                Attribute('_index', PythonType(int), 'index', optional=True))
 
-class _Vacuum(object):
+class _Vacuum(Material):
+    
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = Material.__new__(cls, *args, **kwargs)
+        return cls._instance
+#
     def __init__(self):
+        Material.__init__(self, 'Vacuum', {}, 0.0, 0.0, 0.0, 0.0)
         self._index = 0
 
     def __repr__(self):
         return '<Vacuum()>'
-
-    def __str__(self):
-        return self.name
 
     def __copy__(self):
         return VACUUM
@@ -418,44 +413,13 @@ class _Vacuum(object):
     def __deepcopy__(self, memo):
         return VACUUM
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        return VACUUM
-
     def calculate(self):
         pass
 
     def has_density_defined(self):
         return False
 
-    @property
-    def name(self):
-        return 'Vacuum'
-
-    @property
-    def composition(self):
-        return {}
-
-    @property
-    def density_kg_m3(self):
-        return 0.0
-
-    @property
-    def density_g_cm3(self):
-        return 0.0
-
-    @property
-    def absorption_energy_electron(self):
-        return 0.0
-
-    @property
-    def absorption_energy_photon(self):
-        return 0.0
-
-    @property
-    def absorption_energy_positron(self):
-        return 0.0
-
 VACUUM = _Vacuum()
+freeze(VACUUM)
 
-#XMLIO.register('{http://pymontecarlo.sf.net}vacuum', _Vacuum)
+mapper.register(_Vacuum, '{http://pymontecarlo.sf.net}vacuum', inherit=False)

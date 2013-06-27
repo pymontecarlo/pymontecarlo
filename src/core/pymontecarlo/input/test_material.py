@@ -19,7 +19,8 @@ import copy
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.material import \
-    Material, composition_from_formula, pure, VACUUM, _Composition
+    Material, composition_from_formula, pure, _Composition, VACUUM
+from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
 
@@ -86,20 +87,22 @@ class TestVACUUM(TestCase):
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
 
+        self.assertRaises(AttributeError, setattr, VACUUM, 'name', 'test')
+
     def testcopy(self):
         self.assertIs(VACUUM, copy.copy(VACUUM))
         self.assertIs(VACUUM, copy.deepcopy(VACUUM))
 
-#    def testfrom_xml(self):
-#        element = VACUUM.to_xml()
-#        obj = VACUUM.from_xml(element)
+    def testfrom_xml(self):
+        element = mapper.to_xml(VACUUM)
+        obj = mapper.from_xml(element)
+
+        self.assertIs(obj, VACUUM)
 #
-#        self.assertIs(obj, VACUUM)
-#
-#    def testto_xml(self):
-#        element = VACUUM.to_xml()
-#
-#        self.assertEqual(0, len(list(element)))
+    def testto_xml(self):
+        element = mapper.to_xml(VACUUM)
+
+        self.assertEqual(0, len(list(element)))
 
 class Test_Composition(TestCase):
 
@@ -139,7 +142,10 @@ class TestMaterial(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None)
+        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None,
+                          absorption_energy_electron_eV=50,
+                          absorption_energy_photon_eV=51,
+                          absorption_energy_positron_eV=52)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -156,23 +162,8 @@ class TestMaterial(TestCase):
         self.assertIsNone(self.m.density_kg_m3)
 
         self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_positron_eV, 4)
-
-#    def testfrom_xml(self):
-#        element = self.m.to_xml()
-#        m = Material.from_xml(element)
-#
-#        self.assertEquals('Pure Cu', str(m))
-#
-#        self.assertTrue(m.composition.has_key(29))
-#        self.assertAlmostEqual(1.0, m.composition[29], 4)
-#
-#        self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
-#
-#        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
-#        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
-#        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(51, self.m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(52, self.m.absorption_energy_positron_eV, 4)
 
     def testcomposition(self):
         self.m.composition[29] = [0.5, 0.6]
@@ -260,23 +251,44 @@ class TestMaterial(TestCase):
         self.assertTrue(30 in self.m.composition)
         self.assertAlmostEqual(0.5, self.m.composition[30], 4)
 
-#    def testto_xml(self):
-#        element = self.m.to_xml()
-#
-#        self.assertEquals('Pure Cu', element.get('name'))
-#
-#        children = list(element.find('composition'))
-#        self.assertEqual(1, len(children))
-#        self.assertEqual(29, int(children[0].get('z')))
-#        self.assertAlmostEqual(1.0, float(children[0].get('weightFraction')), 4)
-#
-#        self.assertAlmostEqual(8.96, float(element.get('density')) / 1000.0, 4)
-#
-#        self.assertAlmostEqual(50, float(element.get('absorptionEnergyElectron')), 4)
-#        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPhoton')), 4)
-#        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPositron')), 4)
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.m)
+        m = mapper.from_xml(element)
 
+        self.assertEquals('Pure Cu', str(m))
 
+        self.assertTrue(m.composition.has_key(29))
+        self.assertEqual('?', m.composition[29], 4)
+
+        self.assertIsNone(m.density_kg_m3)
+
+        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
+        self.assertAlmostEqual(51, m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(52, m.absorption_energy_positron_eV, 4)
+
+        self.assertFalse(hasattr(m, '_index'))
+
+        # With index
+        self.m._index = 5
+        element = mapper.to_xml(self.m)
+        m = mapper.from_xml(element)
+        self.assertTrue(hasattr(m, '_index'))
+
+    def testto_xml(self):
+        element = mapper.to_xml(self.m)
+
+        self.assertEquals('Pure Cu', element.get('name'))
+
+        children = list(element.find('composition'))
+        self.assertEqual(1, len(children))
+        self.assertEqual(29, int(children[0].get('z')))
+        self.assertEqual('?', children[0].text)
+
+        self.assertEqual('xsi:nil', element.get('density'))
+
+        self.assertAlmostEqual(50, float(element.get('absorption_energy_electron')), 4)
+        self.assertAlmostEqual(51, float(element.get('absorption_energy_photon')), 4)
+        self.assertAlmostEqual(52, float(element.get('absorption_energy_positron')), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
