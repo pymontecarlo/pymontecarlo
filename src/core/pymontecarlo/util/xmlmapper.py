@@ -59,7 +59,8 @@ class UserType(_XMLType):
         return value
     
     def to_xml(self, value):
-        assert isinstance(value, self._klass)
+        assert isinstance(value, self._klass), \
+            '%s != %s' % (value.__class__, self._klass)
         return value
 
 class _XMLItem(object):
