@@ -169,11 +169,6 @@ class TestParameter(unittest.TestCase):
         self.assertEqual(6, len(list(iter_parameters(self.obj))))
         self.assertEqual(1, len(list(iter_values(self.obj, keep_frozen=False))))
 
-        # Multiple values
-        s.add(4.0)
-
-        self.assertEqual(2, len(list(iter_values(self.obj, keep_frozen=False))))
-
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

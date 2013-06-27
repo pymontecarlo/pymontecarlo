@@ -283,16 +283,9 @@ class ParameterAlias(object):
 
 class ParameterizedMutableSet(MutableSet):
 
-    def __init__(self, values=None, validators=None):
+    def __init__(self, validators=None):
         self._validators = validators
         self.__parameters__ = {}
-
-        if values:
-            if not isinstance(values, list):
-                values = [values]
-
-            for value in values:
-                self.add(value)
 
     def __repr__(self):
         valstr = ', '.join(map(str, self))
@@ -321,17 +314,12 @@ class ParameterizedMutableSet(MutableSet):
             parameter._name = key
             self.__parameters__[key] = parameter
 
-        try:
-            values = parameter._get_wrapper(self).get_list()
-        except AttributeError:
-            values = []
-        values.append(item)
-        parameter.__set__(self, values)
+        parameter.__set__(self, item)
 
     def discard(self, item):
         key = self._get_key(item)
         if key not in self.__parameters__:
-            raise KeyError
+            raise KeyError, key
         return self.__parameters__[key].__get__(self)
 
 class ParameterizedMutableMapping(MutableMapping):
@@ -349,12 +337,12 @@ class ParameterizedMutableMapping(MutableMapping):
 
     def __getitem__(self, key):
         if key not in self.__parameters__:
-            raise KeyError
+            raise KeyError, key
         return self.__parameters__[key].__get__(self)
 
     def __delitem__(self, key):
         if key not in self.__parameters__:
-            raise KeyError
+            raise KeyError, key
         return self.__parameters__.pop(key)
 
     def __setitem__(self, key, value):
