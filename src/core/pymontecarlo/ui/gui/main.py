@@ -42,6 +42,8 @@ import wx
 from wx.lib.pubsub import Publisher as pub
 
 # Local modules.
+from pymontecarlo.settings import get_settings
+
 from pymontecarlo.ui.gui.controller import controller
 from pymontecarlo.ui.gui.output.result import ResultPanelManager, UnknownResultPanel
 from pymontecarlo.ui.gui.configure import ConfigureDialog
@@ -53,6 +55,9 @@ from wxtools2.display import center_on_primary_screen
 
 # Globals and constants variables.
 from pymontecarlo.ui.gui.art import ART_CLOSE, ART_PREFERENCES, ICON_APP_LOGO
+
+settings = get_settings()
+settings.get_programs()
 
 class MainFrame(wx.Frame):
 
