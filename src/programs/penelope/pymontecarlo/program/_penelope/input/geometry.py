@@ -1254,7 +1254,10 @@ class PenelopeGeometry(_Geometry):
 
         ## Change of Euler angles convention from ZXZ to ZYZ
         extra.rotation.omega_rad = (self.rotation_rad - math.pi / 2.0) % (2 * math.pi)
-        extra.rotation.theta_rad = self.tilt_rad
+        tilt_rad = self.tilt_rad
+        while tilt_rad < 0:
+            tilt_rad += 2.0 * math.pi
+        extra.rotation.theta_rad = tilt_rad
         extra.rotation.phi_rad = math.pi / 2.0
 
         # Write module
