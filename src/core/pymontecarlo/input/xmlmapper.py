@@ -35,7 +35,14 @@ class ParametrizedAttribute(Attribute):
         Attribute.__init__(self, objattr, type_, xmlname, True, *args, **kwargs)
 
     def _get_object_values(self, obj, manager):
-        wrapper = obj.__dict__[self.objattr]
+        try:
+            wrapper = obj.__dict__[self.objattr]
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
+        
         values = wrapper.get_list()
         return map(self.type_.to_xml, values)
 
@@ -45,9 +52,43 @@ class ParametrizedElement(Element):
         Element.__init__(self, objattr, type_, xmlname, True, *args, **kwargs)
 
     def _get_object_values(self, obj, manager):
-        wrapper = obj.__dict__[self.objattr]
+        try:
+            wrapper = obj.__dict__[self.objattr]
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
+
         values = wrapper.get_list()
         return map(self.type_.to_xml, values)
+
+class ParametrizedElementDict(ElementDict):
+
+    def __init__(self, objattr, keytype, valuetype, xmlname=None,
+                 keyxmlname='_key', valuexmlname='value',
+                 optional=False, *args, **kwargs):
+        ElementDict.__init__(self, objattr, keytype, valuetype, xmlname,
+                             keyxmlname, valuexmlname, optional, *args, **kwargs)
+
+    def _get_object_values(self, obj, manager):
+        try:
+            wrapper = obj.__dict__[self.objattr]
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
+
+        d = wrapper.get()
+
+        keys = d.keys()
+        keys = map(self.keytype.to_xml, keys)
+
+        values = d.values()
+        values = map(self.type_.to_xml, values)
+
+        return zip(keys, values)
 
 mapper = XMLMapper()
 mapper.register_namespace('mc', 'http://pymontecarlo.sf.net')
