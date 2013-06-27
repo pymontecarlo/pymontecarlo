@@ -18,6 +18,7 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo.input import mapper
 from pymontecarlo.input.beam import \
     (PencilBeam, GaussianBeam, tilt_beam,
     convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm)
@@ -111,42 +112,42 @@ class TestPencilBeam(TestCase):
         beam = PencilBeam(15e3, direction=(1, 1, -1))
         self.assertAlmostEqual(0.78540, beam.direction_azimuth_rad, 4)
 
-#    def testfrom_xml(self):
-#        element = self.beam.to_xml()
-#        beam = PencilBeam.from_xml(element)
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.beam)
+        beam = mapper.from_xml(element)
+
+        self.assertEqual(POSITRON, beam.particle)
+
+        self.assertAlmostEqual(15e3, beam.energy_eV, 4)
+
+        self.assertAlmostEqual(1.0, beam.origin_m[0], 4)
+        self.assertAlmostEqual(2.0, beam.origin_m[1], 4)
+        self.assertAlmostEqual(3.0, beam.origin_m[2], 4)
+
+        self.assertAlmostEqual(4.0, beam.direction[0], 4)
+        self.assertAlmostEqual(5.0, beam.direction[1], 4)
+        self.assertAlmostEqual(6.0, beam.direction[2], 4)
+
+        self.assertAlmostEqual(math.radians(3.5), beam.aperture_rad, 4)
 #
-#        self.assertEqual(POSITRON, beam.particle)
+    def testto_xml(self):
+        element = mapper.to_xml(self.beam)
+
+        self.assertEqual('positron', element.get('particle'))
 #
-#        self.assertAlmostEqual(15e3, beam.energy_eV, 4)
-#
-#        self.assertAlmostEqual(1.0, beam.origin_m[0], 4)
-#        self.assertAlmostEqual(2.0, beam.origin_m[1], 4)
-#        self.assertAlmostEqual(3.0, beam.origin_m[2], 4)
-#
-#        self.assertAlmostEqual(4.0, beam.direction[0], 4)
-#        self.assertAlmostEqual(5.0, beam.direction[1], 4)
-#        self.assertAlmostEqual(6.0, beam.direction[2], 4)
-#
-#        self.assertAlmostEqual(math.radians(3.5), beam.aperture_rad, 4)
-#
-#    def testto_xml(self):
-#        element = self.beam.to_xml()
-#
-#        self.assertEqual('positron', element.get('particle'))
-#
-#        self.assertAlmostEqual(15e3, float(element.get('energy')), 4)
-#
-#        child = element.find('origin')
-#        self.assertAlmostEqual(1.0, float(child.get('x')), 4)
-#        self.assertAlmostEqual(2.0, float(child.get('y')), 4)
-#        self.assertAlmostEqual(3.0, float(child.get('z')), 4)
-#
-#        child = element.find('direction')
-#        self.assertAlmostEqual(4.0, float(child.get('x')), 4)
-#        self.assertAlmostEqual(5.0, float(child.get('y')), 4)
-#        self.assertAlmostEqual(6.0, float(child.get('z')), 4)
-#
-#        self.assertAlmostEqual(math.radians(3.5), float(element.get('aperture')), 4)
+        self.assertAlmostEqual(15e3, float(element.get('energy')), 4)
+
+        child = element.find('origin')[0]
+        self.assertAlmostEqual(1.0, float(child.get('x')), 4)
+        self.assertAlmostEqual(2.0, float(child.get('y')), 4)
+        self.assertAlmostEqual(3.0, float(child.get('z')), 4)
+
+        child = element.find('direction')[0]
+        self.assertAlmostEqual(4.0, float(child.get('x')), 4)
+        self.assertAlmostEqual(5.0, float(child.get('y')), 4)
+        self.assertAlmostEqual(6.0, float(child.get('z')), 4)
+
+        self.assertAlmostEqual(math.radians(3.5), float(element.get('aperture')), 4)
 
 class TestGaussianBeam(TestCase):
 
@@ -162,16 +163,42 @@ class TestGaussianBeam(TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)
 #
-#    def testfrom_xml(self):
-#        element = self.beam.to_xml()
-#        beam = GaussianBeam.from_xml(element)
-#
-#        self.assertAlmostEqual(123.456, beam.diameter_m, 4)
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.beam)
+        beam = mapper.from_xml(element)
 
-#    def testto_xml(self):
-#        element = self.beam.to_xml()
-#
-#        self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
+        self.assertAlmostEqual(123.456, beam.diameter_m, 4)
+
+        self.assertAlmostEqual(15e3, beam.energy_eV, 4)
+
+        self.assertAlmostEqual(1.0, beam.origin_m[0], 4)
+        self.assertAlmostEqual(2.0, beam.origin_m[1], 4)
+        self.assertAlmostEqual(3.0, beam.origin_m[2], 4)
+
+        self.assertAlmostEqual(4.0, beam.direction[0], 4)
+        self.assertAlmostEqual(5.0, beam.direction[1], 4)
+        self.assertAlmostEqual(6.0, beam.direction[2], 4)
+
+        self.assertAlmostEqual(math.radians(3.5), beam.aperture_rad, 4)
+
+    def testto_xml(self):
+        element = mapper.to_xml(self.beam)
+
+        self.assertAlmostEqual(123.456, float(element.get('diameter')), 4)
+
+        self.assertAlmostEqual(15e3, float(element.get('energy')), 4)
+
+        child = element.find('origin')[0]
+        self.assertAlmostEqual(1.0, float(child.get('x')), 4)
+        self.assertAlmostEqual(2.0, float(child.get('y')), 4)
+        self.assertAlmostEqual(3.0, float(child.get('z')), 4)
+
+        child = element.find('direction')[0]
+        self.assertAlmostEqual(4.0, float(child.get('x')), 4)
+        self.assertAlmostEqual(5.0, float(child.get('y')), 4)
+        self.assertAlmostEqual(6.0, float(child.get('z')), 4)
+
+        self.assertAlmostEqual(math.radians(3.5), float(element.get('aperture')), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

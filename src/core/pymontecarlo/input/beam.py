@@ -27,7 +27,6 @@ __all__ = ['PencilBeam',
 # Standard library modules.
 import math
 
-
 # Third party modules.
 import numpy as np
 
@@ -35,8 +34,11 @@ import numpy as np
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, AngleParameter, UnitParameter,
      SimpleValidator, EnumValidator, CastValidator)
-#from pymontecarlo.util.xmlutil import XMLIO, Element
 from pymontecarlo.util.mathutil import vector3d
+
+from pymontecarlo.input import mapper
+from pymontecarlo.util.xmlmapper import Attribute, Element, PythonType, UserType
+from pymontecarlo.input.particle import ParticleType
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PARTICLES
@@ -77,37 +79,6 @@ class PencilBeam(object):
         return '<PencilBeam(particle=%s, energy=%s eV, origin=%s m, direction=%s, aperture=%s rad)>' % \
             (self.particle, self.energy_eV, self.origin_m, self.direction, self.aperture_rad)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        particles = list(PARTICLES)
-#        particles = dict(zip(map(str, particles), particles))
-#        particle = particles.get(element.get('particle'), ELECTRON)
-#
-#        energy = float(element.get('energy'))
-#
-#        attrib = element.find('origin').attrib
-#        origin = map(float, map(attrib.get, ('x', 'y', 'z')))
-#
-#        attrib = element.find('direction').attrib
-#        direction = map(float, map(attrib.get, ('x', 'y', 'z')))
-#
-#        aperture = float(element.get('aperture'))
-#
-#        return cls(energy, particle, origin, direction, aperture)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('particle', str(self.particle))
-#
-#        element.set('energy', str(self.energy_eV))
-#
-#        attrib = dict(zip(('x', 'y', 'z'), map(str, self.origin_m)))
-#        element.append(Element('origin', attrib))
-#
-#        attrib = dict(zip(('x', 'y', 'z'), map(str, self.direction)))
-#        element.append(Element('direction', attrib))
-#
-#        element.set('aperture', str(self.aperture_rad))
-
     @property
     def direction_polar_rad(self):
         """
@@ -123,8 +94,13 @@ class PencilBeam(object):
         """
         return math.atan2(self.direction[1], self.direction[0]);
 
-#XMLIO.register('{http://pymontecarlo.sf.net}pencilBeam', PencilBeam)
-#
+mapper.register(PencilBeam, '{http://pymontecarlo.sf.net}pencilBeam',
+                Attribute('energy_eV', PythonType(float), 'energy', iterable=True),
+                Attribute('particle', ParticleType(), iterable=True),
+                Element('origin_m', UserType(vector3d), 'origin', iterable=True),
+                Element('direction', UserType(vector3d), iterable=True),
+                Attribute('aperture_rad', PythonType(float), 'aperture', iterable=True))
+
 _diameter_validator = \
     SimpleValidator(lambda d: d >= 0, "Diameter must be equal or greater than 0")
 
@@ -143,20 +119,8 @@ class GaussianBeam(PencilBeam):
         return '<GaussianBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
             (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
 
-#    @classmethod
-#    def __loadxml__ (cls, element, *args, **kwargs):
-#        pencil = PencilBeam.__loadxml__(element, *args, **kwargs)
-#
-#        diameter_m = float(element.get('diameter'))
-#
-#        return cls(pencil.energy_eV, diameter_m, pencil.particle,
-#                   pencil.origin_m, pencil.direction, pencil.aperture_rad)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        PencilBeam.__savexml__(self, element, *args, **kwargs)
-#        element.set('diameter', str(self.diameter_m))
-
-#XMLIO.register('{http://pymontecarlo.sf.net}gaussianBeam', GaussianBeam)
+mapper.register(GaussianBeam, '{http://pymontecarlo.sf.net}gaussianBeam',
+                Attribute('diameter_m', PythonType(float), 'diameter', iterable=True))
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """
