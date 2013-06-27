@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import xml.etree.ElementTree as ElementTree
 from collections import Iterable
+from operator import itemgetter
 
 # Third party modules.
 
@@ -44,9 +45,13 @@ class PythonType(_XMLType):
         self._type = type_
 
     def from_xml(self, value):
+        if value == 'xsi:nil':
+            return None
         return self._type(value)
 
     def to_xml(self, value):
+        if value is None:
+            return 'xsi:nil'
         return str(value)
     
 class UserType(_XMLType):
@@ -65,18 +70,26 @@ class UserType(_XMLType):
 
 class _XMLItem(object):
     
-    def __init__(self, objattr, type_, xmlname=None, iterable=False, *args, **kwargs):
+    def __init__(self, objattr, type_, xmlname=None,
+                 iterable=False, optional=False, *args, **kwargs):
         self.objattr = objattr
         self.type_ = type_
         self.xmlname = xmlname or objattr
         self.iterable = iterable
+        self.optional = optional
 
     def __repr__(self):
         return '<%s(%s <-> %s)>' % (self.__class__.__name__,
                                     self.objattr, self.xmlname)
         
     def _get_object_values(self, obj, manager):
-        values = getattr(obj, self.objattr)
+        try:
+            values = getattr(obj, self.objattr)
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
 
         if not self.iterable:
             values = [values]
@@ -99,6 +112,9 @@ class _XMLItem(object):
         
     def _set_object_values(self, obj, values):
         values = map(self.type_.from_xml, values)
+
+        if not values and self.optional:
+            return
 
         if not self.iterable:
             values = values[0]
@@ -138,8 +154,7 @@ class Element(_XMLItem):
         if subelement is None:
             return []
 
-        subsubelements = list(subelement)
-        if subsubelements:
+        if isinstance(self.type_, UserType):
             values = self._extract_values_usertype(subelement, manager)
         else:
             values = self._extract_values_nousertype(subelement, manager)
@@ -154,6 +169,75 @@ class Element(_XMLItem):
     
     def _extract_values_nousertype(self, subelement, manager):
         return subelement.text.split(',')
+
+class ElementDict(Element):
+
+    def __init__(self, objattr, keytype, valuetype, xmlname=None, 
+                 keyxmlname='_key', valuexmlname='value',
+                 optional=False, *args, **kwargs):
+        Element.__init__(self, objattr, valuetype, xmlname,
+                         iterable=True, optional=optional, *args, **kwargs)
+        self.keytype = keytype
+        self.keyxmlname = keyxmlname
+        self.valuexmlname = valuexmlname
+
+    def _get_object_values(self, obj, manager):
+        try:
+            d = getattr(obj, self.objattr)
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
+
+        keys = d.keys()
+        keys = map(self.keytype.to_xml, keys)
+
+        values = d.values()
+        values = map(self.type_.to_xml, values)
+
+        return zip(keys, values)
+
+    def _update_element_usertype(self, subelement, values, manager):
+        for key, value in values:
+            subsubelement = manager.to_xml(value)
+            subsubelement.set(self.keyxmlname, key)
+            subelement.append(subsubelement)
+
+    def _update_element_nousertype(self, subelement, values, manager):
+        for key, value in values:
+            subsubelement = ElementTree.Element(self.valuexmlname)
+            subsubelement.set(self.keyxmlname, key)
+            subsubelement.text = value
+            subelement.append(subsubelement)
+
+    def _set_object_values(self, obj, values):
+        keys = map(itemgetter(0), values)
+        keys = map(self.keytype.from_xml, keys)
+
+        values = map(itemgetter(1), values)
+        values = map(self.type_.from_xml, values)
+
+        if not values and self.optional:
+            return
+
+        setattr(obj, self.objattr, dict(zip(keys, values)))
+
+    def _extract_values_usertype(self, subelement, manager):
+        values = []
+        for subsubelement in subelement:
+            key = subsubelement.get(self.keyxmlname)
+            value = manager.from_xml(subsubelement)
+            values.append((key, value))
+        return values
+
+    def _extract_values_nousertype(self, subelement, manager):
+        values = []
+        for subsubelement in subelement:
+            key = subsubelement.get(self.keyxmlname)
+            value = subsubelement.text
+            values.append((key, value))
+        return values
 
 class Attribute(_XMLItem):
 
@@ -194,16 +278,17 @@ class XMLMapper(object):
         """
         ElementTree.register_namespace(prefix, uri)
 
-    def register(self, klass, tag, *content):
+    def register(self, klass, tag, *content, **kwargs):
         self._manager.register(tag, klass)
         
         # Search for the content already registered classes
-        for base in klass.__bases__:
-            try:
-                basetag = self._manager.get_tag(base)
-            except ValueError:
-                continue
-            content += self._content[basetag]
+        if kwargs.get('inherit', True):
+            for base in klass.__bases__:
+                try:
+                    basetag = self._manager.get_tag(base)
+                except ValueError:
+                    continue
+                content += self._content[basetag]
         
         self._content[tag] = content
 

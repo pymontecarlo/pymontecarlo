@@ -16,7 +16,8 @@ import xml.etree.ElementTree as ElementTree
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlmapper import XMLMapper, Element, Attribute, PythonType, UserType
+from pymontecarlo.util.xmlmapper import \
+    XMLMapper, Element, ElementDict, Attribute, PythonType, UserType
 
 # Globals and constants variables.
 
@@ -25,7 +26,7 @@ mapper = XMLMapper()
 class Human(object):
 
     def __init__(self, firstname, lastname, age,
-                 middlenames=None, luckynumbers=None):
+                 middlenames=None, luckynumbers=None, attributes=None):
         self.firstname = firstname
         self.lastname = lastname
         self.age = age
@@ -33,6 +34,8 @@ class Human(object):
         self.middlenames = middlenames
         if luckynumbers is None: luckynumbers = []
         self.luckynumbers = luckynumbers
+        if attributes is None: attributes = {}
+        self.attributes = attributes
 
     def __repr__(self):
         return '<Human(%s %s aged %i)>' % (self.firstname, self.lastname, self.age)
@@ -42,7 +45,8 @@ mapper.register(Human, 'human',
                 Attribute('lastname', PythonType(str)),
                 Attribute('middlenames', PythonType(str), iterable=True),
                 Attribute('age', PythonType(int)),
-                Element('luckynumbers', PythonType(int), iterable=True))
+                Element('luckynumbers', PythonType(int), iterable=True),
+                ElementDict('attributes', PythonType(str), PythonType(str), keyxmlname='_key'))
 
 class Family(object):
     
@@ -74,13 +78,16 @@ class TestXMLMapper(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testto_xml1(self):
-        element = mapper.to_xml(Human('Steve', 'Maclean', 5, luckynumbers=[45, 68, 78]))
+        human = Human('Steve', 'Maclean', 5, luckynumbers=[45, 68, 78],
+                      attributes={'hair': 'brown', 'eyes': 'blue'})
+        element = mapper.to_xml(human)
 
         self.assertEqual('Steve', element.get('firstname'))
         self.assertEqual('Maclean', element.get('lastname'))
         self.assertEqual('5', element.get('age'))
         self.assertEqual('45,68,78', element.find('luckynumbers').text)
         self.assertIsNone(element.get('middlenames'))
+        self.assertEqual(2, len(list(element.find('attributes'))))
 
     def testto_xml2(self):
         element = mapper.to_xml(self.family)
@@ -101,6 +108,10 @@ class TestXMLMapper(unittest.TestCase):
         text = '''<human age="5" firstname="Steve" lastname="Maclean"
                          middlenames="L,M,P">
                       <luckynumbers>45,68,78</luckynumbers>
+                      <attributes>
+                          <value _key="hair">brown</value>
+                          <value _key="eyes">blue</value>
+                      </attributes>
                   </human>'''
         element = ElementTree.fromstring(text)
         obj = mapper.from_xml(element)
@@ -116,6 +127,9 @@ class TestXMLMapper(unittest.TestCase):
         self.assertEqual('L', obj.middlenames[0])
         self.assertEqual('M', obj.middlenames[1])
         self.assertEqual('P', obj.middlenames[2])
+        self.assertEqual(2, len(obj.attributes))
+        self.assertEqual('brown', obj.attributes['hair'])
+        self.assertEqual('blue', obj.attributes['eyes'])
 
     def testfrom_xml3(self):
         text = '''<family>
