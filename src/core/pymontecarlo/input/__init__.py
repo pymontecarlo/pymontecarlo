@@ -18,8 +18,6 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlmapper import XMLMapper, Attribute, PythonType
-from pymontecarlo.util.mathutil import vector2d, vector3d
 
 #from pymontecarlo.input.beam import *
 #from pymontecarlo.input.body import *
@@ -33,20 +31,4 @@ from pymontecarlo.util.mathutil import vector2d, vector3d
 #from pymontecarlo.input.particle import *
 
 # Globals and constants variables.
-
-mapper = XMLMapper()
-mapper.register_namespace('mc', 'http://pymontecarlo.sf.net')
-
-# Register classes in pymontecarlo.util
-mapper.register(vector3d, "vector3d",
-                Attribute('x', PythonType(float)),
-                Attribute('y', PythonType(float)),
-                Attribute('z', PythonType(float)))
-
-mapper.register(vector2d, "vector2d",
-                Attribute('x', PythonType(float)),
-                Attribute('y', PythonType(float)))
-
-
-#
 
