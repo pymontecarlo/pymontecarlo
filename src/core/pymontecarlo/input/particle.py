@@ -26,6 +26,7 @@ __all__ = ['ELECTRON',
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.xmlmapper import _XMLType
 
 # Globals and constants variables.
 
@@ -59,3 +60,12 @@ PHOTON = _Particle('photon', 2, 0)
 POSITRON = _Particle('positron', 3, +1)
 
 PARTICLES = frozenset([ELECTRON, PHOTON, POSITRON])
+
+class ParticleType(_XMLType):
+
+    def from_xml(self, value):
+        lookup = dict(zip(map(str, PARTICLES), PARTICLES))
+        return lookup[value]
+
+    def to_xml(self, value):
+        return str(value)
