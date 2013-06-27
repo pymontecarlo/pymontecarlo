@@ -36,8 +36,7 @@ import collections
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input import mapper
-from pymontecarlo.util.xmlmapper import _XMLType, Attribute, PythonType
+from pymontecarlo.input.xmlmapper import mapper, _XMLType, Attribute, PythonType
 
 # Globals and constants variables.
 

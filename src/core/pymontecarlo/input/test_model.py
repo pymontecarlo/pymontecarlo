@@ -18,7 +18,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.model import ModelType
-from pymontecarlo.input import mapper
+from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
 

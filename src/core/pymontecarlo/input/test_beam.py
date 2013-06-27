@@ -18,11 +18,11 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input import mapper
 from pymontecarlo.input.beam import \
     (PencilBeam, GaussianBeam, tilt_beam,
     convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm)
 from pymontecarlo.input.particle import POSITRON
+from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
 
