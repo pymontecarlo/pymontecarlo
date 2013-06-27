@@ -25,11 +25,16 @@ import uuid
 # Third party modules.
 
 # Local modules.
-#from pymontecarlo.util.xmlutil import XMLIO, Element, objectxml
-from pymontecarlo.input.parameter import ParameterizedMetaClass, Parameter, SimpleValidator, ParameterizedMutableMapping, ParameterizedMutableSet
-from pymontecarlo.input.beam import GaussianBeam
+from pymontecarlo.input.parameter import \
+    (ParameterizedMetaClass, Parameter, SimpleValidator, CastValidator,
+     ParameterizedMutableMapping, ParameterizedMutableSet)
+from pymontecarlo.input.beam import PencilBeam, GaussianBeam
 from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
+from pymontecarlo.input.model import Model
+
+from pymontecarlo.input import mapper
+from pymontecarlo.util.xmlmapper import Attribute, Element, PythonType, UserType
 
 # Globals and constants variables.
 
@@ -85,7 +90,7 @@ class Options(object):
     geometry = Parameter(doc="Geometry")
     detectors = Parameter(doc="Detector(s)")
     limits = Parameter(doc="Limit(s)")
-    models = Parameter(doc="Model(s)")
+    models = Parameter([CastValidator(_Models)], "Model(s)")
 
     def __init__(self, name='Untitled'):
         """
@@ -120,7 +125,6 @@ class Options(object):
         self.__parameters__['limits'].freeze(self)
 
         self.models = _Models()
-        self.__parameters__['models'].freeze(self)
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
@@ -220,6 +224,13 @@ class Options(object):
         if self._uuid is None:
             self._uuid = uuid.uuid4().hex
         return self._uuid
+
+mapper.register(Options, '{http://pymontecarlo.sf.net}options',
+                Attribute('VERSION', PythonType(str), 'version'),
+                Attribute('name', PythonType(str)),
+                Element('beam', UserType(PencilBeam), iterable=True),
+                Element('models', UserType(Model), iterable=True),
+                )
 
 #XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
 #
