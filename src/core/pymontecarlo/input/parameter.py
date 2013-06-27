@@ -246,7 +246,7 @@ class FrozenParameter(Parameter):
         if not obj.__dict__.has_key(self.name):
             value = self._value
             if inspect.isclass(value):
-                value = self._klass(*self._klass_args, **self._klass_kwargs)
+                value = self._value(*self._klass_args, **self._klass_kwargs)
             wrapper = _ParameterValuesWrapper([value])
             wrapper.freeze()
             obj.__dict__[self.name] = wrapper
