@@ -65,6 +65,15 @@ class TestManager(TestCase):
 
         self.assertRaises(ValueError, self.manager.register_saver, 'tag2', Mock1)
 
+    def testis_registered(self):
+        self.assertFalse(self.manager.is_registered(klass=Mock1))
+        self.assertFalse(self.manager.is_registered(tag='tag1'))
+
+        self.manager.register('tag1', Mock1)
+
+        self.assertTrue(self.manager.is_registered(klass=Mock1))
+        self.assertTrue(self.manager.is_registered(tag='tag1'))
+
 class TestClassManager(TestCase):
 
     def setUp(self):
