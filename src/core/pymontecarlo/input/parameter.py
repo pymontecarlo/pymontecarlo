@@ -24,6 +24,7 @@ from abc import ABCMeta, abstractmethod
 from collections import MutableSet, MutableMapping, Mapping, Iterable
 import copy
 from operator import itemgetter
+import inspect
 
 # Third party modules.
 
@@ -182,6 +183,29 @@ class Parameter(object):
     @property
     def name(self):
         return self._name
+
+class FrozenParameter(Parameter):
+
+    def __init__(self, klass_or_value, doc=None, args=(), kwargs=None):
+        Parameter.__init__(self, None, doc)
+
+        self._value = klass_or_value
+        self._klass_args = args
+        if kwargs is None: kwargs = {}
+        self._klass_kwargs = kwargs
+
+    def __get__(self, obj, objtype=None):
+        return Parameter.__get__(self, obj, objtype=objtype)
+
+    def _get_wrapper(self, obj, objtype=None):
+        if not obj.__dict__.has_key(self.name):
+            value = self._value
+            if inspect.isclass(value):
+                value = self._klass(*self._klass_args, **self._klass_kwargs)
+            wrapper = _ParameterValuesWrapper([value])
+            wrapper.freeze()
+            obj.__dict__[self.name] = wrapper
+        return obj.__dict__[self.name]
 
 class ParameterAlias(object):
 

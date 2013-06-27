@@ -17,7 +17,7 @@ import math
 
 # Local modules.
 from pymontecarlo.input.parameter import \
-    (ParameterizedMetaClass, Parameter, SimpleValidator,
+    (ParameterizedMetaClass, Parameter, FrozenParameter, SimpleValidator,
      ParameterAlias, AngleParameter, UnitParameter,
      iter_parameters, iter_values, freeze, expand,
      ParameterizedMutableMapping, ParameterizedMutableSet)
@@ -30,16 +30,13 @@ class ParametrizedObject(object):
 
     param1 = Parameter(doc="Parameter 1")
     param2 = Parameter(SimpleValidator(lambda x: x > 0), doc='Parameter 2')
-    param3 = Parameter(doc='Parameter 3')
+    param3 = FrozenParameter(99, doc='Parameter 3')
     param4 = ParameterAlias(param1, doc="Parameter 4")
     param5 = AngleParameter(doc="Parameter5")
     param6 = UnitParameter("m", doc='Parameter6 (in meters)')
 
     def __init__(self, name):
         self.name = name
-
-        self.param3 = 99
-        self.__parameters__['param3'].freeze(self)
 
     def __repr__(self):
         return '<ParameterizedObject(%s)>' % self.name
