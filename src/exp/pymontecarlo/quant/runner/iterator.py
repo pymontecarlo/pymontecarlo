@@ -28,8 +28,9 @@ __license__ = "GPL v3"
 # Third party modules.
 import numpy as np
 
+import pyxray.element_properties as ep
+
 # Local modules.
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 

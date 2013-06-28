@@ -19,6 +19,8 @@ from math import radians
 # Third party modules.
 from nose.plugins.attrib import attr
 
+from pyxray.transition import Ka
+
 # Local modules.
 #from pymontecarlo.testcase import TestCase
 
@@ -35,8 +37,6 @@ from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.limit import ShowersLimit
 
 from pymontecarlo.program.pap.runner.worker import Worker
-
-from pymontecarlo.util.transition import Ka
 
 # Globals and constants variables.
 

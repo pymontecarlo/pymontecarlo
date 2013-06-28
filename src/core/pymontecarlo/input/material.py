@@ -41,7 +41,7 @@ from pymontecarlo.input.xmlmapper import \
     (mapper, Attribute, ParameterizedAttribute, ParameterizedElementDict,
      _XMLType, PythonType)
 
-import pymontecarlo.util.element_properties as ep
+import pyxray.element_properties as ep
 
 # Globals and constants variables.
 

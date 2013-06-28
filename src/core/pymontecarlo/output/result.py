@@ -26,8 +26,9 @@ from collections import Iterable, Sized
 # Third party modules.
 import numpy as np
 
+from pyxray.transition import from_string
+
 # Local modules.
-from pymontecarlo.util.transition import from_string
 from pymontecarlo.output.manager import ResultManager
 
 import pymontecarlo.util.progress as progress

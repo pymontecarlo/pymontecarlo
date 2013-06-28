@@ -26,12 +26,13 @@ from itertools import product
 # Third party modules.
 import wx
 
+from pyxray.transition import get_transitions
+
 # Local modules.
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
 
 from pymontecarlo.util.manager import ClassManager
 from pymontecarlo.util.human import camelcase_to_words
-from pymontecarlo.util.transition import get_transitions
 
 from pymontecarlo.ui.gui.input.wizardpage import WizardPage
 

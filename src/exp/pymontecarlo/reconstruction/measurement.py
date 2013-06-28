@@ -24,7 +24,10 @@ from StringIO import StringIO
 
 # Third party modules.
 import numpy as np
+
 import h5py
+
+import pyxray.transition as transitionutil
 
 # Local modules.
 from pymontecarlo.input.options import Options
@@ -35,7 +38,6 @@ from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.output.results import Results
 
 import pymontecarlo.util.xmlutil as xmlutil
-import pymontecarlo.util.transition as transitionutil
 
 # Globals and constants variables.
 

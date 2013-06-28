@@ -13,12 +13,12 @@ import unittest
 import logging
 
 # Third party modules.
+from pyxray.transition import Transition, La
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
-from pymontecarlo.util.transition import Transition, La
 
 # Globals and constants variables.
 

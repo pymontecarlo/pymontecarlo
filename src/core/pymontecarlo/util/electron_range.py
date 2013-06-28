@@ -19,9 +19,9 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+import pyxray.element_properties as ep
 
 # Local modules.
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 

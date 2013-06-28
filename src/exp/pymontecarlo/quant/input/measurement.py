@@ -22,15 +22,16 @@ __license__ = "GPL v3"
 from operator import attrgetter
 
 # Third party modules.
-from pymontecarlo.input.options import Options #@UnusedImport
+
+import pyxray.element_properties as ep
 
 # Local modules.
+from pymontecarlo.input.options import Options #@UnusedImport
 from pymontecarlo.input.material import pure
 from pymontecarlo.input.geometry import Substrate
 
 from pymontecarlo.quant.input.rule import ElementByDifferenceRule
 
-import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO, objectxml, Element
 
 # Globals and constants variables.

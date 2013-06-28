@@ -25,6 +25,8 @@ from operator import itemgetter, attrgetter
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
 
+import pyxray.element_properties as ep
+
 # Local modules.
 from wxtools2.list import \
     (PyListCtrl, StaticColumn, TextCtrlColumn, PyListCtrlValidator,
@@ -34,7 +36,6 @@ from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
 from wxtools2.dialog import show_open_filedialog, show_save_filedialog
 
-import pymontecarlo.util.element_properties as ep
 from pymontecarlo.input.material import \
     composition_from_formula, Material, _generate_name, _calculate_composition
 

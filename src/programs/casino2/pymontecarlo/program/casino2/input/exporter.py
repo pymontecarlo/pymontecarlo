@@ -28,6 +28,8 @@ from StringIO import StringIO
 # Third party modules.
 import numpy as np
 
+import pyxray.element_properties as ep
+
 # Local modules.
 from pymontecarlo.input.beam import GaussianBeam
 from pymontecarlo.input.geometry import  Substrate, MultiLayers, GrainBoundaries
@@ -50,7 +52,6 @@ from pymontecarlo.input.model import \
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
 from pymontecarlo.input.exporter import \
     Exporter as _Exporter, ExporterException, ExporterWarning
-import pymontecarlo.util.element_properties as ep
 
 from casinoTools.FileFormat.casino2.File import File
 from casinoTools.FileFormat.casino2.SimulationOptions import \

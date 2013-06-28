@@ -13,6 +13,7 @@ import unittest
 import logging
 
 # Third party modules.
+from pyxray.transition import Ka, La
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
@@ -25,7 +26,6 @@ from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.material import Material, pure
 from pymontecarlo.output.results import Results
 from pymontecarlo.output.result import PhotonIntensityResult, create_intensity_dict
-from pymontecarlo.util.transition import Ka, La
 
 # Globals and constants variables.
 

@@ -30,12 +30,14 @@ from xml.etree.ElementTree import fromstring
 
 # Third party modules.
 import h5py
+
 import numpy as np
+
+from pyxray.transition import from_string
 
 # Local modules.
 from pymontecarlo.util.updater import _Updater
 from pymontecarlo.util.config import ConfigParser
-from pymontecarlo.util.transition import from_string
 import pymontecarlo.util.hdf5util as hdf5util
 
 from pymontecarlo.input.options import Options

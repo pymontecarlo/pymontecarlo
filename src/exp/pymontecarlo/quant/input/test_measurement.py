@@ -14,6 +14,7 @@ import logging
 from math import radians
 
 # Third party modules.
+from pyxray.transition import Ka, La
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
@@ -24,7 +25,6 @@ from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
 from pymontecarlo.input.material import Material
 from pymontecarlo.input.geometry import Sphere
-from pymontecarlo.util.transition import Ka, La
 from pymontecarlo.quant.input.rule import ElementByDifferenceRule, FixedElementRule
 
 # Globals and constants variables.

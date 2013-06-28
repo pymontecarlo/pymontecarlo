@@ -25,6 +25,8 @@ import csv
 # Third party modules.
 import numpy as np
 
+from pyxray.transition import from_string
+
 # Local modules.
 from pymontecarlo.output.importer import Importer as _Importer, ImporterException
 
@@ -34,8 +36,6 @@ from pymontecarlo.input.detector import \
 from pymontecarlo.output.result import \
     (PhotonIntensityResult, create_intensity_dict,
      PhotonDepthResult, create_photondist_dict)
-
-from pymontecarlo.util.transition import from_string
 
 # Globals and constants variables.
 

@@ -44,6 +44,7 @@ except ImportError:
     _winreg = WinReg()
 
 # Third party modules.
+from pyxray.transition import Ka, La, Ma
 
 # Local modules.
 from pymontecarlo.settings import get_settings
@@ -51,8 +52,6 @@ from pymontecarlo.settings import get_settings
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.input.detector import PhotonIntensityDetector, PhotonDepthDetector
-
-from pymontecarlo.util.transition import Ka, La, Ma
 
 from pymontecarlo.program.monaco.input.converter import Converter
 from pymontecarlo.program.monaco.input.exporter import Exporter

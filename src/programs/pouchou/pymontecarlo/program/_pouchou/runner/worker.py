@@ -24,12 +24,12 @@ import tempfile
 import time
 
 # Third party modules.
+from pyxray.transition import get_transitions
 
 # Local modules.
 from pymontecarlo.program._pouchou.input.converter import Converter
 from pymontecarlo.runner.worker import Worker as _Worker
 from pymontecarlo.util.config import ConfigParser
-from pymontecarlo.util.transition import get_transitions
 from pymontecarlo.input.model import MASS_ABSORPTION_COEFFICIENT
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhotonDepthDetector, TimeDetector
