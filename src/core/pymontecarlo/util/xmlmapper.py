@@ -45,13 +45,30 @@ class PythonType(_XMLType):
         self._type = type_
 
     def from_xml(self, value):
+        # None
         if value == 'xsi:nil':
             return None
+
+        # Boolean
+        if self._type is bool:
+            if value == 'true':
+                return True
+            elif value == 'false':
+                return False
+            else:
+                raise ValueError, 'Incorrect boolean value: %s' % value
+
         return self._type(value)
 
     def to_xml(self, value):
+        # None
         if value is None:
             return 'xsi:nil'
+
+        # Boolean
+        if self._type is bool:
+            return 'true' if value else 'false'
+
         return str(value)
     
 class UserType(_XMLType):
