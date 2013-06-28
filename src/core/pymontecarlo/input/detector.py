@@ -48,9 +48,10 @@ from collections import namedtuple
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, AngleParameter, UnitParameter,
      SimpleValidator, CastValidator)
-#from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.xmlmapper import mapper, Attribute, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
 from pymontecarlo.util.human import camelcase_to_words
 from pymontecarlo.util.mathutil import _vector
+
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -88,6 +89,10 @@ class limit(_vector, namedtuple('limits', ['lower', 'upper'])):
     def high(self):
         return self.upper
 
+mapper.register(limit, '{http://pymontecarlo.sf.net}limit',
+                Attribute('lower', PythonType(float)),
+                Attribute('upper', PythonType(float)))
+
 class _Detector(object):
 
     __metaclass__ = ParameterizedMetaClass
@@ -102,10 +107,12 @@ _equality_validator = \
     SimpleValidator(lambda x: abs(x.high - x.low) > TOLERANCE,
                     "Elevation angles cannot be equal")
 _elevation_validator = \
-    SimpleValidator(lambda x:-HALFPI <= x.low <= HALFPI and -HALFPI <= x.high <= HALFPI,
+    SimpleValidator(lambda x:-HALFPI - TOLERANCE <= x.low <= HALFPI + TOLERANCE and \
+                        - HALFPI - TOLERANCE <= x.high <= HALFPI + TOLERANCE,
                     "Angle must be between [-pi/2, pi/2] rad")
 _azimuth_validator = \
-    SimpleValidator(lambda x: 0 <= x.low <= TWOPI and 0 <= x.high <= TWOPI,
+    SimpleValidator(lambda x: 0 <= x.low <= TWOPI + TOLERANCE and \
+                        0 <= x.high <= TWOPI + TOLERANCE,
                     "Angle must be between [0, 2pi] rad")
 
 class _DelimitedDetector(_Detector):
@@ -163,22 +170,6 @@ class _DelimitedDetector(_Detector):
              self.elevation_deg[0], self.elevation_deg[1],
              self.azimuth_deg[0], self.azimuth_deg[1])
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        elevation = (float(element.get('elevation_min')),
-#                     float(element.get('elevation_max')))
-#        azimuth = (float(element.get('azimuth_min')),
-#                   float(element.get('azimuth_max')))
-#
-#        return cls(elevation, azimuth)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('elevation_min', str(self.elevation_rad[0]))
-#        element.set('elevation_max', str(self.elevation_rad[1]))
-#
-#        element.set('azimuth_min', str(self.azimuth_rad[0]))
-#        element.set('azimuth_max', str(self.azimuth_rad[1]))
-
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad):
         elevation_rad = (takeoffangle_rad - opening_rad, takeoffangle_rad + opening_rad)
@@ -197,6 +188,10 @@ class _DelimitedDetector(_Detector):
     @property
     def takeoffangle_deg(self):
         return math.degrees(self.takeoffangle_rad)
+
+mapper.register(_DelimitedDetector, '{http://pymontecarlo.sf.net}_delimitedDetector',
+                ParameterizedElement('elevation_rad', UserType(limit), 'elevation'),
+                ParameterizedElement('azimuth_rad', UserType(limit), 'azimuth'))
 
 _bins_validator = \
     SimpleValidator(lambda x: x >= 1,
@@ -217,13 +212,8 @@ class _ChannelsDetector(_Detector):
         return '%s (channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__), self.channels)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        channels = int(element.get('channels'))
-#        return cls(channels)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('channels', str(self.channels))
+mapper.register(_ChannelsDetector, '{http://pymontecarlo.sf.net}_channelsDetector',
+                ParameterizedAttribute('channels', PythonType(int)))
 
 #class _BoundedChannelsDetector(_ChannelsDetector):
 #
@@ -269,11 +259,11 @@ class _ChannelsDetector(_Detector):
 
 class _SpatialDetector(_Detector):
 
-    xlimits = UnitParameter('m', doc="Limits in x")
+    xlimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in x")
     xbins = Parameter(_bins_validator, "Number of bins in x")
-    ylimits = UnitParameter('m', doc="Limits in y")
+    ylimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in y")
     ybins = Parameter(_bins_validator, "Number of bins in y")
-    zlimits = UnitParameter('m', doc="Limits in z")
+    zlimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in z")
     zbins = Parameter(_bins_validator, "Number of bins in z")
 
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
@@ -301,31 +291,13 @@ class _SpatialDetector(_Detector):
              self.ylimits_m[0] * 1e9, self.ylimits_m[1] * 1e9, self.ybins,
              self.zlimits_m[0] * 1e9, self.zlimits_m[1] * 1e9, self.zbins)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        xlimits = float(element.get('xlimit_min')), float(element.get('xlimit_max'))
-#        xbins = int(element.get('xbins'))
-#
-#        ylimits = float(element.get('ylimit_min')), float(element.get('ylimit_max'))
-#        ybins = int(element.get('ybins'))
-#
-#        zlimits = float(element.get('zlimit_min')), float(element.get('zlimit_max'))
-#        zbins = int(element.get('zbins'))
-#
-#        return cls(xlimits, xbins, ylimits, ybins, zlimits, zbins)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('xlimit_min', str(self.xlimits_m[0]))
-#        element.set('xlimit_max', str(self.xlimits_m[1]))
-#        element.set('xbins', str(self.xbins))
-#
-#        element.set('ylimit_min', str(self.ylimits_m[0]))
-#        element.set('ylimit_max', str(self.ylimits_m[1]))
-#        element.set('ybins', str(self.ybins))
-#
-#        element.set('zlimit_min', str(self.zlimits_m[0]))
-#        element.set('zlimit_max', str(self.zlimits_m[1]))
-#        element.set('zbins', str(self.zbins))
+mapper.register(_SpatialDetector, '{http://pymontecarlo.sf.net}_spatialDetector',
+                ParameterizedElement('xlimits_m', UserType(limit), 'xlimits'),
+                ParameterizedAttribute('xbins', PythonType(int)),
+                ParameterizedElement('ylimits_m', UserType(limit), 'ylimits'),
+                ParameterizedAttribute('ybins', PythonType(int)),
+                ParameterizedElement('zlimits_m', UserType(limit), 'zlimits'),
+                ParameterizedAttribute('zbins', PythonType(int)))
 
 _energy_limit_validator = \
     SimpleValidator(lambda x: x[0] >= 0 and x[1] >= 0,
@@ -350,6 +322,9 @@ class _EnergyDetector(_ChannelsDetector):
             (camelcase_to_words(self.__class__.__name__),
              self.limits_eV[0], self.limits_eV[1], self.channels)
 
+mapper.register(_EnergyDetector, '{http://pymontecarlo.sf.net}_energyDetector',
+                ParameterizedElement('limits_eV', UserType(limit), 'limits'))
+
 class _AngularDetector(_ChannelsDetector):
 
     def __init__(self, channels, limits_rad):
@@ -365,13 +340,8 @@ class _AngularDetector(_ChannelsDetector):
             (camelcase_to_words(self.__class__.__name__),
              self.limits_deg[0], self.limits_deg[1], self.channels)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        # Required due to argument inversion
-#        limits = float(element.get('limit_min')), float(element.get('limit_max'))
-#        channels = int(element.get('channels'))
-#
-#        return cls(channels, limits)
+mapper.register(_AngularDetector, '{http://pymontecarlo.sf.net}_ngularDetector',
+                ParameterizedElement('limits_rad', UserType(limit), 'limits'))
 
 class _PolarAngularDetector(_AngularDetector):
 
@@ -381,6 +351,8 @@ class _PolarAngularDetector(_AngularDetector):
     def __init__(self, channels, limits_rad=(-HALFPI, HALFPI)):
         _AngularDetector.__init__(self, channels, limits_rad)
 
+mapper.register(_PolarAngularDetector, '{http://pymontecarlo.sf.net}_polarAngularDetector')
+
 class _AzimuthalAngularDetector(_AngularDetector):
 
     limits = AngleParameter([CastValidator(limit), _azimuth_validator],
@@ -389,62 +361,62 @@ class _AzimuthalAngularDetector(_AngularDetector):
     def __init__(self, channels, limits_rad=(0, TWOPI)):
         _AngularDetector.__init__(self, channels, limits_rad)
 
+mapper.register(_AzimuthalAngularDetector, '{http://pymontecarlo.sf.net}_azimuthalAngularDetector')
+
 class _PhotonDelimitedDetector(_DelimitedDetector):
     pass
+
+mapper.register(_PhotonDelimitedDetector, '{http://pymontecarlo.sf.net}_photonDelimitedDetector')
 
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronEnergyDetector', BackscatteredElectronEnergyDetector)
+mapper.register(BackscatteredElectronEnergyDetector, '{http://pymontecarlo.sf.net}backscatteredElectronEnergyDetector')
 
 class TransmittedElectronEnergyDetector(_EnergyDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronEnergyDetector', TransmittedElectronEnergyDetector)
+mapper.register(TransmittedElectronEnergyDetector, '{http://pymontecarlo.sf.net}transmittedElectronEnergyDetector')
 
 class BackscatteredElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronPolarAngularDetector', BackscatteredElectronPolarAngularDetector)
+mapper.register(BackscatteredElectronPolarAngularDetector, '{http://pymontecarlo.sf.net}backscatteredElectronPolarAngularDetector')
 
 class TransmittedElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronPolarAngularDetector', TransmittedElectronPolarAngularDetector)
+mapper.register(TransmittedElectronPolarAngularDetector, '{http://pymontecarlo.sf.net}transmittedElectronPolarAngularDetector')
 
 class BackscatteredElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronAzimuthalAngularDetector', BackscatteredElectronAzimuthalAngularDetector)
+mapper.register(BackscatteredElectronAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}backscatteredElectronAzimuthalAngularDetector')
 
 class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}transmittedElectronAzimuthalAngularDetector', TransmittedElectronAzimuthalAngularDetector)
+mapper.register(TransmittedElectronAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}transmittedElectronAzimuthalAngularDetector')
 
 class BackscatteredElectronRadialDetector(_ChannelsDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}backscatteredElectronRadialDetector', BackscatteredElectronRadialDetector)
+mapper.register(BackscatteredElectronRadialDetector, '{http://pymontecarlo.sf.net}backscatteredElectronRadialDetector')
 
 class PhotonPolarAngularDetector(_PolarAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}photonPolarAngularDetector', PhotonPolarAngularDetector)
+mapper.register(PhotonPolarAngularDetector, '{http://pymontecarlo.sf.net}photonPolarAngularDetector')
 
 class PhotonAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}photonAzimuthalAngularDetector', PhotonAzimuthalAngularDetector)
+mapper.register(PhotonAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}photonAzimuthalAngularDetector')
 
 class EnergyDepositedSpatialDetector(_SpatialDetector):
+    pass
 
-    def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
-        _SpatialDetector.__init__(self, xlimits_m, xbins,
-                                        ylimits_m, ybins,
-                                        zlimits_m, zbins)
-
-#XMLIO.register('{http://pymontecarlo.sf.net}energyDepositedSpatialDetector', EnergyDepositedSpatialDetector)
+mapper.register(EnergyDepositedSpatialDetector, '{http://pymontecarlo.sf.net}energyDepositedSpatialDetector')
 
 class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
 
@@ -468,19 +440,7 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
              self.limits_eV[0], self.limits_eV[1],
              self.channels)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-#        energy = _EnergyDetector.__loadxml__(element, *args, **kwargs)
-#
-#        return cls(delimited.elevation_rad, delimited.azimuth_rad,
-#                   energy.limits_eV, energy.channels)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-#        _EnergyDetector.__savexml__(self, element, *args, **kwargs)
-
-#XMLIO.register('{http://pymontecarlo.sf.net}photonSpectrumDetector', PhotonSpectrumDetector)
+mapper.register(PhotonSpectrumDetector, '{http://pymontecarlo.sf.net}photonSpectrumDetector')
 
 class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
@@ -502,17 +462,7 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
              self.azimuth_deg[0], self.azimuth_deg[1],
              self.channels)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-#        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
-#        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels.channels)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-#        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
-
-#XMLIO.register('{http://pymontecarlo.sf.net}photonDepthDetector', PhotonDepthDetector)
+mapper.register(PhotonDepthDetector, '{http://pymontecarlo.sf.net}photonDepthDetector')
 
 class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
@@ -534,17 +484,7 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
              self.azimuth_deg[0], self.azimuth_deg[1],
              self.channels)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-#        channels = _ChannelsDetector.__loadxml__(element, *args, **kwargs)
-#        return cls(delimited.elevation_rad, delimited.azimuth_rad, channels.channels)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-#        _ChannelsDetector.__savexml__(self, element, *args, **kwargs)
-
-#XMLIO.register('{http://pymontecarlo.sf.net}photonRadialDetector', PhotonRadialDetector)
+mapper.register(PhotonRadialDetector, '{http://pymontecarlo.sf.net}photonRadialDetector')
 
 class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
 
@@ -573,27 +513,15 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
              self.azimuth_deg[0], self.azimuth_deg[1],
              self.xbins, self.ybins, self.zbins)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        delimited = _PhotonDelimitedDetector.__loadxml__(element, *args, **kwargs)
-#        xbins = int(element.get('xbins'))
-#        ybins = int(element.get('ybins'))
-#        zbins = int(element.get('zbins'))
-#        return cls(delimited.elevation_rad, delimited.azimuth_rad,
-#                   xbins, ybins, zbins)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _PhotonDelimitedDetector.__savexml__(self, element, *args, **kwargs)
-#        element.set('xbins', str(self.xbins))
-#        element.set('ybins', str(self.ybins))
-#        element.set('zbins', str(self.zbins))
-
-#XMLIO.register('{http://pymontecarlo.sf.net}photonEmissionMapDetector', PhotonEmissionMapDetector)
+mapper.register(PhotonEmissionMapDetector, '{http://pymontecarlo.sf.net}photonEmissionMapDetector',
+                ParameterizedAttribute('xbins', PythonType(int)),
+                ParameterizedAttribute('ybins', PythonType(int)),
+                ParameterizedAttribute('zbins', PythonType(int)))
 
 class PhotonIntensityDetector(_PhotonDelimitedDetector):
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}photonIntensityDetector', PhotonIntensityDetector)
+mapper.register(PhotonIntensityDetector, '{http://pymontecarlo.sf.net}photonIntensityDetector')
 
 class TimeDetector(_Detector):
     """
@@ -601,7 +529,7 @@ class TimeDetector(_Detector):
     """
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}timeDetector', TimeDetector)
+mapper.register(TimeDetector, '{http://pymontecarlo.sf.net}timeDetector')
 
 class ElectronFractionDetector(_Detector):
     """
@@ -609,7 +537,7 @@ class ElectronFractionDetector(_Detector):
     """
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}electronFractionDetector', ElectronFractionDetector)
+mapper.register(ElectronFractionDetector, '{http://pymontecarlo.sf.net}electronFractionDetector')
 
 class ShowersStatisticsDetector(_Detector):
     """
@@ -617,7 +545,7 @@ class ShowersStatisticsDetector(_Detector):
     """
     pass
 
-#XMLIO.register('{http://pymontecarlo.sf.net}showersStatisticsDetector', ShowersStatisticsDetector)
+mapper.register(ShowersStatisticsDetector, '{http://pymontecarlo.sf.net}showersStatisticsDetector')
 
 class TrajectoryDetector(_Detector):
     """
@@ -650,14 +578,6 @@ class TrajectoryDetector(_Detector):
         return '%s (%s secondary particles)' % \
             (camelcase_to_words(self.__class__.__name__), prep)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        secondary = True if element.get('secondary') == 'true' else False
-#
-#        return cls(secondary)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('secondary', str(self.secondary).lower())
-
-#XMLIO.register('{http://pymontecarlo.sf.net}trajectoryDetector', TrajectoryDetector)
+mapper.register(TrajectoryDetector, '{http://pymontecarlo.sf.net}trajectoryDetector',
+                ParameterizedAttribute('secondary', PythonType(bool)))
 
