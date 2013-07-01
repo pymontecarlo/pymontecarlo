@@ -148,6 +148,14 @@ def sdist():
     _call_all_setups('sdist', '-d', dist_dir)
 
 @task
+def egg_info():
+    """
+    Create egg info from pymontecarlo and programs.
+    """
+    dist_dir = os.path.abspath(os.path.join(os.curdir, 'dist'))
+    _call_all_setups('egg_info')
+
+@task
 def bdist_egg():
     """
     Builds egg distribution from pymontecarlo and programs.
