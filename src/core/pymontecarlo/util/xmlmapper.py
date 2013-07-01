@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import xml.etree.ElementTree as ElementTree
 from collections import Iterable
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 # Third party modules.
 
@@ -101,7 +101,7 @@ class _XMLItem(object):
         
     def _get_object_values(self, obj, manager):
         try:
-            values = getattr(obj, self.objattr)
+            values = attrgetter(self.objattr)(obj)
         except AttributeError:
             if self.optional:
                 return []
@@ -136,7 +136,9 @@ class _XMLItem(object):
         if not self.iterable:
             values = values[0]
 
-        setattr(obj, self.objattr, values)
+        dots = self.objattr.rsplit('.', 1)
+        lastobj = attrgetter(dots[0])(obj) if len(dots) > 1 else obj
+        setattr(lastobj, dots[-1], values)
 
     def load(self, obj, element, manager):
         values = self._extract_values(element, manager)
