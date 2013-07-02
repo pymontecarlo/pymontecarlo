@@ -327,15 +327,40 @@ class XMLMapper(object):
         recast = False
         try:
             obj = klass.__new__(klass)
-        except TypeError:
+        except TypeError: # old class style
             recast = True
             obj = _EmptyClass()
 
+        # Load XML
         for item in content:
             item.load(obj, element, self)
 
         if recast:
             obj = klass(**obj.__dict__)
+
+        # Reduce
+        if hasattr(obj, '__reduce__'):
+            reduce = obj.__reduce__()
+
+            func = reduce[0]
+            args = reduce[1]
+            obj = func(*args)
+
+            # State
+            if len(reduce) > 2:
+                state = reduce[2]
+                if hasattr(obj, '__setstate__'):
+                    obj.__setstate__(state)
+                else:
+                    obj.__dict__.update(state)
+
+            # List items
+            if len(reduce) > 3:
+                obj.extend(reduce[3])
+
+            # Dict items
+            if len(reduce) > 4:
+                obj.update(reduce[4])
 
         return obj
 
