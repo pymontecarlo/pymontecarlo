@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.util.xmlmapper import * #@UnusedWildImport
@@ -102,3 +103,17 @@ mapper.register(vector3d, "vector3d",
 mapper.register(vector2d, "vector2d",
                 Attribute('x', PythonType(float)),
                 Attribute('y', PythonType(float)))
+
+class _SubshellType(_XMLType):
+
+    def to_xml(self, value):
+        return str(value.index)
+    
+    def from_xml(self, value):
+        return int(value)
+
+mapper.register(Transition, 'transition',
+                Attribute('_z', PythonType(int), 'z'),
+                Attribute('_src', _SubshellType(), 'src'),
+                Attribute('_dest', _SubshellType(), 'dest'),
+                Attribute('_satellite', PythonType(int), 'satellite', optional=True))

@@ -13,9 +13,10 @@ import unittest
 import logging
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
-from pymontecarlo.input import mapper
+from pymontecarlo.input.xmlmapper import mapper
 from pymontecarlo.util.mathutil import vector3d, vector2d
 
 # Globals and constants variables.
@@ -32,7 +33,7 @@ class Testvector2d(unittest.TestCase):
 
     def testskeleton(self):
         self.assertTrue(True)
-        
+
     def testto_xml(self):
         element = mapper.to_xml(self.u)
 
@@ -73,6 +74,33 @@ class Testvector3d(unittest.TestCase):
         self.assertEqual(1, u.x)
         self.assertEqual(2, u.y)
         self.assertEqual(3, u.z)
+
+class TestTransition(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.t = Transition(29, 9, 4)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertTrue(True)
+
+    def testto_xml(self):
+        element = mapper.to_xml(self.t)
+
+        self.assertEqual(29, int(element.get('z')))
+        self.assertEqual(9, int(element.get('src')))
+        self.assertEqual(4, int(element.get('dest')))
+        self.assertEqual(0, int(element.get('satellite')))
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.t)
+        t = mapper.from_xml(element)
+
+        self.assertEqual(t, self.t)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
