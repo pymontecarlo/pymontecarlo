@@ -25,12 +25,14 @@ __all__ = ['TimeLimit',
 # Standard library modules.
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
-#from pymontecarlo.input.option import Option
-#from pymontecarlo.util.xmlutil import XMLIO
 from pymontecarlo.input.parameter import \
-    ParameterizedMetaClass, Parameter, TimeParameter, SimpleValidator
+    (ParameterizedMetaClass, Parameter, FrozenParameter, TimeParameter,
+     SimpleValidator)
+from pymontecarlo.input.xmlmapper import \
+    mapper, ParameterizedAttribute, Element, UserType, PythonType
 
 # Globals and constants variables.
 
@@ -38,28 +40,16 @@ class _TransitionsLimit(object):
 
     __metaclass__ = ParameterizedMetaClass
 
-    transitions = Parameter(doc="Transitions for the limit")
+    transitions = FrozenParameter(set, doc="Transitions for the limit")
 
     def __init__(self, transitions):
-        self.transitions = set()
-        self.__parameters__['transitions'].freeze(self)
-
         if hasattr(transitions, '__iter__'):
             self.transitions.update(transitions)
         else:
             self.transitions.add(transitions)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        transitions = set()
-#        for child in list(element):
-#            transitions.add(XMLIO.from_xml(child, *args, **kwargs))
-#
-#        return cls(transitions)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        for transition in self.transitions:
-#            element.append(transition.to_xml())
+mapper.register(_TransitionsLimit, '{http://pymontecarlo.sf.net}_transitionsLimit',
+                Element('transitions', UserType(Transition), iterable=True))
 
 _time_validator = SimpleValidator(lambda t: t > 0,
                                   "Time must be greater than 0")
@@ -76,15 +66,8 @@ class TimeLimit(object):
     def __repr__(self):
         return '<TimeLimit(time=%s s)>' % self.time_s
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        time = long(element.get('time'))
-#        return cls(time)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('time', str(self.time_s))
-
-#XMLIO.register('{http://pymontecarlo.sf.net}timeLimit', TimeLimit)
+mapper.register(TimeLimit, '{http://pymontecarlo.sf.net}timeLimit',
+                ParameterizedAttribute('time_s', PythonType(float), 'time'))
 
 _showers_validator = \
     SimpleValidator(lambda s: s >= 1,
@@ -99,18 +82,11 @@ class ShowersLimit(object):
     def __init__(self, showers):
         self.showers = showers
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        showers = long(element.get('showers'))
-#        return cls(showers)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('showers', str(self.showers))
-
     def __repr__(self):
         return '<ShowersLimit(showers=%s)>' % self.showers
 
-#XMLIO.register('{http://pymontecarlo.sf.net}showersLimit', ShowersLimit)
+mapper.register(ShowersLimit, '{http://pymontecarlo.sf.net}showersLimit',
+                ParameterizedAttribute('showers', PythonType(long)))
 
 _uncertainty_validator = \
     SimpleValidator(lambda unc: 0.0 < unc < 1.0,
@@ -129,17 +105,5 @@ class UncertaintyLimit(_TransitionsLimit):
         return '<UncertaintyLimit(%i transitions, uncertainty=%s %%)>' % \
             (len(self.transitions), self.uncertainty * 100.0)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        transitions = \
-#            _TransitionsLimit.__loadxml__(element, *args, **kwargs).transitions
-#
-#        uncertainty = float(element.get('uncertainty'))
-#
-#        return cls(transitions, uncertainty)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _TransitionsLimit.__savexml__(self, element, *args, **kwargs)
-#        element.set('uncertainty', str(self.uncertainty))
-
-#XMLIO.register('{http://pymontecarlo.sf.net}uncertaintyLimit', UncertaintyLimit)
+mapper.register(UncertaintyLimit, '{http://pymontecarlo.sf.net}uncertaintyLimit',
+                ParameterizedAttribute('uncertainty', PythonType(float)))
