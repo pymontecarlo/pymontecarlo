@@ -25,7 +25,7 @@ from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.util.xmlmapper import * #@UnusedWildImport
-from pymontecarlo.util.xmlmapper import _XMLType #@UnusedImport
+from pymontecarlo.util.xmlmapper import _XMLType, _XMLItem #@UnusedImport
 from pymontecarlo.util.mathutil import vector2d, vector3d
 
 # Globals and constants variables.
@@ -67,7 +67,7 @@ class ParameterizedElement(Element):
 class ParameterizedElementDict(ElementDict):
 
     def __init__(self, objattr, keytype, valuetype, xmlname=None,
-                 keyxmlname='_key', valuexmlname='value',
+                 keyxmlname='{xmlmapper}key', valuexmlname='{xmlmapper}value',
                  optional=False, *args, **kwargs):
         ElementDict.__init__(self, objattr, keytype, valuetype, xmlname,
                              keyxmlname, valuexmlname, optional, *args, **kwargs)
