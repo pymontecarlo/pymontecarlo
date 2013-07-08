@@ -117,14 +117,14 @@ class _XMLItem(object):
 
         return map(self.type_.to_xml, values)
     
-    def _update_element(self, element, values, manager):
+    def _update_element(self, element, values, manager, cache):
         raise NotImplementedError
 
-    def dump(self, obj, element, manager):
+    def dump(self, obj, element, manager, cache):
         values = self._get_object_values(obj, manager)
-        self._update_element(element, values, manager)
+        self._update_element(element, values, manager, cache)
         
-    def _extract_values(self, element, manager):
+    def _extract_values(self, element, manager, cache):
         raise NotImplementedError
         
     def _set_object_values(self, obj, values):
@@ -140,27 +140,36 @@ class _XMLItem(object):
         lastobj = attrgetter(dots[0])(obj) if len(dots) > 1 else obj
         setattr(lastobj, dots[-1], values)
 
-    def load(self, obj, element, manager):
-        values = self._extract_values(element, manager)
+    def load(self, obj, element, manager, cache):
+        values = self._extract_values(element, manager, cache)
         self._set_object_values(obj, values)
 
 class Element(_XMLItem):
     
-    def _update_element(self, element, values, manager):
+    def _update_element(self, element, values, manager, cache):
         subelement = ElementTree.Element(self.xmlname)
 
         if isinstance(self.type_, UserType):
-            self._update_element_usertype(subelement, values, manager)
+            self._update_element_usertype(subelement, values, manager, cache)
         else:
-            self._update_element_nousertype(subelement, values, manager)
+            self._update_element_nousertype(subelement, values, manager, cache)
 
         element.append(subelement)
         
-    def _update_element_usertype(self, subelement, values, manager):
+    def _update_element_usertype(self, subelement, values, manager, cache):
         for value in values:
-            subelement.append(manager.to_xml(value))
+            id_value = id(value)
+            if id_value in cache:
+                subsubelement = ElementTree.Element('{xmlmapper}cache')
+                subsubelement.set('{xmlmapper}id', str(id_value))
+            else:
+                subsubelement = manager.to_xml(value)
+                subsubelement.set('{xmlmapper}id', str(id_value))
+                cache[id_value] = value
 
-    def _update_element_nousertype(self, subelement, values, manager):
+            subelement.append(subsubelement)
+
+    def _update_element_nousertype(self, subelement, values, manager, cache):
         text = []
         for value in values:
             if ',' in str(value):
@@ -168,31 +177,39 @@ class Element(_XMLItem):
             text.append(value)
         subelement.text = ','.join(text)
 
-    def _extract_values(self, element, manager):
+    def _extract_values(self, element, manager, cache):
         subelement = element.find(self.xmlname)
         if subelement is None:
             return []
 
         if isinstance(self.type_, UserType):
-            values = self._extract_values_usertype(subelement, manager)
+            values = self._extract_values_usertype(subelement, manager, cache)
         else:
-            values = self._extract_values_nousertype(subelement, manager)
+            values = self._extract_values_nousertype(subelement, manager, cache)
 
         return values
     
-    def _extract_values_usertype(self, subelement, manager):
+    def _extract_values_usertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
-            values.append(manager.from_xml(subsubelement))
+            id_value = int(subsubelement.get('{xmlmapper}id'))
+            if subsubelement.tag == '{xmlmapper}cache':
+                value = cache[id_value]
+            else:
+                value = manager.from_xml(subsubelement)
+                cache[id_value] = value
+            values.append(value)
         return values
     
-    def _extract_values_nousertype(self, subelement, manager):
+    def _extract_values_nousertype(self, subelement, manager, cache):
+        if not subelement.text:
+            return []
         return subelement.text.split(',')
 
 class ElementDict(Element):
 
     def __init__(self, objattr, keytype, valuetype, xmlname=None, 
-                 keyxmlname='_key', valuexmlname='value',
+                 keyxmlname='{xmlmapper}key', valuexmlname='{xmlmapper}value',
                  optional=False, *args, **kwargs):
         Element.__init__(self, objattr, valuetype, xmlname,
                          iterable=True, optional=optional, *args, **kwargs)
@@ -217,13 +234,21 @@ class ElementDict(Element):
 
         return zip(keys, values)
 
-    def _update_element_usertype(self, subelement, values, manager):
+    def _update_element_usertype(self, subelement, values, manager, cache):
         for key, value in values:
-            subsubelement = manager.to_xml(value)
+            id_value = id(value)
+            if id_value in cache:
+                subsubelement = ElementTree.Element('{xmlmapper}cache')
+                subsubelement.set('{xmlmapper}id', str(id_value))
+            else:
+                subsubelement = manager.to_xml(value)
+                subsubelement.set('{xmlmapper}id', str(id_value))
+                cache[id_value] = value
+
             subsubelement.set(self.keyxmlname, key)
             subelement.append(subsubelement)
 
-    def _update_element_nousertype(self, subelement, values, manager):
+    def _update_element_nousertype(self, subelement, values, manager, cache):
         for key, value in values:
             subsubelement = ElementTree.Element(self.valuexmlname)
             subsubelement.set(self.keyxmlname, key)
@@ -242,15 +267,21 @@ class ElementDict(Element):
 
         setattr(obj, self.objattr, dict(zip(keys, values)))
 
-    def _extract_values_usertype(self, subelement, manager):
+    def _extract_values_usertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
+            id_value = int(subsubelement.get('{xmlmapper}id'))
+            if subsubelement.tag == '{xmlmapper}cache':
+                value = cache[id_value]
+            else:
+                value = manager.from_xml(subsubelement)
+                cache[id_value] = value
+
             key = subsubelement.get(self.keyxmlname)
-            value = manager.from_xml(subsubelement)
             values.append((key, value))
         return values
 
-    def _extract_values_nousertype(self, subelement, manager):
+    def _extract_values_nousertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
             key = subsubelement.get(self.keyxmlname)
@@ -260,7 +291,7 @@ class ElementDict(Element):
 
 class Attribute(_XMLItem):
 
-    def _update_element(self, element, values, manager):
+    def _update_element(self, element, values, manager, cache):
         if not values:
             return
 
@@ -273,7 +304,7 @@ class Attribute(_XMLItem):
 
         element.set(self.xmlname, text)
 
-    def _extract_values(self, element, manager):
+    def _extract_values(self, element, manager, cache):
         text = element.get(self.xmlname)
         if text is None:
             return []
@@ -287,6 +318,7 @@ class XMLMapper(object):
     def __init__(self):
         self._manager = Manager()
         self._content = {}
+        self.register_namespace("xmlmapper", "xmlmapper")
 
     def register_namespace(self, prefix, uri):
         """
@@ -332,8 +364,10 @@ class XMLMapper(object):
             obj = _EmptyClass()
 
         # Load XML
+        cache = {}
+
         for item in content:
-            item.load(obj, element, self)
+            item.load(obj, element, self, cache)
 
         if recast:
             obj = klass(**obj.__dict__)
@@ -373,11 +407,12 @@ class XMLMapper(object):
         """
         tag = self._manager.get_tag(obj.__class__)
         content = self._content[tag]
+        cache = {}
 
         element = ElementTree.Element(tag)
 
         for item in content:
-            item.dump(obj, element, self)
+            item.dump(obj, element, self, cache)
 
         return element
 

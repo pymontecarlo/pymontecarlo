@@ -93,6 +93,15 @@ class TestXMLMapper(unittest.TestCase):
         element = mapper.to_xml(self.family)
         self.assertEqual(4, len(element.findall('*')))
 
+    def testto_xml3(self):
+        father = Human('John', 'Smith', 52)
+        family = Family(father, father)
+        element = mapper.to_xml(family)
+
+        subelement = list(element.find('mother'))[0]
+        self.assertEqual('{xmlmapper}cache', subelement.tag)
+        self.assertEqual(id(father), int(subelement.get('{xmlmapper}id')))
+
     def testfrom_xml1(self):
         text = '<human age="5" firstname="Steve" lastname="Maclean" />'
         element = ElementTree.fromstring(text)
@@ -132,12 +141,12 @@ class TestXMLMapper(unittest.TestCase):
         self.assertEqual('blue', obj.attributes['eyes'])
 
     def testfrom_xml3(self):
-        text = '''<family>
+        text = '''<family xmlns:xmlmapper="xmlmapper">
                       <father>
-                          <human age="52" firstname="John" lastname="Smith" />
+                          <human age="52" firstname="John" lastname="Smith" xmlmapper:id="0"/>
                       </father>
                       <mother>
-                          <human age="53" firstname="Mary" lastname="Smith" />
+                          <human age="53" firstname="Mary" lastname="Smith" xmlmapper:id="1"/>
                       </mother>
                       <status>Married</status>
                   </family>'''
@@ -153,6 +162,25 @@ class TestXMLMapper(unittest.TestCase):
         self.assertEqual(53, obj.mother.age)
 
         self.assertEqual('Married', obj.status)
+
+    def testfrom_xml4(self):
+        text = '''<family xmlns:xmlmapper="xmlmapper">
+                    <father>
+                        <human age="52" firstname="John" xmlmapper:id="19135952" lastname="Smith">
+                            <luckynumbers /><attributes />
+                        </human>
+                    </father>
+                    <mother>
+                        <xmlmapper:cache xmlmapper:id="19135952" />
+                    </mother>
+                    <status>Married</status>
+                    <children />
+                </family>
+        '''
+        element = ElementTree.fromstring(text)
+        family = mapper.from_xml(element)
+
+        self.assertIs(family.father, family.mother)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
