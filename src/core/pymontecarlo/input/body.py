@@ -28,6 +28,10 @@ __all__ = ['Body',
 # Local modules.
 from pymontecarlo.input.parameter import \
     ParameterizedMetaClass, Parameter, UnitParameter, SimpleValidator
+from pymontecarlo.input.material import Material
+from pymontecarlo.input.xmlmapper import \
+    (mapper, ParameterizedElement, Attribute, ParameterizedAttribute,
+     PythonType, UserType)
 
 # Globals and constants variables.
 
@@ -49,25 +53,9 @@ class Body(object):
     def __repr__(self):
         return '<Body(material=%s)>' % str(self.material)
 
-#    @classmethod
-#    def __loadxml__(cls, element, material=None, *args, **kwargs):
-#        if material is None:
-#            child = list(element.find('material'))[0]
-#            material = XMLIO.from_xml(child)
-#
-#        return cls(material)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        child = element.find('material')
-#        if child is not None:
-#            child.clear()
-#            child.append(self.material.to_xml())
-#        else:
-#            child = Element('material')
-#            child.append(self.material.to_xml())
-#            element.append(child)
-
-#XMLIO.register('{http://pymontecarlo.sf.net}body', Body)
+mapper.register(Body, '{http://pymontecarlo.sf.net}body',
+                ParameterizedElement('material', UserType(Material), optional=True),
+                Attribute('_index', PythonType(int), 'index', optional=True))
 
 _thickness_validator = SimpleValidator(lambda t: t > 0,
                                        "Thickness must be greater than 0")
@@ -94,17 +82,5 @@ class Layer(Body):
         return '<Layer(material=%s, thickness=%s m)>' % \
                     (str(self.material), self.thickness_m)
 
-#    @classmethod
-#    def __loadxml__(cls, element, material=None, thickness_m=None, *args, **kwargs):
-#        body = Body.__loadxml__(element, material, *args, **kwargs)
-#
-#        if thickness_m is None:
-#            thickness_m = float(element.get('thickness'))
-#
-#        return cls(body.material, thickness_m)
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        Body.__savexml__(self, element, *args, **kwargs)
-#        element.set('thickness', str(self.thickness_m))
-
-#XMLIO.register('{http://pymontecarlo.sf.net}layer', Layer)
+mapper.register(Layer, '{http://pymontecarlo.sf.net}layer',
+                ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))

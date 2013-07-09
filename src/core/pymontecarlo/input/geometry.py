@@ -28,18 +28,19 @@ __all__ = ['Cuboids2D',
 # Standard library modules.
 from operator import attrgetter
 from math import pi
-import itertools
+#import itertools
+from xml.etree import ElementTree
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
-from pymontecarlo.util.oset import oset
-
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, UnitParameter, AngleParameter,
-     ParameterAlias, SimpleValidator)
+     FrozenParameter, ParameterAlias, SimpleValidator, ParameterizedMutableSequence)
 from pymontecarlo.input.body import Body, Layer
 from pymontecarlo.input.material import VACUUM
+from pymontecarlo.input.xmlmapper import mapper, ParameterizedElement, ParameterizedElementSequence, ParameterizedAttribute, PythonType, UserType, _XMLItem
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -47,7 +48,7 @@ _THICKNESS_GETTER = attrgetter('thickness_m')
 POSINF = float('inf')
 NEGINF = float('-inf')
 
-class MaterialParameterAlias(ParameterAlias):
+class _MaterialParameterAlias(ParameterAlias):
 
     def __get__(self, obj, objtype=None):
         body = ParameterAlias.__get__(self, obj, objtype)
@@ -115,6 +116,89 @@ _tilt_validator = SimpleValidator(lambda t:-pi <= t <= pi,
 _rotation_validator = SimpleValidator(lambda r:-pi <= r <= pi,
                                       "Rotation must be between [-pi, pi]")
 
+class _BodyXMLElement(_XMLItem):
+
+    def __init__(self, *args, **kwargs):
+        _XMLItem.__init__(self, None, None)
+
+    def _get_object_values(self, obj, manager):
+        # Bodies
+        bodies_lookup = {}
+        for i, body in enumerate(obj.get_bodies()):
+            bodies_lookup[body] = i
+
+        # Materials
+        materials_lookup = {}
+        for i, material in enumerate(obj.get_materials()):
+            materials_lookup[material] = i + 1
+
+        return bodies_lookup, materials_lookup
+    
+    def _update_element(self, element, values, manager):
+        bodies_lookup, materials_lookup = values
+        
+        # Materials
+        subelement = ElementTree.Element('materials')
+
+        for material, index in materials_lookup.iteritems():
+            subsubelement = manager.to_xml(material)
+            subsubelement.set('index', str(index))
+            subelement.append(subsubelement)
+
+        element.append(subelement)
+
+        # Bodies
+        subelement = ElementTree.Element('bodies')
+        
+        for body, index in bodies_lookup.iteritems():
+            subsubelement = manager.to_xml(body)
+            subsubelement.set('index', str(index))
+            
+            subsubelement.remove(subsubelement.find('material')) # remove material element
+
+            material = body.__dict__['material'].get_list()
+            subsubelement.set('material', str(materials_lookup[body.material]))
+            
+            subelement.append(subsubelement)
+            
+        element.append(subelement)
+
+    def _update_element_bodies(self, obj, element, bodies_lookup):
+        raise NotImplementedError
+
+    def dump(self, obj, element, manager):
+        values = self._get_object_values(obj, manager)
+        self._update_element(element, values, manager)
+        self._update_element_bodies(obj, element, values[0])
+
+    def _extract_values(self, element, manager):
+        # Materials
+        materials_lookup = {0: VACUUM}
+        for subelement in element.find('materials'):
+            index = int(subelement.get('index'))
+            material = manager.from_xml(subelement)
+            materials_lookup[index] = material
+
+        # Bodies
+        bodies_lookup = {}
+        for subelement in element.find('bodies'):
+            index = int(subelement.get('index'))
+            body = manager.from_xml(subelement)
+
+            material_index = int(subelement.get('material'))
+            body.material = materials_lookup[material_index]
+
+            bodies_lookup[index] = body
+
+        return bodies_lookup
+
+    def _set_object_bodies(self, obj, element, bodies_lookup):
+        raise NotImplementedError
+
+    def load(self, obj, element, manager):
+        bodies_lookup = self._extract_values(element, manager)
+        self._set_object_bodies(obj, element, bodies_lookup)
+
 class _Geometry(object):
     """
     Base class for all geometry representations.
@@ -137,82 +221,6 @@ class _Geometry(object):
         self.tilt_rad = tilt_rad
         self.rotation_rad = rotation_rad
 
-#    @classmethod
-#    def _parse_xml_materials(cls, element):
-#        children = list(element.find('materials'))
-#        materials_lookup = {0: VACUUM}
-#        for child in children:
-#            index = int(child.get('index'))
-#            materials_lookup[index] = XMLIO.from_xml(child)
-#
-#        return materials_lookup
-#
-#    @classmethod
-#    def _parse_xml_bodies(cls, element, materials_lookup):
-#        children = list(element.find('bodies'))
-#        bodies_lookup = {}
-#        for child in children:
-#            index = int(child.get('index'))
-#            material = materials_lookup[int(child.get('material'))]
-#            body = XMLIO.from_xml(child, material=material)
-#            body._index = index
-#            bodies_lookup[index] = body
-#
-#        return bodies_lookup
-#
-#    @classmethod
-#    def _parse_xml(cls, element):
-#        materials_lookup = cls._parse_xml_materials(element)
-#        bodies_lookup = cls._parse_xml_bodies(element, materials_lookup)
-#
-#        tilt_rad = float(element.get('tilt'))
-#        rotation_rad = float(element.get('rotation'))
-#
-#        return bodies_lookup, tilt_rad, rotation_rad
-#
-#    def _indexify(self):
-#        count = 1
-#        for material in self.get_materials():
-#            if material is not VACUUM: # Vacuum has an index of 0
-#                material._index = count
-#                count += 1
-#
-#        for i, body in enumerate(self.get_bodies()):
-#            body._index = i
-#
-#    def _materials_to_xml(self):
-#        element = Element('materials')
-#        for material in self.get_materials():
-#            if material is VACUUM:
-#                continue
-#            child = material.to_xml()
-#            child.set('index', str(material._index))
-#            element.append(child)
-#
-#        return element
-#
-#    def _bodies_to_xml(self):
-#        element = Element('bodies')
-#        for body in self.get_bodies():
-#            child = body.to_xml()
-#            child.set('index', str(body._index))
-#
-#            child.remove(child.find('material')) # remove material element
-#            child.set('material', str(body.material._index))
-#
-#            element.append(child)
-#
-#        return element
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        self._indexify()
-#
-#        element.append(self._materials_to_xml())
-#        element.append(self._bodies_to_xml())
-#
-#        element.set('tilt', str(self.tilt_rad))
-#        element.set('rotation', str(self.rotation_rad))
-
     def get_materials(self):
         """
         Returns a :class:`set` of all materials inside this geometry.
@@ -221,7 +229,9 @@ class _Geometry(object):
         :obj:`VACUUM` is not considered as a material, so this object will
         not appear in this list.
         """
-        materials = set(map(_MATERIAL_GETTER, self.get_bodies()))
+        materials = map(_MATERIAL_GETTER, self.get_bodies())
+        materials = np.array(materials).flatten()
+        materials = set(materials)
         materials.discard(VACUUM)
         return materials
 
@@ -242,10 +252,14 @@ class _Geometry(object):
         """
         raise NotImplementedError
 
+mapper.register(_Geometry, 'geometry',
+                ParameterizedAttribute('tilt_rad', PythonType(float), 'tilt'),
+                ParameterizedAttribute('rotation_rad', PythonType(float), 'rotation'))
+
 class Substrate(_Geometry):
 
     body = Parameter(doc="Body of this substrate")
-    material = MaterialParameterAlias(body, doc="Material of this substrate")
+    material = _MaterialParameterAlias(body, doc="Material of this substrate")
 
     def __init__(self, material):
         _Geometry.__init__(self)
@@ -254,26 +268,9 @@ class Substrate(_Geometry):
     def __repr__(self):
         return '<Substrate(material=%s)>' % str(self.material)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
-#
-#        index = int(element.get('substrate'))
-#        body = bodies_lookup[index]
-#
-#        obj = cls(VACUUM)
-#        obj._props['body'] = body
-#        obj.tilt_rad = tilt_rad
-#        obj.rotation_rad = rotation_rad
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Geometry.__savexml__(self, element, *args, **kwargs)
-#        element.set('substrate', str(self.body._index))
-
     def get_bodies(self):
-        return set([self.body])
+        bodies = self.__dict__['body'].get_list()
+        return set(bodies)
 
     def get_dimensions(self, body):
         if body is self.body:
@@ -281,7 +278,8 @@ class Substrate(_Geometry):
         else:
             raise ValueError, "Unknown body: %s" % body
 
-#XMLIO.register('{http://pymontecarlo.sf.net}substrate', Substrate)
+mapper.register(Substrate, '{http://pymontecarlo.sf.net}substrate',
+                ParameterizedElement('body', UserType(Body), 'substrate'))
 
 _diameter_validator = SimpleValidator(lambda d: d > 0.0,
                                       "Diameter must be greater than 0.0")
@@ -289,11 +287,11 @@ _diameter_validator = SimpleValidator(lambda d: d > 0.0,
 class Inclusion(_Geometry):
 
     substrate_body = Parameter(doc="Body of the substrate")
-    substrate_material = MaterialParameterAlias(substrate_body,
+    substrate_material = _MaterialParameterAlias(substrate_body,
                                                 doc="Material of the substrate")
 
     inclusion_body = Parameter(doc="Body of the inclusion")
-    inclusion_material = MaterialParameterAlias(inclusion_body,
+    inclusion_material = _MaterialParameterAlias(inclusion_body,
                                                 doc="Material of the inclusion")
 
     inclusion_diameter = UnitParameter("m", _diameter_validator,
@@ -310,32 +308,6 @@ class Inclusion(_Geometry):
         return '<Inclusion(substrate_material=%s, inclusion_material=%s, inclusion_diameter=%s m)>' % \
             (str(self.substrate_material), str(self.inclusion_material), self.inclusion_diameter_m)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        bodies_lookup, tilt, rotation = _Geometry._parse_xml(element)
-#
-#        index = int(element.get('substrate'))
-#        substrate = bodies_lookup[index]
-#
-#        index = int(element.get('inclusion'))
-#        inclusion = bodies_lookup[index]
-#
-#        diameter = float(element.get('diameter'))
-#
-#        obj = cls(VACUUM, VACUUM, diameter)
-#        obj._props['substrate'] = substrate
-#        obj._props['inclusion'] = inclusion
-#        obj.tilt_rad = tilt
-#        obj.rotation_rad = rotation
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Geometry.__savexml__(self, element, *args, **kwargs)
-#        element.set('substrate', str(self.substrate_body._index))
-#        element.set('inclusion', str(self.inclusion_body._index))
-#        element.set('diameter', str(self.inclusion_diameter_m))
-
     def get_bodies(self):
         return set([self.substrate_body, self.inclusion_body])
 
@@ -347,45 +319,24 @@ class Inclusion(_Geometry):
             return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
-#
-#XMLIO.register('{http://pymontecarlo.sf.net}inclusion', Inclusion)
-#
-class _Layered(_Geometry):
 
-    layers = Parameter(doc="Layers from top to bottom (multi-layers) or from left to right (grain boundaries).")
+mapper.register(Inclusion, '{http://pymontecarlo.sf.net}inclusion',
+                ParameterizedElement('substrate_body', UserType(Body), 'substrate'),
+                ParameterizedElement('inclusion_body', UserType(Body), 'inclusion'),
+                ParameterizedAttribute('inclusion_diameter_m', PythonType(float), 'diameter'))
+
+class _Layers(ParameterizedMutableSequence):
+    pass
+
+class _LayeredGeometry(_Geometry):
+
+    layers = FrozenParameter(_Layers, "Layers from top to bottom (multi-layers) or from left to right (grain boundaries).")
 
     def __init__(self, layers=None):
         _Geometry.__init__(self)
 
-        if layers is None: layers = []
-        self.layers = oset(layers)
-        self.__parameters__['layers'].freeze(self)
-
-#    @classmethod
-#    def _parse_xml_layers(cls, element, bodies_lookup):
-#        layers_str = element.get('layers')
-#        if not layers_str:
-#            return []
-#
-#        layer_indexes = map(int, layers_str.split(','))
-#        layers = map(bodies_lookup.get, layer_indexes)
-#
-#        return layers
-#
-#    @classmethod
-#    def _parse_xml(cls, element):
-#        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
-#        layers = cls._parse_xml_layers(element, bodies_lookup)
-#
-#        return bodies_lookup, layers, tilt_rad, rotation_rad
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Geometry.__savexml__(self, element, *args, **kwargs)
-#
-#        layer_indexes = []
-#        for layer in self.layers:
-#            layer_indexes.append(layer._index)
-#        element.set('layers', ','.join(map(str, layer_indexes)))
+        if layers is not None:
+            self.layers.extend(layers)
 
     def add_layer(self, material, thickness):
         """
@@ -394,7 +345,7 @@ class _Layered(_Geometry):
 
         This method is equivalent to::
 
-            geometry.layers.add(Layer(material, thickness))
+            geometry.layers.append(Layer(material, thickness))
 
         :arg material: material of the layer
         :type material: :class:`Material`
@@ -402,7 +353,7 @@ class _Layered(_Geometry):
         :arg thickness: thickness of the layer in meters
         """
         layer = Layer(material, thickness)
-        self.layers.add(layer)
+        self.layers.append(layer)
         return layer
 
     def clear(self):
@@ -412,13 +363,16 @@ class _Layered(_Geometry):
         del self.layers[:]
 
     def get_bodies(self):
-        return set(self.layers) # copy
+        return list(self.layers) # copy
 
-class MultiLayers(_Layered):
+mapper.register(_LayeredGeometry, '{http://pymontecarlo.sf.net}layeredGeometry',
+                ParameterizedElementSequence('layers', UserType(Layer)))
+
+class MultiLayers(_LayeredGeometry):
 
     substrate_body = Parameter(doc="Body of the substrate")
     substrate_material = \
-        MaterialParameterAlias(substrate_body, doc="Material of the substrate")
+        _MaterialParameterAlias(substrate_body, doc="Material of the substrate")
 
     def __init__(self, substrate_material=None, layers=None):
         """
@@ -431,7 +385,7 @@ class MultiLayers(_Layered):
             If ``None``, the geometry does not have a substrate, only layers
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        _Layered.__init__(self, layers)
+        _LayeredGeometry.__init__(self, layers)
 
         if substrate_material is None:
             substrate_material = VACUUM
@@ -444,29 +398,6 @@ class MultiLayers(_Layered):
         else:
             return '<MultiLayers(No substrate, layers_count=%i)>' % len(self.layers)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        bodies_lookup, layers, tilt_rad, rotation_rad = _Layered._parse_xml(element)
-#
-#        if element.get('substrate') is not None:
-#            index = int(element.get('substrate'))
-#            substrate = bodies_lookup[index]
-#        else:
-#            substrate = None
-#
-#        obj = cls(VACUUM, layers)
-#        obj._props['substrate'] = substrate
-#        obj.tilt_rad = tilt_rad
-#        obj.rotation_rad = rotation_rad
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Layered.__savexml__(self, element, *args, **kwargs)
-#
-#        if self.has_substrate():
-#            element.set('substrate', str(self.substrate_body._index))
-
     def has_substrate(self):
         """
         Returns ``True`` if a substrate material has been defined.
@@ -474,10 +405,10 @@ class MultiLayers(_Layered):
         return self.substrate_body.material is not VACUUM
 
     def get_bodies(self):
-        bodies = _Layered.get_bodies(self)
+        bodies = _LayeredGeometry.get_bodies(self)
 
         if self.has_substrate():
-            bodies.add(self.substrate_body)
+            bodies.append(self.substrate_body)
 
         return bodies
 
@@ -486,22 +417,24 @@ class MultiLayers(_Layered):
             zmax = -sum(map(_THICKNESS_GETTER, self.layers))
             return _Dimension(zmax=zmax)
         elif body in self.layers:
-            index = self.layers.index(body)
-            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:index]))
-            zmin = zmax - body.thickness_m
+            indextop = self.layers.index(body)
+            indexbottom = len(self.layers) - self.layers[::-1].index(body)
+            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:indextop]))
+            zmin = -sum(map(_THICKNESS_GETTER, self.layers[:indexbottom]))
             return _Dimension(zmin=zmin, zmax=zmax)
         else:
             raise ValueError, "Unknown body: %s" % body
-#
-#XMLIO.register('{http://pymontecarlo.sf.net}multiLayers', MultiLayers)
-#
-class GrainBoundaries(_Layered):
+
+mapper.register(MultiLayers, '{http://pymontecarlo.sf.net}multiLayers',
+                ParameterizedElement('substrate_body', UserType(Body), 'substrate'))
+
+class GrainBoundaries(_LayeredGeometry):
 
     left_body = Parameter(doc="Body of left side")
-    left_material = MaterialParameterAlias(left_body, doc="Material of left side")
+    left_material = _MaterialParameterAlias(left_body, doc="Material of left side")
 
     right_body = Parameter(doc="Body of right side")
-    right_material = MaterialParameterAlias(right_body, doc="Material of right side")
+    right_material = _MaterialParameterAlias(right_body, doc="Material of right side")
 
     def __init__(self, left_material, right_material, layers=None):
         """
@@ -514,7 +447,7 @@ class GrainBoundaries(_Layered):
         :arg right_material: material on the right side
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        _Layered.__init__(self, layers)
+        _LayeredGeometry.__init__(self, layers)
 
         self.left_body = Body(left_material)
         self.right_body = Body(right_material)
@@ -523,35 +456,11 @@ class GrainBoundaries(_Layered):
         return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
             (str(self.left_material), str(self.right_material), len(self.layers))
 
-    @classmethod
-    def __loadxml__(cls, element):
-        bodies_lookup, layers, tilt_rad, rotation_rad = _Layered._parse_xml(element)
-
-        index = int(element.get('left_substrate'))
-        left = bodies_lookup[index]
-
-        index = int(element.get('right_substrate'))
-        right = bodies_lookup[index]
-
-        obj = cls(VACUUM, VACUUM, layers)
-        obj._props['left'] = left
-        obj._props['right'] = right
-        obj.tilt_rad = tilt_rad
-        obj.rotation_rad = rotation_rad
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        _Layered.__savexml__(self, element, *args, **kwargs)
-
-        element.set('left_substrate', str(self.left_body._index))
-        element.set('right_substrate', str(self.right_body._index))
-
     def get_bodies(self):
-        bodies = _Layered.get_bodies(self)
+        bodies = _LayeredGeometry.get_bodies(self)
 
-        bodies.add(self.left_body)
-        bodies.add(self.right_body)
+        bodies.append(self.left_body)
+        bodies.append(self.right_body)
 
         return bodies
 
@@ -572,13 +481,18 @@ class GrainBoundaries(_Layered):
         elif body is self.right_body:
             return _Dimension(xmin=positions[-1], zmax=0)
         elif body in self.layers:
-            index = self.layers.index(body)
-            return _Dimension(xmin=positions[index], xmax=positions[index + 1], zmax=0)
+            indexleft = self.layers.index(body)
+            indexright = len(self.layers) - self.layers[::-1].index(body)
+            return _Dimension(xmin=positions[indexleft],
+                              xmax=positions[indexright],
+                              zmax=0)
         else:
             raise ValueError, "Unknown body: %s" % body
-#
-#XMLIO.register('{http://pymontecarlo.sf.net}grainBoundaries', GrainBoundaries)
-#
+
+mapper.register(GrainBoundaries, '{http://pymontecarlo.sf.net}grainBoundaries',
+                ParameterizedElement('left_body', UserType(Body), 'left'),
+                ParameterizedElement('right_body', UserType(Body), 'right'))
+
 _thickness_validator = SimpleValidator(lambda t: t> 0,
                                        'Thickness must be greater than 0')
 
@@ -607,55 +521,18 @@ class ThinGrainBoundaries(GrainBoundaries):
             (str(self.left_material), str(self.right_material),
              len(self.layers), self.thickness_m)
 
-#    @classmethod
-#    def __loadxml__(cls, element):
-#        gb = GrainBoundaries.__loadxml__(element)
-#        thickness_m = float(element.get('thickness'))
-#
-#        obj = cls(VACUUM, VACUUM, thickness_m, gb.layers)
-#        obj._props['left'] = gb.left_body
-#        obj._props['right'] = gb.right_body
-#        obj.tilt_rad = gb.tilt_rad
-#        obj.rotation_rad = gb.rotation_rad
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        GrainBoundaries.__savexml__(self, element, *args, **kwargs)
-#
-#        element.set('thickness', str(self.thickness_m))
-
     def get_dimensions(self, body):
-        thicknesses = map(_THICKNESS_GETTER, self.layers)
+        dim = GrainBoundaries.get_dimensions(self, body)
+        dim._zmin = -self.thickness_m
+        return dim
 
-        positions = []
-        if thicknesses: # simple couple
-            middle = sum(thicknesses) / 2.0
-            for i in range(len(thicknesses)):
-                positions.append(sum(thicknesses[:i]) - middle)
-            positions.append(positions[-1] + thicknesses[-1])
-        else:
-            positions.append(0.0)
+mapper.register(ThinGrainBoundaries, '{http://pymontecarlo.sf.net}thinGrainBoundaries',
+                ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))
 
-        zmin = -self.thickness_m
-
-        if body is self.left_body:
-            return _Dimension(xmax=positions[0], zmax=0, zmin=zmin)
-        elif body is self.right_body:
-            return _Dimension(xmin=positions[-1], zmax=0, zmin=zmin)
-        elif body in self.layers:
-            index = self.layers.index(body)
-            return _Dimension(xmin=positions[index], xmax=positions[index + 1],
-                              zmax=0, zmin=zmin)
-        else:
-            raise ValueError, "Unknown body: %s" % body
-#
-#XMLIO.register('{http://pymontecarlo.sf.net}thinGrainBoundaries', ThinGrainBoundaries)
-#
 class Sphere(_Geometry):
 
     body = Parameter(doc="Body of this sphere")
-    material = MaterialParameterAlias(body, doc="Material of this sphere")
+    material = _MaterialParameterAlias(body, doc="Material of this sphere")
 
     diameter = UnitParameter("m", _diameter_validator,
                              "Diameter of this sphere (in meters)")
@@ -677,27 +554,6 @@ class Sphere(_Geometry):
         return '<Sphere(material=%s, diameter=%s m)>' % \
                     (str(self.material), self.diameter_m)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
-#
-#        index = int(element.get('substrate'))
-#        body = bodies_lookup[index]
-#
-#        diameter_m = float(element.get('diameter'))
-#
-#        obj = cls(VACUUM, diameter_m)
-#        obj._props['body'] = body
-#        obj.tilt_rad = tilt_rad
-#        obj.rotation_rad = rotation_rad
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Geometry.__savexml__(self, element, *args, **kwargs)
-#        element.set('substrate', str(self.body._index))
-#        element.set('diameter', str(self.diameter_m))
-
     def get_bodies(self):
         return set([self.body])
 
@@ -710,8 +566,10 @@ class Sphere(_Geometry):
                               zmin=-d, zmax=0.0)
         else:
             raise ValueError, "Unknown body: %s" % body
-#
-#XMLIO.register('{http://pymontecarlo.sf.net}sphere', Sphere)
+
+mapper.register(Sphere, '{http://pymontecarlo.sf.net}sphere',
+                ParameterizedElement('body', UserType(Body), 'body'),
+                ParameterizedAttribute('diameter_m', PythonType(float), 'diameter'))
 #
 #class Cuboids2D(_Geometry):
 #
