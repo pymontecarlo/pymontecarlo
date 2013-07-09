@@ -36,9 +36,11 @@ from pymontecarlo.input.xmlmapper import \
 
 # Globals and constants variables.
 
-class _TransitionsLimit(object):
+class _Limit(object):
 
     __metaclass__ = ParameterizedMetaClass
+
+class _TransitionsLimit(_Limit):
 
     transitions = FrozenParameter(set, doc="Transitions for the limit")
 
@@ -54,9 +56,7 @@ mapper.register(_TransitionsLimit, '{http://pymontecarlo.sf.net}_transitionsLimi
 _time_validator = SimpleValidator(lambda t: t > 0,
                                   "Time must be greater than 0")
 
-class TimeLimit(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class TimeLimit(_Limit):
 
     time = TimeParameter(_time_validator, "Simulation time in seconds")
 
@@ -73,9 +73,7 @@ _showers_validator = \
     SimpleValidator(lambda s: s >= 1,
                     "Number of showers must be equal or greater than 1")
 
-class ShowersLimit(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class ShowersLimit(_Limit):
 
     showers = Parameter(_showers_validator, 'Number of electron showers')
 
