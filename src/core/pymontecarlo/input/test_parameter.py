@@ -20,7 +20,8 @@ from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, FrozenParameter, SimpleValidator,
      ParameterAlias, AngleParameter, UnitParameter,
      iter_parameters, iter_values, freeze, expand,
-     ParameterizedMutableMapping, ParameterizedMutableSet)
+     ParameterizedMutableMapping, ParameterizedMutableSet,
+     ParameterizedMutableSequence)
 
 # Globals and constants variables.
 
@@ -165,6 +166,38 @@ class TestParameter(unittest.TestCase):
         s = ParameterizedMutableSet()
         s.add(4.0)
         self.obj.param1 = s
+
+        self.assertEqual(6, len(list(iter_parameters(self.obj))))
+        self.assertEqual(1, len(list(iter_values(self.obj, keep_frozen=False))))
+
+    def testparametrized_mutable_sequence(self):
+        s = ParameterizedMutableSequence()
+        s.append(4.0)
+        self.obj.param1 = s
+
+        # get
+        self.assertAlmostEqual(4.0, self.obj.param1[0], 4)
+
+        # len
+        self.assertEqual(1, len(self.obj.param1))
+
+        # set
+        self.obj.param1[0] = 5.0
+        self.assertAlmostEqual(5.0, self.obj.param1[0], 4)
+
+        # insert
+        self.obj.param1.insert(0, 3.0)
+        self.assertEqual(2, len(self.obj.param1))
+        self.assertAlmostEqual(3.0, self.obj.param1[0], 4)
+        self.assertAlmostEqual(5.0, self.obj.param1[1], 4)
+
+        # delete
+        del self.obj.param1[1]
+        self.assertEqual(1, len(self.obj.param1))
+
+        # contains
+        self.assertTrue(3.0 in self.obj.param1)
+        self.assertFalse(5.0 in self.obj.param1)
 
         self.assertEqual(6, len(list(iter_parameters(self.obj))))
         self.assertEqual(1, len(list(iter_values(self.obj, keep_frozen=False))))

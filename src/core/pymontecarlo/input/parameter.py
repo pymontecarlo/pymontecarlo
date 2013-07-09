@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import math
 from abc import ABCMeta, abstractmethod
-from collections import MutableSet, MutableMapping, Mapping, Iterable
+from collections import MutableSet, MutableMapping, MutableSequence, Mapping, Iterable
 import copy
 from operator import itemgetter
 import inspect
@@ -321,6 +321,71 @@ class ParameterizedMutableSet(MutableSet):
         if key not in self.__parameters__:
             raise KeyError, key
         return self.__parameters__[key].__get__(self)
+
+class ParameterizedMutableSequence(MutableSequence):
+
+    def __init__(self, validators=None):
+        self._validators = validators
+        self.__parameters__ = {}
+
+    def __repr__(self):
+        valstr = ', '.join(map(str, self))
+        return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __len__(self):
+        return len(self.__parameters__)
+
+    def __iter__(self):
+        for parameter in self.__parameters__.itervalues():
+            yield parameter.__get__(self)
+
+    def __contains__(self, value):
+        return value in list(self)
+
+    def __getitem__(self, index):
+        key = self._get_key(index)
+        if key not in self.__parameters__:
+            raise IndexError, index
+        parameter =  self.__parameters__[key]
+        return parameter.__get__(self)
+
+    def __setitem__(self, index, value):
+        key = self._get_key(index)
+        if key not in self.__parameters__:
+            raise IndexError, index
+        parameter = self.__parameters__[key]
+        parameter.__set__(self, value)
+
+    def __delitem__(self, index):
+        key = self._get_key(index)
+        if key not in self.__parameters__:
+            raise IndexError, index
+        del self.__parameters__[key]
+        del self.__dict__[key]
+
+    def _get_key(self, index):
+        return 'item%i' % index
+
+    def insert(self, index, value):
+        # Shift
+        for i in reversed(range(index, len(self.__parameters__))):
+            oldkey = self._get_key(i)
+            newkey = self._get_key(i + 1)
+
+            self.__parameters__[newkey] = self.__parameters__[oldkey]
+            self.__parameters__[newkey]._name = newkey
+            del self.__parameters__[oldkey]
+
+            self.__dict__[newkey] = self.__dict__[oldkey]
+            del self.__dict__[oldkey]
+
+        # Insert new value
+        key = self._get_key(index)
+
+        parameter = Parameter(self._validators)
+        parameter._name = key
+        self.__parameters__[key] = parameter
+        parameter.__set__(self, value)
 
 class ParameterizedMutableMapping(MutableMapping):
 
