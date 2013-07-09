@@ -268,12 +268,6 @@ class TestMaterial(TestCase):
 
         self.assertFalse(hasattr(m, '_index'))
 
-        # With index
-        self.m._index = 5
-        element = mapper.to_xml(self.m)
-        m = mapper.from_xml(element)
-        self.assertTrue(hasattr(m, '_index'))
-
     def testto_xml(self):
         element = mapper.to_xml(self.m)
 

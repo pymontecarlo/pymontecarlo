@@ -38,7 +38,7 @@ from pymontecarlo.input.parameter import \
      SimpleValidator, ParameterizedMutableMapping, FactorParameterAlias,
      expand, freeze)
 from pymontecarlo.input.xmlmapper import \
-    (mapper, Attribute, ParameterizedAttribute, ParameterizedElementDict,
+    (mapper, ParameterizedAttribute, ParameterizedElementDict,
      _XMLType, PythonType)
 
 import pyxray.element_properties as ep
@@ -388,8 +388,7 @@ mapper.register(Material, '{http://pymontecarlo.sf.net}material',
                 ParameterizedAttribute('density_kg_m3', PythonType(float), 'density'),
                 ParameterizedAttribute('absorption_energy_electron_eV', PythonType(float), 'absorption_energy_electron'),
                 ParameterizedAttribute('absorption_energy_photon_eV', PythonType(float), 'absorption_energy_photon'),
-                ParameterizedAttribute('absorption_energy_positron_eV', PythonType(float), 'absorption_energy_positron'),
-                Attribute('_index', PythonType(int), 'index', optional=True))
+                ParameterizedAttribute('absorption_energy_positron_eV', PythonType(float), 'absorption_energy_positron'))
 
 class _Vacuum(Material):
     
@@ -397,12 +396,18 @@ class _Vacuum(Material):
     
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = Material.__new__(cls, *args, **kwargs)
+            inst = Material.__new__(cls, *args, **kwargs)
+            inst.name = 'Vacuum'
+            inst.composition = {}
+            inst.density_kg_m3 = 0.0
+            inst.absorption_energy_electron = 0.0
+            inst.absorption_energy_photon = 0.0
+            inst.absorption_energy_positron = 0.0
+            cls._instance = inst
         return cls._instance
-#
+
     def __init__(self):
-        Material.__init__(self, 'Vacuum', {}, 0.0, 0.0, 0.0, 0.0)
-        self._index = 0
+        pass
 
     def __repr__(self):
         return '<Vacuum()>'
@@ -412,6 +417,12 @@ class _Vacuum(Material):
 
     def __deepcopy__(self, memo):
         return VACUUM
+
+    def __getstate__(self):
+        return {} # Nothing to pickle
+
+    def __reduce__(self):
+        return (self.__class__, ())
 
     def calculate(self):
         pass
