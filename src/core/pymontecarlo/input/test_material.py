@@ -257,7 +257,7 @@ class TestMaterial(TestCase):
 
         self.assertEquals('Pure Cu', str(m))
 
-        self.assertTrue(m.composition.has_key(29))
+        self.assertIn(29, m.composition)
         self.assertEqual('?', m.composition[29], 4)
 
         self.assertIsNone(m.density_kg_m3)

@@ -398,7 +398,7 @@ class _Vacuum(Material):
         if not cls._instance:
             inst = Material.__new__(cls, *args, **kwargs)
             inst.name = 'Vacuum'
-            inst.composition = {}
+            inst.composition.clear()
             inst.density_kg_m3 = 0.0
             inst.absorption_energy_electron = 0.0
             inst.absorption_energy_photon = 0.0
