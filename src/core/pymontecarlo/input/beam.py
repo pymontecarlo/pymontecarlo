@@ -43,14 +43,16 @@ from pymontecarlo.input.particle import ParticleType
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON, PARTICLES
 
+class _Beam(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
 _energy_validator = SimpleValidator(lambda e: e > 0.0,
                                     "Energy must be greater than 0 eV.")
 _aperture_validator = SimpleValidator(lambda x: 0.0 <= x <= math.pi / 2,
                                       "Aperture must be between [0, pi/2] rad")
 
-class PencilBeam(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class PencilBeam(_Beam):
 
     energy = UnitParameter('eV', _energy_validator,
                           "Energy of this electron beam (in eV)")
