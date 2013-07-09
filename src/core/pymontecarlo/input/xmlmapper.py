@@ -105,6 +105,36 @@ class ParameterizedElementDict(ElementDict):
         d.clear()
         d.update(dict(zip(keys, values)))
 
+class ParameterizedElementSequence(Element):
+
+    def __init__(self, objattr, type_, xmlname=None, optional=False,
+                 *args, **kwargs):
+        Element.__init__(self, objattr, type_, xmlname, True, optional,
+                         *args, **kwargs)
+
+    def _get_object_values(self, obj, manager):
+        try:
+            wrapper = obj.__dict__[self.objattr]
+        except AttributeError:
+            if self.optional:
+                return []
+            else:
+                raise
+
+        values = wrapper.get()
+        values = map(self.type_.to_xml, values)
+        return values
+
+    def _set_object_values(self, obj, values):
+        values = map(self.type_.from_xml, values)
+
+        if not values and self.optional:
+            return
+
+        s = getattr(obj, self.objattr)
+        del s[:]
+        s.extend(values)
+
 mapper = XMLMapper()
 mapper.register_namespace('mc', 'http://pymontecarlo.sf.net')
 
