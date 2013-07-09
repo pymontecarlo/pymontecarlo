@@ -133,7 +133,7 @@ class ParameterizedElementSet(Element):
 
         s = getattr(obj, self.objattr)
         s.clear()
-        s.update(values)
+        s |= set(values)
 
 class ParameterizedElementSequence(Element):
 
