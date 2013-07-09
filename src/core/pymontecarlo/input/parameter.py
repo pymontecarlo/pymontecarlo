@@ -342,12 +342,23 @@ class ParameterizedMutableSequence(MutableSequence):
     def __contains__(self, value):
         return value in list(self)
 
-    def __getitem__(self, index):
-        key = self._get_key(index)
-        if key not in self.__parameters__:
-            raise IndexError, index
-        parameter =  self.__parameters__[key]
-        return parameter.__get__(self)
+    def __getitem__(self, s):
+        isslice = True
+        if not isinstance(s, slice):
+            s = slice(s, s + 1)
+            isslice = False
+
+        values = []
+        for index in range(*s.indices(len(self.__parameters__))):
+            key = self._get_key(index)
+            if key not in self.__parameters__:
+                raise IndexError, index
+            parameter = self.__parameters__[key]
+            values.append(parameter.__get__(self))
+
+        if not isslice:
+            return values[0]
+        return values
 
     def __setitem__(self, index, value):
         key = self._get_key(index)
@@ -356,12 +367,16 @@ class ParameterizedMutableSequence(MutableSequence):
         parameter = self.__parameters__[key]
         parameter.__set__(self, value)
 
-    def __delitem__(self, index):
-        key = self._get_key(index)
-        if key not in self.__parameters__:
-            raise IndexError, index
-        del self.__parameters__[key]
-        del self.__dict__[key]
+    def __delitem__(self, s):
+        if not isinstance(s, slice):
+            s = slice(s, s + 1)
+
+        for index in range(*s.indices(len(self.__parameters__))):
+            key = self._get_key(index)
+            if key not in self.__parameters__:
+                raise IndexError, index
+            del self.__parameters__[key]
+            del self.__dict__[key]
 
     def _get_key(self, index):
         return 'item%i' % index
