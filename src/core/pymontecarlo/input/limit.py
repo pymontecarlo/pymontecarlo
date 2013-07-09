@@ -32,7 +32,7 @@ from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, FrozenParameter, TimeParameter,
      SimpleValidator)
 from pymontecarlo.input.xmlmapper import \
-    mapper, ParameterizedAttribute, Element, UserType, PythonType
+    mapper, ParameterizedAttribute, ParameterizedElementSet, UserType, PythonType
 
 # Globals and constants variables.
 
@@ -49,7 +49,7 @@ class _TransitionsLimit(object):
             self.transitions.add(transitions)
 
 mapper.register(_TransitionsLimit, '{http://pymontecarlo.sf.net}_transitionsLimit',
-                Element('transitions', UserType(Transition), iterable=True))
+                ParameterizedElementSet('transitions', UserType(Transition)))
 
 _time_validator = SimpleValidator(lambda t: t > 0,
                                   "Time must be greater than 0")
