@@ -91,6 +91,20 @@ class ParameterizedElementDict(ElementDict):
 
         return zip(keys, values)
 
+    def _set_object_values(self, obj, values):
+        keys = map(itemgetter(0), values)
+        keys = map(self.keytype.from_xml, keys)
+
+        values = map(itemgetter(1), values)
+        values = map(self.type_.from_xml, values)
+
+        if not values and self.optional:
+            return
+
+        d = getattr(obj, self.objattr)
+        d.clear()
+        d.update(dict(zip(keys, values)))
+
 mapper = XMLMapper()
 mapper.register_namespace('mc', 'http://pymontecarlo.sf.net')
 
