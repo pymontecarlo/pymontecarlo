@@ -336,7 +336,9 @@ class ParameterizedMutableSequence(MutableSequence):
         return len(self.__parameters__)
 
     def __iter__(self):
-        for parameter in self.__parameters__.itervalues():
+        for index in range(len(self.__parameters__)):
+            key = self._get_key(index)
+            parameter = self.__parameters__[key]
             yield parameter.__get__(self)
 
     def __contains__(self, value):
