@@ -21,20 +21,21 @@ __all__ = ['Options']
 
 # Standard library modules.
 import uuid
+from copy import deepcopy
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.parameter import \
-    (ParameterizedMetaClass, Parameter, SimpleValidator, CastValidator,
+    (ParameterizedMetaClass, Parameter, FrozenParameter, SimpleValidator,
      ParameterizedMutableMapping, ParameterizedMutableSet)
-from pymontecarlo.input.beam import PencilBeam, GaussianBeam
+from pymontecarlo.input.beam import _Beam, GaussianBeam
 from pymontecarlo.input.material import pure
-from pymontecarlo.input.geometry import Substrate
+from pymontecarlo.input.geometry import _Geometry, Substrate
+from pymontecarlo.input.detector import _Detector
+from pymontecarlo.input.limit import _Limit
 from pymontecarlo.input.model import Model
-
-from pymontecarlo.input import mapper
-from pymontecarlo.util.xmlmapper import Attribute, Element, PythonType, UserType
+from pymontecarlo.input.xmlmapper import mapper, Attribute, ParameterizedElement, ParameterizedElementSet, ParameterizedElementDict, PythonType, UserType
 
 # Globals and constants variables.
 
@@ -57,25 +58,13 @@ class _Detectors(ParameterizedMutableMapping):
 
 class _Limits(ParameterizedMutableSet):
 
-    def _get_key(self, item):
-        return hash(item.__class__)
-
     def iterclass(self, clasz):
-        parameter = self.__parameters__[hash(clasz)]
-        wrapper = parameter._get_wrapper(self)
-        return iter(wrapper)
+        return (limit for limit in self if isinstance(limit, clasz))
 
 class _Models(ParameterizedMutableSet):
     
-    def _get_key(self, item):
-        return item.type
-
-    def find(self, type, default=None):
-        return self.__parameters__.get(type, default).__get__(self)
-
-    def iteritems(self):
-        for type, parameter in self.__parameters__.iteritems():
-            yield type, parameter.__get__(self)
+    def itertype(self, type_):
+        return (model for model in self if model.type == type_)
 
 _name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
 
@@ -88,9 +77,9 @@ class Options(object):
     name = Parameter(_name_validator, "Name")
     beam = Parameter(doc="Beam")
     geometry = Parameter(doc="Geometry")
-    detectors = Parameter(doc="Detector(s)")
-    limits = Parameter(doc="Limit(s)")
-    models = Parameter([CastValidator(_Models)], "Model(s)")
+    detectors = FrozenParameter(_Detectors, "Detector(s)")
+    limits = FrozenParameter(_Limits, "Limit(s)")
+    models = FrozenParameter(_Models, "Model(s)")
 
     def __init__(self, name='Untitled'):
         """
@@ -118,14 +107,6 @@ class Options(object):
 
         self.geometry = Substrate(pure(79)) # Au substrate
 
-        self.detectors = _Detectors()
-        self.__parameters__['detectors'].freeze(self)
-
-        self.limits = _Limits()
-        self.__parameters__['limits'].freeze(self)
-
-        self.models = _Models()
-
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
 
@@ -135,86 +116,27 @@ class Options(object):
     def __unicode__(self):
         return unicode(self.name)
     
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state['_uuid'] = None
-        return state
+    def __copy__(self):
+        # From http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
+        cls = self.__class__
+        result = cls.__new__(cls)
 
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        # Check version
-#        version = element.get('version')
-#        if version != cls.VERSION:
-#            raise IOError, "Incorrect version of options %s. Only version %s is accepted" % \
-#                    (version, cls.VERSION)
-#
-#        options = cls(element.get('name'))
-#
-#        # UUID
-#        options._uuid = element.get('uuid')
-#
-#        # Beam
-#        parent = element.find("beam")
-#        if parent is None:
-#            raise IOError, 'No beam defined.'
-#        child = list(parent)[0]
-#        options.beam = XMLIO.from_xml(child, *args, **kwargs)
-#
-#        # Geometry
-#        parent = element.find("geometry")
-#        if parent is None:
-#            raise IOError, 'No geometry defined.'
-#        child = list(parent)[0]
-#        options.geometry = XMLIO.from_xml(child, *args, **kwargs)
-#
-#        parent = element.find('detectors')
-#        if parent is not None:
-#            for child in list(parent):
-#                key = child.get('_key')
-#                options.detectors[key] = XMLIO.from_xml(child, *args, **kwargs)
-#
-#        parent = element.find('limits')
-#        if parent is not None:
-#            for child in list(parent):
-#                options.limits.add(XMLIO.from_xml(child, *args, **kwargs))
-#
-#        parent = element.find('models')
-#        if parent is not None:
-#            for child in list(parent):
-#                options.models.add(XMLIO.from_xml(child, *args, **kwargs))
-#
-#        return options
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('name', self.name)
-#        if self._uuid: element.set('uuid', self.uuid)
-#        element.set('version', self.VERSION)
-#
-#        child = Element('beam')
-#        child.append(self.beam.to_xml())
-#        element.append(child)
-#
-#        child = Element('geometry')
-#        child.append(self.geometry.to_xml())
-#        element.append(child)
-#
-#        child = Element('detectors')
-#        for key in sorted(self.detectors.keys()):
-#            detector = self.detectors[key]
-#            grandchild = detector.to_xml()
-#            grandchild.set('_key', key)
-#            child.append(grandchild)
-#        element.append(child)
-#
-#        child = Element('limits')
-#        for limit in self.limits:
-#            child.append(limit.to_xml())
-#        element.append(child)
-#
-#        child = Element('models')
-#        for model in self.models:
-#            child.append(model.to_xml())
-#        element.append(child)
+        result.__dict__.update(self.__dict__)
+        result.__dict__['_uuid'] = None
+
+        return result
+
+    def __deepcopy__(self, memo):
+        # http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+
+        for k, v in self.__dict__.items():
+            result.__dict__[k] = deepcopy(v, memo)
+        result.__dict__['_uuid'] = None
+
+        return result
 
     @property
     def uuid(self):
@@ -228,12 +150,14 @@ class Options(object):
 mapper.register(Options, '{http://pymontecarlo.sf.net}options',
                 Attribute('VERSION', PythonType(str), 'version'),
                 Attribute('name', PythonType(str)),
-                Element('beam', UserType(PencilBeam), iterable=True),
-                Element('models', UserType(Model), iterable=True),
+                Attribute('_uuid', PythonType(str), 'uuid'),
+                ParameterizedElement('beam', UserType(_Beam)),
+                ParameterizedElement('geometry', UserType(_Geometry)),
+                ParameterizedElementDict('detectors', PythonType(str), UserType(_Detector)),
+                ParameterizedElementSet('limits', UserType(_Limit)),
+                ParameterizedElementSet('models', UserType(Model)),
                 )
 
-#XMLIO.register('{http://pymontecarlo.sf.net}options', Options)
-#
 #class _OptionsSequenceParameters(Sequence):
 #
 #    def __init__(self):

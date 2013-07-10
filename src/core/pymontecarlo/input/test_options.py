@@ -18,7 +18,7 @@ import copy
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input import mapper
+from pymontecarlo.input.xmlmapper import mapper
 from pymontecarlo.input.options import Options #, OptionsSequence
 from pymontecarlo.input.detector import BackscatteredElectronEnergyDetector
 from pymontecarlo.input.limit import ShowersLimit
@@ -55,8 +55,9 @@ class TestOptions(TestCase):
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(1, len(self.ops.models))
-        model = self.ops.models.find(ELASTIC_CROSS_SECTION)
-        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
+        models = list(self.ops.models.itertype(ELASTIC_CROSS_SECTION))
+        self.assertEqual(1, len(models))
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 
     def testcopy(self):
         uuid = self.ops.uuid
@@ -123,66 +124,61 @@ class TestOptions(TestCase):
 
     def testlimits(self):
         self.ops.limits.add(ShowersLimit(1234))
-        self.assertEqual(1, len(self.ops.limits))
+        self.assertEqual(2, len(self.ops.limits))
 
         limits = list(self.ops.limits.iterclass(ShowersLimit))
         self.assertEqual(2, len(limits))
-        self.assertEqual(5678, limits[0].showers)
 
     def testmodels(self):
         self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
-        self.assertEqual(1, len(self.ops.models))
-        models = self.ops.models.find(ELASTIC_CROSS_SECTION)
+        self.assertEqual(2, len(self.ops.models))
+        models = list(self.ops.models.itertype(ELASTIC_CROSS_SECTION))
         self.assertEqual(2, len(models))
-#        self.assertEqual(ELASTIC_CROSS_SECTION.mott_drouin1993, model)
 
     def testfrom_xml(self):
-#        uuid = self.ops.uuid
+        uuid = self.ops.uuid
         element = mapper.to_xml(self.ops)
         ops = mapper.from_xml(element)
 
         self.assertEqual("Test", ops.name)
-#        self.assertEqual(uuid, ops.uuid)
+        self.assertEqual(uuid, ops.uuid)
 
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
 #
-#        self.assertEqual(1, len(ops.detectors))
-#        det = ops.detectors['bse']
-#        self.assertAlmostEqual(0, det.limits_eV[0], 4)
-#        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
-#        self.assertEqual(1000, det.channels)
+        self.assertEqual(1, len(ops.detectors))
+        det = ops.detectors['bse']
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
+        self.assertEqual(1000, det.channels)
+
+        self.assertEqual(1, len(ops.limits))
+        limits = list(ops.limits.iterclass(ShowersLimit))
+        self.assertEqual(1, len(limits))
+        self.assertEqual(5678, limits[0].showers)
 #
-#        self.assertEqual(1, len(ops.limits))
-#        limit = ops.limits.find(ShowersLimit)
-#        self.assertEqual(5678, limit.showers)
-#
-        print repr(ops.models)
-#        self.assertEqual(1, len(ops.models))
-#        model = ops.models.find(ELASTIC_CROSS_SECTION)
-#        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, model)
+        self.assertEqual(1, len(ops.models))
+        models = list(ops.models.itertype(ELASTIC_CROSS_SECTION))
+        self.assertEqual(1, len(models))
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 
     def testto_xml(self):
         element = mapper.to_xml(self.ops)
 
-        from xml.etree.ElementTree import tostring
-        print tostring(element)
-
         self.assertEqual('Test', element.get('name'))
 #
-#        self.assertIsNone(element.get('uuid'))
+        self.assertEqual('xsi:nil', element.get('uuid'))
 #
         children = list(element.find('beam'))
         self.assertEqual(1, len(children))
 #
-#        children = list(element.find('geometry'))
-#        self.assertEqual(1, len(children))
-#
-#        children = list(element.find('detectors'))
-#        self.assertEqual(1, len(children))
-#        self.assertEqual('bse', children[0].get('_key'))
-#
-#        children = list(element.find('limits'))
-#        self.assertEqual(1, len(children))
+        children = list(element.find('geometry'))
+        self.assertEqual(1, len(children))
+
+        children = list(element.find('detectors'))
+        self.assertEqual(1, len(children))
+
+        children = list(element.find('limits'))
+        self.assertEqual(1, len(children))
 #
         children = list(element.find('models'))
         self.assertEqual(1, len(children))
