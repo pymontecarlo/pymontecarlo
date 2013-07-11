@@ -35,7 +35,9 @@ from pymontecarlo.input.geometry import _Geometry, Substrate
 from pymontecarlo.input.detector import _Detector
 from pymontecarlo.input.limit import _Limit
 from pymontecarlo.input.model import Model
-from pymontecarlo.input.xmlmapper import mapper, Attribute, ParameterizedElement, ParameterizedElementSet, ParameterizedElementDict, PythonType, UserType
+from pymontecarlo.input.xmlmapper import \
+    (mapper, Attribute, ParameterizedElement, ParameterizedElementSet,
+     ParameterizedElementDict, PythonType, UserType)
 
 # Globals and constants variables.
 
@@ -72,7 +74,7 @@ class Options(object):
     
     __metaclass__ = ParameterizedMetaClass
     
-    VERSION = '5'
+    VERSION = '6'
 
     name = Parameter(_name_validator, "Name")
     beam = Parameter(doc="Beam")
