@@ -115,6 +115,14 @@ class Manager(object):
         if klass not in self._savers:
             raise ValueError, 'No saver found for class (%s). Please register it first.' % klass
         return self._savers[klass]
+    
+    def is_registered(self, tag=None, klass=None):
+        if tag is not None:
+            return tag in self._loaders
+        elif klass is not None:
+            return klass in self._savers
+        else:
+            raise ValueError
 
 class ClassManager(object):
 

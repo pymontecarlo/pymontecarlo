@@ -21,11 +21,11 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+import pyxray.element_properties as ep
 
 # Local modules.
 from pymontecarlo.input.material import Material as _Material
 from pymontecarlo.input.option import Option
-import pymontecarlo.util.element_properties as ep
 from pymontecarlo.util.xmlutil import XMLIO
 
 # Globals and constants variables.

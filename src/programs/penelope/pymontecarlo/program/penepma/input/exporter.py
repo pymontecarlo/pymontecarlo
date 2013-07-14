@@ -26,6 +26,7 @@ import warnings
 from operator import attrgetter, mul
 
 # Third party modules.
+from pyxray.transition import get_transitions
 
 # Local modules.
 from pymontecarlo.settings import get_settings
@@ -41,8 +42,6 @@ from pymontecarlo.input.detector import \
     (_PhotonDelimitedDetector, PhotonSpectrumDetector, PhotonDepthDetector,
      BackscatteredElectronEnergyDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit, UncertaintyLimit
-
-from pymontecarlo.util.transition import get_transitions
 
 from pymontecarlo.program._penelope.input.exporter import \
     Exporter as _Exporter, Keyword, Comment, ExporterException, ExporterWarning

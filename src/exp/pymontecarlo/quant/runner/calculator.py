@@ -23,14 +23,13 @@ import os
 import math
 
 # Third party modules.
+import pyxray.element_properties as ep
 
 # Local modules.
 from QuantitativeAnalysisTools.FluorescenceFactor import FluorescenceFactor
 
 from SpecimenTools.Element import Element
 from SpecimenTools.SampleRegion import SampleRegion
-
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 from QuantitativeAnalysisTools.FluorescenceModelName import MODEL_CHARACTERISTIC_DEMERS2007

@@ -25,6 +25,9 @@ from operator import mul
 # Third party modules.
 import numpy as np
 
+from pyxray.element_properties import symbol
+from pyxray.transition import from_string
+
 # Local modules.
 from pymontecarlo.output.importer import Importer as _Importer
 from pymontecarlo.output.result import \
@@ -49,8 +52,6 @@ from pymontecarlo.input.detector import \
      ShowersStatisticsDetector,
      )
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.util.element_properties import symbol
-from pymontecarlo.util.transition import from_string
 
 from winxrayTools.ResultsFile.BseResults import BseResults
 from winxrayTools.ResultsFile.GeneralResults import GeneralResults

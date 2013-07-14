@@ -27,81 +27,25 @@ __all__ = ['composition_from_formula',
 from collections import defaultdict
 from fractions import gcd
 from itertools import combinations
+from types import StringTypes
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
-from pymontecarlo.input.option import Option
+from pymontecarlo.input.parameter import \
+    (ParameterizedMetaClass, Parameter, UnitParameter, FrozenParameter,
+     SimpleValidator, ParameterizedMutableMapping, FactorParameterAlias,
+     expand, freeze)
+from pymontecarlo.input.xmlmapper import \
+    (mapper, ParameterizedAttribute, ParameterizedElementDict,
+     _XMLType, PythonType)
 
-import pymontecarlo.util.element_properties as ep
-from pymontecarlo.util.xmlutil import XMLIO, Element
+import pyxray.element_properties as ep
 
 # Globals and constants variables.
 
-def _calculate_composition(composition):
-    """
-    Returns a valid composition :class:`dict`.
-    Replaces wildcards and ensures that the total fraction is equal to 1.0.
-    
-    :arg composition: composition in weight fraction. 
-        The composition is specified by a dictionary.
-        The key can either be the atomic number or the symbol of the element.
-        It will automatically be converted to the atomic number.
-        The value is the weight fraction between ]0.0, 1.0] or ``?`` 
-        indicating that the weight fraction is unknown and shall be 
-        automatically calculated to make the total weight fraction equal 
-        to 1.0. 
-    :type composition: :class:`dict`
-    """
-    if not composition:
-        raise ValueError, 'No elements defined'
 
-    composition2 = {}
-    for element, fraction in composition.iteritems():
-        # Replace symbol by atomic number
-        if isinstance(element, basestring): # symbol
-            element = ep.atomic_number(symbol=element)
-
-        # Atomic number check
-        if element <= 0 or element > 96:
-            raise ValueError, "Atomic number (%i) must be between [1, 96]" % element
-
-        # Fraction check
-        if fraction != '?':
-            fraction = float(fraction)
-            if fraction < 0.0 or fraction > 1.0:
-                raise ValueError, "Fraction (%s) must be between ]0.0, 1.0]" % fraction
-
-        composition2[element] = fraction
-
-    # Replace wildcard
-    totalfraction = 0.0
-    countwildcard = 0
-    for fraction in composition2.values():
-        if fraction == '?':
-            countwildcard += 1
-        else:
-            totalfraction += fraction
-
-    if countwildcard > 0:
-        if totalfraction <= 1.0:
-            wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
-        else:
-            raise ValueError, 'Wild card(s) could not be replaced since total fraction is already 1.0'
-
-    composition3 = {}
-    for z, fraction in composition2.iteritems():
-        if fraction == '?':
-            fraction = wildcardfraction
-        composition3[z] = fraction
-
-    # Check total fraction
-    totalfraction = sum(composition3.values())
-    if abs(totalfraction - 1.0) > 1e-6:
-        raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
-
-    return composition3
 
 def _calculate_composition_atomic(composition):
     """
@@ -252,11 +196,115 @@ def pure(z,
     name = ep.name(z)
     composition = {z: '?'}
 
-    return Material(name, composition, None,
-                    absorption_energy_electron_eV, absorption_energy_photon_eV,
-                    absorption_energy_positron_eV)
+    mat = Material(name, composition, None,
+                   absorption_energy_electron_eV, absorption_energy_photon_eV,
+                   absorption_energy_positron_eV)
+    mat.calculate()
 
-class Material(Option):
+    return mat
+
+class _Composition(ParameterizedMutableMapping):
+    
+    def __init__(self):
+        validator = SimpleValidator(lambda wf: 0.0 <= wf <= 1.0 or wf == '?',
+                                    'Weight fraction must be within [0.0, 1.0]')
+        ParameterizedMutableMapping.__init__(self, validators=[validator])
+
+    def __setitem__(self, key, value):
+        if isinstance(key, StringTypes):
+            key = ep.atomic_number(key)
+        if key <= 0 or key >= 99:
+            raise ValueError, "Atomic number must be between [1, 99]"
+        ParameterizedMutableMapping.__setitem__(self, key, value)
+    
+    def calculate(self):
+        compositions = expand(self)
+        
+        # Replace wildcard
+        for composition in compositions:
+            # Replace wildcard
+            totalfraction = 0.0
+            countwildcard = 0
+            for fraction in composition.values():
+                if fraction == '?':
+                    countwildcard += 1
+                else:
+                    totalfraction += fraction
+
+            if countwildcard > 0:
+                if totalfraction <= 1.0:
+                    wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
+                else:
+                    raise ValueError, 'Wild card(s) could not be replaced since total fraction is already 1.0'
+
+            for z, fraction in composition.items():
+                if fraction == '?':
+                    fraction = wildcardfraction
+                composition[z] = fraction
+
+            # Check total fraction
+            totalfraction = sum(composition.values())
+            if abs(totalfraction - 1.0) > 1e-6:
+                raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
+
+        # Replace values
+        self.clear()
+
+        zs = {}
+        for composition in compositions:
+            for z, wf in composition.iteritems():
+                zs.setdefault(z, []).append(wf)
+
+        for z, wfs in zs.iteritems():
+            self[z] = wfs
+
+class _WeightFractionXMLType(_XMLType):
+    
+    def to_xml(self, value):
+        return str(value)
+
+    def from_xml(self, value):
+        if value != '?':
+            value = float(value)
+        return value
+
+class _DensityParameter(Parameter):
+    
+    def __init__(self, doc="Density"):
+        validator = SimpleValidator(lambda d: d is None or d >= 0.0,
+                                    "Density must be greater than 0.0")
+        Parameter.__init__(self, [validator], doc)
+
+    def _new(self, cls, clsname, bases, methods, name):
+        parameter = methods.pop(name)
+        methods[name + '_kg_m3'] = parameter
+        methods[name + '_g_cm3'] = FactorParameterAlias(parameter, 1000.0)
+        Parameter._new(self, cls, clsname, bases, methods, name + "_kg_m3")
+
+_energy_validator = \
+    SimpleValidator(lambda e: e >= 0.0,
+                    'Energy must be greater or equal to 0.0')
+
+class Material(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
+    name = Parameter(doc="Name")
+
+    composition = FrozenParameter(_Composition, "Composition")
+
+    density = _DensityParameter()
+
+    absorption_energy_electron = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the electrons")
+    absorption_energy_photon = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the photons")
+    absorption_energy_positron = \
+        UnitParameter("eV", _energy_validator,
+                      "Absorption energy of the positrons")
+
     def __init__(self, name, composition, density_kg_m3=None,
                  absorption_energy_electron_eV=50.0,
                  absorption_energy_photon_eV=50.0,
@@ -295,10 +343,10 @@ class Material(Option):
             in this material.
         :type absorption_energy_positron_eV: :class:`float`
         """
-        Option.__init__(self)
-
         self.name = name
-        self.composition = composition
+
+        self.composition.update(composition)
+
         self.density_kg_m3 = density_kg_m3
 
         self.absorption_energy_electron_eV = absorption_energy_electron_eV
@@ -315,153 +363,54 @@ class Material(Option):
     def __str__(self):
         return self.name
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        name = element.get('name')
+    def calculate(self):
+        self.composition.calculate()
 
-        composition = {}
-        for child in iter(element.find('composition')):
-            composition[int(child.get('z'))] = float(child.get('weightFraction'))
-
-        density_kg_m3 = float(element.get('density'))
-
-        abs_electron_eV = float(element.get('absorptionEnergyElectron'))
-        abs_photon_eV = float(element.get('absorptionEnergyPhoton'))
-        abs_positron_eV = float(element.get('absorptionEnergyPositron'))
-
-        return cls(name, composition, density_kg_m3,
-                   abs_electron_eV, abs_photon_eV, abs_positron_eV)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('name', self.name)
-
-        child = Element('composition')
-        for z, fraction in self.composition.iteritems():
-            child.append(Element('element', {'z': str(z), 'weightFraction': str(fraction)}))
-        element.append(child)
-
-        element.set('density', str(self.density_kg_m3))
-
-        element.set('absorptionEnergyElectron', str(self.absorption_energy_electron_eV))
-        element.set('absorptionEnergyPhoton', str(self.absorption_energy_photon_eV))
-        element.set('absorptionEnergyPositron', str(self.absorption_energy_positron_eV))
-
-    @property
-    def name(self):
-        """
-        Name of the material.
-        """
-        return self._props['name']
-
-    @name.setter
-    def name(self, name):
-        self._props['name'] = name
-
-    @property
-    def composition(self):
-        """
-        Composition of this material.
-        The composition is specified by a dictionary.
-        The keys are atomic numbers and values are weight fractions.
-        """
-        return dict(self._props['composition']) # copy
-
-    @composition.setter
-    def composition(self, composition):
-        composition = _calculate_composition(composition)
-        self._props['composition'] = composition
-        self._props['composition_atomic'] = \
-            _calculate_composition_atomic(composition)
-
-    @property
-    def composition_atomic(self):
-        """
-        Returns the composition of this material.
-        The composition is specified by a dictionary.
-        The keys are atomic numbers and values are atomic fractions.
-        """
-        return self._props['composition_atomic']
-
-    @property
-    def density_kg_m3(self):
-        """
-        Density of this material in kg/m3.
-        """
-        if self.has_density_defined():
-            return self._props['density']
-        else:
-            return _calculate_density(self.composition)
-
-    @density_kg_m3.setter
-    def density_kg_m3(self, density):
-        self._props['density'] = density
-
-    @density_kg_m3.deleter
-    def density_kg_m3(self):
-        self._props['density'] = None
+        # Calculate density
+        if self.density_kg_m3 is None:
+            densities = []
+            for composition in expand(self.composition):
+                densities.append(_calculate_density(composition))
+            self.density_kg_m3 = densities
 
     def has_density_defined(self):
         """
         Returns ``True`` if the density was specified by the user, ``False`` if
         it is automatically calculated from the composition.
         """
-        density = self._props['density']
+        density = self.density_kg_m3
         return density is not None and density >= 0.0
 
-    @property
-    def absorption_energy_electron_eV(self):
-        """
-        Absorption energy of the electrons in this material.
-        """
-        return self._props['absorption energy electron']
+mapper.register(Material, '{http://pymontecarlo.sf.net}material',
+                ParameterizedAttribute('name', PythonType(str)),
+                ParameterizedElementDict('composition', PythonType(int), _WeightFractionXMLType(),
+                                        keyxmlname='z', valuexmlname='element'),
+                ParameterizedAttribute('density_kg_m3', PythonType(float), 'density'),
+                ParameterizedAttribute('absorption_energy_electron_eV', PythonType(float), 'absorption_energy_electron'),
+                ParameterizedAttribute('absorption_energy_photon_eV', PythonType(float), 'absorption_energy_photon'),
+                ParameterizedAttribute('absorption_energy_positron_eV', PythonType(float), 'absorption_energy_positron'))
 
-    @absorption_energy_electron_eV.setter
-    def absorption_energy_electron_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy electron'] = energy
+class _Vacuum(Material):
+    
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            inst = Material.__new__(cls, *args, **kwargs)
+            inst.name = 'Vacuum'
+            inst.composition.clear()
+            inst.density_kg_m3 = 0.0
+            inst.absorption_energy_electron = 0.0
+            inst.absorption_energy_photon = 0.0
+            inst.absorption_energy_positron = 0.0
+            cls._instance = inst
+        return cls._instance
 
-    @property
-    def absorption_energy_photon_eV(self):
-        """
-        Absorption energy of the photons in this material.
-        """
-        return self._props['absorption energy photon']
-
-    @absorption_energy_photon_eV.setter
-    def absorption_energy_photon_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy photon'] = energy
-
-    @property
-    def absorption_energy_positron_eV(self):
-        """
-        Absorption energy of the positrons in this material.
-        """
-        return self._props['absorption energy positron']
-
-    @absorption_energy_positron_eV.setter
-    def absorption_energy_positron_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Absorption energy (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['absorption energy positron'] = energy
-
-XMLIO.register('{http://pymontecarlo.sf.net}material', Material)
-
-class _Vacuum(Option):
     def __init__(self):
-        Option.__init__(self)
-        self._index = 0
+        pass
 
     def __repr__(self):
         return '<Vacuum()>'
-
-    def __str__(self):
-        return self.name
 
     def __copy__(self):
         return VACUUM
@@ -469,29 +418,19 @@ class _Vacuum(Option):
     def __deepcopy__(self, memo):
         return VACUUM
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        return VACUUM
+    def __getstate__(self):
+        return {} # Nothing to pickle
 
-    @property
-    def name(self):
-        return 'Vacuum'
+    def __reduce__(self):
+        return (self.__class__, ())
 
-    @property
-    def composition(self):
-        return {}
-
-    @property
-    def composition_atomic(self):
-        return {}
-
-    @property
-    def density_kg_m3(self):
-        return 0.0
+    def calculate(self):
+        pass
 
     def has_density_defined(self):
         return False
 
 VACUUM = _Vacuum()
+freeze(VACUUM)
 
-XMLIO.register('{http://pymontecarlo.sf.net}vacuum', _Vacuum)
+mapper.register(_Vacuum, '{http://pymontecarlo.sf.net}vacuum', inherit=False)

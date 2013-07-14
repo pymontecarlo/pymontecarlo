@@ -19,6 +19,7 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.body import Body, Layer
 from pymontecarlo.input.material import pure
+from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
 
@@ -36,13 +37,13 @@ class TestBody(TestCase):
         self.assertEqual('Copper', str(self.body.material))
 
     def testfrom_xml(self):
-        element = self.body.to_xml()
-        body = Body.from_xml(element)
+        element = mapper.to_xml(self.body)
+        body = mapper.from_xml(element)
 
         self.assertEqual('Copper', str(body.material))
 
     def testto_xml(self):
-        element = self.body.to_xml()
+        element = mapper.to_xml(self.body)
 
         children = list(element.find('material'))
         self.assertEqual(1, len(children))
@@ -62,13 +63,13 @@ class TestLayer(TestCase):
         self.assertAlmostEqual(123.456, self.layer.thickness_m, 4)
 
     def testfrom_xml(self):
-        element = self.layer.to_xml()
-        layer = Layer.from_xml(element)
+        element = mapper.to_xml(self.layer)
+        layer = mapper.from_xml(element)
 
         self.assertAlmostEqual(123.456, layer.thickness_m, 4)
 
     def testto_xml(self):
-        element = self.layer.to_xml()
+        element = mapper.to_xml(self.layer)
 
         self.assertAlmostEqual(123.456, float(element.get('thickness')), 4)
 

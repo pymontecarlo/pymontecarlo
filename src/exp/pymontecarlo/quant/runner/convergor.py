@@ -23,9 +23,9 @@ import math
 import logging
 
 # Third party modules.
+import pyxray.element_properties as ep
 
 # Local modules.
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 

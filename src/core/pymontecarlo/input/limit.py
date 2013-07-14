@@ -25,110 +25,75 @@ __all__ = ['TimeLimit',
 # Standard library modules.
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
-from pymontecarlo.input.option import Option
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.parameter import \
+    (ParameterizedMetaClass, Parameter, FrozenParameter, TimeParameter,
+     SimpleValidator)
+from pymontecarlo.input.xmlmapper import \
+    mapper, ParameterizedAttribute, ParameterizedElementSet, UserType, PythonType
 
 # Globals and constants variables.
 
-class _TransitionsLimit(Option):
+class _Limit(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
+class _TransitionsLimit(_Limit):
+
+    transitions = FrozenParameter(set, doc="Transitions for the limit")
+
     def __init__(self, transitions):
-        Option.__init__(self)
-
-        self._props['transitions'] = set()
-
         if hasattr(transitions, '__iter__'):
             self.transitions.update(transitions)
         else:
             self.transitions.add(transitions)
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        transitions = set()
-        for child in list(element):
-            transitions.add(XMLIO.from_xml(child, *args, **kwargs))
+mapper.register(_TransitionsLimit, '{http://pymontecarlo.sf.net}_transitionsLimit',
+                ParameterizedElementSet('transitions', UserType(Transition)))
 
-        return cls(transitions)
+_time_validator = SimpleValidator(lambda t: t > 0,
+                                  "Time must be greater than 0")
 
-    def __savexml__(self, element, *args, **kwargs):
-        for transition in self.transitions:
-            element.append(transition.to_xml())
+class TimeLimit(_Limit):
 
-    @property
-    def transitions(self):
-        """
-        Transitions for the limit.
-        
-        :rtype: :class:`list`
-        """
-        return self._props['transitions']
+    time = TimeParameter(_time_validator, "Simulation time in seconds")
 
-class TimeLimit(Option):
     def __init__(self, time):
-        Option.__init__(self)
-
         self.time_s = time
 
     def __repr__(self):
         return '<TimeLimit(time=%s s)>' % self.time_s
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        time = long(element.get('time'))
-        return cls(time)
+mapper.register(TimeLimit, '{http://pymontecarlo.sf.net}timeLimit',
+                ParameterizedAttribute('time_s', PythonType(float), 'time'))
 
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('time', str(self.time_s))
+_showers_validator = \
+    SimpleValidator(lambda s: s >= 1,
+                    "Number of showers must be equal or greater than 1")
 
-    @property
-    def time_s(self):
-        """
-        Simulation time in seconds.
-        """
-        return self._props['time']
+class ShowersLimit(_Limit):
 
-    @time_s.setter
-    def time_s(self, time):
-        if time <= 0:
-            raise ValueError, "Time (%s) must be greater than 0." % time
-        self._props['time'] = long(time)
+    showers = Parameter(_showers_validator, 'Number of electron showers')
 
-XMLIO.register('{http://pymontecarlo.sf.net}timeLimit', TimeLimit)
-
-class ShowersLimit(Option):
     def __init__(self, showers):
-        Option.__init__(self)
-
         self.showers = showers
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        showers = long(element.get('showers'))
-        return cls(showers)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('showers', str(self.showers))
 
     def __repr__(self):
         return '<ShowersLimit(showers=%s)>' % self.showers
 
-    @property
-    def showers(self):
-        """
-        Number of electron showers.
-        """
-        return self._props['showers']
+mapper.register(ShowersLimit, '{http://pymontecarlo.sf.net}showersLimit',
+                ParameterizedAttribute('showers', PythonType(long)))
 
-    @showers.setter
-    def showers(self, showers):
-        if showers < 1:
-            raise ValueError, "Number of showers (%s) must be equal or greater than 1." % showers
-        self._props['showers'] = long(showers)
-
-XMLIO.register('{http://pymontecarlo.sf.net}showersLimit', ShowersLimit)
+_uncertainty_validator = \
+    SimpleValidator(lambda unc: 0.0 < unc < 1.0,
+                    'Relative uncertainty must be between [0.0, 1.0]')
 
 class UncertaintyLimit(_TransitionsLimit):
+    
+    uncertainty = Parameter(_uncertainty_validator, "Relative uncertainty")
+
     def __init__(self, transitions, uncertainty):
         _TransitionsLimit.__init__(self, transitions)
 
@@ -138,27 +103,5 @@ class UncertaintyLimit(_TransitionsLimit):
         return '<UncertaintyLimit(%i transitions, uncertainty=%s %%)>' % \
             (len(self.transitions), self.uncertainty * 100.0)
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        transitions = \
-            _TransitionsLimit.__loadxml__(element, *args, **kwargs).transitions
-
-        uncertainty = float(element.get('uncertainty'))
-
-        return cls(transitions, uncertainty)
-
-    def __savexml__(self, element, *args, **kwargs):
-        _TransitionsLimit.__savexml__(self, element, *args, **kwargs)
-        element.set('uncertainty', str(self.uncertainty))
-
-    @property
-    def uncertainty(self):
-        return self._props['uncertainty']
-
-    @uncertainty.setter
-    def uncertainty(self, unc):
-        if unc < 0 or unc > 1:
-            raise ValueError, "Relative uncertainty (%s) must be between [0.0, 1.0]." % unc
-        self._props['uncertainty'] = unc
-
-XMLIO.register('{http://pymontecarlo.sf.net}uncertaintyLimit', UncertaintyLimit)
+mapper.register(UncertaintyLimit, '{http://pymontecarlo.sf.net}uncertaintyLimit',
+                ParameterizedAttribute('uncertainty', PythonType(float)))

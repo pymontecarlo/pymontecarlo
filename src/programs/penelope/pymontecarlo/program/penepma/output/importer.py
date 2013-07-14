@@ -27,6 +27,8 @@ from collections import defaultdict
 # Third party modules.
 import numpy as np
 
+from pyxray.transition import Transition
+
 # Local modules.
 from pymontecarlo.output.result import \
     (
@@ -52,7 +54,6 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      ShowersStatisticsDetector,
      )
-from pymontecarlo.util.transition import Transition
 from pymontecarlo.program._penelope.output.importer import \
     Importer as _Importer, ImporterException
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors

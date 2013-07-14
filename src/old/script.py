@@ -4,6 +4,8 @@ import logging
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+from pyxray.transition import Ka
+
 from optimization.optimizer import LevenbergMarquardtOptimzier
 from pymontecarlo.runner.local import LocalRunner
 from pymontecarlo.program.nistmonte.config import program as NISTMonte
@@ -14,7 +16,6 @@ from pymontecarlo.reconstruction.parameter import Parameter
 from pymontecarlo.reconstruction.reconstructor import Reconstructor
 
 from pymontecarlo.input import Inclusion, pure, Material, Options, ShowersLimit, PhotonIntensityDetector, composition_from_formula
-from pymontecarlo.util.transition import Ka
 
 baseops = Options()
 baseops.beam.energy_eV = 10e3

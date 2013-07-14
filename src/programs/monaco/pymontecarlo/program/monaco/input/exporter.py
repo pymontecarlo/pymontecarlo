@@ -27,13 +27,13 @@ import math
 # Third party modules.
 import numpy as np
 
+import pyxray.element_properties as ep
+
 # Local modules.
 from pymontecarlo.input.exporter import Exporter as _Exporter
 
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.limit import ShowersLimit
-
-import pymontecarlo.util.element_properties as ep
 
 # Globals and constants variables.
 

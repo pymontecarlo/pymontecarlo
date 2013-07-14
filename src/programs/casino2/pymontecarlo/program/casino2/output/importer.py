@@ -23,6 +23,8 @@ __license__ = "GPL v3"
 # Third party modules.
 import numpy as np
 
+from pyxray.transition import K_family, LIII, MV
+
 # Local modules.
 from pymontecarlo.output.importer import Importer as _Importer
 from pymontecarlo.output.result import \
@@ -52,7 +54,6 @@ from pymontecarlo.input.detector import \
      TransmittedElectronEnergyDetector,
      TrajectoryDetector,
      )
-from pymontecarlo.util.transition import K_family, LIII, MV
 
 from casinoTools.FileFormat.casino2.File import File
 

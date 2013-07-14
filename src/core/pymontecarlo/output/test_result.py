@@ -16,7 +16,10 @@ import tempfile
 
 # Third party modules.
 import numpy as np
+
 import h5py
+
+from pyxray.transition import Transition, K_family
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
@@ -33,7 +36,6 @@ from pymontecarlo.output.result import \
      TrajectoryResult,
      ShowersStatisticsResult,
      _ChannelsResult)
-from pymontecarlo.util.transition import Transition, K_family
 
 # Globals and constants variables.
 from pymontecarlo.input.particle import ELECTRON
