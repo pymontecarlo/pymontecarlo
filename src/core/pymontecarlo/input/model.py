@@ -282,7 +282,7 @@ ENERGY_LOSS = ModelType('energy loss')
 
 ENERGY_LOSS.joy_luo1989 = ('Joy and Luo 1989', 'Joy and Luo (1989)')
 ENERGY_LOSS.bethe1930 = \
-    Model("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
+    ("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.bethe1930mod = \
     ("Modified Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")
 ENERGY_LOSS.joy_luo_lowney = ('Joy and Luo + Lowney',)
