@@ -166,7 +166,7 @@ class FunctionGetter(object):
 
 class FunctionHandler(object):
     
-    def __init__(self, func, eps_diff):
+    def __init__(self, func, eps_diff=1e-2, n=1):
         """
         Creates a function handler.
         
@@ -179,6 +179,7 @@ class FunctionHandler(object):
         
         self.func = func
         self.eps_diff = eps_diff
+        self.n = n
         self._f = None
         
     def get_func(self):
@@ -199,14 +200,15 @@ class FunctionHandler(object):
         Returns a callable function that maps a list of argument values to a matrix
         containing approximations of the partial derivatives
         of the previously defined callable function.
+        Here finite differences with step size abs(argmuent) * eps_diff are used. 
         """
         
         def _jac(x, *args, **kwargs):
             # Setup step sizes for finite difference quotients
             xphs, dxs = [], np.zeros(len(x))
-            for i in range(0, len(x)):
+            for i in range(len(x)):
                 xph = copy.deepcopy(x)
-                xph[i] += self.eps_diff*abs(x[i])
+                xph[i] += self.eps_diff * abs(x[i])
                 xphs.append(xph)
                 dxs[i] = xph[i] - x[i]
             
@@ -219,6 +221,41 @@ class FunctionHandler(object):
                 J[i] = (fs[i] - self._f)/dxs[i]
             J = J.transpose()
                 
+            return J
+        
+        return _jac
+    
+    def get_jac_regression(self):
+        """
+        Returns a callable function that maps a list of argument values to a matrix
+        containing approximations of the partial derivatives
+        of the previously defined callable function.
+        Here for each argument x, 2*n+1 function evaluations
+        (n to the left of x, 1 at x, n to the right of x)
+        are used to fit a linear function (the partial derivative) to.
+        This way noise in the function can be compensated.
+        """
+        
+        def _jac(x, *args, **kwargs):
+            # Setup step sizes for finite difference quotients
+            xphs, dxs = np.zeros((len(x), 2*self.n+1, len(x))), np.zeros(len(x))
+            for i in range(len(x)):
+                for j in range(-self.n,self.n+1):
+                    xph = copy.deepcopy(x)
+                    xph[i] += j * self.eps_diff * abs(x[i])
+                    xphs[i,j + self.n] = xph
+                    dxs[i] = xph[i] - x[i]
+        
+                    # Calculate function evaluations
+                    fs = self.func([xphs[i,j] for i in range(len(x)) for j in range(2*self.n+1)])
+                    
+                    J = np.zeros([len(x), len(fs[0])])
+                    for i in range(x):
+                        for k in range(len(fs[0])):
+                            x = xphs[i,:,i]
+                            y = [fs[i * (2 * self.n + 1) + j][k] for j in range(2 * self.n + 1)]
+                            J[k,i] = np.polyfit(x, y, 1)[0]
+                            
             return J
         
         return _jac
