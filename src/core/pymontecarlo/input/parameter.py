@@ -181,6 +181,8 @@ class Parameter(object):
         return '<%s(%s)>' % (self.__class__.__name__, self.name)
 
     def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
         return self._get_wrapper(obj, objtype).get()
     
     def _get_wrapper(self, obj, objtype=None):
@@ -239,9 +241,6 @@ class FrozenParameter(Parameter):
         if kwargs is None: kwargs = {}
         self._klass_kwargs = kwargs
 
-    def __get__(self, obj, objtype=None):
-        return Parameter.__get__(self, obj, objtype=objtype)
-
     def _get_wrapper(self, obj, objtype=None):
         if not obj.__dict__.has_key(self.name):
             value = self._value
@@ -273,6 +272,8 @@ class ParameterAlias(object):
         return '<%s(%s)>' % (self.__class__.__name__, self._alias.name)
 
     def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
         return self._get_wrapper(obj, objtype).get()
 
     def _get_wrapper(self, obj, objtype=None):
