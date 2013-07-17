@@ -40,7 +40,7 @@ Binary version for Windows and Linux Debian are available to :ref:`download`.
 Getting started
 ###############
 
-* :ref:`keyconcept`
+* :doc:`input/beam`
 * 
 
 Authors

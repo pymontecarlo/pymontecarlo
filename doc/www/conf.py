@@ -19,7 +19,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.coverage', 'sphinx.ext.pngmath',
               'sphinx.ext.ifconfig', 'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
-              'sphinxtools.ext.bibtex' ]
+              'sphinxtools.ext.bibtex',
+              'pymontecarlo.sphinxext.availability']
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -212,4 +213,4 @@ autoclass_content = "both"
 
 bibtex_path = 'references.bib'
 bibtex_style = ('apa', 'apalike')
-bibtex_styles_path = ['./styles']
+bibtex_styles_path = [os.path.abspath('./styles')]
