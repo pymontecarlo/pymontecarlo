@@ -55,22 +55,38 @@ _aperture_validator = SimpleValidator(lambda x: 0.0 <= x <= math.pi / 2,
 class PencilBeam(_Beam):
 
     energy = UnitParameter('eV', _energy_validator,
-                          "Energy of this electron beam (in eV)")
+                          "Initial energy of the particle(s)")
     particle = Parameter(EnumValidator(PARTICLES),
-                         "Type of particles in this beam")
+                         "Type of particles (see :mod:`.particle`)")
     origin = UnitParameter('m', CastValidator(vector3d),
-                         """Starting location of this electron beam. 
-                         Location saved in a tuple of length 3 for the x, y and z coordinates. 
-                         All coordinates are expressed in meters.""")
+                           """Initial location of the particle(s). 
+                             Location saved as a tuple of length 3 for the x, y and z spatial coordinates.""")
     direction = Parameter(CastValidator(vector3d),
-                          """Direction of this electron beam.
+                          """Direction of the particle(s).
                           Direction is represented by a tuple of length 3 for the x, y and z coordinates.""")
     aperture = AngleParameter(_aperture_validator,
-                              "Angular aperture of the electron beam (in radians)")
+                              "Angular aperture of the electron beam")
 
     def __init__(self, energy_eV, particle=ELECTRON,
                  origin_m=(0, 0, 1), direction=(0, 0, -1),
                  aperture_rad=0.0):
+        """
+        Creates a new pencil beam.
+        A pencil beam is a one dimensional beam (no width).
+        
+        :arg energy_eV: initial energy of the particle(s)
+        :arg particle: type of particles (see :mod:`.particle`). 
+            [default: :data:`.ELECTRON`]
+        :type particle: :class:`_Particle`: 
+        :arg origin_m: initial location of the particle(s). 
+            Location saved as a tuple of length 3 for the x, y and z 
+            spatial coordinates. [default: ``(0, 0, 1)``]
+        :arg direction: direction of the particle(s).
+            Direction is represented by a tuple of length 3 for the x, y and 
+            z coordinates. [default: ``(0, 0, -1)``]
+        :arg aperture_rad: angular aperture of the electron beam 
+            [default: ``0.0``]
+        """
         self.energy_eV = energy_eV
         self.particle = particle
         self.origin_m = origin_m
@@ -84,7 +100,7 @@ class PencilBeam(_Beam):
     @property
     def direction_polar_rad(self):
         """
-        Angle of the beam with respect to the positive z-axis.
+        Angle of the beam with respect to the positive z-axis. (read-only)
         """
         norm = np.linalg.norm(self.direction)
         return math.acos(self.direction[2] / norm);
@@ -92,7 +108,7 @@ class PencilBeam(_Beam):
     @property
     def direction_azimuth_rad(self):
         """
-        Angle of the beam with respect to the positive x-axis in the x-y plane.
+        Angle of the beam with respect to the positive x-axis in the x-y plane.  (read-only)
         """
         return math.atan2(self.direction[1], self.direction[0]);
 
@@ -109,10 +125,30 @@ _diameter_validator = \
 class GaussianBeam(PencilBeam):
 
     diameter_m = Parameter(_diameter_validator,
-                           "Diameter of this electron beam (in meters)")
+                           "Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
 
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
+        """
+        Creates a new Gaussian beam.
+        A Gaussian beam is a two dimensional beam where the particles are
+        distributed following a 2D-Gaussian distribution.
+        
+        :arg energy_eV: initial energy of the particle(s)
+        :arg diameter_m: diameter of the beam.
+            The diameter corresponds to the full width at half maximum (FWHM) of
+            a two dimensional Gaussian distribution.
+        :arg particle: type of particles (see :mod:`particle`). [default: ``ELECTRON``]
+        :type particle: :class:`_Particle`: 
+        :arg origin_m: initial location of the particle(s). 
+            Location saved as a tuple of length 3 for the x, y and z 
+            spatial coordinates. [default: ``(0, 0, 1)``]
+        :arg direction: direction of the particle(s).
+            Direction is represented by a tuple of length 3 for the x, y and 
+            z coordinates. [default: ``(0, 0, -1)``]
+        :arg aperture_rad: angular aperture of the electron beam 
+            [default: ``0.0``]
+        """
         PencilBeam.__init__(self, energy_eV, particle, origin_m, direction, aperture_rad)
 
         self.diameter_m = diameter_m

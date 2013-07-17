@@ -55,9 +55,9 @@ class _Particle(object):
     def charge(self):
         return self._charge
 
-ELECTRON = _Particle('electron', 1, -1)
-PHOTON = _Particle('photon', 2, 0)
-POSITRON = _Particle('positron', 3, +1)
+ELECTRON = _Particle('electron', 1, -1) #: Electron particle
+PHOTON = _Particle('photon', 2, 0) #: Photon particle
+POSITRON = _Particle('positron', 3, +1) #: Positron particle
 
 PARTICLES = frozenset([ELECTRON, PHOTON, POSITRON])
 
