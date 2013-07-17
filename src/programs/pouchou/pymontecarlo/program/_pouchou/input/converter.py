@@ -45,10 +45,10 @@ class Converter(_Converter):
                  PhotonIntensityDetector,
                  TimeDetector]
     LIMITS = []
-    MODELS = {MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991,
-                                                 MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11_dtsa,
-                                                 MASS_ABSORPTION_COEFFICIENT.henke1993]}
-    DEFAULT_MODELS = {MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.henke1993}
+    MODELS = {MASS_ABSORPTION_COEFFICIENT: [MASS_ABSORPTION_COEFFICIENT.pouchou_pichoir1991,
+                                            MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11_dtsa,
+                                            MASS_ABSORPTION_COEFFICIENT.henke1993]}
+    DEFAULT_MODELS = {MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.henke1993}
 
 
     def __init__(self):

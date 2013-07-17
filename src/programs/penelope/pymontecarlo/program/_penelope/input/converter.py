@@ -27,7 +27,7 @@ from pymontecarlo.input.converter import \
     Converter as _Converter, ConversionException
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.geometry import \
-    Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere, Cuboids2D
+    Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere #, Cuboids2D
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, INELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION,
      BREMSSTRAHLUNG_EMISSION, PHOTON_SCATTERING_CROSS_SECTION,
@@ -39,19 +39,19 @@ from pymontecarlo.program._penelope.input.body import Body, Layer
 # Globals and constants variables.
 
 class Converter(_Converter):
-    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere, Cuboids2D]
-    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.elsepa2005],
-              INELASTIC_CROSS_SECTION.type: [INELASTIC_CROSS_SECTION.sternheimer_liljequist1952],
-              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.bote_salvat2008],
-              BREMSSTRAHLUNG_EMISSION.type: [BREMSSTRAHLUNG_EMISSION.seltzer_berger1985],
-              PHOTON_SCATTERING_CROSS_SECTION.type: [PHOTON_SCATTERING_CROSS_SECTION.brusa1996],
-              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.llnl1989]}
-    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.elsepa2005,
-                      INELASTIC_CROSS_SECTION.type: INELASTIC_CROSS_SECTION.sternheimer_liljequist1952,
-                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.bote_salvat2008,
-                      BREMSSTRAHLUNG_EMISSION.type: BREMSSTRAHLUNG_EMISSION.seltzer_berger1985,
-                      PHOTON_SCATTERING_CROSS_SECTION.type: PHOTON_SCATTERING_CROSS_SECTION.brusa1996,
-                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.llnl1989}
+    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere] #, Cuboids2D]
+    MODELS = {ELASTIC_CROSS_SECTION: [ELASTIC_CROSS_SECTION.elsepa2005],
+              INELASTIC_CROSS_SECTION: [INELASTIC_CROSS_SECTION.sternheimer_liljequist1952],
+              IONIZATION_CROSS_SECTION: [IONIZATION_CROSS_SECTION.bote_salvat2008],
+              BREMSSTRAHLUNG_EMISSION: [BREMSSTRAHLUNG_EMISSION.seltzer_berger1985],
+              PHOTON_SCATTERING_CROSS_SECTION: [PHOTON_SCATTERING_CROSS_SECTION.brusa1996],
+              MASS_ABSORPTION_COEFFICIENT: [MASS_ABSORPTION_COEFFICIENT.llnl1989]}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION: ELASTIC_CROSS_SECTION.elsepa2005,
+                      INELASTIC_CROSS_SECTION: INELASTIC_CROSS_SECTION.sternheimer_liljequist1952,
+                      IONIZATION_CROSS_SECTION: IONIZATION_CROSS_SECTION.bote_salvat2008,
+                      BREMSSTRAHLUNG_EMISSION: BREMSSTRAHLUNG_EMISSION.seltzer_berger1985,
+                      PHOTON_SCATTERING_CROSS_SECTION: PHOTON_SCATTERING_CROSS_SECTION.brusa1996,
+                      MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.llnl1989}
 
 
     def __init__(self, elastic_scattering=(0.0, 0.0),
@@ -112,10 +112,10 @@ class Converter(_Converter):
             geometry._props['body'] = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
-        elif isinstance(geometry, Cuboids2D):
-            for position, body in geometry._bodies.iteritems():
-                geometry._bodies[position] = \
-                    self._create_penelope_body(body, materials_lookup)
+#        elif isinstance(geometry, Cuboids2D):
+#            for position, body in geometry._bodies.iteritems():
+#                geometry._bodies[position] = \
+#                    self._create_penelope_body(body, materials_lookup)
 
         else:
             raise ConversionException, "Cannot convert geometry"

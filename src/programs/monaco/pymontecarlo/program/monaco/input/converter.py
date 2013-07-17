@@ -44,23 +44,23 @@ class Converter(_Converter):
     GEOMETRIES = [Substrate]
     DETECTORS = [PhotonIntensityDetector, PhotonDepthDetector]
     LIMITS = [ShowersLimit]
-    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990],
-              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.gryzinsky,
-                                              IONIZATION_CROSS_SECTION.gryzinsky_bethe,
-                                              IONIZATION_CROSS_SECTION.worthington_tomlin1956,
-                                              IONIZATION_CROSS_SECTION.hutchins1974],
-              IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.springer1967,
-                                          IONIZATION_POTENTIAL.duncumb_decasa1969,
-                                          IONIZATION_POTENTIAL.sternheimer1964,
-                                          IONIZATION_POTENTIAL.gryzinski],
-              ENERGY_LOSS.type: [ENERGY_LOSS.bethe1930mod],
-              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989,
-                                                 MASS_ABSORPTION_COEFFICIENT.henke1982]}
-    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.mott_czyzewski1990,
-                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.gryzinsky_bethe,
-                      IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.springer1967,
-                      ENERGY_LOSS.type: ENERGY_LOSS.bethe1930mod,
-                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989}
+    MODELS = {ELASTIC_CROSS_SECTION: [ELASTIC_CROSS_SECTION.mott_czyzewski1990],
+              IONIZATION_CROSS_SECTION: [IONIZATION_CROSS_SECTION.gryzinsky,
+                                         IONIZATION_CROSS_SECTION.gryzinsky_bethe,
+                                         IONIZATION_CROSS_SECTION.worthington_tomlin1956,
+                                         IONIZATION_CROSS_SECTION.hutchins1974],
+              IONIZATION_POTENTIAL: [IONIZATION_POTENTIAL.springer1967,
+                                     IONIZATION_POTENTIAL.duncumb_decasa1969,
+                                     IONIZATION_POTENTIAL.sternheimer1964,
+                                     IONIZATION_POTENTIAL.gryzinski],
+              ENERGY_LOSS: [ENERGY_LOSS.bethe1930mod],
+              MASS_ABSORPTION_COEFFICIENT: [MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989,
+                                            MASS_ABSORPTION_COEFFICIENT.henke1982]}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION: ELASTIC_CROSS_SECTION.mott_czyzewski1990,
+                      IONIZATION_CROSS_SECTION: IONIZATION_CROSS_SECTION.gryzinsky_bethe,
+                      IONIZATION_POTENTIAL: IONIZATION_POTENTIAL.springer1967,
+                      ENERGY_LOSS: ENERGY_LOSS.bethe1930mod,
+                      MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989}
 
     def _convert_beam(self, options):
         _Converter._convert_beam(self, options)

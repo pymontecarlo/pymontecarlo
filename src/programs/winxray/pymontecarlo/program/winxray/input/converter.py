@@ -61,31 +61,31 @@ class Converter(_Converter):
                  TimeDetector,
                  ShowersStatisticsDetector]
     LIMITS = [ShowersLimit]
-    MODELS = {ELASTIC_CROSS_SECTION.type: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
+    MODELS = {ELASTIC_CROSS_SECTION: [ELASTIC_CROSS_SECTION.mott_czyzewski1990,
                                            ELASTIC_CROSS_SECTION.mott_czyzewski1990_linear,
                                            ELASTIC_CROSS_SECTION.mott_czyzewski1990_powerlaw,
                                            ELASTIC_CROSS_SECTION.mott_czyzewski1990_cubicspline,
                                            ELASTIC_CROSS_SECTION.mott_demers,
                                            ELASTIC_CROSS_SECTION.rutherford,
                                            ELASTIC_CROSS_SECTION.rutherford_relativistic],
-              IONIZATION_CROSS_SECTION.type: [IONIZATION_CROSS_SECTION.casnati1982],
-              IONIZATION_POTENTIAL.type: [IONIZATION_POTENTIAL.joy_luo1989],
-              RANDOM_NUMBER_GENERATOR.type: [RANDOM_NUMBER_GENERATOR.press1966_rand1,
+              IONIZATION_CROSS_SECTION: [IONIZATION_CROSS_SECTION.casnati1982],
+              IONIZATION_POTENTIAL: [IONIZATION_POTENTIAL.joy_luo1989],
+              RANDOM_NUMBER_GENERATOR: [RANDOM_NUMBER_GENERATOR.press1966_rand1,
                                              RANDOM_NUMBER_GENERATOR.press1966_rand2,
                                              RANDOM_NUMBER_GENERATOR.press1966_rand3,
                                              RANDOM_NUMBER_GENERATOR.press1966_rand4],
-              DIRECTION_COSINE.type: [DIRECTION_COSINE.demers2000],
-              ENERGY_LOSS.type: [ENERGY_LOSS.joy_luo1989],
-              MASS_ABSORPTION_COEFFICIENT.type: [MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11,
+              DIRECTION_COSINE: [DIRECTION_COSINE.demers2000],
+              ENERGY_LOSS: [ENERGY_LOSS.joy_luo1989],
+              MASS_ABSORPTION_COEFFICIENT: [MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11,
                                                  MASS_ABSORPTION_COEFFICIENT.henke1993,
                                                  MASS_ABSORPTION_COEFFICIENT.thinh_leroux1979]}
-    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION.type: ELASTIC_CROSS_SECTION.mott_czyzewski1990,
-                      IONIZATION_CROSS_SECTION.type: IONIZATION_CROSS_SECTION.casnati1982,
-                      IONIZATION_POTENTIAL.type: IONIZATION_POTENTIAL.joy_luo1989,
-                      RANDOM_NUMBER_GENERATOR.type: RANDOM_NUMBER_GENERATOR.press1966_rand3,
-                      DIRECTION_COSINE.type: DIRECTION_COSINE.demers2000,
-                      ENERGY_LOSS.type: ENERGY_LOSS.joy_luo1989,
-                      MASS_ABSORPTION_COEFFICIENT.type: MASS_ABSORPTION_COEFFICIENT.henke1993}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION: ELASTIC_CROSS_SECTION.mott_czyzewski1990,
+                      IONIZATION_CROSS_SECTION: IONIZATION_CROSS_SECTION.casnati1982,
+                      IONIZATION_POTENTIAL: IONIZATION_POTENTIAL.joy_luo1989,
+                      RANDOM_NUMBER_GENERATOR: RANDOM_NUMBER_GENERATOR.press1966_rand3,
+                      DIRECTION_COSINE: DIRECTION_COSINE.demers2000,
+                      ENERGY_LOSS: ENERGY_LOSS.joy_luo1989,
+                      MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.henke1993}
 
     def _convert_beam(self, options):
         try:
