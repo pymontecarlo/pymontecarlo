@@ -53,6 +53,12 @@ def _call_exp_setup(*args):
     """
     _call_setup(os.path.join('src', 'exp', 'setup.py'), *args)
 
+def _call_sphinxext_setup(*args):
+    """
+    Calls setup.py of Sphinx's extensions.
+    """
+    _call_setup(os.path.join('src', 'sphinxext', 'setup.py'), *args)
+
 def _call_program_setups(*args):
     """
     Calls setup.py of all programs.
@@ -94,6 +100,7 @@ def _call_all_setups(*args):
     """
     _call_dependency_setups(*args)
     _call_exp_setup(*args)
+    _call_sphinxext_setup(*args)
     _call_core_setup(*args)
     _call_program_setups(*args)
 
@@ -133,9 +140,11 @@ def develop(options):
     if not uninstall:
         _call_core_setup('develop', *args)
         _call_exp_setup('develop', *args)
+        _call_sphinxext_setup('develop', *args)
         _call_program_setups('develop', *args)
     else:
         _call_program_setups('develop', *args)
+        _call_sphinxext_setup('develop', *args)
         _call_exp_setup('develop', *args)
         _call_core_setup('develop', *args)
 

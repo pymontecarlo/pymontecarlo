@@ -13,6 +13,7 @@
 <path>/pymontecarlo/src/programs/monaco</path>
 <path>/pymontecarlo/src/core</path>
 <path>/pymontecarlo/src/exp</path>
+<path>/pymontecarlo/src/sphinxext</path>
 </pydev_pathproperty>
 
 
