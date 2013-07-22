@@ -55,7 +55,7 @@ class TestOptions(TestCase):
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(1, len(self.ops.models))
-        models = list(self.ops.models.itertype(ELASTIC_CROSS_SECTION))
+        models = list(self.ops.models.iterclass(ELASTIC_CROSS_SECTION))
         self.assertEqual(1, len(models))
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 
@@ -132,7 +132,7 @@ class TestOptions(TestCase):
     def testmodels(self):
         self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
         self.assertEqual(2, len(self.ops.models))
-        models = list(self.ops.models.itertype(ELASTIC_CROSS_SECTION))
+        models = list(self.ops.models.iterclass(ELASTIC_CROSS_SECTION))
         self.assertEqual(2, len(models))
 
     def testfrom_xml(self):
@@ -157,7 +157,7 @@ class TestOptions(TestCase):
         self.assertEqual(5678, limits[0].showers)
 #
         self.assertEqual(1, len(ops.models))
-        models = list(ops.models.itertype(ELASTIC_CROSS_SECTION))
+        models = list(ops.models.iterclass(ELASTIC_CROSS_SECTION))
         self.assertEqual(1, len(models))
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 

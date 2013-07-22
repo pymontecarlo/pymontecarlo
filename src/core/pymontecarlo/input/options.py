@@ -65,7 +65,7 @@ class _Limits(ParameterizedMutableSet):
 
 class _Models(ParameterizedMutableSet):
     
-    def itertype(self, type_):
+    def iterclass(self, type_):
         return (model for model in self if model.type == type_)
 
 _name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
