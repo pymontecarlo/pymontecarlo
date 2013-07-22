@@ -100,7 +100,7 @@ class Converter(object):
                 warnings.warn(message, ConversionWarning)
 
     def _convert_limits(self, options):
-        for limit in list(options.limits):
+        for limit in options.limits:
             if limit.__class__ not in self.LIMITS:
                 options.limits.discard(limit)
 
@@ -110,10 +110,10 @@ class Converter(object):
 
     def _convert_models(self, options):
         for model_type, default_model in self.DEFAULT_MODELS.iteritems():
-            model = options.models.find(model_type)
+            models = list(options.models.iterclass(model_type))
 
             # Add default model if model type is missing
-            if model is None:
+            if not models:
                 options.models.add(default_model)
 
                 message = "Set default model (%s) for model type '%s'" % \
@@ -122,20 +122,21 @@ class Converter(object):
 
             # Check if model is allowable
             else:
-                if model not in self.MODELS[model_type]:
-                    options.models.discard(model) # not required
-                    options.models.add(default_model)
+                for model in models:
+                    if model not in self.MODELS[model_type]:
+                        options.models.discard(model) # not required
+                        options.models.add(default_model)
 
-                    message = "Model (%s) is not allowable. It is replaced by the default model (%s)." % \
-                        (model, default_model)
-                    warnings.warn(message, ConversionWarning)
+                        message = "Model (%s) is not allowable. It is replaced by the default model (%s)." % \
+                            (model, default_model)
+                        warnings.warn(message, ConversionWarning)
 
         # Remove extra model types
-        for model_type, model in options.models.items():
-            if model_type not in self.DEFAULT_MODELS:
+        for model in options.models:
+            if model.type not in self.DEFAULT_MODELS:
                 options.models.discard(model)
 
                 message = "Unknown model type (%s) for this converter. Model (%s) is removed." % \
-                    (model_type, model)
+                    (model.type, model)
                 warnings.warn(message, ConversionWarning)
 
