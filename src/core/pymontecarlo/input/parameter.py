@@ -299,7 +299,7 @@ class ParameterizedMutableSet(MutableSet):
         return len(self.__parameters__)
 
     def __iter__(self):
-        for parameter in self.__parameters__.itervalues():
+        for parameter in self.__parameters__.values():
             yield parameter.__get__(self)
 
     def __contains__(self, item):
@@ -324,7 +324,8 @@ class ParameterizedMutableSet(MutableSet):
         key = self._get_key(item)
         if key not in self.__parameters__:
             raise KeyError, key
-        return self.__parameters__[key].__get__(self)
+        del self.__parameters__[key]
+        del self.__dict__[key]
 
 class ParameterizedMutableSequence(MutableSequence):
 
