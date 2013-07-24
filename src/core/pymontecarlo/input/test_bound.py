@@ -42,6 +42,8 @@ class Testbound(unittest.TestCase):
         self.assertEqual(6, self.b.high)
         self.assertEqual(6, self.b.upper)
 
+        self.assertRaises(AttributeError, setattr, self.b, 'lower', 0)
+
     def testfrom_xml(self):
         element = mapper.to_xml(self.a)
         a = mapper.from_xml(element)
