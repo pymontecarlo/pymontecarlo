@@ -40,7 +40,6 @@ __all__ = ['BackscatteredElectronAzimuthalAngularDetector',
 
 # Standard library modules.
 import math
-from collections import namedtuple
 
 # Third party modules.
 
@@ -48,10 +47,9 @@ from collections import namedtuple
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, AngleParameter, UnitParameter,
      SimpleValidator, CastValidator)
-from pymontecarlo.input.xmlmapper import mapper, Attribute, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
+from pymontecarlo.input.xmlmapper import mapper, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
+from pymontecarlo.input.bound import bound
 from pymontecarlo.util.human import camelcase_to_words
-from pymontecarlo.util.mathutil import _vector
-
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -75,23 +73,6 @@ def equivalent_opening(det1, det2, places=6):
         return False
 
     return True
-
-class limit(_vector, namedtuple('limits', ['lower', 'upper'])):
-
-    def __new__(cls, lower, upper):
-        return cls.__bases__[1].__new__(cls, min(lower, upper), max(lower, upper))
-
-    @property
-    def low(self):
-        return self.lower
-
-    @property
-    def high(self):
-        return self.upper
-
-mapper.register(limit, '{http://pymontecarlo.sf.net}limit',
-                Attribute('lower', PythonType(float)),
-                Attribute('upper', PythonType(float)))
 
 class _Detector(object):
 
@@ -117,11 +98,11 @@ _azimuth_validator = \
 
 class _DelimitedDetector(_Detector):
     
-    elevation = AngleParameter([CastValidator(limit),
+    elevation = AngleParameter([CastValidator(bound),
                                 _equality_validator,
                                 _elevation_validator],
                                "Elevation angle from the x-y plane")
-    azimuth = AngleParameter([CastValidator(limit),
+    azimuth = AngleParameter([CastValidator(bound),
                               _equality_validator,
                               _azimuth_validator],
                                "Azimuth angle from the positive x-axis")
@@ -190,8 +171,8 @@ class _DelimitedDetector(_Detector):
         return math.degrees(self.takeoffangle_rad)
 
 mapper.register(_DelimitedDetector, '{http://pymontecarlo.sf.net}_delimitedDetector',
-                ParameterizedElement('elevation_rad', UserType(limit), 'elevation'),
-                ParameterizedElement('azimuth_rad', UserType(limit), 'azimuth'))
+                ParameterizedElement('elevation_rad', UserType(bound), 'elevation'),
+                ParameterizedElement('azimuth_rad', UserType(bound), 'azimuth'))
 
 _bins_validator = \
     SimpleValidator(lambda x: x >= 1,
@@ -259,11 +240,11 @@ mapper.register(_ChannelsDetector, '{http://pymontecarlo.sf.net}_channelsDetecto
 
 class _SpatialDetector(_Detector):
 
-    xlimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in x")
+    xlimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in x")
     xbins = Parameter(_bins_validator, "Number of bins in x")
-    ylimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in y")
+    ylimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in y")
     ybins = Parameter(_bins_validator, "Number of bins in y")
-    zlimits = UnitParameter('m', validators=[CastValidator(limit)], doc="Limits in z")
+    zlimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in z")
     zbins = Parameter(_bins_validator, "Number of bins in z")
 
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
@@ -292,11 +273,11 @@ class _SpatialDetector(_Detector):
              self.zlimits_m[0] * 1e9, self.zlimits_m[1] * 1e9, self.zbins)
 
 mapper.register(_SpatialDetector, '{http://pymontecarlo.sf.net}_spatialDetector',
-                ParameterizedElement('xlimits_m', UserType(limit), 'xlimits'),
+                ParameterizedElement('xlimits_m', UserType(bound), 'xlimits'),
                 ParameterizedAttribute('xbins', PythonType(int)),
-                ParameterizedElement('ylimits_m', UserType(limit), 'ylimits'),
+                ParameterizedElement('ylimits_m', UserType(bound), 'ylimits'),
                 ParameterizedAttribute('ybins', PythonType(int)),
-                ParameterizedElement('zlimits_m', UserType(limit), 'zlimits'),
+                ParameterizedElement('zlimits_m', UserType(bound), 'zlimits'),
                 ParameterizedAttribute('zbins', PythonType(int)))
 
 _energy_limit_validator = \
@@ -306,7 +287,7 @@ _energy_limit_validator = \
 class _EnergyDetector(_ChannelsDetector):
 
     limits = UnitParameter('eV',
-                           [CastValidator(limit), _energy_limit_validator],
+                           [CastValidator(bound), _energy_limit_validator],
                            "Energy limits (in eV)")
 
     def __init__(self, limits_eV, channels):
@@ -323,7 +304,7 @@ class _EnergyDetector(_ChannelsDetector):
              self.limits_eV[0], self.limits_eV[1], self.channels)
 
 mapper.register(_EnergyDetector, '{http://pymontecarlo.sf.net}_energyDetector',
-                ParameterizedElement('limits_eV', UserType(limit), 'limits'))
+                ParameterizedElement('limits_eV', UserType(bound), 'limits'))
 
 class _AngularDetector(_ChannelsDetector):
 
@@ -341,11 +322,11 @@ class _AngularDetector(_ChannelsDetector):
              self.limits_deg[0], self.limits_deg[1], self.channels)
 
 mapper.register(_AngularDetector, '{http://pymontecarlo.sf.net}_ngularDetector',
-                ParameterizedElement('limits_rad', UserType(limit), 'limits'))
+                ParameterizedElement('limits_rad', UserType(bound), 'limits'))
 
 class _PolarAngularDetector(_AngularDetector):
 
-    limits = AngleParameter([CastValidator(limit), _elevation_validator],
+    limits = AngleParameter([CastValidator(bound), _elevation_validator],
                             "Angular limits (in radians)")
 
     def __init__(self, channels, limits_rad=(-HALFPI, HALFPI)):
@@ -355,7 +336,7 @@ mapper.register(_PolarAngularDetector, '{http://pymontecarlo.sf.net}_polarAngula
 
 class _AzimuthalAngularDetector(_AngularDetector):
 
-    limits = AngleParameter([CastValidator(limit), _azimuth_validator],
+    limits = AngleParameter([CastValidator(bound), _azimuth_validator],
                             "Angular limits (in radians)")
 
     def __init__(self, channels, limits_rad=(0, TWOPI)):

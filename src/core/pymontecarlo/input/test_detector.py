@@ -19,7 +19,7 @@ from math import radians
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.detector import \
-    (limit, _DelimitedDetector, _ChannelsDetector,
+    (_DelimitedDetector, _ChannelsDetector,
      _SpatialDetector, _EnergyDetector,
      _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
@@ -29,28 +29,6 @@ from pymontecarlo.input.detector import \
 from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
-
-class Testlimit(TestCase):
-
-    def setUp(self):
-        TestCase.setUp(self)
-
-        self.a = limit(-5, 5)
-        self.b = limit(6, -6)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertEqual(-5, self.a.low)
-        self.assertEqual(-5, self.a.lower)
-        self.assertEqual(5, self.a.high)
-        self.assertEqual(5, self.a.upper)
-
-        self.assertEqual(-6, self.b.low)
-        self.assertEqual(-6, self.b.lower)
-        self.assertEqual(6, self.b.high)
-        self.assertEqual(6, self.b.upper)
 
 class Test_DelimitedDetector(TestCase):
 
