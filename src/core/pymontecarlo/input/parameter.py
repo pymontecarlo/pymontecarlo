@@ -252,7 +252,7 @@ class FrozenParameter(Parameter):
         return obj.__dict__[self.name]
 
     def __set__(self, obj, values):
-        raise AttributeError, "Frozen parameter"
+        raise AttributeError, "Frozen parameter (%s)" % self._name
 
 class ParameterAlias(object):
 
