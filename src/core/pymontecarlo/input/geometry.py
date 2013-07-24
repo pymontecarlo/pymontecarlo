@@ -40,7 +40,9 @@ from pymontecarlo.input.parameter import \
      FrozenParameter, ParameterAlias, SimpleValidator, ParameterizedMutableSequence)
 from pymontecarlo.input.body import Body, Layer
 from pymontecarlo.input.material import VACUUM
-from pymontecarlo.input.xmlmapper import mapper, ParameterizedElement, ParameterizedElementSequence, ParameterizedAttribute, PythonType, UserType, _XMLItem
+from pymontecarlo.input.xmlmapper import \
+    (mapper, ParameterizedElement, ParameterizedElementSequence,
+     ParameterizedAttribute, PythonType, UserType, _XMLItem)
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -252,7 +254,7 @@ class _Geometry(object):
         """
         raise NotImplementedError
 
-mapper.register(_Geometry, 'geometry',
+mapper.register(_Geometry, '{http://pymontecarlo.sf.net}_geometry',
                 ParameterizedAttribute('tilt_rad', PythonType(float), 'tilt'),
                 ParameterizedAttribute('rotation_rad', PythonType(float), 'rotation'))
 
