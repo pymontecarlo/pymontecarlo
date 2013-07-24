@@ -23,15 +23,30 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.option import Option
-from pymontecarlo.input.particle import PARTICLES
-from pymontecarlo.input.collision import COLLISIONS
-
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.particle import PARTICLES, ParticleType
+from pymontecarlo.input.collision import COLLISIONS, CollisionType
+from pymontecarlo.input.bound import bound
+from pymontecarlo.input.parameter import ParameterizedMetaClass, Parameter, EnumValidator, SimpleValidator, CastValidator
+from pymontecarlo.input.xmlmapper import mapper, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
 
 # Globals and constants variables.
 
-class InteractionForcing(Option):
+_forcer_validator = SimpleValidator(lambda forcer: forcer != 0.0)
+_weight_validator = SimpleValidator(lambda x: 0 <= x.low <= 1 and \
+                                              0 <= x.high <= 1.0)
+
+class InteractionForcing(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
+    particle = Parameter(EnumValidator(PARTICLES),
+                         "Type of particles (see :mod:`.particle`)")
+    collision = Parameter(EnumValidator(COLLISIONS),
+                         "Type of collisions (see :mod:`.collision`)")
+    forcer = Parameter(_forcer_validator, "Forcing factor")
+    weight = Parameter([CastValidator(bound), _weight_validator],
+                       "Weight window where interaction is applied. The low and upper limits must be between 0.0 and 1.0.")
+
     def __init__(self, particle, collision, forcer= -1, weight=(0.1, 1.0)):
         """
         Creates a new interaction forcing.
@@ -48,12 +63,15 @@ class InteractionForcing(Option):
             The weight is a :class:`tuple` of the low and high limits 
             (``default=(0.1, 1.0)``)
         """
-        Option.__init__(self)
-
         self.particle = particle
         self.collision = collision
         self.forcer = forcer
         self.weight = weight
+
+    def __repr__(self):
+        return '<%s(%s, %s, forcer=%i, weight=(%f, %f))>' % \
+            (self.__class__.__name__, str(self.particle), str(self.collision),
+             self.forcer, self.weight.low, self.weight.high)
 
     def __eq__(self, other):
         return self.particle is other.particle and \
@@ -65,85 +83,8 @@ class InteractionForcing(Option):
     def __hash__(self):
         return hash(('interactionforcing', self.particle, self.collision))
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        particles = list(PARTICLES)
-        particles = dict(zip(map(str, particles), particles))
-        particle = particles[element.get('particle')]
-
-        collisions = list(COLLISIONS)
-        collisions = dict(zip(map(str, collisions), collisions))
-        collision = collisions[element.get('collision')]
-
-        forcer = float(element.get('forcer'))
-        weight = (float(element.get('weightMin')), float(element.get('weightMax')))
-
-        return cls(particle, collision, forcer, weight)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('particle', str(self.particle))
-        element.set('collision', str(self.collision))
-        element.set('forcer', str(self.forcer))
-        element.set('weightMin', str(self.weight[0]))
-        element.set('weightMax', str(self.weight[1]))
-
-    @property
-    def particle(self):
-        """
-        Type of particle.
-        """
-        return self._props['particle']
-
-    @particle.setter
-    def particle(self, particle):
-        if particle not in PARTICLES:
-            raise ValueError, 'Particle (%i) must be %s' % (particle, PARTICLES)
-        self._props['particle'] = particle
-
-    @property
-    def collision(self):
-        """
-        Type of collision.
-        """
-        return self._props['collision']
-
-    @collision.setter
-    def collision(self, collision):
-        if collision not in COLLISIONS:
-            raise ValueError, "Incorrect collision type (%s)." % collision
-        self._props['collision'] = collision
-
-    @property
-    def forcer(self):
-        """
-        Forcing value.
-        If negative the forcing value is adjusted based on the interaction volume.
-        """
-        return self._props['forcer']
-
-    @forcer.setter
-    def forcer(self, forcer):
-        if forcer == 0.0:
-            raise ValueError, "Forcer (%s) cannot be equal to zero." % forcer
-        self._props['forcer'] = forcer
-
-    @property
-    def weight(self):
-        """
-        The weight window where interaction is applied.
-        The low and upper limits must be between 0.0 and 1.0.
-        """
-        return self._props['weight']
-
-    @weight.setter
-    def weight(self, weight):
-        low, high = weight
-
-        if low < 0 or low > 1:
-            raise ValueError, "Weight low limit (%s) must be between [0, 1]." % low
-        if high < 0 or high > 1:
-            raise ValueError, "Weight upper limit (%s) must be between [0, 1]." % high
-
-        self._props['weight'] = min(low, high), max(low, high)
-
-XMLIO.register('{http://pymontecarlo.sf.net/penelope}interactionForcing', InteractionForcing)
+mapper.register(InteractionForcing, '{http://pymontecarlo.sf.net/penelope}interactionForcing',
+                ParameterizedAttribute('particle', ParticleType()),
+                ParameterizedAttribute('collision', CollisionType()),
+                ParameterizedAttribute('forcer', PythonType(int)),
+                ParameterizedElement('weight', UserType(bound)))

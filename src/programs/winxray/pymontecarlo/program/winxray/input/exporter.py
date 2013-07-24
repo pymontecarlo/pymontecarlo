@@ -86,19 +86,19 @@ class Exporter(_Exporter):
 
         self._limit_exporters[ShowersLimit] = self._limit_showers
 
-        self._model_exporters[ELASTIC_CROSS_SECTION.type] = \
+        self._model_exporters[ELASTIC_CROSS_SECTION] = \
             self._model_elastic_cross_section
-        self._model_exporters[IONIZATION_CROSS_SECTION.type] = \
+        self._model_exporters[IONIZATION_CROSS_SECTION] = \
             self._model_ionization_cross_section
-        self._model_exporters[IONIZATION_POTENTIAL.type] = \
+        self._model_exporters[IONIZATION_POTENTIAL] = \
             self._model_ionization_potential
-        self._model_exporters[RANDOM_NUMBER_GENERATOR.type] = \
+        self._model_exporters[RANDOM_NUMBER_GENERATOR] = \
             self._model_random_number_generator
-        self._model_exporters[DIRECTION_COSINE.type] = \
+        self._model_exporters[DIRECTION_COSINE] = \
             self._model_direction_cosine
-        self._model_exporters[ENERGY_LOSS.type] = \
+        self._model_exporters[ENERGY_LOSS] = \
             self._model_energy_loss
-        self._model_exporters[MASS_ABSORPTION_COEFFICIENT.type] = \
+        self._model_exporters[MASS_ABSORPTION_COEFFICIENT] = \
             self._model_mass_absorption_coefficient
 
     def export(self, options):
@@ -148,7 +148,8 @@ class Exporter(_Exporter):
         _Exporter._export_detectors(self, options, wxrops)
 
         # Detector position
-        dets = options.detectors.findall(_DelimitedDetector).values()
+        dets = options.detectors.iterclass(_DelimitedDetector)
+        dets = map(itemgetter(1), dets)
 
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
@@ -186,6 +187,7 @@ class Exporter(_Exporter):
 
     def _geometry_substrate(self, options, geometry, wxrops):
         material = geometry.material
+#        material.calculate()
 
         composition = material.composition.items()
         zs = map(itemgetter(0), composition)

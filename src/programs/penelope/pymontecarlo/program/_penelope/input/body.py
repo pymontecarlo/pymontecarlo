@@ -25,74 +25,48 @@ import warnings
 
 # Local modules.
 from pymontecarlo.input.body import Body as _Body, Layer as _Layer
-from pymontecarlo.input.option import Option
+from pymontecarlo.input.parameter import \
+    UnitParameter, FrozenParameter, ParameterizedMutableSet, _Validator
+from pymontecarlo.input.xmlmapper import \
+    mapper, ParameterizedAttribute, ParameterizedElementSet, PythonType, UserType
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
-from pymontecarlo.util.xmlutil import XMLIO, Element
+
 
 # Globals and constants variables.
 
-class Body(_Body, Option):
+class _MaximumStepLengthValidator(_Validator):
+
+    def validate(self, value):
+        if value > 1e20:
+            warnings.warn('Maximum step length set to maximum value: 1e20')
+            value = 1e20
+        if value < 0:
+            raise ValueError, "Length (%s) must be greater than 0.0." % value
+        return value
+
+class Body(_Body):
+
+    maximum_step_length = UnitParameter('m', _MaximumStepLengthValidator(),
+                                        "Maximum length of an electron trajectory")
+    interaction_forcings = FrozenParameter(ParameterizedMutableSet,
+                                           "Interaction forcing(s)")
+
     def __init__(self, material, maximum_step_length_m=1e20):
-        Option.__init__(self)
         _Body.__init__(self, material)
 
-        self._props['interaction forcings'] = set()
         self.maximum_step_length_m = maximum_step_length_m
+        self.interaction_forcings.clear()
 
     def __repr__(self):
         return '<Body(material=%s, %i interaction forcing(s), dsmax=%s m)>' % \
             (str(self.material), len(self.interaction_forcings), self.maximum_step_length_m)
 
-    @classmethod
-    def __loadxml__(cls, element, material=None, *args, **kwargs):
-        body = _Body.__loadxml__(element, material, *args, **kwargs)
-        maximum_step_length = float(element.get('maximumStepLength'))
-
-        obj = cls(body.material, maximum_step_length)
-
-        children = list(element.find("interactionForcings"))
-        for child in children:
-            obj.interaction_forcings.add(InteractionForcing.from_xml(child))
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        _Body.__savexml__(self, element, *args, **kwargs)
-
-        child = Element("interactionForcings")
-        for intforce in self.interaction_forcings:
-            child.append(intforce.to_xml())
-        element.append(child)
-
-        element.set('maximumStepLength', str(self.maximum_step_length_m))
-
-    @property
-    def interaction_forcings(self):
-        """
-        Set of interaction forcings.
-        Use :meth:`add` to add an interaction forcing to this body.
-        """
-        return self._props['interaction forcings']
-
-    @property
-    def maximum_step_length_m(self):
-        """
-        Maximum length of an electron trajectory in this body (in meters).
-        """
-        return self._props['maximum step length']
-
-    @maximum_step_length_m.setter
-    def maximum_step_length_m(self, length):
-        if length > 1e20:
-            warnings.warn('Maximum step length set to maximum value: 1e20')
-            length = 1e20
-        if length < 0:
-            raise ValueError, "Length (%s) must be greater than 0.0." % length
-        self._props['maximum step length'] = length
-
-XMLIO.register('{http://pymontecarlo.sf.net/penelope}body', Body)
+mapper.register(Body, '{http://pymontecarlo.sf.net/penelope}body',
+                ParameterizedAttribute('maximum_step_length_m', PythonType(float), 'maximum_step_length'),
+                ParameterizedElementSet('interaction_forcings', UserType(InteractionForcing)))
 
 class Layer(Body, _Layer):
+
     def __init__(self, material, thickness, maximum_step_length_m=None):
         _Layer.__init__(self, material, thickness)
 
@@ -100,20 +74,4 @@ class Layer(Body, _Layer):
             maximum_step_length_m = thickness / 10.0
         Body.__init__(self, material, maximum_step_length_m)
 
-    @classmethod
-    def __loadxml__(cls, element, material=None, thickness=None, *args, **kwargs):
-        layer = _Layer.__loadxml__(element, material, thickness, *args, **kwargs)
-        body = Body.__loadxml__(element, material, *args, **kwargs)
-
-        layer = cls(layer.material, layer.thickness_m, body.maximum_step_length_m)
-
-        for intforce in body.interaction_forcings:
-            layer.interaction_forcings.add(intforce)
-
-        return layer
-
-    def __savexml__(self, element, *args, **kwargs):
-        Body.__savexml__(self, element, *args, **kwargs)
-        _Layer.__savexml__(self, element, *args, **kwargs)
-
-XMLIO.register('{http://pymontecarlo.sf.net/penelope}layer', Layer)
+mapper.register(Layer, '{http://pymontecarlo.sf.net/penelope}layer')

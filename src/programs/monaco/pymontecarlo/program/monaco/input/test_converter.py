@@ -60,7 +60,7 @@ class TestConverter(TestCase):
         self.assertEqual(1, len(ops.detectors))
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits.find(ShowersLimit)
+        limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(5, len(ops.models))

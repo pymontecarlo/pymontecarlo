@@ -27,7 +27,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere #, Cuboids2D
 from pymontecarlo.input.material import VACUUM
 
 from pymontecarlo.program._penelope.input.geometry import \
@@ -115,7 +115,7 @@ class Exporter(_Exporter):
         self._geometry_exporters[MultiLayers] = self._export_geometry_multilayers
         self._geometry_exporters[GrainBoundaries] = self._export_geometry_grainboundaries
         self._geometry_exporters[Sphere] = self._export_geometry_sphere
-        self._geometry_exporters[Cuboids2D] = self._export_geometry_cuboids2d
+#        self._geometry_exporters[Cuboids2D] = self._export_geometry_cuboids2d
 
         self._pendbase_dir = pendbase_dir
 
@@ -181,7 +181,8 @@ class Exporter(_Exporter):
         # Save geometry
         title = geometry.__class__.__name__.lower()
         pengeom = PenelopeGeometry(title)
-        pengeom._props.update(geometry._props) # tilt and rotation
+        pengeom.tilt_rad = geometry.tilt_rad
+        pengeom.rotation_rad = geometry.rotation_rad
 
         self._export_geometry(geometry, pengeom)
 
@@ -194,12 +195,14 @@ class Exporter(_Exporter):
         # Save materials
         matinfos = []
         for material in pengeom.get_materials():
+            if material is VACUUM: continue
             index = material._index
-            if index == 0: continue
+
+            material.calculate()
 
             filepath = os.path.join(outputdir, 'mat%i.mat' % index)
 
-            penmaterial.create(material.name, material.composition,
+            penmaterial.create(material.name, dict(material.composition),
                                material.density_kg_m3, filepath,
                                self._pendbase_dir)
 

@@ -19,14 +19,18 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from collections import namedtuple
 
 # Third party modules.
 import pyxray.element_properties as ep
 
 # Local modules.
 from pymontecarlo.input.material import Material as _Material
-from pymontecarlo.input.option import Option
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.parameter import \
+    Parameter, UnitParameter, SimpleValidator, CastValidator
+from pymontecarlo.input.xmlmapper import \
+    (mapper, Attribute, ParameterizedAttribute, ParameterizedElement, UserType,
+     PythonType)
 
 # Globals and constants variables.
 
@@ -68,13 +72,41 @@ def pure(z,
     name = ep.name(z)
     composition = {z: '?'}
 
-    return Material(name, composition, None,
-                    absorption_energy_electron_eV, absorption_energy_photon_eV,
-                    absorption_energy_positron_eV,
-                    elastic_scattering,
-                    cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
+    mat = Material(name, composition, None,
+                   absorption_energy_electron_eV, absorption_energy_photon_eV,
+                   absorption_energy_positron_eV,
+                   elastic_scattering,
+                   cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
+    mat.calculate()
 
-class Material(_Material, Option):
+    return mat
+
+elastic_scattering = namedtuple('elastic_scattering', ['c1', 'c2'])
+
+mapper.register(elastic_scattering,
+                '{http://pymontecarlo.sf.net/penelope}elastic_scattering',
+                Attribute('c1', PythonType(float)),
+                Attribute('c2', PythonType(float)))
+
+_elastic_scattering_validator = \
+    SimpleValidator(lambda es: 0.0 <= es.c1 <= 0.2 and 0.0 <= es.c2 <= 0.2)
+_cutoff_energy_validator = SimpleValidator(lambda e: e >= 0.0)
+
+class Material(_Material):
+
+    elastic_scattering = \
+        Parameter([CastValidator(elastic_scattering),
+                   _elastic_scattering_validator],
+                  "Elastic scattering coefficients (C1 and C2)")
+
+    cutoff_energy_inelastic = \
+        UnitParameter('eV', _cutoff_energy_validator,
+                      "Cutoff energy for inelastic collisions")
+
+    cutoff_energy_bremsstrahlung = \
+        UnitParameter('eV', _cutoff_energy_validator,
+                      "Cutoff energy for Bremsstrahlung emission")
+
     def __init__(self, name, composition, density_kg_m3=None,
                  absorption_energy_electron_eV=50.0,
                  absorption_energy_photon_eV=50.0,
@@ -128,7 +160,6 @@ class Material(_Material, Option):
         :arg cutoff_energy_bremsstrahlung_eV: cutoff energy for Bremsstrahlung
             emission (in eV).
         """
-        Option.__init__(self)
         _Material.__init__(self, name, composition, density_kg_m3,
                            absorption_energy_electron_eV,
                            absorption_energy_photon_eV,
@@ -146,76 +177,7 @@ class Material(_Material, Option):
              self.elastic_scattering,
              self.cutoff_energy_inelastic_eV, self.cutoff_energy_bremsstrahlung_eV)
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        material = _Material.__loadxml__(element, *args, **kwargs)
-
-        elastic_scattering = (float(element.get('c1')), float(element.get('c2')))
-        cutoff_energy_inelastic = float(element.get('wcc'))
-        cutoff_energy_bremsstrahlung = float(element.get('wcr'))
-
-        return cls(material.name, material.composition, material.density_kg_m3,
-                   material.absorption_energy_electron_eV, material.absorption_energy_photon_eV,
-                   material.absorption_energy_positron_eV,
-                   elastic_scattering,
-                   cutoff_energy_inelastic, cutoff_energy_bremsstrahlung)
-
-    def __savexml__(self, element, *args, **kwargs):
-        _Material.__savexml__(self, element, *args, **kwargs)
-
-        element.set('c1', str(self.elastic_scattering[0]))
-        element.set('c2', str(self.elastic_scattering[1]))
-        element.set('wcc', str(self.cutoff_energy_inelastic_eV))
-        element.set('wcr', str(self.cutoff_energy_bremsstrahlung_eV))
-
-    @property
-    def elastic_scattering(self):
-        """
-        Elastic scattering coefficients.
-        :rtype: :class:`tuple` 
-        """
-        return self._props['elastic scattering']
-
-    @elastic_scattering.setter
-    def elastic_scattering(self, coeffs):
-        try:
-            c1, c2 = coeffs
-        except TypeError:
-            c1 = c2 = float(coeffs)
-
-        if c1 < 0.0 or c1 > 0.2:
-            raise ValueError, "C1 elastic scattering coefficient (%s) must be between [0.0, 0.2]" % c1
-        if c2 < 0.0 or c2 > 0.2:
-            raise ValueError, "C2 elastic scattering coefficient (%s) must be between [0.0, 0.2]" % c2
-
-        self._props['elastic scattering'] = (c1, c2)
-
-    @property
-    def cutoff_energy_inelastic_eV(self):
-        """
-        Cutoff energy for inelastic collisions (in eV).
-        """
-        return self._props['cutoff energy inelastic']
-
-    @cutoff_energy_inelastic_eV.setter
-    def cutoff_energy_inelastic_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Cutoff energy inelastic (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['cutoff energy inelastic'] = energy
-
-    @property
-    def cutoff_energy_bremsstrahlung_eV(self):
-        """
-        Cutoff energy for Bremsstrahlung emission (in eV).
-        """
-        return self._props['cutoff energy bremsstrahlung']
-
-    @cutoff_energy_bremsstrahlung_eV.setter
-    def cutoff_energy_bremsstrahlung_eV(self, energy):
-        if energy < 0.0:
-            raise ValueError, "Cutoff energy Bremsstrahlung (%s) must be greater or equal to 0.0" \
-                    % energy
-        self._props['cutoff energy bremsstrahlung'] = energy
-
-XMLIO.register('{http://pymontecarlo.sf.net/penelope}material', Material)
+mapper.register(Material, '{http://pymontecarlo.sf.net/penelope}material',
+                ParameterizedElement('elastic_scattering', UserType(elastic_scattering)),
+                ParameterizedAttribute('cutoff_energy_inelastic_eV', PythonType(float), 'wcc'),
+                ParameterizedAttribute('cutoff_energy_bremsstrahlung_eV', PythonType(float), 'wcr'))

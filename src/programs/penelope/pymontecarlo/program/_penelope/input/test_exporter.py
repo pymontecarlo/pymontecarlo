@@ -25,7 +25,7 @@ from pymontecarlo.settings import get_settings
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere, Cuboids2D
+    Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere #, Cuboids2D
 from pymontecarlo.input.limit import TimeLimit
 
 from pymontecarlo.program._penelope.input.converter import Converter
@@ -200,39 +200,39 @@ class TestPenelopeExporter(TestCase):
         matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
         self.assertTrue(os.path.exists(matfilepath))
 
-    @attr('slow')
-    def testexport_cuboids2d(self):
-        # Create
-        mat1 = Material('mat', {79: 0.5, 47: 0.5})
-
-        ops = Options()
-
-        ops.geometry = Cuboids2D(3, 3, 0.0001, 0.0002)
-        ops.geometry.material[-1, -1] = mat1
-        ops.geometry.material[-1, 0] = mat1
-        ops.geometry.material[-1, 1] = mat1
-        ops.geometry.material[0, -1] = mat1
-        ops.geometry.material[0, 0] = mat1
-        ops.geometry.material[0, 1] = mat1
-        ops.geometry.material[1, -1] = mat1
-        ops.geometry.material[1, 0] = mat1
-        ops.geometry.material[1, 1] = mat1
-
-        ops.limits.add(TimeLimit(100))
-
-        self.c._convert_geometry(ops)
-        self.e.export_geometry(ops.geometry, self.tmpdir)
-
-        # Test
-        geofilepath = os.path.join(self.tmpdir, 'cuboids2d.geo')
-        repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
-        nmat, nbody = pengeom.init(geofilepath, repfilepath)
-
-        self.assertEqual(1, nmat)
-        self.assertEqual(10, nbody)
-
-        matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
-        self.assertTrue(os.path.exists(matfilepath))
+#    @attr('slow')
+#    def testexport_cuboids2d(self):
+#        # Create
+#        mat1 = Material('mat', {79: 0.5, 47: 0.5})
+#
+#        ops = Options()
+#
+#        ops.geometry = Cuboids2D(3, 3, 0.0001, 0.0002)
+#        ops.geometry.material[-1, -1] = mat1
+#        ops.geometry.material[-1, 0] = mat1
+#        ops.geometry.material[-1, 1] = mat1
+#        ops.geometry.material[0, -1] = mat1
+#        ops.geometry.material[0, 0] = mat1
+#        ops.geometry.material[0, 1] = mat1
+#        ops.geometry.material[1, -1] = mat1
+#        ops.geometry.material[1, 0] = mat1
+#        ops.geometry.material[1, 1] = mat1
+#
+#        ops.limits.add(TimeLimit(100))
+#
+#        self.c._convert_geometry(ops)
+#        self.e.export_geometry(ops.geometry, self.tmpdir)
+#
+#        # Test
+#        geofilepath = os.path.join(self.tmpdir, 'cuboids2d.geo')
+#        repfilepath = os.path.join(self.tmpdir, 'geometry.rep')
+#        nmat, nbody = pengeom.init(geofilepath, repfilepath)
+#
+#        self.assertEqual(1, nmat)
+#        self.assertEqual(10, nbody)
+#
+#        matfilepath = os.path.join(self.tmpdir, 'mat1.mat')
+#        self.assertTrue(os.path.exists(matfilepath))
 
 
 if __name__ == '__main__': #pragma: no cover

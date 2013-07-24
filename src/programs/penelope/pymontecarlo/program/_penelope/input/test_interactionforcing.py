@@ -21,6 +21,7 @@ from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 from pymontecarlo.input.collision import \
     (HARD_BREMSSTRAHLUNG_EMISSION, INNERSHELL_IMPACT_IONISATION,
      INCOHERENT_COMPTON_SCATTERING, ANNIHILATION, DELTA)
+from pymontecarlo.input.xmlmapper import mapper
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 
 # Globals and constants variables.
@@ -136,8 +137,8 @@ class TestInteractionForcing(TestCase):
 #        self.assertEqual(cmp(if6, if7), -1) #if6 is less than if7
 
     def testfrom_xml(self):
-        element = self.if1.to_xml()
-        if1 = InteractionForcing.from_xml(element)
+        element = mapper.to_xml(self.if1)
+        if1 = mapper.from_xml(element)
 
         self.assertIs(ELECTRON, if1.particle)
         self.assertIs(HARD_BREMSSTRAHLUNG_EMISSION, if1.collision)
@@ -146,14 +147,16 @@ class TestInteractionForcing(TestCase):
         self.assertAlmostEqual(1.0, if1.weight[1], 6)
 
     def testto_xml(self):
-        element = self.if1.to_xml()
+        element = mapper.to_xml(self.if1)
 
         self.assertEqual('electron', element.get('particle'))
         self.assertEqual('hard bremsstrahlung emission',
                          element.get('collision'))
         self.assertAlmostEqual(-4.0, float(element.get('forcer')))
-        self.assertAlmostEqual(0.1, float(element.get('weightMin')))
-        self.assertAlmostEqual(1.0, float(element.get('weightMax')))
+
+        subelement = list(element.find('weight'))[0]
+        self.assertAlmostEqual(0.1, float(subelement.get('lower')))
+        self.assertAlmostEqual(1.0, float(subelement.get('upper')))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

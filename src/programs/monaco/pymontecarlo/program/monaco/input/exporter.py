@@ -95,7 +95,8 @@ class Exporter(_Exporter):
 
             # Number of electrons
             # DELPHI:   l:=4; Inc(s,l); BlockWrite(Sf,NE,l,w);    Inc(Sum,w);
-            showers = options.limits.find(ShowersLimit).showers
+            limit = list(options.limits.iterclass(ShowersLimit))[0]
+            showers = limit.showers
             fp.write(struct.pack('i', showers))
 
             # Cutoff energy

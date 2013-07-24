@@ -95,7 +95,7 @@ class Converter(_Converter):
     def _convert_detectors(self, options):
         _Converter._convert_detectors(self, options)
         
-        for key, det in options.detectors.findall(PhotonDepthDetector).iteritems():
+        for key, det in options.detectors.iterclass(PhotonDepthDetector):
             if det.channels != 128:
                 message = "Number of channels of PhiRhoZ detector (%s) is set to 128" % key
                 warnings.warn(message, ConversionWarning)
@@ -103,6 +103,6 @@ class Converter(_Converter):
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
 
-        limit = options.limits.find(ShowersLimit)
-        if limit is None:
+        limits = list(options.limits.iterclass(ShowersLimit))
+        if not limits:
             raise ConversionException, "A ShowersLimit must be defined."

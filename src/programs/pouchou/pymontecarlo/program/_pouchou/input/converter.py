@@ -79,12 +79,12 @@ class Converter(_Converter):
         _Converter._convert_detectors(self, options)
 
         # Assert that there is only one PhotonIntensityDetector
-        detectors = options.detectors.findall(PhotonIntensityDetector)
+        detectors = list(options.detectors.iterclass(PhotonIntensityDetector))
         if len(detectors) > 1:
             raise ConversionException, "Too many photon intensity detectors. Only one is accepted"
 
         # Assert that there is only one PhiRhoZDetector
-        detectors = options.detectors.findall(PhotonDepthDetector)
+        detectors = list(options.detectors.iterclass(PhotonDepthDetector))
         if len(detectors) > 1:
             raise ConversionException, "Too many phi-rho-z detectors. Only one is accepted"
 

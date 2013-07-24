@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import warnings
+from operator import itemgetter
 
 # Third party modules.
 
@@ -130,13 +131,15 @@ class Converter(_Converter):
 
         # There can be only one detector of each type
         for clasz in self.DETECTORS:
-            if len(options.detectors.findall(clasz)) > 1:
+            if len(list(options.detectors.iterclass(clasz))) > 1:
                 raise ConversionException, "There can only one '%s' detector" % clasz.__name__
 
         # Assert elevation and azimuth of delimited detectors are equal
-        detectors = options.detectors.findall(_DelimitedDetector).values()
+        detectors = list(options.detectors.iterclass(_DelimitedDetector))
         if not detectors:
             return
+
+        detectors = map(itemgetter(1), detectors)
 
         detector_class = detectors[0].__class__.__name__
         elevation_rad = detectors[0].elevation_rad
@@ -160,6 +163,6 @@ class Converter(_Converter):
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
 
-        limit = options.limits.find(ShowersLimit)
-        if limit is None:
+        limit = list(options.limits.iterclass(ShowersLimit))
+        if not limit:
             raise ConversionException, "A ShowersLimit must be defined."

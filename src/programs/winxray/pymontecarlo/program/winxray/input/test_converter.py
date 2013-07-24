@@ -25,8 +25,7 @@ from pymontecarlo.input.detector import \
     (BackscatteredElectronEnergyDetector, PhotonSpectrumDetector, PhotonDepthDetector,
      PhotonIntensityDetector, TransmittedElectronEnergyDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit
-from pymontecarlo.input.model import \
-    RANDOM_NUMBER_GENERATOR, ModelType, ModelCategory, Model
+from pymontecarlo.input.model import RANDOM_NUMBER_GENERATOR, ModelType
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -69,11 +68,11 @@ class TestConverter(TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits.find(ShowersLimit)
+        limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(7, len(ops.models))
-        model = ops.models.find(RANDOM_NUMBER_GENERATOR.type)
+        model = list(ops.models.iterclass(RANDOM_NUMBER_GENERATOR))[0]
         self.assertEqual(RANDOM_NUMBER_GENERATOR.press1966_rand1, model)
 
     def testconvert2(self):
@@ -106,7 +105,7 @@ class TestConverter(TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits.find(ShowersLimit)
+        limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(7, len(ops.models))
@@ -150,13 +149,12 @@ class TestConverter(TestCase):
 
     def testconvert6(self):
         NEW_MODEL_TYPE = ModelType('new')
-        NEW_MODEL_CATEGORY = ModelCategory(NEW_MODEL_TYPE)
-        NEW_MODEL_CATEGORY.test = Model('test')
+        NEW_MODEL_TYPE.test = ('test',)
 
         # Base options
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
-        ops.models.add(NEW_MODEL_CATEGORY.test)
+        ops.models.add(NEW_MODEL_TYPE.test)
         ops.limits.add(ShowersLimit(5678))
 
         with warnings.catch_warnings(record=True) as ws:

@@ -23,6 +23,7 @@ __license__ = ""
 import math
 from itertools import chain
 from operator import methodcaller, attrgetter
+from collections import namedtuple
 
 # Third party modules.
 from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
@@ -31,11 +32,16 @@ from pyparsing import (Word, ZeroOrMore, Optional, Suppress, alphanums,
 # Local modules.
 from pymontecarlo.input.geometry import _Geometry
 from pymontecarlo.input.material import VACUUM
-from pymontecarlo.input.option import Option
+from pymontecarlo.input.parameter import \
+    (ParameterizedMetaClass, Parameter, UnitParameter, AngleParameter,
+     FrozenParameter, SimpleValidator, CastValidator,
+     ParameterizedMutableMapping, ParameterizedMutableSet)
+from pymontecarlo.input.xmlmapper import \
+    (mapper, Attribute, ParameterizedElement, ParameterizedElementDict,
+     ParameterizedElementSet, ParameterizedAttribute, PythonType, UserType)
 
 from pymontecarlo.program._penelope.input.body import Body
 
-from pymontecarlo.util.xmlutil import objectxml, Element
 from pymontecarlo.util.sort import topological_sort
 
 # Globals and constants variables.
@@ -244,10 +250,22 @@ class _Keyword(object):
 
         return line
 
-class Rotation(Option):
+_rotation_validator = SimpleValidator(lambda x: 0.0 <= x <= 2 * math.pi)
+
+class Rotation(object):
+    
+    __metaclass__ = ParameterizedMetaClass
+    
     _KEYWORD_OMEGA = _Keyword('OMEGA=', ' DEG          (DEFAULT=0.0)')
     _KEYWORD_THETA = _Keyword('THETA=', ' DEG          (DEFAULT=0.0)')
     _KEYWORD_PHI = _Keyword('PHI=', ' DEG          (DEFAULT=0.0)')
+
+    omega = AngleParameter(_rotation_validator,
+                           "Rotation around the z-axis between 0 and 2pi.")
+    theta = AngleParameter(_rotation_validator,
+                           "Rotation around the y-axis between 0 and 2pi.")
+    phi = AngleParameter(_rotation_validator,
+                         "Rotation around the new z-axis between 0 and 2pi.")
 
     def __init__(self, omega_rad=0.0, theta_rad=0.0, phi_rad=0.0):
         """
@@ -257,8 +275,6 @@ class Rotation(Option):
         :arg theta_rad: rotation around the y-axis (rad)
         :arg phi_rad: rotation around the new z-axis (rad)
         """
-        Option.__init__(self)
-
         self.omega_rad = omega_rad
         self.theta_rad = theta_rad
         self.phi_rad = phi_rad
@@ -270,63 +286,6 @@ class Rotation(Option):
     def __str__(self):
         return '(omega=%s, theta=%s, phi=%s)' % \
                     (self.omega_rad, self.theta_rad, self.phi_rad)
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        omega_rad = float(element.get('omega'))
-        theta_rad = float(element.get('theta'))
-        phi_rad = float(element.get('phi'))
-
-        return cls(omega_rad, theta_rad, phi_rad)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('omega', str(self.omega_rad))
-        element.set('theta', str(self.theta_rad))
-        element.set('phi', str(self.phi_rad))
-
-    @property
-    def omega_rad(self):
-        """
-        Rotation around the z-axis (rad).
-        The value must be between 0 and 2pi.
-        """
-        return self._props['omega']
-
-    @omega_rad.setter
-    def omega_rad(self, angle):
-        if angle < 0 or angle > 2 * math.pi:
-            raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._props['omega'] = angle
-
-    @property
-    def theta_rad(self):
-        """
-        Rotation around the y-axis (rad).
-        The value must be between 0 and 2pi.
-        """
-        return self._props['theta']
-
-    @theta_rad.setter
-    def theta_rad(self, angle):
-        if angle < 0 or angle > 2 * math.pi:
-            raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._props['theta'] = angle
-
-    @property
-    def phi_rad(self):
-        """
-        Rotation around the new z-axis (rad).
-        The new z-axis refer to the axis after the omega and theta rotation were
-        applied on the original coordinate system.
-        The value must be between 0 and 2pi.
-        """
-        return self._props['phi']
-
-    @phi_rad.setter
-    def phi_rad(self, angle):
-        if angle < 0 or angle > 2 * math.pi:
-            raise ValueError, "Angle (%s) must be between [0,pi]." % angle
-        self._props['phi'] = angle
 
     def to_geo(self):
         """
@@ -345,10 +304,22 @@ class Rotation(Option):
 
         return lines
 
-class Shift(Option):
+mapper.register(Rotation, '{http://pymontecarlo.sf.net/penelope}rotation',
+                ParameterizedAttribute('omega_rad', PythonType(float), 'omega'),
+                ParameterizedAttribute('theta_rad', PythonType(float), 'theta'),
+                ParameterizedAttribute('phi_rad', PythonType(float), 'phi'))
+
+class Shift(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
     _KEYWORD_X = _Keyword('X-SHIFT=', '              (DEFAULT=0.0)')
     _KEYWORD_Y = _Keyword('Y-SHIFT=', '              (DEFAULT=0.0)')
     _KEYWORD_Z = _Keyword('Z-SHIFT=', '              (DEFAULT=0.0)')
+
+    x = UnitParameter('m', doc="translation along the x direction")
+    y = UnitParameter('m', doc="translation along the y direction")
+    z = UnitParameter('m', doc="translation along the z direction")
 
     def __init__(self, x_m=0.0, y_m=0.0, z_m=0.0):
         """
@@ -358,8 +329,6 @@ class Shift(Option):
         :arg y_m: translation along the y direction (m)
         :arg z_m: translation along the z direction (m)
         """
-        Option.__init__(self)
-
         self.x_m = x_m
         self.y_m = y_m
         self.z_m = z_m
@@ -369,52 +338,6 @@ class Shift(Option):
 
     def __str__(self):
         return "(x=%s, y=%s, z=%s)" % (self.x_m, self.y_m, self.z_m)
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        x_m = float(element.get('x'))
-        y_m = float(element.get('y'))
-        z_m = float(element.get('z'))
-
-        return cls(x_m, y_m, z_m)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('x', str(self.x_m))
-        element.set('y', str(self.y_m))
-        element.set('z', str(self.z_m))
-
-    @property
-    def x_m(self):
-        """
-        Translation along the x direction (m).
-        """
-        return self._props['x']
-
-    @x_m.setter
-    def x_m(self, shift):
-        self._props['x'] = shift
-
-    @property
-    def y_m(self):
-        """
-        Translation along the y direction (m).
-        """
-        return self._props['y']
-
-    @y_m.setter
-    def y_m(self, shift):
-        self._props['y'] = shift
-
-    @property
-    def z_m(self):
-        """
-        Translation along the z direction (m).
-        """
-        return self._props['z']
-
-    @z_m.setter
-    def z_m(self, shift):
-        self._props['z'] = shift
 
     def to_geo(self):
         """
@@ -433,10 +356,24 @@ class Shift(Option):
 
         return lines
 
-class Scale(Option):
+mapper.register(Shift, '{http://pymontecarlo.sf.net/penelope}shift',
+                ParameterizedAttribute('x_m', PythonType(float), 'x'),
+                ParameterizedAttribute('y_m', PythonType(float), 'y'),
+                ParameterizedAttribute('z_m', PythonType(float), 'z'))
+
+_scale_validator = SimpleValidator(lambda x: x != 0.0)
+
+class Scale(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
     _KEYWORD_X = _Keyword('X-SCALE=', '              (DEFAULT=1.0)')
     _KEYWORD_Y = _Keyword('Y-SCALE=', '              (DEFAULT=1.0)')
     _KEYWORD_Z = _Keyword('Z-SCALE=', '              (DEFAULT=1.0)')
+
+    x = Parameter(_scale_validator, "scaling along the x direction")
+    y = Parameter(_scale_validator, "scaling along the y direction")
+    z = Parameter(_scale_validator, "scaling along the z direction")
 
     def __init__(self, x=1.0, y=1.0, z=1.0):
         """
@@ -446,8 +383,6 @@ class Scale(Option):
         :arg y: scaling along the y direction
         :arg z: scaling along the z direction
         """
-        Option.__init__(self)
-
         self.x = x
         self.y = y
         self.z = z
@@ -457,61 +392,6 @@ class Scale(Option):
 
     def __str__(self):
         return "(x=%s, y=%s, z=%s)" % (self.x, self.y, self.z)
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        x = float(element.get('x'))
-        y = float(element.get('y'))
-        z = float(element.get('z'))
-
-        return cls(x, y, z)
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('x', str(self.x))
-        element.set('y', str(self.y))
-        element.set('z', str(self.z))
-
-    @property
-    def x(self):
-        """
-        Scaling along the x direction.
-        The value cannot be 0.
-        """
-        return self._props['x']
-
-    @x.setter
-    def x(self, scale):
-        if scale == 0.0:
-            raise ValueError, "X scale cannot be equal to 0."
-        self._props['x'] = scale
-
-    @property
-    def y(self):
-        """
-        Scaling along the y direction.
-        The value cannot be 0.
-        """
-        return self._props['y']
-
-    @y.setter
-    def y(self, scale):
-        if scale == 0.0:
-            raise ValueError, "Y scale cannot be equal to 0."
-        self._props['y'] = scale
-
-    @property
-    def z(self):
-        """
-        Scaling along the z direction.
-        The value cannot be 0.
-        """
-        return self._props['z']
-
-    @z.setter
-    def z(self, scale):
-        if scale == 0.0:
-            raise ValueError, "Z scale cannot be equal to 0."
-        self._props['z'] = scale
 
     def to_geo(self):
         """
@@ -530,69 +410,29 @@ class Scale(Option):
 
         return lines
 
-class _Surface(Option):
+mapper.register(Scale, '{http://pymontecarlo.sf.net/penelope}scale',
+                ParameterizedAttribute('x', PythonType(float)),
+                ParameterizedAttribute('y', PythonType(float)),
+                ParameterizedAttribute('z', PythonType(float)))
+
+class _Surface(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
     _KEYWORD_SURFACE = _Keyword("SURFACE")
     _KEYWORD_INDICES = _Keyword('INDICES=')
 
-    def __init__(self, description=''):
-        Option.__init__(self)
+    description = Parameter(CastValidator(str), 'Description')
 
+    rotation = Parameter(doc="Rotation")
+
+    shift = Parameter(doc="Shift")
+
+    def __init__(self, description=''):
         self.description = description
 
-        self._props['rotation'] = Rotation()
-        self._props['shift'] = Shift()
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        description = str(element.get('description'))
-        obj = cls(description)
-
-        child = list(element.find("rotation"))[0]
-        obj._props['rotation'] = Rotation.from_xml(child, *args, **kwargs)
-
-        child = list(element.find("shift"))[0]
-        obj._props['shift'] = Shift.from_xml(child, *args, **kwargs)
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        element.set('index', str(self._index))
-        element.set('description', str(self.description))
-
-        child = Element('rotation')
-        child.append(self.rotation.to_xml())
-        element.append(child)
-
-        child = Element('shift')
-        child.append(self.shift.to_xml())
-        element.append(child)
-
-    @property
-    def description(self):
-        """
-        Description of the surface.
-        """
-        return self._props['description']
-
-    @description.setter
-    def description(self, desc):
-        self._props['description'] = desc
-
-    @property
-    def rotation(self):
-        """
-        Rotation of the surface.
-        The rotation is defined by a :class:`.Rotation`.
-        """
-        return self._props['rotation']
-
-    @property
-    def shift(self):
-        """
-        Shift/translation of the surface.
-        The shift is defined by a :class:`.Shift`.
-        """
-        return self._props['shift']
+        self.rotation = Rotation()
+        self.shift = Shift()
 
     def to_geo(self):
         lines = []
@@ -607,7 +447,30 @@ class _Surface(Option):
 
         return lines
 
+mapper.register(_Surface, '{http://pymontecarlo.sf.net/penelope}_surface',
+                ParameterizedAttribute('description', PythonType(str)),
+                ParameterizedElement('rotation', UserType(Rotation)),
+                ParameterizedElement('shift', UserType(Shift)))
+
+class implicit(namedtuple('implicit', ['axx', 'axy', 'axz', 'ayy', 'ayz',
+                                       'azz', 'ax', 'ay', 'az', 'a0'])):
+    pass
+
+mapper.register(implicit,
+                '{http://pymontecarlo.sf.net/penelope}implicit',
+                Attribute('axx', PythonType(float)),
+                Attribute('axy', PythonType(float)),
+                Attribute('axz', PythonType(float)),
+                Attribute('ayy', PythonType(float)),
+                Attribute('ayz', PythonType(float)),
+                Attribute('azz', PythonType(float)),
+                Attribute('ax', PythonType(float)),
+                Attribute('ay', PythonType(float)),
+                Attribute('az', PythonType(float)),
+                Attribute('a0', PythonType(float)),)
+
 class SurfaceImplicit(_Surface):
+
     _KEYWORD_AXX = _Keyword('AXX=', '              (DEFAULT=0.0)')
     _KEYWORD_AXY = _Keyword('AXY=', '              (DEFAULT=0.0)')
     _KEYWORD_AXZ = _Keyword('AXZ=', '              (DEFAULT=0.0)')
@@ -619,78 +482,28 @@ class SurfaceImplicit(_Surface):
     _KEYWORD_AZ = _Keyword('AZ=', '              (DEFAULT=0.0)')
     _KEYWORD_A0 = _Keyword('A0=', '              (DEFAULT=0.0)')
 
-    def __init__(self, coefficients=[0.0] * 10, description=''):
+    coefficients = \
+        Parameter(CastValidator(implicit),
+                  "Coefficients for the implicit form of the quadratic equation.")
+
+    def __init__(self, coefficients=None, description=''):
         _Surface.__init__(self, description)
 
+        if coefficients is None:
+            coefficients = implicit(0.0, 0.0, 0.0, 0.0, 0.0,
+                                    0.0, 0.0, 0.0, 0.0, 0.0)
         self.coefficients = coefficients
 
     def __repr__(self):
-        coeffs = ['%s=%s' % (key, value) for key, value in self.coefficients.iteritems()]
+        coeffs = ['%s=%s' % (key, value) \
+                  for key, value in self.coefficients._asdict().iteritems()]
         return '<Surface(description=%s, %s, rotation=%s, shift=%s)>' % \
             (self.description, ', '.join(coeffs), str(self.rotation), str(self.shift))
 
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        surface = _Surface.__loadxml__(element, *args, **kwargs)
-
-        keys = ['xx', 'xy', 'xz', 'yy', 'yz', 'zz', 'x', 'y', 'z', '0']
-        values = map(float, map(element.get, keys))
-        coefficients = dict(zip(keys, values))
-
-        obj = cls(coefficients, surface.description)
-        obj._props['rotation'] = surface.rotation
-        obj._props['shift'] = surface.shift
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        _Surface.__savexml__(self, element, *args, **kwargs)
-
-        for key, value in self.coefficients.iteritems():
-            element.set(key, str(value))
-
-    @property
-    def coefficients(self):
-        """
-        Coefficients for the implicit form of the quadratic equation.
-        The coefficients are defined by a dictionary, a list or a tuple.
-        See examples below. 
-    
-        **Examples**::
-    
-          >>> s = Surface()
-          >>> s.coefficients = {'xx': 0.0, 'xy': 0.0, 'xz': 0.0, 'yy': 0.0, 'yz': 0.0, 'zz': 0.0, 'x': 0.0, 'y': 0.0, 'z': 0.0, '0': 0.0}
-          >>> s.coefficients = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-          >>> s.coefficients = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-          >>> s.coefficients = {'xx': 1.0, 'xy': 1.0}
-        """
-        return self._props['coefficients']
-
-    @coefficients.setter
-    def coefficients(self, coefficients):
-        if isinstance(coefficients, dict):
-            self._props['coefficients'] = {'xx': 0.0, 'xy': 0.0, 'xz': 0.0,
-                                           'yy': 0.0, 'yz': 0.0,
-                                           'zz': 0.0,
-                                           'x': 0.0, 'y': 0.0, 'z': 0.0, '0': 0.0}
-
-            for key in coefficients:
-                assert key in self._props['coefficients']
-                self._props['coefficients'][key] = coefficients[key]
-        else:
-            assert len(coefficients) == 10
-
-            self._props['coefficients'] = \
-                {'xx': coefficients[0], 'xy': coefficients[1], 'xz': coefficients[2],
-                 'yy': coefficients[3], 'yz': coefficients[4],
-                 'zz': coefficients[5],
-                 'x': coefficients[6], 'y': coefficients[7], 'z': coefficients[8],
-                 '0': coefficients[9]}
-
     def to_geo(self):
         def create_coefficient_line(key):
-            value = self.coefficients[key]
-            keyword = getattr(self, "_KEYWORD_A" + key.upper())
+            value = getattr(self.coefficients, key)
+            keyword = getattr(self, "_KEYWORD_" + key.upper())
             return keyword.create_expline(value)
 
         lines = _Surface.to_geo(self)
@@ -701,86 +514,57 @@ class SurfaceImplicit(_Surface):
         lines.insert(1, line)
 
         # Coefficients
-        lines.insert(2, create_coefficient_line('xx'))
-        lines.insert(3, create_coefficient_line('xy'))
-        lines.insert(4, create_coefficient_line('xz'))
-        lines.insert(5, create_coefficient_line('yy'))
-        lines.insert(6, create_coefficient_line('yz'))
-        lines.insert(7, create_coefficient_line('zz'))
-        lines.insert(8, create_coefficient_line('x'))
-        lines.insert(9, create_coefficient_line('y'))
-        lines.insert(10, create_coefficient_line('z'))
-        lines.insert(11, create_coefficient_line('0'))
+        lines.insert(2, create_coefficient_line('axx'))
+        lines.insert(3, create_coefficient_line('axy'))
+        lines.insert(4, create_coefficient_line('axz'))
+        lines.insert(5, create_coefficient_line('ayy'))
+        lines.insert(6, create_coefficient_line('ayz'))
+        lines.insert(7, create_coefficient_line('azz'))
+        lines.insert(8, create_coefficient_line('ax'))
+        lines.insert(9, create_coefficient_line('ay'))
+        lines.insert(10, create_coefficient_line('az'))
+        lines.insert(11, create_coefficient_line('a0'))
         lines.insert(12, LINE_EXTRA)
 
         return lines
 
+mapper.register(SurfaceImplicit,
+                '{http://pymontecarlo.sf.net/penelope}surface_implicit',
+                ParameterizedElement('coefficients', UserType(implicit)))
+
+class indices(namedtuple('indices', ['a', 'b', 'c', 'd', 'e'])):
+
+    def __new__(cls, a, b, c, d, e):
+        for v in [a, b, c, d, e]:
+            if v not in [-1, 0, 1]:
+                raise ValueError, "Indices must either be -1, 0, or 1"
+        return cls.__bases__[0].__new__(cls, a, b, c, d, e)
+
+mapper.register(indices,
+                '{http://pymontecarlo.sf.net/penelope}indices',
+                Attribute('a', PythonType(int)),
+                Attribute('b', PythonType(int)),
+                Attribute('c', PythonType(int)),
+                Attribute('d', PythonType(int)),
+                Attribute('e', PythonType(int)))
+
 class SurfaceReduced(_Surface):
+
+    indices = Parameter(CastValidator(indices),
+                        "Indices for the explicit form of the quadratic equation. The indices are defined by a :class:`tuple` containing 5 indices (-1, 0 or 1).")
+
+    scale = Parameter(doc="Scale")
 
     def __init__(self, indices, description=''):
         _Surface.__init__(self, description)
 
         self.indices = indices
-        self._props['scale'] = Scale()
+        self.scale = Scale()
 
     def __repr__(self):
         return '<Surface(description=%s, indices=%s, scale=%s, rotation=%s, shift=%s)>' % \
             (self.description, str(self.indices), str(self.scale),
              str(self.rotation), str(self.shift))
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        surface = _Surface.__loadxml__(element, *args, **kwargs)
-
-        indices = map(int, map(element.get, 'abcde'))
-
-        child = list(element.find("scale"))[0]
-        scale = Scale.from_xml(child)
-
-        obj = cls(indices, surface.description)
-        obj._props['scale'] = scale
-        obj._props['rotation'] = surface.rotation
-        obj._props['shift'] = surface.shift
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        _Surface.__savexml__(self, element, *args, **kwargs)
-
-        for key, value in zip('abcde', self.indices):
-            element.set(key, str(value))
-
-        child = Element('scale')
-        child.append(self.scale.to_xml())
-        element.append(child)
-
-    @property
-    def indices(self):
-        """
-        Indices for the explicit form of the quadratic equation.
-        The indices are defined by a :class:`tuple` containing 5 indices (-1, 0 or 1).
-        If the attribute is deleted, all the indices are set to 0.
-        """
-        return self._props['indices']
-
-    @indices.setter
-    def indices(self, indices):
-        if len(indices) != 5:
-            raise ValueError, "Five indices must be defined."
-
-        for indice in indices:
-            if not indice in [-1, 0, 1]:
-                raise ValueError, "Index (%s) must be either -1, 0 or 1." % indice
-
-        self._props['indices'] = tuple(indices)
-
-    @property
-    def scale(self):
-        """
-        Scaling of the surface.
-        The scaling is defined by a :class:`.Scale`.
-        """
-        return self._props['scale']
 
     def to_geo(self):
         lines = _Surface.to_geo(self)
@@ -795,12 +579,17 @@ class SurfaceReduced(_Surface):
 
         return lines
 
+mapper.register(SurfaceReduced,
+                '{http://pymontecarlo.sf.net/penelope}surface_reduced',
+                ParameterizedElement('indices', UserType(indices)),
+                ParameterizedElement('scale', UserType(Scale)))
+
 def zplane(z_m):
     """
     Returns a surface for a plane Z=z
-    
+
     :arg z_m: intercept on the z-axis (in m)
-    
+
     :rtype: :class:`.Surface`
     """
     s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Z=%4.2f m' % z_m)
@@ -810,9 +599,9 @@ def zplane(z_m):
 def xplane(x_m):
     """
     Returns a surface for a plane X=x
-    
+
     :arg z_m: intercept on the x-axis (in m)
-    
+
     :rtype: :class:`.Surface`
     """
     s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane X=%4.2f m' % x_m)
@@ -823,9 +612,9 @@ def xplane(x_m):
 def yplane(y_m):
     """
     Returns a surface for a plane Y=y
-    
+
     :arg y_m: intercept on the y-axis (in m)
-    
+
     :rtype: :class:`.Surface`
     """
     s = SurfaceReduced((0, 0, 0, 1, 0), 'Plane Y=%4.2f m' % y_m)
@@ -837,10 +626,10 @@ def yplane(y_m):
 def cylinder(radius_m, axis=AXIS_Z):
     """
     Returns a surface for a cylinder along *axis* with *radius*
-    
+
     :arg radius_m: radius of the cylinder (in m)
     :arg axis: axis of the cylinder (:const:`AXIS_X`, :const:`AXIS_Y` or :const:`AXIS_Z`)
-    
+
     :rtype: :class:`.Surface`
     """
     axis = axis.lower()
@@ -863,9 +652,9 @@ def cylinder(radius_m, axis=AXIS_Z):
 def sphere(radius_m):
     """
     Returns a surface for a sphere or *radius*
-    
+
     :arg radius_m: radius of the cylinder (in m)
-    
+
     :rtype: :class:`.Surface`
     """
     description = 'Sphere of radius %4.2f m' % radius_m
@@ -878,95 +667,33 @@ def sphere(radius_m):
     return s
 
 class Module(Body):
+
     _KEYWORD_MODULE = _Keyword("MODULE")
     _KEYWORD_MATERIAL = _Keyword('MATERIAL')
     _KEYWORD_SURFACE = _Keyword("SURFACE")
     _KEYWORD_SIDEPOINTER = ', SIDE POINTER='
     _KEYWORD_MODULE = _Keyword('MODULE')
 
+    description = Parameter(CastValidator(str), 'Description')
+
+    _surfaces = FrozenParameter(ParameterizedMutableMapping)
+
+    _modules = FrozenParameter(ParameterizedMutableSet)
+
+    rotation = Parameter(doc="Rotation")
+
+    shift = Parameter(doc="Shift")
+
     def __init__(self, material, description=''):
         Body.__init__(self, material)
 
         self.description = description
 
-        self._props['surfaces'] = {}
-        self._props['modules'] = set()
+        self._surfaces.clear()
+        self._modules.clear()
 
-        self._props['rotation'] = Rotation()
-        self._props['shift'] = Shift()
-
-    def __repr__(self):
-        return '<Module(description=%s, material=%s, %i interaction forcing(s), dsmax=%s m, surfaces_count=%i, modules_count=%i, rotation=%s, shift=%s)>' % \
-            (self.description, self.material, len(self.interaction_forcings),
-             self.maximum_step_length_m, len(self._props['surfaces']),
-             len(self._props['modules']), str(self.rotation), str(self.shift))
-
-    @classmethod
-    def __loadxml__(cls, element, materials_lookup, surfaces_lookup,
-                    modules_lookup, *args, **kwargs):
-        index = int(element.find('material').get('index'))
-        material = materials_lookup[index]
-
-        body = Body.__loadxml__(element, material, *args, **kwargs)
-
-        description = str(element.get('description'))
-        obj = cls(body.material, description)
-        obj._props['interaction forcings'] |= body.interaction_forcings
-        obj.maximum_step_length_m = body.maximum_step_length_m
-
-        children = list(element.find('surfaces'))
-        for child in children:
-            index = int(child.get('index'))
-            pointer = int(child.get('pointer'))
-            obj.add_surface(surfaces_lookup[index], pointer)
-
-        children = list(element.find('modules'))
-        for child in children:
-            index = int(child.get('index'))
-            obj.add_module(modules_lookup[index])
-
-        child = list(element.find("rotation"))[0]
-        obj._props['rotation'] = Rotation.from_xml(child, *args, **kwargs)
-
-        child = list(element.find("shift"))[0]
-        obj._props['shift'] = Shift.from_xml(child, *args, **kwargs)
-
-        return obj
-
-    def __savexml__(self, element, *args, **kwargs):
-        Body.__savexml__(self, element, *args, **kwargs)
-
-        element.remove(element.find('material'))
-
-        element.set('index', str(self._index))
-        element.set('description', str(self.description))
-
-        attrib = {'index': str(self.material._index)}
-        element.append(Element('material', attrib))
-
-        child = Element('surfaces')
-        surfaces = self._props['surfaces']
-        for surface, pointer in surfaces.iteritems():
-            attrib = {'index': str(surface._index), 'pointer': str(pointer)}
-            child.append(Element('surface', attrib))
-        element.append(child)
-
-        child = Element('modules')
-        modules = self._props['modules']
-        for module in modules:
-            attrib = {'index': str(module._index)}
-            child.append(Element('module', attrib))
-        element.append(child)
-
-        child = Element('rotation')
-        child.append(self.rotation.to_xml())
-        element.append(child)
-
-        child = Element('shift')
-        child.append(self.shift.to_xml())
-        element.append(child)
-
-        return element
+        self.rotation = Rotation()
+        self.shift = Shift()
 
     @classmethod
     def from_body(cls, body, description=''):
@@ -974,73 +701,50 @@ class Module(Body):
         Creates a module from a :class:`PenelopeBody`.
         """
         module = cls(body.material, description)
-
-        module._props.update(body._props)
-
+        module.__dict__.update(body.__dict__)
         return module
 
-    @property
-    def description(self):
-        """
-        Description of the module.
-        """
-        return self._props['description']
-
-    @description.setter
-    def description(self, desc):
-        self._props['description'] = desc
+    def __repr__(self):
+        return '<Module(description=%s, material=%s, %i interaction forcing(s), dsmax=%s m, surfaces_count=%i, modules_count=%i, rotation=%s, shift=%s)>' % \
+            (self.description, self.material, len(self.interaction_forcings),
+             self.maximum_step_length_m, len(self._props['surfaces']),
+             len(self._props['modules']), str(self.rotation), str(self.shift))
 
     def add_module(self, module):
         if module == self:
             raise ValueError, "Cannot add this module to this module."
-        self._props['modules'].add(module)
+        self._modules.add(module)
 
     def pop_module(self, module):
-        self._props['modules'].discard(module)
+        self._modules.discard(module)
 
     def clear_modules(self):
-        self._props['modules'].clear()
+        self._modules.clear()
 
     def get_modules(self):
-        return list(self._props['modules'])
+        return list(self._modules)
 
     def add_surface(self, surface, pointer):
         if pointer not in [-1, 1]:
             raise ValueError, "Pointer (%s) must be either -1 or 1." % pointer
-        if surface in self._props['surfaces']:
+        if surface in self._surfaces:
             raise ValueError, "Module already contains this surface."
-        self._props['surfaces'][surface] = pointer
+        self._surfaces[surface] = pointer
 
     def pop_surface(self, surface):
-        self._props['surfaces'].pop(surface)
+        self._surfaces.pop(surface)
 
     def clear_surfaces(self):
-        self._props['surfaces'].clear()
+        self._surfaces.clear()
 
     def get_surface_pointer(self, surface):
         """
         Returns the surface pointer for the specified surface.
         """
-        return self._props['surfaces'][surface]
+        return self._surfaces[surface]
 
     def get_surfaces(self):
-        return self._props['surfaces'].keys()
-
-    @property
-    def rotation(self):
-        """
-        Rotation of the surface.
-        The rotation is defined by a :class:`.Rotation`.
-        """
-        return self._props['rotation']
-
-    @property
-    def shift(self):
-        """
-        Shift/translation of the surface.
-        The shift is defined by a :class:`.Shift`.
-        """
-        return self._props['shift']
+        return self._surfaces.keys()
 
     def to_geo(self):
         """
@@ -1086,7 +790,21 @@ class Module(Body):
 
         return lines
 
+mapper.register(Module, '{http://pymontecarlo.sf.net/penelope}module',
+                ParameterizedAttribute('description', PythonType(str)),
+                ParameterizedElementDict('_surfaces', UserType(_Surface), PythonType(int)),
+                ParameterizedElementSet('_modules', UserType(Module)),
+                ParameterizedElement('rotation', UserType(Rotation)),
+                ParameterizedElement('shift', UserType(Shift)))
+
+_title_validator = SimpleValidator(lambda t: len(t) <= (LINE_SIZE - 3))
+
 class PenelopeGeometry(_Geometry):
+
+    title = Parameter([CastValidator(str), _title_validator],
+                      "Title of the geometry")
+
+    modules = FrozenParameter(ParameterizedMutableSet)
 
     def __init__(self, title="Untitled"):
         """
@@ -1095,111 +813,100 @@ class PenelopeGeometry(_Geometry):
         _Geometry.__init__(self)
 
         self.title = title
-        self._props['modules'] = set()
+        self.modules.clear()
 
-    @classmethod
-    def _parse_xml_surfaces(cls, element):
-        children = list(element.find('surfaces'))
-        surfaces_lookup = {}
-        for child in children:
-            index = int(child.get('index'))
-            surfaces_lookup[index] = objectxml.from_xml(child)
-
-        return surfaces_lookup
-
-    @classmethod
-    def _parse_xml_modules(cls, element, materials_lookup, surfaces_lookup):
-        children = list(element.find('modules'))
-        modules_dep = {} # module dependencies
-        modules_element = {} # module xml element
-        for child in children:
-            index = int(child.get('index'))
-            modules_element[index] = child
-
-            modules_dep.setdefault(index, [])
-            for grandchild in list(child.find('modules')):
-                modules_dep[index].append(int(grandchild.get('index')))
-
-        modules_lookup = {}
-        for index in modules_dep:
-            for dep_index in topological_sort(modules_dep, index):
-                if dep_index in modules_lookup: continue # skip already loaded module
-
-                element = modules_element[dep_index]
-                modules_lookup[dep_index] = \
-                    objectxml.from_xml(element, materials_lookup,
-                                        surfaces_lookup, modules_lookup)
-
-        return modules_lookup
-
-    @classmethod
-    def __loadxml__(cls, element, *args, **kwargs):
-        materials_lookup = cls._parse_xml_materials(element)
-        surfaces_lookup = cls._parse_xml_surfaces(element)
-        modules_lookup = cls._parse_xml_modules(element, materials_lookup, surfaces_lookup)
-
-        title = str(element.get('title'))
-        obj = cls(title)
-
-        obj._props['modules'] |= set(modules_lookup.values())
-
-        obj.tilt_rad = float(element.get('tilt'))
-        obj.rotation_rad = float(element.get('rotation'))
-
-        return obj
-
-    def _surfaces_to_xml(self):
-        element = Element('surfaces')
-        for surface in self.get_surfaces():
-            element.append(surface.to_xml())
-
-        return element
-
-    def _modules_to_xml(self):
-        element = Element('modules')
-        for module in self.modules:
-            element.append(module.to_xml())
-
-        return element
-
-    def __savexml__(self, element, *args, **kwargs):
-        self._indexify()
-
-        element.set('title', self.title)
-        element.set('tilt', str(self.tilt_rad))
-        element.set('rotation', str(self.rotation_rad))
-
-        element.append(self._materials_to_xml())
-        element.append(self._surfaces_to_xml())
-        element.append(self._modules_to_xml())
-
-    @property
-    def title(self):
-        """
-        Title of the geometry.
-        The title must have less than 61 charaters.
-        """
-        return self._props['title']
-
-    @title.setter
-    def title(self, title):
-        if len(title) > LINE_SIZE - 3:
-            raise ValueError, "The length of the title (%i) must be less than %i." % \
-                (len(title), LINE_SIZE - 3)
-        self._props['title'] = title
+#    @classmethod
+#    def _parse_xml_surfaces(cls, element):
+#        children = list(element.find('surfaces'))
+#        surfaces_lookup = {}
+#        for child in children:
+#            index = int(child.get('index'))
+#            surfaces_lookup[index] = objectxml.from_xml(child)
+#
+#        return surfaces_lookup
+#
+#    @classmethod
+#    def _parse_xml_modules(cls, element, materials_lookup, surfaces_lookup):
+#        children = list(element.find('modules'))
+#        modules_dep = {} # module dependencies
+#        modules_element = {} # module xml element
+#        for child in children:
+#            index = int(child.get('index'))
+#            modules_element[index] = child
+#
+#            modules_dep.setdefault(index, [])
+#            for grandchild in list(child.find('modules')):
+#                modules_dep[index].append(int(grandchild.get('index')))
+#
+#        modules_lookup = {}
+#        for index in modules_dep:
+#            for dep_index in topological_sort(modules_dep, index):
+#                if dep_index in modules_lookup: continue # skip already loaded module
+#
+#                element = modules_element[dep_index]
+#                modules_lookup[dep_index] = \
+#                    objectxml.from_xml(element, materials_lookup,
+#                                        surfaces_lookup, modules_lookup)
+#
+#        return modules_lookup
+#
+#    @classmethod
+#    def __loadxml__(cls, element, *args, **kwargs):
+#        materials_lookup = cls._parse_xml_materials(element)
+#        surfaces_lookup = cls._parse_xml_surfaces(element)
+#        modules_lookup = cls._parse_xml_modules(element, materials_lookup, surfaces_lookup)
+#
+#        title = str(element.get('title'))
+#        obj = cls(title)
+#
+#        obj._props['modules'] |= set(modules_lookup.values())
+#
+#        obj.tilt_rad = float(element.get('tilt'))
+#        obj.rotation_rad = float(element.get('rotation'))
+#
+#        return obj
+#
+#    def _surfaces_to_xml(self):
+#        element = Element('surfaces')
+#        for surface in self.get_surfaces():
+#            element.append(surface.to_xml())
+#
+#        return element
+#
+#    def _modules_to_xml(self):
+#        element = Element('modules')
+#        for module in self.modules:
+#            element.append(module.to_xml())
+#
+#        return element
+#
+#    def __savexml__(self, element, *args, **kwargs):
+#        self._indexify()
+#
+#        element.set('title', self.title)
+#        element.set('tilt', str(self.tilt_rad))
+#        element.set('rotation', str(self.rotation_rad))
+#
+#        element.append(self._materials_to_xml())
+#        element.append(self._surfaces_to_xml())
+#        element.append(self._modules_to_xml())
 
     def get_bodies(self):
-        return set(self._props['modules']) # copy
+        return set(self.modules) # copy
 
     def get_surfaces(self):
         return set(chain(*map(_SURFACES_GETTER, self.modules)))
 
-    @property
-    def modules(self):
-        return self._props['modules']
-
     def _indexify(self):
-        _Geometry._indexify(self)
+        VACUUM._index = 0
+
+        count = 1
+        for material in self.get_materials():
+            material._index = count
+            count += 1
+
+        for i, body in enumerate(self.get_bodies()):
+            body._index = i
 
         # Surfaces
         for i, surface in enumerate(self.get_surfaces()):

@@ -78,18 +78,18 @@ class Converter(_Converter):
         materials_lookup = self._create_penelope_materials(geometry.get_materials())
 
         if isinstance(geometry, Substrate):
-            geometry._props['body'] = \
+            geometry.body = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
         elif isinstance(geometry, Inclusion):
-            geometry._props['substrate'] = \
+            geometry.substrate_body = \
                 self._create_penelope_body(geometry.substrate_body, materials_lookup)
-            geometry._props['inclusion'] = \
+            geometry.inclusion_body = \
                 self._create_penelope_body(geometry.inclusion_body, materials_lookup)
 
         elif isinstance(geometry, MultiLayers):
             if geometry.has_substrate():
-                geometry._props['substrate'] = \
+                geometry.substrate_body = \
                     self._create_penelope_body(geometry.substrate_body, materials_lookup)
 
             newlayers = \
@@ -98,9 +98,9 @@ class Converter(_Converter):
             geometry.layers.extend(newlayers)
 
         elif isinstance(geometry, GrainBoundaries):
-            geometry._props['left'] = \
+            geometry.left_body = \
                 self._create_penelope_body(geometry.left_body, materials_lookup)
-            geometry._props['right'] = \
+            geometry.right_body = \
                 self._create_penelope_body(geometry.right_body, materials_lookup)
 
             newlayers = \
@@ -109,7 +109,7 @@ class Converter(_Converter):
             geometry.layers.extend(newlayers)
 
         elif isinstance(geometry, Sphere):
-            geometry._props['body'] = \
+            geometry.body = \
                 self._create_penelope_body(geometry.body, materials_lookup)
 
 #        elif isinstance(geometry, Cuboids2D):

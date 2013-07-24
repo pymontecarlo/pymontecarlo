@@ -25,8 +25,7 @@ from pymontecarlo.input.detector import \
     (BackscatteredElectronEnergyDetector, PhotonSpectrumDetector,
      PhotonDepthDetector, PhotonIntensityDetector)
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit
-from pymontecarlo.input.model import \
-    IONIZATION_CROSS_SECTION, ModelType, ModelCategory, Model
+from pymontecarlo.input.model import IONIZATION_CROSS_SECTION, ModelType
 
 from pymontecarlo.program.casino2.input.converter import Converter, ConversionException
 
@@ -42,9 +41,6 @@ class TestCasino2Converter(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertTrue(True)
 
     def testconvert1(self):
         # Base options
@@ -71,11 +67,11 @@ class TestCasino2Converter(TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits.find(ShowersLimit)
+        limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(7, len(ops.models))
-        model = ops.models.find(IONIZATION_CROSS_SECTION.type)
+        model = list(ops.models.iterclass(IONIZATION_CROSS_SECTION))[0]
         self.assertEqual(IONIZATION_CROSS_SECTION.jakoby, model)
 
     def testconvert2(self):
@@ -110,7 +106,7 @@ class TestCasino2Converter(TestCase):
         self.assertEqual(1000, det.channels)
 
         self.assertEqual(1, len(ops.limits))
-        limit = ops.limits.find(ShowersLimit)
+        limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
         self.assertEqual(7, len(ops.models))
@@ -150,13 +146,12 @@ class TestCasino2Converter(TestCase):
 
     def testconvert6(self):
         NEW_MODEL_TYPE = ModelType('new')
-        NEW_MODEL_CATEGORY = ModelCategory(NEW_MODEL_TYPE)
-        NEW_MODEL_CATEGORY.test = Model('test')
+        NEW_MODEL_TYPE.test = ('test',)
 
         # Base options
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
-        ops.models.add(NEW_MODEL_CATEGORY.test)
+        ops.models.add(NEW_MODEL_TYPE.test)
         ops.limits.add(ShowersLimit(5678))
 
         with warnings.catch_warnings(record=True) as ws:

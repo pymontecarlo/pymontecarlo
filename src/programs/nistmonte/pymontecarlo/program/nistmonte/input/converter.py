@@ -141,7 +141,7 @@ class Converter(_Converter):
     def _convert_limits(self, options):
         _Converter._convert_limits(self, options)
 
-        limit = options.limits.find(ShowersLimit)
-        if limit is None:
+        limits = list(options.limits.iterclass(ShowersLimit))
+        if not limits:
             raise ConversionException, "A ShowersLimit must be defined."
 

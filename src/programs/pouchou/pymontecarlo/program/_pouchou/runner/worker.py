@@ -101,7 +101,7 @@ class _PouchouWorker(_Worker):
 
         # Create PAP object
         self.create(options, workdir)
-        macmodel = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
+        macmodel = list(options.models.iterclass(MASS_ABSORPTION_COEFFICIENT))[0]
         model = self._MODEL_CLASS(None, None, None, None,
                                   configurationFile=config_filepath,
                                   macModel=_MACMODELS[macmodel])

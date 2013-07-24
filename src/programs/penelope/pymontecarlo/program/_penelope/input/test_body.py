@@ -19,6 +19,7 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.collision import DELTA
+from pymontecarlo.input.xmlmapper import mapper
 
 from pymontecarlo.program._penelope.input.body import Body, Layer
 from pymontecarlo.program._penelope.input.material import pure
@@ -41,20 +42,20 @@ class TestBody(TestCase):
         self.assertAlmostEqual(123.45, self.body.maximum_step_length_m, 4)
 
     def testfrom_xml(self):
-        element = self.body.to_xml()
-        body = Body.from_xml(element)
+        element = mapper.to_xml(self.body)
+        body = mapper.from_xml(element)
 
         self.assertEqual('Copper', str(body.material))
         self.assertAlmostEqual(123.45, body.maximum_step_length_m, 4)
 
     def testto_xml(self):
-        element = self.body.to_xml()
+        element = mapper.to_xml(self.body)
 
         children = list(element.find('material'))
         self.assertEqual(1, len(children))
         self.assertEqual('Copper', children[0].get('name'))
 
-        self.assertAlmostEqual(123.45, float(element.get('maximumStepLength')), 4)
+        self.assertAlmostEqual(123.45, float(element.get('maximum_step_length')), 4)
 
 class TestLayer(TestCase):
 
@@ -76,8 +77,8 @@ class TestLayer(TestCase):
         self.assertEqual(1, len(self.layer.interaction_forcings))
 
     def testfrom_xml(self):
-        element = self.layer.to_xml()
-        layer = Layer.from_xml(element)
+        element = mapper.to_xml(self.layer)
+        layer = mapper.from_xml(element)
 
         self.assertEqual('Copper', str(layer.material))
         self.assertAlmostEqual(56.78, layer.thickness_m, 4)
@@ -85,7 +86,7 @@ class TestLayer(TestCase):
         self.assertEqual(1, len(layer.interaction_forcings))
 
     def testto_xml(self):
-        element = self.layer.to_xml()
+        element = mapper.to_xml(self.layer)
 
         children = list(element.find('material'))
         self.assertEqual(1, len(children))
@@ -93,7 +94,7 @@ class TestLayer(TestCase):
 
         self.assertAlmostEqual(56.78, float(element.get('thickness')), 4)
 
-        self.assertAlmostEqual(123.45, float(element.get('maximumStepLength')), 4)
+        self.assertAlmostEqual(123.45, float(element.get('maximum_step_length')), 4)
 
 if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

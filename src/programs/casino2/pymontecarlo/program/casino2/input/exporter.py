@@ -19,7 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 import warnings
 import math
 import pkgutil
@@ -69,6 +69,7 @@ from casinoTools.FileFormat.casino2.SimulationOptions import \
 # Globals and constants variables.
 
 def _setup_region_material(region, material):
+    material.calculate()
     region.removeAllElements()
 
     for z, fraction in material.composition.iteritems():
@@ -112,19 +113,19 @@ class Exporter(_Exporter):
 
         self._limit_exporters[ShowersLimit] = self._limit_showers
 
-        self._model_exporters[ELASTIC_CROSS_SECTION.type] = \
+        self._model_exporters[ELASTIC_CROSS_SECTION] = \
             self._model_elastic_cross_section
-        self._model_exporters[IONIZATION_CROSS_SECTION.type] = \
+        self._model_exporters[IONIZATION_CROSS_SECTION] = \
             self._model_ionization_cross_section
-        self._model_exporters[IONIZATION_POTENTIAL.type] = \
+        self._model_exporters[IONIZATION_POTENTIAL] = \
             self._model_ionization_potential
-        self._model_exporters[RANDOM_NUMBER_GENERATOR.type] = \
+        self._model_exporters[RANDOM_NUMBER_GENERATOR] = \
             self._model_random_number_generator
-        self._model_exporters[DIRECTION_COSINE.type] = \
+        self._model_exporters[DIRECTION_COSINE] = \
             self._model_direction_cosine
-        self._model_exporters[ENERGY_LOSS.type] = \
+        self._model_exporters[ENERGY_LOSS] = \
             self._model_energy_loss
-        self._model_exporters[MASS_ABSORPTION_COEFFICIENT.type] = \
+        self._model_exporters[MASS_ABSORPTION_COEFFICIENT] = \
             self._model_mass_absorption_coefficient
 
     def export(self, options):
@@ -251,7 +252,8 @@ class Exporter(_Exporter):
         _Exporter._export_detectors(self, options, simdata, simops)
 
         # Detector position
-        dets = options.detectors.findall(_DelimitedDetector).values()
+        dets = options.detectors.iterclass(_DelimitedDetector)
+        dets = map(itemgetter(1), dets)
 
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
@@ -330,7 +332,8 @@ class Exporter(_Exporter):
 
     def _detector_trajectory(self, options, name, detector, simdata, simops):
         simops.Memory_Keep = 1
-        simops.Electron_Display = options.limits.find(ShowersLimit).showers
+        limit = list(options.limits.iterclass(ShowersLimit))[0]
+        simops.Electron_Display = limit.showers
 #        simops.Electron_Save = 5 # Save interval (min)
 
     def _limit_showers(self, options, limit, simdata, simops):

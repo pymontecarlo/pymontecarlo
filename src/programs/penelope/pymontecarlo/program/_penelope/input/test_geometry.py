@@ -18,10 +18,11 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program._penelope.input.geometry import \
-    (Rotation, Shift, Scale, SurfaceImplicit, SurfaceReduced, PenelopeGeometry,
-     xplane, zplane, cylinder, Module)
 from pymontecarlo.input.material import VACUUM
+from pymontecarlo.input.xmlmapper import mapper
+from pymontecarlo.program._penelope.input.geometry import \
+    (Rotation, Shift, Scale, SurfaceImplicit, implicit, SurfaceReduced,
+     xplane, zplane, cylinder, Module, PenelopeGeometry)
 from pymontecarlo.program._penelope.input.material import pure
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 
@@ -49,20 +50,20 @@ class TestRotation(TestCase):
         self.assertAlmostEqual(radians(2.0), self.rotation.theta_rad, 4)
         self.assertAlmostEqual(radians(3.0), self.rotation.phi_rad, 4)
 
-#    def testto_xml(self):
-#        element = self.rotation.to_xml()
-#
-#        self.assertAlmostEqual(radians(1.0), float(element.get('omega')), 4)
-#        self.assertAlmostEqual(radians(2.0), float(element.get('theta')), 4)
-#        self.assertAlmostEqual(radians(3.0), float(element.get('phi')), 4)
-#
-#    def testfrom_xml(self):
-#        element = self.rotation.to_xml()
-#        rotation = Rotation.from_xml(element)
-#
-#        self.assertAlmostEqual(radians(1.0), rotation.omega_rad, 4)
-#        self.assertAlmostEqual(radians(2.0), rotation.theta_rad, 4)
-#        self.assertAlmostEqual(radians(3.0), rotation.phi_rad, 4)
+    def testto_xml(self):
+        element = mapper.to_xml(self.rotation)
+
+        self.assertAlmostEqual(radians(1.0), float(element.get('omega')), 4)
+        self.assertAlmostEqual(radians(2.0), float(element.get('theta')), 4)
+        self.assertAlmostEqual(radians(3.0), float(element.get('phi')), 4)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.rotation)
+        rotation = mapper.from_xml(element)
+
+        self.assertAlmostEqual(radians(1.0), rotation.omega_rad, 4)
+        self.assertAlmostEqual(radians(2.0), rotation.theta_rad, 4)
+        self.assertAlmostEqual(radians(3.0), rotation.phi_rad, 4)
 
     def testto_geo(self):
         lines = self.rotation.to_geo()
@@ -87,20 +88,20 @@ class TestShift(TestCase):
         self.assertAlmostEqual(0.02, self.shift.y_m, 4)
         self.assertAlmostEqual(0.03, self.shift.z_m, 4)
 
-#    def testto_xml(self):
-#        element = self.shift.to_xml()
-#
-#        self.assertAlmostEqual(0.01, float(element.get('x')), 4)
-#        self.assertAlmostEqual(0.02, float(element.get('y')), 4)
-#        self.assertAlmostEqual(0.03, float(element.get('z')), 4)
-#
-#    def testfrom_xml(self):
-#        element = self.shift.to_xml()
-#        shift = Shift.from_xml(element)
-#
-#        self.assertAlmostEqual(0.01, shift.x_m, 4)
-#        self.assertAlmostEqual(0.02, shift.y_m, 4)
-#        self.assertAlmostEqual(0.03, shift.z_m, 4)
+    def testto_xml(self):
+        element = mapper.to_xml(self.shift)
+
+        self.assertAlmostEqual(0.01, float(element.get('x')), 4)
+        self.assertAlmostEqual(0.02, float(element.get('y')), 4)
+        self.assertAlmostEqual(0.03, float(element.get('z')), 4)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.shift)
+        shift = mapper.from_xml(element)
+
+        self.assertAlmostEqual(0.01, shift.x_m, 4)
+        self.assertAlmostEqual(0.02, shift.y_m, 4)
+        self.assertAlmostEqual(0.03, shift.z_m, 4)
 
     def testto_geo(self):
         lines = self.shift.to_geo()
@@ -125,25 +126,44 @@ class TestScale(TestCase):
         self.assertAlmostEqual(2.0, self.scale.y, 4)
         self.assertAlmostEqual(3.0, self.scale.z, 4)
 
-#    def testto_xml(self):
-#        element = self.scale.to_xml()
-#
-#        self.assertAlmostEqual(1.0, float(element.get('x')), 4)
-#        self.assertAlmostEqual(2.0, float(element.get('y')), 4)
-#        self.assertAlmostEqual(3.0, float(element.get('z')), 4)
-#
-#    def testfrom_xml(self):
-#        element = self.scale.to_xml()
-#        scale = Scale.from_xml(element)
-#
-#        self.assertAlmostEqual(1.0, scale.x, 4)
-#        self.assertAlmostEqual(2.0, scale.y, 4)
-#        self.assertAlmostEqual(3.0, scale.z, 4)
+    def testto_xml(self):
+        element = mapper.to_xml(self.scale)
+
+        self.assertAlmostEqual(1.0, float(element.get('x')), 4)
+        self.assertAlmostEqual(2.0, float(element.get('y')), 4)
+        self.assertAlmostEqual(3.0, float(element.get('z')), 4)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.scale)
+        scale = mapper.from_xml(element)
+
+        self.assertAlmostEqual(1.0, scale.x, 4)
+        self.assertAlmostEqual(2.0, scale.y, 4)
+        self.assertAlmostEqual(3.0, scale.z, 4)
 
     def testto_geo(self):
         lines = self.scale.to_geo()
         self.assertEqual(3, len(lines))
         self.assertEqual(self.GEOFILE, lines)
+
+class Testimplicit(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.implicit = implicit(0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(5.0, self.implicit.axy, 4)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.implicit)
+        implicit = mapper.from_xml(element)
+
+        self.assertAlmostEqual(5.0, implicit.axy, 4)
 
 class TestSurfaceImplicit(TestCase):
     GEOFILE = ['SURFACE (   1) surface',
@@ -169,9 +189,8 @@ class TestSurfaceImplicit(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.surface = SurfaceImplicit(description='surface')
-        self.surface.coefficients['xx'] = 1e3
-        self.surface.coefficients['y'] = 1e9
+        coefficients = implicit(1e3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1e9, 0.0, 0.0)
+        self.surface = SurfaceImplicit(coefficients, description='surface')
         self.surface.rotation.phi_rad = radians(180)
         self.surface.shift.z_m = -1e3
         self.surface._index = 0
@@ -183,57 +202,57 @@ class TestSurfaceImplicit(TestCase):
         self.assertEqual('surface', self.surface.description)
         self.assertAlmostEqual(radians(180), self.surface.rotation.phi_rad, 4)
         self.assertAlmostEqual(-1e3, self.surface.shift.z_m, 4)
-        self.assertAlmostEqual(1e3, self.surface.coefficients['xx'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['xy'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['xz'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['yy'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['yz'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['zz'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['x'], 4)
-        self.assertAlmostEqual(1e9, self.surface.coefficients['y'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['z'], 4)
-        self.assertAlmostEqual(0.0, self.surface.coefficients['0'], 4)
+        self.assertAlmostEqual(1e3, self.surface.coefficients.axx, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.axy, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.axz, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.ayy, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.ayz, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.azz, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.ax, 4)
+        self.assertAlmostEqual(1e9, self.surface.coefficients.ay, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.az, 4)
+        self.assertAlmostEqual(0.0, self.surface.coefficients.a0, 4)
 
-#    def testto_xml(self):
-#        element = self.surface.to_xml()
-#
-#        self.assertEqual(0, int(element.get('index')))
-#        self.assertEqual('surface', element.get('description'))
-#
-#        self.assertAlmostEqual(1e3, float(element.get('xx')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('xy')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('xz')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('yy')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('yz')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('zz')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('x')), 4)
-#        self.assertAlmostEqual(1e9, float(element.get('y')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('z')), 4)
-#        self.assertAlmostEqual(0.0, float(element.get('0')), 4)
-#
-#        child = list(element.find('rotation'))[0]
-#        self.assertAlmostEqual(radians(180), float(child.get('phi')), 4)
-#
-#        child = list(element.find('shift'))[0]
-#        self.assertAlmostEqual(-1e3, float(child.get('z')), 4)
-#
-#    def testfrom_xml(self):
-#        element = self.surface.to_xml()
-#        surface = SurfaceImplicit.from_xml(element)
-#
-#        self.assertEqual('surface', surface.description)
-#        self.assertAlmostEqual(radians(180), surface.rotation.phi_rad, 4)
-#        self.assertAlmostEqual(-1e3, surface.shift.z_m, 4)
-#        self.assertAlmostEqual(1e3, surface.coefficients['xx'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['xy'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['xz'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['yy'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['yz'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['zz'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['x'], 4)
-#        self.assertAlmostEqual(1e9, surface.coefficients['y'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['z'], 4)
-#        self.assertAlmostEqual(0.0, surface.coefficients['0'], 4)
+    def testto_xml(self):
+        element = mapper.to_xml(self.surface)
+
+        self.assertEqual('surface', element.get('description'))
+
+        subelement = list(element.find('coefficients'))[0]
+        self.assertAlmostEqual(1e3, float(subelement.get('axx')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('axy')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('axz')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('ayy')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('ayz')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('azz')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('ax')), 4)
+        self.assertAlmostEqual(1e9, float(subelement.get('ay')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('az')), 4)
+        self.assertAlmostEqual(0.0, float(subelement.get('a0')), 4)
+
+        child = list(element.find('rotation'))[0]
+        self.assertAlmostEqual(radians(180), float(child.get('phi')), 4)
+
+        child = list(element.find('shift'))[0]
+        self.assertAlmostEqual(-1e3, float(child.get('z')), 4)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.surface)
+        surface = mapper.from_xml(element)
+
+        self.assertEqual('surface', surface.description)
+        self.assertAlmostEqual(radians(180), surface.rotation.phi_rad, 4)
+        self.assertAlmostEqual(-1e3, surface.shift.z_m, 4)
+        self.assertAlmostEqual(1e3, surface.coefficients.axx, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.axy, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.axz, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.ayy, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.ayz, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.azz, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.ax, 4)
+        self.assertAlmostEqual(1e9, surface.coefficients.ay, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.az, 4)
+        self.assertAlmostEqual(0.0, surface.coefficients.a0, 4)
 
     def testto_geo(self):
         lines = self.surface.to_geo()
@@ -268,25 +287,25 @@ class TestSurfaceReduced(TestCase):
         self.assertEqual('surface', self.surface.description)
         self.assertAlmostEqual(3.0, self.surface.scale.x, 4)
 
-#    def testto_xml(self):
-#        element = self.surface.to_xml()
-#
-#        self.assertEqual(0, int(element.get('index')))
-#        self.assertEqual('surface', element.get('description'))
-#
-#        self.assertEqual(1, int(element.get('a')))
-#        self.assertEqual(1, int(element.get('b')))
-#        self.assertEqual(1, int(element.get('c')))
-#        self.assertEqual(0, int(element.get('d')))
-#        self.assertEqual(-1, int(element.get('e')))
-#
-#    def testfrom_xml(self):
-#        element = self.surface.to_xml()
-#        surface = SurfaceReduced.from_xml(element)
-#
-#        self.assertEqual((1, 1, 1, 0, -1), surface.indices)
-#        self.assertEqual('surface', surface.description)
-#        self.assertAlmostEqual(3.0, surface.scale.x, 4)
+    def testto_xml(self):
+        element = mapper.to_xml(self.surface)
+
+        self.assertEqual('surface', element.get('description'))
+
+        subelement = list(element.find('indices'))[0]
+        self.assertEqual(1, int(subelement.get('a')))
+        self.assertEqual(1, int(subelement.get('b')))
+        self.assertEqual(1, int(subelement.get('c')))
+        self.assertEqual(0, int(subelement.get('d')))
+        self.assertEqual(-1, int(subelement.get('e')))
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.surface)
+        surface = mapper.from_xml(element)
+
+        self.assertEqual((1, 1, 1, 0, -1), surface.indices)
+        self.assertEqual('surface', surface.description)
+        self.assertAlmostEqual(3.0, surface.scale.x, 4)
 
     def testto_geo(self):
         lines = self.surface.to_geo()
@@ -370,38 +389,43 @@ class TestModule(TestCase):
 
 #    def testto_xml(self):
 #        # Module 1
-#        element = self.module1.to_xml()
+#        element = mapper.to_xml(self.module1)
+#
+#        from xml.etree import ElementTree
+#        print ElementTree.tostringlist(element)
 #
 #        self.assertEqual(0, int(element.get('index')))
 #        self.assertEqual('Test', element.get('description'))
 #
 #        child = element.find('material')
-#        self.assertEqual(1, int(child.get('index')))
+##        self.assertEqual(1, int(child.get('index')))
 #
-#        children = list(element.find('surfaces'))
+#        children = list(element.find('_surfaces'))
 #        self.assertEqual(2, len(children))
 #
-#        children = list(element.find('modules'))
+#        children = list(element.find('_modules'))
 #        self.assertEqual(1, len(children))
 #
 #        # Module 2
-#        element = self.module2.to_xml()
+#        element = mapper.to_xml(self.module2)
+#
+#        from xml.etree import ElementTree
+#        print ElementTree.tostring(element)
 #
 #        self.assertEqual(1, int(element.get('index')))
 #        self.assertEqual('', element.get('description'))
 #        self.assertAlmostEqual(1e4, float(element.get('maximumStepLength')), 4)
 #
 #        child = element.find('material')
-#        self.assertEqual(0, int(child.get('index')))
+##        self.assertEqual(0, int(child.get('index')))
 #
 #        children = element.find('interactionForcings')
 #        self.assertEqual(1, len(children))
 #
 #    def testfrom_xml(self):
 #        # Module 1
-#        element = self.module1.to_xml()
-#        module = Module.from_xml(element, self.materials_lookup,
-#                                 self.surfaces_lookup, self.modules_lookup)
+#        element = mapper.to_xml(self.module1)
+#        module = mapper.from_xml(element)
 #
 #        self.assertEqual('Copper', str(module.material))
 #        self.assertEqual('Test', module.description)
@@ -411,9 +435,8 @@ class TestModule(TestCase):
 #        self.assertEqual(1, len(module.get_modules()))
 #
 #        # Module 2
-#        element = self.module2.to_xml()
-#        module = Module.from_xml(element, self.materials_lookup,
-#                                 self.surfaces_lookup, self.modules_lookup)
+#        element = mapper.to_xml(self.module2)
+#        module = mapper.from_xml(element)
 #
 #        self.assertEqual(str(VACUUM), str(module.material))
 #        self.assertEqual(0, len(module.get_surfaces()))

@@ -17,6 +17,8 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo.input.xmlmapper import mapper
+
 from pymontecarlo.program._penelope.input.material import Material, pure
 
 # Globals and constants variables.
@@ -37,7 +39,7 @@ class TestModule(TestCase):
 
         self.assertEquals('Copper', str(m))
 
-        self.assertTrue(m.composition.has_key(29))
+        self.assertTrue(29 in m.composition)
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
@@ -57,7 +59,7 @@ class TestMaterial(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None,
+        self.m = Material('Pure Cu', {'Cu': 1.0}, density_kg_m3=8960.0,
                           elastic_scattering=(0.1, 0.2),
                           cutoff_energy_inelastic_eV=51.2,
                           cutoff_energy_bremsstrahlung_eV=53.4)
@@ -71,7 +73,7 @@ class TestMaterial(TestCase):
         self.assertEquals('Pure Cu', str(self.m))
         self.assertEquals('Pure Cu', self.m.name)
 
-        self.assertTrue(self.m.composition.has_key(29))
+        self.assertTrue(29 in self.m.composition)
         self.assertAlmostEqual(1.0, self.m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, self.m.density_kg_m3 / 1000.0, 4)
@@ -87,12 +89,12 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(53.4, self.m.cutoff_energy_bremsstrahlung_eV, 4)
 
     def testfrom_xml(self):
-        element = self.m.to_xml()
-        m = Material.from_xml(element)
+        element = mapper.to_xml(self.m)
+        m = mapper.from_xml(element)
 
         self.assertEquals('Pure Cu', str(m))
 
-        self.assertTrue(m.composition.has_key(29))
+        self.assertTrue(29 in m.composition)
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
         self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
@@ -130,23 +132,23 @@ class TestMaterial(TestCase):
         self.assertRaises(ValueError, self.m.__setattr__, 'cutoff_energy_bremsstrahlung_eV', -1.0)
 
     def testto_xml(self):
-        element = self.m.to_xml()
+        element = mapper.to_xml(self.m)
 
         self.assertEquals('Pure Cu', element.get('name'))
 
         children = list(element.find('composition'))
         self.assertEqual(1, len(children))
         self.assertEqual(29, int(children[0].get('z')))
-        self.assertAlmostEqual(1.0, float(children[0].get('weightFraction')), 4)
 
         self.assertAlmostEqual(8.96, float(element.get('density')) / 1000.0, 4)
 
-        self.assertAlmostEqual(50, float(element.get('absorptionEnergyElectron')), 4)
-        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPhoton')), 4)
-        self.assertAlmostEqual(50, float(element.get('absorptionEnergyPositron')), 4)
+        self.assertAlmostEqual(50, float(element.get('absorption_energy_electron')), 4)
+        self.assertAlmostEqual(50, float(element.get('absorption_energy_photon')), 4)
+        self.assertAlmostEqual(50, float(element.get('absorption_energy_positron')), 4)
 
-        self.assertAlmostEqual(0.1, float(element.get('c1')), 4)
-        self.assertAlmostEqual(0.2, float(element.get('c2')), 4)
+        child = list(element.find('elastic_scattering'))[0]
+        self.assertAlmostEqual(0.1, float(child.get('c1')), 4)
+        self.assertAlmostEqual(0.2, float(child.get('c2')), 4)
 
         self.assertAlmostEqual(51.2, float(element.get('wcc')), 4)
         self.assertAlmostEqual(53.4, float(element.get('wcr')), 4)
