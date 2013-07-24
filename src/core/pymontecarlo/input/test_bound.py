@@ -16,6 +16,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.input.bound import bound
+from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
 
@@ -40,6 +41,21 @@ class Testbound(unittest.TestCase):
         self.assertEqual(-6, self.b.lower)
         self.assertEqual(6, self.b.high)
         self.assertEqual(6, self.b.upper)
+
+    def testfrom_xml(self):
+        element = mapper.to_xml(self.a)
+        a = mapper.from_xml(element)
+
+        self.assertEqual(-5, a.low)
+        self.assertEqual(-5, a.lower)
+        self.assertEqual(5, a.high)
+        self.assertEqual(5, a.upper)
+
+    def testto_xml(self):
+        element = mapper.to_xml(self.a)
+
+        self.assertEqual(-5, int(element.get('lower')))
+        self.assertEqual(5, int(element.get('upper')))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
