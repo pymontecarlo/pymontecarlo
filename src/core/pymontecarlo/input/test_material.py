@@ -12,6 +12,7 @@ __license__ = "GPL v3"
 import unittest
 import logging
 import copy
+import warnings
 
 # Third party modules.
 
@@ -23,6 +24,8 @@ from pymontecarlo.input.material import \
 from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
+
+warnings.simplefilter("always")
 
 class TestModule(TestCase):
 
@@ -235,8 +238,10 @@ class TestMaterial(TestCase):
 
         # Wildcard
         self.m.composition.update({29: 0.7, 30: '?'})
+        self.m.density_kg_m3 = None
         self.m.calculate()
 
+        self.assertAlmostEqual(8323.4973, self.m.density_kg_m3, 4)
         self.assertTrue(29 in self.m.composition)
         self.assertAlmostEqual(0.7, self.m.composition[29], 4)
         self.assertTrue(30 in self.m.composition)
@@ -244,12 +249,35 @@ class TestMaterial(TestCase):
 
         # Multiple wildcards
         self.m.composition.update({29: '?', 30: '?'})
+        self.m.density_kg_m3 = None
         self.m.calculate()
 
+        self.assertAlmostEqual(7947.1304, self.m.density_kg_m3, 4)
         self.assertTrue(29 in self.m.composition)
         self.assertAlmostEqual(0.5, self.m.composition[29], 4)
         self.assertTrue(30 in self.m.composition)
         self.assertAlmostEqual(0.5, self.m.composition[30], 4)
+
+        # Multiple values
+        self.m.composition.update({29: 0.4, 'Zn': [0.5, '?'], 'Ni': ['?']})
+        self.m.density_kg_m3 = None
+
+        with warnings.catch_warnings(record=True) as ws:
+            self.m.calculate()
+
+        self.assertEqual(1, len(ws))
+        self.assertIsNone(self.m.density_kg_m3)
+        self.assertEqual(2, len(self.m.composition[29]))
+        self.assertAlmostEqual(0.4, self.m.composition[29][0], 4)
+        self.assertAlmostEqual(0.4, self.m.composition[29][1], 4)
+
+        self.assertEqual(2, len(self.m.composition[30]))
+        self.assertAlmostEqual(0.5, self.m.composition[30][0], 4)
+        self.assertAlmostEqual(0.3, self.m.composition[30][1], 4)
+
+        self.assertEqual(2, len(self.m.composition[28]))
+        self.assertAlmostEqual(0.1, self.m.composition[28][0], 4)
+        self.assertAlmostEqual(0.3, self.m.composition[28][1], 4)
 
     def testfrom_xml(self):
         element = mapper.to_xml(self.m)

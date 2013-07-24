@@ -28,6 +28,7 @@ from collections import defaultdict
 from fractions import gcd
 from itertools import combinations
 from types import StringTypes
+import warnings
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
@@ -368,10 +369,11 @@ class Material(object):
 
         # Calculate density
         if self.density_kg_m3 is None:
-            densities = []
-            for composition in expand(self.composition):
-                densities.append(_calculate_density(composition))
-            self.density_kg_m3 = densities
+            if len(expand(self.composition)) != 1:
+                message = "Cannot calculate density when many compositions are defined"
+                warnings.warn(message, UserWarning)
+            else:
+                self.density_kg_m3 = _calculate_density(self.composition)
 
     def has_density_defined(self):
         """
