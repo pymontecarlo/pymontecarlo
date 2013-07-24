@@ -648,7 +648,7 @@ class CastValidator(_Validator):
     def validate(self, value):
         if isinstance(value, Mapping):
             return self._cls(**value)
-        elif isinstance(value, Iterable):
+        elif isinstance(value, Iterable) and not isinstance(value, basestring):
             return self._cls(*value)
         else:
             return self._cls(value)
