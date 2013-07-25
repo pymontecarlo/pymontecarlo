@@ -305,6 +305,28 @@ class ParameterizedMutableSet(MutableSet):
     def __contains__(self, item):
         return self._get_key(item) in self.__parameters__
 
+    def __deepcopy__(self, memo):
+        # Override
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            result.__dict__[k] = copy.deepcopy(v, memo)
+
+        # Key must be update with new key from objects
+        for key, parameter in result.__parameters__.items():
+            wrapper = result.__dict__[key]
+            newkey = self._get_key(wrapper.get())
+
+            del result.__parameters__[key]
+            parameter._name = newkey
+            result.__parameters__[newkey] = parameter
+
+            del result.__dict__[key]
+            result.__dict__[newkey] = wrapper
+
+        return result
+
     def _get_key(self, item):
         return hash(item)
 
