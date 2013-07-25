@@ -19,8 +19,9 @@ import warnings
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 from pymontecarlo.input.material import \
-    Material, composition_from_formula, pure, _Composition, VACUUM
+    Material, composition_from_formula, pure, _Composition, _AbsorptionEnergy, VACUUM
 from pymontecarlo.input.xmlmapper import mapper
 
 # Globals and constants variables.
@@ -74,8 +75,8 @@ class TestModule(TestCase):
         self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
         self.assertAlmostEqual(8.96, m.density_g_cm3, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[PHOTON], 4)
 
 class TestVACUUM(TestCase):
 
@@ -89,6 +90,9 @@ class TestVACUUM(TestCase):
         self.assertEquals('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
+        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[POSITRON], 4)
 
         self.assertRaises(AttributeError, setattr, VACUUM, 'name', 'test')
 
@@ -140,15 +144,40 @@ class Test_Composition(TestCase):
         self.assertAlmostEqual(0.1, self.comp[28][0], 4)
         self.assertAlmostEqual(0.3, self.comp[28][1], 4)
 
+class Test_AbsorptionEnergy(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.ae = _AbsorptionEnergy(56.8)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+    
+    def testdefault(self):
+        self.assertAlmostEqual(56.8, self.ae[ELECTRON], 4)
+        self.assertAlmostEqual(56.8, self.ae[PHOTON], 4)
+        self.assertAlmostEqual(56.8, self.ae[POSITRON], 4)
+
+    def test__setitem__(self):
+        self.ae[ELECTRON] = 1e3
+        self.assertAlmostEqual(1e3, self.ae[ELECTRON], 4)
+
+        # ValueError: Energy less than 0
+        self.assertRaises(ValueError, self.ae.__setitem__, ELECTRON, -1.0)
+
+        # Only particle key are accepted
+        self.assertRaises(KeyError, self.ae.__setitem__, "blah", 50.0)
+
 class TestMaterial(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
 
-        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None,
-                          absorption_energy_electron_eV=50,
-                          absorption_energy_photon_eV=51,
-                          absorption_energy_positron_eV=52)
+        self.m = Material('Pure Cu', {'Cu': '?'}, density_kg_m3=None)
+        self.m.absorption_energy_eV[ELECTRON] = 50.0
+        self.m.absorption_energy_eV[PHOTON] = 51.0
+        self.m.absorption_energy_eV[POSITRON] = 52.0
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -164,9 +193,9 @@ class TestMaterial(TestCase):
 
         self.assertIsNone(self.m.density_kg_m3)
 
-        self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(51, self.m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(52, self.m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(51, self.m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(52, self.m.absorption_energy_eV[POSITRON], 4)
 
     def testcomposition(self):
         self.m.composition[29] = [0.5, 0.6]
@@ -208,27 +237,6 @@ class TestMaterial(TestCase):
         # User defined density
         self.m.density_kg_m3 = 1.0
         self.assertAlmostEqual(1.0, self.m.density_kg_m3, 4)
-
-    def testabsoprtion_energy_electron_eV(self):
-        self.m.absorption_energy_electron_eV = 1e3
-        self.assertAlmostEqual(1e3, self.m.absorption_energy_electron_eV, 4)
-
-        # ValueError: Energy less than 0
-        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_electron_eV', -1.0)
-
-    def testabsoprtion_energy_photon_eV(self):
-        self.m.absorption_energy_photon_eV = 1e3
-        self.assertAlmostEqual(1e3, self.m.absorption_energy_photon_eV, 4)
-
-        # ValueError: Energy less than 0
-        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_photon_eV', -1.0)
-
-    def testabsoprtion_energy_positron_eV(self):
-        self.m.absorption_energy_positron_eV = 1e3
-        self.assertAlmostEqual(1e3, self.m.absorption_energy_positron_eV, 4)
-
-        # ValueError: Energy less than 0
-        self.assertRaises(ValueError, self.m.__setattr__, 'absorption_energy_positron_eV', -1.0)
 
     def testcalculate(self):
         self.m.calculate()
@@ -290,9 +298,9 @@ class TestMaterial(TestCase):
 
         self.assertIsNone(m.density_kg_m3)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(51, m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(52, m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(51, m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(52, m.absorption_energy_eV[POSITRON], 4)
 
         self.assertFalse(hasattr(m, '_index'))
 
@@ -308,9 +316,14 @@ class TestMaterial(TestCase):
 
         self.assertEqual('xsi:nil', element.get('density'))
 
-        self.assertAlmostEqual(50, float(element.get('absorption_energy_electron')), 4)
-        self.assertAlmostEqual(51, float(element.get('absorption_energy_photon')), 4)
-        self.assertAlmostEqual(52, float(element.get('absorption_energy_positron')), 4)
+        children = list(element.find('absorption_energy'))
+        self.assertEqual(3, len(children))
+        self.assertEqual("electron", children[0].get('particle'))
+        self.assertAlmostEqual(50, float(children[0].text), 4)
+        self.assertEqual("positron", children[1].get('particle'))
+        self.assertAlmostEqual(52, float(children[1].text), 4)
+        self.assertEqual("photon", children[2].get('particle'))
+        self.assertAlmostEqual(51, float(children[2].text), 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

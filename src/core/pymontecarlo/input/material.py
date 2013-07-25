@@ -34,10 +34,10 @@ import warnings
 from pyparsing import Word, Group, Optional, OneOrMore
 
 # Local modules.
+from pymontecarlo.input.particle import PARTICLES, ParticleType
 from pymontecarlo.input.parameter import \
-    (ParameterizedMetaClass, Parameter, UnitParameter, FrozenParameter,
-     SimpleValidator, ParameterizedMutableMapping, FactorParameterAlias,
-     expand, freeze)
+    (ParameterizedMetaClass, Parameter, FrozenParameter, SimpleValidator,
+     ParameterizedMutableMapping, FactorParameterAlias, expand, freeze)
 from pymontecarlo.input.xmlmapper import \
     (mapper, ParameterizedAttribute, ParameterizedElementDict,
      _XMLType, PythonType)
@@ -45,8 +45,6 @@ from pymontecarlo.input.xmlmapper import \
 import pyxray.element_properties as ep
 
 # Globals and constants variables.
-
-
 
 def _calculate_composition_atomic(composition):
     """
@@ -172,10 +170,7 @@ def composition_from_formula(formula):
 
     return composition
 
-def pure(z,
-         absorption_energy_electron_eV=50.0,
-         absorption_energy_photon_eV=50.0,
-         absorption_energy_positron_eV=50.0):
+def pure(z):
     """
     Returns the material for the specified pure element.
     
@@ -197,9 +192,7 @@ def pure(z,
     name = ep.name(z)
     composition = {z: '?'}
 
-    mat = Material(name, composition, None,
-                   absorption_energy_electron_eV, absorption_energy_photon_eV,
-                   absorption_energy_positron_eV)
+    mat = Material(name, composition, None)
     mat.calculate()
 
     return mat
@@ -282,9 +275,24 @@ class _DensityParameter(Parameter):
         methods[name + '_g_cm3'] = FactorParameterAlias(parameter, 1000.0)
         Parameter._new(self, cls, clsname, bases, methods, name + "_kg_m3")
 
-_energy_validator = \
-    SimpleValidator(lambda e: e >= 0.0,
-                    'Energy must be greater or equal to 0.0')
+class _AbsorptionEnergy(ParameterizedMutableMapping):
+
+    def __init__(self, default_energy_eV=50.0):
+        validator = SimpleValidator(lambda e: e >= 0.0,
+                                    'Energy must be greater or equal to 0.0')
+        ParameterizedMutableMapping.__init__(self, validators=[validator])
+
+        self._default_energy_eV = default_energy_eV
+
+    def __setitem__(self, key, value):
+        if key not in PARTICLES:
+            raise KeyError, "Unknown particle: %s" % key
+        ParameterizedMutableMapping.__setitem__(self, key, value)
+
+    def __getitem__(self, key):
+        if key not in self.__parameters__:
+            return self._default_energy_eV
+        return self.__parameters__[key].__get__(self)
 
 class Material(object):
 
@@ -296,20 +304,11 @@ class Material(object):
 
     density = _DensityParameter()
 
-    absorption_energy_electron = \
-        UnitParameter("eV", _energy_validator,
-                      "Absorption energy of the electrons")
-    absorption_energy_photon = \
-        UnitParameter("eV", _energy_validator,
-                      "Absorption energy of the photons")
-    absorption_energy_positron = \
-        UnitParameter("eV", _energy_validator,
-                      "Absorption energy of the positrons")
+    absorption_energy_eV = \
+        FrozenParameter(_AbsorptionEnergy,
+                        "Absorption energy of particles (in eV)")
 
-    def __init__(self, name, composition, density_kg_m3=None,
-                 absorption_energy_electron_eV=50.0,
-                 absorption_energy_photon_eV=50.0,
-                 absorption_energy_positron_eV=50.0):
+    def __init__(self, name, composition, density_kg_m3=None):
         """
         Creates a new material.
         
@@ -331,18 +330,6 @@ class Material(object):
             automatically calculated based on the density of the elements and 
             their weight fraction.
         :type density_kg_m3: :class:`float`
-        
-        :arg absorption_energy_electron_eV: absorption energy of the electrons 
-            in this material.
-        :type absorption_energy_electron_eV: :class:`float`
-        
-        :arg absorption_energy_photon_eV: absorption energy of the photons in
-            this material.
-        :type absorption_energy_photon_eV: :class:`float`
-        
-        :arg absorption_energy_positron_eV: absorption energy of the positrons
-            in this material.
-        :type absorption_energy_positron_eV: :class:`float`
         """
         self.name = name
 
@@ -350,9 +337,7 @@ class Material(object):
 
         self.density_kg_m3 = density_kg_m3
 
-        self.absorption_energy_electron_eV = absorption_energy_electron_eV
-        self.absorption_energy_photon_eV = absorption_energy_photon_eV
-        self.absorption_energy_positron_eV = absorption_energy_positron_eV
+        self.absorption_energy_eV.clear()
 
     def __repr__(self):
         return '<Material(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, abs_positron=%s eV)>' % \
@@ -388,9 +373,8 @@ mapper.register(Material, '{http://pymontecarlo.sf.net}material',
                 ParameterizedElementDict('composition', PythonType(int), _WeightFractionXMLType(),
                                         keyxmlname='z', valuexmlname='element'),
                 ParameterizedAttribute('density_kg_m3', PythonType(float), 'density'),
-                ParameterizedAttribute('absorption_energy_electron_eV', PythonType(float), 'absorption_energy_electron'),
-                ParameterizedAttribute('absorption_energy_photon_eV', PythonType(float), 'absorption_energy_photon'),
-                ParameterizedAttribute('absorption_energy_positron_eV', PythonType(float), 'absorption_energy_positron'))
+                ParameterizedElementDict('absorption_energy_eV', ParticleType(), PythonType(float),
+                                         "absorption_energy", "particle", "energy"),)
 
 class _Vacuum(Material):
     
@@ -402,9 +386,7 @@ class _Vacuum(Material):
             inst.name = 'Vacuum'
             inst.composition.clear()
             inst.density_kg_m3 = 0.0
-            inst.absorption_energy_electron = 0.0
-            inst.absorption_energy_photon = 0.0
-            inst.absorption_energy_positron = 0.0
+            inst.absorption_energy_eV._default_energy_eV = 0.0
             cls._instance = inst
         return cls._instance
 
