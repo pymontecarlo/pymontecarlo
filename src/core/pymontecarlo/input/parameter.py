@@ -430,7 +430,8 @@ class ParameterizedMutableMapping(MutableMapping):
     def __delitem__(self, key):
         if key not in self.__parameters__:
             raise KeyError, key
-        return self.__parameters__.pop(key)
+        del self.__dict__[key]
+        del self.__parameters__[key]
 
     def __setitem__(self, key, value):
         try:
