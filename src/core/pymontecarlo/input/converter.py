@@ -24,6 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.input.parameter import expand
 
 # Globals and constants variables.
 
@@ -61,11 +62,15 @@ class Converter(object):
     MODELS = {}
     DEFAULT_MODELS = {}
 
-
     def convert(self, options):
         """
-        Converts the beam, geometry, detectors and limits to be compatible
-        with the Monte Carlo program.
+        Performs two tasks:
+        
+          1. Expand the options to create single options that the Monte Carlo
+             program can run
+          2. Converts the beam, geometry, detectors and limits to be compatible
+             with the Monte Carlo program.
+             
         This method may raise :exc:`ConversionException` if some parameters
         cannot be converted.
         If a parameter is modified or removed during the conversion, a
@@ -73,21 +78,54 @@ class Converter(object):
         If no conversion is required, the parameter (and its object) are left
         intact.
         
+        This method returns a list of options, corresponding to the expanded
+        options.
+        
         :arg options: options
         """
-        self._convert_beam(options)
-        self._convert_geometry(options)
-        self._convert_detectors(options)
-        self._convert_limits(options)
-        self._convert_models(options)
+        list_options = []
+        
+        for options in self._expand(options):
+            if not self._convert_beam(options): continue
+            if not self._convert_geometry(options): continue
+            if not self._convert_detectors(options): continue
+            if not self._convert_limits(options): continue
+            if not self._convert_models(options): continue
+
+            list_options.append(options)
+
+        if not list_options:
+            warnings.warn("No options could be converted", ConversionWarning)
+
+        return list_options
+
+    def _expand(self, options):
+        return expand(options)
 
     def _convert_beam(self, options):
-        if options.beam.__class__ not in self.BEAMS:
-            raise ConversionException, "Cannot convert beam"
+        clasz = options.beam.__class__
+        if clasz not in self.BEAMS:
+            message = "Cannot convert beam (%s). This options definition was removed." % \
+                clasz.__name__
+            warnings.warn(message, ConversionWarning)
+            return False
+
+        return True
 
     def _convert_geometry(self, options):
-        if options.geometry.__class__ not in self.GEOMETRIES:
-            raise ConversionException, "Cannot convert geometry"
+        # Check class
+        clasz = options.geometry.__class__
+        if clasz not in self.GEOMETRIES:
+            message = "Cannot convert geometry (%s). This options definition was removed." % \
+                clasz.__name__
+            warnings.warn(message, ConversionWarning)
+            return False
+
+        # Calculate materials
+        for material in options.geometry.get_materials():
+            material.calculate()
+
+        return True
 
     def _convert_detectors(self, options):
         for key in options.detectors.keys():
@@ -99,6 +137,13 @@ class Converter(object):
                     (key, detector.__class__.__name__)
                 warnings.warn(message, ConversionWarning)
 
+        if not options.detectors:
+            message = "No detectors in options. This options definition was removed."
+            warnings.warn(message, ConversionWarning)
+            return False
+
+        return True
+
     def _convert_limits(self, options):
         for limit in options.limits:
             if limit.__class__ not in self.LIMITS:
@@ -107,6 +152,13 @@ class Converter(object):
                 message = "Limit of type '%s' cannot be converted. It was removed" % \
                     (limit.__class__.__name__)
                 warnings.warn(message, ConversionWarning)
+
+        if not options.limits:
+            message = "No limits in options. This options definition was removed."
+            warnings.warn(message, ConversionWarning)
+            return False
+
+        return True
 
     def _convert_models(self, options):
         for model_type, default_model in self.DEFAULT_MODELS.iteritems():
@@ -139,4 +191,6 @@ class Converter(object):
                 message = "Unknown model type (%s) for this converter. Model (%s) is removed." % \
                     (model.type, model)
                 warnings.warn(message, ConversionWarning)
+
+        return True
 
