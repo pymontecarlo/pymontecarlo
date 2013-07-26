@@ -735,39 +735,68 @@ def freeze(obj):
             baseobj.__dict__[name] = _ParameterValuesWrapper(())
         parameter.freeze(baseobj)
 
-def expand(obj):
+class Expander(object):
     """
-    Returns a list of the specified object where only one value is defined
-    for each parameter.
-    The function computes all possible combinations of parameter/values.
+    Expands an parameterized object based on all possible combinations of
+    paramter/values.
+    """
+
+    def expand(self, obj):
+        """
+        Returns a list of the specified object where only one value is defined
+        for each parameter.
+        The function computes all possible combinations of parameter/values.
+        
+        :arg obj: object containing parameters
+        """
+        obj = copy.deepcopy(obj)
+
+        parameter_values, parameter_obj_ids = \
+            self._create_parameter_values_dict(obj)
+
+        combinations, parameter_objs, parameters = \
+            self._create_combinations(parameter_values, parameter_obj_ids)
+
+        objs = self._create_objects(obj, combinations, parameter_objs, parameters)
+
+        return objs
+
+    def _create_parameter_values_dict(self, obj):
+        parameter_values = {}
+        parameter_obj_ids = {}
+        for _name, parameter, parameter_obj in iter_parameters(obj):
+            try:
+                wrapper = parameter._get_wrapper(parameter_obj)
+            except AttributeError: # No value
+                continue
+
+            if wrapper.is_frozen():
+                continue
+
+            if len(wrapper) < 2:
+                continue
+
+            parameter_obj_id = id(parameter_obj) # Use id in case baseobj is not hashable
+            parameter_values[(parameter_obj_id, parameter)] = list(wrapper)
+            parameter_obj_ids[parameter_obj_id] = parameter_obj
+
+        return parameter_values, parameter_obj_ids
+
+    def _create_combinations(self, parameter_values, parameter_obj_ids):
+        combinations, names, _varied = combine(parameter_values)
+        parameter_objs = map(parameter_obj_ids.get, map(itemgetter(0), names))
+        parameters = map(itemgetter(1), names)
+
+        return combinations, parameter_objs, parameters
+
+    def _create_objects(self, baseobj, combinations, parameter_objs, parameters):
+        objs = []
+        for combination in combinations:
+            for parameter_obj, parameter, value in zip(parameter_objs, parameters, combination):
+                parameter.__set__(parameter_obj, value)
+            objs.append(copy.deepcopy(baseobj))
     
-    :arg obj: object containing parameters
-    """
-    obj = copy.deepcopy(obj)
+        return objs
 
-    prm_values = {}
-    baseobj_ids = {}
-    for _name, parameter, baseobj in iter_parameters(obj):
-        try:
-            wrapper = parameter._get_wrapper(baseobj)
-        except AttributeError: # No value
-            continue
-
-        if wrapper.is_frozen():
-            continue
-
-        baseobj_id = id(baseobj) # Use id in case baseobj is not hashable
-        prm_values[(baseobj_id, parameter)] = list(wrapper)
-        baseobj_ids[baseobj_id] = baseobj
-
-    combinations, names, _varied = combine(prm_values)
-    baseobjs = map(baseobj_ids.get, map(itemgetter(0), names))
-    parameters = map(itemgetter(1), names)
-
-    objs = []
-    for combination in combinations:
-        for baseobj, parameter, value in zip(baseobjs, parameters, combination):
-            parameter.__set__(baseobj, value)
-        objs.append(copy.deepcopy(obj))
-
-    return objs
+_root_expander = Expander()
+expand = _root_expander.expand
