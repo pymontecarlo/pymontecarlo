@@ -54,22 +54,22 @@ class Exporter(object):
         self._limit_exporters = {}
         self._model_exporters = {}
     
-    def export(self, options, outputdir, *args, **kwargs):
+    def export(self, options, dirpath, *args, **kwargs):
         """
         Exports options to a file inside the specified output directory.
         Returns the filepath of the exported options.
         
         :arg options: options to export
             The options must only contained a single value for each parameter.
-        :arg outputdir: full path to output directory
+        :arg dirpath: full path to output directory
         """
         if self._expander.is_expandable(options):
             raise ValueError, "Only options with singular value can be exported"
 
-        return self._export(options, outputdir, *args, **kwargs)
+        return self._export(options, dirpath, *args, **kwargs)
 
     @abstractmethod
-    def _export(self, options, outputdir, *args, **kwargs):
+    def _export(self, options, dirpath, *args, **kwargs):
         """
         Performs the actual export.
         """
@@ -187,7 +187,7 @@ class XMLExporter(Exporter):
     Exports the options to a XML file.
     """
 
-    def _export(self, options, outputdir, *args, **kwargs):
+    def _export(self, options, dirpath, *args, **kwargs):
         element = mapper.to_xml(options)
         
         encoding = kwargs.get('encoding', 'UTF-8')
@@ -197,7 +197,7 @@ class XMLExporter(Exporter):
         if pretty_print:
             output = minidom.parseString(output).toprettyxml(encoding=encoding)
 
-        filepath = os.path.join(outputdir, options.name + '.xml')
+        filepath = os.path.join(dirpath, options.name + '.xml')
         with open(filepath, 'w') as fp:
             fp.write(output)
 
