@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import copy
 
 # Third party modules.
 
@@ -34,10 +35,10 @@ class Expander(_Expander):
     name for each options based on the varied parameter.
     """
 
-    def expand(self, options):
-        if not isinstance(options, Options):
+    def expand(self, obj):
+        if not isinstance(obj, Options):
             raise ValueError, "Argument must be an Options"
-        return _Expander.expand(self, options)
+        return _Expander.expand(self, obj)
 
     def _create_objects(self, baseobj, combinations, parameter_objs, parameters):
         opss = _Expander._create_objects(self, baseobj, combinations,
@@ -52,3 +53,57 @@ class Expander(_Expander):
             options.name = '+'.join(parts)
 
         return opss
+
+class ExpanderSingleDetector(Expander):
+    """
+    Further expansion to to ensure that there is only one type of detector 
+    per options.
+    """
+
+    def __init__(self, detector_classes):
+        """
+        Special expander that expands the options to ensure that there is
+        only one type of detector per options.
+        
+        :arg detector_classes: list of detector classes that should be unique
+        """
+        Expander.__init__(self)
+
+        self._detector_classes = list(detector_classes) # copy
+
+    def expand(self, obj):
+        list_options = Expander.expand(self, obj)
+
+        # Check detector duplicates
+        for detector_class in self._detector_classes:
+            for options in list(list_options):
+                detectors = list(options.detectors.iterclass(detector_class))
+                if len(detectors) <= 1:
+                    continue
+
+                # Remove all detectors
+                baseoptions = copy.deepcopy(options)
+                for key, _ in detectors:
+                    del baseoptions.detectors[key]
+
+                # Add only one detector per options
+                for key, detector in detectors:
+                    newoptions = copy.deepcopy(baseoptions)
+                    newoptions.detectors[key] = detector
+                    list_options.append(newoptions)
+
+                # Remove original options
+                list_options.remove(options)
+
+        return list_options
+
+    def is_expandable(self, obj):
+        if Expander.is_expandable(self, obj):
+            return True
+        
+        for detector_class in self._detector_classes:
+            detectors = list(obj.detectors.iterclass(detector_class))
+            if len(detectors) > 1:
+                return True
+        
+        return False

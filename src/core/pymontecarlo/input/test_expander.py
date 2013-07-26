@@ -16,12 +16,14 @@ from operator import attrgetter
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.expander import Expander
+from pymontecarlo.input.expander import Expander, ExpanderSingleDetector
 from pymontecarlo.input.options import Options
+from pymontecarlo.input.detector import \
+    TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector
 
 # Globals and constants variables.
 
-class Test(unittest.TestCase):
+class TestExpander(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -48,6 +50,101 @@ class Test(unittest.TestCase):
 
         self.ops.beam.energy_eV = [5e3]
         self.assertFalse(self.expander.is_expandable(self.ops))
+
+class TestExpanderSingleDetector(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.ops = Options("op1")
+        self.ops.detectors['det1a'] = TimeDetector()
+        self.ops.detectors['det2a'] = ElectronFractionDetector()
+        self.ops.detectors['det3'] = ShowersStatisticsDetector()
+
+        self.expander = ExpanderSingleDetector([TimeDetector,
+                                                ElectronFractionDetector])
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testexpand_noduplicates(self):
+        opss = self.expander.expand(self.ops)
+        self.assertEqual(1, len(opss))
+        self.assertEqual(3, len(opss[0].detectors))
+
+    def testexpand_duplicates(self):
+        self.ops.detectors['det1b'] = TimeDetector()
+        opss = self.expander.expand(self.ops)
+
+        self.assertEqual(2, len(opss))
+
+        self.assertEqual(3, len(opss[0].detectors))
+        if 'det1a' in opss[0].detectors:
+            self.assertNotIn('det1b', opss[0].detectors)
+        if 'det1b' in opss[0].detectors:
+            self.assertNotIn('det1a', opss[0].detectors)
+
+        self.assertEqual(3, len(opss[1].detectors))
+        if 'det1a' in opss[1].detectors:
+            self.assertNotIn('det1b', opss[1].detectors)
+        if 'det1a' in opss[1].detectors:
+            self.assertNotIn('det1b', opss[1].detectors)
+
+    def testexpand_duplicates2(self):
+        self.ops.detectors['det1b'] = TimeDetector()
+        self.ops.detectors['det2b'] = ElectronFractionDetector()
+        opss = self.expander.expand(self.ops)
+
+        self.assertEqual(4, len(opss))
+
+        self.assertEqual(3, len(opss[0].detectors))
+        if 'det1a' in opss[0].detectors:
+            self.assertNotIn('det1b', opss[0].detectors)
+        if 'det1b' in opss[0].detectors:
+            self.assertNotIn('det1a', opss[0].detectors)
+        if 'det2a' in opss[0].detectors:
+            self.assertNotIn('det2b', opss[0].detectors)
+        if 'det2b' in opss[0].detectors:
+            self.assertNotIn('det2a', opss[0].detectors)
+
+        self.assertEqual(3, len(opss[1].detectors))
+        if 'det1a' in opss[1].detectors:
+            self.assertNotIn('det1b', opss[1].detectors)
+        if 'det1b' in opss[1].detectors:
+            self.assertNotIn('det1a', opss[1].detectors)
+        if 'det2a' in opss[1].detectors:
+            self.assertNotIn('det2b', opss[1].detectors)
+        if 'det2b' in opss[1].detectors:
+            self.assertNotIn('det2a', opss[1].detectors)
+
+        self.assertEqual(3, len(opss[0].detectors))
+        if 'det1a' in opss[2].detectors:
+            self.assertNotIn('det1b', opss[2].detectors)
+        if 'det1b' in opss[2].detectors:
+            self.assertNotIn('det1a', opss[2].detectors)
+        if 'det2a' in opss[2].detectors:
+            self.assertNotIn('det2b', opss[2].detectors)
+        if 'det2b' in opss[2].detectors:
+            self.assertNotIn('det2a', opss[2].detectors)
+
+        self.assertEqual(3, len(opss[0].detectors))
+        if 'det1a' in opss[3].detectors:
+            self.assertNotIn('det1b', opss[3].detectors)
+        if 'det1b' in opss[3].detectors:
+            self.assertNotIn('det1a', opss[3].detectors)
+        if 'det2a' in opss[3].detectors:
+            self.assertNotIn('det2b', opss[3].detectors)
+        if 'det2b' in opss[3].detectors:
+            self.assertNotIn('det2a', opss[3].detectors)
+
+    def testis_expandable(self):
+        self.assertFalse(self.expander.is_expandable(self.ops))
+
+        self.ops.detectors['det1b'] = TimeDetector()
+        self.assertTrue(self.expander.is_expandable(self.ops))
+
+        self.ops.detectors['det2b'] = ElectronFractionDetector()
+        self.assertTrue(self.expander.is_expandable(self.ops))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
