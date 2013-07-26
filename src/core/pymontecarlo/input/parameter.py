@@ -295,6 +295,9 @@ class ParameterizedMutableSet(MutableSet):
         valstr = ', '.join(map(str, self))
         return '<%s(%s)>' % (self.__class__.__name__, valstr)
 
+    def __str__(self):
+        return str(set(self))
+
     def __len__(self):
         return len(self.__parameters__)
 
@@ -358,6 +361,9 @@ class ParameterizedMutableSequence(MutableSequence):
     def __repr__(self):
         valstr = ', '.join(map(str, self))
         return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __str__(self):
+        return str(list(self))
 
     def __len__(self):
         return len(self.__parameters__)
@@ -440,6 +446,9 @@ class ParameterizedMutableMapping(MutableMapping):
     def __repr__(self):
         valstr = ', '.join(['%s: %s' % item for item in self.items()])
         return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __str__(self):
+        return str(dict(self))
 
     def __len__(self):
         return len(self.__parameters__)
