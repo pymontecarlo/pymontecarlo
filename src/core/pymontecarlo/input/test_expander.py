@@ -43,6 +43,12 @@ class Test(unittest.TestCase):
         self.assertIn('op1+energy_eV=10000.0', names)
         self.assertIn('op1+energy_eV=15000.0', names)
 
+    def testis_expandable(self):
+        self.assertTrue(self.expander.is_expandable(self.ops))
+
+        self.ops.beam.energy_eV = [5e3]
+        self.assertFalse(self.expander.is_expandable(self.ops))
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

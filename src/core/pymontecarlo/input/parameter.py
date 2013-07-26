@@ -762,15 +762,19 @@ class Expander(object):
 
         parameter_values, parameter_obj_ids = \
             self._create_parameter_values_dict(obj)
+        if not parameter_values:
+            return [obj]
 
         combinations, parameter_objs, parameters = \
             self._create_combinations(parameter_values, parameter_obj_ids)
-        if not combinations:
-            return [obj]
 
         objs = self._create_objects(obj, combinations, parameter_objs, parameters)
 
         return objs
+
+    def is_expandable(self, obj):
+        parameter_values, _ = self._create_parameter_values_dict(obj)
+        return bool(parameter_values)
 
     def _create_parameter_values_dict(self, obj):
         parameter_values = {}
