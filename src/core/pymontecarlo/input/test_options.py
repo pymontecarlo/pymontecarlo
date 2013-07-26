@@ -110,8 +110,6 @@ class TestOptions(TestCase):
         dets = list(self.ops.detectors.iterclass(ShowersLimit))
         self.assertEqual(0, len(dets))
 
-        self.assertRaises(KeyError, self.ops.detectors.__setitem__, 'options', None)
-
     def testdetectors_multiple(self):
         self.ops.detectors['bse'] = \
             [BackscatteredElectronEnergyDetector((0, 1234), 1000),

@@ -41,15 +41,7 @@ from pymontecarlo.input.xmlmapper import \
 
 # Globals and constants variables.
 
-FORBIDDEN_DETECTOR_KEYS = ['options', 'keys']
-
 class _Detectors(ParameterizedMutableMapping):
-
-    def __setitem__(self, key, value):
-        if key in FORBIDDEN_DETECTOR_KEYS:
-            raise KeyError, 'Detector cannot have the following keys: %s' % \
-                        ', '.join(FORBIDDEN_DETECTOR_KEYS)
-        return ParameterizedMutableMapping.__setitem__(self, key, value)
 
     def iterclass(self, clasz):
         for key, parameter in self.__parameters__.iteritems():
