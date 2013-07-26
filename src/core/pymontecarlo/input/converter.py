@@ -31,9 +31,6 @@ from pymontecarlo.input.parameter import expand
 class ConversionWarning(Warning):
     pass
 
-class ConversionException(Exception):
-    pass
-
 class Converter(object):
     """
     Base class of all converters.
@@ -61,6 +58,10 @@ class Converter(object):
     LIMITS = []
     MODELS = {}
     DEFAULT_MODELS = {}
+
+    def _warn(self, *messages):
+        message = ' '.join(messages)
+        warnings.warn(message, ConversionWarning)
 
     def convert(self, options):
         """
@@ -95,7 +96,7 @@ class Converter(object):
             list_options.append(options)
 
         if not list_options:
-            warnings.warn("No options could be converted", ConversionWarning)
+            self._warn("No options could be converted")
 
         return list_options
 
@@ -105,9 +106,8 @@ class Converter(object):
     def _convert_beam(self, options):
         clasz = options.beam.__class__
         if clasz not in self.BEAMS:
-            message = "Cannot convert beam (%s). This options definition was removed." % \
-                clasz.__name__
-            warnings.warn(message, ConversionWarning)
+            self._warn("Cannot convert beam (%s)." % clasz.__name__,
+                       "This options definition was removed.")
             return False
 
         return True
@@ -116,9 +116,8 @@ class Converter(object):
         # Check class
         clasz = options.geometry.__class__
         if clasz not in self.GEOMETRIES:
-            message = "Cannot convert geometry (%s). This options definition was removed." % \
-                clasz.__name__
-            warnings.warn(message, ConversionWarning)
+            self._warn("Cannot convert geometry (%s)." % clasz.__name__,
+                       "This options definition was removed.")
             return False
 
         # Calculate materials
@@ -130,32 +129,33 @@ class Converter(object):
     def _convert_detectors(self, options):
         for key in options.detectors.keys():
             detector = options.detectors[key]
-            if detector.__class__ not in self.DETECTORS:
+            clasz = detector.__class__
+            if clasz not in self.DETECTORS:
                 options.detectors.pop(key)
 
-                message = "Detector '%s' of type '%s' cannot be converted. It was removed" % \
-                    (key, detector.__class__.__name__)
-                warnings.warn(message, ConversionWarning)
+                self._warn("Detector '%s' of type '%s' cannot be converted." % \
+                           (key, clasz.__name__),
+                           "It was removed")
 
         if not options.detectors:
-            message = "No detectors in options. This options definition was removed."
-            warnings.warn(message, ConversionWarning)
+            self._warn("No detectors in options.",
+                       "This options definition was removed.")
             return False
 
         return True
 
     def _convert_limits(self, options):
         for limit in options.limits:
-            if limit.__class__ not in self.LIMITS:
+            clasz = limit.__class__
+            if clasz not in self.LIMITS:
                 options.limits.discard(limit)
 
-                message = "Limit of type '%s' cannot be converted. It was removed" % \
-                    (limit.__class__.__name__)
-                warnings.warn(message, ConversionWarning)
+                self._warn("Limit of type '%s' cannot be converted." % clasz.__name__,
+                           "It was removed")
 
         if not options.limits:
-            message = "No limits in options. This options definition was removed."
-            warnings.warn(message, ConversionWarning)
+            self._warn("No limits in options.",
+                       "This options definition was removed.")
             return False
 
         return True
@@ -168,9 +168,8 @@ class Converter(object):
             if not models:
                 options.models.add(default_model)
 
-                message = "Set default model (%s) for model type '%s'" % \
-                    (default_model, model_type)
-                warnings.warn(message, ConversionWarning)
+                self._warn("Set default model (%s) for model type '%s'" % \
+                           (default_model, model_type))
 
             # Check if model is allowable
             else:
@@ -179,18 +178,16 @@ class Converter(object):
                         options.models.discard(model) # not required
                         options.models.add(default_model)
 
-                        message = "Model (%s) is not allowable. It is replaced by the default model (%s)." % \
-                            (model, default_model)
-                        warnings.warn(message, ConversionWarning)
+                        self._warn("Model (%s) is not allowable." % model,
+                                   "It is replaced by the default model (%s)." % default_model)
 
         # Remove extra model types
         for model in options.models:
             if model.type not in self.DEFAULT_MODELS:
                 options.models.discard(model)
 
-                message = "Unknown model type (%s) for this converter. Model (%s) is removed." % \
-                    (model.type, model)
-                warnings.warn(message, ConversionWarning)
+                self._warn("Unknown model type (%s) for this converter." % model.type,
+                           "Model (%s) is removed." % model)
 
         return True
 
