@@ -153,7 +153,7 @@ class Test_AbsorptionEnergy(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-    
+
     def testdefault(self):
         self.assertAlmostEqual(56.8, self.ae[ELECTRON], 4)
         self.assertAlmostEqual(56.8, self.ae[PHOTON], 4)
@@ -244,7 +244,7 @@ class TestMaterial(TestCase):
 
     def testcalculate(self):
         self.m.calculate()
-        
+
         self.assertAlmostEqual(1.0, self.m.composition[29], 4)
         self.assertAlmostEqual(8960, self.m.density_kg_m3, 4)
 
@@ -322,12 +322,14 @@ class TestMaterial(TestCase):
 
         children = list(element.find('absorption_energy'))
         self.assertEqual(3, len(children))
-        self.assertEqual("electron", children[0].get('particle'))
-        self.assertAlmostEqual(50, float(children[0].text), 4)
-        self.assertEqual("positron", children[1].get('particle'))
-        self.assertAlmostEqual(52, float(children[1].text), 4)
-        self.assertEqual("photon", children[2].get('particle'))
-        self.assertAlmostEqual(51, float(children[2].text), 4)
+
+        values = dict([(child.get('particle'), float(child.text)) for child in children])
+        self.assertIn("electron", values)
+        self.assertAlmostEqual(50, values["electron"], 4)
+        self.assertIn("photon", values)
+        self.assertAlmostEqual(51, values["photon"], 4)
+        self.assertIn("positron", values)
+        self.assertAlmostEqual(52, values["positron"], 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
