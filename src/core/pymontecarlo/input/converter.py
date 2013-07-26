@@ -24,7 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.parameter import expand
+from pymontecarlo.input.parameter import Expander
 
 # Globals and constants variables.
 
@@ -58,6 +58,9 @@ class Converter(object):
     LIMITS = []
     MODELS = {}
     DEFAULT_MODELS = {}
+
+    def __init__(self):
+        self._expander = Expander()
 
     def _warn(self, *messages):
         message = ' '.join(messages)
@@ -101,7 +104,7 @@ class Converter(object):
         return list_options
 
     def _expand(self, options):
-        return expand(options)
+        return self._expander.expand(options)
 
     def _convert_beam(self, options):
         clasz = options.beam.__class__
