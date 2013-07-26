@@ -765,6 +765,8 @@ class Expander(object):
 
         combinations, parameter_objs, parameters = \
             self._create_combinations(parameter_values, parameter_obj_ids)
+        if not combinations:
+            return [obj]
 
         objs = self._create_objects(obj, combinations, parameter_objs, parameters)
 
