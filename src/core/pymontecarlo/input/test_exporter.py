@@ -11,26 +11,44 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import tempfile
+import shutil
+import os
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.exporter import Exporter #@UnusedImport
+from pymontecarlo.input.exporter import XMLExporter
+from pymontecarlo.input.options import Options
 
 # Globals and constants variables.
 
-class TestExporter(TestCase):
+class TestXMLExporter(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
+        
+        self.tmpdir = tempfile.mkdtemp()
+
+        self.ops = Options("test1")
+
+        self.e = XMLExporter()
 
     def tearDown(self):
         TestCase.tearDown(self)
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def testskeleton(self):
-        self.assertTrue(True)
+    def testexport(self):
+        filepath = self.e.export(self.ops, self.tmpdir)
+
+        self.assertTrue(os.path.exists(filepath))
+        self.assertIn(os.path.basename(filepath), os.listdir(self.tmpdir))
+
+    def testexport_multivalue_options(self):
+        self.ops.beam.energy_eV = [1e3, 2e3]
+        self.assertRaises(ValueError, self.e.export, self.ops, self.tmpdir)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
