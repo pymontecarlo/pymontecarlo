@@ -197,10 +197,6 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(51, self.m.absorption_energy_eV[PHOTON], 4)
         self.assertAlmostEqual(52, self.m.absorption_energy_eV[POSITRON], 4)
 
-    def test__repr__(self):
-        expected = "<Material(name=Pure Cu, composition={29: '?'}, density=None kg/m3, absorption energies={<POSITRON>: 52.0, <ELECTRON>: 50.0, <PHOTON>: 51.0})>"
-        self.assertEqual(expected, repr(self.m))
-
     def testcomposition(self):
         self.m.composition[29] = [0.5, 0.6]
 
