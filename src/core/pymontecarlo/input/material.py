@@ -340,11 +340,8 @@ class Material(object):
         self.absorption_energy_eV.clear()
 
     def __repr__(self):
-        return '<Material(name=%s, composition=%s, density=%s kg/m3, abs_electron=%s eV, abs_photon=%s eV, abs_positron=%s eV)>' % \
-            (self.name, self.composition, self.density_kg_m3,
-             self.absorption_energy_electron_eV,
-             self.absorption_energy_photon_eV,
-             self.absorption_energy_positron_eV)
+        return '<Material(name=%s, composition=%s, density=%s kg/m3, absorption energies=%s)>' % \
+            (self.name, self.composition, self.density_kg_m3, self.absorption_energy_eV)
 
     def __str__(self):
         return self.name
