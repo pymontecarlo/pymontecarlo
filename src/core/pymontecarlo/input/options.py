@@ -44,6 +44,13 @@ from pymontecarlo.input.xmlmapper import \
 class _Detectors(ParameterizedMutableMapping):
 
     def iterclass(self, clasz):
+        """
+        Iterates over all detectors that are an instance of the specified class.
+        Each iteration returns:
+        
+            * name/key of the detector
+            * detector object
+        """
         for key, parameter in self.__parameters__.iteritems():
             wrapper = parameter._get_wrapper(self)
             for detector in wrapper:
@@ -53,11 +60,19 @@ class _Detectors(ParameterizedMutableMapping):
 class _Limits(ParameterizedMutableSet):
 
     def iterclass(self, clasz):
+        """
+        Iterates over all limits that are an instance of the specified class.
+        Each iterations returns one limit object.
+        """
         return (limit for limit in self if isinstance(limit, clasz))
 
 class _Models(ParameterizedMutableSet):
     
     def iterclass(self, type_):
+        """
+        Iterates over all models that are of the specified type.
+        Each iteration returns one model.
+        """
         return (model for model in self if model.type == type_)
 
 _name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
