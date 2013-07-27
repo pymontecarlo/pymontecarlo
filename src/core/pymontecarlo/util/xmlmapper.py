@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import xml.etree.ElementTree as ElementTree
+import xml.dom.minidom as minidom
 from collections import Iterable
 from operator import itemgetter, attrgetter
 
@@ -32,6 +33,15 @@ from pymontecarlo.util.manager import Manager
 # Globals and constants variables.
 NSPREFIX = 'mapper'
 NSURI = 'xmlmapper'
+
+def parse(source):
+    return ElementTree.parse(source)
+
+def tostring(element, encoding='UTF-8', pretty_print=True):
+    output = ElementTree.tostring(element, encoding=encoding)
+    if pretty_print:
+        output = minidom.parseString(output).toprettyxml(encoding=encoding)
+    return output
 
 class _XMLType(object):
 
