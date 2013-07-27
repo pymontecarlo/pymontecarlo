@@ -152,9 +152,14 @@ class _DelimitedDetector(_Detector):
              self.azimuth_deg[0], self.azimuth_deg[1])
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad):
+    def _annular(cls, takeoffangle_rad, opening_rad):
         elevation_rad = (takeoffangle_rad - opening_rad, takeoffangle_rad + opening_rad)
         azimuth_rad = (0.0, 2.0 * math.pi)
+        return elevation_rad, azimuth_rad
+
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad):
+        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
         return cls(elevation_rad, azimuth_rad)
 
     @property
@@ -405,6 +410,11 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
         _EnergyDetector.__init__(self, limits_eV, channels)
 
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
+        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
+        return cls(elevation_rad, azimuth_rad, limits_eV, channels)
+
     def __repr__(self):
         return "<%s(elevation=%s to %s deg, azimuth=%s to %s deg, limits=%s to %s eV, channels=%s)>" % \
             (self.__class__.__name__,
@@ -429,6 +439,11 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
         _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
 
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, channels):
+        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
+        return cls(elevation_rad, azimuth_rad, channels)
+
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
             (self.__class__.__name__,
@@ -450,6 +465,11 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
     def __init__(self, elevation_rad, azimuth_rad, channels):
         _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
+        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
+        return cls(elevation_rad, azimuth_rad, limits_eV, channels)
 
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
@@ -479,6 +499,11 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
         self.xbins = xbins
         self.ybins = ybins
         self.zbins = zbins
+
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, xbins, ybins, zbins):
+        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
+        return cls(elevation_rad, azimuth_rad, xbins, ybins, zbins)
 
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, bins=(%s, %s, %s))>' % \
