@@ -162,7 +162,7 @@ mapper.register(Options, '{http://pymontecarlo.sf.net}options',
                 Attribute('_uuid', PythonType(str), 'uuid'),
                 ParameterizedElement('beam', UserType(_Beam)),
                 ParameterizedElement('geometry', UserType(_Geometry)),
-                ParameterizedElementDict('detectors', PythonType(str), UserType(_Detector)),
+                ParameterizedElementDict('detectors', PythonType(str), UserType(_Detector), keyxmlname="_key"),
                 ParameterizedElementSet('limits', UserType(_Limit)),
                 ParameterizedElementSet('models', UserType(Model)),
                 )
