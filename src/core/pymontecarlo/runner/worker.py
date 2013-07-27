@@ -28,7 +28,7 @@ __license__ = "GPL v3"
 
 class Worker(object):
 
-    def __init__(self):
+    def __init__(self, program):
         """
         Base class for all workers. 
         A worker is used to run simulations in a queue with a given program and 
@@ -39,6 +39,10 @@ class Worker(object):
         A worker should not be directly used to start a simulation. 
         One should rather use a runner.
         """
+        self._program = program
+        self._exporter = program.exporter_class()
+        self._importer = program.importer_class()
+
         self._progress = 0.0
         self._status = ''
 
@@ -49,7 +53,7 @@ class Worker(object):
         self._progress = 0.0
         self._status = ''
 
-    def create(self, options, outputdir):
+    def create(self, options, outputdir, *args, **kwargs):
         """
         Creates the simulation file(s) from the options and saves it inside the
         output directory.
@@ -59,9 +63,9 @@ class Worker(object):
         :arg options: options of a simulation
         :arg outputdir: directory where to save the simulation file(s)
         """
-        raise NotImplementedError
+        return self._exporter.export(options, outputdir)
 
-    def run(self, options, outputdir, workdir):
+    def run(self, options, outputdir, workdir, *args, **kwargs):
         """
         Creates and runs a simulation from the specified options.
         This method should be implemented by derived class.
@@ -91,10 +95,14 @@ class Worker(object):
         """
         return self._progress, self._status
 
+    @property
+    def program(self):
+        return self._program
+
 class SubprocessWorker(Worker):
 
-    def __init__(self):
-        Worker.__init__(self)
+    def __init__(self, program):
+        Worker.__init__(self, program)
         self._process = None
 
     def reset(self):
