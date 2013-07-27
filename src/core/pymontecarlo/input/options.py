@@ -36,8 +36,9 @@ from pymontecarlo.input.detector import _Detector
 from pymontecarlo.input.limit import _Limit
 from pymontecarlo.input.model import Model
 from pymontecarlo.input.xmlmapper import \
-    (mapper, Attribute, ParameterizedElement, ParameterizedElementSet,
-     ParameterizedElementDict, PythonType, UserType)
+    (mapper, parse, tostring, Attribute,
+     ParameterizedElement, ParameterizedElementSet, ParameterizedElementDict,
+     PythonType, UserType)
 
 # Globals and constants variables.
 
@@ -115,6 +116,27 @@ class Options(object):
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
 
         self.geometry = Substrate(pure(79)) # Au substrate
+        
+    @classmethod
+    def load(cls, source):
+        """
+        Loads the options from a file-object.
+        The file-object must correspond to a XML file where the options were 
+        saved.
+        
+        :arg source: filepath or file-object
+        
+        :return: loaded options
+        """
+        self_opened = False
+        if not hasattr(source, "read"):
+            source = open(source, "rb")
+            self_opened = True
+
+        element = parse(source).getroot()
+        if self_opened: source.close()
+
+        return mapper.from_xml(element)
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
@@ -155,6 +177,27 @@ class Options(object):
         if self._uuid is None:
             self._uuid = uuid.uuid4().hex
         return self._uuid
+    
+    def save(self, source, pretty_print=True):
+        """
+        Saves this options to a file-object.
+        The file-object must correspond to a XML file where the options will 
+        be saved.
+        
+        :arg source: filepath or file-object
+        :arg pretty_print: format XML
+        """
+        element = mapper.to_xml(self)
+        output = tostring(element, pretty_print=pretty_print)
+
+        self_opened = False
+        if not hasattr(source, "write"):
+            source = open(source, "wb")
+            self_opened = True
+
+        source.write(output)
+
+        if self_opened: source.close()
 
 mapper.register(Options, '{http://pymontecarlo.sf.net}options',
                 Attribute('VERSION', PythonType(str), 'version'),
