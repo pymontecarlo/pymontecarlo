@@ -67,7 +67,8 @@ class ParameterizedElement(Element):
 class ParameterizedElementDict(ElementDict):
 
     def __init__(self, objattr, keytype, valuetype, xmlname=None,
-                 keyxmlname='{xmlmapper}key', valuexmlname='{xmlmapper}value',
+                 keyxmlname='{%s}key' % NSURI,
+                 valuexmlname='{%s}value' % NSURI,
                  optional=False, *args, **kwargs):
         ElementDict.__init__(self, objattr, keytype, valuetype, xmlname,
                              keyxmlname, valuexmlname, optional, *args, **kwargs)

@@ -30,6 +30,8 @@ from operator import itemgetter, attrgetter
 from pymontecarlo.util.manager import Manager
 
 # Globals and constants variables.
+NSPREFIX = 'mapper'
+NSURI = 'xmlmapper'
 
 class _XMLType(object):
 
@@ -160,11 +162,11 @@ class Element(_XMLItem):
         for value in values:
             id_value = id(value)
             if id_value in cache:
-                subsubelement = ElementTree.Element('{xmlmapper}cache')
-                subsubelement.set('{xmlmapper}id', str(id_value))
+                subsubelement = ElementTree.Element('{%s}cache' % NSURI)
+                subsubelement.set('{%s}id' % NSURI, str(id_value))
             else:
                 subsubelement = manager.to_xml(value)
-                subsubelement.set('{xmlmapper}id', str(id_value))
+                subsubelement.set('{%s}id' % NSURI, str(id_value))
                 cache[id_value] = value
 
             subelement.append(subsubelement)
@@ -192,8 +194,8 @@ class Element(_XMLItem):
     def _extract_values_usertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
-            id_value = int(subsubelement.get('{xmlmapper}id'))
-            if subsubelement.tag == '{xmlmapper}cache':
+            id_value = int(subsubelement.get('{%s}id' % NSURI))
+            if subsubelement.tag == '{%s}cache' % NSURI:
                 value = cache[id_value]
             else:
                 value = manager.from_xml(subsubelement)
@@ -209,7 +211,8 @@ class Element(_XMLItem):
 class ElementDict(Element):
 
     def __init__(self, objattr, keytype, valuetype, xmlname=None, 
-                 keyxmlname='{xmlmapper}key', valuexmlname='{xmlmapper}value',
+                 keyxmlname='{%s}key' % NSURI,
+                 valuexmlname='{%s}value' % NSURI,
                  optional=False, *args, **kwargs):
         Element.__init__(self, objattr, valuetype, xmlname,
                          iterable=True, optional=optional, *args, **kwargs)
@@ -238,11 +241,11 @@ class ElementDict(Element):
         for key, value in values:
             id_value = id(value)
             if id_value in cache:
-                subsubelement = ElementTree.Element('{xmlmapper}cache')
-                subsubelement.set('{xmlmapper}id', str(id_value))
+                subsubelement = ElementTree.Element('{%s}cache' % NSURI)
+                subsubelement.set('{%s}id' % NSURI, str(id_value))
             else:
                 subsubelement = manager.to_xml(value)
-                subsubelement.set('{xmlmapper}id', str(id_value))
+                subsubelement.set('{%s}id' % NSURI, str(id_value))
                 cache[id_value] = value
 
             subsubelement.set(self.keyxmlname, key)
@@ -270,8 +273,8 @@ class ElementDict(Element):
     def _extract_values_usertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
-            id_value = int(subsubelement.get('{xmlmapper}id'))
-            if subsubelement.tag == '{xmlmapper}cache':
+            id_value = int(subsubelement.get('{%s}id' % NSURI))
+            if subsubelement.tag == '{%s}cache' % NSURI:
                 value = cache[id_value]
             else:
                 value = manager.from_xml(subsubelement)
@@ -318,7 +321,7 @@ class XMLMapper(object):
     def __init__(self):
         self._manager = Manager()
         self._content = {}
-        self.register_namespace("xmlmapper", "xmlmapper")
+        self.register_namespace(NSPREFIX, NSURI)
 
     def register_namespace(self, prefix, uri):
         """
