@@ -29,7 +29,7 @@ __license__ = "GPL v3"
 class Program(object):
 
     def __init__(self, name, alias, converter_class, worker_class,
-                 exporter_class=None, importer_class=None):
+                 exporter_class, importer_class):
         """
         Creates a new program.
         
@@ -45,10 +45,10 @@ class Program(object):
         :arg worker_class: class of the worker
         :type worker_class: :class:`Worker <pymontecarlo.runner.worker.Worker>`
         
-        :arg exporter_class: class of the exporter (optional)
+        :arg exporter_class: class of the exporter
         :type exporter_class: :class:`Exporter <pymontecarlo.io.exporter.Exporter>`
         
-        :arg importer_class: class of the importer (optional)
+        :arg importer_class: class of the importer
         :type importer_class: :class:`Importer <pymontecarlo.io.importer.Importer>`
         """
         self._name = name
@@ -100,8 +100,6 @@ class Program(object):
         """
         Exporter class of program
         """
-        if self._exporter_class is None:
-            raise RuntimeError, "No exporter class"
         return self._exporter_class
 
     @property
@@ -109,8 +107,6 @@ class Program(object):
         """
         Importer class of program
         """
-        if self._importer_class is None:
-            raise RuntimeError, "No importer class"
         return self._importer_class
 
     def validate(self):

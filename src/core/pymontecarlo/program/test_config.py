@@ -17,7 +17,9 @@ import logging
 # Local modules.
 from pymontecarlo.program.config import Program
 from pymontecarlo.input.converter import Converter
+from pymontecarlo.input.exporter import Exporter
 from pymontecarlo.runner.worker import Worker
+from pymontecarlo.output.importer import Importer
 from pymontecarlo.output.results import Results
 
 # Globals and constants variables.
@@ -39,6 +41,11 @@ class DummyConverter(Converter):
     def _convert_models(self, options):
         pass
 
+class DummyExporter(Exporter):
+
+    def _export(self, options, outputdir, *args, **kwargs):
+        pass
+
 class DummyWorker(Worker):
 
     def create(self, options, outputdir):
@@ -58,10 +65,16 @@ class DummyWorker(Worker):
 
         return Results(options)
 
+class DummyImporter(Importer):
+
+    def _import(self, options, dirpath, *args, **kwargs):
+        return Results(options)
+
 class DummyProgram(Program):
 
     def __init__(self):
-        Program.__init__(self, 'Dummy', 'dummy', DummyConverter, DummyWorker)
+        Program.__init__(self, 'Dummy', 'dummy', DummyConverter, DummyWorker,
+                         DummyExporter, DummyImporter)
 
 class TestProgram(unittest.TestCase):
 
