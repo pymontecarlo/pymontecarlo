@@ -21,7 +21,6 @@ __license__ = "GPL v3"
 __all__ = ['Results']
 
 # Standard library modules.
-import copy
 import uuid
 from collections import Mapping, Sequence
 from StringIO import StringIO
@@ -53,7 +52,7 @@ class _ResultsContainer(Mapping):
             :class:`Result <pymontecarlo.result.base.result.Result>` class.
         :type results: :class:`dict`
         """
-        self._options = copy.deepcopy(options)
+        self._options = options
         freeze(self._options)
 
         self._results = {}
@@ -77,9 +76,6 @@ class _ResultsContainer(Mapping):
 
     @property
     def options(self):
-        """
-        Returns a copy of the options.
-        """
         return self._options
 
 class Results(Sequence):
@@ -102,7 +98,7 @@ class Results(Sequence):
     VERSION = '7'
 
     def __init__(self, options, list_results):
-        self._options = copy.deepcopy(options)
+        self._options = options
         freeze(self._options)
 
         self._list_results = []

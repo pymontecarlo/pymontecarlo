@@ -57,7 +57,9 @@ class Test_ResultsContainer(TestCase):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testoptions(self):
-        self.assertIsNot(self.ops, self.results.options)
+        # frozen
+        self.assertRaises(AttributeError, setattr,
+                          self.results.options.beam, 'energy_eV', 6.0)
 
 class TestResults(TestCase):
 
@@ -67,10 +69,10 @@ class TestResults(TestCase):
         self.tmpdir = tempfile.mkdtemp()
 
         # Results 1
-        ops1 = Options(name='test1')
-        ops1.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
-        ops1.detectors['det2'] = TimeDetector()
-        ops1.detectors['det3'] = ElectronFractionDetector()
+        self.ops1 = Options(name='test1')
+        self.ops1.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
+        self.ops1.detectors['det2'] = TimeDetector()
+        self.ops1.detectors['det3'] = ElectronFractionDetector()
 
         results1 = {}
         results1['det1'] = PhotonIntensityResult()
@@ -84,9 +86,12 @@ class TestResults(TestCase):
         results2 = {}
         results2['det1'] = PhotonIntensityResult()
 
+        # Base options
+        self.ops = Options(name='base')
+
         # Sequence
-        list_results = [(ops1, results1), (ops2, results2)]
-        self.results = Results(ops1, list_results)
+        list_results = [(self.ops1, results1), (ops2, results2)]
+        self.results = Results(self.ops, list_results)
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -105,6 +110,8 @@ class TestResults(TestCase):
 
     def testsave_load(self):
         # Save
+        ops_uuid = self.ops.uuid
+        ops1_uuid = self.ops1.uuid
         filepath = os.path.join(self.tmpdir, 'results.h5')
         self.results.save(filepath)
 
@@ -120,6 +127,9 @@ class TestResults(TestCase):
         self.assertIn('det2', results[0])
         self.assertIn('det3', results[0])
         self.assertIn('det1', results[1])
+
+        self.assertEqual(ops_uuid, results.options.uuid)
+        self.assertEqual(ops1_uuid, results[0].options.uuid)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
