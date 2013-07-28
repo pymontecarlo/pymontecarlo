@@ -22,18 +22,15 @@ __license__ = "GPL v3"
 import os
 import subprocess
 import logging
-import shutil
-from zipfile import ZipFile
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+from pymontecarlo.program._penelope.runner.worker import Worker as _Worker
 
 # Globals and constants variables.
-from zipfile import ZIP_DEFLATED
 
 class Worker(_Worker):
 
@@ -47,19 +44,6 @@ class Worker(_Worker):
         if not os.path.isfile(self._executable):
             raise IOError, 'PENSHOWER executable (%s) cannot be found' % self._executable
         logging.debug('PENSHOWER executable: %s', self._executable)
-
-    def create(self, options, outputdir, *args, **kwargs):
-        # Create directory if needed
-        if kwargs.get('createdir', True):
-            simdir = os.path.join(outputdir, options.name)
-            if os.path.exists(simdir):
-                logging.info("Simulation directory (%s) exists. It will be empty.", simdir)
-                shutil.rmtree(simdir, ignore_errors=True)
-            os.makedirs(simdir)
-        else:
-            simdir = outputdir
-
-        return _Worker.create(self, options, outputdir, *args, **kwargs)
 
     def run(self, options, outputdir, workdir, *args, **kwargs):
         infilepath = self.create(options, workdir, createdir=False)
@@ -98,20 +82,5 @@ class Worker(_Worker):
         if retcode != 0:
             raise RuntimeError, "An error occurred during the simulation"
 
-        return self._extract_results(options, outputdir, workdir)
-
-    def _extract_results(self, options, outputdir, workdir):
-        # Import results to pyMonteCarlo
-        self._status = 'Importing results'
-        results = self._importer.import_(options, workdir)
-
-        # Create ZIP with all PENSHOWER results
-        zipfilepath = os.path.join(outputdir, options.name + '.zip')
-        with ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED) as zipfile:
-            for filename in os.listdir(workdir):
-                if filename == 'pe-trajectories.dat':
-                    continue
-                filepath = os.path.join(workdir, filename)
-                zipfile.write(filepath, filename)
-
-        return results
+        return self._extract_results(options, outputdir, workdir,
+                                     ["pe-trajectories.dat"])
