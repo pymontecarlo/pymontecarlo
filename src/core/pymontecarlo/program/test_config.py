@@ -27,19 +27,19 @@ from pymontecarlo.output.results import Results
 class DummyConverter(Converter):
 
     def _convert_beam(self, options):
-        pass
+        return True
 
     def _convert_geometry(self, options):
-        pass
+        return True
 
     def _convert_detectors(self, options):
-        pass
+        return True
 
     def _convert_limits(self, options):
-        pass
+        return True
 
     def _convert_models(self, options):
-        pass
+        return True
 
 class DummyExporter(Exporter):
 
@@ -63,7 +63,7 @@ class DummyWorker(Worker):
         self._status = 'Completed'
         self._progress = 1.0
 
-        return Results(options)
+        return Results(options, [(options, {})])
 
 class DummyImporter(Importer):
 
