@@ -114,8 +114,10 @@ class Options(object):
         self._uuid = None
 
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
-
         self.geometry = Substrate(pure(79)) # Au substrate
+        self.detectors.clear()
+        self.limits.clear()
+        self.models.clear()
         
     @classmethod
     def load(cls, source):
