@@ -37,9 +37,6 @@ class TestConverter(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-    def testskeleton(self):
-        self.assertTrue(True)
-
     def testconvert1(self):
         # Base options
         ops = Options(name="Test")
@@ -49,21 +46,22 @@ class TestConverter(TestCase):
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
 
         # 6 warnings for the default models
         self.assertEqual(6, len(ws))
+        self.assertEqual(1, len(opss))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
 
-        self.assertEqual(1, len(ops.detectors))
+        self.assertEqual(1, len(opss[0].detectors))
 
-        self.assertEqual(1, len(ops.limits))
+        self.assertEqual(1, len(opss[0].limits))
         limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
-        self.assertEqual(5, len(ops.models))
+        self.assertEqual(5, len(opss[0].models))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

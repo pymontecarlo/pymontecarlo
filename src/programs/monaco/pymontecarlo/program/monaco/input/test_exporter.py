@@ -43,11 +43,7 @@ class TestExporter(unittest.TestCase):
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-    def testskeleton(self):
-        self.assertTrue(True)
 
     def testexport(self):
         self.e.export(self.ops, self.tmpdir)

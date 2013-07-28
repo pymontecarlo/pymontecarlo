@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import struct
-from operator import itemgetter, attrgetter
+from operator import itemgetter
 import math
 
 # Third party modules.
@@ -33,6 +33,7 @@ import pyxray.element_properties as ep
 from pymontecarlo.input.exporter import Exporter as _Exporter
 
 from pymontecarlo.input.geometry import Substrate
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.limit import ShowersLimit
 
 # Globals and constants variables.
@@ -47,20 +48,12 @@ class Exporter(_Exporter):
 
         self._geometry_exporters[Substrate] = self._export_geometry_substrate
 
-    def export(self, options, outputdir):
-        """
-        Creates MAT and SIM files for Monaco program.
-        
-        :arg options: options to be exported
-        :arg outputdir: directory where the simulation files should be saved
-        """
-        self._export(options, outputdir)
+    def _export(self, options, outputdir, *args, **kwargs):
+        simfilepath = self._create_sim_file(options, outputdir, *args, **kwargs)
+        self._export_geometry(options, outputdir, *args, **kwargs)
+        return simfilepath
 
-    def _export(self, options, outputdir, *args):
-        self._create_sim_file(options, outputdir, *args)
-        self._export_geometry(options, outputdir, *args)
-
-    def _create_sim_file(self, options, outputdir, *args):
+    def _create_sim_file(self, options, outputdir, *args, **kwargs):
         filepath = os.path.join(outputdir, options.name + '.SIM')
         with open(filepath, 'wb') as fp:
             # Header
@@ -101,9 +94,11 @@ class Exporter(_Exporter):
 
             # Cutoff energy
             # DELPHI: l:=4; Inc(s,l); BlockWrite(Sf,EM,l,w);    Inc(Sum,w);
-            abs_energy_keV = min(map(attrgetter('absorption_energy_electron_eV'),
-                                     options.geometry.get_materials())) / 1000.0
-            fp.write(struct.pack('f', abs_energy_keV))
+
+
+            abs_energy_keV = min(material.absorption_energy_eV[ELECTRON] \
+                                 for material in options.geometry.get_materials())
+            fp.write(struct.pack('f', abs_energy_keV / 1000.0))
 
             # Secondary electron
             # DELPHI:   l:=1; Inc(s,l); BlockWrite(Sf,SE,l,w);    Inc(Sum,w);
@@ -177,6 +172,8 @@ class Exporter(_Exporter):
             sputtering_str = str(sputtering)
             fp.write(struct.pack('b', len(sputtering_str)))
             fp.write(sputtering_str)
+
+        return filepath
 
     def _export_geometry_substrate(self, options, geometry, outputdir, *args):
         composition = sorted(geometry.material.composition.items(), key=itemgetter(0))
@@ -271,6 +268,8 @@ class Exporter(_Exporter):
             fp.write(struct.pack('b', len(composition)))
             for i in range(len(composition)):
                 fp.write(struct.pack('b', i + 1))
+
+        return filepath
 
 if __name__ == '__main__':
     from pymontecarlo.input.options import Options

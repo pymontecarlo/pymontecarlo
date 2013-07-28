@@ -20,6 +20,7 @@ from pymontecarlo.program.monaco.output.importer import Importer
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhotonDepthDetector
 
@@ -32,8 +33,9 @@ class TestImporter(unittest.TestCase):
 
         self.ops = Options('aatest')
         self.ops.beam.energy_eV = 4e3
-        self.ops.geometry.material.composition = {6: 0.4, 13: 0.6}
-        self.ops.geometry.material.absorption_energy_electron_eV = 234
+        self.ops.geometry.material.composition[6] = 0.4
+        self.ops.geometry.material.composition[13] = 0.6
+        self.ops.geometry.material.absorption_energy_eV[ELECTRON] = 234
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['prz'] = PhotonDepthDetector((0, 1), (2, 3), 128)
         self.ops.limits.add(ShowersLimit(1234))
@@ -45,21 +47,18 @@ class TestImporter(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    def testskeleton(self):
-        self.assertTrue(True)
-
-    def testimport_from_dir(self):
+    def testimport_(self):
         jobdir = os.path.join(self._testdata, 'job1')
-        results = self.i.import_from_dir(self.ops, jobdir)
+        results = self.i.import_(self.ops, jobdir)
 
-        self.assertEqual(2, len(results))
+        self.assertEqual(2, len(results[0]))
 
-        result = results['xray']
+        result = results[0]['xray']
         val, unc = result.intensity('Cu La')
         self.assertAlmostEqual(3.473295, val, 4)
         self.assertAlmostEqual(0.0, unc, 4)
 
-        result = results['prz']
+        result = results[0]['prz']
         self.assertTrue(result.exists('Au La', True, False))
         self.assertTrue(result.exists('Au Ma', True, False))
 

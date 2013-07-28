@@ -44,24 +44,13 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[PhotonIntensityDetector] = \
-            self._detector_photon_intensity
-        self._detector_importers[PhotonDepthDetector] = self._detector_photondepth
+        self._importers[PhotonIntensityDetector] = self._import_photon_intensity
+        self._importers[PhotonDepthDetector] = self._import_photondepth
 
-    def import_from_dir(self, options, jobdir):
-        """
-        Imports Monaco results from a job directory.
-        
-        :arg options: options of the simulation
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
-        
-        :arg path: location of the results directory
-        """
-        if not os.path.isdir(jobdir):
-            raise ValueError, "Specified path (%s) is not a directory" % jobdir
-        return self._import_results(options, jobdir)
+    def _import(self, options, dirpath, *args, **kwargs):
+        return self._run_importers(options, dirpath, *args, **kwargs)
 
-    def _detector_photon_intensity(self, options, name, detector, jobdir):
+    def _import_photon_intensity(self, options, name, detector, jobdir):
         intensities_filepath = os.path.join(jobdir, 'intensities_%s.csv' % name)
         if not os.path.exists(intensities_filepath):
             raise ImporterException, \
@@ -83,7 +72,7 @@ class Importer(_Importer):
             
         return PhotonIntensityResult(intensities)
 
-    def _detector_photondepth(self, options, name, detector, jobdir):
+    def _import_photondepth(self, options, name, detector, jobdir):
         prz_filepath = os.path.join(jobdir, 'phi_%s.csv' % name)
         if not os.path.exists(prz_filepath):
             raise ImporterException, \

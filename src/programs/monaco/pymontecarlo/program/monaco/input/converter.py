@@ -19,13 +19,11 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import warnings
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import \
-    Converter as _Converter, ConversionWarning, ConversionException
+from pymontecarlo.input.converter import Converter as _Converter
 
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import PencilBeam
@@ -63,46 +61,61 @@ class Converter(_Converter):
                       MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989}
 
     def _convert_beam(self, options):
-        _Converter._convert_beam(self, options)
+        if not _Converter._convert_beam(self, options):
+            return False
 
         if options.beam.particle is not ELECTRON:
-            raise ConversionException, "Beam particle must be ELECTRON"
+            self._warn("Beam particle must be ELECTRON.",
+                       "This options definition was removed.")
+            return False
 
         if options.beam.energy_eV > 400e3:
-            message = "Beam energy (%s) must be less than 400 keV" % \
-                            options.beam.energy_eV
-            raise ConversionException, message
+            self._warn("Beam energy must be less than 400 keV.",
+                       "This options definition was removed.")
+            return False
 
         if options.beam.aperture_rad != 0.0:
-            message = "Monaco does not support beam aperture."
-            warnings.warn(message, ConversionWarning)
+            self._warn("Monaco does not support beam aperture.",
+                       "This options definition was removed.")
+            return False
+
+        return True
 
     def _convert_geometry(self, options):
-        _Converter._convert_geometry(self, options)
+        if not _Converter._convert_geometry(self, options):
+            return False
 
         if options.geometry.tilt_rad != 0.0:
-            options.geometry.tilt_rad = 0.0
-            message = "Geometry cannot be tilted in Monaco, only the beam direction. Tilt set to 0.0 deg."
-            warnings.warn(message, ConversionWarning)
+            self._warn("Geometry cannot be tilted in Monaco, only the beam direction.",
+                       "This options definition was removed.")
+            return False
 
         for material in options.geometry.get_materials():
-            if material.absorption_energy_electron_eV < 200.0:
-                material.absorption_energy_electron_eV = 200.0
-                message = 'Absorption energy of material %s is set to lower limit of Monaco: 200 eV' % \
-                    material.name
-                warnings.warn(message, ConversionWarning)
+            if material.absorption_energy_eV[ELECTRON] < 200.0:
+                material.absorption_energy_eV[ELECTRON] = 200.0
+                self._warn('Electron absorption energy below limit.',
+                           'Set to 200 eV')
+
+        return True
 
     def _convert_detectors(self, options):
-        _Converter._convert_detectors(self, options)
+        if not _Converter._convert_detectors(self, options):
+            return False
         
-        for key, det in options.detectors.iterclass(PhotonDepthDetector):
+        for _key, det in options.detectors.iterclass(PhotonDepthDetector):
             if det.channels != 128:
-                message = "Number of channels of PhiRhoZ detector (%s) is set to 128" % key
-                warnings.warn(message, ConversionWarning)
+                self._warn("Number of channels of phi-rho-z detector set to 128")
+
+        return True
 
     def _convert_limits(self, options):
-        _Converter._convert_limits(self, options)
+        if not _Converter._convert_limits(self, options):
+            return False
 
         limits = list(options.limits.iterclass(ShowersLimit))
         if not limits:
-            raise ConversionException, "A ShowersLimit must be defined."
+            self._warn("A showers limit must be defined.",
+                       "This options definition was removed.")
+            return False
+
+        return True

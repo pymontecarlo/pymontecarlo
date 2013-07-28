@@ -53,10 +53,6 @@ from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
 from pymontecarlo.input.detector import PhotonIntensityDetector, PhotonDepthDetector
 
-from pymontecarlo.program.monaco.input.converter import Converter
-from pymontecarlo.program.monaco.input.exporter import Exporter
-from pymontecarlo.program.monaco.output.importer import Importer
-
 # Globals and constants variables.
 from pymontecarlo.input.model import \
     (MASS_ABSORPTION_COEFFICIENT, IONIZATION_CROSS_SECTION,
@@ -81,21 +77,19 @@ _IONIZATION_POTENTIAL_REF = \
      IONIZATION_POTENTIAL.sternheimer1964: 4}
 
 class Worker(_Worker):
-    def __init__(self):
+
+    def __init__(self, program):
         """
         Runner to run Monaco simulation(s).
         """
-        _Worker.__init__(self)
+        _Worker.__init__(self, program)
 
         self._monaco_basedir = get_settings().monaco.basedir
         self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
 
-    def create(self, options, outputdir, createdir=True):
-        # Convert
-        Converter().convert(options)
-
+    def create(self, options, outputdir, *args, **kwargs):
         # Create job directory
-        if createdir:
+        if kwargs.get('createdir', True):
             jobdir = os.path.join(outputdir, options.name)
             if os.path.exists(jobdir):
                 logging.info('Job directory (%s) already exists, so it is removed.', jobdir)
@@ -104,10 +98,7 @@ class Worker(_Worker):
         else:
             jobdir = outputdir
 
-        # Export: create MAT and SIM files
-        Exporter().export(options, jobdir)
-
-        return jobdir
+        return _Worker.create(self, options, jobdir, *args, **kwargs)
 
     def _setup_registry(self):
         try:
@@ -120,12 +111,12 @@ class Worker(_Worker):
                                self._monaco_basedir)
         logging.debug("Setup Monaco path in registry")
 
-    def run(self, options, outputdir, workdir):
+    def run(self, options, outputdir, workdir, *args, **kwargs):
         # Setup registry (in case it is not already set)
         self._setup_registry()
 
         # Create job directory and simulation files
-        self.create(options, workdir, False)
+        self.create(options, workdir, createdir=False)
 
         # Run simulation (in batch)
         self._run_simulation(options, workdir)
@@ -134,18 +125,18 @@ class Worker(_Worker):
         transitions = self._extract_transitions(options)
 
         # Extract intensities if photon intensity detectors
-        detectors = options.detectors.findall(PhotonIntensityDetector)
-        for detector_key, detector in detectors.iteritems():
+        detectors = options.detectors.iterclass(PhotonIntensityDetector)
+        for detector_key, detector in detectors:
             self._run_intensities(workdir, options, detector_key, detector,
                                   transitions)
 
         # Extract phi-rho-zs if phi-rho-z detectors
-        detectors = options.detectors.findall(PhotonDepthDetector)
-        for detector_key, detector in detectors.iteritems():
+        detectors = options.detectors.iterclass(PhotonDepthDetector)
+        for detector_key, detector in detectors:
             self._run_phirhozs(workdir, options, detector_key, detector,
                                transitions)
 
-        return self._extract_results(options, outputdir, workdir)
+        return self._importer.import_(options, workdir)
 
     def _run_simulation(self, options, workdir):
         mat_filepath = os.path.join(workdir, options.name + '.MAT')
@@ -193,13 +184,13 @@ class Worker(_Worker):
         nez_filepath = os.path.join(workdir, 'NEZ.1')
 
         # Find models
-        model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
+        model = list(options.models.iterclass(MASS_ABSORPTION_COEFFICIENT))[0]
         mac_id = _MASS_ABSORPTION_COEFFICIENT_REF.get(model, 0)
 
-        model = options.models.find(IONIZATION_CROSS_SECTION.type)
+        model = list(options.models.iterclass(IONIZATION_CROSS_SECTION))[0]
         ics_id = _IONIZATION_CROSS_SECTION_REF.get(model, 0)
 
-        model = options.models.find(IONIZATION_POTENTIAL.type)
+        model = list(options.models.iterclass(IONIZATION_POTENTIAL))[0]
         ip_id = _IONIZATION_POTENTIAL_REF.get(model, 0)
 
         # Launch mccli32.exe
@@ -236,13 +227,13 @@ class Worker(_Worker):
         nez_filepath = os.path.join(workdir, 'NEZ.1')
 
         # Find models
-        model = options.models.find(MASS_ABSORPTION_COEFFICIENT.type)
+        model = options.models.find(MASS_ABSORPTION_COEFFICIENT)
         mac_id = _MASS_ABSORPTION_COEFFICIENT_REF.get(model, 0)
 
-        model = options.models.find(IONIZATION_CROSS_SECTION.type)
+        model = options.models.find(IONIZATION_CROSS_SECTION)
         ics_id = _IONIZATION_CROSS_SECTION_REF.get(model, 0)
 
-        model = options.models.find(IONIZATION_POTENTIAL.type)
+        model = options.models.find(IONIZATION_POTENTIAL)
         ip_id = _IONIZATION_POTENTIAL_REF.get(model, 0)
 
         # Launch mccli32.exe
@@ -270,7 +261,4 @@ class Worker(_Worker):
         dst_filepath = os.path.join(workdir, 'phi_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)
         logging.debug("Appending detector key to phi.csv")
-
-    def _extract_results(self, options, outputdir, workdir):
-        return Importer().import_from_dir(options, workdir)
 
