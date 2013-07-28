@@ -24,7 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.parameter import Expander
+from pymontecarlo.input.expander import Expander
 
 # Globals and constants variables.
 
