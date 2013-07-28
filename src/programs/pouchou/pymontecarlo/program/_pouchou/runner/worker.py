@@ -27,10 +27,10 @@ import time
 from pyxray.transition import get_transitions
 
 # Local modules.
-from pymontecarlo.program._pouchou.input.converter import Converter
 from pymontecarlo.runner.worker import Worker as _Worker
 from pymontecarlo.util.config import ConfigParser
 from pymontecarlo.input.model import MASS_ABSORPTION_COEFFICIENT
+from pymontecarlo.input.particle import PHOTON
 from pymontecarlo.input.detector import \
     PhotonIntensityDetector, PhotonDepthDetector, TimeDetector
 from pymontecarlo.output.result import \
@@ -83,17 +83,6 @@ class _PouchouWorker(_Worker):
 
         return fileobj.name
 
-    def create(self, options, outputdir):
-        # Convert
-        Converter().convert(options)
-
-        # Save
-        filepath = os.path.join(outputdir, options.name + '.xml')
-        options.save(filepath)
-        logging.debug('Save options to: %s', filepath)
-
-        return filepath
-
     def run(self, options, outputdir, workdir):
         # Create configuration
         config_filepath = self._create_configuration_file()
@@ -114,7 +103,7 @@ class _PouchouWorker(_Worker):
         for z, wf in options.geometry.material.composition.iteritems(): # Substrate
             elements.append(Element(z, weightFraction=wf))
 
-        energylow_eV = options.geometry.material.absorption_energy_photon_eV
+        energylow_eV = options.geometry.material.absorption_energy_eV[PHOTON]
         transitions = {}
         for z in options.geometry.material.composition.iterkeys():
             for transition in get_transitions(z, energylow_eV, energy_eV):
@@ -132,32 +121,32 @@ class _PouchouWorker(_Worker):
         results = {}
 
         # Intensity
-        dets = options.detectors.findall(PhotonIntensityDetector)
+        dets = list(options.detectors.iterclass(PhotonIntensityDetector))
         if dets:
-            key, detector = dets.items()[0]
+            key, detector = dets[0]
             intensities = self._compute_intensities(model, detector, elements,
                                                     energy_keV, transitions)
             results[key] = PhotonIntensityResult(intensities)
 
-        dets = options.detectors.findall(PhotonDepthDetector)
+        dets = list(options.detectors.iterclass(PhotonDepthDetector))
         if dets:
-            key, detector = dets.items()[0]
+            key, detector = dets[0]
             distributions = self._compute_prz(model, detector, elements,
                                               energy_keV, transitions)
             results[key] = PhotonDepthResult(distributions)
 
         end = time.time()
 
-        dets = options.detectors.findall(TimeDetector)
+        dets = list(options.detectors.iterclass(TimeDetector))
         if dets:
-            key = dets.keys()[0]
+            key, _ = dets[0]
             results[key] = TimeResult(simulation_time_s=end - start)
 
         # Remove configuration file
         os.remove(config_filepath)
         logging.debug("Remove configuration filepath")
 
-        return Results(options, results)
+        return Results(options, [(options, results)])
 
     def _compute_intensities(self, model, detector, elements, energy_keV, transitions):
         intensities = {}

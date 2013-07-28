@@ -23,6 +23,8 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.input.exporter import XMLExporter
+from pymontecarlo.output.importer import HDF5Importer
 from pymontecarlo.program.config import Program
 from pymontecarlo.program._pouchou.input.converter import Converter
 
@@ -31,5 +33,6 @@ from pymontecarlo.program._pouchou.input.converter import Converter
 class _PouchouProgram(Program):
 
     def __init__(self, name, alias, worker_class):
-        Program.__init__(self, name, alias, Converter, worker_class)
+        Program.__init__(self, name, alias,
+                         Converter, worker_class, XMLExporter, HDF5Importer)
 

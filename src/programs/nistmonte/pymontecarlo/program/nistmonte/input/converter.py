@@ -19,13 +19,11 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import warnings
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import \
-    Converter as _Converter, ConversionException, ConversionWarning
+from pymontecarlo.input.converter import Converter as _Converter
 
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import GaussianBeam, PencilBeam
@@ -57,6 +55,10 @@ from pymontecarlo.input.model import \
 # Globals and constants variables.
 
 class Converter(_Converter):
+    """
+    Converter for NistMonte simulation.
+    """
+
     BEAMS = [GaussianBeam, PencilBeam]
     GEOMETRIES = [Substrate, Inclusion, MultiLayers, GrainBoundaries, ThinGrainBoundaries]
     DETECTORS = [
@@ -115,33 +117,40 @@ class Converter(_Converter):
                       FLUORESCENCE: FLUORESCENCE.none}
 
 
-    def __init__(self):
-        """
-        Converter from base options for NistMonte simulation.
-        """
-        _Converter.__init__(self)
-
     def _convert_beam(self, options):
-        _Converter._convert_beam(self, options)
+        if not _Converter._convert_beam(self, options):
+            return False
 
         if options.beam.particle is not ELECTRON:
-            raise ConversionException, "Beam particle must be ELECTRON"
+            self._warn("Beam particle must be ELECTRON",
+                       "This options definition was removed.")
+            return False
 
         if options.beam.energy_eV < 100:
-            raise ConversionException, "Beam energy must be greater or equal to 100 eV"
+            self._warn("Beam energy must be greater or equal to 100 eV",
+                       "This options definition was removed.")
+            return False
 
         if options.beam.origin_m == (0, 0, 1):
             options.beam.origin_m = (0, 0, 0.09)
-            message = 'Change origin position to fit inside NISTMonte microscope chamber'
-            warnings.warn(message, ConversionWarning)
+            self._warn('Change origin position to fit inside NISTMonte microscope chamber')
 
         if any(map(lambda p: p >= 0.1, options.beam.origin_m)):
-            raise ConversionException, "Origin must be within a sphere with radius of 0.1 m"
+            self._warn("Origin must be within a sphere with radius of 0.1 m",
+                       "This options definition was removed.")
+            return False
+
+        return True
 
     def _convert_limits(self, options):
-        _Converter._convert_limits(self, options)
+        if not _Converter._convert_limits(self, options):
+            return False
 
         limits = list(options.limits.iterclass(ShowersLimit))
         if not limits:
-            raise ConversionException, "A ShowersLimit must be defined."
+            self._warn("A ShowersLimit must be defined.",
+                       "This options definition was removed.")
+            return False
+
+        return True
 

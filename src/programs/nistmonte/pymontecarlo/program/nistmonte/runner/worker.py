@@ -27,18 +27,17 @@ import logging
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.program.nistmonte.input.converter import Converter
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
-from pymontecarlo.output.results import Results
 
 # Globals and constants variables.
 
 class Worker(_Worker):
-    def __init__(self):
+
+    def __init__(self, program):
         """
         Runner to run NISTMonte simulation(s).
         """
-        _Worker.__init__(self)
+        _Worker.__init__(self, program)
 
         self._java_exec = get_settings().nistmonte.java
         if not os.path.isfile(self._java_exec):
@@ -49,17 +48,6 @@ class Worker(_Worker):
         if not os.path.isfile(self._jar_path):
             raise IOError, 'pyMonteCarlo jar (%s) cannot be found' % self._jar_path
         logging.debug('pyMonteCarlo jar path: %s', self._jar_path)
-
-    def create(self, options, outputdir):
-        # Convert
-        Converter().convert(options)
-
-        # Save
-        filepath = os.path.join(outputdir, options.name + '.xml')
-        options.save(filepath)
-        logging.debug('Save options to: %s', filepath)
-
-        return filepath
 
     def run(self, options, outputdir, workdir):
         xmlfilepath = self.create(options, workdir)
@@ -87,8 +75,4 @@ class Worker(_Worker):
         if retcode != 0:
             raise RuntimeError, "An error occurred during the simulation"
 
-        h5filepath = os.path.join(workdir, options.name + '.h5')
-        if not os.path.exists(h5filepath):
-            raise RuntimeError, 'No results found'
-
-        return Results.load(h5filepath)
+        return self._importer.import_(options, workdir)

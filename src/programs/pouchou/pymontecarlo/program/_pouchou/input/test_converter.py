@@ -21,7 +21,7 @@ from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.program._pouchou.input.converter import Converter, ConversionException
+from pymontecarlo.program._pouchou.input.converter import Converter
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -49,12 +49,13 @@ class TestConverter(TestCase):
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
 
         self.assertEqual(2, len(ws)) # GaussianBeam, model for MAC
+        self.assertEqual(1, len(opss))
 
-        self.assertEqual(1, len(ops.detectors))
-        self.assertEqual(1, len(ops.models))
+        self.assertEqual(1, len(opss[0].detectors))
+        self.assertEqual(1, len(opss[0].models))
 
     def testconvert2(self):
         # Base options
@@ -68,8 +69,12 @@ class TestConverter(TestCase):
                                       (0, radians(360.0)))
         ops.detectors['det2'] = det
 
-        # Two photon intensity detector
-        self.assertRaises(ConversionException, self.converter.convert, ops)
+        # Convert
+        with warnings.catch_warnings(record=True) as ws:
+            opss = self.converter.convert(ops)
+
+        self.assertEqual(4, len(ws)) # GaussianBeam, model for MAC
+        self.assertEqual(2, len(opss))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
