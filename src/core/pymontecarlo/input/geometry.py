@@ -17,8 +17,7 @@ __version__ = "0.1"
 __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
-__all__ = ['Cuboids2D',
-           'GrainBoundaries',
+__all__ = ['GrainBoundaries',
            'ThinGrainBoundaries',
            'Inclusion',
            'MultiLayers',
