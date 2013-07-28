@@ -303,7 +303,7 @@ MASS_ABSORPTION_COEFFICIENT.henke1982 = \
 MASS_ABSORPTION_COEFFICIENT.henke1993 = \
     ('Henke 1993', "B.L. Henke, E.M. Gullikson and J.C. Davis (1993). X-ray interactions: photoabsorption, scattering, transmission, and reflection at E=50-30000 eV, Z=1-92, Atomic Data and Nuclear Data Tables, 54, pp. 181-342")
 MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989 = \
-    ('Bastin and Heijligers 1985, 1988, 1989', "as quoted in Scott, Love & Reed, Quantitative Electron-Probe Microanalysis, 2nd ed.")
+    ('Bastin and Heijligers 1985 1988 1989', "as quoted in Scott, Love & Reed, Quantitative Electron-Probe Microanalysis, 2nd ed.")
 MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11_dtsa = \
     ('Heinrich IXCOM 11 (DTSA)', "Heinrich KFJ. in Proc. 11th Int. Congr. X-ray Optics & Microanalysis, Brown JD, Packwood RH (eds). Univ. Western Ontario: London, 1986; 67")
 MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11 = \
