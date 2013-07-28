@@ -78,12 +78,14 @@ class TestExpanderSingleDetector(unittest.TestCase):
 
         self.assertEqual(2, len(opss))
 
+        self.assertEqual("op1+0", opss[0].name)
         self.assertEqual(3, len(opss[0].detectors))
         if 'det1a' in opss[0].detectors:
             self.assertNotIn('det1b', opss[0].detectors)
         if 'det1b' in opss[0].detectors:
             self.assertNotIn('det1a', opss[0].detectors)
 
+        self.assertEqual("op1+1", opss[1].name)
         self.assertEqual(3, len(opss[1].detectors))
         if 'det1a' in opss[1].detectors:
             self.assertNotIn('det1b', opss[1].detectors)

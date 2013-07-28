@@ -87,8 +87,10 @@ class ExpanderSingleDetector(Expander):
                     del baseoptions.detectors[key]
 
                 # Add only one detector per options
-                for key, detector in detectors:
+                for i, item in enumerate(detectors):
+                    key, detector = item
                     newoptions = copy.deepcopy(baseoptions)
+                    newoptions.name += '+%i' % i
                     newoptions.detectors[key] = detector
                     list_options.append(newoptions)
 
