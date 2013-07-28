@@ -20,7 +20,7 @@ import shutil
 from pymontecarlo.runner.local import LocalRunner
 from pymontecarlo.program.test_config import DummyProgram
 
-from pymontecarlo.input import Options
+from pymontecarlo.input.options import Options
 
 # Globals and constants variables.
 
