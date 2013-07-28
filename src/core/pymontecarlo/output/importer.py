@@ -89,7 +89,7 @@ class Importer(object):
             result = method(options, key, detector, *args, **kwargs)
             results[key] = result
 
-        return Results(options, results)
+        return Results(options, [(options, results)])
 
 class HDF5Importer(Importer):
 
