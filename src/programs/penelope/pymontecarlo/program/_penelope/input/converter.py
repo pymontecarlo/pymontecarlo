@@ -23,8 +23,7 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import \
-    Converter as _Converter, ConversionException
+from pymontecarlo.input.converter import Converter as _Converter
 from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.geometry import \
     Substrate, MultiLayers, GrainBoundaries, Inclusion, Sphere #, Cuboids2D
@@ -71,11 +70,12 @@ class Converter(_Converter):
         self._cutoff_energy_bremsstrahlung_eV = cutoff_energy_bremsstrahlung
 
     def _convert_geometry(self, options):
-        _Converter._convert_geometry(self, options)
-        self.convert_geometry(options.geometry)
+        if not _Converter._convert_geometry(self, options):
+            return False
 
-    def convert_geometry(self, geometry):
-        materials_lookup = self._create_penelope_materials(geometry.get_materials())
+        geometry = options.geometry
+        materials_lookup = \
+            self._create_penelope_materials(geometry.get_materials())
 
         if isinstance(geometry, Substrate):
             geometry.body = \
@@ -118,7 +118,9 @@ class Converter(_Converter):
 #                    self._create_penelope_body(body, materials_lookup)
 
         else:
-            raise ConversionException, "Cannot convert geometry"
+            return False
+
+        return True
 
     def _create_penelope_materials(self, oldmaterials):
         materials_lookup = {VACUUM: VACUUM}
@@ -133,11 +135,13 @@ class Converter(_Converter):
         if isinstance(old, Material):
             return old
 
-        return Material(old.name, old.composition, old.density_kg_m3,
-                        old.absorption_energy_electron_eV, old.absorption_energy_photon_eV,
-                        old.absorption_energy_positron_eV,
-                        self._elastic_scattering,
-                        self._cutoff_energy_inelastic_eV, self._cutoff_energy_bremsstrahlung_eV)
+        mat = Material(old.name, old.composition, old.density_kg_m3,
+                       self._elastic_scattering,
+                       self._cutoff_energy_inelastic_eV,
+                       self._cutoff_energy_bremsstrahlung_eV)
+        mat.absorption_energy_eV.update(old.absorption_energy_eV)
+
+        return mat
 
     def _create_penelope_body(self, old, materials_lookup):
         # Do not convert PENELOPE body

@@ -18,9 +18,10 @@ import warnings
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penepma.input.converter import Converter, ConversionException
+from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
+from pymontecarlo.input.detector import TimeDetector
 from pymontecarlo.input.limit import TimeLimit
 
 # Globals and constants variables.
@@ -43,29 +44,34 @@ class TestPenelopeConverter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam = PencilBeam(1234)
+        ops.detectors['det1'] = TimeDetector()
         ops.limits.add(TimeLimit(100))
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
 
         # 7 warning:
         # PencilBeam -> GaussianBeam
         # Set default models (6)
+        self.assertEqual(1, len(opss))
         self.assertEqual(7, len(ws))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
-        self.assertAlmostEqual(0.0, ops.beam.diameter_m, 4)
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
+        self.assertAlmostEqual(0.0, opss[0].beam.diameter_m, 4)
 
-        self.assertEqual(6, len(ops.models))
+        self.assertEqual(6, len(opss[0].models))
 
     def testconvert_nolimit(self):
         # Base options
         ops = Options(name="Test")
 
         # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(0, len(opss))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

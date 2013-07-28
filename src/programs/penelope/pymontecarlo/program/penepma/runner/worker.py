@@ -32,31 +32,25 @@ from pymontecarlo.settings import get_settings
 from pymontecarlo.input.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.program.penepma.input.converter import Converter
-from pymontecarlo.program.penepma.input.exporter import Exporter
-from pymontecarlo.program.penepma.output.importer import Importer
-
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
 
 class Worker(_Worker):
-    def __init__(self):
+
+    def __init__(self, program):
         """
         Runner to run PENEPMA simulation(s).
         """
-        _Worker.__init__(self)
+        _Worker.__init__(self, program)
 
         self._executable = get_settings().penepma.exe
         if not os.path.isfile(self._executable):
             raise IOError, 'PENEPMA executable (%s) cannot be found' % self._executable
         logging.debug('PENEPMA executable: %s', self._executable)
 
-    def create(self, options, outputdir, createdir=True):
-        # Convert
-        Converter().convert(options)
-
-        # Export
-        if createdir:
+    def create(self, options, outputdir, *args, **kwargs):
+        # Create directory if needed
+        if kwargs.get('createdir', True):
             simdir = os.path.join(outputdir, options.name)
             if os.path.exists(simdir):
                 logging.info("Simulation directory (%s) exists. It will be empty.", simdir)
@@ -65,26 +59,20 @@ class Worker(_Worker):
         else:
             simdir = outputdir
 
-        # Create .in, .geo and all .mat
-        infilepath = Exporter().export(options, simdir)
+        return _Worker.create(self, options, outputdir, *args, **kwargs)
 
-        # Save
-        logging.debug('Save in file: %s', infilepath)
-
-        return infilepath
-
-    def run(self, options, outputdir, workdir):
-        infilepath = self.create(options, workdir, False)
+    def run(self, options, outputdir, workdir, *args, **kwargs):
+        infilepath = self.create(options, workdir, createdir=False)
 
         # Extract limit
-        limit = options.limits.find(ShowersLimit)
-        showers_limit = limit.showers if limit else 1e38
+        limits = list(options.limits.iterclass(ShowersLimit))
+        showers_limit = limits[0].showers if limits else 1e38
 
-        limit = options.limits.find(TimeLimit)
-        time_limit = limit.time_s if limit else 1e38
+        limits = list(options.limits.iterclass(TimeLimit))
+        time_limit = limits[0].time_s if limits else 1e38
 
-        limit = options.limits.find(UncertaintyLimit)
-        uncertainty_limit = 1.0 - limit.uncertainty if limit else float('inf')
+        limits = list(options.limits.iterclass(UncertaintyLimit))
+        uncertainty_limit = 1.0 - limits[0].uncertainty if limits else float('inf')
 
         # Launch
         args = [self._executable]
@@ -124,14 +112,15 @@ class Worker(_Worker):
 
     def _extract_results(self, options, outputdir, workdir):
         # Import results to pyMonteCarlo
-        results = Importer().import_from_dir(options, workdir)
+        self._status = 'Importing results'
+        results = self._importer.import_(options, workdir)
 
         # Create ZIP with all PENEPMA results
         zipfilepath = os.path.join(outputdir, options.name + '.zip')
         with ZipFile(zipfilepath, 'w', compression=ZIP_DEFLATED) as zipfile:
             for filename in os.listdir(workdir):
                 filepath = os.path.join(workdir, filename)
-                zipfile.write(filepath)
+                zipfile.write(filepath, filename)
 
         return results
 

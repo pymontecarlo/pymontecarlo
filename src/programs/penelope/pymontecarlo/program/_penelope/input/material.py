@@ -35,8 +35,6 @@ from pymontecarlo.input.xmlmapper import \
 # Globals and constants variables.
 
 def pure(z,
-         absorption_energy_electron_eV=50.0, absorption_energy_photon_eV=50.0,
-         absorption_energy_positron_eV=50.0,
          elastic_scattering=(0.0, 0.0),
          cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
     """
@@ -44,18 +42,6 @@ def pure(z,
     
     :arg z: atomic number
     :type z: :class:`int`
-    
-    :arg absorption_energy_electron_eV: absorption energy of the electrons in
-            this material.
-    :type absorption_energy_electron_eV: :class:`float`
-    
-    :arg absorption_energy_photon_eV: absorption energy of the photons in
-        this material.
-    :type absorption_energy_photon_eV: :class:`float`
-    
-    :arg absorption_energy_positron_eV: absorption energy of the positrons in
-        this material.
-    :type absorption_energy_positron_eV: :class:`float`
     
     :arg elastic_scattering: elastic scattering coefficients. 
         They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
@@ -73,8 +59,6 @@ def pure(z,
     composition = {z: '?'}
 
     mat = Material(name, composition, None,
-                   absorption_energy_electron_eV, absorption_energy_photon_eV,
-                   absorption_energy_positron_eV,
                    elastic_scattering,
                    cutoff_energy_inelastic_eV, cutoff_energy_bremsstrahlung_eV)
     mat.calculate()
@@ -108,9 +92,6 @@ class Material(_Material):
                       "Cutoff energy for Bremsstrahlung emission")
 
     def __init__(self, name, composition, density_kg_m3=None,
-                 absorption_energy_electron_eV=50.0,
-                 absorption_energy_photon_eV=50.0,
-                 absorption_energy_positron_eV=50.0,
                  elastic_scattering=(0.0, 0.0),
                  cutoff_energy_inelastic_eV=50.0, cutoff_energy_bremsstrahlung_eV=50.0):
         """
@@ -136,18 +117,6 @@ class Material(_Material):
             their weight fraction.
         :type density_kg_m3: :class:`float`
         
-        :arg absorption_energy_electron_eV: absorption energy of the electrons 
-            in this material.
-        :type absorption_energy_electron_eV: :class:`float`
-        
-        :arg absorption_energy_photon_eV: absorption energy of the photons in
-            this material.
-        :type absorption_energy_photon_eV: :class:`float`
-        
-        :arg absorption_energy_positron_eV: absorption energy of the positrons in
-            this material.
-        :type absorption_energy_positron_eV: :class:`float`
-        
         :arg elastic_scattering: elastic scattering coefficients. 
             They can either be specified as a :class:`tuple`: ``(C1, C2)`` or
             as a single :class:`float` value, where ``C1=C2``. 
@@ -160,10 +129,7 @@ class Material(_Material):
         :arg cutoff_energy_bremsstrahlung_eV: cutoff energy for Bremsstrahlung
             emission (in eV).
         """
-        _Material.__init__(self, name, composition, density_kg_m3,
-                           absorption_energy_electron_eV,
-                           absorption_energy_photon_eV,
-                           absorption_energy_positron_eV)
+        _Material.__init__(self, name, composition, density_kg_m3)
 
         self.elastic_scattering = elastic_scattering
         self.cutoff_energy_inelastic_eV = cutoff_energy_inelastic_eV

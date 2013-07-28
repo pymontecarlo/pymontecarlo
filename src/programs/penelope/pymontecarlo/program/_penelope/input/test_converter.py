@@ -24,6 +24,7 @@ from pymontecarlo.input.geometry import \
 from pymontecarlo.input.body import Layer
 from pymontecarlo.input.material import pure
 from pymontecarlo.input.limit import TimeLimit
+from pymontecarlo.input.particle import POSITRON
 
 # Globals and constants variables.
 
@@ -44,6 +45,7 @@ class TestPenelopeConverter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.geometry = Substrate(pure(29))
+        ops.geometry.material.absorption_energy_eV[POSITRON] = 63.4
         ops.limits.add(TimeLimit(100))
 
         # Convert
@@ -57,6 +59,7 @@ class TestPenelopeConverter(TestCase):
             self.assertAlmostEqual(0.2, material.elastic_scattering[1], 4)
             self.assertAlmostEqual(51.2, material.cutoff_energy_inelastic_eV, 4)
             self.assertAlmostEqual(53.4, material.cutoff_energy_bremsstrahlung_eV, 4)
+            self.assertAlmostEqual(63.4, material.absorption_energy_eV[POSITRON], 4)
 
         for body in ops.geometry.get_bodies():
             self.assertAlmostEqual(1e20, body.maximum_step_length_m, 4)

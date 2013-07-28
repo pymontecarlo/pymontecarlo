@@ -34,8 +34,7 @@ from pymontecarlo.input.collision import \
      PHOTOELECTRIC_ABSORPTION, ELECTRON_POSITRON_PAIR_PRODUCTION, ANNIHILATION)
 from pymontecarlo.input.detector import TrajectoryDetector
 
-from pymontecarlo.program._penelope.output.importer import \
-    Importer as _Importer, ImporterException
+from pymontecarlo.output.importer import Importer as _Importer, ImporterException
 
 # Globals and constants variables.
 _PARTICLES_REF = {1: ELECTRON, 2: PHOTON, 3: POSITRON}
@@ -63,10 +62,13 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[TrajectoryDetector] = self._detector_trajectory
+        self._importers[TrajectoryDetector] = self._import_trajectory
 
-    def _detector_trajectory(self, options, key, detector, path, *args):
-        filepath = os.path.join(path, 'pe-trajectories.dat')
+    def _import(self, options, dirpath, *args, **kwargs):
+        return self._run_importers(options, dirpath, *args, **kwargs)
+
+    def _import_trajectory(self, options, key, detector, dirpath, *args, **kwargs):
+        filepath = os.path.join(dirpath, 'pe-trajectories.dat')
         if not os.path.exists(filepath):
             raise ImporterException, "Data file %s cannot be found" % filepath
 

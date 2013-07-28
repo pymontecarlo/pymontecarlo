@@ -29,6 +29,7 @@ import itertools
 from pymontecarlo.input.geometry import \
     Substrate, Inclusion, MultiLayers, GrainBoundaries, Sphere #, Cuboids2D
 from pymontecarlo.input.material import VACUUM
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 
 from pymontecarlo.program._penelope.input.geometry import \
     PenelopeGeometry, Module, xplane, yplane, zplane, cylinder, sphere
@@ -37,7 +38,6 @@ from pymontecarlo.input.exporter import \
     Exporter as _Exporter, ExporterException, ExporterWarning #@UnusedImport
 
 import penelopelib.material as penmaterial
-
 
 # Globals and constants variables.
 
@@ -119,18 +119,6 @@ class Exporter(_Exporter):
 
         self._pendbase_dir = pendbase_dir
 
-    def export(self, options, outputdir):
-        """
-        Creates all materials, geometry and input file to run a PENELOPE main
-        program from the specified options.
-        
-        :arg options: options to be exported
-        :arg outputdir: directory where the simulation files should be saved
-        
-        :return: location of .in file
-        """
-        return self._export(options, outputdir)
-
     def _export(self, options, outputdir, *args):
         # Export geometry
         geoinfo, matinfos = self.export_geometry(options.geometry, outputdir)
@@ -157,6 +145,46 @@ class Exporter(_Exporter):
         :return: path to the .in file
         """
         raise NotImplementedError
+
+    def _append_material_data(self, lines, options, geoinfo, matinfos, *args):
+        lines.append(self._COMMENT_MATERIALDATA())
+
+        for material, matfilepath in matinfos:
+            text = os.path.basename(matfilepath)
+            line = self._KEYWORD_MFNAME(text)
+            lines.append(line)
+
+            text = [material.absorption_energy_eV[ELECTRON],
+                    material.absorption_energy_eV[PHOTON],
+                    material.absorption_energy_eV[POSITRON],
+                    material.elastic_scattering[0],
+                    material.elastic_scattering[1],
+                    material.cutoff_energy_inelastic_eV,
+                    material.cutoff_energy_bremsstrahlung_eV]
+            line = self._KEYWORD_MSIMPA(text)
+            lines.append(line)
+
+        lines.append(self._COMMENT_SKIP())
+
+    def _append_geometry(self, lines, options, geoinfo, matinfos, *args):
+        lines.append(self._COMMENT_GEOMETRY())
+
+        pengeom, geofilepath = geoinfo
+
+        text = os.path.basename(geofilepath)
+        line = self._KEYWORD_GEOMFN(text)
+        lines.append(line)
+
+        bodies = sorted(pengeom.get_bodies(), key=attrgetter('_index'))
+        for body in bodies:
+            if body.material is VACUUM:
+                continue
+            text = [body._index + 1,
+                    body.maximum_step_length_m * 1e2]
+            line = self._KEYWORD_DSMAX(text)
+            lines.append(line)
+
+        lines.append(self._COMMENT_SKIP())
 
     def export_geometry(self, geometry, outputdir):
         """

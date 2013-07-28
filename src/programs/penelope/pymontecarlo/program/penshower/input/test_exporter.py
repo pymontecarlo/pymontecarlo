@@ -56,8 +56,8 @@ class TestPenelopeExporter(TestCase):
         ops.limits.add(ShowersLimit(100))
 
         # Export
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        opss = self.c.convert(ops)
+        self.e.export(opss[0], self.tmpdir)
 
 if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

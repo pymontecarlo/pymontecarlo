@@ -18,11 +18,11 @@ import warnings
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.penshower.input.converter import Converter, ConversionException
+from pymontecarlo.program.penshower.input.converter import Converter
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import TrajectoryDetector
+from pymontecarlo.input.limit import ShowersLimit, TimeLimit
+from pymontecarlo.input.detector import TrajectoryDetector, TimeDetector
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -49,26 +49,31 @@ class TestPenelopeConverter(TestCase):
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
 
         # 7 warning:
         # PencilBeam -> GaussianBeam
         # Set default models (6)
+        self.assertEqual(1, len(opss))
         self.assertEqual(7, len(ws))
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
-        self.assertAlmostEqual(0.0, ops.beam.diameter_m, 4)
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
+        self.assertAlmostEqual(0.0, opss[0].beam.diameter_m, 4)
 
-        self.assertEqual(6, len(ops.models))
+        self.assertEqual(6, len(opss[0].models))
 
     def testconvert_no_detector(self):
         # Base options
         ops = Options(name="Test")
+        ops.detectors['det1'] = TimeDetector()
         ops.limits.add(ShowersLimit(100))
 
         # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(0, len(opss))
         
     def testconvert_toomany_detector(self):
         # Base options
@@ -78,15 +83,22 @@ class TestPenelopeConverter(TestCase):
         ops.limits.add(ShowersLimit(100))
 
         # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(2, len(opss))
 
     def testconvert_nolimit(self):
         # Base options
         ops = Options(name="Test")
         ops.detectors['trajectories'] = TrajectoryDetector(100)
+        ops.limits.add(TimeLimit(1))
 
         # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(0, len(opss))
 
 if __name__ == '__main__':  #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -26,7 +26,8 @@ from pymontecarlo.input.collision import HARD_ELASTIC
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.limit import TimeLimit
 from pymontecarlo.input.detector import \
-    PhotonIntensityDetector, PhotonSpectrumDetector, PhotonDepthDetector
+    (PhotonIntensityDetector, PhotonSpectrumDetector, PhotonDepthDetector,
+     TimeDetector)
 from pymontecarlo.program.penepma.input.converter import Converter
 from pymontecarlo.program._penelope.input.interactionforcing import InteractionForcing
 from pymontecarlo.program.penepma.input.exporter import Exporter, ExporterException
@@ -68,8 +69,8 @@ class TestPenelopeExporter(TestCase):
         ops.limits.add(TimeLimit(100))
 
         # Export
-        self.c.convert(ops)
-        self.e.export(ops, self.tmpdir)
+        opss = self.c.convert(ops)
+        self.e.export(opss[0], self.tmpdir)
 
     def test_append_photon_detectors_maxlimit(self):
         ops = Options()
@@ -80,8 +81,8 @@ class TestPenelopeExporter(TestCase):
                 PhotonSpectrumDetector((radians(i), radians(45)), (0, radians(360.0)),
                                        (0, 1000), 500)
 
-        self.c.convert(ops)
-        self.assertRaises(ExporterException, self.e.export, ops, self.tmpdir)
+        opss = self.c.convert(ops)
+        self.assertRaises(ExporterException, self.e.export, opss[0], self.tmpdir)
 
     def test_append_photon_detectors_maxchannels(self):
         ops = Options()
@@ -90,10 +91,10 @@ class TestPenelopeExporter(TestCase):
             PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)),
                                    (0, 1000), 50000)
 
-        self.c.convert(ops)
+        opss = self.c.convert(ops)
 
         with warnings.catch_warnings(record=True) as ws:
-            self.e.export(ops, self.tmpdir)
+            self.e.export(opss[0], self.tmpdir)
 
         self.assertEqual(1, len(ws))
 
@@ -106,10 +107,10 @@ class TestPenelopeExporter(TestCase):
         ops.detectors['prz2'] = \
             PhotonDepthDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
 
-        self.c.convert(ops)
+        opss = self.c.convert(ops)
 
         with warnings.catch_warnings(record=True) as ws:
-            self.e.export(ops, self.tmpdir)
+            self.e.export(opss[0], self.tmpdir)
 
         self.assertEqual(2, len(ws))
 
@@ -122,8 +123,8 @@ class TestPenelopeExporter(TestCase):
             ops.detectors['det%i' % i] = \
                 PhotonDepthDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
 
-        self.c.convert(ops)
-        self.assertRaises(ExporterException, self.e.export, ops, self.tmpdir)
+        opss = self.c.convert(ops)
+        self.assertRaises(ExporterException, self.e.export, opss[0], self.tmpdir)
 
     def test_append_phirhoz_distribution_restrain_transitions(self):
         ops = Options()
@@ -134,24 +135,25 @@ class TestPenelopeExporter(TestCase):
             ops.detectors['det%i' % i] = \
                 PhotonDepthDetector((radians(i), radians(45)), (0, radians(360.0)), 500)
 
-        self.c.convert(ops)
+        opss = self.c.convert(ops)
 
         with warnings.catch_warnings(record=True) as ws:
-            self.e.export(ops, self.tmpdir)
+            self.e.export(opss[0], self.tmpdir)
 
         self.assertEqual(10 + 1, len(ws))
 
     def testinteraction_forcing(self):
         ops = Options()
         ops.beam.energy_eV = 30e3
+        ops.detectors['det1'] = TimeDetector()
         ops.limits.add(TimeLimit(100))
 
-        self.c.convert(ops)
+        opss = self.c.convert(ops)
 
         intfor = InteractionForcing(ELECTRON, HARD_ELASTIC, -40)
-        ops.geometry.body.interaction_forcings.add(intfor)
+        opss[0].geometry.body.interaction_forcings.add(intfor)
 
-        self.e.export(ops, self.tmpdir)
+        self.e.export(opss[0], self.tmpdir)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

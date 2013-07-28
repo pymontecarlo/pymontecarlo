@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import math
-from operator import attrgetter, mul
+from operator import mul
 
 # Third party modules.
 
@@ -29,7 +29,6 @@ from operator import attrgetter, mul
 from pymontecarlo.settings import get_settings
 
 from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
-from pymontecarlo.input.material import VACUUM
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import TrajectoryDetector
 
@@ -135,57 +134,17 @@ class Exporter(_Exporter):
 
         lines.append(self._COMMENT_SKIP())
 
-    def _append_material_data(self, lines, options, geoinfo, matinfos, *args):
-        lines.append(self._COMMENT_MATERIALDATA())
-
-        for material, matfilepath in matinfos:
-            text = os.path.basename(matfilepath)
-            line = self._KEYWORD_MFNAME(text)
-            lines.append(line)
-
-            text = [material.absorption_energy_electron_eV,
-                    material.absorption_energy_photon_eV,
-                    material.absorption_energy_positron_eV,
-                    material.elastic_scattering[0],
-                    material.elastic_scattering[1],
-                    material.cutoff_energy_inelastic_eV,
-                    material.cutoff_energy_bremsstrahlung_eV]
-            line = self._KEYWORD_MSIMPA(text)
-            lines.append(line)
-
-        lines.append(self._COMMENT_SKIP())
-
-    def _append_geometry(self, lines, options, geoinfo, matinfos, *args):
-        lines.append(self._COMMENT_GEOMETRY())
-
-        pengeom, geofilepath = geoinfo
-
-        text = os.path.basename(geofilepath)
-        line = self._KEYWORD_GEOMFN(text)
-        lines.append(line)
-
-        bodies = sorted(pengeom.get_bodies(), key=attrgetter('_index'))
-        for body in bodies:
-            if body.material is VACUUM:
-                continue
-            text = [body._index + 1,
-                    body.maximum_step_length_m * 1e2]
-            line = self._KEYWORD_DSMAX(text)
-            lines.append(line)
-
-        lines.append(self._COMMENT_SKIP())
-
     def _append_job_properties(self, lines, options, geoinfo, matinfos, *args):
         lines.append(self._COMMENT_JOBPROP())
 
         #NOTE: No random number. PENSHOWER will select them.
 
-        det = options.detectors.findall(TrajectoryDetector).values()[0] # only one is defined
+        det = list(options.detectors.iterclass(TrajectoryDetector))[0][1]
         text = '1' if det.secondary else '0'
         line = self._KEYWORD_TRJSC(text)
         lines.append(line)
 
-        limit = options.limits.find(ShowersLimit)
+        limit = list(options.limits.iterclass(ShowersLimit))[0]
         text = '%e' % limit.showers
         line = self._KEYWORD_NTRJM(text)
         lines.append(line)

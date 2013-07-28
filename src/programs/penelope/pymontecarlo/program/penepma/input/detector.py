@@ -46,7 +46,7 @@ def index_delimited_detectors(detectors, places=6):
     for detector_key, detector in detectors.iteritems():
         # Create a key for the detector opening by looking only at the
         # significant digits
-        opening = detector.elevation_rad + detector.azimuth_rad
+        opening = tuple(detector.elevation_rad) + tuple(detector.azimuth_rad)
         opening_key = tuple(map(round, opening, [places] * 4))
 
         openings.setdefault(opening_key, []).append(detector_key)

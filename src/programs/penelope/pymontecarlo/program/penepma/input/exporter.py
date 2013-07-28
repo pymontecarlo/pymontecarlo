@@ -155,7 +155,7 @@ class Exporter(_Exporter):
         # Find index for each delimited detector
         # The same method (index_delimited_detectors) is called when importing
         # the result. It ensures that the same index is used for all detectors
-        dets = options.detectors.findall(_PhotonDelimitedDetector)
+        dets = dict(options.detectors.iterclass(_PhotonDelimitedDetector))
         phdets_key_index, phdets_index_keys = index_delimited_detectors(dets)
 
         # Create lines
@@ -217,46 +217,6 @@ class Exporter(_Exporter):
 
         lines.append(self._COMMENT_SKIP())
 
-    def _append_material_data(self, lines, options, geoinfo, matinfos, *args):
-        lines.append(self._COMMENT_MATERIALDATA())
-
-        for material, matfilepath in matinfos:
-            text = os.path.basename(matfilepath)
-            line = self._KEYWORD_MFNAME(text)
-            lines.append(line)
-
-            text = [material.absorption_energy_electron_eV,
-                    material.absorption_energy_photon_eV,
-                    material.absorption_energy_positron_eV,
-                    material.elastic_scattering[0],
-                    material.elastic_scattering[1],
-                    material.cutoff_energy_inelastic_eV,
-                    material.cutoff_energy_bremsstrahlung_eV]
-            line = self._KEYWORD_MSIMPA(text)
-            lines.append(line)
-
-        lines.append(self._COMMENT_SKIP())
-
-    def _append_geometry(self, lines, options, geoinfo, matinfos, *args):
-        lines.append(self._COMMENT_GEOMETRY())
-
-        pengeom, geofilepath = geoinfo
-
-        text = os.path.basename(geofilepath)
-        line = self._KEYWORD_GEOMFN(text)
-        lines.append(line)
-
-        bodies = sorted(pengeom.get_bodies(), key=attrgetter('_index'))
-        for body in bodies:
-            if body.material is VACUUM:
-                continue
-            text = [body._index + 1,
-                    body.maximum_step_length_m * 1e2]
-            line = self._KEYWORD_DSMAX(text)
-            lines.append(line)
-
-        lines.append(self._COMMENT_SKIP())
-
     def _append_interaction_forcing(self, lines, options, geoinfo, matinfos, *args):
         lines.append(self._COMMENT_INTERACTION())
 
@@ -304,12 +264,12 @@ class Exporter(_Exporter):
 
         #FIXME: Add emerging particle detectors
 
-        detectors = options.detectors.findall(BackscatteredElectronEnergyDetector)
+        detectors = list(options.detectors.iterclass(BackscatteredElectronEnergyDetector))
         if not detectors:
             lines.append(self._COMMENT_SKIP())
             return
 
-        detector = detectors.values()[0]
+        detector = detectors[0][1]
         text = detector.limits_eV[0], detector.limits_eV[1], detector.channels
         line = self._KEYWORD_NBE(text)
         lines.append(line)
@@ -365,11 +325,11 @@ class Exporter(_Exporter):
             comment = Comment('Detector %i used by %s' % (index + 1, ', '.join(keys)))
             lines.append(comment())
 
-            text = elevation_deg + detector.azimuth_deg + (0,)
+            text = elevation_deg + tuple(detector.azimuth_deg) + (0,)
             line = self._KEYWORD_PDANGL(text)
             lines.append(line)
 
-            text = detector.limits_eV + (channels,)
+            text = tuple(detector.limits_eV) + (channels,)
             line = self._KEYWORD_PDENER(text)
             lines.append(line)
 
@@ -386,7 +346,7 @@ class Exporter(_Exporter):
                                      phdets_key_index, phdets_index_keys, *args):
         lines.append(self._COMMENT_PHIRHOZ())
 
-        detectors = options.detectors.findall(PhotonDepthDetector)
+        detectors = dict(options.detectors.iterclass(PhotonDepthDetector))
         if not detectors:
             lines.append(self._COMMENT_SKIP())
             return
@@ -405,7 +365,7 @@ class Exporter(_Exporter):
             zs |= set(material.composition.keys())
 
         # Retrieve all transitions above a certain probability
-        energylow = min(map(attrgetter('absorption_energy_electron_eV'), materials))
+        energylow = min(mat.absorption_energy_eV[ELECTRON] for mat in materials)
         energyhigh = options.beam.energy_eV
 
         transitions = []
@@ -462,21 +422,23 @@ class Exporter(_Exporter):
 
         lines.append(self._COMMENT_SKIP())
 
-        limit = options.limits.find(ShowersLimit, ShowersLimit(1e38))
-        text = '%e' % limit.showers
+        limits = list(options.limits.iterclass(ShowersLimit))
+        showers = limits[0].showers if limits else 1e38
+        text = '%e' % showers
         line = self._KEYWORD_NSIMSH(text)
         lines.append(line)
 
         #NOTE: No random number. PENEPMA will select them.
 
-        limit = options.limits.find(TimeLimit, TimeLimit(1e38))
-        text = '%e' % limit.time_s
+        limits = list(options.limits.iterclass(TimeLimit))
+        time_s = limits[0].time_s if limits else 1e38
+        text = '%e' % time_s
         line = self._KEYWORD_TIME(text)
         lines.append(line)
 
-        limit = options.limits.find(UncertaintyLimit)
-        if limit:
-            for transition in limit.transitions:
+        limits = list(options.limits.iterclass(UncertaintyLimit))
+        if limits:
+            for transition in limits[0].transitions:
                 text = [transition.z, transition.dest.index, transition.src.index]
                 line = self._KEYWORD_XLMTR(text)
                 lines.append(line)
@@ -485,7 +447,7 @@ class Exporter(_Exporter):
             line = self._KEYWORD_XLMPD(text)
             lines.append(line)
 
-            text = [limit.uncertainty, 0.0]
+            text = [limits[0].uncertainty, 0.0]
             line = self._KEYWORD_XLMUNC(text)
             lines.append(line)
 

@@ -18,6 +18,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.input.xmlmapper import mapper
+from pymontecarlo.input.particle import ELECTRON, PHOTON, POSITRON
 
 from pymontecarlo.program._penelope.input.material import Material, pure
 
@@ -44,9 +45,9 @@ class TestModule(TestCase):
 
         self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[POSITRON], 4)
 
         self.assertAlmostEqual(0.0, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.0, m.elastic_scattering[1], 4)
@@ -78,9 +79,9 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(8.96, self.m.density_kg_m3 / 1000.0, 4)
 
-        self.assertAlmostEqual(50, self.m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(50, self.m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(50, self.m.absorption_energy_eV[POSITRON], 4)
 
         self.assertAlmostEqual(0.1, self.m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, self.m.elastic_scattering[1], 4)
@@ -99,9 +100,9 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
 
-        self.assertAlmostEqual(50, m.absorption_energy_electron_eV, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_photon_eV, 4)
-        self.assertAlmostEqual(50, m.absorption_energy_positron_eV, 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(50, m.absorption_energy_eV[POSITRON], 4)
 
         self.assertAlmostEqual(0.1, m.elastic_scattering[0], 4)
         self.assertAlmostEqual(0.2, m.elastic_scattering[1], 4)
@@ -141,10 +142,6 @@ class TestMaterial(TestCase):
         self.assertEqual(29, int(children[0].get('z')))
 
         self.assertAlmostEqual(8.96, float(element.get('density')) / 1000.0, 4)
-
-        self.assertAlmostEqual(50, float(element.get('absorption_energy_electron')), 4)
-        self.assertAlmostEqual(50, float(element.get('absorption_energy_photon')), 4)
-        self.assertAlmostEqual(50, float(element.get('absorption_energy_positron')), 4)
 
         child = list(element.find('elastic_scattering'))[0]
         self.assertAlmostEqual(0.1, float(child.get('c1')), 4)

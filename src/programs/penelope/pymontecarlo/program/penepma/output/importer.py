@@ -54,8 +54,7 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      ShowersStatisticsDetector,
      )
-from pymontecarlo.program._penelope.output.importer import \
-    Importer as _Importer, ImporterException
+from pymontecarlo.output.importer import Importer as _Importer, ImporterException
 from pymontecarlo.program.penepma.input.detector import index_delimited_detectors
 
 # Globals and constants variables.
@@ -85,32 +84,30 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[PhotonSpectrumDetector] = \
-            self._detector_photon_spectrum
-        self._detector_importers[PhotonIntensityDetector] = \
-            self._detector_photon_intensity
-        self._detector_importers[PhotonDepthDetector] = \
-            self._detector_photondepth
-        self._detector_importers[ElectronFractionDetector] = \
-            self._detector_electron_fraction
-        self._detector_importers[TimeDetector] = self._detector_time
-        self._detector_importers[ShowersStatisticsDetector] = \
-            self._detector_showers_statistics
-        self._detector_importers[BackscatteredElectronEnergyDetector] = \
-            self._detector_backscattered_electron_energy
+        self._importers[PhotonSpectrumDetector] = \
+            self._import_photon_spectrum
+        self._importers[PhotonIntensityDetector] = self._import_photon_intensity
+        self._importers[PhotonDepthDetector] = self._import_photondepth
+        self._importers[ElectronFractionDetector] = \
+            self._import_electron_fraction
+        self._importers[TimeDetector] = self._import_time
+        self._importers[ShowersStatisticsDetector] = \
+            self._import_showers_statistics
+        self._importers[BackscatteredElectronEnergyDetector] = \
+            self._import_backscattered_electron_energy
 
-    def _import_results(self, options, path, *args):
+    def _import(self, options, dirpath, *args, **kwargs):
         # Find index for each delimited detector
         # The same method (index_delimited_detectors) is called when exporting
         # the result. It ensures that the same index is used for all detectors
-        dets = options.detectors.findall(_PhotonDelimitedDetector)
+        dets = dict(options.detectors.iterclass(_PhotonDelimitedDetector))
         phdets_key_index, phdets_index_keys = index_delimited_detectors(dets)
 
-        return _Importer._import_results(self, options, path,
-                                         phdets_key_index, phdets_index_keys,
-                                         *args)
+        return self._run_importers(options, dirpath,
+                                   phdets_key_index, phdets_index_keys,
+                                   *args, **kwargs)
 
-    def _detector_photon_spectrum(self, options, key, detector, path,
+    def _import_photon_spectrum(self, options, key, detector, path,
                                   phdets_key_index, phdets_index_keys, *args):
         index = phdets_key_index[key] + 1
 
@@ -139,7 +136,7 @@ class Importer(_Importer):
 
         return PhotonSpectrumResult(total, background)
 
-    def _detector_photon_intensity(self, options, key, detector, path,
+    def _import_photon_intensity(self, options, key, detector, path,
                                    phdets_key_index, phdets_index_keys, *args):
         def _read_intensities_line(line):
             values = line.split()
@@ -202,7 +199,7 @@ class Importer(_Importer):
 
         return PhotonIntensityResult(intensities)
 
-    def _detector_photondepth(self, options, key, detector, path,
+    def _import_photondepth(self, options, key, detector, path,
                               phdets_key_index, phdets_index_keys, *args):
         index = phdets_key_index[key] + 1
 
@@ -283,7 +280,7 @@ class Importer(_Importer):
 
         return dict(zip(header, values))
 
-    def _detector_electron_fraction(self, options, key, detector, path, *args):
+    def _import_electron_fraction(self, options, key, detector, path, *args):
         line = self._read_log(path)
 
         absorbed = line['F_ABS'], line['F_ABS_E']
@@ -292,7 +289,7 @@ class Importer(_Importer):
 
         return ElectronFractionResult(absorbed, backscattered, transmitted)
 
-    def _detector_time(self, options, key, detector, path, *args):
+    def _import_time(self, options, key, detector, path, *args):
         line = self._read_log(path)
 
         simulation_time_s = line['SIM_TIME']
@@ -300,14 +297,14 @@ class Importer(_Importer):
 
         return TimeResult(simulation_time_s, simulation_speed_s)
 
-    def _detector_showers_statistics(self, options, key, detector, path, *args):
+    def _import_showers_statistics(self, options, key, detector, path, *args):
         line = self._read_log(path)
 
         showers = line['N_ELECTRON']
 
         return ShowersStatisticsResult(showers)
 
-    def _detector_backscattered_electron_energy(self, options, key, detector, path, *args):
+    def _import_backscattered_electron_energy(self, options, key, detector, path, *args):
         filepath = os.path.join(path, 'pe-energy-el-back.dat')
         if not os.path.exists(filepath):
             raise ImporterException, "Data file %s cannot be found" % filepath

@@ -58,7 +58,7 @@ class TestImporter(TestCase):
             PhotonIntensityDetector((radians(-35), radians(-45)), (0, radians(360.0)))
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(2, len(results))
@@ -90,7 +90,7 @@ class TestImporter(TestCase):
                                    (0, 20e3), 1000)
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
@@ -119,7 +119,7 @@ class TestImporter(TestCase):
             PhotonDepthDetector((radians(35), radians(45)), (0, radians(360.0)), 500)
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
@@ -160,7 +160,7 @@ class TestImporter(TestCase):
         ops.detectors['fraction'] = ElectronFractionDetector()
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
@@ -183,7 +183,7 @@ class TestImporter(TestCase):
         ops.detectors['time'] = TimeDetector()
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
@@ -200,7 +200,7 @@ class TestImporter(TestCase):
         ops.detectors['showers'] = ShowersStatisticsDetector()
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
@@ -217,7 +217,7 @@ class TestImporter(TestCase):
             BackscatteredElectronEnergyDetector((0.0, 20e3), 100)
 
         # Import
-        results = self.i.import_from_dir(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)
 
         # Test
         self.assertEqual(1, len(results))
