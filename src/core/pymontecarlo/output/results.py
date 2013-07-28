@@ -31,6 +31,7 @@ import h5py
 
 # Local modules.
 from pymontecarlo.input.options import Options
+from pymontecarlo.input.parameter import freeze
 from pymontecarlo.output.manager import ResultManager
 import pymontecarlo.output.result #@UnusedImport
 
@@ -38,13 +39,11 @@ import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 
-class Results(Mapping):
-    VERSION = '6'
+class _ResultsContainer(Mapping):
 
     def __init__(self, options, results={}):
         """
-        Creates a new container for the results.
-        Once created, the results container cannot be modified (i.e. read-only).
+        Internal container for the results.
         
         :arg options: options used to generate these results
         :type options: :class:`Options`
@@ -55,7 +54,7 @@ class Results(Mapping):
         :type results: :class:`dict`
         """
         self._options = copy.deepcopy(options)
-        self._uuid = options.uuid
+        freeze(self._options)
 
         self._results = {}
         for key, result in results.iteritems():
@@ -64,98 +63,8 @@ class Results(Mapping):
             self._results[key] = result
 
     def __repr__(self):
-        return '<Results(%s)>' % ', '.join(self._results.keys())
-
-    @classmethod
-    def load(cls, filepath):
-        """
-        Loads results from a HDF5 file.
-        
-        :arg filepath: location of HDF5 file
-        
-        :return: results
-        """
-        hdf5file = h5py.File(filepath, 'r')
-
-        try:
-            return cls._load(hdf5file)
-        finally:
-            hdf5file.close()
-
-    @classmethod
-    def _load(cls, hdf5parent):
-        """
-        Internal method to load results from an HDF5 group.
-        """
-        task = progress.start_task("Loading results")
-
-        try:
-            # Check version
-            if hdf5parent.attrs['version'] != cls.VERSION:
-                raise IOError, "Incorrect version of results. Only version %s is accepted" % \
-                        cls.VERSION
-
-            # Read options
-            task.status = 'Reading options'
-            fp = StringIO(hdf5parent.attrs['options'])
-            options = Options.load(fp)
-
-            # Load each result
-            results = {}
-            for i, key in enumerate(hdf5parent):
-                task.progress = float(i) / len(hdf5parent)
-                task.status = 'Loading %s' % key
-
-                hdf5group = hdf5parent[key]
-                klass = ResultManager.get_class(hdf5group.attrs['_class'])
-                results[key] = klass.__loadhdf5__(hdf5parent, key)
-
-            return cls(options, results)
-        finally:
-            progress.stop_task(task)
-
-    def save(self, filepath):
-        """
-        Saves results in a results HDF5.
-        
-        :arg filepath: location where to save
-        """
-        hdf5file = h5py.File(filepath, 'w')
-
-        try:
-            self._save(hdf5file)
-        finally:
-            hdf5file.close()
-
-    def _save(self, hdf5parent):
-        """
-        Internal method to save a results inside the specified HDF5 group.
-        """
-        task = progress.start_task('Saving results')
-
-        try:
-            hdf5parent.attrs['version'] = self.VERSION
-
-            # Save each result
-            for i, key in enumerate(self.iterkeys()):
-                task.progress = float(i) / len(self)
-                task.status = 'Saving result(s) for %s' % key
-
-                result = self[key]
-
-                hdf5group = hdf5parent.create_group(key)
-                tag = ResultManager.get_tag(result.__class__)
-                hdf5group.attrs['_class'] = tag
-
-                result.__savehdf5__(hdf5parent, key)
-
-            # Save options
-            task.status = 'Saving options'
-            fp = StringIO()
-            self._options.save(fp, pretty_print=False)
-            hdf5parent.attrs['options'] = fp.getvalue()
-        finally:
-            progress.stop_task(task)
+        return '<%s(%s)>' % (self.__class__.__name__,
+                             ', '.join(self._results.keys()))
 
     def __len__(self):
         return len(self._results)
@@ -171,27 +80,9 @@ class Results(Mapping):
         """
         Returns a copy of the options.
         """
-        return copy.deepcopy(self._options)
+        return self._options
 
-    @property
-    def options_uuid(self):
-        """
-        Returns UUID of original options.
-        """
-        return self._uuid
-
-class _ResultsSequenceParameters(Sequence):
-
-    def __init__(self, list_params):
-        self._list_params = list_params
-
-    def __len__(self):
-        return len(self._list_params)
-
-    def __getitem__(self, index):
-        return self._list_params[index].copy()
-
-class ResultsSequence(Sequence):
+class Results(Sequence):
     """
     :class:`.ResultsSequence` is a container of several :class:`.Results`.
     It preserves the order of the results.
@@ -208,98 +99,16 @@ class ResultsSequence(Sequence):
         >>> 2.0
     """
 
-    VERSION = '1'
+    VERSION = '7'
 
-    def __init__(self, list_results, list_params=None):
-        self._list_results = list(list_results) # copy
+    def __init__(self, options, list_results):
+        self._options = copy.deepcopy(options)
+        freeze(self._options)
 
-        if list_params is not None :
-            if len(list_results) != len(list_params):
-                raise ValueError, "Number of parameters should match the number of results"
-        else:
-            list_params = [{}] * len(list_results)
-        self._params = _ResultsSequenceParameters(list_params)
-
-    @classmethod
-    def load(cls, filepath):
-        """
-        Loads results sequence from a HDF5 file.
-        
-        :arg filepath: location of HDF5 file
-        
-        :return: results sequence
-        """
-        task = progress.start_task('Loading results sequence')
-
-        hdf5file = h5py.File(filepath, 'r')
-
-        try:
-            # Check version
-            if hdf5file.attrs['version'] != cls.VERSION:
-                raise IOError, "Incorrect version of results sequence. Only version %s is accepted" % \
-                        cls.VERSION
-
-            # Identifiers
-            identifiers = hdf5file.attrs['identifiers']
-
-            # Read results and parameters
-            list_results = {}
-            list_params = {}
-
-            for identifier, hdf5group in hdf5file.iteritems():
-                # Results
-                results = Results._load(hdf5group)
-                list_results[identifier] = results
-
-                # Parameters
-                params = {}
-                for key, value in hdf5group.attrs.iteritems():
-                    if not key.startswith(identifier):
-                        continue
-                    params[key.split('-')[1]] = value
-
-                list_params[identifier] = params
-
-            # Build sequence
-            if len(identifiers) != len(list_results):
-                raise IOError, 'Number of identifiers do not match number of results'
-
-            list_results = [list_results[identifier] for identifier in identifiers]
-            list_params = [list_params[identifier] for identifier in identifiers]
-            return cls(list_results, list_params)
-        finally:
-            hdf5file.close()
-            progress.stop_task(task)
-
-    def save(self, filepath):
-        """
-        Saves results sequence in a results HDF5.
-        
-        :arg filepath: location where to save
-        """
-        task = progress.start_task('Saving results sequence')
-
-        hdf5file = h5py.File(filepath, 'w')
-
-        try:
-            hdf5file.attrs['version'] = self.VERSION
-
-            identifiers = []
-            for results, params in zip(self, self._params):
-                identifier = uuid.uuid4().hex
-                identifiers.append(identifier)
-
-                hdf5group = hdf5file.create_group(identifier)
-
-                for param, value in params.iteritems():
-                    hdf5group.attrs['%s-%s' % (identifier, param)] = value
-
-                results._save(hdf5group)
-
-            hdf5file.attrs['identifiers'] = identifiers
-        finally:
-            hdf5file.close()
-            progress.stop_task(task)
+        self._list_results = []
+        for options, results in list_results:
+            container = _ResultsContainer(options, results)
+            self._list_results.append(container)
 
     def __repr__(self):
         return '<%s(%i results)>' % (self.__class__.__name__, len(self))
@@ -311,7 +120,128 @@ class ResultsSequence(Sequence):
         return self._list_results[index]
 
     @property
-    def parameters(self):
-        return self._params
+    def options(self):
+        return self._options
 
-    params = parameters
+    @classmethod
+    def load(cls, filepath):
+        """
+        Loads results from a HDF5 file.
+        
+        :arg filepath: location of HDF5 file
+        
+        :return: results
+        """
+        task = progress.start_task('Loading results')
+
+        hdf5file = h5py.File(filepath, 'r')
+
+        try:
+            # Check version
+            if hdf5file.attrs['version'] != cls.VERSION:
+                raise IOError, "Incorrect version of results sequence. Only version %s is accepted" % \
+                        cls.VERSION
+
+            # Read results
+            len_hdf5file = float(len(hdf5file))
+
+            list_results = {}
+            for i, item in enumerate(hdf5file.iteritems()):
+                task.status = 'Reading results %i' % i
+                task.progress = i / len_hdf5file
+                identifier, hdf5group = item
+
+                # Options
+                task.status = 'Reading options'
+                fp = StringIO(hdf5group.attrs['options'])
+                options = Options.load(fp)
+                
+                # Load each result
+                len_hdf5group = float(len(hdf5group))
+
+                results = {}
+                for j, item in enumerate(hdf5group.iteritems()):
+                    key, hdf5group2 = item
+
+                    task.status = 'Loading %s' % key
+                    task.progress = i / len_hdf5file + j / len_hdf5group * 0.1
+    
+                    klass = ResultManager.get_class(hdf5group2.attrs['_class'])
+                    results[key] = klass.__loadhdf5__(hdf5group, key)
+                
+                # Results
+                list_results[identifier] = (options, results)
+                
+            identifiers = hdf5file.attrs['identifiers']
+            if len(identifiers) != len(list_results):
+                raise IOError, 'Number of identifiers do not match number of results'
+
+            list_results = [list_results[identifier] for identifier in identifiers]
+
+            # Read options
+            task.status = 'Reading base options'
+            fp = StringIO(hdf5file.attrs['options'])
+            options = Options.load(fp)
+
+            return cls(options, list_results)
+        finally:
+            hdf5file.close()
+            progress.stop_task(task)
+
+    def save(self, filepath):
+        """
+        Saves results as HDF5.
+        
+        :arg filepath: location where to save
+        """
+        task = progress.start_task('Saving results')
+
+        hdf5file = h5py.File(filepath, 'w')
+
+        try:
+            # Save version
+            hdf5file.attrs['version'] = self.VERSION
+
+            # Save results
+            len_self = float(len(self))
+            
+            identifiers = []
+            for i, results in enumerate(self):
+                task.status = 'Saving results %i' % i
+                task.progress = i / len_self
+
+                identifier = uuid.uuid4().hex
+                identifiers.append(identifier)
+
+                hdf5group = hdf5file.create_group(identifier)
+
+                # Save each result
+                len_results = float(len(results))
+
+                for j, item in enumerate(results.iteritems()):
+                    key, result = item
+
+                    task.status = 'Saving result %s' % key
+                    task.progress = i / len_self + j / len_results * 0.1
+
+                    hdf5group2 = hdf5group.create_group(key)
+                    tag = ResultManager.get_tag(result.__class__)
+                    hdf5group2.attrs['_class'] = tag
+                    result.__savehdf5__(hdf5group, key)
+
+                # Save options
+                task.status = 'Saving options'
+                fp = StringIO()
+                results.options.save(fp, pretty_print=False)
+                hdf5group.attrs['options'] = fp.getvalue()
+
+            hdf5file.attrs['identifiers'] = identifiers
+
+            # Save options
+            task.status = 'Saving options'
+            fp = StringIO()
+            self.options.save(fp, pretty_print=False)
+            hdf5file.attrs['options'] = fp.getvalue()
+        finally:
+            hdf5file.close()
+            progress.stop_task(task)
