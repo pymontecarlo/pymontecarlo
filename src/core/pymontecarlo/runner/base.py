@@ -53,13 +53,6 @@ class _Creator(object):
 
         atexit.register(self.close) # Ensures that the runner is properly closed
 
-    @property
-    def program(self):
-        """
-        Program of this runner.
-        """
-        return self._program
-
     def put(self, options):
         """
         Puts an options in queue.
@@ -87,6 +80,13 @@ class _Creator(object):
             self._options_names.append(name)
 
             self._options_lookup.setdefault(base_options, []).append(options.uuid)
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exctype, value, tb):
+        self.close()
 
     def start(self):
         """
@@ -133,6 +133,13 @@ class _Creator(object):
         """
         completed = len(self._options_names) - self._queue_options.unfinished_tasks
         return completed, 0, ''
+
+    @property
+    def program(self):
+        """
+        Program of this runner.
+        """
+        return self._program
 
 class _Runner(_Creator):
 
