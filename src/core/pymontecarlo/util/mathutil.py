@@ -32,6 +32,9 @@ from operator import add, sub, mul, div, neg
 
 class _vector(object):
     
+    def __str__(self):
+        return '(' + ','.join(map(str, self)) + ')'
+
     def __nonzero__(self):
         return all(map(lambda x: x == 0, self))
 #
