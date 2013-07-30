@@ -50,7 +50,9 @@ class Expander(_Expander):
             for parameter, value in zip(parameters, combination):
                 parts.append('%s=%s' % (parameter.name, value))
 
-            options.name = '+'.join(parts)
+            name = '+'.join(parts)
+            name = name.replace(',', '_')
+            options.name = name
 
         return opss
 
