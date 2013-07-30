@@ -80,26 +80,18 @@ class _ParameterValuesWrapper(object):
         return len(self._values)
 
     def __add__(self, other):
-        if self.is_frozen():
-            raise ValueError, "Frozen parameter"
         return self.__class__([v + other if v is not None else None \
                                for v in self._values])
 
     def __sub__(self, other):
-        if self.is_frozen():
-            raise ValueError, "Frozen parameter"
         return self.__class__([v - other if v is not None else None \
                                for v in self._values])
 
     def __mul__(self, other):
-        if self.is_frozen():
-            raise ValueError, "Frozen parameter"
         return self.__class__([v * other if v is not None else None \
                                for v in self._values])
 
     def __div__(self, other):
-        if self.is_frozen():
-            raise ValueError, "Frozen parameter"
         return self.__class__([v / other if v is not None else None \
                                for v in self._values])
 
