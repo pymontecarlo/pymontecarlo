@@ -24,10 +24,10 @@ __license__ = "GPL v3"
 from docutils.parsers.rst.directives.tables import Table
 from docutils import nodes
 from sphinx import addnodes
-from sphinx.util.nodes import set_role_source_info
 
 # Local modules.
 from pymontecarlo.settings import get_settings
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
@@ -35,6 +35,7 @@ class AvailabilityTableDirective(Table):
 
     required_arguments = 1
     has_content = False
+    option_spec = {'only': str}
 
     def run(self):
         # Extract choices
@@ -50,6 +51,10 @@ class AvailabilityTableDirective(Table):
                 modulepath = clasz.__module__ + '.' + clasz.__name__
                 choices.setdefault(modulepath, set()).add(program)
 
+        if 'only' in self.options:
+            if self.options['only'] not in choices:
+                raise ValueError, "Unknown module in only flag"
+
         # Create table
         table_node = self._build_table(programs, choices)
         table_node['classes'] += self.options.get('class', [])
@@ -59,43 +64,22 @@ class AvailabilityTableDirective(Table):
 
     def _build_table(self, programs, choices):
         env = self.state.document.settings.env
+        isonly = 'only' in self.options
 
-        def create_api_reference(modulepath):
+        def create_reference(modulepath):
             # From sphinx.roles.XRefRole
-            domain = 'py'
-            role = 'class'
-            classes = ['xref', role]
+            classes = ['xref', 'ref']
 
-            has_explicit_title = True
-            title = 'api'
-            target = modulepath
-            rawtext = ':py:class:`%s <%s>`' % (title, target)
-
-            refnode = \
-                addnodes.pending_xref(rawtext, reftype=role, refdomain=domain,
-                                      refexplicit=has_explicit_title)
-            # we may need the line number for warnings
-            set_role_source_info(self.state_machine, self.lineno, refnode)
-
-            refnode['py:module'] = env.temp_data.get('py:module')
-            refnode['py:class'] = env.temp_data.get('py:class')
-
-            # now that the target and title are finally determined, set them
-            refnode['reftarget'] = target
-            refnode += nodes.literal(rawtext, title, classes=classes)
-            # we also need the source document
-            refnode['refdoc'] = env.docname
-
-            return refnode
-
-        def create_gui_reference(modulepath):
-            # From sphinx.roles.XRefRole
-            classes = ['xref']
-            title = 'gui'
-            target = modulepath.rsplit('.', 1)[-1].lower() + '-gui'
+            modulename = modulepath.rsplit('.', 1)[-1]
+            title = camelcase_to_words(modulename)
+            target = modulename.lower()
             rawtext = ':ref:`%s <%s>`' % (title, target)
 
-            refnode = nodes.reference(refid=target)
+            refnode = \
+                addnodes.pending_xref(rawtext, reftype='ref', refdomain='std',
+                                      refexplicit=True,
+                                      reftarget=target,
+                                      refdoc=env.docname)
             refnode += nodes.literal(rawtext, title, classes=classes)
 
             return refnode
@@ -103,12 +87,13 @@ class AvailabilityTableDirective(Table):
         # table
         table = nodes.table()
 
-        ncol = len(programs) + 1
+        ncol = len(programs)
+        if not isonly: ncol += 1
         tgroup = nodes.tgroup(cols=ncol)
         table += tgroup
 
         colwidths = self.get_column_widths(ncol)
-        colwidths[0] *= 2
+        if not isonly: colwidths[0] *= 2
         tgroup.extend(nodes.colspec(colwidth=colwidth) for colwidth in colwidths)
 
         # header
@@ -116,27 +101,26 @@ class AvailabilityTableDirective(Table):
         tgroup += thead
         rownode = nodes.row()
         thead += rownode
-        rownode.extend(nodes.entry(h, nodes.paragraph(text=h))
-                       for h in [''] + programs)
+        hs = [''] if not isonly else []
+        hs += programs
+        rownode.extend(nodes.entry(h, nodes.paragraph(text=h)) for h in hs)
 
         # body
         tbody = nodes.tbody()
         tgroup += tbody
         
         for modulepath, available_programs in choices.iteritems():
+            if isonly and modulepath != self.options['only']:
+                continue
+
             rownode = nodes.row()
             tbody += rownode
 
-            # Reference to class in API and GUI
-            classname = modulepath.rsplit('.', 1)[-1]
-            guirefnode = create_gui_reference(modulepath)
-            apirefnode = create_api_reference(modulepath)
-
-            refnode = nodes.paragraph(classname + ' | ', classname + ' | ')
-            refnode += guirefnode
-            refnode += nodes.Text(' | ', ' | ')
-            refnode += apirefnode
-            rownode.append(nodes.entry('', refnode))
+            # Reference to class
+            if not isonly:
+                refnode = nodes.paragraph()
+                refnode += create_reference(modulepath)
+                rownode.append(nodes.entry('', refnode))
 
             # Exist for program
             for program in programs:
