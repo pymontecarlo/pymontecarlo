@@ -62,6 +62,7 @@ def email_role(typ, rawtext, text, lineno, inliner, options={}, content=[]):
     # Handle addresses of the form "Name <name@domain.org>"
     if '<' in text and '>' in text:
         name, email = text.split('<')
+        name = name.strip()
         email = email.split('>')[0]
     elif '(' in text and ')' in text:
         name, email = text.split('(')
