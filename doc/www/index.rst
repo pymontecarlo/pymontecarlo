@@ -5,8 +5,8 @@ Welcome
    :hidden:
    
    features
-   models
    documentation
+   examples
    collaboration
    download
 
@@ -35,7 +35,7 @@ See :ref:`newprogram` in the development section for more information.
 pyMonteCarlo is written in Python, a cross-platform object-oriented programming
 language.
 It is licensed under the GNU GPL v3.
-Binary version for Windows and Linux Debian are available to :ref:`download`.
+Binary version for Windows and Linux Debian are available to :doc:`download`.
 
 Getting started
 ###############

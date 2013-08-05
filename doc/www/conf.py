@@ -20,6 +20,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.ifconfig', 'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
               'sphinxtools.ext.bibtex',
+              'sphinxcontrib.email',
               'pymontecarlo.sphinxext.availability']
 
 
