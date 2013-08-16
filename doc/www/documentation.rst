@@ -1,8 +1,16 @@
 Documentation
 #############
 
+Simulation options
+------------------
+
 .. toctree::
-   :hidden:
+   :maxdepth: 1
    
    input/beam
-   input/particle
+   
+Results
+-------
+
+Programs
+--------
