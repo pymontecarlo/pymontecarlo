@@ -12,14 +12,17 @@ __license__ = "GPL v3"
 import unittest
 import logging
 from operator import attrgetter
+from math import radians as d2r
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.expander import Expander, ExpanderSingleDetector
+from pymontecarlo.input.expander import \
+    Expander, ExpanderSingleDetector, ExpanderSingleDetectorSameOpening
 from pymontecarlo.input.options import Options
 from pymontecarlo.input.detector import \
-    TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector
+    (TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
+     PhotonIntensityDetector, PhotonDepthDetector)
 
 # Globals and constants variables.
 
@@ -147,6 +150,58 @@ class TestExpanderSingleDetector(unittest.TestCase):
 
         self.ops.detectors['det2b'] = ElectronFractionDetector()
         self.assertTrue(self.expander.is_expandable(self.ops))
+
+class TestExpanderSingleDetectorSameOpening(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.ops = Options("op1")
+        self.ops.detectors['det1a'] = \
+            PhotonIntensityDetector((d2r(35.0), d2r(45.0)), (0.0, d2r(360.0)))
+        self.ops.detectors['det1b'] = \
+            PhotonIntensityDetector((d2r(30.0), d2r(40.0)), (0.0, d2r(360.0)))
+        self.ops.detectors['det2a'] = \
+            PhotonDepthDetector((d2r(30.0), d2r(40.0)), (0.0, d2r(360.0)), 100)
+        self.ops.detectors['det3'] = ShowersStatisticsDetector()
+
+        self.expander = ExpanderSingleDetectorSameOpening([])
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testexpand_noduplicates(self):
+        del self.ops.detectors['det1a']
+
+        opss = self.expander.expand(self.ops)
+        self.assertEqual(1, len(opss))
+
+    def testexpand_duplicates(self):
+        opss = self.expander.expand(self.ops)
+
+        self.assertEqual(2, len(opss))
+
+        self.assertEqual("op1+opening0", opss[0].name)
+        self.assertEqual(2, len(opss[0].detectors))
+        if 'det1a' in opss[0].detectors:
+            self.assertNotIn('det1b', opss[0].detectors)
+            self.assertNotIn('det2a', opss[0].detectors)
+        if 'det1b' in opss[0].detectors:
+            self.assertNotIn('det1a', opss[0].detectors)
+
+        self.assertEqual("op1+opening1", opss[1].name)
+        self.assertEqual(3, len(opss[1].detectors))
+        if 'det1a' in opss[1].detectors:
+            self.assertNotIn('det1b', opss[1].detectors)
+            self.assertNotIn('det2a', opss[1].detectors)
+        if 'det1b' in opss[1].detectors:
+            self.assertNotIn('det1a', opss[1].detectors)
+
+    def testis_expandable(self):
+        self.assertTrue(self.expander.is_expandable(self.ops))
+
+        del self.ops.detectors['det1a']
+        self.assertFalse(self.expander.is_expandable(self.ops))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
