@@ -34,7 +34,8 @@ import paramiko
 from pymontecarlo.runner.base import _RunnerDispatcher, _Runner
 
 from pymontecarlo.output.results import Results
-import pymontecarlo.util.xmlutil as xmlutil
+
+import pymontecarlo.input.xmlmapper as xmlmapper
 
 # Globals and constants variables.
 
@@ -120,7 +121,7 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
             for options in options_list:
                 remote_filepath = \
                     posixpath.join(self._remote_workdir, options.name + '.xml')
-                data = xmlutil.tostring(options.to_xml())
+                data = xmlmapper.tostring(options.to_xml())
 
                 ftp.open(remote_filepath, 'w').write(data)
                 logging.debug("Transfered options to %s", remote_filepath)
