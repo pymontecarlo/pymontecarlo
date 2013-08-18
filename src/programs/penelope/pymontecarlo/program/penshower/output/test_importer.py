@@ -50,7 +50,7 @@ class TestImporter(TestCase):
         ops.detectors['trajectories'] = TrajectoryDetector(50)
 
         # Import
-        results = self.i.import_(ops, self.testdata)
+        results = self.i.import_(ops, self.testdata)[0]
 
         # Test
         result = results['trajectories']

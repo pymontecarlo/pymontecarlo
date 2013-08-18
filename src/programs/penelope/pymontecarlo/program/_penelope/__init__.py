@@ -24,7 +24,6 @@ import os
 # Local modules.
 
 # Globals and constants variables.
-from pymontecarlo.util.xmlutil import XMLIO
+from pymontecarlo.input.xmlmapper import mapper
 
-
-XMLIO.register_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope')
+mapper.register_namespace('mc-pen', 'http://pymontecarlo.sf.net/penelope')
