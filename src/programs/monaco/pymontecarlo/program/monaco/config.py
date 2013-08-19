@@ -50,8 +50,13 @@ class _MonacoProgram(Program):
         if not os.path.isdir(basedir):
             raise AssertionError, "Specified Monaco base directory (%s) does not exist" % basedir
 
-        mccli32_exe = os.path.join(settings.monaco.basedir, 'Mccli32.exe')
+        try:
+            mccli32_exe = settings.monaco.exe
+        except AttributeError:
+            mccli32_exe = os.path.join(settings.monaco.basedir, 'Mccli32.exe')
         if not os.path.isfile(mccli32_exe):
             raise AssertionError, "No Mccli32.exe in Monaco base directory (%s)" % basedir
+        if not os.access(mccli32_exe, os.X_OK):
+            raise AssertionError, "Specified Monaco executable (%s) is not executable" % mccli32_exe
 
 program = _MonacoProgram()

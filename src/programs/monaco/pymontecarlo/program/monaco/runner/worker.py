@@ -25,23 +25,9 @@ import shutil
 import subprocess
 
 try:
-    import _winreg
+    import _winreg as winreg
 except ImportError:
-    class WinReg:
-        HKEY_CURRENT_USER = None
-        KEY_ALL_ACCESS = None
-        REG_SZ = None
-
-        def OpenKey(self, key, sub_key, res, sam):
-            pass
-
-        def CreateKey(self, key, sub_key):
-            pass
-
-        def SetValueEx(self, key, value_name, reserved, type, value):
-            pass
-
-    _winreg = WinReg()
+    import dummy_winreg as winreg
 
 # Third party modules.
 from pyxray.transition import Ka, La, Ma
@@ -58,7 +44,7 @@ from pymontecarlo.input.model import \
     (MASS_ABSORPTION_COEFFICIENT, IONIZATION_CROSS_SECTION,
      IONIZATION_POTENTIAL)
 
-_WINKEY = r'Software\GfE\Monaco\3.0'
+_WINKEY = 'Software\\GfE\\Monaco\\3.0'
 
 _MASS_ABSORPTION_COEFFICIENT_REF = \
     {MASS_ABSORPTION_COEFFICIENT.bastin_heijligers1989: 1,
@@ -85,7 +71,11 @@ class Worker(_Worker):
         _Worker.__init__(self, program)
 
         self._monaco_basedir = get_settings().monaco.basedir
-        self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
+
+        try:
+            self._mccli32exe = get_settings().monaco.exe
+        except AttributeError:
+            self._mccli32exe = os.path.join(self._monaco_basedir, 'Mccli32.exe')
 
     def create(self, options, outputdir, *args, **kwargs):
         # Create job directory
@@ -102,12 +92,12 @@ class Worker(_Worker):
 
     def _setup_registry(self):
         try:
-            key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, _WINKEY,
-                                  0, _winreg.KEY_ALL_ACCESS)
+            handle = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _WINKEY,
+                                  0, winreg.KEY_ALL_ACCESS)
         except:
-            key = _winreg.CreateKey(_winreg.HKEY_CURRENT_USER, _WINKEY)
-        with key:
-            _winreg.SetValueEx(key, "SysPath", 0, _winreg.REG_SZ,
+            handle = winreg.CreateKey(winreg.HKEY_CURRENT_USER, _WINKEY)
+        with handle:
+            winreg.SetValueEx(handle, "SysPath", 0, winreg.REG_SZ,
                                self._monaco_basedir)
         logging.debug("Setup Monaco path in registry")
 
