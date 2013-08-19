@@ -88,7 +88,7 @@ class Converter(_Converter):
         self._expander = ExpanderSingleDetector(dets)
 
     def _convert_beam(self, options):
-        if isinstance(options.beam, PencilBeam):
+        if type(options.beam) is PencilBeam:
             old = options.beam
             options.beam = GaussianBeam(old.energy_eV, 0.0, old.particle,
                                         old.origin_m, old.direction,
