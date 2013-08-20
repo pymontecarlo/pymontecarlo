@@ -124,8 +124,8 @@ _diameter_validator = \
 
 class GaussianBeam(PencilBeam):
 
-    diameter_m = Parameter(_diameter_validator,
-                           "Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
+    diameter = UnitParameter("m", _diameter_validator,
+                             "Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
 
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
