@@ -29,64 +29,67 @@ import pyxray.element_properties as ep
 
 # Globals and constants variables.
 
-COLOR_ALKALI_METALS = '#CC99CC'
-COLOR_ALKALI_EARTH_METALS = '#00FFFF'
-COLOR_NON_METALS = '#00CC66'
-COLOR_TRANSITION_METALS = '#66FF99'
-COLOR_OTHER_METALS = '#9933CC'
-COLOR_HALOGENS = '#FFCC00'
-COLOR_INERT_GAS = '#CC0000'
-COLOR_LANTHANIDES = '#6600FF'
-COLOR_ACTINIDES = '#6666FF'
+BCOLOR_ALKALI_METALS = '#CC99CC'
+BCOLOR_ALKALI_EARTH_METALS = '#00FFFF'
+BCOLOR_NON_METALS = '#00CC66'
+BCOLOR_TRANSITION_METALS = '#66FF99'
+BCOLOR_OTHER_METALS = '#9933CC'
+BCOLOR_HALOGENS = '#FFCC00'
+BCOLOR_INERT_GAS = '#CC0000'
+BCOLOR_LANTHANIDES = '#6600FF'
+BCOLOR_ACTINIDES = '#6666FF'
+
+FCOLOR_WHITE = "#FFFFFF"
+FCOLOR_BLACK = "#000000"
 
 # Elements setup
 def _setup_elements():
     e = {}
-    e[1] = ((0, 0), COLOR_NON_METALS)
+    e[1] = ((0, 0), BCOLOR_NON_METALS, FCOLOR_BLACK)
 
     ## Alkali Metals
     for row, z in enumerate([3, 11, 19, 37, 55, 87]):
-        e[z] = ((row + 1, 0), COLOR_ALKALI_METALS)
+        e[z] = ((row + 1, 0), BCOLOR_ALKALI_METALS, FCOLOR_BLACK)
 
     ## Alkali Earth Metals
     for row, z in enumerate([4, 12, 20, 38, 56, 88]):
-        e[z] = ((row + 1, 1), COLOR_ALKALI_EARTH_METALS)
+        e[z] = ((row + 1, 1), BCOLOR_ALKALI_EARTH_METALS, FCOLOR_BLACK)
 
     ## Transition Metals
     transitions = [range(21, 30 + 1), range(39, 48 + 1),
                    range(71, 80 + 1), range(103, 106 + 1)]
     for row, transitions_row in enumerate(transitions):
         for col, z in enumerate(transitions_row):
-            e[z] = ((row + 3, col + 3), COLOR_TRANSITION_METALS)
+            e[z] = ((row + 3, col + 3), BCOLOR_TRANSITION_METALS, FCOLOR_BLACK)
 
     ## Non Metals
     nonmetals = [range(5, 8 + 1), range(14, 16 + 1), range(33, 34 + 1), [52]]
     for row, nonmetals_row in enumerate(nonmetals):
         for col, z in enumerate(nonmetals_row):
-            e[z] = ((row + 1, col + 13 + row), COLOR_NON_METALS)
+            e[z] = ((row + 1, col + 13 + row), BCOLOR_NON_METALS, FCOLOR_BLACK)
 
     ## Other Metals
     othermetals = [[13], range(31, 32 + 1), range(49, 51 + 1), range(81, 84 + 1)]
     for row, othermetals_row in enumerate(othermetals):
         for col, z in enumerate(othermetals_row):
-            e[z] = ((row + 2, col + 13), COLOR_OTHER_METALS)
+            e[z] = ((row + 2, col + 13), BCOLOR_OTHER_METALS, FCOLOR_WHITE)
 
     ## Halogens
     for row, z in enumerate([9, 17, 35, 53, 85]):
-        e[z] = ((row + 1, 17), COLOR_HALOGENS)
+        e[z] = ((row + 1, 17), BCOLOR_HALOGENS, FCOLOR_BLACK)
 
     ## Inert gas
     for row, z in enumerate([2, 10, 18, 36, 54, 86]):
-        e[z] = ((row, 18), COLOR_INERT_GAS)
+        e[z] = ((row, 18), BCOLOR_INERT_GAS, FCOLOR_WHITE)
 
     ## Lanthanides
     for col, z in enumerate(range(57, 70 + 1)):
-        e[z] = ((8, col + 3), COLOR_LANTHANIDES)
+        e[z] = ((8, col + 3), BCOLOR_LANTHANIDES, FCOLOR_WHITE)
 
     ## Actinides
 #    for col, z in enumerate(range(89, 102 + 1)):
     for col, z in enumerate(range(89, 96 + 1)): # Limit range to actual available data
-        e[z] = ((9, col + 3), COLOR_ACTINIDES)
+        e[z] = ((9, col + 3), BCOLOR_ACTINIDES, FCOLOR_BLACK)
 
     return e
 
@@ -98,16 +101,17 @@ ElementLeaveEvent, EVT_LEAVE_ELEMENT = wx.lib.newevent.NewCommandEvent()
 ElementSelectEvent, EVT_SELECT_ELEMENT = wx.lib.newevent.NewCommandEvent()
 
 class ElementPanel(wx.Panel):
-    def __init__(self, parent, z, color):
+    def __init__(self, parent, z, bcolor, fcolor):
         minsize = (30, 40)
         wx.Panel.__init__(self, parent, size=minsize)
 
-        self.SetBackgroundColour(color)
+        self.SetBackgroundColour(bcolor)
+        self.SetForegroundColour(fcolor)
         self.SetMinSize(minsize)
 
         # Variables
         self._z = z
-        self._color = color
+        self._color = bcolor
 
         # Controls
         font = wx.Font(pointSize=10, family=wx.SWISS, style=wx.NORMAL, weight=wx.BOLD)
@@ -167,8 +171,8 @@ class PeriodicTableDialog(wx.Dialog):
         self._lblinfo = wx.StaticText(self, label="")
 
         for z in _ELEMENTS.iterkeys():
-            _pos, color = _ELEMENTS[z]
-            self._panels[z] = ElementPanel(self, z, color)
+            _pos, bcolor, fcolor = _ELEMENTS[z]
+            self._panels[z] = ElementPanel(self, z, bcolor, fcolor)
 
         btnok = wx.Button(self, wx.ID_OK)
         btnok.SetDefault()
@@ -182,7 +186,7 @@ class PeriodicTableDialog(wx.Dialog):
         sizer.Add(szr_elements, 1, wx.EXPAND | wx.ALL, 10)
 
         for z, panel in self._panels.iteritems():
-            pos, _color = _ELEMENTS[z]
+            pos, _bcolor, _fcolor = _ELEMENTS[z]
             szr_elements.Add(panel, pos=pos, flag=wx.EXPAND)
 
         ## Add info label
