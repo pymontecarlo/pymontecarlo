@@ -183,7 +183,9 @@ class Parameter(object):
         return obj.__dict__[self.name]
 
     def __set__(self, obj, values):
-        obj.__dict__[self.name] = self._create_wrapper(obj, values)
+        wrapper = self._create_wrapper(obj, values)
+        wrapper = self._validate(wrapper)
+        obj.__dict__[self.name] = wrapper
     
     def _create_wrapper(self, obj, values):
         if obj.__dict__.get(self.name, _PASS_WRAPPER).is_frozen():
@@ -192,8 +194,12 @@ class Parameter(object):
         if not isinstance(values, list):
             values = (values,)
 
+        return _ParameterValuesWrapper(values)
+
+    def _validate(self, wrapper):
         valid_values = []
-        for value in values:
+
+        for value in wrapper:
             valid_value = value
             for validator in self._validators:
                 valid_value = validator.validate(valid_value)
@@ -272,10 +278,15 @@ class ParameterAlias(object):
         return self._alias._get_wrapper(obj, objtype)
 
     def __set__(self, obj, values):
+        wrapper = self._create_wrapper(obj, values)
+        wrapper = self._validate(wrapper)
         obj.__dict__[self._alias.name] = self._create_wrapper(obj, values)
 
     def _create_wrapper(self, obj, values):
         return self._alias._create_wrapper(obj, values)
+
+    def _validate(self, wrapper):
+        return self._alias._validate(wrapper)
 
 class ParameterizedMutableSet(MutableSet):
 
