@@ -19,7 +19,6 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
 from operator import mul
 
 # Third party modules.
@@ -73,42 +72,29 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[PhotonIntensityDetector] = \
-            self._detector_photon_intensity
-        self._detector_importers[PhotonSpectrumDetector] = \
-            self._detector_photon_spectrum
-        self._detector_importers[PhotonDepthDetector] = \
-            self._detector_photondepth
-        self._detector_importers[ElectronFractionDetector] = \
-            self._detector_electron_fraction
-        self._detector_importers[TimeDetector] = self._detector_time
-        self._detector_importers[ShowersStatisticsDetector] = \
-            self._detector_showers_statistics
+        self._importers[PhotonIntensityDetector] = self._import_photon_intensity
+        self._importers[PhotonSpectrumDetector] = self._import_photon_spectrum
+        self._importers[PhotonDepthDetector] = self._import_photondepth
+        self._importers[ElectronFractionDetector] = \
+            self._import_electron_fraction
+        self._importers[TimeDetector] = self._import_time
+        self._importers[ShowersStatisticsDetector] = \
+            self._import_showers_statistics
 
-    def import_from_dir(self, options, path):
-        """
-        Imports WinX-Ray results from a results directory.
-        
-        :arg options: options of the simulation
-        :type options: :class:`Options <pymontecarlo.input.base.options.Options>`
-        
-        :arg path: location of the results directory
-        """
-        if not os.path.isdir(path):
-            raise ValueError, "Specified path (%s) is not a directory" % path
-
-        return self._import_results(options, path)
+    def _import(self, options, dirpath, *args, **kwargs):
+        return self._run_importers(options, dirpath)
 
     def _get_normalization_factor(self, options, detector):
         """
         Returns the factor that should be *multiplied* to WinXRay intensities
         to convert them to counts / (sr.electron).
         """
-        nelectron = options.limits.find(ShowersLimit).showers
+        limits = list(options.limits.iterclass(ShowersLimit))
+        nelectron = limits[0].showers
         solidangle_sr = detector.solidangle_sr
         return 1.0 / (nelectron * solidangle_sr)
 
-    def _detector_photon_intensity(self, options, name, detector, path):
+    def _import_photon_intensity(self, options, name, detector, path):
         wxrresult = CharacteristicIntensity(path)
         factor = self._get_normalization_factor(options, detector)
 
@@ -129,7 +115,7 @@ class Importer(_Importer):
 
         return PhotonIntensityResult(intensities)
 
-    def _detector_photon_spectrum(self, options, name, detector, path):
+    def _import_photon_spectrum(self, options, name, detector, path):
         wxrresult = XRaySpectrum(path)
 
         # Retrieve data
@@ -146,7 +132,7 @@ class Importer(_Importer):
 
         return PhotonSpectrumResult(total, background)
 
-    def _detector_photondepth(self, options, name, detector, path):
+    def _import_photondepth(self, options, name, detector, path):
         wxrresult = CharateristicPhirhoz(path)
         distributions = {}
 
@@ -173,14 +159,14 @@ class Importer(_Importer):
 
         return PhotonDepthResult(distributions)
 
-    def _detector_electron_fraction(self, options, name, detector, path):
+    def _import_electron_fraction(self, options, name, detector, path):
         wxrresult = BseResults(path)
 
         backscattered = wxrresult.getBseYield(), wxrresult.getBseYieldError()
 
         return ElectronFractionResult(backscattered=backscattered)
 
-    def _detector_time(self, options, name, detector, path):
+    def _import_time(self, options, name, detector, path):
         wxrresult = GeneralResults(path)
 
         simulation_time_s = wxrresult.time_s
@@ -188,7 +174,7 @@ class Importer(_Importer):
 
         return TimeResult(simulation_time_s, simulation_speed_s)
 
-    def _detector_showers_statistics(self, options, name, detector, path):
+    def _import_showers_statistics(self, options, name, detector, path):
         wxrresult = GeneralResults(path)
 
         showers = wxrresult.numberElectron

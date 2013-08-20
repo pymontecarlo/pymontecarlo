@@ -28,6 +28,7 @@ from pymontecarlo.input.detector import \
      PhotonDepthDetector, PhotonSpectrumDetector)
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.material import Material
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, MASS_ABSORPTION_COEFFICIENT)
@@ -59,7 +60,9 @@ class TestExporter(TestCase):
 
     def testexport_substrate(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -75,7 +78,7 @@ class TestExporter(TestCase):
 
         # Export to WinX-Ray options
         with warnings.catch_warnings(record=True) as ws:
-            wxrops = self.e.export(ops)
+            wxrops = self.e.export_wxroptions(ops)
 
         # 1 warning for beam origin
         self.assertEqual(1, len(ws))
@@ -106,7 +109,9 @@ class TestExporter(TestCase):
 
     def testexport_spectrum(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -117,7 +122,7 @@ class TestExporter(TestCase):
                                    (0, 1234), 500)
 
         # Export to WinX-Ray options
-        wxrops = self.e.export(ops)
+        wxrops = self.e.export_wxroptions(ops)
 
         # Test
         self.assertTrue(wxrops.isXrayCompute())
@@ -130,7 +135,9 @@ class TestExporter(TestCase):
 
     def testexport_models(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -145,7 +152,7 @@ class TestExporter(TestCase):
         ops.models.add(MASS_ABSORPTION_COEFFICIENT.thinh_leroux1979)
 
         # Export to WinX-Ray options
-        wxrops = self.e.export(ops)
+        wxrops = self.e.export_wxroptions(ops)
 
         # Test
         self.assertEqual(ElectronElasticCrossSection.TYPE_RUTHERFORD, wxrops.getTypePartialCrossSection())
@@ -160,7 +167,9 @@ class TestExporter(TestCase):
 
     def testexport_different_opening(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -172,7 +181,7 @@ class TestExporter(TestCase):
             PhotonDepthDetector((radians(30), radians(50)), (0, radians(360.0)), 750)
 
         # Test
-        self.assertRaises(ExporterException, self.e.export, ops)
+        self.assertRaises(ExporterException, self.e.export_wxroptions, ops)
 
 
 if __name__ == '__main__': #pragma: no cover

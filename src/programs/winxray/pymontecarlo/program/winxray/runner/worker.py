@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import ntpath
 import subprocess
 import logging
 from zipfile import ZipFile
@@ -30,21 +31,16 @@ from zipfile import ZipFile
 from pymontecarlo.settings import get_settings
 from pymontecarlo.runner.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.program.winxray.input.converter import Converter
-from pymontecarlo.program.winxray.input.exporter import Exporter
-from pymontecarlo.program.winxray.output.importer import Importer
-
-
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
 
 class Worker(_Worker):
 
-    def __init__(self):
+    def __init__(self, program):
         """
         Runner to run WinX-Ray simulation(s).
         """
-        _Worker.__init__(self)
+        _Worker.__init__(self, program)
 
         self._executable = get_settings().winxray.exe
         if not os.path.isfile(self._executable):
@@ -54,27 +50,11 @@ class Worker(_Worker):
         self._executable_dir = os.path.dirname(self._executable)
         logging.debug('WinX-Ray directory: %s', self._executable_dir)
 
-    def create(self, options, outputdir, setpath=False):
-        # Convert
-        Converter().convert(options)
-
-        # Export
-        wxrops = Exporter().export(options)
-
-        if setpath:
-            wxrops.setResultsPath(outputdir)
-
-        # Save
-        filepath = os.path.join(outputdir, options.name + '.wxc')
-        wxrops.write(filepath)
-        logging.debug('Save wxc file: %s', filepath)
-
-        return filepath
-
-    def run(self, options, outputdir, workdir):
-        wxcfilepath = self.create(options, workdir, True)
+    def run(self, options, outputdir, workdir, *args, **kwargs):
+        wxcfilepath = self.create(options, workdir)
 
         # Launch
+        wxcfilepath = ntpath.normcase(wxcfilepath) # Requires \\ instead of /
         args = [self._executable, wxcfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
@@ -99,7 +79,7 @@ class Worker(_Worker):
         # Import results to pyMonteCarlo
         logging.debug('Importing results from WinXRay')
         path = os.path.join(workdir, resultdirs[-1]) # Take last result folder
-        results = Importer().import_from_dir(options, path)
+        results = self._importer.import_(options, path)
 
         # Create ZIP with all WinXRay results
         zipfilepath = os.path.join(outputdir, options.name + '.zip')

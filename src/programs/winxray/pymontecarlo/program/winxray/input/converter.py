@@ -19,22 +19,18 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import warnings
-from operator import itemgetter
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import \
-    Converter as _Converter, ConversionWarning, ConversionException
+from pymontecarlo.input.converter import Converter as _Converter
 
 from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.beam import PencilBeam, GaussianBeam
 from pymontecarlo.input.geometry import Substrate
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
-    (_DelimitedDetector,
-     BackscatteredElectronEnergyDetector,
+    (BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      PhotonDepthDetector,
      PhotonIntensityDetector,
@@ -47,6 +43,7 @@ from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS,
      MASS_ABSORPTION_COEFFICIENT)
+from pymontecarlo.input.expander import ExpanderSingleDetectorSameOpening
 
 # Globals and constants variables.
 
@@ -88,64 +85,38 @@ class Converter(_Converter):
                       ENERGY_LOSS: ENERGY_LOSS.joy_luo1989,
                       MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.henke1993}
 
-    def _convert_beam(self, options):
-        try:
-            _Converter._convert_beam(self, options)
-        except ConversionException as ex:
-            if isinstance(options.beam, PencilBeam):
-                old = options.beam
-                options.beam = GaussianBeam(old.energy_eV, 0.0, old.particle,
-                                            old.origin_m, old.direction,
-                                            old.aperture_rad)
+    def __init__(self):
+        _Converter.__init__(self)
 
-                message = "Pencil beam converted to Gaussian beam with 0 m diameter"
-                warnings.warn(message, ConversionWarning)
-            else:
-                raise ex
+        self._expander = ExpanderSingleDetectorSameOpening(self.DETECTORS)
+
+    def _convert_beam(self, options):
+        if type(options.beam) is PencilBeam:
+            old = options.beam
+            options.beam = GaussianBeam(old.energy_eV, 0.0, old.particle,
+                                        old.origin_m, old.direction,
+                                        old.aperture_rad)
+
+            self._warn("Pencil beam converted to Gaussian beam with 0 m diameter")
+
+        if not _Converter._convert_beam(self, options):
+            return False
 
         if options.beam.particle is not ELECTRON:
-            raise ConversionException, "Beam particle must be ELECTRON"
+            self._warn("Beam particle must be ELECTRON",
+                       "This options definition was removed.")
+            return False
 
-    def _convert_geometry(self, options):
-        _Converter._convert_geometry(self, options)
-
-    def _convert_detectors(self, options):
-        _Converter._convert_detectors(self, options)
-
-        # There can be only one detector of each type
-        for clasz in self.DETECTORS:
-            if len(list(options.detectors.iterclass(clasz))) > 1:
-                raise ConversionException, "There can only one '%s' detector" % clasz.__name__
-
-        # Assert elevation and azimuth of delimited detectors are equal
-        detectors = list(options.detectors.iterclass(_DelimitedDetector))
-        if not detectors:
-            return
-
-        detectors = map(itemgetter(1), detectors)
-
-        detector_class = detectors[0].__class__.__name__
-        elevation_rad = detectors[0].elevation_rad
-        azimuth_rad = detectors[0].azimuth_rad
-
-        for detector in detectors[1:]:
-            if abs(elevation_rad[0] - detector.elevation_rad[0]) > 1e-6 or \
-                    abs(elevation_rad[1] - detector.elevation_rad[1]) > 1e-6:
-                raise ConversionException, \
-                    "The elevation of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
-                        (detector_class, str(elevation_rad),
-                         detector.__class__.__name__, str(detector.elevation_rad))
-
-            if abs(azimuth_rad[0] - detector.azimuth_rad[0]) > 1e-6 or \
-                    abs(azimuth_rad[1] - detector.azimuth_rad[1]) > 1e-6:
-                raise ConversionException, \
-                    "The azimuth of the '%s' (%s) should be the same as the one of the '%s' (%s)" % \
-                        (detector_class, str(elevation_rad),
-                         detector.__class__.__name__, str(detector.elevation_rad))
+        return True
 
     def _convert_limits(self, options):
-        _Converter._convert_limits(self, options)
+        if not _Converter._convert_limits(self, options):
+            return False
 
         limits = list(options.limits.iterclass(ShowersLimit))
         if not limits:
-            raise ConversionException, "A ShowersLimit must be defined."
+            self._warn("A ShowersLimit must be defined.",
+                       "This options definition was removed.")
+            return False
+
+        return True

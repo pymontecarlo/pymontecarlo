@@ -46,7 +46,7 @@ class TestImporter(TestCase):
 
         dirpath = os.path.join(os.path.dirname(__file__),
                                '../testdata/al_10keV_1ke_001')
-        self.results = Importer().import_from_dir(self.ops, dirpath)
+        self.results = Importer().import_(self.ops, dirpath)[0]
 
     def tearDown(self):
         TestCase.tearDown(self)

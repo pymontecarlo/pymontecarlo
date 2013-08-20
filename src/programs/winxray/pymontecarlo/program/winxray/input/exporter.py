@@ -19,15 +19,17 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 import math
 import warnings
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.input.beam import GaussianBeam
 from pymontecarlo.input.geometry import Substrate
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
     (_DelimitedDetector,
@@ -101,7 +103,15 @@ class Exporter(_Exporter):
         self._model_exporters[MASS_ABSORPTION_COEFFICIENT] = \
             self._model_mass_absorption_coefficient
 
-    def export(self, options):
+    def _export(self, options, dirpath, *args, **kwargs):
+        wxrops = self.export_wxroptions(options, dirpath)
+        
+        filepath = os.path.join(dirpath, options.name + '.wxc')
+        wxrops.write(filepath)
+        
+        return filepath
+
+    def export_wxroptions(self, options, dirpath=None):
         """
         Exports options to WinX-Ray options.
         
@@ -109,10 +119,13 @@ class Exporter(_Exporter):
         """
         wxrops = OptionsFile()
 
+        if dirpath is not None:
+            wxrops.setResultsPath(dirpath)
+
         # Default options
         wxrops.setSaveFile(True) # Save results to file
 
-        self._export(options, wxrops)
+        self._run_exporters(options, wxrops)
 
         return wxrops
 
@@ -208,8 +221,8 @@ class Exporter(_Exporter):
             warnings.warn(message, ExporterWarning)
 
         # Absorption energy electron
-        abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
-                               options.geometry.get_materials()))
+        abs_electron_eV = min(mat.absorption_energy_eV[ELECTRON] \
+                              for mat in options.geometry.get_materials())
         wxrops.setMinimumElectronEnergy_eV(abs_electron_eV)
 
     def _detector_backscattered_electron_energy(self, options, name,
