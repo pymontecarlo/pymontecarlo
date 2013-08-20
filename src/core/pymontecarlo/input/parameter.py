@@ -807,3 +807,15 @@ class Expander(object):
 
 _root_expander = Expander()
 expand = _root_expander.expand
+
+def get_list(obj, name):
+    """
+    Returns a list of values for the specified parameter.
+    
+    :arg object: object
+    :arg name: name of parameter
+    """
+    parameter = getattr(obj.__class__, name)
+    return parameter._get_wrapper(obj).get_list()
+
+
