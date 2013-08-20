@@ -19,7 +19,8 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import attrgetter, itemgetter
+import os
+from operator import itemgetter
 import warnings
 import math
 import pkgutil
@@ -32,6 +33,7 @@ import pyxray.element_properties as ep
 
 # Local modules.
 from pymontecarlo.input.beam import GaussianBeam
+from pymontecarlo.input.particle import ELECTRON
 from pymontecarlo.input.geometry import  Substrate, MultiLayers, GrainBoundaries
 from pymontecarlo.input.limit import ShowersLimit
 from pymontecarlo.input.detector import \
@@ -128,7 +130,15 @@ class Exporter(_Exporter):
         self._model_exporters[MASS_ABSORPTION_COEFFICIENT] = \
             self._model_mass_absorption_coefficient
 
-    def export(self, options):
+    def _export(self, options, dirpath, *args, **kwargs):
+        casfile = self.export_cas(options)
+        
+        filepath = os.path.join(dirpath, options.name + '.sim')
+        casfile.write(filepath)
+
+        return filepath
+
+    def export_cas(self, options):
         casfile = File()
 
         # Load template (from geometry)
@@ -138,7 +148,7 @@ class Exporter(_Exporter):
         simdata = casfile.getOptionSimulationData()
         simops = simdata.getSimulationOptions()
 
-        self._export(options, simdata, simops)
+        self._run_exporters(options, simdata, simops)
 
         return casfile
 
@@ -166,6 +176,25 @@ class Exporter(_Exporter):
         else:
             raise ExporterException, "Unknown geometry: %s" % geometry_name
 
+    def _beam_gaussian(self, options, beam, simdata, simops):
+        simops.setIncidentEnergy_keV(beam.energy_eV / 1000.0) # keV
+        simops.setPosition(beam.origin_m[0] * 1e9) # nm
+
+        # Beam diameter
+        # Casino's beam diameter contains 99.9% of the electrons (n=3.290)
+        # d_{CASINO} = 2 (3.2905267 \sigma)
+        # d_{FWHM} = 2 (1.177411 \sigma)
+        # d_{CASINO} = 2.7947137 d_{FWHM}
+        # NOTE: The attribute Beam_Diameter corresponds in fact to the beam
+        # radius.
+        simops.Beam_Diameter = 2.7947137 * beam.diameter_m * 1e9 / 2.0 # nm
+
+        # Beam tilt
+        a = np.array(beam.direction)
+        b = np.array([0, 0, -1])
+        angle = np.arccos(np.vdot(a, b) / np.linalg.norm(a))
+        simops.Beam_angle = math.degrees(angle)
+
     def _export_geometry(self, options, simdata, simops):
         _Exporter._export_geometry(self, options, simdata, simops)
 
@@ -178,8 +207,8 @@ class Exporter(_Exporter):
             warnings.warn(message, ExporterWarning)
 
         # Absorption energy electron
-        abs_electron_eV = min(map(attrgetter('absorption_energy_electron_eV'),
-                               options.geometry.get_materials()))
+        abs_electron_eV = min(mat.absorption_energy_eV[ELECTRON] \
+                              for mat in options.geometry.get_materials())
         simops.Eminimum = abs_electron_eV / 1000.0 # keV
 
     def _geometry_substrate(self, options, geometry, simdata, simops):
@@ -263,25 +292,6 @@ class Exporter(_Exporter):
         if dets:
             simops.TOA = math.degrees(dets[0].takeoffangle_rad) # deg
             simops.PhieRX = math.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg
-
-    def _beam_gaussian(self, options, beam, simdata, simops):
-        simops.setIncidentEnergy_keV(beam.energy_eV / 1000.0) # keV
-        simops.setPosition(beam.origin_m[0] * 1e9) # nm
-
-        # Beam diameter
-        # Casino's beam diameter contains 99.9% of the electrons (n=3.290)
-        # d_{CASINO} = 2 (3.2905267 \sigma)
-        # d_{FWHM} = 2 (1.177411 \sigma)
-        # d_{CASINO} = 2.7947137 d_{FWHM}
-        # NOTE: The attribute Beam_Diameter corresponds in fact to the beam
-        # radius.
-        simops.Beam_Diameter = 2.7947137 * beam.diameter_m * 1e9 / 2.0 # nm
-
-        # Beam tilt
-        a = np.array(beam.direction)
-        b = np.array([0, 0, -1])
-        angle = np.arccos(np.vdot(a, b) / np.linalg.norm(a))
-        simops.Beam_angle = math.degrees(angle)
 
     def _detector_backscattered_electron_energy(self, options, name,
                                                 detector, simdata, simops):

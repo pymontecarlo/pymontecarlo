@@ -33,6 +33,7 @@ from pymontecarlo.input.geometry import GrainBoundaries, MultiLayers
 from pymontecarlo.input.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE)
+from pymontecarlo.input.particle import ELECTRON
 
 from casinoTools.FileFormat.casino2.SimulationOptions import \
     (DIRECTION_COSINES_SOUM, CROSS_SECTION_MOTT_EQUATION,
@@ -56,7 +57,9 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_substrate(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -75,7 +78,7 @@ class TestCasino2Exporter(TestCase):
         ops.detectors['trajs'] = TrajectoryDetector()
 
         # Export to CAS
-        casfile = self.e.export(ops)
+        casfile = self.e.export_cas(ops)
 
         # Test
         simdata = casfile.getOptionSimulationData()
@@ -127,9 +130,14 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_grainboundaries(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat1.absorption_energy_eV[ELECTRON] = 123
+
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
+        mat2.absorption_energy_eV[ELECTRON] = 89
+
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
+        mat3.absorption_energy_eV[ELECTRON] = 89
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -142,7 +150,7 @@ class TestCasino2Exporter(TestCase):
         ops.limits.add(ShowersLimit(5678))
 
         # Export to CAS
-        casfile = self.e.export(ops)
+        casfile = self.e.export_cas(ops)
 
         # Test
         simdata = casfile.getOptionSimulationData()
@@ -187,9 +195,14 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_multilayers1(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat1.absorption_energy_eV[ELECTRON] = 123
+
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
+        mat2.absorption_energy_eV[ELECTRON] = 89
+
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
+        mat3.absorption_energy_eV[ELECTRON] = 89
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -203,7 +216,7 @@ class TestCasino2Exporter(TestCase):
         ops.limits.add(ShowersLimit(5678))
 
         # Export to CAS
-        casfile = self.e.export(ops)
+        casfile = self.e.export_cas(ops)
 
         # Test
         simdata = casfile.getOptionSimulationData()
@@ -248,9 +261,14 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_multilayers2(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5}, absorption_energy_electron_eV=89)
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5}, absorption_energy_electron_eV=89)
+        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat1.absorption_energy_eV[ELECTRON] = 123
+
+        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
+        mat2.absorption_energy_eV[ELECTRON] = 89
+
+        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
+        mat3.absorption_energy_eV[ELECTRON] = 89
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -265,7 +283,7 @@ class TestCasino2Exporter(TestCase):
         ops.limits.add(ShowersLimit(5678))
 
         # Export to CAS
-        casfile = self.e.export(ops)
+        casfile = self.e.export_cas(ops)
 
         # Test
         simdata = casfile.getOptionSimulationData()
@@ -310,7 +328,9 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_models(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -325,7 +345,7 @@ class TestCasino2Exporter(TestCase):
         ops.models.add(DIRECTION_COSINE.soum1979)
 
         # Export to CAS
-        casfile = self.e.export(ops)
+        casfile = self.e.export_cas(ops)
 
         # Test
         simdata = casfile.getOptionSimulationData()
@@ -347,7 +367,9 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_different_openings(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5}, absorption_energy_electron_eV=123)
+        mat = Material('Mat1', {79: 0.5, 47: 0.5})
+        mat.absorption_energy_eV[ELECTRON] = 123
+
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
@@ -360,7 +382,7 @@ class TestCasino2Exporter(TestCase):
             PhotonDepthDetector((radians(30), radians(55)), (0, radians(360.0)), 750)
 
         # Test
-        self.assertRaises(ExporterException, self.e.export, ops)
+        self.assertRaises(ExporterException, self.e.export_cas, ops)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

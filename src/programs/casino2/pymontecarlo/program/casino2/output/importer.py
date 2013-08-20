@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
 import numpy as np
@@ -73,35 +74,36 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[PhotonIntensityDetector] = \
-            self._detector_photon_intensity
-        self._detector_importers[PhotonDepthDetector] = \
-            self._detector_photon_depth
-        self._detector_importers[PhotonRadialDetector] = \
-            self._detector_photon_radial
-        self._detector_importers[ElectronFractionDetector] = \
-            self._detector_electron_fraction
-        self._detector_importers[BackscatteredElectronEnergyDetector] = \
-            self._detector_backscattered_electron_energy
-        self._detector_importers[TransmittedElectronEnergyDetector] = \
-            self._detector_transmitted_electron_energy
-        self._detector_importers[BackscatteredElectronPolarAngularDetector] = \
-            self._detector_backscattered_electron_polar_angular
-        self._detector_importers[BackscatteredElectronRadialDetector] = \
-            self._detector_backscattered_electron_radial
-        self._detector_importers[TrajectoryDetector] = \
-            self._detector_trajectory
+        self._importers[PhotonIntensityDetector] = self._import_photon_intensity
+        self._importers[PhotonDepthDetector] = self._import_photon_depth
+        self._importers[PhotonRadialDetector] = self._import_photon_radial
+        self._importers[ElectronFractionDetector] = self._import_electron_fraction
+        self._importers[BackscatteredElectronEnergyDetector] = \
+            self._import_backscattered_electron_energy
+        self._importers[TransmittedElectronEnergyDetector] = \
+            self._import_transmitted_electron_energy
+        self._importers[BackscatteredElectronPolarAngularDetector] = \
+            self._import_backscattered_electron_polar_angular
+        self._importers[BackscatteredElectronRadialDetector] = \
+            self._import_backscattered_electron_radial
+        self._importers[TrajectoryDetector] = self._import_trajectory
 
-    def import_from_cas(self, options, fileobj):
+    def _import(self, options, dirpath, *args, **kwargs):
+        filepath = os.path.join(dirpath, options.name + '.cas')
+
+        with open(filepath, 'rb') as fileobj:
+            return self.import_from_cas(options, fileobj)
+
+    def import_cas(self, options, fileobj):
         # Read cas
         casfile = File()
         casfile.readFromFileObject(fileobj)
 
         simdata = casfile.getResultsFirstSimulation()
 
-        return self._import_results(options, simdata)
+        return self._run_importers(options, simdata)
 
-    def _detector_photon_intensity(self, options, name, detector, simdata):
+    def _import_photon_intensity(self, options, name, detector, simdata):
         cas_intensities = simdata.getTotalXrayIntensities()
         factor = detector.solidangle_sr / (0.0025 * 1e9)
         if factor == 0.0: factor = 1.0
@@ -122,7 +124,7 @@ class Importer(_Importer):
 
         return PhotonIntensityResult(intensities)
 
-    def _detector_photon_depth(self, options, name, detector, simdata):
+    def _import_photon_depth(self, options, name, detector, simdata):
         simops = simdata.getSimulationOptions()
         dz = simops.EpaisCouche * 1e-9 # nm
         nz = simops.NbreCoucheRX
@@ -160,7 +162,7 @@ class Importer(_Importer):
 
         return PhotonDepthResult(dists)
 
-    def _detector_photon_radial(self, options, name, detector, simdata):
+    def _import_photon_radial(self, options, name, detector, simdata):
         simops = simdata.getSimulationOptions()
         dr = simops.EpaisCouche * 1e-9 # nm
         nr = simops.NbreCoucheRX
@@ -201,11 +203,11 @@ class Importer(_Importer):
 
         return PhotonRadialResult(dists)
 
-    def _detector_electron_fraction(self, options, name, detector, simdata):
+    def _import_electron_fraction(self, options, name, detector, simdata):
         bse_intensity = simdata.getSimulationResults().BE_Intensity[0]
         return ElectronFractionResult(backscattered=(bse_intensity, 0.0))
 
-    def _detector_backscattered_electron_energy(self, options, name, detector, simdata):
+    def _import_backscattered_electron_energy(self, options, name, detector, simdata):
         graphdata = simdata.getSimulationResults().getBackscatteredEnergyDistribution()
 
         data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
@@ -213,7 +215,7 @@ class Importer(_Importer):
 
         return BackscatteredElectronEnergyResult(data)
 
-    def _detector_transmitted_electron_energy(self, options, name, detector, simdata):
+    def _import_transmitted_electron_energy(self, options, name, detector, simdata):
         graphdata = simdata.getSimulationResults().getTransmittedEnergyDistribution()
 
         data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
@@ -221,7 +223,7 @@ class Importer(_Importer):
 
         return TransmittedElectronEnergyResult(data)
 
-    def _detector_backscattered_electron_polar_angular(self, options, name, detector, simdata):
+    def _import_backscattered_electron_polar_angular(self, options, name, detector, simdata):
         graphdata = simdata.getSimulationResults().getBackscatteredAngleDistribution()
 
         data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
@@ -229,7 +231,7 @@ class Importer(_Importer):
 
         return BackscatteredElectronPolarAngularResult(data)
 
-    def _detector_backscattered_electron_radial(self, options, name, detector, simdata):
+    def _import_backscattered_electron_radial(self, options, name, detector, simdata):
         graphdata = simdata.getSimulationResults().getSurfaceRadiusBseDistribution()
 
         data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
@@ -238,7 +240,7 @@ class Importer(_Importer):
 
         return BackscatteredElectronRadialResult(data)
 
-    def _detector_trajectory(self, options, name, detector, simdata):
+    def _import_trajectory(self, options, name, detector, simdata):
         trajdata = simdata.getTrajectoriesData()
         trajectories = []
 

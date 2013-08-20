@@ -50,7 +50,7 @@ class TestCasino2Importer(TestCase):
                                 '../testdata/result1.cas')
         imp = Importer()
         with open(filepath, 'rb') as f:
-            self.results = imp.import_from_cas(self.ops, f)
+            self.results = imp.import_cas(self.ops, f)[0]
 
     def tearDown(self):
         TestCase.tearDown(self)

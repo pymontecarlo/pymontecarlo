@@ -27,7 +27,7 @@ from pymontecarlo.input.detector import \
 from pymontecarlo.input.limit import ShowersLimit, TimeLimit
 from pymontecarlo.input.model import IONIZATION_CROSS_SECTION, ModelType
 
-from pymontecarlo.program.casino2.input.converter import Converter, ConversionException
+from pymontecarlo.program.casino2.input.converter import Converter
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -52,25 +52,27 @@ class TestCasino2Converter(TestCase):
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(1, len(opss))
 
         # 6 warnings for the default models
         self.assertEqual(6, len(ws))
 
-        # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
 
-        self.assertEqual(1, len(ops.detectors))
+        self.assertEqual(1, len(opss[0].detectors))
         det = ops.detectors['bse']
         self.assertAlmostEqual(0, det.limits_eV[0], 4)
         self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
-        self.assertEqual(1, len(ops.limits))
+        self.assertEqual(1, len(opss[0].limits))
         limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
-        self.assertEqual(7, len(ops.models))
+        self.assertEqual(7, len(opss[0].models))
         model = list(ops.models.iterclass(IONIZATION_CROSS_SECTION))[0]
         self.assertEqual(IONIZATION_CROSS_SECTION.jakoby, model)
 
@@ -87,7 +89,10 @@ class TestCasino2Converter(TestCase):
 
         # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(1, len(opss))
 
         # 4 warnings:
         # PencilBeam -> GaussianBeam
@@ -96,20 +101,19 @@ class TestCasino2Converter(TestCase):
         # Set default models (7)
         self.assertEqual(10, len(ws))
 
-        # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
 
-        self.assertEqual(1, len(ops.detectors))
+        self.assertEqual(1, len(opss[0].detectors))
         det = ops.detectors['bse']
         self.assertAlmostEqual(0, det.limits_eV[0], 4)
         self.assertAlmostEqual(1234, det.limits_eV[1], 4)
         self.assertEqual(1000, det.channels)
 
-        self.assertEqual(1, len(ops.limits))
+        self.assertEqual(1, len(opss[0].limits))
         limit = list(ops.limits.iterclass(ShowersLimit))[0]
         self.assertEqual(5678, limit.showers)
 
-        self.assertEqual(7, len(ops.models))
+        self.assertEqual(7, len(opss[0].models))
 
     def testconvert3(self):
         # Base options
@@ -119,8 +123,11 @@ class TestCasino2Converter(TestCase):
         ops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
         ops.limits.add(ShowersLimit(5678))
 
-        # Two many BackscatteredElectronEnergyDetector
-        self.assertRaises(ConversionException, self.converter.convert, ops)
+        # Convert
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(2, len(opss))
 
     def testconvert4(self):
         # Base options
@@ -131,18 +138,27 @@ class TestCasino2Converter(TestCase):
         ops.limits.add(ShowersLimit(5678))
 
         # Convert
-        self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
-        self.assertEqual(2, len(ops.detectors))
-        self.assertEqual(7, len(ops.models))
+        # Test
+        self.assertEqual(1, len(opss))
+
+        self.assertEqual(2, len(opss[0].detectors))
+        self.assertEqual(7, len(opss[0].models))
 
         # Test difference in elevation
         ops.detectors['xray'] = PhotonIntensityDetector((0.5, 1), (2, 3))
-        self.assertRaises(ConversionException, self.converter.convert, ops)
+
+        opss = self.converter.convert(ops)
+
+        self.assertEqual(2, len(opss))
 
         # Test difference in azimuth
         ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2.5, 3))
-        self.assertRaises(ConversionException, self.converter.convert, ops)
+
+        opss = self.converter.convert(ops)
+
+        self.assertEqual(2, len(opss))
 
     def testconvert6(self):
         NEW_MODEL_TYPE = ModelType('new')
@@ -151,12 +167,15 @@ class TestCasino2Converter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
+        ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         ops.models.add(NEW_MODEL_TYPE.test)
         ops.limits.add(ShowersLimit(5678))
 
+        # Convert
         with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
+            opss = self.converter.convert(ops)
 
+        self.assertEqual(1, len(opss))
         self.assertEqual(8, len(ws))
 
     def testconvert7(self):
@@ -164,8 +183,11 @@ class TestCasino2Converter(TestCase):
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
 
-        # No shower limit
-        self.assertRaises(ConversionException, self.converter.convert, ops)
+        # Convert
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(0, len(opss)) # No shower limit
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
