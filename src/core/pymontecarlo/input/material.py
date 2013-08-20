@@ -40,7 +40,7 @@ from pymontecarlo.input.parameter import \
      ParameterizedMutableMapping, FactorParameterAlias, expand, freeze)
 from pymontecarlo.input.xmlmapper import \
     (mapper, ParameterizedAttribute, ParameterizedElementDict,
-     _XMLType, PythonType)
+     _XMLType, PythonType, tostring, parse)
 
 import pyxray.element_properties as ep
 
@@ -117,11 +117,16 @@ def _generate_name(composition):
             gcds.append(gcd(a, b))
         smallest_gcd = min(gcds)
 
+    if smallest_gcd == 0.0:
+        smallest_gcd = 100.0
+
     # Write formula
     name = ''
     for symbol, fraction in zip(symbols, fractions):
         fraction /= smallest_gcd
-        if fraction == 1:
+        if fraction == 0:
+            continue
+        elif fraction == 1:
             name += "%s" % symbol
         else:
             name += '%s%i' % (symbol, fraction)
@@ -339,6 +344,27 @@ class Material(object):
 
         self.absorption_energy_eV.clear()
 
+    @classmethod
+    def load(cls, source):
+        """
+        Loads the options from a file-object.
+        The file-object must correspond to a XML file where the options were 
+        saved.
+        
+        :arg source: filepath or file-object
+        
+        :return: loaded options
+        """
+        self_opened = False
+        if not hasattr(source, "read"):
+            source = open(source, "rb")
+            self_opened = True
+
+        element = parse(source).getroot()
+        if self_opened: source.close()
+
+        return mapper.from_xml(element)
+
     def __repr__(self):
         return '<Material(name=%s, composition=%s, density=%s kg/m3, absorption energies=%s)>' % \
             (self.name, self.composition, self.density_kg_m3, self.absorption_energy_eV)
@@ -347,9 +373,14 @@ class Material(object):
         return self.name
 
     def calculate(self):
+        # Composition
         self.composition.calculate()
 
-        # Calculate density
+        # Name
+        if self.name is None:
+            self.name = _generate_name(self.composition)
+
+        # Density
         if self.density_kg_m3 is None:
             if len(expand(self.composition)) != 1:
                 message = "Cannot calculate density when many compositions are defined"
@@ -364,6 +395,27 @@ class Material(object):
         """
         density = self.density_kg_m3
         return density is not None and density >= 0.0
+
+    def save(self, source, pretty_print=True):
+        """
+        Saves this options to a file-object.
+        The file-object must correspond to a XML file where the options will 
+        be saved.
+        
+        :arg source: filepath or file-object
+        :arg pretty_print: format XML
+        """
+        element = mapper.to_xml(self)
+        output = tostring(element, pretty_print=pretty_print)
+
+        self_opened = False
+        if not hasattr(source, "write"):
+            source = open(source, "wb")
+            self_opened = True
+
+        source.write(output)
+
+        if self_opened: source.close()
 
 mapper.register(Material, '{http://pymontecarlo.sf.net}material',
                 ParameterizedAttribute('name', PythonType(str)),
