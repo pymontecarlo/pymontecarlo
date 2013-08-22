@@ -90,6 +90,15 @@ class TestSubstrate(TestCase):
     def testget_materials(self):
         self.assertEqual(1, len(self.g.get_materials()))
 
+    def testget_dimensions(self):
+        dim = self.g.get_dimensions()
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
     def testfrom_xml(self):
         self.g.tilt_rad = 1.1
         self.g.rotation_rad = 2.2
@@ -131,6 +140,23 @@ class TestInclusion(TestCase):
 
     def testget_materials(self):
         self.assertEqual(2, len(self.g.get_materials()))
+
+    def testget_dimensions(self):
+        dim = self.g.get_dimensions('substrate')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g.get_dimensions('inclusion')
+        self.assertAlmostEqual(-61.728, dim.xmin_m, 4)
+        self.assertAlmostEqual(61.728, dim.xmax_m, 4)
+        self.assertAlmostEqual(-61.728, dim.ymin_m, 4)
+        self.assertAlmostEqual(61.728, dim.ymax_m, 4)
+        self.assertAlmostEqual(-61.728, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
 
     def testfrom_xml(self):
         self.g.tilt_rad = 1.1
@@ -212,6 +238,49 @@ class TestMultiLayers(TestCase):
         self.assertEqual(3, len(self.g1.get_materials()))
         self.assertEqual(2, len(self.g2.get_materials()))
         self.assertEqual(3, len(self.g3.get_materials()))
+
+    def testget_dimensions(self):
+        # Multi-layers 1
+        dim = self.g1.get_dimensions('substrate')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(-580.245, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-123.456, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.l2)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-580.245, dim.zmin_m, 4)
+        self.assertAlmostEqual(-123.456, dim.zmax_m, 4)
+
+        # Multi-layers 2
+        dim = self.g2.get_dimensions(self.l1)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-123.456, dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-580.245, dim.zmin_m)
+        self.assertAlmostEqual(-123.456, dim.zmax_m, 4)
 
     def testfrom_xml(self):
         # Multi-layers 1
@@ -306,6 +375,65 @@ class TestGrainBoundaries(TestCase):
     def testget_materials(self):
         self.assertEqual(3, len(self.g1.get_materials()))
 
+    def testget_dimensions(self):
+        # Grain boundaries 1
+        dim = self.g1.get_dimensions('left')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions('right')
+        self.assertAlmostEqual(250.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertAlmostEqual(-250.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        # Grain boundaries 2
+        dim = self.g2.get_dimensions('left')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions('right')
+        self.assertAlmostEqual(150.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertAlmostEqual(-150.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(-50.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l3)
+        self.assertAlmostEqual(-50.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertEqual(float('-inf'), dim.zmin_m)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
     def testfrom_xml(self):
         # Grain boundaries 1
         self.g1.tilt_rad = 1.1
@@ -390,6 +518,65 @@ class TestThinGrainBoundaries(TestCase):
     def testget_materials(self):
         self.assertEqual(3, len(self.g1.get_materials()))
 
+    def testget_dimensions(self):
+        # Grain boundaries 1
+        dim = self.g1.get_dimensions('left')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions('right')
+        self.assertAlmostEqual(250.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g1.get_dimensions(self.l1)
+        self.assertAlmostEqual(-250.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(250.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-500.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        # Grain boundaries 2
+        dim = self.g2.get_dimensions('left')
+        self.assertEqual(float('-inf'), dim.xmin_m)
+        self.assertAlmostEqual(-150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions('right')
+        self.assertAlmostEqual(150.0, dim.xmin_m, 4)
+        self.assertEqual(float('inf'), dim.xmax_m)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l2)
+        self.assertAlmostEqual(-150.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(-50.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
+        dim = self.g2.get_dimensions(self.l3)
+        self.assertAlmostEqual(-50.0, dim.xmin_m, 4)
+        self.assertAlmostEqual(150.0, dim.xmax_m, 4)
+        self.assertEqual(float('-inf'), dim.ymin_m)
+        self.assertEqual(float('inf'), dim.ymax_m)
+        self.assertAlmostEqual(-400.0, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
+
     def testfrom_xml(self):
         # Grain boundaries 1
         self.g1.tilt_rad = 1.1
@@ -464,6 +651,15 @@ class TestSphere(TestCase):
 
     def testget_materials(self):
         self.assertEqual(1, len(self.g.get_materials()))
+
+    def testget_dimensions(self):
+        dim = self.g.get_dimensions()
+        self.assertAlmostEqual(-61.728, dim.xmin_m, 4)
+        self.assertAlmostEqual(61.728, dim.xmax_m, 4)
+        self.assertAlmostEqual(-61.728, dim.ymin_m, 4)
+        self.assertAlmostEqual(61.728, dim.ymax_m, 4)
+        self.assertAlmostEqual(-123.456, dim.zmin_m, 4)
+        self.assertAlmostEqual(0.0, dim.zmax_m, 4)
 
     def testfrom_xml(self):
         self.g.tilt_rad = 1.1

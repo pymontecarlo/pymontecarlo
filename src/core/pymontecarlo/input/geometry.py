@@ -26,6 +26,7 @@ __all__ = ['GrainBoundaries',
 
 # Standard library modules.
 from operator import attrgetter
+from collections import namedtuple
 from math import pi
 #import itertools
 
@@ -41,10 +42,25 @@ from pymontecarlo.input.xmlmapper import \
      ParameterizedAttribute, PythonType, UserType)
 
 # Globals and constants variables.
-_MATERIAL_GETTER = attrgetter('material')
 _THICKNESS_GETTER = attrgetter('thickness_m')
 POSINF = float('inf')
 NEGINF = float('-inf')
+
+_thickness_validator = SimpleValidator(lambda t: t > 0,
+                                       "Thickness must be greater than 0")
+
+class Dimension(namedtuple('Dimension', ['xmin_m', 'xmax_m',
+                                          'ymin_m', 'ymax_m',
+                                          'zmin_m', 'zmax_m'])):
+    """
+    Dimensions in x, y and z of a body.
+    """
+
+    def __new__(cls,
+                 xmin=NEGINF, xmax=POSINF,
+                 ymin=NEGINF, ymax=POSINF,
+                 zmin=NEGINF, zmax=POSINF):
+        return super(Dimension, cls).__new__(cls, xmin, xmax, ymin, ymax, zmin, zmax)
 
 _tilt_validator = SimpleValidator(lambda t:-pi <= t <= pi,
                                   "Tilt must be between [-pi, pi]")
@@ -83,6 +99,18 @@ class _Geometry(object):
         """
         raise NotImplementedError
 
+    def get_dimensions(self, body=None):
+        """
+        Returns a class:`Dimension <.Dimension>` corresponding to the 
+        dimensions of the body inside the geometry.
+        All dimensions are in meters.
+        
+        :arg body: body to get the dimensions for. In some geometries,
+            the body is implied and no argument is required. For other 
+            geometries, a specific string or an actual object must be specified.
+        """
+        raise NotImplementedError
+
 mapper.register(_Geometry, '{http://pymontecarlo.sf.net}_geometry',
                 ParameterizedAttribute('tilt_rad', PythonType(float), 'tilt'),
                 ParameterizedAttribute('rotation_rad', PythonType(float), 'rotation'))
@@ -103,6 +131,9 @@ class Substrate(_Geometry):
         if self.material is not VACUUM:
             materials.add(self.material)
         return materials
+
+    def get_dimensions(self, body=None):
+        return Dimension(zmax=0.0)
 
 mapper.register(Substrate, '{http://pymontecarlo.sf.net}substrate',
                 ParameterizedElement('material', UserType(Material), 'substrate'))
@@ -138,13 +169,20 @@ class Inclusion(_Geometry):
             materials.add(self.inclusion_material)
         return materials
 
+    def get_dimensions(self, body):
+        body = body.lower()
+        if body == 'substrate':
+            return Dimension(zmax=0.0)
+        elif body == 'inclusion':
+            radius = self.inclusion_diameter_m / 2.0
+            return Dimension(-radius, radius, -radius, radius, -radius, 0.0)
+        else:
+            raise ValueError, "Unknown argument: %s" % body
+
 mapper.register(Inclusion, '{http://pymontecarlo.sf.net}inclusion',
                 ParameterizedElement('substrate_material', UserType(Material), 'substrate'),
                 ParameterizedElement('inclusion_material', UserType(Material), 'inclusion'),
                 ParameterizedAttribute('inclusion_diameter_m', PythonType(float), 'diameter'))
-
-_thickness_validator = SimpleValidator(lambda t: t > 0,
-                                       "Thickness must be greater than 0")
 
 class Layer(object):
 
@@ -262,6 +300,19 @@ class MultiLayers(_LayeredGeometry):
             materials.add(self.substrate_material)
         return materials
 
+    def get_dimensions(self, body):
+        if body in self.layers:
+            indextop = self.layers.index(body)
+            indexbottom = len(self.layers) - self.layers[::-1].index(body)
+            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:indextop]))
+            zmin = -sum(map(_THICKNESS_GETTER, self.layers[:indexbottom]))
+            return Dimension(zmin=zmin, zmax=zmax)
+        elif body.lower() == 'substrate' and self.has_substrate():
+            zmax = -sum(map(_THICKNESS_GETTER, self.layers))
+            return Dimension(zmax=zmax)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
 mapper.register(MultiLayers, '{http://pymontecarlo.sf.net}multiLayers',
                 ParameterizedElement('substrate_material', UserType(Material), 'substrate'))
 
@@ -301,12 +352,34 @@ class GrainBoundaries(_LayeredGeometry):
 
         return materials
 
+    def get_dimensions(self, body):
+        thicknesses = map(_THICKNESS_GETTER, self.layers)
+
+        positions = []
+        if thicknesses: # simple couple
+            middle = sum(thicknesses) / 2.0
+            for i in range(len(thicknesses)):
+                positions.append(sum(thicknesses[:i]) - middle)
+            positions.append(positions[-1] + thicknesses[-1])
+        else:
+            positions.append(0.0)
+
+        if body in self.layers:
+            indexleft = self.layers.index(body)
+            indexright = len(self.layers) - self.layers[::-1].index(body)
+            return Dimension(xmin=positions[indexleft],
+                             xmax=positions[indexright],
+                             zmax=0)
+        elif body.lower() == 'left':
+            return Dimension(xmax=positions[0], zmax=0)
+        elif body.lower() == 'right':
+            return Dimension(xmin=positions[-1], zmax=0)
+        else:
+            raise ValueError, "Unknown body: %s" % body
+
 mapper.register(GrainBoundaries, '{http://pymontecarlo.sf.net}grainBoundaries',
                 ParameterizedElement('left_material', UserType(Material), 'left'),
                 ParameterizedElement('right_material', UserType(Material), 'right'))
-
-_thickness_validator = SimpleValidator(lambda t: t> 0,
-                                       'Thickness must be greater than 0')
 
 class ThinGrainBoundaries(GrainBoundaries):
     
@@ -332,6 +405,10 @@ class ThinGrainBoundaries(GrainBoundaries):
         return '<ThinGrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i, thickness=%s m)>' % \
             (str(self.left_material), str(self.right_material),
              len(self.layers), self.thickness_m)
+
+    def get_dimensions(self, body):
+        dim = GrainBoundaries.get_dimensions(self, body)
+        return dim._replace(zmin_m=-self.thickness_m)
 
 mapper.register(ThinGrainBoundaries, '{http://pymontecarlo.sf.net}thinGrainBoundaries',
                 ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))
@@ -365,6 +442,13 @@ class Sphere(_Geometry):
         if self.material is not VACUUM:
             materials.add(self.material)
         return materials
+
+    def get_dimensions(self, body=None):
+        d = self.diameter_m
+        r = d / 2.0
+        return Dimension(xmin=-r, xmax=r,
+                         ymin=-r, ymax=r,
+                         zmin=-d, zmax=0.0)
 
 mapper.register(Sphere, '{http://pymontecarlo.sf.net}sphere',
                 ParameterizedElement('material', UserType(Material), 'body'),
