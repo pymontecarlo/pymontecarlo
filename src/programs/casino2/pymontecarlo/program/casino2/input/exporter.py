@@ -162,7 +162,12 @@ class Exporter(_Exporter):
             buffer.mode = 'rb'
             return buffer
         elif isinstance(geometry, (MultiLayers, GrainBoundaries)):
-            regions_count = len(geometry.get_bodies())
+            regions_count = len(geometry.layers)
+
+            if isinstance(geometry, MultiLayers):
+                if geometry.has_substrate(): regions_count += 1
+            else: # GrainBoundaries
+                regions_count += 2 # left and right regions
 
             filename = "%s%i.sim" % (geometry_name, regions_count)
             data = pkgutil.get_data(__name__, "templates/" + filename)
@@ -233,7 +238,7 @@ class Exporter(_Exporter):
             region = regionops.getRegion(regionops.getNumberRegions() - 1)
             _setup_region_material(region, geometry.substrate_material)
 
-            dim = geometry.get_dimensions(geometry.substrate_body)
+            dim = geometry.get_dimensions('substrate')
             parameters = region.getParameters()
             parameters[0] = abs(dim.zmax_m) * 1e9
             parameters[2] = parameters[0] + 10.0
@@ -248,7 +253,7 @@ class Exporter(_Exporter):
         region = regionops.getRegion(0)
         _setup_region_material(region, geometry.left_material)
 
-        dim = geometry.get_dimensions(geometry.left_body)
+        dim = geometry.get_dimensions('left')
         parameters = region.getParameters()
         parameters[1] = dim.xmax_m * 1e9
         parameters[2] = parameters[1] - 10.0
@@ -267,7 +272,7 @@ class Exporter(_Exporter):
         region = regionops.getRegion(regionops.getNumberRegions() - 1)
         _setup_region_material(region, geometry.right_material)
 
-        dim = geometry.get_dimensions(geometry.right_body)
+        dim = geometry.get_dimensions('right')
         parameters = region.getParameters()
         parameters[0] = dim.xmin_m * 1e9
         parameters[2] = parameters[0] + 10.0
