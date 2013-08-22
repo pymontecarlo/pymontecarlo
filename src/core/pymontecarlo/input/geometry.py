@@ -28,20 +28,17 @@ __all__ = ['GrainBoundaries',
 from operator import attrgetter
 from math import pi
 #import itertools
-from xml.etree import ElementTree
 
 # Third party modules.
-import numpy as np
 
 # Local modules.
 from pymontecarlo.input.parameter import \
     (ParameterizedMetaClass, Parameter, UnitParameter, AngleParameter,
-     FrozenParameter, ParameterAlias, SimpleValidator, ParameterizedMutableSequence)
-from pymontecarlo.input.body import Body, Layer
-from pymontecarlo.input.material import VACUUM
+     FrozenParameter, SimpleValidator, ParameterizedMutableSequence)
+from pymontecarlo.input.material import Material, VACUUM
 from pymontecarlo.input.xmlmapper import \
     (mapper, ParameterizedElement, ParameterizedElementSequence,
-     ParameterizedAttribute, PythonType, UserType, _XMLItem)
+     ParameterizedAttribute, PythonType, UserType)
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
@@ -49,156 +46,10 @@ _THICKNESS_GETTER = attrgetter('thickness_m')
 POSINF = float('inf')
 NEGINF = float('-inf')
 
-class _MaterialParameterAlias(ParameterAlias):
-
-    def __get__(self, obj, objtype=None):
-        body = ParameterAlias.__get__(self, obj, objtype)
-        return body.material
-
-    def __set__(self, obj, value):
-        body = ParameterAlias.__get__(self, obj)
-        body.material = value
-
-class _Dimension(object):
-    """
-    Dimensions in x, y and z of a body.
-    """
-
-    def __init__(self,
-                 xmin=NEGINF, xmax=POSINF,
-                 ymin=NEGINF, ymax=POSINF,
-                 zmin=NEGINF, zmax=POSINF):
-        self._xmin = xmin
-        self._xmax = xmax
-        self._ymin = ymin
-        self._ymax = ymax
-        self._zmin = zmin
-        self._zmax = zmax
-
-    def __repr__(self):
-        return '<Dimension(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)>' % \
-            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
-
-    def __str__(self):
-        return '(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)' % \
-            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
-
-    @property
-    def xmin_m(self):
-        return self._xmin
-
-    @property
-    def xmax_m(self):
-        return self._xmax
-
-    @property
-    def ymin_m(self):
-        return self._ymin
-
-    @property
-    def ymax_m(self):
-        return self._ymax
-
-    @property
-    def zmin_m(self):
-        return self._zmin
-
-    @property
-    def zmax_m(self):
-        return self._zmax
-
-    def to_tuple(self):
-        return self.xmin_m, self.xmax_m, \
-               self.ymin_m, self.ymax_m, \
-               self.zmin_m, self.zmax_m
-
 _tilt_validator = SimpleValidator(lambda t:-pi <= t <= pi,
                                   "Tilt must be between [-pi, pi]")
 _rotation_validator = SimpleValidator(lambda r:-pi <= r <= pi,
                                       "Rotation must be between [-pi, pi]")
-
-class _BodyXMLElement(_XMLItem):
-
-    def __init__(self, *args, **kwargs):
-        _XMLItem.__init__(self, None, None)
-
-    def _get_object_values(self, obj, manager):
-        # Bodies
-        bodies_lookup = {}
-        for i, body in enumerate(obj.get_bodies()):
-            bodies_lookup[body] = i
-
-        # Materials
-        materials_lookup = {}
-        for i, material in enumerate(obj.get_materials()):
-            materials_lookup[material] = i + 1
-
-        return bodies_lookup, materials_lookup
-    
-    def _update_element(self, element, values, manager):
-        bodies_lookup, materials_lookup = values
-        
-        # Materials
-        subelement = ElementTree.Element('materials')
-
-        for material, index in materials_lookup.iteritems():
-            subsubelement = manager.to_xml(material)
-            subsubelement.set('index', str(index))
-            subelement.append(subsubelement)
-
-        element.append(subelement)
-
-        # Bodies
-        subelement = ElementTree.Element('bodies')
-        
-        for body, index in bodies_lookup.iteritems():
-            subsubelement = manager.to_xml(body)
-            subsubelement.set('index', str(index))
-            
-            subsubelement.remove(subsubelement.find('material')) # remove material element
-
-            material = body.__dict__['material'].get_list()
-            subsubelement.set('material', str(materials_lookup[body.material]))
-            
-            subelement.append(subsubelement)
-            
-        element.append(subelement)
-
-    def _update_element_bodies(self, obj, element, bodies_lookup):
-        raise NotImplementedError
-
-    def dump(self, obj, element, manager):
-        values = self._get_object_values(obj, manager)
-        self._update_element(element, values, manager)
-        self._update_element_bodies(obj, element, values[0])
-
-    def _extract_values(self, element, manager):
-        # Materials
-        materials_lookup = {0: VACUUM}
-        for subelement in element.find('materials'):
-            index = int(subelement.get('index'))
-            material = manager.from_xml(subelement)
-            materials_lookup[index] = material
-
-        # Bodies
-        bodies_lookup = {}
-        for subelement in element.find('bodies'):
-            index = int(subelement.get('index'))
-            body = manager.from_xml(subelement)
-
-            material_index = int(subelement.get('material'))
-            body.material = materials_lookup[material_index]
-
-            bodies_lookup[index] = body
-
-        return bodies_lookup
-
-    def _set_object_bodies(self, obj, element, bodies_lookup):
-        raise NotImplementedError
-
-    def load(self, obj, element, manager):
-        bodies_lookup = self._extract_values(element, manager)
-        self._set_object_bodies(obj, element, bodies_lookup)
 
 class _Geometry(object):
     """
@@ -230,27 +81,6 @@ class _Geometry(object):
         :obj:`VACUUM` is not considered as a material, so this object will
         not appear in this list.
         """
-        materials = map(_MATERIAL_GETTER, self.get_bodies())
-        materials = np.array(materials).flatten()
-        materials = set(materials)
-        materials.discard(VACUUM)
-        return materials
-
-    def get_bodies(self):
-        """
-        Returns a :class:`set` of all bodies inside this geometry. 
-        The bodies are returned in no particular order.
-        """
-        raise NotImplementedError
-
-    def get_dimensions(self, body):
-        """
-        Returns a class:`Dimension <._Dimension>` corresponding to the 
-        dimensions of the body inside the geometry.
-        All dimensions are in meters.
-        
-        :arg body: body to get the dimensions for
-        """
         raise NotImplementedError
 
 mapper.register(_Geometry, '{http://pymontecarlo.sf.net}_geometry',
@@ -259,41 +89,32 @@ mapper.register(_Geometry, '{http://pymontecarlo.sf.net}_geometry',
 
 class Substrate(_Geometry):
 
-    body = Parameter(doc="Body of this substrate")
-    material = _MaterialParameterAlias(body, doc="Material of this substrate")
+    material = Parameter(doc="Material of this substrate")
 
     def __init__(self, material):
         _Geometry.__init__(self)
-        self.body = Body(material)
+        self.material = material
 
     def __repr__(self):
         return '<Substrate(material=%s)>' % str(self.material)
 
-    def get_bodies(self):
-        bodies = self.__dict__['body'].get_list()
-        return set(bodies)
-
-    def get_dimensions(self, body):
-        if body is self.body:
-            return _Dimension(zmax=0.0)
-        else:
-            raise ValueError, "Unknown body: %s" % body
+    def get_materials(self):
+        materials = set()
+        if self.material is not VACUUM:
+            materials.add(self.material)
+        return materials
 
 mapper.register(Substrate, '{http://pymontecarlo.sf.net}substrate',
-                ParameterizedElement('body', UserType(Body), 'substrate'))
+                ParameterizedElement('material', UserType(Material), 'substrate'))
 
 _diameter_validator = SimpleValidator(lambda d: d > 0.0,
                                       "Diameter must be greater than 0.0")
 
 class Inclusion(_Geometry):
 
-    substrate_body = Parameter(doc="Body of the substrate")
-    substrate_material = _MaterialParameterAlias(substrate_body,
-                                                doc="Material of the substrate")
+    substrate_material = Parameter(doc="Material of the substrate")
 
-    inclusion_body = Parameter(doc="Body of the inclusion")
-    inclusion_material = _MaterialParameterAlias(inclusion_body,
-                                                doc="Material of the inclusion")
+    inclusion_material = Parameter(doc="Material of the inclusion")
 
     inclusion_diameter = UnitParameter("m", _diameter_validator,
                                        "Inclusion diameter (in meters)")
@@ -301,30 +122,58 @@ class Inclusion(_Geometry):
     def __init__(self, substrate_material, inclusion_material, inclusion_diameter_m):
         _Geometry.__init__(self)
 
-        self.substrate_body = Body(substrate_material)
-        self.inclusion_body = Body(inclusion_material)
+        self.substrate_material = substrate_material
+        self.inclusion_material = inclusion_material
         self.inclusion_diameter_m = inclusion_diameter_m
 
     def __repr__(self):
         return '<Inclusion(substrate_material=%s, inclusion_material=%s, inclusion_diameter=%s m)>' % \
             (str(self.substrate_material), str(self.inclusion_material), self.inclusion_diameter_m)
 
-    def get_bodies(self):
-        return set([self.substrate_body, self.inclusion_body])
-
-    def get_dimensions(self, body):
-        if body is self.substrate_body:
-            return _Dimension(zmax=0.0)
-        elif body is self.inclusion_body:
-            radius = self.inclusion_diameter_m / 2.0
-            return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
-        else:
-            raise ValueError, "Unknown body: %s" % body
+    def get_materials(self):
+        materials = set()
+        if self.substrate_material is not VACUUM:
+            materials.add(self.substrate_material)
+        if self.inclusion_material is not VACUUM:
+            materials.add(self.inclusion_material)
+        return materials
 
 mapper.register(Inclusion, '{http://pymontecarlo.sf.net}inclusion',
-                ParameterizedElement('substrate_body', UserType(Body), 'substrate'),
-                ParameterizedElement('inclusion_body', UserType(Body), 'inclusion'),
+                ParameterizedElement('substrate_material', UserType(Material), 'substrate'),
+                ParameterizedElement('inclusion_material', UserType(Material), 'inclusion'),
                 ParameterizedAttribute('inclusion_diameter_m', PythonType(float), 'diameter'))
+
+_thickness_validator = SimpleValidator(lambda t: t > 0,
+                                       "Thickness must be greater than 0")
+
+class Layer(object):
+
+    __metaclass__ = ParameterizedMetaClass
+
+    material = Parameter(doc="Material of this layer")
+
+    thickness = UnitParameter("m", _thickness_validator,
+                              "Thickness of this layer in meters")
+
+    def __init__(self, material, thickness_m):
+        """
+        Layer of a geometry.
+        
+        :arg material: material of the layer
+        :type material: :class:`Material`
+        
+        :arg thickness_m: thickness of the layer in meters
+        """
+        self.material = material
+        self.thickness_m = thickness_m
+
+    def __repr__(self):
+        return '<Layer(material=%s, thickness=%s m)>' % \
+                    (str(self.material), self.thickness_m)
+
+mapper.register(Layer, '{http://pymontecarlo.sf.net}layer',
+                ParameterizedElement('material', UserType(Material), optional=True),
+                ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))
 
 class _Layers(ParameterizedMutableSequence):
     pass
@@ -363,17 +212,19 @@ class _LayeredGeometry(_Geometry):
         """
         del self.layers[:]
 
-    def get_bodies(self):
-        return list(self.layers) # copy
+    def get_materials(self):
+        materials = set()
+        for layer in self.layers:
+            if layer.material is not VACUUM:
+                materials.add(layer.material)
+        return materials
 
 mapper.register(_LayeredGeometry, '{http://pymontecarlo.sf.net}layeredGeometry',
                 ParameterizedElementSequence('layers', UserType(Layer)))
 
 class MultiLayers(_LayeredGeometry):
 
-    substrate_body = Parameter(doc="Body of the substrate")
-    substrate_material = \
-        _MaterialParameterAlias(substrate_body, doc="Material of the substrate")
+    substrate_material = Parameter(doc="Material of the substrate")
 
     def __init__(self, substrate_material=None, layers=None):
         """
@@ -390,7 +241,7 @@ class MultiLayers(_LayeredGeometry):
 
         if substrate_material is None:
             substrate_material = VACUUM
-        self.substrate_body = Body(substrate_material)
+        self.substrate_material = substrate_material
 
     def __repr__(self):
         if self.has_substrate():
@@ -403,39 +254,22 @@ class MultiLayers(_LayeredGeometry):
         """
         Returns ``True`` if a substrate material has been defined.
         """
-        return self.substrate_body.material is not VACUUM
+        return self.substrate_material is not VACUUM
 
-    def get_bodies(self):
-        bodies = _LayeredGeometry.get_bodies(self)
-
+    def get_materials(self):
+        materials = _LayeredGeometry.get_materials(self)
         if self.has_substrate():
-            bodies.append(self.substrate_body)
-
-        return bodies
-
-    def get_dimensions(self, body):
-        if body is self.substrate_body and body is not None:
-            zmax = -sum(map(_THICKNESS_GETTER, self.layers))
-            return _Dimension(zmax=zmax)
-        elif body in self.layers:
-            indextop = self.layers.index(body)
-            indexbottom = len(self.layers) - self.layers[::-1].index(body)
-            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:indextop]))
-            zmin = -sum(map(_THICKNESS_GETTER, self.layers[:indexbottom]))
-            return _Dimension(zmin=zmin, zmax=zmax)
-        else:
-            raise ValueError, "Unknown body: %s" % body
+            materials.add(self.substrate_material)
+        return materials
 
 mapper.register(MultiLayers, '{http://pymontecarlo.sf.net}multiLayers',
-                ParameterizedElement('substrate_body', UserType(Body), 'substrate'))
+                ParameterizedElement('substrate_material', UserType(Material), 'substrate'))
 
 class GrainBoundaries(_LayeredGeometry):
 
-    left_body = Parameter(doc="Body of left side")
-    left_material = _MaterialParameterAlias(left_body, doc="Material of left side")
+    left_material = Parameter(doc="Material of left side")
 
-    right_body = Parameter(doc="Body of right side")
-    right_material = _MaterialParameterAlias(right_body, doc="Material of right side")
+    right_material = Parameter(doc="Material of right side")
 
     def __init__(self, left_material, right_material, layers=None):
         """
@@ -450,49 +284,26 @@ class GrainBoundaries(_LayeredGeometry):
         """
         _LayeredGeometry.__init__(self, layers)
 
-        self.left_body = Body(left_material)
-        self.right_body = Body(right_material)
+        self.left_material = left_material
+        self.right_material = right_material
 
     def __repr__(self):
         return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
             (str(self.left_material), str(self.right_material), len(self.layers))
 
-    def get_bodies(self):
-        bodies = _LayeredGeometry.get_bodies(self)
+    def get_materials(self):
+        materials = _LayeredGeometry.get_materials(self)
 
-        bodies.append(self.left_body)
-        bodies.append(self.right_body)
+        if self.left_material is not VACUUM:
+            materials.add(self.left_material)
+        if self.right_material is not VACUUM:
+            materials.add(self.right_material)
 
-        return bodies
-
-    def get_dimensions(self, body):
-        thicknesses = map(_THICKNESS_GETTER, self.layers)
-
-        positions = []
-        if thicknesses: # simple couple
-            middle = sum(thicknesses) / 2.0
-            for i in range(len(thicknesses)):
-                positions.append(sum(thicknesses[:i]) - middle)
-            positions.append(positions[-1] + thicknesses[-1])
-        else:
-            positions.append(0.0)
-
-        if body is self.left_body:
-            return _Dimension(xmax=positions[0], zmax=0)
-        elif body is self.right_body:
-            return _Dimension(xmin=positions[-1], zmax=0)
-        elif body in self.layers:
-            indexleft = self.layers.index(body)
-            indexright = len(self.layers) - self.layers[::-1].index(body)
-            return _Dimension(xmin=positions[indexleft],
-                              xmax=positions[indexright],
-                              zmax=0)
-        else:
-            raise ValueError, "Unknown body: %s" % body
+        return materials
 
 mapper.register(GrainBoundaries, '{http://pymontecarlo.sf.net}grainBoundaries',
-                ParameterizedElement('left_body', UserType(Body), 'left'),
-                ParameterizedElement('right_body', UserType(Body), 'right'))
+                ParameterizedElement('left_material', UserType(Material), 'left'),
+                ParameterizedElement('right_material', UserType(Material), 'right'))
 
 _thickness_validator = SimpleValidator(lambda t: t> 0,
                                        'Thickness must be greater than 0')
@@ -522,18 +333,12 @@ class ThinGrainBoundaries(GrainBoundaries):
             (str(self.left_material), str(self.right_material),
              len(self.layers), self.thickness_m)
 
-    def get_dimensions(self, body):
-        dim = GrainBoundaries.get_dimensions(self, body)
-        dim._zmin = -self.thickness_m
-        return dim
-
 mapper.register(ThinGrainBoundaries, '{http://pymontecarlo.sf.net}thinGrainBoundaries',
                 ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))
 
 class Sphere(_Geometry):
 
-    body = Parameter(doc="Body of this sphere")
-    material = _MaterialParameterAlias(body, doc="Material of this sphere")
+    material = Parameter(doc="Material of this sphere")
 
     diameter = UnitParameter("m", _diameter_validator,
                              "Diameter of this sphere (in meters)")
@@ -548,28 +353,21 @@ class Sphere(_Geometry):
         """
         _Geometry.__init__(self)
 
-        self.body = Body(material)
+        self.material = material
         self.diameter_m = diameter_m
 
     def __repr__(self):
         return '<Sphere(material=%s, diameter=%s m)>' % \
                     (str(self.material), self.diameter_m)
 
-    def get_bodies(self):
-        return set([self.body])
-
-    def get_dimensions(self, body):
-        if body is self.body:
-            d = self.diameter_m
-            r = d / 2.0
-            return _Dimension(xmin=-r, xmax=r,
-                              ymin=-r, ymax=r,
-                              zmin=-d, zmax=0.0)
-        else:
-            raise ValueError, "Unknown body: %s" % body
+    def get_materials(self):
+        materials = set()
+        if self.material is not VACUUM:
+            materials.add(self.material)
+        return materials
 
 mapper.register(Sphere, '{http://pymontecarlo.sf.net}sphere',
-                ParameterizedElement('body', UserType(Body), 'body'),
+                ParameterizedElement('material', UserType(Material), 'body'),
                 ParameterizedAttribute('diameter_m', PythonType(float), 'diameter'))
 #
 #class Cuboids2D(_Geometry):

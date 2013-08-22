@@ -20,7 +20,6 @@ __license__ = "GPL v3"
 # Local modules.
 
 from pymontecarlo.input.beam import *
-from pymontecarlo.input.body import *
 from pymontecarlo.input.collision import *
 from pymontecarlo.input.detector import *
 from pymontecarlo.input.geometry import *
