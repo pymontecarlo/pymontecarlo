@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import copy
 import time
+import logging
 
 # Third party modules.
 import numpy as np
@@ -131,7 +132,7 @@ class FunctionGetter(object):
         
         pass
     
-    def get_func(self, experimentcreator, experimentrunner, ref_experiment):
+    def get_targetfunc(self, experimentcreator, experimentrunner, ref_experiment):
         """
         Returns a function that maps a list of lists of values for the experiment parameters
         to a list containing the differences between the simulated k-ratios and the reference k-ratios.
@@ -141,7 +142,7 @@ class FunctionGetter(object):
         :arg ref_experiment: experiment from which the reference k-ratios will be extracted
         """
         
-        def _func(list_values):
+        def _targetfunc(list_values):
             for values in list_values:
                 experiment = experimentcreator.get_experiment(values)
                 experimentrunner.put(experiment)
@@ -162,11 +163,35 @@ class FunctionGetter(object):
 
             return list_diff
 
+        return _targetfunc
+    
+    def get_func(self, experimentcreator, experimentrunner):
+        def _func(list_values):
+            for values in list_values:
+                experiment = experimentcreator.get_experiment(values)
+                experimentrunner.put(experiment)
+            experimentrunner.start()
+            
+            while experimentrunner.is_alive():
+                print experimentrunner.report()
+                time.sleep(1)
+                
+            list_experiments = experimentrunner.get_results()
+            
+            list_f = []
+            
+            for experiment in sorted(list_experiments, key=lambda x: x.name):
+                list_f.append(experiment.get_kratios())
+                
+            experimentrunner.stop()
+
+            return list_f
+
         return _func
 
 class FunctionHandler(object):
     
-    def __init__(self, func, eps_diff=1e-2, n=1):
+    def __init__(self, targetfunc, func, eps_diff=1e-2, n=2):
         """
         Creates a function handler.
         
@@ -177,25 +202,33 @@ class FunctionHandler(object):
             when calculating the Jacobian of the given callable function
         """
         
+        self.targetfunc = targetfunc
         self.func = func
         self.eps_diff = eps_diff
         self.n = n
-        self._f = None
         
-    def get_func(self):
+    def get_targetfunc(self):
         """
         Returns a callable function that maps a list of argument values to a list of
         function values using the previously defined callable function.
         """
         
+        def _tagetfunc(x, *args, **kwargs):
+            fs = self.tagetfunc([x])
+            
+            return fs[0]
+        
+        return _tagetfunc
+    
+    def get_func(self):
         def _func(x, *args, **kwargs):
             fs = self.func([x])
-            self._f = fs[0]
             
-            return self._f
+            return fs[0]
+        
         return _func
     
-    def get_jac(self):
+    def get_jacobian(self):
         """
         Returns a callable function that maps a list of argument values to a matrix
         containing approximations of the partial derivatives
@@ -206,9 +239,10 @@ class FunctionHandler(object):
         def _jac(x, *args, **kwargs):
             # Setup step sizes for finite difference quotients
             xphs, dxs = [], np.zeros(len(x))
+            xphs.append(copy.deepcopy(x))
             for i in range(len(x)):
                 xph = copy.deepcopy(x)
-                xph[i] += self.eps_diff * abs(x[i])
+                xph[i] += self.eps_diff
                 xphs.append(xph)
                 dxs[i] = xph[i] - x[i]
             
@@ -217,15 +251,16 @@ class FunctionHandler(object):
             
             # Compute the jacobian using forward differences
             J = np.zeros([len(x), len(fs[0])]) # Create empty jacobian
-            for i in range(0, len(x)): # Calculate finite differences
-                J[i] = (fs[i] - self._f)/dxs[i]
+            for i in range(len(x)): # Calculate finite differences
+                logging.info("Partial derivative: x1=%s; x0=%s; (x1-x0)=%s; f1=%s; f0=%s" % (xphs[i+1], xphs[0], dxs[i], fs[i+1], fs[0]))
+                J[i] = (fs[i+1] - fs[0])/dxs[i]
             J = J.transpose()
                 
             return J
         
         return _jac
     
-    def get_jac_regression(self):
+    def get_jacobian_regression(self):
         """
         Returns a callable function that maps a list of argument values to a matrix
         containing approximations of the partial derivatives
@@ -238,23 +273,24 @@ class FunctionHandler(object):
         
         def _jac(x, *args, **kwargs):
             # Setup step sizes for finite difference quotients
-            xphs, dxs = np.zeros((len(x), 2*self.n+1, len(x))), np.zeros(len(x))
+            xphs = []
+            xphs.append(copy.deepcopy(x))
             for i in range(len(x)):
-                for j in range(-self.n,self.n+1):
+                for j in range(-self.n, 0) + range(1, self.n + 1):
                     xph = copy.deepcopy(x)
-                    xph[i] += j * self.eps_diff * abs(x[i])
-                    xphs[i,j + self.n] = xph
-                    dxs[i] = xph[i] - x[i]
+                    xph[i] += j * self.eps_diff
+                    xphs.append(xph)
         
-                    # Calculate function evaluations
-                    fs = self.func([xphs[i,j] for i in range(len(x)) for j in range(2*self.n+1)])
+            # Calculate function evaluations
+            fs = self.func(xphs)
                     
-                    J = np.zeros([len(x), len(fs[0])])
-                    for i in range(x):
-                        for k in range(len(fs[0])):
-                            x = xphs[i,:,i]
-                            y = [fs[i * (2 * self.n + 1) + j][k] for j in range(2 * self.n + 1)]
-                            J[k,i] = np.polyfit(x, y, 1)[0]
+            J = np.zeros([len(fs[0]), len(x)])
+            for i in range(len(x)):
+                for k in range(len(fs[0])):
+                    x = [xphs[0][i]] + [xphs[i * (2 * self.n) + j + 1][i] for j in range(2 * self.n)]
+                    y = [fs[0][k]] + [fs[i * (2 * self.n) + j + 1][k] for j in range(2 * self.n)]
+                    logging.info("Partial derivative of f%s w.r.t x%s: x=%s; y=%s; slope=%s" % (k,i,x,y,np.polyfit(x, y, 1)[0]))
+                    J[k,i] = np.polyfit(x, y, 1)[0]
                             
             return J
         
