@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`wizard` -- New simulation(s) wizard
+:mod:`options` -- New simulation(s) wizard
 ================================================================================
 
-.. module:: wizard
+.. module:: options
    :synopsis: New simulation(s) wizard
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.input.wizard
+.. inheritance-diagram:: pymontecarlo.ui.gui.input.wizard.options
 
 """
 
@@ -19,8 +19,6 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import methodcaller, mul
-from itertools import product
 
 # Third party modules.
 import wx
@@ -28,20 +26,21 @@ import wx
 # Local modules.
 from wxtools2.wizard import Wizard
 
-from pymontecarlo.ui.gui.input.beam import BeamWizardPage
-from pymontecarlo.ui.gui.input.geometry import GeometryWizardPage
-from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
-from pymontecarlo.ui.gui.input.limit import LimitWizardPage
-from pymontecarlo.ui.gui.input.model import ModelWizardPage
-from pymontecarlo.ui.gui.input.verification import VerificationWizardPage
+from pymontecarlo.ui.gui.input.wizard.beam import BeamWizardPage
+#from pymontecarlo.ui.gui.input.wizard.geometry import GeometryWizardPage
+#from pymontecarlo.ui.gui.input.detector import DetectorWizardPage
+#from pymontecarlo.ui.gui.input.limit import LimitWizardPage
+#from pymontecarlo.ui.gui.input.model import ModelWizardPage
+#from pymontecarlo.ui.gui.input.verification import VerificationWizardPage
 
 from pymontecarlo.input.options import Options
+from pymontecarlo.input.parameter import expand
 
 # Globals and constants variables.
 
-class NewSimulationWizard(Wizard):
+class OptionsWizard(Wizard):
 
-    def __init__(self, parent, programs):
+    def __init__(self, parent, programs, options=None):
         Wizard.__init__(self, parent, 'New simulation(s)')
         self.SetSizeWH(500, 700)
         self.CenterOnParent()
@@ -60,6 +59,10 @@ class NewSimulationWizard(Wizard):
             for modeltype, models in converter.MODELS.iteritems():
                 self._available_models.setdefault(modeltype, set()).update(models)
 
+        if options is None:
+            options = Options()
+        self._options = options
+
         # Controls
         self._lblcount = wx.StaticText(self, label='1 simulation defined')
         font = wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.ITALIC, wx.FONTWEIGHT_NORMAL)
@@ -69,23 +72,23 @@ class NewSimulationWizard(Wizard):
         self._szr_buttons.Insert(0, self._lblcount, flag=wx.ALIGN_CENTER_VERTICAL)
 
         # Pages
-        self._page_beam = BeamWizardPage(self)
+        self._page_beam = BeamWizardPage(self, options)
         self.pages.append(self._page_beam)
 
-        self._page_geometry = GeometryWizardPage(self)
-        self.pages.append(self._page_geometry)
+#        self._page_geometry = GeometryWizardPage(self, options)
+#        self.pages.append(self._page_geometry)
 
-        self._page_detector = DetectorWizardPage(self)
-        self.pages.append(self._page_detector)
-
-        self._page_limit = LimitWizardPage(self)
-        self.pages.append(self._page_limit)
-
-        self._page_model = ModelWizardPage(self)
-        self.pages.append(self._page_model)
-
-        self._page_verification = VerificationWizardPage(self)
-        self.pages.append(self._page_verification)
+#        self._page_detector = DetectorWizardPage(self)
+#        self.pages.append(self._page_detector)
+#
+#        self._page_limit = LimitWizardPage(self)
+#        self.pages.append(self._page_limit)
+#
+#        self._page_model = ModelWizardPage(self)
+#        self.pages.append(self._page_model)
+#
+#        self._page_verification = VerificationWizardPage(self)
+#        self.pages.append(self._page_verification)
 
     def _get_classes(self, programs, attr):
         classes = set()
@@ -93,6 +96,23 @@ class NewSimulationWizard(Wizard):
             converter = program.converter_class
             classes |= set(getattr(converter, attr))
         return classes
+
+    def OnPrev(self, event):
+        Wizard.OnPrev(self, event)
+        self.on_value_changed()
+
+    def OnNext(self, event):
+        Wizard.OnNext(self, event)
+        self.on_value_changed()
+
+    def on_value_changed(self, event=None):
+        count = len(expand(self.options))
+
+        if count > 1:
+            label = '%i simulations defined' % count
+        else:
+            label = '%i simulation defined' % count
+        self._lblcount.SetLabel(label)
 
     @property
     def programs(self):
@@ -118,56 +138,9 @@ class NewSimulationWizard(Wizard):
     def available_models(self):
         return self._available_models
 
-    def OnPrev(self, event):
-        Wizard.OnPrev(self, event)
-        self.OnValueChanged()
-
-    def OnNext(self, event):
-        Wizard.OnNext(self, event)
-        self.OnValueChanged()
-
-    def get_options(self):
-        beams = self._page_beam.get_options()
-        geometries = self._page_geometry.get_options()
-        detectors = self._page_detector.get_options()
-        list_limits = self._page_limit.get_options()
-        list_models = self._page_model.get_options()
-
-        list_options = []
-        for beam, geometry, limits, models in \
-                product(beams, geometries, list_limits, list_models):
-            options = Options()
-            options.beam = beam
-            options.geometry = geometry
-            if detectors:
-                options.detectors.update(detectors[0])
-            for limit in limits:
-                options.limits.add(limit)
-            for model in models:
-                options.models.add(model)
-
-            list_options.append(options)
-
-        return list_options
-
-    def OnValueChanged(self, event=None):
-        pages = [self._page_beam, self._page_geometry, self._page_detector,
-                 self._page_limit, self._page_model]
-        maxpage = min(self._pages.index(self._pages.selection) + 1, len(pages))
-        pages = pages[:maxpage] # Only consider pages up to current page
-
-        try:
-            counts = map(len, map(methodcaller('get_options'), pages))
-        except:
-            count = 0
-        else:
-            count = reduce(mul, counts, 1)
-
-        if count > 1:
-            label = '%i simulations defined' % count
-        else:
-            label = '%i simulation defined' % count
-        self._lblcount.SetLabel(label)
+    @property
+    def options(self):
+        return self._options
 
 if __name__ == '__main__': #pragma: no cover
     from pymontecarlo.ui.gui.art import ArtProvider
@@ -179,7 +152,7 @@ if __name__ == '__main__': #pragma: no cover
     wx.ArtProvider.Push(ArtProvider())
 
     programs = [nistmonte, penepma, casino2]
-    wiz = NewSimulationWizard(None, programs)
+    wiz = OptionsWizard(None, programs)
 
     wiz.ShowModal()
 
