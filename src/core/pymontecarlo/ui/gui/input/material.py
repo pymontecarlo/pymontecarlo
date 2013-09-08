@@ -36,8 +36,7 @@ from wxtools2.dialog import show_exclamation_dialog, show_error_dialog
 from wxtools2.exception import catch_all
 from wxtools2.dialog import show_open_filedialog, show_save_filedialog
 
-from pymontecarlo.input.material import \
-    composition_from_formula, Material, _generate_name, _calculate_composition
+from pymontecarlo.input.material import composition_from_formula, Material
 
 from pymontecarlo.ui.gui.util.periodictable import PeriodicTableDialog
 
@@ -177,18 +176,18 @@ class MaterialDialog(wx.Dialog):
         self.SetSizer(sizer)
 
         # Bind
-        self.Bind(wx.EVT_TOOL, self.OnAdd, id=self._TOOL_ADD)
-        self.Bind(wx.EVT_TOOL, self.OnRemove, id=self._TOOL_REMOVE)
-        self.Bind(wx.EVT_TOOL, self.OnClear, id=self._TOOL_CLEAR)
-        self.Bind(wx.EVT_TOOL, self.OnCalc, id=self._TOOL_CALC)
-        self.Bind(wx.EVT_TOOL, self.OnOpen, id=self._TOOL_OPEN)
-        self.Bind(wx.EVT_TOOL, self.OnSave, id=self._TOOL_SAVE)
+        self.Bind(wx.EVT_TOOL, self.on_add, id=self._TOOL_ADD)
+        self.Bind(wx.EVT_TOOL, self.on_remove, id=self._TOOL_REMOVE)
+        self.Bind(wx.EVT_TOOL, self.on_clear, id=self._TOOL_CLEAR)
+        self.Bind(wx.EVT_TOOL, self.on_calc, id=self._TOOL_CALC)
+        self.Bind(wx.EVT_TOOL, self.on_open, id=self._TOOL_OPEN)
+        self.Bind(wx.EVT_TOOL, self.on_save, id=self._TOOL_SAVE)
 
-        self.Bind(wx.EVT_CHECKBOX, self.OnNameAuto, self._chknameauto)
-        self.Bind(wx.EVT_CHECKBOX, self.OnDensityUserDefined, self._chkdensityuserdefined)
+        self.Bind(wx.EVT_CHECKBOX, self.on_auto_name, self._chknameauto)
+        self.Bind(wx.EVT_CHECKBOX, self.on_density_user_defined, self._chkdensityuserdefined)
 
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Bind(wx.EVT_BUTTON, self.OnOk, id=wx.ID_OK)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.Bind(wx.EVT_BUTTON, self.on_ok, id=wx.ID_OK)
 
         # Load material
         if material is not None:
@@ -203,20 +202,14 @@ class MaterialDialog(wx.Dialog):
         for row in self._lstelements:
             composition[row.z] = row.weightfraction
 
-        # Replace wildcards
-        with catch_all(self) as success:
-            composition = _calculate_composition(composition)
-        if not success:
-            return
-
         # Name
-        if self._chknameauto.IsChecked():
-            name = _generate_name(composition)
-        else:
+        if not self._chknameauto.IsChecked():
             name = self._txtname.GetValue().strip()
             if not name:
                 show_error_dialog(self, "Please specify a name")
                 return
+        else:
+            name = None
 
         # Density
         if self._chkdensityuserdefined.IsChecked():
@@ -235,17 +228,19 @@ class MaterialDialog(wx.Dialog):
         # Create material
         with catch_all(self) as success:
             mat = Material(name, composition, density_kg_m3)
+            mat.calculate()
         if not success:
             return
 
         # Update dialog
         self._txtname.SetValue(mat.name)
-        self._txtdensity.SetValue(str(mat.density_kg_m3 / 1000.0))
+        self._txtdensity.SetValue(str(mat.density_g_cm3))
 
         for i, row in enumerate(self._lstelements):
+            # FIXME: composition as atomic fraction
             self._lstelements[i] = \
                 _ElementRow(row.z, mat.composition[row.z],
-                            mat.composition_atomic[row.z])
+                            0.0)
 
         return mat
 
@@ -265,10 +260,11 @@ class MaterialDialog(wx.Dialog):
 
         self._lstelements.clear()
         for z, fraction in material.composition.iteritems():
-            row = _ElementRow(z, fraction, material.composition_atomic[z])
+            # FIXME: composition as atomic fraction
+            row = _ElementRow(z, fraction, 0.0)
             self._lstelements.append(row)
 
-    def OnAdd(self, event):
+    def on_add(self, event):
         def _addperiodictable():
             dialog = PeriodicTableDialog(self, multiple_selection=True)
 
@@ -307,7 +303,7 @@ class MaterialDialog(wx.Dialog):
             if row not in self._lstelements:
                 self._lstelements.append(row)
 
-    def OnRemove(self, event):
+    def on_remove(self, event):
         if not self._lstelements: # No elements
             return
 
@@ -323,7 +319,7 @@ class MaterialDialog(wx.Dialog):
         if not self._chkdensityuserdefined.IsChecked():
             self._txtdensity.Clear()
 
-    def OnClear(self, event):
+    def on_clear(self, event):
         self._lstelements.clear()
 
         if self._chknameauto.IsChecked():
@@ -332,10 +328,10 @@ class MaterialDialog(wx.Dialog):
         if not self._chkdensityuserdefined.IsChecked():
             self._txtdensity.Clear()
 
-    def OnCalc(self, event):
+    def on_calc(self, event):
         self._calculate()
 
-    def OnOpen(self, event):
+    def on_open(self, event):
         filetypes = [('Material file (*.xml)', 'xml')]
         filepath = show_open_filedialog(self, filetypes, multiple_selection=False)
         if filepath is None:
@@ -348,7 +344,7 @@ class MaterialDialog(wx.Dialog):
 
         self._load_material(mat)
 
-    def OnSave(self, event):
+    def on_save(self, event):
         mat = self._calculate()
         if mat is None:
             return
@@ -363,16 +359,16 @@ class MaterialDialog(wx.Dialog):
         if not success:
             return
 
-    def OnNameAuto(self, event):
+    def on_auto_name(self, event):
         self._txtname.Enable(not self._chknameauto.IsChecked())
 
-    def OnDensityUserDefined(self, event):
+    def on_density_user_defined(self, event):
         self._txtdensity.Enable(self._chkdensityuserdefined.IsChecked())
 
-    def OnClose(self, event):
+    def on_close(self, event):
         self.EndModal(wx.ID_CANCEL)
 
-    def OnOk(self, event):
+    def on_ok(self, event):
         mat = self._calculate()
         if mat is None:
             event.StopPropagation()
@@ -385,7 +381,7 @@ class MaterialDialog(wx.Dialog):
                 self._material.density_kg_m3 = mat.density_kg_m3
             event.Skip()
 
-    def GetMaterial(self):
+    def get_material(self):
         """
         Returns the successfully created material or the edited material.
         """
@@ -469,17 +465,17 @@ class MaterialListCtrl(wx.Panel):
         self.SetSizer(sizer)
 
         # Bind
-        self.Bind(wx.EVT_TOOL, self.OnAdd, id=self._TOOL_ADD)
-        self.Bind(wx.EVT_TOOL, self.OnRemove, id=self._TOOL_REMOVE)
-        self.Bind(wx.EVT_TOOL, self.OnClear, id=self._TOOL_CLEAR)
-        self.Bind(wx.EVT_TOOL, self.OnEdit, id=self._TOOL_EDIT)
-        self.Bind(EVT_LIST_ROW_ACTIVATED, self.OnEdit, self._lst)
+        self.Bind(wx.EVT_TOOL, self.on_add, id=self._TOOL_ADD)
+        self.Bind(wx.EVT_TOOL, self.on_remove, id=self._TOOL_REMOVE)
+        self.Bind(wx.EVT_TOOL, self.on_clear, id=self._TOOL_CLEAR)
+        self.Bind(wx.EVT_TOOL, self.on_edit, id=self._TOOL_EDIT)
+        self.Bind(EVT_LIST_ROW_ACTIVATED, self.on_edit, self._lst)
 
-    def OnAdd(self, event):
+    def on_add(self, event):
         dialog = MaterialDialog(self.GetParent())
 
         if dialog.ShowModal() == wx.ID_OK:
-            material = dialog.GetMaterial()
+            material = dialog.get_material()
 
             event = NotifyMaterialEvent(wxEVT_LIST_MATERIAL_ADDING,
                                         self.GetId(), material)
@@ -508,7 +504,7 @@ class MaterialListCtrl(wx.Panel):
                               material)
         self.GetEventHandler().ProcessEvent(event)
 
-    def OnRemove(self, event):
+    def on_remove(self, event):
         if not self._lst: # No materials
             return
 
@@ -518,11 +514,11 @@ class MaterialListCtrl(wx.Panel):
 
         self._delmaterial(self._lst.selection)
 
-    def OnClear(self, event):
+    def on_clear(self, event):
         for material in list(self._lst):
             self._delmaterial(material)
 
-    def OnEdit(self, event):
+    def on_edit(self, event):
         if not self._lst: # No materials
             return
 
@@ -547,12 +543,14 @@ class MaterialListCtrl(wx.Panel):
                               material)
         self.GetEventHandler().ProcessEvent(event)
 
-    def GetMaterials(self):
+    def get_materials(self):
         return list(self._lst) # copy
 
-    def SetMaterials(self, materials):
+    def set_materials(self, materials):
         self._lst.clear()
         self._lst.extend(materials)
+
+    materials = property(get_materials, set_materials)
 
 if __name__ == '__main__':
     from pymontecarlo.ui.gui.art import ArtProvider
@@ -575,7 +573,7 @@ if __name__ == '__main__':
             else:
                 print 'cancel'
 
-            self.material = self._dialog.GetMaterial()
+            self.material = self._dialog.get_material()
 
             self.label.SetLabel(str(self.material))
 
