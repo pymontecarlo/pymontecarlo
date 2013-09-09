@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`wizardpage` -- Base implementation of wizard page
+:mod:`page` -- Base implementation of wizard page
 ================================================================================
 
-.. module:: wizardpage
+.. module:: page
    :synopsis: Base implementation of wizard page
 
-.. inheritance-diagram:: wizardpage
+.. inheritance-diagram:: pymontecarlo.ui.gui.input.wizard.page
 
 """
 
@@ -30,14 +30,17 @@ from wxtools2.validator import form_validate
 
 class WizardPage(_WizardPage):
 
-    def __init__(self, wizard, title):
+    def __init__(self, wizard, title, options):
         _WizardPage.__init__(self, wizard, title)
 
-    def OnValueChanged(self, event=None):
-        self.GetParent().OnValueChanged(event)
+        self._options = options
 
     def Validate(self):
         return form_validate(self)
 
-    def get_options(self):
-        raise NotImplementedError
+    def on_value_changed(self, event=None):
+        self.GetParent().on_value_changed(event)
+
+    @property
+    def options(self):
+        return self._options
