@@ -86,42 +86,22 @@ class Reconstructor(object):
             self._ref_experiment = self._experimentrunner.get_results()[0]
 
         fgetter = FunctionGetter()
-        func = fgetter.get_func(self._experimentcreator, self._experimentrunner, self._ref_experiment)
-        fhandler = FunctionHandler(func, self._eps_diff)
+        targetfunc = fgetter.get_targetfunc(self._experimentcreator, self._experimentrunner, self._ref_experiment)
+        func = fgetter.get_func(self._experimentcreator, self._experimentrunner)
+        fhandler = FunctionHandler(targetfunc, func, self._eps_diff)
         
         if ref_x and rel_err:
             x_opt, F_opt, f_evals, exit_code = \
-                self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
+                self._optimizer.optimize(fhandler.get_targetfunc(), fhandler.get_jacobian(),
                                          x0, self._experimentcreator.get_constraints(), (ref_x, rel_err))
         else:
             x_opt, F_opt, f_evals, exit_code = \
-                self._optimizer.optimize(fhandler.get_func(), fhandler.get_jac(),
+                self._optimizer.optimize(fhandler.get_targetfunc(), fhandler.get_jacobian(),
                                          x0, self._experimentcreator.get_constraints())
         
         geometry_opt = self._experimentcreator.get_experiment(x_opt).get_geometry()
         
-        return geometry_opt, x_opt, F_opt, f_evals, exit_code
-    
-    def _simulate_standards(self, experiment):
-        if not experiment.simulated_std():
-            # Pretend that the experiment has simulated unknowns
-            for measurement in experiment.get_measurements():
-                measurement.results_unk = True
-            
-            self._experimentrunner.put(experiment)
-            self._experimentrunner.start()
-            
-            while self._experimentrunner.is_alive():
-                print self._experimentrunner.report()
-                time.sleep(1)
-                
-            experiment = self._experimentrunner.get_results()[0]
-            
-            # Revert the above
-            for measurement in experiment.get_measurements():
-                measurement.results_unk = None
-                        
-            return experiment    
+        return geometry_opt, x_opt, F_opt, f_evals, exit_code    
     
 class FunctionGetter(object):
     
@@ -156,8 +136,10 @@ class FunctionGetter(object):
             
             list_diff = []
             
-            for experiment in sorted(list_experiments, key=lambda x: x.name):
-                list_diff.append(experiment.get_kratios() - ref_experiment.get_kratios())
+            for values in list_values:
+                for experiment in list_experiments:
+                    if experiment.get_values() == values:
+                        list_diff.append(experiment.get_kratios() - ref_experiment.get_kratios())
                 
             experimentrunner.stop()
 
@@ -179,9 +161,11 @@ class FunctionGetter(object):
             list_experiments = experimentrunner.get_results()
             
             list_f = []
-            
-            for experiment in sorted(list_experiments, key=lambda x: x.name):
-                list_f.append(experiment.get_kratios())
+                
+            for values in list_values:
+                for experiment in list_experiments:
+                    if experiment.get_values() == values:
+                        list_f.append(experiment.get_kratios())
                 
             experimentrunner.stop()
 
@@ -252,7 +236,6 @@ class FunctionHandler(object):
             # Compute the jacobian using forward differences
             J = np.zeros([len(x), len(fs[0])]) # Create empty jacobian
             for i in range(len(x)): # Calculate finite differences
-                logging.info("Partial derivative: x1=%s; x0=%s; (x1-x0)=%s; f1=%s; f0=%s" % (xphs[i+1], xphs[0], dxs[i], fs[i+1], fs[0]))
                 J[i] = (fs[i+1] - fs[0])/dxs[i]
             J = J.transpose()
                 
@@ -289,7 +272,6 @@ class FunctionHandler(object):
                 for k in range(len(fs[0])):
                     x = [xphs[0][i]] + [xphs[i * (2 * self.n) + j + 1][i] for j in range(2 * self.n)]
                     y = [fs[0][k]] + [fs[i * (2 * self.n) + j + 1][k] for j in range(2 * self.n)]
-                    logging.info("Partial derivative of f%s w.r.t x%s: x=%s; y=%s; slope=%s" % (k,i,x,y,np.polyfit(x, y, 1)[0]))
                     J[k,i] = np.polyfit(x, y, 1)[0]
                             
             return J
