@@ -71,7 +71,7 @@ class Reconstructor(object):
         if base_experiment.has_standards() and not base_experiment.simulated_std():
             self._experimentcreator._base_experiment = self._simulate_standards(base_experiment)
         
-        if not ref_experiment and not ref_x:
+        if not ref_experiment and ref_x == None:
             raise ValueError, 'No reference specified'
         
         if ref_experiment:
@@ -90,7 +90,7 @@ class Reconstructor(object):
         func = fgetter.get_func(self._experimentcreator, self._experimentrunner)
         fhandler = FunctionHandler(targetfunc, func, self._eps_diff)
         
-        if ref_x and rel_err:
+        if not ref_x == None and rel_err:
             x_opt, F_opt, f_evals, exit_code = \
                 self._optimizer.optimize(fhandler.get_targetfunc(), fhandler.get_jacobian(),
                                          x0, self._experimentcreator.get_constraints(), (ref_x, rel_err))
@@ -138,7 +138,7 @@ class FunctionGetter(object):
             
             for values in list_values:
                 for experiment in list_experiments:
-                    if experiment.get_values() == values:
+                    if (experiment.get_values() == values).all():
                         list_diff.append(experiment.get_kratios() - ref_experiment.get_kratios())
                 
             experimentrunner.stop()
@@ -164,7 +164,7 @@ class FunctionGetter(object):
                 
             for values in list_values:
                 for experiment in list_experiments:
-                    if experiment.get_values() == values:
+                    if (experiment.get_values() == values).all():
                         list_f.append(experiment.get_kratios())
                 
             experimentrunner.stop()
@@ -198,7 +198,7 @@ class FunctionHandler(object):
         """
         
         def _tagetfunc(x, *args, **kwargs):
-            fs = self.tagetfunc([x])
+            fs = self.targetfunc([x])
             
             return fs[0]
         
