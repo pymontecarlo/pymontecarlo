@@ -226,7 +226,10 @@ class FunctionHandler(object):
             xphs.append(copy.deepcopy(x))
             for i in range(len(x)):
                 xph = copy.deepcopy(x)
-                xph[i] += self.eps_diff
+                if xph[i] <= 0.5:
+                    xph[i] += self.eps_diff
+                else:
+                    xph[i] -= self.eps_diff
                 xphs.append(xph)
                 dxs[i] = xph[i] - x[i]
             
