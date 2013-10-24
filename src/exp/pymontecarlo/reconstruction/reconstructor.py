@@ -76,6 +76,13 @@ class Reconstructor(object):
         
         if ref_experiment:
             self._ref_experiment = ref_experiment
+            if not self._ref_experiment.simulated_unk():
+                self._experimentrunner.put(self._ref_experiment)
+                self._experimentrunner.start()
+                while self._experimentrunner.is_alive():
+                    print self._experimentrunner.report()
+                    time.sleep(1)
+                self._ref_experiment = self._experimentrunner.get_results()[0]
         else:
             self._ref_experiment = self._experimentcreator.get_experiment(ref_x)
             self._experimentrunner.put(self._ref_experiment)
@@ -197,12 +204,12 @@ class FunctionHandler(object):
         function values using the previously defined callable function.
         """
         
-        def _tagetfunc(x, *args, **kwargs):
+        def _targetfunc(x, *args, **kwargs):
             fs = self.targetfunc([x])
             
             return fs[0]
         
-        return _tagetfunc
+        return _targetfunc
     
     def get_func(self):
         def _func(x, *args, **kwargs):
