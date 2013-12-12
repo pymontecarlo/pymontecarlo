@@ -145,7 +145,7 @@ class FunctionGetter(object):
             
             for values in list_values:
                 for experiment in list_experiments:
-                    if (experiment.get_values() == values).all():
+                    if np.all(experiment.get_values() == values):
                         list_diff.append(experiment.get_kratios() - ref_experiment.get_kratios())
                 
             experimentrunner.stop()
@@ -171,7 +171,7 @@ class FunctionGetter(object):
                 
             for values in list_values:
                 for experiment in list_experiments:
-                    if (experiment.get_values() == values).all():
+                    if np.all(experiment.get_values() == values):
                         list_f.append(experiment.get_kratios())
                 
             experimentrunner.stop()
