@@ -52,7 +52,7 @@ class _XMLType(object):
         raise NotImplementedError
 
 class PythonType(_XMLType):
-    
+
     def __init__(self, type_):
         self._type = type_
 
@@ -82,23 +82,23 @@ class PythonType(_XMLType):
             return 'true' if value else 'false'
 
         return str(value)
-    
+
 class UserType(_XMLType):
-    
+
     def __init__(self, klass):
         self._klass = klass
-        
+
     def from_xml(self, value):
         assert isinstance(value, self._klass)
         return value
-    
+
     def to_xml(self, value):
         assert isinstance(value, self._klass), \
             '%s != %s' % (value.__class__, self._klass)
         return value
 
 class _XMLItem(object):
-    
+
     def __init__(self, objattr, type_, xmlname=None,
                  iterable=False, optional=False, *args, **kwargs):
         self.objattr = objattr
@@ -110,7 +110,7 @@ class _XMLItem(object):
     def __repr__(self):
         return '<%s(%s <-> %s)>' % (self.__class__.__name__,
                                     self.objattr, self.xmlname)
-        
+
     def _get_object_values(self, obj, manager):
         try:
             values = attrgetter(self.objattr)(obj)
@@ -128,17 +128,17 @@ class _XMLItem(object):
                 values = [values]
 
         return map(self.type_.to_xml, values)
-    
+
     def _update_element(self, element, values, manager, cache):
         raise NotImplementedError
 
     def dump(self, obj, element, manager, cache):
         values = self._get_object_values(obj, manager)
         self._update_element(element, values, manager, cache)
-        
+
     def _extract_values(self, element, manager, cache):
         raise NotImplementedError
-        
+
     def _set_object_values(self, obj, values):
         values = map(self.type_.from_xml, values)
 
@@ -157,7 +157,7 @@ class _XMLItem(object):
         self._set_object_values(obj, values)
 
 class Element(_XMLItem):
-    
+
     def _update_element(self, element, values, manager, cache):
         subelement = ElementTree.Element(self.xmlname)
 
@@ -167,7 +167,7 @@ class Element(_XMLItem):
             self._update_element_nousertype(subelement, values, manager, cache)
 
         element.append(subelement)
-        
+
     def _update_element_usertype(self, subelement, values, manager, cache):
         for value in values:
             id_value = id(value)
@@ -200,7 +200,7 @@ class Element(_XMLItem):
             values = self._extract_values_nousertype(subelement, manager, cache)
 
         return values
-    
+
     def _extract_values_usertype(self, subelement, manager, cache):
         values = []
         for subsubelement in subelement:
@@ -212,7 +212,7 @@ class Element(_XMLItem):
                 cache[id_value] = value
             values.append(value)
         return values
-    
+
     def _extract_values_nousertype(self, subelement, manager, cache):
         if not subelement.text:
             return []
@@ -220,7 +220,7 @@ class Element(_XMLItem):
 
 class ElementDict(Element):
 
-    def __init__(self, objattr, keytype, valuetype, xmlname=None, 
+    def __init__(self, objattr, keytype, valuetype, xmlname=None,
                  keyxmlname='{%s}key' % NSURI,
                  valuexmlname='{%s}value' % NSURI,
                  optional=False, *args, **kwargs):
@@ -327,7 +327,7 @@ class _EmptyClass(object):
     pass
 
 class XMLMapper(object):
-    
+
     def __init__(self):
         self._manager = Manager()
         self._content = {}
@@ -336,7 +336,7 @@ class XMLMapper(object):
     def register_namespace(self, prefix, uri):
         """
         Registers a namespace to be used when loading and saving from/to XML.
-        
+
         :arg prefix: prefix of the namespace
         :arg uri: URI of the namespace
         """
@@ -344,7 +344,7 @@ class XMLMapper(object):
 
     def register(self, klass, tag, *content, **kwargs):
         self._manager.register(tag, klass)
-        
+
         # Search for the content already registered classes
         if kwargs.get('inherit', True):
             for base in klass.__bases__:
@@ -353,7 +353,7 @@ class XMLMapper(object):
                 except ValueError:
                     continue
                 content += self._content[basetag]
-        
+
         self._content[tag] = content
 
     def is_registered(self, klass=None, tag=None):
@@ -363,7 +363,7 @@ class XMLMapper(object):
         """
         Loads an object from a XML element. A :exc:`ValueError` is raised if
         no loader is found for the XML element.
-        
+
         :arg element: XML element
         """
         klass = self._manager.get_class(element.tag)
@@ -387,27 +387,27 @@ class XMLMapper(object):
 
         # Reduce
         if hasattr(obj, '__reduce__'):
-            reduce = obj.__reduce__()
+            rdc = obj.__reduce__()
 
-            func = reduce[0]
-            args = reduce[1]
+            func = rdc[0]
+            args = rdc[1]
             obj = func(*args)
 
             # State
-            if len(reduce) > 2:
-                state = reduce[2]
+            if len(rdc) > 2:
+                state = rdc[2]
                 if hasattr(obj, '__setstate__'):
                     obj.__setstate__(state)
                 else:
                     obj.__dict__.update(state)
 
             # List items
-            if len(reduce) > 3:
-                obj.extend(reduce[3])
+            if len(rdc) > 3:
+                obj.extend(rdc[3])
 
             # Dict items
-            if len(reduce) > 4:
-                obj.update(reduce[4])
+            if len(rdc) > 4:
+                obj.update(rdc[4])
 
         return obj
 
@@ -415,7 +415,7 @@ class XMLMapper(object):
         """
         Saves an object as a XML element. A :exc:`ValueError` is raised if
         no saver is found for the object.
-        
+
         :arg obj: object
         """
         tag = self._manager.get_tag(obj.__class__)
