@@ -13,8 +13,13 @@ import sys
 
 # Third party modules.
 from setuptools import setup
-from cx_Freeze.dist import Distribution, build, build_exe
-from cx_Freeze.freezer import Executable
+
+try:
+    from cx_Freeze.dist import Distribution, build, build_exe
+    from cx_Freeze.freezer import Executable
+    has_cx_freeze = True
+except ImportError:
+    has_cx_freeze = False
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
@@ -51,17 +56,25 @@ entry_points['console_scripts'] = \
 entry_points['gui_scripts'] = \
     ['%s = %s' % item for item in gui_executables.items()]
 
-def _make_executable(target_name, script, gui=False):
-    path = os.path.join(*script.split(":")[0].split('.')) + '.py'
-    if sys.platform == "win32": target_name += '.exe'
-    base = "Win32GUI" if sys.platform == "win32" and gui else None
-    return Executable(path, targetName=target_name, base=base)
-
 executables = []
-for target_name, script in cli_executables.items():
-    executables.append(_make_executable(target_name, script, False))
-for target_name, script in gui_executables.items():
-    executables.append(_make_executable(target_name, script, True))
+
+if has_cx_freeze:
+    def _make_executable(target_name, script, gui=False):
+        path = os.path.join(*script.split(":")[0].split('.')) + '.py'
+        if sys.platform == "win32": target_name += '.exe'
+        base = "Win32GUI" if sys.platform == "win32" and gui else None
+        return Executable(path, targetName=target_name, base=base)
+
+    for target_name, script in cli_executables.items():
+        executables.append(_make_executable(target_name, script, False))
+    for target_name, script in gui_executables.items():
+        executables.append(_make_executable(target_name, script, True))
+
+    distclass = Distribution
+    cmdclass = {'clean': clean, "build": build, "build_exe": build_exe},
+else:
+    distclass = None
+    cmdclass = {'clean': clean}
 
 setup(name="pyMonteCarlo",
       version='0.1',
@@ -83,8 +96,8 @@ setup(name="pyMonteCarlo",
       package_data={'pymontecarlo.util': ['data/*']},
       namespace_packages=namespace_packages,
 
-      distclass=Distribution,
-      cmdclass={'clean': clean, "build": build, "build_exe": build_exe},
+      distclass=distclass,
+      cmdclass=cmdclass,
 
       setup_requires=['nose>=1.0'],
       install_requires=['pyparsing >=1.5.2, <2.0', 'numpy>=1.5',
