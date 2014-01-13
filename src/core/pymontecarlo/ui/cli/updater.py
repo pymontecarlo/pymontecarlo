@@ -26,8 +26,8 @@ from optparse import OptionParser
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.ui.cli.console import Console
-from pymontecarlo.input.updater import Updater as OptionsUpdater
-from pymontecarlo.output.updater import Updater as ResultsUpdater
+from pymontecarlo.options.updater import Updater as OptionsUpdater
+from pymontecarlo.results.updater import Updater as ResultsUpdater
 
 # Globals and constants variables.
 

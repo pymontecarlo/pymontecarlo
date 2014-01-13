@@ -20,7 +20,7 @@ import shutil
 from pymontecarlo.runner.local import LocalRunner
 from pymontecarlo.program.test_config import DummyProgram
 
-from pymontecarlo.input.options import Options
+from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
 
@@ -67,6 +67,6 @@ class TestLocalRunner(unittest.TestCase):
 
         self.assertRaises(RuntimeError, self.runner.join)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

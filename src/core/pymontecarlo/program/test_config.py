@@ -16,11 +16,11 @@ import logging
 
 # Local modules.
 from pymontecarlo.program.config import Program
-from pymontecarlo.input.converter import Converter
-from pymontecarlo.input.exporter import Exporter
+from pymontecarlo.options.converter import Converter
+from pymontecarlo.options.exporter import Exporter
 from pymontecarlo.runner.worker import Worker
-from pymontecarlo.output.importer import Importer
-from pymontecarlo.output.results import Results
+from pymontecarlo.results.importer import Importer
+from pymontecarlo.results.results import Results
 
 # Globals and constants variables.
 
@@ -92,6 +92,6 @@ class TestProgram(unittest.TestCase):
     def testalias(self):
         self.assertEqual('dummy', self.program.alias)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

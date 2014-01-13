@@ -27,7 +27,7 @@ from Queue import Empty
 
 # Local modules.
 from pymontecarlo.util.queue import Queue
-from pymontecarlo.output.results import Results
+from pymontecarlo.results.results import Results
 
 # Globals and constants variables.
 
@@ -57,12 +57,12 @@ class _Creator(object):
         """
         Puts an options in queue.
         The options are converted using the converter of this runner's program.
-        
+
         An :exc:`ValueError` is raised if an options with the same name was
-        already added. 
-        This error is raised as options with the same name would lead to 
+        already added.
+        This error is raised as options with the same name would lead to
         results been overwritten.
-        
+
         :arg options: options to be added to the queue
         """
         base_options = options
@@ -96,14 +96,14 @@ class _Creator(object):
 
     def stop(self):
         """
-        Stops all running simulations. 
+        Stops all running simulations.
         The simulations can be restarted by calling :meth:`start`.
         """
         raise NotImplementedError
 
     def close(self):
         """
-        Stops all running simulations and closes the runner. 
+        Stops all running simulations and closes the runner.
         The runner cannot be restarted after calling :meth:`close`.
         """
         raise NotImplementedError
@@ -146,14 +146,14 @@ class _Runner(_Creator):
     def __init__(self, program):
         """
         Creates a new runner to run several simulations.
-        
+
         Use :meth:`put` to add simulation to the run and then use the method
-        :meth:`start` to start the simulation(s). 
-        Status of the simulations can be retrieved using the method 
-        :meth:`report`. 
+        :meth:`start` to start the simulation(s).
+        Status of the simulations can be retrieved using the method
+        :meth:`report`.
         The method :meth:`join` before closing an application to ensure that
         all simulations were run and all workers are stopped.
-        
+
         :arg program: program used to run the simulations
         """
         _Creator.__init__(self, program)
@@ -167,7 +167,7 @@ class _Runner(_Creator):
         the results.
         The order of the results may not match the order in which they were
         put in queue.
-        
+
         :rtype: :class:`list` of :class:`.Results`
         """
         self.join()
@@ -218,11 +218,11 @@ class _CreatorDispatcher(threading.Thread):
     def report(self):
         """
         Returns a tuple of:
-        
+
           * counter of completed simulations
-          * the progress of *one* of the currently running simulations 
+          * the progress of *one* of the currently running simulations
               (between 0.0 and 1.0)
-          * text indicating the status of *one* of the currently running 
+          * text indicating the status of *one* of the currently running
               simulations
         """
         return 0.0, ''

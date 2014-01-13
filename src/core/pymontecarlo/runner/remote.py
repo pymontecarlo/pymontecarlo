@@ -33,9 +33,9 @@ import paramiko
 # Local modules.
 from pymontecarlo.runner.base import _RunnerDispatcher, _Runner
 
-from pymontecarlo.output.results import Results
+from pymontecarlo.results.results import Results
 
-import pymontecarlo.input.xmlmapper as xmlmapper
+import pymontecarlo.options.xmlmapper as xmlmapper
 
 # Globals and constants variables.
 
@@ -165,10 +165,10 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
         """
         Launches the simulations.
         Returns a set of job ids corresponding to the submitted simulations.
-        
-        :arg remote_filepaths: location of options file (.xml) on the 
+
+        :arg remote_filepaths: location of options file (.xml) on the
             remote host
-        
+
         :return: job ids of the submitted simulations
         :rtype: :class:`set`
         """
@@ -178,12 +178,12 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
         """
         Returns the progress of the simulations with the specified job ids.
         The progress is returned as three :class:`set`:
-        
+
             * pending job ids
             * running job ids
             * completed or exited job ids
-        
-        :arg jobids: :class:`set` containing the job ids of the 
+
+        :arg jobids: :class:`set` containing the job ids of the
             submitted simulations
         """
         raise NotImplementedError
@@ -191,8 +191,8 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
     def _stop_simulations(self, jobids):
         """
         Stops the specified simulations.
-        
-        :arg jobids: :class:`set` containing the job ids of the 
+
+        :arg jobids: :class:`set` containing the job ids of the
             submitted simulations
         """
         raise NotImplementedError

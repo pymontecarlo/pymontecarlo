@@ -28,7 +28,7 @@ from optparse import OptionParser, OptionGroup
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.input.options import Options
+from pymontecarlo.options.options import Options
 
 from pymontecarlo.runner.local import LocalRunner, LocalCreator
 

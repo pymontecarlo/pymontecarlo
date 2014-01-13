@@ -20,7 +20,7 @@ import shutil
 from pymontecarlo.runner.platformlsf import PlatformLSFRemoteRunner
 from pymontecarlo.program.test_config import DummyProgram
 
-from pymontecarlo.input import Options
+from pymontecarlo.options import Options
 
 # Globals and constants variables.
 
@@ -54,6 +54,6 @@ class TestPlatformLSFRemoteRunner(unittest.TestCase):
 
         self.runner.join()
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
