@@ -43,7 +43,7 @@ class Program(object):
         :type converter_class: :class:`Converter <pymontecarlo.input.converter.Converter>`
         
         :arg worker_class: class of the worker
-        :type worker_class: :class:`Worker <pymontecarlo.runner.worker.Worker>`
+        :type worker_class: :class:`Worker <pymontecarlo.program.worker.Worker>`
         
         :arg exporter_class: class of the exporter
         :type exporter_class: :class:`Exporter <pymontecarlo.io.exporter.Exporter>`

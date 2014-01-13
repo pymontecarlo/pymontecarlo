@@ -20,7 +20,7 @@ import os
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.exporter import XMLExporter
+from pymontecarlo.program.exporter import XMLExporter
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.

@@ -16,7 +16,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.converter import Converter
+from pymontecarlo.program.converter import Converter
 
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
