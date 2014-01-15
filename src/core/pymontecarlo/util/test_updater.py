@@ -36,16 +36,19 @@ class MockUpdater(_Updater):
         self._updaters[1] = self._update_version1
 
     def _get_version(self, filepath):
-        text = open(filepath, 'r').read().strip()
+        with open(filepath, 'r') as fp:
+            text = fp.read().strip()
         return 1 if text == 'Hello' else 0
 
     def _validate(self, filepath):
-        text = open(filepath, 'r').read().strip()
+        with open(filepath, 'r') as fp:
+            text = fp.read().strip()
         if text != 'Hello':
-            raise AssertionError, 'Text not "Hello"'
+            raise AssertionError('Text not "Hello"')
 
     def _update_noversion(self, filepath):
-        open(filepath, 'w').write('Hello')
+        with open(filepath, 'w') as fp:
+            fp.write('Hello')
         return filepath
 
     def _update_version1(self, filepath):
@@ -60,10 +63,12 @@ class Test_Updater(TestCase):
         self.tmpdir = tempfile.mkdtemp()
 
         self.invalid_filepath = os.path.join(self.tmpdir, 'test1.txt')
-        open(self.invalid_filepath, 'w').write('Version 0 file, invalid')
+        with open(self.invalid_filepath, 'w') as fp:
+            fp.write('Version 0 file, invalid')
 
         self.valid_filepath = os.path.join(self.tmpdir, 'test2.txt')
-        open(self.valid_filepath, 'w').write('Hello')
+        with open(self.valid_filepath, 'w') as fp:
+            fp.write('Hello')
 
         # Updater
         self.updater = MockUpdater()
@@ -82,7 +87,8 @@ class Test_Updater(TestCase):
         backup_filepath = os.path.join(self.tmpdir, 'test1.txt.bak')
         self.assertTrue(os.path.exists(backup_filepath))
 
-        text = open(self.invalid_filepath, 'r').read().strip()
+        with open(self.invalid_filepath, 'r') as fp:
+            text = fp.read().strip()
         self.assertEqual('Hello', text)
 
     def testupdate_valid(self):
@@ -91,9 +97,10 @@ class Test_Updater(TestCase):
         backup_filepath = os.path.join(self.tmpdir, 'test2.txt.bak')
         self.assertTrue(os.path.exists(backup_filepath))
 
-        text = open(self.valid_filepath, 'r').read().strip()
+        with open(self.valid_filepath, 'r') as fp:
+            text = fp.read().strip()
         self.assertEqual('Hello', text)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

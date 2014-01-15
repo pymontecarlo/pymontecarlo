@@ -10,7 +10,7 @@
 .. inheritance-diagram:: pymontecarlo.ui.cli.console
 
 Generic interface to interact with the command line.
-A console implements easy functions to print error, warning, information 
+A console implements easy functions to print error, warning, information
 messages as well as to retrieve data from the user.
 """
 
@@ -26,7 +26,6 @@ import os
 import sys
 import textwrap
 import logging
-import warnings
 import traceback
 
 # Third party modules.
@@ -51,12 +50,12 @@ class ProgressBar(object):
         The progress bar displays two progresses: the number of tasks completed
         and the progress of each task.
         There is an example of the progress bar output::
-        
+
           Completed 1/5 | [###########             ] 45%% - Running task 1
-        
+
         Once created and initialized, the method :meth:`update` should be call
         to redraws the progress bar in the command line.
-        
+
         :arg console: console where the progress bar will be written
         :arg total: total number of tasks
         :arg fill_char: character used in the bar of the progress bar
@@ -81,7 +80,7 @@ class ProgressBar(object):
     def _create_bar_text(self, counter, progress, status):
         """
         Constructs the text for this progress bar.
-        
+
         :arg counter: number of completed tasks
         :arg progress: progress of the running task (0.0 to 1.0)
         :arg status: status of the running task
@@ -102,7 +101,7 @@ class ProgressBar(object):
     def update(self, counter, progress, status):
         """
         Updates the progress and status of this progress bar.
-        
+
         :arg counter: number of completed tasks
         :arg progress: progress of the running task (0.0 to 1.0)
         :arg status: status of the running task
@@ -164,7 +163,7 @@ class _Console(object):
         Creates a new console.
         The method :meth:`init` should be called to initialize the console
         after it is created.
-        
+
         :arg width: number of characters in one line [default: 80]
             Text exceeding this number of characters will be wrapped to multiple
             lines.
@@ -184,22 +183,19 @@ class _Console(object):
 
     def init(self):
         """
-        Initializes the console. 
-        This method grabs the control of warnings and logging. 
+        Initializes the console.
+        This method grabs the control of warnings and logging.
         All warnings or log message are redirected to the console.
         """
-        # Redirect warnings
-        def showwarning(message, category, filename, lineno, file=None, line=None):
-            name = category.__name__.replace('Warning', '')
-            self.print_warn('%s (%s)' % (message, name))
-        warnings.showwarning = showwarning
-
         # Redirect logging
         logger = logging.getLogger()
 
         logger.handlers = []
         handler = ConsoleLoggingHandler(self)
         logger.addHandler(handler)
+
+        # Redirect warnings
+        logging.captureWarnings(True)
 
     def _pre_print(self, stream, text, color):
         """
@@ -211,7 +207,7 @@ class _Console(object):
                eol=True, wrap=True, fill=True):
         """
         Prints a text.
-        
+
         :arg stream: where to write the text (usually, stdout or stderr)
         :arg text: text to print
         :arg color: color of the text [default: COLOR_DEFAULT]
@@ -251,25 +247,25 @@ class _Console(object):
         """
         pass
 
-    def print_error(self, text, exit=True):
+    def print_error(self, text, exit_=True):
         """
         Prints an error message in red.
-        
+
         :arg exit: whether to exit the program after writing the error message
             [default: ``True``]
         """
         self._print(self._stderr, 'Error: ' + text, color=COLOR_RED)
-        if exit: self.close(1)
+        if exit_: self.close(1)
 
-    def print_exception(self, exc, exit=True):
+    def print_exception(self, exc, exit_=True):
         """
         Prints an error message from an exception.
-        
+
         :arg exit: whether to exit the program after writing the error message
             [default: ``True``]
         """
         traceback.print_exc()
-        self.print_error(str(exc), exit)
+        self.print_error(str(exc), exit_)
 
     def print_warn(self, text):
         """
@@ -313,13 +309,13 @@ class _Console(object):
         If no answer is given and a default value is given, the default value
         is returned.
         Otherwise, an empty string is returned.
-        
+
         The answer can be validated with validators.
         A validator is a function taking the answer as its only argument.
         If the answer is invalid, the validator should raise an exception.
         In this situation, the question will be asked again until a valid
         answer is given.
-        
+
         :arg question: question to ask
         :arg default: default value when no answer is given
         :arg validators: :class:`list` of functions
@@ -333,7 +329,7 @@ class _Console(object):
 
         while True:
             self._print(self._stdout, text, COLOR_PURPLE, eol=False, fill=False)
-            answer = raw_input() or default
+            answer = input() or default
 
             if answer is None: answer = ''
             answer = answer.strip()
@@ -351,9 +347,9 @@ class _Console(object):
 
     def prompt_text(self, question, default=None, validators=None):
         """
-        Prompts for a textual value. 
+        Prompts for a textual value.
         Any answer is accepted, except an empty string.
-        
+
         :arg question: question to ask
         :arg default: default value when no answer is given
         :arg validators: :class:`list` of functions
@@ -364,7 +360,7 @@ class _Console(object):
 
         def _nonempty(answer):
             if not answer:
-                raise ValueError, 'Please enter some text.'
+                raise ValueError('Please enter some text.')
         validators.append(_nonempty)
 
         # Prompt
@@ -372,15 +368,15 @@ class _Console(object):
 
     def prompt_boolean(self, question, default=None, validators=None):
         """
-        Prompts for a boolean value. 
+        Prompts for a boolean value.
         Only the following answers are accepted: ``y``, ``yes``, ``n``, ``no``
         and their uppercase equivalents.
-        
+
         :arg question: question to ask
         :arg default: default value when no answer is given (either ``True`` or
             ``False``)
         :arg validators: :class:`list` of functions
-        
+
         :rtype: :class:`bool`
         """
         # Validators
@@ -389,7 +385,7 @@ class _Console(object):
 
         def _boolean(answer):
             if answer.upper() not in ('Y', 'YES', 'N', 'NO'):
-                raise ValueError, "Please enter either 'y' or 'n'"
+                raise ValueError("Please enter either 'y' or 'n'")
         validators.append(_boolean)
 
         # Default
@@ -406,8 +402,8 @@ class _Console(object):
         Prompts for a path to a file.
         If the ``should_exist`` flag is ``True``, the answer is valid if the
         specified file exists.
-        Otherwise, any non-empty answer is accepted. 
-        
+        Otherwise, any non-empty answer is accepted.
+
         :arg question: question to ask
         :arg default: default path when no answer is given
         :arg should_exist: whether to check if the specified path is a valid
@@ -423,18 +419,18 @@ class _Console(object):
         if ext is not None:
             def _extension(answer):
                 if os.path.splitext(answer)[1] != ext:
-                    raise ValueError, "Wrong extension: %s" % ext
+                    raise ValueError("Wrong extension: %s" % ext)
             validators.append(_extension)
 
         if mode is not None:
             def _mode(answer):
                 if not os.access(answer, mode):
-                    raise ValueError, "Wrong access mode"
+                    raise ValueError("Wrong access mode")
             validators.append(_mode)
 
         def _exists(answer):
             if should_exist and not os.path.isfile(answer):
-                raise ValueError, "Please enter an existing file"
+                raise ValueError("Please enter an existing file")
         validators.append(_exists)
 
         # Prompt
@@ -448,8 +444,8 @@ class _Console(object):
         Prompts for a path to a directory.
         If the ``should_exist`` flag is ``True``, the answer is valid if the
         specified directory exists.
-        Otherwise, any non-empty answer is accepted. 
-        
+        Otherwise, any non-empty answer is accepted.
+
         :arg question: question to ask
         :arg default: default path when no answer is given
         :arg should_exist: whether to check if the specified path is a valid
@@ -462,7 +458,7 @@ class _Console(object):
 
         def _exists(answer):
             if should_exist and not os.path.isdir(answer):
-                raise ValueError, "Please enter an existing file"
+                raise ValueError("Please enter an existing file")
         validators.append(_exists)
 
         # Prompt
@@ -472,13 +468,13 @@ class _Console(object):
 
     def prompt_float(self, question, default=None, validators=None):
         """
-        Prompts for a float value. 
+        Prompts for a float value.
         An answer is valid if it can be converted to a float.
-        
+
         :arg question: question to ask
-        :arg default: default value when no answer is given 
+        :arg default: default value when no answer is given
         :arg validators: :class:`list` of functions
-        
+
         :rtype: :class:`float`
         """
         # Validators
@@ -489,7 +485,7 @@ class _Console(object):
             try:
                 answer = float(answer)
             except ValueError:
-                raise ValueError, "Cannot convert %s to float" % answer
+                raise ValueError("Cannot convert %s to float" % answer)
         validators.append(_float)
 
         if default is not None: default = str(default)
@@ -499,13 +495,13 @@ class _Console(object):
 
     def prompt_int(self, question, default=None, validators=None):
         """
-        Prompts for a integer value. 
+        Prompts for a integer value.
         An answer is valid if it can be converted to a integer.
-        
+
         :arg question: question to ask
-        :arg default: default value when no answer is given 
+        :arg default: default value when no answer is given
         :arg validators: :class:`list` of functions
-        
+
         :rtype: :class:`int`
         """
         # Validators
@@ -516,7 +512,7 @@ class _Console(object):
             try:
                 answer = int(answer)
             except ValueError:
-                raise ValueError, "Cannot convert %s to integer" % answer
+                raise ValueError("Cannot convert %s to integer" % answer)
         validators.append(_int)
 
         if default is not None: default = str(default)
@@ -528,16 +524,16 @@ class _Console(object):
         """
         Closes the console and the program.
         It resets the logging and warnings settings to the default settings.
-        
+
         :arg retcode: return code sent to ``sys.exit``
         """
-        # Reset warnings
-        warnings.showwarning = warnings._show_warning
-
         # Reset logging basic configuration
         logger = logging.getLogger()
         logger.handlers = []
         logging.basicConfig()
+
+        # Reset warnings
+        logging.captureWarnings(False)
 
         sys.exit(retcode)
 

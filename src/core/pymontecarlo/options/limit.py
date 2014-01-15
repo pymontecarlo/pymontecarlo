@@ -36,9 +36,8 @@ from pymontecarlo.options.xmlmapper import \
 
 # Globals and constants variables.
 
-class _Limit(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class _Limit(object, metaclass=ParameterizedMetaClass):
+    pass
 
 class _TransitionsLimit(_Limit):
 
@@ -84,7 +83,7 @@ class ShowersLimit(_Limit):
         return '<ShowersLimit(showers=%s)>' % self.showers
 
 mapper.register(ShowersLimit, '{http://pymontecarlo.sf.net}showersLimit',
-                ParameterizedAttribute('showers', PythonType(long)))
+                ParameterizedAttribute('showers', PythonType(int)))
 
 _uncertainty_validator = \
     SimpleValidator(lambda unc: 0.0 < unc < 1.0,

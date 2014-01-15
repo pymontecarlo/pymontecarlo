@@ -43,9 +43,8 @@ from pymontecarlo.options.particle import ParticleType
 # Globals and constants variables.
 from pymontecarlo.options.particle import ELECTRON, PARTICLES
 
-class _Beam(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class _Beam(object, metaclass=ParameterizedMetaClass):
+    pass
 
 _energy_validator = SimpleValidator(lambda e: e > 0.0,
                                     "Energy must be greater than 0 eV.")
@@ -181,7 +180,7 @@ def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     elif axis.lower() == 'z':
         r = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
     else:
-        raise ValueError, "Unknown axis: %s" % axis
+        raise ValueError("Unknown axis: %s" % axis)
 
     return np.dot(r, direction)
 

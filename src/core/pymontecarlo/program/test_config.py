@@ -58,7 +58,7 @@ class DummyWorker(Worker):
         logging.info('Simulation run')
 
         if options.name.lower() == 'error':
-            raise RuntimeError, 'Options name == error'
+            raise RuntimeError('Options name == error')
 
         self._status = 'Completed'
         self._progress = 1.0

@@ -11,15 +11,15 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-from StringIO import StringIO
-from ConfigParser import SafeConfigParser
+from io import StringIO
+from configparser import ConfigParser as SafeConfigParser
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from config import ConfigParser
+from pymontecarlo.util.config import ConfigParser
 
 # Globals and constants variables.
 
@@ -91,9 +91,9 @@ class TestConfigParser(TestCase):
         self.c.write(output)
 
         # Read and test
-        input = StringIO(output.getvalue())
+        fp = StringIO(output.getvalue())
         parser = SafeConfigParser()
-        parser.readfp(input)
+        parser.read_file(fp)
 
         self.assertTrue(parser.has_section('section1'))
         self.assertTrue(parser.has_option('section1', 'option1'))
@@ -118,6 +118,6 @@ class TestConfigParser(TestCase):
         self.c.add_section('section3')
         self.assertTrue('section3' in self.c)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

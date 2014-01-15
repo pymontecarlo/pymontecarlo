@@ -23,7 +23,7 @@ __all__ = ['Results']
 # Standard library modules.
 import uuid
 from collections import Mapping, Sequence
-from StringIO import StringIO
+from io import BytesIO
 
 # Third party modules.
 import h5py
@@ -56,9 +56,9 @@ class _ResultsContainer(Mapping):
         freeze(self._options)
 
         self._results = {}
-        for key, result in results.iteritems():
+        for key, result in results.items():
             if key not in options.detectors:
-                raise KeyError, 'No detector found for result %s' % key
+                raise KeyError('No detector found for result %s' % key)
             self._results[key] = result
 
     def __repr__(self):
@@ -135,28 +135,28 @@ class Results(Sequence):
         try:
             # Check version
             if hdf5file.attrs['version'] != cls.VERSION:
-                raise IOError, "Incorrect version of results sequence. Only version %s is accepted" % \
-                        cls.VERSION
+                raise IOError("Incorrect version of results sequence. Only version %s is accepted" % \
+                              cls.VERSION)
 
             # Read results
             len_hdf5file = float(len(hdf5file))
 
             list_results = {}
-            for i, item in enumerate(hdf5file.iteritems()):
+            for i, item in enumerate(hdf5file.items()):
                 task.status = 'Reading results %i' % i
                 task.progress = i / len_hdf5file
                 identifier, hdf5group = item
 
                 # Options
                 task.status = 'Reading options'
-                fp = StringIO(hdf5group.attrs['options'])
+                fp = BytesIO(hdf5group.attrs['options'])
                 options = Options.load(fp)
 
                 # Load each result
                 len_hdf5group = float(len(hdf5group))
 
                 results = {}
-                for j, item in enumerate(hdf5group.iteritems()):
+                for j, item in enumerate(hdf5group.items()):
                     key, hdf5group2 = item
 
                     task.status = 'Loading %s' % key
@@ -166,17 +166,17 @@ class Results(Sequence):
                     results[key] = klass.__loadhdf5__(hdf5group, key)
 
                 # Results
-                list_results[identifier] = (options, results)
+                list_results[identifier.encode('ascii')] = (options, results)
 
             identifiers = hdf5file.attrs['identifiers']
             if len(identifiers) != len(list_results):
-                raise IOError, 'Number of identifiers do not match number of results'
+                raise IOError('Number of identifiers do not match number of results')
 
             list_results = [list_results[identifier] for identifier in identifiers]
 
             # Read options
             task.status = 'Reading base options'
-            fp = StringIO(hdf5file.attrs['options'])
+            fp = BytesIO(hdf5file.attrs['options'])
             options = Options.load(fp)
 
             return cls(options, list_results)
@@ -206,7 +206,7 @@ class Results(Sequence):
                 task.status = 'Saving results %i' % i
                 task.progress = i / len_self
 
-                identifier = uuid.uuid4().hex
+                identifier = uuid.uuid4().hex.encode('ascii')
                 identifiers.append(identifier)
 
                 hdf5group = hdf5file.create_group(identifier)
@@ -214,7 +214,7 @@ class Results(Sequence):
                 # Save each result
                 len_results = float(len(results))
 
-                for j, item in enumerate(results.iteritems()):
+                for j, item in enumerate(results.items()):
                     key, result = item
 
                     task.status = 'Saving result %s' % key
@@ -227,7 +227,7 @@ class Results(Sequence):
 
                 # Save options
                 task.status = 'Saving options'
-                fp = StringIO()
+                fp = BytesIO()
                 results.options.save(fp, pretty_print=False)
                 hdf5group.attrs['options'] = fp.getvalue()
 
@@ -235,7 +235,7 @@ class Results(Sequence):
 
             # Save options
             task.status = 'Saving options'
-            fp = StringIO()
+            fp = BytesIO()
             self.options.save(fp, pretty_print=False)
             hdf5file.attrs['options'] = fp.getvalue()
         finally:

@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 from collections import namedtuple
 import numbers
 import math
-from operator import add, sub, mul, div, neg
+from operator import add, sub, mul, truediv, neg
 
 # Third party modules.
 
@@ -31,7 +31,7 @@ from operator import add, sub, mul, div, neg
 # Globals and constants variables.
 
 class _vector(object):
-    
+
     def __str__(self):
         return '(' + ','.join(map(str, self)) + ')'
 
@@ -66,11 +66,11 @@ class _vector(object):
 
     __rmul__ = __mul__
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, numbers.Number):
             return self.__class__(*map(lambda x: x / other, self))
         else:
-            return self.__class__(*map(div, self, other))
+            return self.__class__(*map(truediv, self, other))
 
 #    def __rdiv__(self, other):
 #        if isinstance(other, numbers.Number):

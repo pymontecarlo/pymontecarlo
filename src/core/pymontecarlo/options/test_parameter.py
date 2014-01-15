@@ -25,9 +25,7 @@ from pymontecarlo.options.parameter import \
 
 # Globals and constants variables.
 
-class ParametrizedObject(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class ParametrizedObject(object, metaclass=ParameterizedMetaClass):
 
     param1 = Parameter(doc="Parameter 1")
     param2 = Parameter(SimpleValidator(lambda x: x > 0), doc='Parameter 2')

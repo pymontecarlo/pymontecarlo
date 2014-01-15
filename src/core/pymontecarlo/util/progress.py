@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import threading
 from operator import attrgetter
+from functools import total_ordering
 
 # Third party modules.
 
@@ -28,12 +29,13 @@ from operator import attrgetter
 
 # Globals and constants variables.
 
+@total_ordering
 class Task:
 
     def __init__(self, alias):
         """
         Creates a new task.
-        
+
         :arg alias: alias of task
         """
         self._alias = str(alias)
@@ -47,8 +49,11 @@ class Task:
     def __str__(self):
         return self._alias
 
-    def __cmp__(self, other):
-        return cmp(self.progress, other.progress)
+    def __lt__(self, other):
+        return self.progress < other.progress
+
+    def __eq__(self, other):
+        return self.progress == other.progress
 
     @property
     def progress(self):
@@ -90,7 +95,7 @@ class ProgressTracker:
     def start_task(self, alias=None):
         """
         Starts a new task.
-        
+
         :arg alias: alias of the task. If ``None``, the task is given a name based
             on its creation order.
         :type alias: :class:`str`
@@ -150,7 +155,7 @@ root = ProgressTracker()
 def start_task(alias=None):
     """
     Starts a new task.
-    
+
     :arg alias: alias of the task. If ``None``, the task is given a name based
         on its creation order.
     :type alias: :class:`str`

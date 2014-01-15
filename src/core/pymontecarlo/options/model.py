@@ -73,9 +73,9 @@ class ModelType(collections.Set):
         model = Model(self, *value)
 
         if name in self.__dict__:
-            raise ValueError, "Model '%s' is already registered" % name
+            raise ValueError("Model '%s' is already registered" % name)
         if model in self._models:
-            raise ValueError, "Model '%s' is already registered" % model
+            raise ValueError("Model '%s' is already registered" % model)
 
         self._models.add(model)
         self._modelnames[model.name] = model

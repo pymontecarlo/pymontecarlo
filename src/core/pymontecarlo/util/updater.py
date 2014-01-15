@@ -42,7 +42,7 @@ class _Updater(object):
     def update(self, filepath, validate=True):
         """
         Updates the specified file to the most current file format.
-        
+
         :arg filepath: path to the file to be updated
         :arg validate: whether to validate the updated file [default:``True``]
         """
@@ -50,7 +50,7 @@ class _Updater(object):
 
         updater = self._updaters.get(version)
         if not updater:
-            raise ValueError, "Cannot update %s" % filepath
+            raise ValueError("Cannot update %s" % filepath)
 
         bak_filepath = self._make_backup(filepath)
         logging.debug("Backup at %s", bak_filepath)
@@ -67,9 +67,9 @@ class _Updater(object):
     def _make_backup(self, filepath):
         """
         Creates a copy of the specified file.
-        
+
         :arg filepath: path to the original file
-        
+
         :return: filepath of the backup file
         """
         bak_filepath = filepath + '.bak'
@@ -80,8 +80,8 @@ class _Updater(object):
         """
         Returns the version of the file.
         The method should returns ``0`` if no version is found.
-        
-        :arg filepath: path to the file to be updated 
+
+        :arg filepath: path to the file to be updated
         """
         raise NotImplementedError
 
@@ -89,7 +89,7 @@ class _Updater(object):
         """
         Validates the updated file.
         The method should raise an exception if the file is not valid.
-        
+
         :arg filepath: path to the updated file
         """
         pass

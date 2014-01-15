@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ """
 
 # Script information for the file.
@@ -49,7 +48,7 @@ mapper.register(Human, 'human',
                 ElementDict('attributes', PythonType(str), PythonType(str), keyxmlname='_key'))
 
 class Family(object):
-    
+
     def __init__(self, father, mother, status='Married'):
         self.father = father
         self.mother = mother
@@ -182,6 +181,6 @@ class TestXMLMapper(unittest.TestCase):
 
         self.assertIs(family.father, family.mother)
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

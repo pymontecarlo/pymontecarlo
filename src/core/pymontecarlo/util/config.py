@@ -9,11 +9,11 @@
 
 .. inheritance-diagram:: pymontecarlo.util.config
 
-Configuration parser to read INI type files. 
+Configuration parser to read INI type files.
 This parser differs slightly from those available in the :mod:`ConfigParser`
 module as the sections, options and values can be accessed using attributes
 instead of getters and setters.
-While the access of the data is different, this class uses the 
+While the access of the data is different, this class uses the
 :class:`SafeConfigParser` of the :mod:`ConfigParser` module to read and
 write configuration file.
 
@@ -26,10 +26,10 @@ Let's take the configuration file::
   [section1]
   option1=value1
   option2=value2
-  
+
   [section2]
   option3 = value3
-  
+
 To load the configuration file, use the :meth:`read` method::
 
   >>> config = ConfigParser()
@@ -96,7 +96,7 @@ __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from ConfigParser import SafeConfigParser
+from configparser import ConfigParser as _ConfigParser
 
 # Third party modules.
 
@@ -109,7 +109,7 @@ class _Section(object):
         self.__dict__.update(options)
 
     def __iter__(self):
-        for option_name, value in self.__dict__.iteritems():
+        for option_name, value in self.__dict__.items():
             yield option_name, value
 
     def __contains__(self, option_name):
@@ -124,7 +124,7 @@ class ConfigParser(object):
         return section_name in self.__dict__
 
     def __iter__(self):
-        for section_name, section in self.__dict__.iteritems():
+        for section_name, section in self.__dict__.items():
             for option_name, value in section:
                 yield section_name, option_name, value
 
@@ -132,7 +132,7 @@ class ConfigParser(object):
         """
         Adds a new section if the specified section name doesn't exist.
         Does nothing if the section already exists.
-        
+
         :return: section
         """
         if section_name not in self.__dict__:
@@ -142,23 +142,23 @@ class ConfigParser(object):
     def read(self, fileobj, ignore_errors=False):
         """
         Reads the configuration from the file object.
-        
-        If ``ignore_errors`` is ``True`` and a section or option starts with 
+
+        If ``ignore_errors`` is ``True`` and a section or option starts with
         a number, a :exc:`IOError` exception is raised.
-        If not, these sections or options are skipped. 
-        
+        If not, these sections or options are skipped.
+
         :arg fileobj: file object
-        :arg ignore_errors: whether to raise exception or skip invalid 
+        :arg ignore_errors: whether to raise exception or skip invalid
             section(s) and option(s)
         """
-        parser = SafeConfigParser()
-        parser.readfp(fileobj)
+        parser = _ConfigParser()
+        parser.read_file(fileobj)
 
         for section in parser.sections():
             if section[0].isdigit():
                 if ignore_errors:
                     continue
-                raise IOError, "Section name (%s) cannot start with a digit" % section
+                raise IOError("Section name (%s) cannot start with a digit" % section)
 
             options = {}
 
@@ -166,7 +166,7 @@ class ConfigParser(object):
                 if option[0].isdigit():
                     if ignore_errors:
                         continue
-                    raise IOError, "Option name (%s) cannot start with a digit" % option
+                    raise IOError("Option name (%s) cannot start with a digit" % option)
 
                 options[option] = parser.get(section, option)
 
@@ -175,10 +175,10 @@ class ConfigParser(object):
     def write(self, fileobj):
         """
         Writes the configuration inside the file object.
-        
+
         :arg fileobj: file object
         """
-        parser = SafeConfigParser()
+        parser = _ConfigParser()
 
         # Add sections
         for section_name in self.__dict__:

@@ -93,19 +93,19 @@ class PhotonIntensityResult(_Result):
         # Check structure
         def _check1(transition, data, key1, name1):
             if key1 not in data:
-                raise ValueError, "Transition %s is missing %s intensities" % \
-                        (transition, name1)
+                raise ValueError("Transition %s is missing %s intensities" % \
+                        (transition, name1))
 
         def _check2(transition, data, key1, name1, key2, name2):
             if key2 not in data[key1]:
-                raise ValueError, "Transition %s is missing %s %s intensities" % \
-                        (transition, name1, name2)
+                raise ValueError("Transition %s is missing %s %s intensities" % \
+                        (transition, name1, name2))
 
             if len(data[key1][key2]) != 2:
-                raise ValueError, 'Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
-                    (transition, name1, name2)
+                raise ValueError('Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
+                                 (transition, name1, name2))
 
-        for transition, data in intensities.iteritems():
+        for transition, data in intensities.items():
             _check1(transition, data, GENERATED, 'generated')
             _check1(transition, data, EMITTED, 'emitted')
 
@@ -127,7 +127,7 @@ class PhotonIntensityResult(_Result):
 
         intensities = {}
 
-        for transition, dataset in hdf5group.iteritems():
+        for transition, dataset in hdf5group.items():
             transition = from_string(str(transition))
 
             gcf = dataset.attrs['gcf']
@@ -149,7 +149,7 @@ class PhotonIntensityResult(_Result):
     def __savehdf5__(self, hdf5file, key):
         hdf5group = hdf5file.require_group(key)
 
-        for transition, intensities in self._intensities.iteritems():
+        for transition, intensities in self._intensities.items():
             dataset = hdf5group.create_dataset(str(transition), shape=())
 
             dataset.attrs['gcf'] = intensities[GENERATED][CHARACTERISTIC]
@@ -166,7 +166,7 @@ class PhotonIntensityResult(_Result):
         return self.has_intensity(transition)
 
     def _get_intensity(self, key, transition, absorption=True):
-        if isinstance(transition, basestring):
+        if isinstance(transition, str):
             transition = from_string(transition)
 
         # Get intensity data
@@ -180,12 +180,12 @@ class PhotonIntensityResult(_Result):
                         data.append(self._intensities[t])
 
             if not data:
-                raise ValueError, "No intensity for transition(s): %s" % transition
+                raise ValueError("No intensity for transition(s): %s" % transition)
         else: # single transition
             try:
                 data.append(self._intensities[transition])
             except KeyError:
-                raise ValueError, "No intensity for transition(s): %s" % transition
+                raise ValueError("No intensity for transition(s): %s" % transition)
 
         # Retrieve intensity (and its uncertainty)
         absorption_key = EMITTED if absorption else GENERATED
@@ -209,7 +209,7 @@ class PhotonIntensityResult(_Result):
         :arg transition: transition or set of transitions or name of the
             transition or transitions set (see examples in :meth:`.intensity`)
         """
-        if isinstance(transition, basestring):
+        if isinstance(transition, str):
             transition = from_string(transition)
 
         # Get intensity data
@@ -225,7 +225,7 @@ class PhotonIntensityResult(_Result):
             if not data:
                 return False
         else: # single transition
-            if not self._intensities.has_key(transition):
+            if transition not in self._intensities:
                 return False
 
         return True
@@ -388,14 +388,14 @@ class PhotonSpectrumResult(_Result):
         """
         def _check(data):
             if data.shape[1] < 2:
-                raise ValueError, 'The data must contains at least two columns'
+                raise ValueError('The data must contains at least two columns')
             if data.shape[1] == 2:
                 data = np.append(data, np.zeros((data.shape[0], 1)), 1)
 
             return data
 
         if not np.allclose(total[:, 0], background[:, 0]):
-            raise ValueError, 'Energies are different for the total and background array'
+            raise ValueError('Energies are different for the total and background array')
 
         _Result.__init__(self)
 
@@ -499,7 +499,7 @@ def create_photondist_dict(transition, gnf=None, gt=None, enf=None, et=None):
     """
     def _check(data):
         if data.shape[1] < 2:
-            raise ValueError, 'The data must contains at least two columns'
+            raise ValueError('The data must contains at least two columns')
         if data.shape[1] == 2:
             data = np.append(data, np.zeros((data.shape[0], 1)), 1)
 
@@ -536,15 +536,15 @@ class _PhotonDistributionResult(_Result):
         hdf5group = hdf5file[key]
 
         data = {}
-        for transition, group in hdf5group.iteritems():
+        for transition, group in hdf5group.items():
             transition = from_string(str(transition))
 
-            for suffix, dataset in group.iteritems():
+            for suffix, dataset in group.items():
                 data.setdefault(transition, {})[suffix] = np.copy(dataset)
 
         # Construct distributions
         distributions = {}
-        for transition, datum in data.iteritems():
+        for transition, datum in data.items():
             distributions.update(create_photondist_dict(transition, **datum))
 
         return cls(distributions)
@@ -573,7 +573,7 @@ class _PhotonDistributionResult(_Result):
             distribution with fluorescence is returned, if ``False``
             distribution without fluorescence.
         """
-        if isinstance(transition, basestring):
+        if isinstance(transition, str):
             transition = from_string(transition)
 
         if transition not in self._distributions:
@@ -610,12 +610,12 @@ class _PhotonDistributionResult(_Result):
         :raise: :class:`ValueError` if there is no distribution for the
             specified transition.
         """
-        if isinstance(transition, basestring):
+        if isinstance(transition, str):
             transition = from_string(transition)
 
         # Check existence
         if not self.exists(transition, absorption, fluorescence):
-            raise ValueError, "No distribution for transition(s): %s" % transition
+            raise ValueError("No distribution for transition(s): %s" % transition)
 
         # Retrieve data
         absorption_key = EMITTED if absorption else GENERATED
@@ -881,7 +881,7 @@ class TimeResult(_Result):
         self._simulation_time_s = simulation_time_s
 
         if len(simulation_speed_s) != 2:
-            raise ValueError, "Simulation speed must be a tuple (value, uncertainty)"
+            raise ValueError("Simulation speed must be a tuple (value, uncertainty)")
         self._simulation_speed_s = simulation_speed_s
 
     @classmethod
@@ -943,15 +943,15 @@ class ElectronFractionResult(_Result):
         _Result.__init__(self)
 
         if len(absorbed) != 2:
-            raise ValueError, "Absorbed fraction must be a tuple (value, uncertainty)"
+            raise ValueError("Absorbed fraction must be a tuple (value, uncertainty)")
         self._absorbed = absorbed
 
         if len(backscattered) != 2:
-            raise ValueError, "Backscattered fraction must be a tuple (value, uncertainty)"
+            raise ValueError("Backscattered fraction must be a tuple (value, uncertainty)")
         self._backscattered = backscattered
 
         if len(transmitted) != 2:
-            raise ValueError, "Transmitted fraction must be a tuple (value, uncertainty)"
+            raise ValueError("Transmitted fraction must be a tuple (value, uncertainty)")
         self._transmitted = transmitted
 
     @classmethod
@@ -1111,7 +1111,7 @@ class TrajectoryResult(_Result, Iterable, Sized):
         task = progress.start_task()
         task.status = 'Loading trajectories'
 
-        for i, dataset in enumerate(hdf5file[key].itervalues()):
+        for i, dataset in enumerate(hdf5file[key].values()):
             task.progress = i / size
 
             primary = bool(dataset.attrs['primary'])
@@ -1200,7 +1200,7 @@ class _ChannelsResult(_Result):
         _Result.__init__(self)
 
         if data.shape[1] < 2:
-            raise ValueError, 'The data must contains at least two columns'
+            raise ValueError('The data must contains at least two columns')
         if data.shape[1] == 2:
             data = np.append(data, np.zeros((data.shape[0], 1)), 1)
 

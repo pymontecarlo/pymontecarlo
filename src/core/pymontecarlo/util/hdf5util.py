@@ -31,7 +31,7 @@ def copy_attrs(src, dest):
     """
     Copies attributes from source to destination.
     """
-    for key, value in src.attrs.iteritems():
+    for key, value in src.attrs.items():
         dest.attrs[key] = value
 
 def copy(src, dest):

@@ -47,7 +47,7 @@ class build_py(_build_py):
                 init_filepath = os.path.join(packagedir, '__init__.py')
 
                 if not os.path.exists(init_filepath):
-                    print 'creating missing %s' % init_filepath
+                    print('creating missing %s' % init_filepath)
                     open(init_filepath, 'w').close()
 
 class clean(_clean):

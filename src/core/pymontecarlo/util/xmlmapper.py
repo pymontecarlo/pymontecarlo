@@ -68,7 +68,7 @@ class PythonType(_XMLType):
             elif value == 'false':
                 return False
             else:
-                raise ValueError, 'Incorrect boolean value: %s' % value
+                raise ValueError('Incorrect boolean value: %s' % value)
 
         return self._type(value)
 
@@ -127,7 +127,7 @@ class _XMLItem(object):
                     manager.is_registered(klass=values.__class__):
                 values = [values]
 
-        return map(self.type_.to_xml, values)
+        return list(map(self.type_.to_xml, values))
 
     def _update_element(self, element, values, manager, cache):
         raise NotImplementedError
@@ -140,7 +140,7 @@ class _XMLItem(object):
         raise NotImplementedError
 
     def _set_object_values(self, obj, values):
-        values = map(self.type_.from_xml, values)
+        values = list(map(self.type_.from_xml, values))
 
         if not values and self.optional:
             return
@@ -185,7 +185,7 @@ class Element(_XMLItem):
         text = []
         for value in values:
             if ',' in str(value):
-                raise ValueError, "Value %s contains ','. Cannot be serialised" % value
+                raise ValueError("Value %s contains ','. Cannot be serialised" % value)
             text.append(value)
         subelement.text = ','.join(text)
 
@@ -240,12 +240,12 @@ class ElementDict(Element):
                 raise
 
         keys = d.keys()
-        keys = map(self.keytype.to_xml, keys)
+        keys = list(map(self.keytype.to_xml, keys))
 
         values = d.values()
-        values = map(self.type_.to_xml, values)
+        values = list(map(self.type_.to_xml, values))
 
-        return zip(keys, values)
+        return list(zip(keys, values))
 
     def _update_element_usertype(self, subelement, values, manager, cache):
         for key, value in values:
@@ -269,11 +269,11 @@ class ElementDict(Element):
             subelement.append(subsubelement)
 
     def _set_object_values(self, obj, values):
-        keys = map(itemgetter(0), values)
-        keys = map(self.keytype.from_xml, keys)
+        keys = list(map(itemgetter(0), values))
+        keys = list(map(self.keytype.from_xml, keys))
 
-        values = map(itemgetter(1), values)
-        values = map(self.type_.from_xml, values)
+        values = list(map(itemgetter(1), values))
+        values = list(map(self.type_.from_xml, values))
 
         if not values and self.optional:
             return
@@ -311,7 +311,7 @@ class Attribute(_XMLItem):
         text = []
         for value in values:
             if ',' in str(value):
-                raise ValueError, "Value %s contains ','. Cannot be serialised" % value
+                raise ValueError("Value %s contains ','. Cannot be serialised" % value)
             text.append(value)
         text = ','.join(text)
 

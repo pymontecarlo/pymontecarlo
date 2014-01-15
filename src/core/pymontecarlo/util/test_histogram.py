@@ -11,7 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-from StringIO import StringIO
+from io import StringIO
 
 # Third party modules.
 
@@ -212,6 +212,6 @@ class TestSumHistogram(TestCase):
         self.h.add(1.0, 0.5)
         self.assertEqual([0.25 + 2.25, 0.25, 0, 0, 0], list(self.h.squares))
 
-if __name__ == '__main__': #pragma: no cover
+if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

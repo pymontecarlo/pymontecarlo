@@ -24,7 +24,7 @@ import csv
 import logging
 import tempfile
 import shutil
-from StringIO import StringIO
+from io import BytesIO
 from zipfile import ZipFile, is_zipfile
 from xml.etree.ElementTree import fromstring
 
@@ -65,7 +65,7 @@ def _update_options(source):
 
     # Open temporary file and write options in it.
     fd, tmpfilepath = tempfile.mkstemp('.xml')
-    with open(tmpfilepath, 'w') as fp:
+    with open(tmpfilepath, 'wb') as fp:
         fp.write(source)
 
     # Update
@@ -99,8 +99,8 @@ class Updater(_Updater):
 
     def _get_version(self, filepath):
         if is_zipfile(filepath):
-            with ZipFile(filepath, 'r') as zip:
-                comment = zip.comment
+            with ZipFile(filepath, 'r') as z:
+                comment = z.comment
 
             try:
                 return int(comment.split('=')[1])
@@ -112,7 +112,7 @@ class Updater(_Updater):
             hdf5file.close()
             return version
         else:
-            raise ValueError, "Unknown file format: %s" % filepath
+            raise ValueError("Unknown file format: %s" % filepath)
 
     def _make_backup(self, filepath):
         bak_filepath = _Updater._make_backup(self, filepath)
@@ -151,7 +151,7 @@ class Updater(_Updater):
             value = value.replace('pymontecarlo.result.base.result.', '')
             setattr(getattr(config, section), option, value)
 
-        fp = StringIO()
+        fp = BytesIO()
         config.write(fp)
         newzip.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
@@ -181,17 +181,17 @@ class Updater(_Updater):
         # Find options
         xmlfilepath = os.path.splitext(filepath)[0] + '.xml'
         if not os.path.exists(xmlfilepath):
-            raise ValueError, 'Update requires an options file saved at %s' % xmlfilepath
+            raise ValueError('Update requires an options file saved at %s' % xmlfilepath)
         with open(xmlfilepath, 'r') as fp:
             source = fp.read()
         source = _update_options(source)
-        options = Options.load(StringIO(source))
+        options = Options.load(BytesIO(source))
 
         oldzip = ZipFile(filepath, 'r')
         newzip = ZipFile(filepath + ".new", 'w')
 
         # Add options file
-        fp = StringIO()
+        fp = BytesIO()
         options.save(fp)
         newzip.writestr(OPTIONS_FILENAME, fp.getvalue())
 
@@ -377,7 +377,7 @@ class Updater(_Updater):
 
             trajectories = []
 
-            for dataset in hdf5file['trajectories'].itervalues():
+            for dataset in hdf5file['trajectories'].values():
                 primary = bool(dataset.attrs['primary'])
                 particle = particles_ref.get(dataset.attrs['particle'])
                 collision = collisions_ref.get(dataset.attrs['collision'])
@@ -414,19 +414,19 @@ class Updater(_Updater):
             try:
                 zipinfo = zipfile.getinfo(OPTIONS_FILENAME)
             except KeyError:
-                raise IOError, "Zip file (%s) does not contain a %s" % \
-                        (filepath, OPTIONS_FILENAME)
+                raise IOError("Zip file (%s) does not contain a %s" % \
+                              (filepath, OPTIONS_FILENAME))
             with zipfile.open(zipinfo, 'r') as fp:
                 source = fp.read()
             source = _update_options(source)
-            options = Options.load(StringIO(source))
+            options = Options.load(BytesIO(source))
 
             # Parse keys.ini
             try:
                 zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
             except KeyError:
-                raise IOError, "Zip file (%s) does not contain a %s" % \
-                        (filepath, KEYS_INI_FILENAME)
+                raise IOError("Zip file (%s) does not contain a %s" % \
+                              (filepath, KEYS_INI_FILENAME))
 
             config = ConfigParser()
             config.read(zipfile.open(zipinfo, 'r'))
@@ -478,7 +478,7 @@ class Updater(_Updater):
         # Find PRZ result (if any)
         przgroups = []
 
-        for result_group in hdf5file.itervalues():
+        for result_group in hdf5file.values():
             if result_group.attrs.get('_class') == 'PhiRhoZResult':
                 przgroups.append(result_group)
 
@@ -509,7 +509,7 @@ class Updater(_Updater):
 
         hdf5file.attrs['version'] = '6' # Change version
 
-        for result_group in hdf5file.itervalues():
+        for result_group in hdf5file.values():
             if result_group.attrs.get('_class') == 'PhiRhoZResult':
                 result_group.attrs['_class'] = 'PhotonDepthResult'
 

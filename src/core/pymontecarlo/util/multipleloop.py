@@ -254,15 +254,15 @@ def _outer(a, b):
 
         all = _outer(all, p)
     """
-    all = []
+    all_ = []
     if not isinstance(a, list):
         raise TypeError('a must be a list')
-    if isinstance(b, (float, int, complex, str)):  b = [b]  # scalar?
+    if isinstance(b, (float, int, complex, str)):  b = [b] # scalar?
 
     if len(a) == 0:
         # first call:
         for j in b:
-            all.append([j])
+            all_.append([j])
     else:
         for j in b:
             for i in a:
@@ -272,9 +272,9 @@ def _outer(a, b):
                 # the underlying list (in a), which is not what
                 # we want, we need a copy, extend the copy, and
                 # add to all
-                k = i + [j]  # extend previous prms with new one
-                all.append(k)
-    return all
+                k = i + [j] # extend previous prms with new one
+                all_.append(k)
+    return all_
 
 def combine(prm_values):
     """
@@ -312,12 +312,12 @@ def combine(prm_values):
         # turn dict into list [(name,values),(name,values),...]:
         prm_values = [(name, prm_values[name]) \
                       for name in prm_values]
-    all = []
+    all_ = []
     varied = []
     for name, values in prm_values:
-        all = _outer(all, values)
+        all_ = _outer(all_, values)
         if isinstance(values, list) and len(values) > 1:
             varied.append(name)
     names = [name for name, values in prm_values]
-    return all, names, varied
+    return all_, names, varied
 

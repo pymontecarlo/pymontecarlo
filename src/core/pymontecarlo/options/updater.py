@@ -118,7 +118,7 @@ class Updater(_Updater):
         else:
             root.set('version', '2')
 
-            with open(filepath, 'w') as fp:
+            with open(filepath, 'wb') as fp:
                 fp.write(tostring(root, pretty_print=True))
 
         return self._update_version2(filepath)
@@ -164,7 +164,7 @@ class Updater(_Updater):
                 collision = _COLLISIONS_REF[particle][int(element.get('collision'))]
                 element.set('collision', str(collision))
 
-        with open(filepath, 'w') as fp:
+        with open(filepath, 'wb') as fp:
             fp.write(tostring(root, pretty_print=True))
 
         return self._update_version3(filepath)
@@ -179,7 +179,7 @@ class Updater(_Updater):
         for element in elements:
             element.set('absorptionEnergyPositron', '50.0')
 
-        with open(filepath, 'w') as fp:
+        with open(filepath, 'wb') as fp:
             fp.write(tostring(root, pretty_print=True))
 
         return self._update_version4(filepath)
@@ -194,7 +194,7 @@ class Updater(_Updater):
             if element.tag == '{http://pymontecarlo.sf.net}phiRhoZDetector':
                 element.tag = '{http://pymontecarlo.sf.net}photonDepthDetector'
 
-        with open(filepath, 'w') as fp:
+        with open(filepath, 'wb') as fp:
             fp.write(tostring(root, pretty_print=True))
 
         return self._update_version5(filepath)

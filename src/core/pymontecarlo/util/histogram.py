@@ -21,7 +21,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import sys
 import bisect
-from itertools import izip
 
 # Third party modules.
 import numpy as np
@@ -38,10 +37,10 @@ class _Histogram:
     def __init__(self, bins):
         """
         Creates a new histogram. A histogram is used to store data in bins.
-        
-        :arg bins: first value of each bin. 
-            The last bin is used as an overflow for values greater or equal to 
-            its value. 
+
+        :arg bins: first value of each bin.
+            The last bin is used as an overflow for values greater or equal to
+            its value.
         :type bins: :class:`list`
         """
         self._bins = sorted(bins)
@@ -55,11 +54,11 @@ class _Histogram:
         return "Histogram(min=%s, max=%s, bins=%i)" % (minvalue, maxvalue, steps)
 
     def __iter__(self):
-        return izip([float('-inf')] + self._bins, self._values)
+        return zip([float('-inf')] + self._bins, self._values)
 
     def __iadd__(self, other):
         if self._bins != other._bins:
-            raise ValueError, "Histogram have different bins"
+            raise ValueError("Histogram have different bins")
 
         self._values += other._values
         return self
@@ -96,7 +95,7 @@ class _Histogram:
     @property
     def bins(self):
         """
-        Returns the bins. 
+        Returns the bins.
         Each value corresponds to the lower limit of each bin.
         """
         return np.array([float('-inf')] + self._bins)
@@ -112,7 +111,7 @@ class CountHistogram(_Histogram):
     def add(self, binvalue):
         """
         Adds a count to the specified bin.
-        
+
         :arg binvalue: value of the bin
         """
         self._values[self._bin(binvalue)] += 1
@@ -120,8 +119,8 @@ class CountHistogram(_Histogram):
     @property
     def counts(self):
         """
-        Number of counts. 
-        
+        Number of counts.
+
         The first value of the array is the underflow and the last one is the
         overflow.
         """
@@ -129,7 +128,7 @@ class CountHistogram(_Histogram):
 
 class SumHistogram(_Histogram):
     """
-    Histogram to sum the values in bins. 
+    Histogram to sum the values in bins.
     The sum of squares in also recorded.
     """
 
@@ -139,7 +138,7 @@ class SumHistogram(_Histogram):
         self._squares = np.zeros(len(bins) + 1) # + 1 for underflow
 
     def __iter__(self):
-        return izip([float('-inf')] + self._bins, self._values, self._squares)
+        return zip([float('-inf')] + self._bins, self._values, self._squares)
 
     def __iadd__(self, other):
         _Histogram.__iadd__(self, other)
@@ -156,7 +155,7 @@ class SumHistogram(_Histogram):
     def add(self, binvalue, value):
         """
         Adds the specified value to the specified bin.
-        
+
         :arg binvalue: value of the bin
         :arg value: value to add to the bin
         """
@@ -167,9 +166,9 @@ class SumHistogram(_Histogram):
     @property
     def sums(self):
         """
-        Returns the value of each bin. 
+        Returns the value of each bin.
         The values correspond to the sum of the values added.
-        
+
         The first value of the array is the underflow and the last one is the
         overflow.
         """
@@ -180,7 +179,7 @@ class SumHistogram(_Histogram):
         """
         Return the sum of squares of each bin.
         The values correspond to the sum of the square value added.
-        
+
         The first value of the array is the underflow and the last one is the
         overflow.
         """

@@ -67,7 +67,7 @@ class TestModule(TestCase):
     def testpure(self):
         m = pure(29)
 
-        self.assertEquals('Copper', str(m))
+        self.assertEqual('Copper', str(m))
 
         self.assertTrue(29 in m.composition)
         self.assertAlmostEqual(1.0, m.composition[29], 4)
@@ -87,7 +87,7 @@ class TestVACUUM(TestCase):
         TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEquals('Vacuum', str(VACUUM))
+        self.assertEqual('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
         self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[ELECTRON], 4)
@@ -185,8 +185,8 @@ class TestMaterial(TestCase):
     def testskeleton(self):
         self.assertTrue(True)
 
-        self.assertEquals('Pure Cu', str(self.m))
-        self.assertEquals('Pure Cu', self.m.name)
+        self.assertEqual('Pure Cu', str(self.m))
+        self.assertEqual('Pure Cu', self.m.name)
 
         self.assertTrue(29 in self.m.composition)
         self.assertEqual('?', self.m.composition[29])
@@ -291,7 +291,7 @@ class TestMaterial(TestCase):
         element = mapper.to_xml(self.m)
         m = mapper.from_xml(element)
 
-        self.assertEquals('Pure Cu', str(m))
+        self.assertEqual('Pure Cu', str(m))
 
         self.assertIn(29, m.composition)
         self.assertEqual('?', m.composition[29], 4)
@@ -307,7 +307,7 @@ class TestMaterial(TestCase):
     def testto_xml(self):
         element = mapper.to_xml(self.m)
 
-        self.assertEquals('Pure Cu', element.get('name'))
+        self.assertEqual('Pure Cu', element.get('name'))
 
         children = list(element.find('composition'))
         self.assertEqual(1, len(children))

@@ -130,7 +130,7 @@ class Converter(object):
         return True
 
     def _convert_detectors(self, options):
-        for key in options.detectors.keys():
+        for key in list(options.detectors.keys()):
             detector = options.detectors[key]
             clasz = detector.__class__
             if clasz not in self.DETECTORS:
@@ -148,7 +148,7 @@ class Converter(object):
         return True
 
     def _convert_limits(self, options):
-        for limit in options.limits:
+        for limit in list(options.limits):
             clasz = limit.__class__
             if clasz not in self.LIMITS:
                 options.limits.discard(limit)
@@ -164,7 +164,7 @@ class Converter(object):
         return True
 
     def _convert_models(self, options):
-        for model_type, default_model in self.DEFAULT_MODELS.iteritems():
+        for model_type, default_model in self.DEFAULT_MODELS.items():
             models = list(options.models.iterclass(model_type))
 
             # Add default model if model type is missing

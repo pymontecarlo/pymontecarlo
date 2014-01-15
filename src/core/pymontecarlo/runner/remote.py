@@ -24,7 +24,7 @@ import time
 import fnmatch
 import logging
 import posixpath
-from Queue import Empty
+from queue import Empty
 import threading
 
 # Third party modules.
@@ -112,8 +112,8 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
             _, _, stderr = self._client.exec_command(command)
             stderr = list(stderr)
             if stderr:
-                raise IOError, 'Error while creating work directory: %s' % \
-                        ''.join(stderr)
+                raise IOError('Error while creating work directory: %s' % \
+                              ''.join(stderr))
 
             # Transfer options
             remote_filepaths = []
@@ -230,7 +230,7 @@ class _RemoteRunner(_Runner):
 
     def start(self):
         if self._dispatcher is None:
-            raise RuntimeError, 'Runner is closed'
+            raise RuntimeError('Runner is closed')
 
         if not self._dispatcher.is_alive():
             self._dispatcher.start()

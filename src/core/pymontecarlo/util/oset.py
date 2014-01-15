@@ -60,7 +60,7 @@ class oset(MutableSet, MutableSequence):
         return set(self) == set(other)
 
     def __del__(self):
-        self.clear()                    # remove circular references
+        self.clear() # remove circular references
 
     def __getitem__(self, index):
         return self._sequence.__getitem__(index)
@@ -69,19 +69,19 @@ class oset(MutableSet, MutableSequence):
         if value not in self._sequence:
             self._sequence.__setitem__(index, value)
         else:
-            raise ValueError, "Set already contains value (%s)" % value
+            raise ValueError("Set already contains value (%s)" % value)
 
     def add(self, value):
         if value not in self._sequence:
             self._sequence.append(value)
         else:
-            raise ValueError, "Set already contains value (%s)" % value
+            raise ValueError("Set already contains value (%s)" % value)
 
     def insert(self, index, value):
         if value not in self._sequence:
             self._sequence.insert(index, value)
         else:
-            raise ValueError, "Set already contains value (%s)" % value
+            raise ValueError("Set already contains value (%s)" % value)
 
     def discard(self, value):
         self._sequence.remove(value)

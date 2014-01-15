@@ -76,4 +76,4 @@ def expand(options):
     for baseobj, name, value in iter_values(options):
         prm_values.setdefault((baseobj, name), []).append(value)
 
-    print prm_values
+    print(prm_values)

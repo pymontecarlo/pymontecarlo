@@ -95,7 +95,6 @@ class TestOptions(TestCase):
         self.ops.name = uname
 
         self.assertEqual(uname, self.ops.name)
-        self.assertEqual(uname, unicode(self.ops))
         self.assertEqual(uname, str(self.ops))
 
     def testuuid(self):

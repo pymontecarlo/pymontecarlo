@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import threading
 import atexit
-from Queue import Empty
+from queue import Empty
 
 # Third party modules.
 
@@ -68,13 +68,12 @@ class _Creator(object):
         base_options = options
         list_options = self._converter.convert(base_options)
         if not list_options:
-            raise ValueError, 'Options not compatible with this program'
+            raise ValueError('Options not compatible with this program')
 
         for options in list_options:
             name = options.name
             if name in self._options_names:
-                raise ValueError, \
-                        'An options with the name (%s) was already added' % name
+                raise ValueError('An options with the name (%s) was already added' % name)
 
             self._queue_options.put(options)
             self._options_names.append(name)
@@ -183,7 +182,7 @@ class _Runner(_Creator):
 
         # Separate results
         group_results = []
-        for base_options, uuids in self._options_lookup.iteritems():
+        for base_options, uuids in self._options_lookup.items():
             list_results = []
             for uuid in uuids:
                 results = raw_results[uuid]

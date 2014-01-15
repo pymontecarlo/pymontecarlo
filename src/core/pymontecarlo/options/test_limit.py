@@ -85,7 +85,7 @@ class TestUncertaintyLimit(TestCase):
 
     def testskeleton(self):
         self.assertEqual(1, len(self.lim.transitions))
-        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
+        self.assertEqual('Cu K\u03b11', str(list(self.lim.transitions)[0]))
         self.assertAlmostEqual(0.05, self.lim.uncertainty, 4)
 
     def testtransitions(self):
@@ -97,7 +97,7 @@ class TestUncertaintyLimit(TestCase):
         lim = mapper.from_xml(element)
 
         self.assertEqual(1, len(self.lim.transitions))
-        self.assertEqual('Cu Ka1', str(list(self.lim.transitions)[0]))
+        self.assertEqual('Cu K\u03b11', str(list(self.lim.transitions)[0]))
         self.assertAlmostEqual(0.05, lim.uncertainty, 4)
 
     def testto_xml(self):

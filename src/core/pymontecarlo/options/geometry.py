@@ -200,7 +200,7 @@ class _BodyXMLElement(_XMLItem):
         bodies_lookup = self._extract_values(element, manager)
         self._set_object_bodies(obj, element, bodies_lookup)
 
-class _Geometry(object):
+class _Geometry(object, metaclass=ParameterizedMetaClass):
     """
     Base class for all geometry representations.
 
@@ -210,8 +210,6 @@ class _Geometry(object):
     A geometry can only refer to a body once, but bodies can be defined using
     the same material.
     """
-
-    __metaclass__ = ParameterizedMetaClass
 
     tilt = AngleParameter(_tilt_validator,
                           "Specimen tilt in radians along the x-axis")
@@ -230,7 +228,7 @@ class _Geometry(object):
         :obj:`VACUUM` is not considered as a material, so this object will
         not appear in this list.
         """
-        materials = map(_MATERIAL_GETTER, self.get_bodies())
+        materials = list(map(_MATERIAL_GETTER, self.get_bodies()))
         materials = np.array(materials).flatten()
         materials = set(materials)
         materials.discard(VACUUM)
@@ -277,7 +275,7 @@ class Substrate(_Geometry):
         if body is self.body:
             return _Dimension(zmax=0.0)
         else:
-            raise ValueError, "Unknown body: %s" % body
+            raise ValueError("Unknown body: %s" % body)
 
 mapper.register(Substrate, '{http://pymontecarlo.sf.net}substrate',
                 ParameterizedElement('body', UserType(Body), 'substrate'))
@@ -319,7 +317,7 @@ class Inclusion(_Geometry):
             radius = self.inclusion_diameter_m / 2.0
             return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
         else:
-            raise ValueError, "Unknown body: %s" % body
+            raise ValueError("Unknown body: %s" % body)
 
 mapper.register(Inclusion, '{http://pymontecarlo.sf.net}inclusion',
                 ParameterizedElement('substrate_body', UserType(Body), 'substrate'),
@@ -424,7 +422,7 @@ class MultiLayers(_LayeredGeometry):
             zmin = -sum(map(_THICKNESS_GETTER, self.layers[:indexbottom]))
             return _Dimension(zmin=zmin, zmax=zmax)
         else:
-            raise ValueError, "Unknown body: %s" % body
+            raise ValueError("Unknown body: %s" % body)
 
 mapper.register(MultiLayers, '{http://pymontecarlo.sf.net}multiLayers',
                 ParameterizedElement('substrate_body', UserType(Body), 'substrate'))
@@ -466,7 +464,7 @@ class GrainBoundaries(_LayeredGeometry):
         return bodies
 
     def get_dimensions(self, body):
-        thicknesses = map(_THICKNESS_GETTER, self.layers)
+        thicknesses = list(map(_THICKNESS_GETTER, self.layers))
 
         positions = []
         if thicknesses: # simple couple
@@ -488,7 +486,7 @@ class GrainBoundaries(_LayeredGeometry):
                               xmax=positions[indexright],
                               zmax=0)
         else:
-            raise ValueError, "Unknown body: %s" % body
+            raise ValueError("Unknown body: %s" % body)
 
 mapper.register(GrainBoundaries, '{http://pymontecarlo.sf.net}grainBoundaries',
                 ParameterizedElement('left_body', UserType(Body), 'left'),
@@ -566,7 +564,7 @@ class Sphere(_Geometry):
                               ymin=-r, ymax=r,
                               zmin=-d, zmax=0.0)
         else:
-            raise ValueError, "Unknown body: %s" % body
+            raise ValueError("Unknown body: %s" % body)
 
 mapper.register(Sphere, '{http://pymontecarlo.sf.net}sphere',
                 ParameterizedElement('body', UserType(Body), 'body'),

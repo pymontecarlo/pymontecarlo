@@ -99,7 +99,7 @@ class Settings(ConfigParser):
     def get_program(self, alias, validate=True):
         """
         Imports, loads, validates and returns a program.
-        
+
         :arg name: name of the program's module (e.g. ``penepma`` or ``winxray``)
         :arg validate: whether to validate if all the settings are correct for the
             program
@@ -113,17 +113,17 @@ class Settings(ConfigParser):
 
                 return program
 
-        raise ValueError, 'Program %s not found' % alias
+        raise ValueError('Program %s not found' % alias)
 
     def get_program_cli(self, program):
         """
         Imports, loads and returns the command line interface of the specified
         program.
         The method raises :exc:`ImportError` exception if:
-    
+
           * No ``config_cli.py`` module exists in program package.
           * No ``cli`` variable exists in ``config_cli.py`` module.
-    
+
         :arg program: program configuration object or alias
         """
         if isinstance(program, Program):
@@ -135,17 +135,17 @@ class Settings(ConfigParser):
             if handler.name == alias:
                 return handler.load()
 
-        raise ValueError, 'Program CLI %s not found' % alias
+        raise ValueError('Program CLI %s not found' % alias)
 
     def get_program_gui(self, program):
         """
         Imports, loads and returns the graphical user interface of the specified
         program.
         The method raises :exc:`ImportError` exception if:
-    
+
           * No ``config_cli.py`` module exists in program package.
           * No ``cli`` variable exists in ``config_cli.py`` module.
-    
+
         :arg program: program configuration object or alias
         """
         if isinstance(program, Program):
@@ -157,7 +157,7 @@ class Settings(ConfigParser):
             if handler.name == alias:
                 return handler.load()
 
-        raise ValueError, 'Program GUI %s not found' % alias
+        raise ValueError('Program GUI %s not found' % alias)
 
     def write(self):
         dirpath = os.path.join(os.path.expanduser('~'), '.pymontecarlo')

@@ -43,7 +43,7 @@ class _PlatformLSFRemoteDispatcher(_RemoteRunnerDispatcher):
                                    connection_dict, remote_workdir, local_outputdir)
 
         if runtime_limit > timedelta(days=1):
-            raise ValueError, "Run time must be less than 24 hours"
+            raise ValueError("Run time must be less than 24 hours")
         self._runtime_limit = runtime_limit
         self._memory_limit = memory_limit
         self._email = email
@@ -89,7 +89,7 @@ class _PlatformLSFRemoteDispatcher(_RemoteRunnerDispatcher):
 
                 stdout = list(stdout)
                 if not stdout:
-                    raise IOError, "Problem in submitting job"
+                    raise IOError("Problem in submitting job")
 
                 jobid = int(self._JOBID_PATTERN.findall(stdout[0])[0])
                 logging.debug("jobid: %i", jobid)

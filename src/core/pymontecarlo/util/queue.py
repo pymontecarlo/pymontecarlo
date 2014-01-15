@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import sys
 import traceback
-from Queue import Queue as _Queue
+from queue import Queue as _Queue
 
 # Third party modules.
 

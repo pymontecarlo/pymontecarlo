@@ -52,7 +52,7 @@ class Importer(object):
         :arg outputdir: full path to output directory
         """
         if not os.path.isdir(dirpath):
-            raise ValueError, "Specified path (%s) is not a directory" % dirpath
+            raise ValueError("Specified path (%s) is not a directory" % dirpath)
         return self._import(options, dirpath, *args, **kwargs)
 
     @abstractmethod

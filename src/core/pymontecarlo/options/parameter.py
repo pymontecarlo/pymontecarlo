@@ -48,10 +48,11 @@ class ParameterizedMetaClass(type):
             parameters.update(base.__parameters__)
 
         # Attach attribute names to parameters
-        for key, value in methods.items():
-            if isinstance(value, Parameter):
-                value._new(cls, clsname, bases, methods, key)
-                parameters[value.name] = value
+        for key, value in list(methods.items()):
+            if not isinstance(value, Parameter):
+                continue
+            value._new(cls, clsname, bases, methods, key)
+            parameters[value.name] = value
 
         # Add __parameters__ attribute
         methods['__parameters__'] = parameters
@@ -91,7 +92,7 @@ class _ParameterValuesWrapper(object):
         return self.__class__([v * other if v is not None else None \
                                for v in self._values])
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self.__class__([v / other if v is not None else None \
                                for v in self._values])
 
@@ -178,8 +179,8 @@ class Parameter(object):
         return self._get_wrapper(obj, objtype).get()
 
     def _get_wrapper(self, obj, objtype=None):
-        if not obj.__dict__.has_key(self.name):
-            raise AttributeError, "No value"
+        if self.name not in obj.__dict__:
+            raise AttributeError("No value")
         return obj.__dict__[self.name]
 
     def __set__(self, obj, values):
@@ -189,7 +190,7 @@ class Parameter(object):
 
     def _create_wrapper(self, obj, values):
         if obj.__dict__.get(self.name, _PASS_WRAPPER).is_frozen():
-            raise AttributeError, "Frozen parameter"
+            raise AttributeError("Frozen parameter")
 
         if not isinstance(values, list):
             values = (values,)
@@ -240,7 +241,7 @@ class FrozenParameter(Parameter):
         self._klass_kwargs = kwargs
 
     def _get_wrapper(self, obj, objtype=None):
-        if not obj.__dict__.has_key(self.name):
+        if not self.name in obj.__dict__:
             value = self._value
             if inspect.isclass(value):
                 value = self._value(*self._klass_args, **self._klass_kwargs)
@@ -250,7 +251,7 @@ class FrozenParameter(Parameter):
         return obj.__dict__[self.name]
 
     def __set__(self, obj, values):
-        raise AttributeError, "Frozen parameter (%s)" % self._name
+        raise AttributeError("Frozen parameter (%s)" % self._name)
 
 class ParameterAlias(object):
 
@@ -351,7 +352,7 @@ class ParameterizedMutableSet(MutableSet):
     def discard(self, item):
         key = self._get_key(item)
         if key not in self.__parameters__:
-            raise KeyError, key
+            raise KeyError(key)
         del self.__parameters__[key]
         del self.__dict__[key]
 
@@ -390,7 +391,7 @@ class ParameterizedMutableSequence(MutableSequence):
         for index in range(*s.indices(len(self.__parameters__))):
             key = self._get_key(index)
             if key not in self.__parameters__:
-                raise IndexError, index
+                raise IndexError(index)
             parameter = self.__parameters__[key]
             values.append(parameter.__get__(self))
 
@@ -401,7 +402,7 @@ class ParameterizedMutableSequence(MutableSequence):
     def __setitem__(self, index, value):
         key = self._get_key(index)
         if key not in self.__parameters__:
-            raise IndexError, index
+            raise IndexError(index)
         parameter = self.__parameters__[key]
         parameter.__set__(self, value)
 
@@ -412,7 +413,7 @@ class ParameterizedMutableSequence(MutableSequence):
         for index in range(*s.indices(len(self.__parameters__))):
             key = self._get_key(index)
             if key not in self.__parameters__:
-                raise IndexError, index
+                raise IndexError(index)
             del self.__parameters__[key]
             del self.__dict__[key]
 
@@ -458,12 +459,12 @@ class ParameterizedMutableMapping(MutableMapping):
 
     def __getitem__(self, key):
         if key not in self.__parameters__:
-            raise KeyError, key
+            raise KeyError(key)
         return self.__parameters__[key].__get__(self)
 
     def __delitem__(self, key):
         if key not in self.__parameters__:
-            raise KeyError, key
+            raise KeyError(key)
         del self.__dict__[key]
         del self.__parameters__[key]
 
@@ -563,7 +564,7 @@ class UnitParameter(Parameter):
         parameter = methods.pop(name)
         methods[name + '_' + self._unit] = parameter
 
-        for prefix, factor in self._prefix.iteritems():
+        for prefix, factor in self._prefix.items():
             methods['%s_%s%s' % (name, prefix, self._unit)] = \
                 FactorParameterAlias(parameter, factor)
 
@@ -595,7 +596,7 @@ class TimeParameter(Parameter):
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
 
-        for unit, factor in self._factors.iteritems():
+        for unit, factor in self._factors.items():
             methods['%s_%s' % (name, unit)] = \
                 FactorParameterAlias(parameter, factor)
 
@@ -633,13 +634,13 @@ class SimpleValidator(_Validator):
             is not valid
         """
         if not callable(func):
-            raise ValueError, "Validation function must be callable"
+            raise ValueError("Validation function must be callable")
         self._func = func
         self._message = message
 
     def validate(self, value):
         if not self._func(value):
-            raise ValueError, self._message or "Invalid value(s)"
+            raise ValueError(self._message or "Invalid value(s)")
         return value
 
 class EnumValidator(_Validator):
@@ -654,7 +655,7 @@ class EnumValidator(_Validator):
 
     def validate(self, value):
         if value not in self._constants:
-            raise ValueError, "Incorrect value(s), possible values: " + str(self._constants)
+            raise ValueError("Incorrect value(s), possible values: " + str(self._constants))
         return value
 
 class LengthValidator(_Validator):
@@ -669,7 +670,7 @@ class LengthValidator(_Validator):
 
     def validate(self, value):
         if len(value) != self._length:
-            raise ValueError, "Value must be of length %i." % self._length
+            raise ValueError("Value must be of length %i." % self._length)
         return value
 
 class CastValidator(_Validator):
@@ -683,7 +684,7 @@ class CastValidator(_Validator):
     def validate(self, value):
         if isinstance(value, Mapping):
             return self._cls(**value)
-        elif isinstance(value, Iterable) and not isinstance(value, basestring):
+        elif isinstance(value, Iterable) and not isinstance(value, str):
             return self._cls(*value)
         else:
             return self._cls(value)
@@ -699,7 +700,7 @@ def iter_parameters(obj):
 
     :arg obj: object containing parameters
     """
-    for name, parameter in getattr(obj, '__parameters__', {}).iteritems():
+    for name, parameter in getattr(obj, '__parameters__', {}).items():
         wrapper = obj.__dict__.get(name, [])
 
         for value in wrapper:
@@ -802,8 +803,8 @@ class Expander(object):
 
     def _create_combinations(self, parameter_values, parameter_obj_ids):
         combinations, names, _varied = combine(parameter_values)
-        parameter_objs = map(parameter_obj_ids.get, map(itemgetter(0), names))
-        parameters = map(itemgetter(1), names)
+        parameter_objs = list(map(parameter_obj_ids.get, list(map(itemgetter(0), names))))
+        parameters = list(map(itemgetter(1), names))
 
         return combinations, parameter_objs, parameters
 

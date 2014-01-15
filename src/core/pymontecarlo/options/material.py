@@ -27,7 +27,6 @@ __all__ = ['composition_from_formula',
 from collections import defaultdict
 from fractions import gcd
 from itertools import combinations
-from types import StringTypes
 import warnings
 
 # Third party modules.
@@ -58,12 +57,12 @@ def _calculate_composition_atomic(composition):
     """
     composition2 = {}
 
-    for z, weightfraction in composition.iteritems():
+    for z, weightfraction in composition.items():
         composition2[z] = weightfraction / ep.atomic_mass_kg_mol(z)
 
     totalfraction = sum(composition2.values())
 
-    for z, fraction in composition2.iteritems():
+    for z, fraction in composition2.items():
         composition2[z] = fraction / totalfraction
 
     return composition2
@@ -85,7 +84,7 @@ def _calculate_density(composition):
     """
     density = 0.0
 
-    for z, fraction in composition.iteritems():
+    for z, fraction in composition.items():
         density += fraction / ep.mass_density_kg_m3(z)
 
     return 1.0 / density
@@ -205,15 +204,15 @@ def pure(z):
 class _Composition(ParameterizedMutableMapping):
 
     def __init__(self):
-        validator = SimpleValidator(lambda wf: 0.0 <= wf <= 1.0 or wf == '?',
+        validator = SimpleValidator(lambda wf: wf == '?' or 0.0 <= wf <= 1.0,
                                     'Weight fraction must be within [0.0, 1.0]')
         ParameterizedMutableMapping.__init__(self, validators=[validator])
 
     def __setitem__(self, key, value):
-        if isinstance(key, StringTypes):
+        if isinstance(key, str):
             key = ep.atomic_number(key)
         if key <= 0 or key >= 99:
-            raise ValueError, "Atomic number must be between [1, 99]"
+            raise ValueError("Atomic number must be between [1, 99]")
         ParameterizedMutableMapping.__setitem__(self, key, value)
 
     def calculate(self):
@@ -234,7 +233,7 @@ class _Composition(ParameterizedMutableMapping):
                 if totalfraction <= 1.0:
                     wildcardfraction = (1.0 - totalfraction) / float(countwildcard)
                 else:
-                    raise ValueError, 'Wild card(s) could not be replaced since total fraction is already 1.0'
+                    raise ValueError('Wild card(s) could not be replaced since total fraction is already 1.0')
 
             for z, fraction in composition.items():
                 if fraction == '?':
@@ -244,17 +243,17 @@ class _Composition(ParameterizedMutableMapping):
             # Check total fraction
             totalfraction = sum(composition.values())
             if abs(totalfraction - 1.0) > 1e-6:
-                raise ValueError, "The total weight fraction (%s) should be 1.0." % totalfraction
+                raise ValueError("The total weight fraction (%s) should be 1.0." % totalfraction)
 
         # Replace values
         self.clear()
 
         zs = {}
         for composition in compositions:
-            for z, wf in composition.iteritems():
+            for z, wf in composition.items():
                 zs.setdefault(z, []).append(wf)
 
-        for z, wfs in zs.iteritems():
+        for z, wfs in zs.items():
             self[z] = wfs
 
 class _WeightFractionXMLType(_XMLType):
@@ -291,7 +290,7 @@ class _AbsorptionEnergy(ParameterizedMutableMapping):
 
     def __setitem__(self, key, value):
         if key not in PARTICLES:
-            raise KeyError, "Unknown particle: %s" % key
+            raise KeyError("Unknown particle: %s" % key)
         ParameterizedMutableMapping.__setitem__(self, key, value)
 
     def __getitem__(self, key):
@@ -299,9 +298,7 @@ class _AbsorptionEnergy(ParameterizedMutableMapping):
             return self._default_energy_eV
         return self.__parameters__[key].__get__(self)
 
-class Material(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class Material(object, metaclass=ParameterizedMetaClass):
 
     name = Parameter(doc="Name")
 

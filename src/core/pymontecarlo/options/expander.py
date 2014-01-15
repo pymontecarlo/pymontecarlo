@@ -38,7 +38,7 @@ class Expander(_Expander):
 
     def expand(self, obj):
         if not isinstance(obj, Options):
-            raise ValueError, "Argument must be an Options"
+            raise ValueError("Argument must be an Options")
         return _Expander.expand(self, obj)
 
     def _create_objects(self, baseobj, combinations, parameter_objs, parameters):
@@ -149,7 +149,7 @@ class ExpanderSingleDetectorSameOpening(ExpanderSingleDetector):
                 del baseoptions.detectors[key]
 
             # Add detector with same opening to a new options
-            for i, items in enumerate(openings.itervalues()):
+            for i, items in enumerate(openings.values()):
                 newoptions = copy.deepcopy(baseoptions)
                 newoptions.name += '+opening%i' % i
 

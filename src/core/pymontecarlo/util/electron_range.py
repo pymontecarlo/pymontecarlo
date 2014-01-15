@@ -28,18 +28,18 @@ import pyxray.element_properties as ep
 def kanaya_okayama(composition, energy):
     """
     Returns the electron range (in meters).
-    
-    :arg composition: composition in weight fraction. 
+
+    :arg composition: composition in weight fraction.
         The composition is specified by a dictionary.
-        The keys are the atomic numbers and the values are the weight fractions 
-        between ]0.0, 1.0]. 
+        The keys are the atomic numbers and the values are the weight fractions
+        between ]0.0, 1.0].
     :type composition: :class:`dict`
-    
+
     :arg energy: beam energy in eV
     """
     r = 0.0;
 
-    for z, fraction in composition.iteritems():
+    for z, fraction in composition.items():
         dr = (0.0276 * (ep.atomic_mass_kg_mol(z) * 1000.0) * (energy / 1000.0) ** 1.67) / \
             (z ** 0.89 * (ep.mass_density_kg_m3(z) / 1000.0))
         r += fraction / (dr * 1e-6)

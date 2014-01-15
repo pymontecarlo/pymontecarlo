@@ -75,9 +75,7 @@ def equivalent_opening(det1, det2, places=6):
 
     return True
 
-class _Detector(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class _Detector(object, metaclass=ParameterizedMetaClass):
 
     def __repr__(self):
         return '<%s()>' % self.__class__.__name__

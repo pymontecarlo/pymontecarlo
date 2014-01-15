@@ -64,7 +64,7 @@ class Exporter(object):
         :arg dirpath: full path to output directory
         """
         if self._expander.is_expandable(options):
-            raise ValueError, "Only options with singular value can be exported"
+            raise ValueError("Only options with singular value can be exported")
 
         return self._export(options, dirpath, *args, **kwargs)
 
@@ -99,7 +99,7 @@ class Exporter(object):
         method = self._beam_exporters.get(clasz)
 
         if not method:
-            raise ExporterException, "Could not export beam '%s'" % clasz.__name__
+            raise ExporterException("Could not export beam '%s'" % clasz.__name__)
 
         method(options, options.beam, *args, **kwargs)
 
@@ -119,7 +119,7 @@ class Exporter(object):
         if method:
             method(options, options.geometry, *args, **kwargs)
         else:
-            raise ExporterException, "Could not export geometry '%s'" % clasz.__name__
+            raise ExporterException("Could not export geometry '%s'" % clasz.__name__)
 
     def _export_detectors(self, options, *args, **kwargs):
         """
@@ -137,8 +137,8 @@ class Exporter(object):
             method = self._detector_exporters.get(clasz)
 
             if not method:
-                raise ExporterException, \
-                    "Could not export detector '%s' (%s)" % (name, clasz.__name__)
+                raise ExporterException("Could not export detector '%s' (%s)" % \
+                                        (name, clasz.__name__))
 
             method(options, name, detector, *args, **kwargs)
 
@@ -157,8 +157,8 @@ class Exporter(object):
             method = self._limit_exporters.get(clasz)
 
             if not method:
-                raise ExporterException, \
-                    "Could not export limit '%s'" % clasz.__name__
+                raise ExporterException("Could not export limit '%s'" % \
+                                        clasz.__name__)
 
             method(options, limit, *args, **kwargs)
 
@@ -177,8 +177,8 @@ class Exporter(object):
             method = self._model_exporters.get(type_)
 
             if not method:
-                raise ExporterException, \
-                    "Could not export model of type '%s'" % type_.name
+                raise ExporterException("Could not export model of type '%s'" % \
+                                        type_.name)
 
             method(options, model, *args, **kwargs)
 
@@ -198,7 +198,7 @@ class XMLExporter(Exporter):
             output = minidom.parseString(output).toprettyxml(encoding=encoding)
 
         filepath = os.path.join(dirpath, options.name + '.xml')
-        with open(filepath, 'w') as fp:
+        with open(filepath, 'wb') as fp:
             fp.write(output)
 
         return filepath

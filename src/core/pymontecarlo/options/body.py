@@ -35,9 +35,7 @@ from pymontecarlo.options.xmlmapper import \
 
 # Globals and constants variables.
 
-class Body(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class Body(object, metaclass=ParameterizedMetaClass):
 
     material = Parameter(doc="Material of this body")
 

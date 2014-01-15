@@ -24,7 +24,7 @@ import logging
 import tempfile
 import shutil
 import threading
-import Queue
+import queue
 
 # Third party modules.
 
@@ -43,11 +43,11 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
         self._worker = program.worker_class(program)
 
         if not os.path.isdir(outputdir):
-            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+            raise ValueError('Output directory (%s) is not a directory' % outputdir)
         self._outputdir = outputdir
 
         if workdir is not None and not os.path.isdir(workdir):
-            raise ValueError, 'Work directory (%s) is not a directory' % workdir
+            raise ValueError('Work directory (%s) is not a directory' % workdir)
         self._workdir = workdir
         self._user_defined_workdir = self._workdir is not None
 
@@ -62,7 +62,7 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
                 # Retrieve options
                 try:
                     options = self._queue_options.get(timeout=1)
-                except Queue.Empty:
+                except queue.Empty:
                     continue
 
                 # Check if results already exists
@@ -130,37 +130,37 @@ class LocalRunner(_Runner):
                  nbprocesses=1):
         """
         Creates a new runner to run several simulations.
-        
+
         Use :meth:`put` to add simulation to the run and then use the method
-        :meth:`start` to start the simulation(s). 
-        Status of the simulations can be retrieved using the method 
-        :meth:`report`. 
+        :meth:`start` to start the simulation(s).
+        Status of the simulations can be retrieved using the method
+        :meth:`report`.
         The method :meth:`join` before closing an application to ensure that
         all simulations were run and all workers are stopped.
-        
+
         :arg program: program used to run the simulations
-        
-        :arg outputdir: output directory for saving the results from the 
+
+        :arg outputdir: output directory for saving the results from the
             simulation. The directory must exists.
-        
+
         :arg workdir: work directory for the simulation temporary files.
             If ``None``, a temporary folder is created and removed after each
             simulation is run. If not ``None``, the directory must exists.
-        
+
         :arg overwrite: whether to overwrite already existing simulation file(s)
-        
+
         :arg nbprocesses: number of processes/threads to use (default: 1)
         """
         _Runner.__init__(self, program)
 
         if nbprocesses < 1:
-            raise ValueError, "Number of processes must be greater or equal to 1."
+            raise ValueError("Number of processes must be greater or equal to 1.")
 
         if not os.path.isdir(outputdir):
-            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+            raise ValueError('Output directory (%s) is not a directory' % outputdir)
 
         if workdir is not None and not os.path.isdir(workdir):
-            raise ValueError, 'Work directory (%s) is not a directory' % workdir
+            raise ValueError('Work directory (%s) is not a directory' % workdir)
 
         self._dispatchers = []
         for _ in range(nbprocesses):
@@ -172,7 +172,7 @@ class LocalRunner(_Runner):
 
     def start(self):
         if not self._dispatchers:
-            raise RuntimeError, "Runner is closed"
+            raise RuntimeError("Runner is closed")
 
         for dispatcher in self._dispatchers:
             if not dispatcher.is_alive():
@@ -210,7 +210,7 @@ class _LocalCreatorDispatcher(_CreatorDispatcher):
         self._worker = program.worker_class()
 
         if not os.path.isdir(outputdir):
-            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+            raise ValueError('Output directory (%s) is not a directory' % outputdir)
         self._outputdir = outputdir
 
         self._overwrite = overwrite
@@ -280,10 +280,10 @@ class LocalCreator(_Creator):
         _Creator.__init__(self, program)
 
         if nbprocesses < 1:
-            raise ValueError, "Number of processes must be greater or equal to 1."
+            raise ValueError("Number of processes must be greater or equal to 1.")
 
         if not os.path.isdir(outputdir):
-            raise ValueError, 'Output directory (%s) is not a directory' % outputdir
+            raise ValueError('Output directory (%s) is not a directory' % outputdir)
 
         self._dispatchers = []
         for _ in range(nbprocesses):
@@ -294,7 +294,7 @@ class LocalCreator(_Creator):
 
     def start(self):
         if not self._dispatchers:
-            raise RuntimeError, "Runner is closed"
+            raise RuntimeError("Runner is closed")
 
         for dispatcher in self._dispatchers:
             if not dispatcher.is_alive():

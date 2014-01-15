@@ -52,7 +52,7 @@ class _Detectors(ParameterizedMutableMapping):
             * name/key of the detector
             * detector object
         """
-        for key, parameter in self.__parameters__.iteritems():
+        for key, parameter in self.__parameters__.items():
             wrapper = parameter._get_wrapper(self)
             for detector in wrapper:
                 if isinstance(detector, clasz):
@@ -78,9 +78,7 @@ class _Models(ParameterizedMutableSet):
 
 _name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
 
-class Options(object):
-
-    __metaclass__ = ParameterizedMetaClass
+class Options(object, metaclass=ParameterizedMetaClass):
 
     VERSION = '6'
 
@@ -144,10 +142,7 @@ class Options(object):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
 
     def __str__(self):
-        return str(self.name)
-
-    def __unicode__(self):
-        return unicode(self.name)
+        return self.name
 
     def __copy__(self):
         # From http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p

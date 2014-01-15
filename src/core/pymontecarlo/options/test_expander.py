@@ -181,21 +181,12 @@ class TestExpanderSingleDetectorSameOpening(unittest.TestCase):
 
         self.assertEqual(2, len(opss))
 
-        self.assertEqual("op1+opening0", opss[0].name)
-        self.assertEqual(2, len(opss[0].detectors))
-        if 'det1a' in opss[0].detectors:
-            self.assertNotIn('det1b', opss[0].detectors)
-            self.assertNotIn('det2a', opss[0].detectors)
-        if 'det1b' in opss[0].detectors:
-            self.assertNotIn('det1a', opss[0].detectors)
-
-        self.assertEqual("op1+opening1", opss[1].name)
-        self.assertEqual(3, len(opss[1].detectors))
-        if 'det1a' in opss[1].detectors:
-            self.assertNotIn('det1b', opss[1].detectors)
-            self.assertNotIn('det2a', opss[1].detectors)
-        if 'det1b' in opss[1].detectors:
-            self.assertNotIn('det1a', opss[1].detectors)
+        for i in range(2):
+            if 'det1a' in opss[i].detectors:
+                self.assertNotIn('det1b', opss[i].detectors)
+                self.assertNotIn('det2a', opss[i].detectors)
+            if 'det1b' in opss[i].detectors:
+                self.assertNotIn('det1a', opss[i].detectors)
 
     def testis_expandable(self):
         self.assertTrue(self.expander.is_expandable(self.ops))
