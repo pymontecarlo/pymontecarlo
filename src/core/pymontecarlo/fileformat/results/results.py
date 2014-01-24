@@ -28,6 +28,8 @@ import h5py
 
 # Local modules.
 from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
+from pymontecarlo.fileformat.handler import \
+    find_convert_handler, find_parse_handler
 
 from pymontecarlo.results.results import Results
 
@@ -35,15 +37,24 @@ import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 
+def load(filepath):
+    with h5py.File(filepath, 'r') as hdf5file:
+        handler = find_parse_handler('pymontecarlo.fileformat.results.results',
+                                     hdf5file)
+        return handler.parse(hdf5file)
+
+def save(results, filepath):
+    with h5py.File(filepath, 'w') as hdf5file:
+        handler = find_convert_handler('pymontecarlo.fileformat.results.results',
+                                       results, hdf5file)
+        return handler.convert(results, hdf5file)
+
 class ResultsHDF5Handler(_HDF5Handler):
 
     CLASS = Results
     VERSION = '7'
 
-    def parse(self, group=None):
-        if group is None:
-            group = self.hdf5file
-
+    def parse(self, group):
         task = progress.start_task('Loading results')
 
         try:

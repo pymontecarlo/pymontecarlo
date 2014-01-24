@@ -26,10 +26,31 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.fileformat.xmlhandler import _XMLHandler
+from pymontecarlo.fileformat.handler import \
+    find_convert_handler, find_parse_handler
 
 from pymontecarlo.options.options import Options
 
+import pymontecarlo.util.xmlutil as xmlutil
+
 # Globals and constants variables.
+
+def load(source):
+    element = xmlutil.parse(source)
+    handler = find_parse_handler('pymontecarlo.fileformat.options.options', element)
+    return handler.parse(element)
+
+def save(options, dest):
+    handler = find_convert_handler('pymontecarlo.fileformat.options.options', options)
+    element = handler.convert(options)
+    output = xmlutil.tostring(element)
+
+    self_opened = False
+    if not hasattr(dest, "write"):
+        dest = open(dest, "wb")
+        self_opened = True
+    dest.write(output)
+    if self_opened: dest.close()
 
 class OptionsXMLHandler(_XMLHandler):
 

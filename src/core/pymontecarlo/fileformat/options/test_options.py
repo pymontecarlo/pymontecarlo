@@ -17,7 +17,8 @@ import xml.etree.ElementTree as etree
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.fileformat.options.options import OptionsXMLHandler
+from pymontecarlo.fileformat.options.options import \
+    OptionsXMLHandler, load, save
 
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import BackscatteredElectronEnergyDetector
@@ -25,6 +26,44 @@ from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ELASTIC_CROSS_SECTION
 
 # Globals and constants variables.
+
+class TestModule(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.obj = Options(name="Test")
+        self.obj.beam.energy_eV = 1234
+
+        self.obj.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
+        self.obj.limits.add(ShowersLimit(5678))
+        self.obj.models.add(ELASTIC_CROSS_SECTION.rutherford)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testloadsave(self):
+        buf = BytesIO()
+        save(self.obj, buf)
+        obj = load(BytesIO(buf.getvalue()))
+
+        self.assertAlmostEqual(1234, obj.beam.energy_eV, 4)
+
+        self.assertEqual(1, len(obj.detectors))
+        det = obj.detectors['bse']
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
+        self.assertEqual(1000, det.channels)
+
+        self.assertEqual(1, len(obj.limits))
+        limits = list(obj.limits.iterclass(ShowersLimit))
+        self.assertEqual(1, len(limits))
+        self.assertEqual(5678, limits[0].showers)
+
+        self.assertEqual(1, len(obj.models))
+        models = list(obj.models.iterclass(ELASTIC_CROSS_SECTION))
+        self.assertEqual(1, len(models))
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 
 class TestOptionsXMLHandler(unittest.TestCase):
 

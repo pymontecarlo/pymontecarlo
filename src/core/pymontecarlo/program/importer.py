@@ -24,11 +24,10 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 # Third party modules.
-import h5py
 
 # Local modules.
 from pymontecarlo.results.results import Results
-from pymontecarlo.fileformat.handler import find_parse_handler
+from pymontecarlo.fileformat.results.results import load as load_results
 
 # Globals and constants variables.
 
@@ -95,6 +94,4 @@ class HDF5Importer(Importer):
 
     def _import(self, options, dirpath, *args, **kwargs):
         filepath = os.path.join(dirpath, options.name + '.h5')
-        with h5py.File(filepath, 'r') as hdf5file:
-            handler = find_parse_handler('pymontecarlo.fileformat.results.results', hdf5file)
-            return handler.parse(hdf5file)
+        return load_results(filepath)

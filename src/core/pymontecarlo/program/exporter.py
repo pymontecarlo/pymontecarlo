@@ -26,8 +26,7 @@ from abc import ABCMeta, abstractmethod
 
 # Local modules.
 from pymontecarlo.util.expander import Expander
-import pymontecarlo.util.xmlutil as xmlutil
-from pymontecarlo.fileformat.handler import find_convert_handler
+from pymontecarlo.fileformat.options.options import save as save_options
 
 # Globals and constants variables.
 
@@ -185,17 +184,6 @@ class XMLExporter(Exporter):
     """
 
     def _export(self, options, dirpath, *args, **kwargs):
-        handler = find_convert_handler('pymontecarlo.fileformat.options.options', options)
-        element = handler.convert(options)
-
-        encoding = kwargs.get('encoding', 'UTF-8')
-        pretty_print = kwargs.get('pretty_print', True)
-
         filepath = os.path.join(dirpath, options.name + '.xml')
-        with open(filepath, 'wb') as fp:
-            fp.write(xmlutil.tostring(element, encoding, pretty_print))
-
+        save_options(options, filepath)
         return filepath
-
-
-
