@@ -26,6 +26,7 @@ import logging
 import posixpath
 from queue import Empty
 import threading
+from io import BytesIO
 
 # Third party modules.
 import paramiko
@@ -33,9 +34,8 @@ import paramiko
 # Local modules.
 from pymontecarlo.runner.base import _RunnerDispatcher, _Runner
 
-from pymontecarlo.results.results import Results
-
-import pymontecarlo.options.xmlmapper as xmlmapper
+from pymontecarlo.fileformat.results.results import load as load_results
+from pymontecarlo.fileformat.options.options import save as save_options
 
 # Globals and constants variables.
 
@@ -88,7 +88,7 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
                 local_filepaths = self._transfer_results()
 
                 for local_filepath in local_filepaths:
-                    self._queue_results.put(Results.load(local_filepath))
+                    self._queue_results.put(load_results(local_filepath))
 
                 # Delay
                 time.sleep(1.0)
@@ -121,7 +121,9 @@ class _RemoteRunnerDispatcher(_RunnerDispatcher):
             for options in options_list:
                 remote_filepath = \
                     posixpath.join(self._remote_workdir, options.name + '.xml')
-                data = xmlmapper.tostring(options.to_xml())
+                buf = BytesIO()
+                save_options(options, buf)
+                data = buf.getvalue()
 
                 ftp.open(remote_filepath, 'w').write(data)
                 logging.debug("Transfered options to %s", remote_filepath)

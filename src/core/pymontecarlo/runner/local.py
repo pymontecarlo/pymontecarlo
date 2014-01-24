@@ -31,6 +31,7 @@ import queue
 # Local modules.
 from pymontecarlo.runner.base import \
     _Runner, _RunnerDispatcher, _Creator, _CreatorDispatcher
+from pymontecarlo.fileformat.results.results import save as save_results
 
 # Globals and constants variables.
 
@@ -85,7 +86,7 @@ class _LocalRunnerDispatcher(_RunnerDispatcher):
                 self._cleanup()
 
                 # Save results
-                results.save(h5filepath)
+                save_results(results, h5filepath)
                 logging.debug('Results saved')
 
                 # Put results in queue
