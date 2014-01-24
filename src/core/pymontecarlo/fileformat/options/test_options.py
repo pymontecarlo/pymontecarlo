@@ -41,7 +41,7 @@ class TestOptionsXMLHandler(unittest.TestCase):
         self.obj.models.add(ELASTIC_CROSS_SECTION.rutherford)
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:options xmlns:mc="http://pymontecarlo.sf.net" name="Test" uuid="xsi:nil" version="7"><beam><mc:pencilBeam aperture="0.0" energy="1234.0" particle="electron"><origin x="0.0" y="0.0" z="1.0" /><direction u="0.0" v="0.0" w="-1.0" /></mc:pencilBeam></beam><geometry><mc:substrate rotation="0.0" tilt="0.0"><materials><mc:material _index="1" density="19300.0" name="Gold"><composition><element weightFraction="1.0" z="79" /></composition></mc:material></materials><body material="1" /></mc:substrate></geometry><detectors><mc:backscatteredElectronEnergyDetector _key="bse"><channels>1000</channels><limits lower="0.0" upper="1234.0" /></mc:backscatteredElectronEnergyDetector></detectors><limits><mc:showersLimit showers="5678" /></limits><models><mc:model name="Rutherford" type="elastic cross section" /></models></mc:options>')
+        source = BytesIO(b'<mc:options xmlns:mc="http://pymontecarlo.sf.net" name="Test" uuid="51d62e0261f2449eb41a74e4cb4501e0" version="7"><beam><mc:pencilBeam aperture="0.0" energy="1234.0" particle="electron"><origin x="0.0" y="0.0" z="1.0" /><direction u="0.0" v="0.0" w="-1.0" /></mc:pencilBeam></beam><geometry><mc:substrate rotation="0.0" tilt="0.0"><materials><mc:material _index="1" density="19300.0" name="Gold"><composition><element weightFraction="1.0" z="79" /></composition></mc:material></materials><body material="1" /></mc:substrate></geometry><detectors><mc:backscatteredElectronEnergyDetector _key="bse"><channels>1000</channels><limits lower="0.0" upper="1234.0" /></mc:backscatteredElectronEnergyDetector></detectors><limits><mc:showersLimit showers="5678" /></limits><models><mc:model name="Rutherford" type="elastic cross section" /></models></mc:options>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -54,7 +54,7 @@ class TestOptionsXMLHandler(unittest.TestCase):
         obj = self.h.parse(self.element)
 
         self.assertEqual("Test", obj.name)
-        self.assertIsNone(obj._uuid)
+        self.assertEqual('51d62e0261f2449eb41a74e4cb4501e0', obj.uuid)
 
         self.assertAlmostEqual(1234, obj.beam.energy_eV, 4)
 
@@ -82,7 +82,7 @@ class TestOptionsXMLHandler(unittest.TestCase):
 
         self.assertEqual('Test', element.get('name'))
 
-        self.assertEqual('xsi:nil', element.get('uuid'))
+        self.assertEqual(self.obj.uuid, element.get('uuid'))
 
         children = list(element.find('beam'))
         self.assertEqual(1, len(children))

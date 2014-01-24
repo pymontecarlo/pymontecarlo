@@ -22,15 +22,15 @@ __license__ = "GPL v3"
 import xml.etree.ElementTree as etree
 
 # Third party modules.
-from pkg_resources import iter_entry_points
 
 import numpy as np
 
 # Local modules.
+from pymontecarlo.fileformat.handler import _Handler
 
 # Globals and constants variables.
 
-class _XMLHandler(object):
+class _XMLHandler(_Handler):
 
     TAG = None
     CLASS = None
@@ -70,17 +70,6 @@ class _XMLHandler(object):
 
         return np.array(newvalues, '?')
 
-    def _parse_handlers(self, element, handler_name):
-        for entry_point in iter_entry_points(handler_name):
-            handler = entry_point.load()()
-            if handler.can_parse(element):
-                return handler.parse(element)
-
-        raise ValueError("No handler can parse element '%s'" % element.tag)
-
-    def can_convert(self, obj):
-        return isinstance(obj, self.CLASS)
-
     def convert(self, obj):
         return etree.Element(self.TAG)
 
@@ -105,13 +94,3 @@ class _XMLHandler(object):
         for value in np.array(values, '?', ndmin=1):
             newvalues.append('true' if value else 'false')
         self._convert_text_parameter(element, newvalues, attrib_name)
-
-    def _convert_handlers(self, obj, handler_name):
-        for entry_point in iter_entry_points(handler_name):
-            handler = entry_point.load()()
-            if handler.can_convert(obj):
-                return handler.convert(obj)
-
-        raise ValueError("No handler can convert '%s'" % obj)
-
-

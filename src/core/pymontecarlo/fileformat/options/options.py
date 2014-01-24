@@ -46,16 +46,14 @@ class OptionsXMLHandler(_XMLHandler):
         name = element.attrib['name']
         obj = Options(name)
 
-        uuid = element.attrib['uuid']
-        if uuid != 'xsi:nil':
-            obj._uuid = uuid
+        obj._uuid = element.attrib['uuid']
 
         subelement = element.find('beam')
         if subelement is None:
             raise ValueError("Element 'beam' not found")
         beams = []
         for subsubelement in subelement:
-            beams.append(self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.beam'))
+            beams.append(self._parse_handlers('pymontecarlo.fileformat.options.beam', subsubelement))
         obj.beam = beams
 
         subelement = element.find('geometry')
@@ -63,7 +61,7 @@ class OptionsXMLHandler(_XMLHandler):
             raise ValueError("Element 'geometry' not found")
         geometries = []
         for subsubelement in subelement:
-            geometries.append(self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.geometry'))
+            geometries.append(self._parse_handlers('pymontecarlo.fileformat.options.geometry', subsubelement))
         obj.geometry = geometries
 
         subelement = element.find('detectors')
@@ -72,7 +70,7 @@ class OptionsXMLHandler(_XMLHandler):
         detectors = {}
         for subsubelement in subelement:
             key = subsubelement.attrib['_key']
-            detector = self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.detector')
+            detector = self._parse_handlers('pymontecarlo.fileformat.options.detector', subsubelement)
             detectors.setdefault(key, []).append(detector)
         obj.detectors.update(detectors)
 
@@ -80,13 +78,13 @@ class OptionsXMLHandler(_XMLHandler):
         if subelement is None:
             raise ValueError("Element 'limits' not found")
         for subsubelement in subelement:
-            obj.limits.add(self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.limit'))
+            obj.limits.add(self._parse_handlers('pymontecarlo.fileformat.options.limit', subsubelement))
 
         subelement = element.find('models')
         if subelement is None:
             raise ValueError("Element 'models' not found")
         for subsubelement in subelement:
-            obj.models.add(self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.model'))
+            obj.models.add(self._parse_handlers('pymontecarlo.fileformat.options.model', subsubelement))
 
         return obj
 
@@ -99,25 +97,25 @@ class OptionsXMLHandler(_XMLHandler):
 
         subelement = etree.SubElement(element, 'beam')
         for beam in np.array(obj.beam, ndmin=1):
-            subelement.append(self._convert_handlers(beam, 'pymontecarlo.fileformat.options.beam'))
+            subelement.append(self._convert_handlers('pymontecarlo.fileformat.options.beam', beam))
 
         subelement = etree.SubElement(element, 'geometry')
         for geometry in np.array(obj.geometry, ndmin=1):
-            subelement.append(self._convert_handlers(geometry, 'pymontecarlo.fileformat.options.geometry'))
+            subelement.append(self._convert_handlers('pymontecarlo.fileformat.options.geometry', geometry))
 
         subelement = etree.SubElement(element, 'detectors')
         for key, detectors in obj.detectors.items():
             for detector in np.array(detectors, ndmin=1):
-                subsubelement = self._convert_handlers(detector, 'pymontecarlo.fileformat.options.detector')
+                subsubelement = self._convert_handlers('pymontecarlo.fileformat.options.detector', detector)
                 subsubelement.set('_key', key)
                 subelement.append(subsubelement)
 
         subelement = etree.SubElement(element, 'limits')
         for limit in obj.limits:
-            subelement.append(self._convert_handlers(limit, 'pymontecarlo.fileformat.options.limit'))
+            subelement.append(self._convert_handlers('pymontecarlo.fileformat.options.limit', limit))
 
         subelement = etree.SubElement(element, 'models')
         for model in obj.models:
-            subelement.append(self._convert_handlers(model, 'pymontecarlo.fileformat.options.model'))
+            subelement.append(self._convert_handlers('pymontecarlo.fileformat.options.model', model))
 
         return element

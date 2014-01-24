@@ -50,7 +50,7 @@ class _GeometryXMLHandler(_XMLHandler):
 
         materials_lookup = {0: VACUUM}
         for i, subsubelement in enumerate(subelement, 1):
-            material = self._parse_handlers(subsubelement, 'pymontecarlo.fileformat.options.material')
+            material = self._parse_handlers('pymontecarlo.fileformat.options.material', subsubelement)
             materials_lookup[i] = material
 
         return materials_lookup
@@ -68,7 +68,7 @@ class _GeometryXMLHandler(_XMLHandler):
 
         materials_lookup = {VACUUM: 0}
         for i, material in enumerate(materials, 1):
-            subsubelement = self._convert_handlers(material, 'pymontecarlo.fileformat.options.material')
+            subsubelement = self._convert_handlers('pymontecarlo.fileformat.options.material', material)
             subsubelement.set('_index', str(i))
             subelement.append(subsubelement)
             materials_lookup[material] = i
