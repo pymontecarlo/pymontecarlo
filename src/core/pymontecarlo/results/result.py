@@ -29,9 +29,6 @@ import numpy as np
 from pyxray.transition import from_string
 
 # Local modules.
-from pymontecarlo.results.manager import ResultManager
-
-import pymontecarlo.util.progress as progress
 
 # Globals and constants variables.
 from pymontecarlo.options.particle import PARTICLES
@@ -48,19 +45,7 @@ class _Result(object):
     """
     Base class of all results.
     A result is a read-only class where results of a detector are stored.
-
-    Derived classes must implement :meth:`__loadhdf5__` and :meth:`__savehdf5__`
-    which respectively load and save the result to a HDF5 file.
-
-    Each result class must be register in the ResultManager.
     """
-
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        return cls()
-
-    def __savehdf5__(self, hdf5file, key):
-        pass
 
 def create_intensity_dict(transition,
                           gcf=(0.0, 0.0), gbf=(0.0, 0.0), gnf=(0.0, 0.0), gt=(0.0, 0.0),
@@ -120,47 +105,6 @@ class PhotonIntensityResult(_Result):
             _check2(transition, data, EMITTED, 'emitted', TOTAL, 'total')
 
         self._intensities = intensities
-
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-
-        intensities = {}
-
-        for transition, dataset in hdf5group.items():
-            transition = from_string(str(transition))
-
-            gcf = dataset.attrs['gcf']
-            gbf = dataset.attrs['gbf']
-            gnf = dataset.attrs['gnf']
-            gt = dataset.attrs['gt']
-
-            ecf = dataset.attrs['ecf']
-            ebf = dataset.attrs['ebf']
-            enf = dataset.attrs['enf']
-            et = dataset.attrs['et']
-
-            intensities.update(create_intensity_dict(transition,
-                                                     gcf, gbf, gnf, gt,
-                                                     ecf, ebf, enf, et))
-
-        return cls(intensities)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-
-        for transition, intensities in self._intensities.items():
-            dataset = hdf5group.create_dataset(str(transition), shape=())
-
-            dataset.attrs['gcf'] = intensities[GENERATED][CHARACTERISTIC]
-            dataset.attrs['gbf'] = intensities[GENERATED][BREMSSTRAHLUNG]
-            dataset.attrs['gnf'] = intensities[GENERATED][NOFLUORESCENCE]
-            dataset.attrs['gt'] = intensities[GENERATED][TOTAL]
-
-            dataset.attrs['ecf'] = intensities[EMITTED][CHARACTERISTIC]
-            dataset.attrs['ebf'] = intensities[EMITTED][BREMSSTRAHLUNG]
-            dataset.attrs['enf'] = intensities[EMITTED][NOFLUORESCENCE]
-            dataset.attrs['et'] = intensities[EMITTED][TOTAL]
 
     def __contains__(self, transition):
         return self.has_intensity(transition)
@@ -359,8 +303,6 @@ class PhotonIntensityResult(_Result):
         for transition in self._intensities:
             yield transition, self.intensity(transition, absorption, fluorescence)
 
-ResultManager.register('PhotonIntensityResult', PhotonIntensityResult)
-
 class PhotonSpectrumResult(_Result):
 
     def __init__(self, total, background):
@@ -401,18 +343,6 @@ class PhotonSpectrumResult(_Result):
 
         self._total = _check(total)
         self._background = _check(background)
-
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-        total = np.copy(hdf5group['total'])
-        background = np.copy(hdf5group['background'])
-        return cls(total, background)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-        hdf5group.create_dataset('total', data=self._total)
-        hdf5group.create_dataset('background', data=self._background)
 
     @property
     def energy_channel_width_eV(self):
@@ -486,8 +416,6 @@ class PhotonSpectrumResult(_Result):
         """
         return self._get_intensity(energy_eV, self._background)
 
-ResultManager.register('PhotonSpectrumResult', PhotonSpectrumResult)
-
 def create_photondist_dict(transition, gnf=None, gt=None, enf=None, et=None):
     """
     Values of *gnf*, *gt*, *enf* and *et* must be a Numpy array containing two
@@ -530,35 +458,6 @@ class _PhotonDistributionResult(_Result):
         """
         _Result.__init__(self)
         self._distributions = distributions
-
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-
-        data = {}
-        for transition, group in hdf5group.items():
-            transition = from_string(str(transition))
-
-            for suffix, dataset in group.items():
-                data.setdefault(transition, {})[suffix] = np.copy(dataset)
-
-        # Construct distributions
-        distributions = {}
-        for transition, datum in data.items():
-            distributions.update(create_photondist_dict(transition, **datum))
-
-        return cls(distributions)
-
-    def __savehdf5__(self, hdf5file, key):
-        distributions = [('gnf', False, False), ('gt', False, True),
-                         ('enf', True, False), ('et', True, True)]
-
-        hdf5group = hdf5file.require_group(key)
-
-        for suffix, absorption, fluorescence in distributions:
-            for transition, data in self.iter_transitions(absorption, fluorescence):
-                group = hdf5group.require_group(str(transition))
-                group.create_dataset(suffix, data=data)
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
@@ -775,8 +674,6 @@ class PhotonDepthResult(_PhotonDistributionResult):
         """
         return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
 
-ResultManager.register('PhotonDepthResult', PhotonDepthResult)
-
 class PhotonRadialResult(_PhotonDistributionResult):
 
     def exists(self, transition, absorption=True, fluorescence=True):
@@ -864,8 +761,6 @@ class PhotonRadialResult(_PhotonDistributionResult):
         """
         return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
 
-ResultManager.register('PhotonRadialResult', PhotonRadialResult)
-
 class TimeResult(_Result):
 
     def __init__(self, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
@@ -884,19 +779,6 @@ class TimeResult(_Result):
             raise ValueError("Simulation speed must be a tuple (value, uncertainty)")
         self._simulation_speed_s = simulation_speed_s
 
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-        simulation_time_s = hdf5group.attrs['simulation_time_s']
-        simulation_speed_s = hdf5group.attrs['simulation_speed_s']
-
-        return cls(simulation_time_s, simulation_speed_s)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-        hdf5group.attrs['simulation_time_s'] = self.simulation_time_s
-        hdf5group.attrs['simulation_speed_s'] = self.simulation_speed_s
-
     @property
     def simulation_time_s(self):
         return self._simulation_time_s
@@ -904,8 +786,6 @@ class TimeResult(_Result):
     @property
     def simulation_speed_s(self):
         return self._simulation_speed_s
-
-ResultManager.register('TimeResult', TimeResult)
 
 class ShowersStatisticsResult(_Result):
 
@@ -919,21 +799,9 @@ class ShowersStatisticsResult(_Result):
 
         self._showers = int(showers)
 
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-        showers = hdf5group.attrs['showers']
-        return cls(showers)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-        hdf5group.attrs['showers'] = self.showers
-
     @property
     def showers(self):
         return self._showers
-
-ResultManager.register('ShowersStatisticsResult', ShowersStatisticsResult)
 
 class ElectronFractionResult(_Result):
 
@@ -954,21 +822,6 @@ class ElectronFractionResult(_Result):
             raise ValueError("Transmitted fraction must be a tuple (value, uncertainty)")
         self._transmitted = transmitted
 
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        hdf5group = hdf5file[key]
-        absorbed = hdf5group.attrs['absorbed']
-        backscattered = hdf5group.attrs['backscattered']
-        transmitted = hdf5group.attrs['transmitted']
-
-        return cls(absorbed, backscattered, transmitted)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-        hdf5group.attrs['absorbed'] = self.absorbed
-        hdf5group.attrs['backscattered'] = self.backscattered
-        hdf5group.attrs['transmitted'] = self.transmitted
-
     @property
     def absorbed(self):
         return self._absorbed
@@ -980,8 +833,6 @@ class ElectronFractionResult(_Result):
     @property
     def transmitted(self):
         return self._transmitted
-
-ResultManager.register('ElectronFractionResult', ElectronFractionResult)
 
 EXIT_STATE_TRANSMITTED = 1
 EXIT_STATE_BACKSCATTERED = 2
@@ -1097,49 +948,6 @@ class TrajectoryResult(_Result, Iterable, Sized):
     def __init__(self, trajectories=[]):
         self._trajectories = trajectories
 
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        particles_ref = list(PARTICLES)
-        particles_ref = dict(zip(map(int, particles_ref), particles_ref))
-
-        collisions_ref = list(COLLISIONS)
-        collisions_ref = dict(zip(map(int, collisions_ref), collisions_ref))
-
-        trajectories = []
-
-        size = float(len(hdf5file[key]))
-        task = progress.start_task()
-        task.status = 'Loading trajectories'
-
-        for i, dataset in enumerate(hdf5file[key].values()):
-            task.progress = i / size
-
-            primary = bool(dataset.attrs['primary'])
-            particle = particles_ref[dataset.attrs['particle']]
-            collision = collisions_ref[dataset.attrs['collision']]
-            exit_state = int(dataset.attrs['exit_state'])
-            interactions = dataset[:]
-
-            trajectory = Trajectory(primary, particle, collision,
-                                    exit_state, interactions)
-            trajectories.append(trajectory)
-
-        progress.stop_task(task)
-
-        return cls(trajectories)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5group = hdf5file.require_group(key)
-
-        for index, trajectory in enumerate(self._trajectories):
-            name = 'trajectory%s' % index
-            dataset = hdf5group.create_dataset(name, data=trajectory.interactions)
-
-            dataset.attrs['primary'] = trajectory.is_primary()
-            dataset.attrs['particle'] = int(trajectory.particle)
-            dataset.attrs['collision'] = int(trajectory.collision)
-            dataset.attrs['exit_state'] = trajectory.exit_state
-
     def __len__(self):
         return len(self._trajectories)
 
@@ -1184,8 +992,6 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
             yield trajectory
 
-ResultManager.register('TrajectoryResult', TrajectoryResult)
-
 class _ChannelsResult(_Result):
 
     def __init__(self, data):
@@ -1205,14 +1011,6 @@ class _ChannelsResult(_Result):
             data = np.append(data, np.zeros((data.shape[0], 1)), 1)
 
         self._data = data
-
-    @classmethod
-    def __loadhdf5__(cls, hdf5file, key):
-        data = np.copy(hdf5file[key]['data'])
-        return cls(data)
-
-    def __savehdf5__(self, hdf5file, key):
-        hdf5file.require_group(key).create_dataset('data', data=self._data)
 
     def __iter__(self):
         return iter(self._data)
@@ -1235,8 +1033,6 @@ class BackscatteredElectronEnergyResult(_ChannelsResult):
     """
     pass
 
-ResultManager.register('BackscatteredElectronEnergyResult', BackscatteredElectronEnergyResult)
-
 class TransmittedElectronEnergyResult(_ChannelsResult):
     """
     Energy distribution of transmitted electrons.
@@ -1248,8 +1044,6 @@ class TransmittedElectronEnergyResult(_ChannelsResult):
         3. uncertainty of the probability density (counts/(eV.electron))
     """
     pass
-
-ResultManager.register('TransmittedElectronEnergyResult', TransmittedElectronEnergyResult)
 
 class BackscatteredElectronPolarAngularResult(_ChannelsResult):
     """
@@ -1263,8 +1057,6 @@ class BackscatteredElectronPolarAngularResult(_ChannelsResult):
     """
     pass
 
-ResultManager.register('BackscatteredElectronPolarAngularResult', BackscatteredElectronPolarAngularResult)
-
 class BackscatteredElectronRadialResult(_ChannelsResult):
     """
     Radial distribution of backscattered electrons.
@@ -1277,4 +1069,3 @@ class BackscatteredElectronRadialResult(_ChannelsResult):
     """
     pass
 
-ResultManager.register('BackscatteredElectronRadialResult', BackscatteredElectronRadialResult)

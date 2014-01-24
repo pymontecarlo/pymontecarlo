@@ -87,7 +87,25 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'ShowersLimit = pymontecarlo.fileformat.options.limit:ShowersLimitXMLHandler',
                      'UncertaintyLimit = pymontecarlo.fileformat.options.limit:UncertaintyLimitXMLHandler'],
                 'pymontecarlo.fileformat.options.model':
-                    ['Model = pymontecarlo.fileformat.options.model:ModelXMLHandler']}
+                    ['Model = pymontecarlo.fileformat.options.model:ModelXMLHandler'],
+                'pymontecarlo.fileformat.options.options':
+                    ['Options = pymontecarlo.fileformat.options.options:OptionsXMLHandler'],
+
+                'pymontecarlo.fileformat.results.result':
+                    ['PhotonIntensityResult = pymontecarlo.fileformat.results.result:PhotonIntensityResultHDF5Handler',
+                     'PhotonSpectrumResult = pymontecarlo.fileformat.results.result:PhotonSpectrumResultHDF5Handler',
+                     'PhotonDepthResult = pymontecarlo.fileformat.results.result:PhotonDepthResultHDF5Handler',
+                     'PhotonRadialResult = pymontecarlo.fileformat.results.result:PhotonRadialResultHDF5Handler',
+                     'TimeResult = pymontecarlo.fileformat.results.result:TimeResultHDF5Handler',
+                     'ShowersStatisticsResult = pymontecarlo.fileformat.results.result:ShowersStatisticsResultHDF5Handler',
+                     'ElectronFractionResult = pymontecarlo.fileformat.results.result:ElectronFractionResultHDF5Handler',
+                     'TrajectoryResult = pymontecarlo.fileformat.results.result:TrajectoryResultHDF5Handler',
+                     'BackscatteredElectronEnergyResult = pymontecarlo.fileformat.results.result:BackscatteredElectronEnergyResultHDF5Handler',
+                     'TransmittedElectronEnergyResult = pymontecarlo.fileformat.results.result:TransmittedElectronEnergyResultHDF5Handler',
+                     'BackscatteredElectronPolarAngularResult = pymontecarlo.fileformat.results.result:BackscatteredElectronPolarAngularResultHDF5Handler',
+                     'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
+                'pymontecarlo.fileformat.results.results':
+                    ['Results = pymontecarlo.fileformat.results.results:ResultsHDF5Handler'], }
 
 
 entry_points['console_scripts'] = \

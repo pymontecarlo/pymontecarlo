@@ -11,9 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import tempfile
-import shutil
-import os
 
 # Third party modules.
 
@@ -35,9 +32,6 @@ class Test_ResultsContainer(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        # Temporary directory
-        self.tmpdir = tempfile.mkdtemp()
-
         # Options
         self.ops = Options()
         self.ops.detectors['det1'] = PhotonIntensityDetector((0, 1), (0, 1))
@@ -54,19 +48,16 @@ class Test_ResultsContainer(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testoptions(self):
         # frozen
-        self.assertRaises(AttributeError, setattr,
+        self.assertRaises(ValueError, setattr,
                           self.results.options.beam, 'energy_eV', 6.0)
 
 class TestResults(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-
-        self.tmpdir = tempfile.mkdtemp()
 
         # Results 1
         self.ops1 = Options(name='test1')
@@ -95,7 +86,6 @@ class TestResults(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test__len__(self):
         self.assertEqual(2, len(self.results))
@@ -107,29 +97,6 @@ class TestResults(TestCase):
         self.assertEqual('test1', self.results[0].options.name)
         self.assertEqual('test2', self.results[1].options.name)
         self.assertRaises(IndexError, self.results.__getitem__, 2)
-
-    def testsave_load(self):
-        # Save
-        ops_uuid = self.ops.uuid
-        ops1_uuid = self.ops1.uuid
-        filepath = os.path.join(self.tmpdir, 'results.h5')
-        self.results.save(filepath)
-
-        # Load
-        results = Results.load(filepath)
-
-        # Test
-        self.assertEqual('test1', results[0].options.name)
-        self.assertEqual('test2', results[1].options.name)
-        self.assertRaises(IndexError, results.__getitem__, 2)
-
-        self.assertIn('det1', results[0])
-        self.assertIn('det2', results[0])
-        self.assertIn('det3', results[0])
-        self.assertIn('det1', results[1])
-
-        self.assertEqual(ops_uuid, results.options.uuid)
-        self.assertEqual(ops1_uuid, results[0].options.uuid)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

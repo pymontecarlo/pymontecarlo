@@ -11,13 +11,9 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import os
-import tempfile
 
 # Third party modules.
 import numpy as np
-
-import h5py
 
 from pyxray.transition import Transition, K_family
 
@@ -69,65 +65,8 @@ class TestPhotonIntensityResult(TestCase):
 
         self.r = PhotonIntensityResult(intensities)
 
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                      '..', 'testdata', 'results',
-                                      'photon_intensity.h5')
-
     def tearDown(self):
         TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertTrue(True)
-
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det1')
-
-        hdf5group = hdf5file['det1']
-        self.assertEqual(3, len(hdf5group))
-
-        dataset = hdf5group['Si K']
-        self.assertAlmostEqual(11.0, dataset.attrs['gcf'][0], 4)
-        self.assertAlmostEqual(0.1, dataset.attrs['gcf'][1], 4)
-        self.assertAlmostEqual(12.0, dataset.attrs['gbf'][0], 4)
-        self.assertAlmostEqual(0.2, dataset.attrs['gbf'][1], 4)
-        self.assertAlmostEqual(13.0, dataset.attrs['gnf'][0], 4)
-        self.assertAlmostEqual(0.3, dataset.attrs['gnf'][1], 4)
-        self.assertAlmostEqual(36.0, dataset.attrs['gt'][0], 4)
-        self.assertAlmostEqual(0.4, dataset.attrs['gt'][1], 4)
-        self.assertAlmostEqual(15.0, dataset.attrs['ecf'][0], 4)
-        self.assertAlmostEqual(0.5, dataset.attrs['ecf'][1], 4)
-        self.assertAlmostEqual(16.0, dataset.attrs['ebf'][0], 4)
-        self.assertAlmostEqual(0.6, dataset.attrs['ebf'][1], 4)
-        self.assertAlmostEqual(17.0, dataset.attrs['enf'][0], 4)
-        self.assertAlmostEqual(0.7, dataset.attrs['enf'][1], 4)
-        self.assertAlmostEqual(48.0, dataset.attrs['et'][0], 4)
-        self.assertAlmostEqual(0.8, dataset.attrs['et'][1], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = PhotonIntensityResult.__loadhdf5__(hdf5file, 'det1')
-
-        self.assertEqual(3, len(r._intensities))
-
-        val, err = r.intensity(self.t1)
-        self.assertAlmostEqual(18.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
-
-        val, err = r.intensity(self.t2)
-        self.assertAlmostEqual(48.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
-
-        val, err = r.intensity('Cu La')
-        self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(1.1314, err, 4)
-
-        hdf5file.close()
 
     def testintensity(self):
         # Transition 1
@@ -278,54 +217,12 @@ class TestPhotonSpectrumResult(TestCase):
 
         self.r = PhotonSpectrumResult(total, background)
 
-        self.results_h5 = os.path.join(os.path.dirname(__file__), '..',
-                                       'testdata', 'results',
-                                       'photonspectrum.h5')
-
     def tearDown(self):
         TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1.0, self.r.energy_offset_eV, 4)
         self.assertAlmostEqual(0.5, self.r.energy_channel_width_eV, 4)
-
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det4')
-
-        hdf5group = hdf5file['det4']
-
-        spectrum = hdf5group['total']
-        self.assertEqual((4, 3), spectrum.shape)
-        self.assertAlmostEqual(1.0, spectrum[0][0], 4)
-        self.assertAlmostEqual(6.0, spectrum[0][1], 4)
-        self.assertAlmostEqual(0.1, spectrum[0][2], 4)
-
-        spectrum = hdf5group['background']
-        self.assertEqual((4, 3), spectrum.shape)
-        self.assertAlmostEqual(1.0, spectrum[0][0], 4)
-        self.assertAlmostEqual(1.0, spectrum[0][1], 4)
-        self.assertAlmostEqual(0.05, spectrum[0][2], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = PhotonSpectrumResult.__loadhdf5__(hdf5file, 'det4')
-
-        self.assertAlmostEqual(1.0, r.energy_offset_eV, 4)
-        self.assertAlmostEqual(0.5, r.energy_channel_width_eV, 4)
-
-        spectrum = r.get_total()
-        self.assertEqual((4, 3), spectrum.shape)
-
-        spectrum = r.get_background()
-        self.assertEqual((4, 3), spectrum.shape)
-
-        hdf5file.close()
 
     def testget_total(self):
         spectrum = self.r.get_total()
@@ -424,77 +321,8 @@ class TestPhotonDepthResultResult(TestCase):
 
         self.r = PhotonDepthResult(distributions)
 
-        self.results_h5 = os.path.join(os.path.dirname(__file__), '..',
-                                       'testdata', 'results', 'phirhoz.h5')
-
     def tearDown(self):
         TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertTrue(True)
-
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det5')
-
-        phirhoz = hdf5file['det5']['Cu L\u03b11']['gnf']
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
-
-        phirhoz = hdf5file['det5']['Cu L\u03b11']['gt']
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
-
-        phirhoz = hdf5file['det5']['Cu L\u03b11']['enf']
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.21, phirhoz[0][2], 4)
-
-        phirhoz = hdf5file['det5']['Cu L\u03b11']['et']
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = PhotonDepthResult.__loadhdf5__(hdf5file, 'det5')
-
-        phirhoz = r.get(self.t1, absorption=False, fluorescence=False)
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
-
-        phirhoz = r.get(self.t1, absorption=False, fluorescence=True)
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
-
-        phirhoz = r.get(self.t1, absorption=True, fluorescence=False)
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.21, phirhoz[0][2], 4)
-
-        phirhoz = r.get(self.t1, absorption=True, fluorescence=True)
-        self.assertEqual((4, 3), phirhoz.shape)
-        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
-        self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
-
-        hdf5file.close()
 
     def testexists(self):
         self.assertTrue(self.r.exists(self.t1))
@@ -556,9 +384,6 @@ class TestTimeResult(TestCase):
 
         self.r = TimeResult(5.0, (1.0, 0.5))
 
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                        '..', 'testdata', 'results', 'time.h5')
-
     def tearDown(self):
         TestCase.tearDown(self)
 
@@ -567,29 +392,6 @@ class TestTimeResult(TestCase):
         self.assertAlmostEqual(1.0, self.r.simulation_speed_s[0], 4)
         self.assertAlmostEqual(0.5, self.r.simulation_speed_s[1], 4)
 
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det2')
-
-        self.assertAlmostEqual(5.0, hdf5file['det2'].attrs['simulation_time_s'], 4)
-        self.assertAlmostEqual(1.0, hdf5file['det2'].attrs['simulation_speed_s'][0], 4)
-        self.assertAlmostEqual(0.5, hdf5file['det2'].attrs['simulation_speed_s'][1], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = TimeResult.__loadhdf5__(hdf5file, 'det2')
-
-        self.assertAlmostEqual(5.0, r.simulation_time_s, 4)
-        self.assertAlmostEqual(1.0, r.simulation_speed_s[0], 4)
-        self.assertAlmostEqual(0.5, r.simulation_speed_s[1], 4)
-
-        hdf5file.close()
-
 class TestShowersStatisticsResult(TestCase):
 
     def setUp(self):
@@ -597,34 +399,11 @@ class TestShowersStatisticsResult(TestCase):
 
         self.r = ShowersStatisticsResult(6)
 
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                        '..', 'testdata', 'results',
-                                        'showers_statistics.h5')
-
     def tearDown(self):
         TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(6, self.r.showers)
-
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det7')
-
-        self.assertEqual(6, hdf5file['det7'].attrs['showers'])
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = ShowersStatisticsResult.__loadhdf5__(hdf5file, 'det7')
-
-        self.assertEqual(6, r.showers)
-
-        hdf5file.close()
 
 class TestElectronFractionResult(TestCase):
 
@@ -632,10 +411,6 @@ class TestElectronFractionResult(TestCase):
         TestCase.setUp(self)
 
         self.r = ElectronFractionResult((1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
-
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                        '..', 'testdata', 'results',
-                                        'electron_fraction.h5')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -648,35 +423,6 @@ class TestElectronFractionResult(TestCase):
         self.assertAlmostEqual(3.0, self.r.transmitted[0], 4)
         self.assertAlmostEqual(0.3, self.r.transmitted[1], 4)
 
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det3')
-
-        self.assertAlmostEqual(1.0, hdf5file['det3'].attrs['absorbed'][0], 4)
-        self.assertAlmostEqual(0.1, hdf5file['det3'].attrs['absorbed'][1], 4)
-        self.assertAlmostEqual(2.0, hdf5file['det3'].attrs['backscattered'][0], 4)
-        self.assertAlmostEqual(0.2, hdf5file['det3'].attrs['backscattered'][1], 4)
-        self.assertAlmostEqual(3.0, hdf5file['det3'].attrs['transmitted'][0], 4)
-        self.assertAlmostEqual(0.3, hdf5file['det3'].attrs['transmitted'][1], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = ElectronFractionResult.__loadhdf5__(hdf5file, 'det3')
-
-        self.assertAlmostEqual(1.0, r.absorbed[0], 4)
-        self.assertAlmostEqual(0.1, r.absorbed[1], 4)
-        self.assertAlmostEqual(2.0, r.backscattered[0], 4)
-        self.assertAlmostEqual(0.2, r.backscattered[1], 4)
-        self.assertAlmostEqual(3.0, r.transmitted[0], 4)
-        self.assertAlmostEqual(0.3, r.transmitted[1], 4)
-
-        hdf5file.close()
-
 class TestTrajectoryResult(TestCase):
 
     def setUp(self):
@@ -685,9 +431,6 @@ class TestTrajectoryResult(TestCase):
         interactions = np.array([[0.0, 0.0, 1.0, 20e3, -1], [1.0, 1.0, 1.0, 19e3, 2]])
         traj = Trajectory(True, ELECTRON, NO_COLLISION, EXIT_STATE_ABSORBED, interactions)
         self.r = TrajectoryResult([traj])
-
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                       '..', 'testdata', 'results', 'trajectory.h5')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -704,41 +447,6 @@ class TestTrajectoryResult(TestCase):
         self.assertEqual(2, len(trajectory.interactions))
         self.assertEqual(5, trajectory.interactions.shape[1])
 
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det6')
-
-        self.assertEqual(1, len(hdf5file['det6']))
-
-        dataset = hdf5file['det6']['trajectory0']
-        self.assertTrue(dataset.attrs['primary'])
-        self.assertEqual(1, dataset.attrs['particle'])
-        self.assertEqual(-1, dataset.attrs['collision'])
-        self.assertEqual(3, dataset.attrs['exit_state'])
-        self.assertEqual(2, len(dataset))
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = TrajectoryResult.__loadhdf5__(hdf5file, 'det6')
-
-        self.assertEqual(1, len(r))
-
-        trajectory = list(r)[0]
-        self.assertTrue(trajectory.is_primary())
-        self.assertFalse(trajectory.is_secondary())
-        self.assertIs(ELECTRON, trajectory.particle)
-        self.assertIs(NO_COLLISION, trajectory.collision)
-        self.assertEqual(EXIT_STATE_ABSORBED, trajectory.exit_state)
-        self.assertEqual(2, len(trajectory.interactions))
-        self.assertEqual(5, trajectory.interactions.shape[1])
-
-        hdf5file.close()
-
 class Test_ChannelsResult(TestCase):
 
     def setUp(self):
@@ -746,9 +454,6 @@ class Test_ChannelsResult(TestCase):
 
         data = np.array([[0.0, 1.0, 0.1], [1.0, 2.0, 0.2], [2.0, 3.0, 0.3]])
         self.r = _ChannelsResult(data)
-
-        self.results_h5 = os.path.join(os.path.dirname(__file__),
-                                       '..', 'testdata', 'results', '_channels.h5')
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -759,29 +464,6 @@ class Test_ChannelsResult(TestCase):
         data = self.r.get_data()
         self.assertAlmostEqual(1.0, data[0][1], 4)
         self.assertAlmostEqual(0.2, data[1][2], 4)
-
-    def test__savehdf5__(self):
-        fd, filepath = tempfile.mkstemp('.h5')
-        hdf5file = h5py.File(filepath, 'w')
-        self.r.__savehdf5__(hdf5file, 'det8')
-
-        dataset = hdf5file['det8']['data']
-        self.assertAlmostEqual(1.0, dataset[0][1], 4)
-        self.assertAlmostEqual(0.2, dataset[1][2], 4)
-
-        hdf5file.close()
-        os.close(fd)
-        os.remove(filepath)
-
-    def test__loadhdf5__(self):
-        hdf5file = h5py.File(self.results_h5, 'r')
-        r = _ChannelsResult.__loadhdf5__(hdf5file, 'det8')
-
-        data = r.get_data()
-        self.assertAlmostEqual(1.0, data[0][1], 4)
-        self.assertAlmostEqual(0.2, data[1][2], 4)
-
-        hdf5file.close()
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
