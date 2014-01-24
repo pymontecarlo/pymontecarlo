@@ -104,7 +104,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
         No detectors, limits or models are defined.
         """
         self._name = name
-        self._uuid = uuid.uuid4().hex.encode('ascii')
+        self._uuid = uuid.uuid4().hex
 
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(Material.pure(79)) # Au substrate
@@ -130,7 +130,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
         result = cls.__new__(cls)
 
         result.__dict__.update(self.__dict__)
-        result.__dict__['_uuid'] = uuid.uuid4().hex.encode('ascii') # Reset
+        result.__dict__['_uuid'] = uuid.uuid4().hex # Reset
 
         return result
 
@@ -142,7 +142,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
 
         for k, v in self.__dict__.items():
             result.__dict__[k] = deepcopy(v, memo)
-        result.__dict__['_uuid'] = uuid.uuid4().hex.encode('ascii') # Reset
+        result.__dict__['_uuid'] = uuid.uuid4().hex # Reset
 
         return result
 
