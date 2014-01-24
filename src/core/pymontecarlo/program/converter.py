@@ -24,7 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.expander import Expander
+from pymontecarlo.util.expander import Expander
 
 # Globals and constants variables.
 
@@ -122,10 +122,6 @@ class Converter(object):
             self._warn("Cannot convert geometry (%s)." % clasz.__name__,
                        "This options definition was removed.")
             return False
-
-        # Calculate materials
-        for material in options.geometry.get_materials():
-            material.calculate()
 
         return True
 

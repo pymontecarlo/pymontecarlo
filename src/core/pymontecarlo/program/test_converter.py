@@ -21,7 +21,7 @@ from pymontecarlo.program.converter import Converter
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
 from pymontecarlo.options.geometry import Substrate, Inclusion
-from pymontecarlo.options.material import pure
+from pymontecarlo.options.material import Material
 from pymontecarlo.options.detector import TimeDetector, ElectronFractionDetector
 from pymontecarlo.options.limit import ShowersLimit, TimeLimit
 from pymontecarlo.options.model import ELASTIC_CROSS_SECTION
@@ -46,7 +46,7 @@ class TestConverter(unittest.TestCase):
 
         self.ops = Options()
         self.ops.beam = PencilBeam(15e3)
-        self.ops.geometry = Substrate(pure(29))
+        self.ops.geometry = Substrate(Material.pure(29))
         self.ops.detectors['det1'] = TimeDetector()
         self.ops.limits.add(ShowersLimit(5678))
         self.ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
@@ -74,8 +74,8 @@ class TestConverter(unittest.TestCase):
         self.assertEqual(1, len(opss))
 
     def test_convert_geometry(self):
-        self.ops.geometry = [Substrate(pure(29)),
-                             Inclusion(pure(29), pure(30), 10e-6)]
+        self.ops.geometry = [Substrate(Material.pure(29)),
+                             Inclusion(Material.pure(29), Material.pure(30), 10e-6)]
 
         with warnings.catch_warnings(record=True) as ws:
             opss = self.converter.convert(self.ops)

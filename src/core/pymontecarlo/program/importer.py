@@ -24,9 +24,11 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.results.results import Results
+from pymontecarlo.fileformat.handler import find_parse_handler
 
 # Globals and constants variables.
 
@@ -36,9 +38,7 @@ class ImporterWarning(Warning):
 class ImporterException(Exception):
     pass
 
-class Importer(object):
-
-    __metaclass__ = ABCMeta
+class Importer(object, metaclass=ABCMeta):
 
     def __init__(self):
         self._importers = {}
@@ -95,4 +95,6 @@ class HDF5Importer(Importer):
 
     def _import(self, options, dirpath, *args, **kwargs):
         filepath = os.path.join(dirpath, options.name + '.h5')
-        return Results.load(filepath)
+        with h5py.File(filepath, 'r') as hdf5file:
+            handler = find_parse_handler('pymontecarlo.fileformat.results.results', hdf5file)
+            return handler.parse(hdf5file)

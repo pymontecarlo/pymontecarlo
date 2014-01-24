@@ -21,14 +21,13 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 from abc import ABCMeta, abstractmethod
-from xml.etree import ElementTree
-import xml.dom.minidom as minidom
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.expander import Expander
-from pymontecarlo.options.xmlmapper import mapper
+from pymontecarlo.util.expander import Expander
+import pymontecarlo.util.xmlutil as xmlutil
+from pymontecarlo.fileformat.handler import find_convert_handler
 
 # Globals and constants variables.
 
@@ -38,12 +37,10 @@ class ExporterWarning(Warning):
 class ExporterException(Exception):
     pass
 
-class Exporter(object):
+class Exporter(object, metaclass=ABCMeta):
     """
     Base class for all exporters.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self):
         self._expander = Expander()
@@ -188,19 +185,17 @@ class XMLExporter(Exporter):
     """
 
     def _export(self, options, dirpath, *args, **kwargs):
-        element = mapper.to_xml(options)
+        handler = find_convert_handler('pymontecarlo.fileformat.options.options', options)
+        element = handler.convert(options)
 
         encoding = kwargs.get('encoding', 'UTF-8')
         pretty_print = kwargs.get('pretty_print', True)
 
-        output = ElementTree.tostring(element, encoding=encoding)
-        if pretty_print:
-            output = minidom.parseString(output).toprettyxml(encoding=encoding)
-
         filepath = os.path.join(dirpath, options.name + '.xml')
         with open(filepath, 'wb') as fp:
-            fp.write(output)
+            fp.write(xmlutil.tostring(element, encoding, pretty_print))
 
         return filepath
+
 
 
