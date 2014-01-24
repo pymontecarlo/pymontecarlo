@@ -103,8 +103,8 @@ class Options(object, metaclass=ParameterizedMetaclass):
         The geometry is a Au substrate.
         No detectors, limits or models are defined.
         """
-        self.name = name
-        self._uuid = None
+        self._name = name
+        self._uuid = uuid.uuid4().hex.encode('ascii')
 
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(Material.pure(79)) # Au substrate
@@ -130,7 +130,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
         result = cls.__new__(cls)
 
         result.__dict__.update(self.__dict__)
-        result.__dict__['_uuid'] = None # Reset
+        result.__dict__['_uuid'] = uuid.uuid4().hex.encode('ascii') # Reset
 
         return result
 
@@ -142,7 +142,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
 
         for k, v in self.__dict__.items():
             result.__dict__[k] = deepcopy(v, memo)
-        result.__dict__['_uuid'] = None # Reset
+        result.__dict__['_uuid'] = uuid.uuid4().hex.encode('ascii') # Reset
 
         return result
 
@@ -150,18 +150,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
     def name(self):
         return self._name
 
-    @name.setter
-    def name(self, name):
-        if not name:
-            raise ValueError('Name cannot be empty')
-        self._name = name
-
     @property
     def uuid(self):
-        """
-        Unique identifier for this object.
-        """
-        if self._uuid is None:
-            self._uuid = uuid.uuid4().hex
         return self._uuid
 

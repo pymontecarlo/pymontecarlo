@@ -90,14 +90,6 @@ class TestOptions(TestCase):
 
         self.assertIsNot(list(self.ops.limits)[0], list(ops.limits)[0])
 
-    def testname(self):
-        # Test unicode name
-        uname = '\u03b1\u03b2\u03b3'
-        self.ops.name = uname
-
-        self.assertEqual(uname, self.ops.name)
-        self.assertEqual(uname, str(self.ops))
-
     def testuuid(self):
         uuid = self.ops.uuid
         self.assertEqual(uuid, self.ops.uuid)
