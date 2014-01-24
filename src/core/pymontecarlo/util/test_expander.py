@@ -17,7 +17,7 @@ from math import radians as d2r
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.expander import \
+from pymontecarlo.util.expander import \
     Expander, ExpanderSingleDetector, ExpanderSingleDetectorSameOpening
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import \
@@ -43,7 +43,7 @@ class TestExpander(unittest.TestCase):
         opss = self.expander.expand(self.ops)
         self.assertEqual(3, len(opss))
 
-        names = map(attrgetter('name'), opss)
+        names = list(map(attrgetter('name'), opss))
         self.assertIn('op1+energy_eV=5000.0', names)
         self.assertIn('op1+energy_eV=10000.0', names)
         self.assertIn('op1+energy_eV=15000.0', names)

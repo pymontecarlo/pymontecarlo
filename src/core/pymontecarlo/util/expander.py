@@ -27,12 +27,9 @@ import copy
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import _DelimitedDetector
 
-from pymontecarlo.util.multipleloop import combine
-from pymontecarlo.util.parameter import iter_attributes
+from pymontecarlo.util.parameter import Expander as _Expander
 
 # Globals and constants variables.
-
-
 
 class Expander(_Expander):
     """
@@ -53,11 +50,11 @@ class Expander(_Expander):
             parts = [options.name]
 
             for parameter, value in zip(parameters, combination):
-                parts.append('%s=%s' % (parameter.name, value))
+                parts.append('%s=%s' % (parameter.name, value[0]))
 
             name = '+'.join(parts)
             name = name.replace(',', '_')
-            options.name = name
+            options._name = name
 
         return opss
 
@@ -97,7 +94,7 @@ class ExpanderSingleDetector(Expander):
                 for i, item in enumerate(detectors):
                     key, detector = item
                     newoptions = copy.deepcopy(baseoptions)
-                    newoptions.name += '+%i' % i
+                    newoptions._name += '+%i' % i
                     newoptions.detectors[key] = detector
                     list_options.append(newoptions)
 
@@ -155,7 +152,7 @@ class ExpanderSingleDetectorSameOpening(ExpanderSingleDetector):
             # Add detector with same opening to a new options
             for i, items in enumerate(openings.values()):
                 newoptions = copy.deepcopy(baseoptions)
-                newoptions.name += '+opening%i' % i
+                newoptions._name += '+opening%i' % i
 
                 for key, detector in items:
                     newoptions.detectors[key] = detector
