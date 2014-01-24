@@ -35,7 +35,6 @@ __all__ = ['NO_COLLISION',
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.xmlmapper import _XMLType
 
 # Globals and constants variables.
 
@@ -79,12 +78,3 @@ COLLISIONS = \
                COHERENT_RAYLEIGH_SCATTERING, INCOHERENT_COMPTON_SCATTERING,
                PHOTOELECTRIC_ABSORPTION, ELECTRON_POSITRON_PAIR_PRODUCTION,
                ANNIHILATION])
-
-class CollisionType(_XMLType):
-
-    def from_xml(self, value):
-        lookup = dict(zip(map(str, COLLISIONS), COLLISIONS))
-        return lookup[value]
-
-    def to_xml(self, value):
-        return str(value)

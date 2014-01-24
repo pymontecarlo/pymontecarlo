@@ -18,7 +18,6 @@ from pyxray.transition import Transition, La
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.xmlmapper import mapper
 from pymontecarlo.options.limit import TimeLimit, ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
@@ -37,17 +36,6 @@ class TestTimeLimit(TestCase):
         self.assertEqual(123, self.lim.time_s)
         self.assertAlmostEqual(2.05, self.lim.time_min, 3)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.lim)
-        lim = mapper.from_xml(element)
-
-        self.assertEqual(123, lim.time_s)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.lim)
-
-        self.assertAlmostEqual(123.0, float(element.get('time')), 4)
-
 class TestShowersLimit(TestCase):
 
     def setUp(self):
@@ -61,17 +49,6 @@ class TestShowersLimit(TestCase):
     def testskeleton(self):
         self.assertEqual(123, self.lim.showers)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.lim)
-        lim = mapper.from_xml(element)
-
-        self.assertEqual(123, lim.showers)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.lim)
-
-        self.assertEqual(123, int(element.get('showers')))
-
 class TestUncertaintyLimit(TestCase):
 
     def setUp(self):
@@ -84,31 +61,12 @@ class TestUncertaintyLimit(TestCase):
         TestCase.tearDown(self)
 
     def testskeleton(self):
-        self.assertEqual(1, len(self.lim.transitions))
-        self.assertEqual('Cu K\u03b11', str(list(self.lim.transitions)[0]))
+        self.assertEqual('Cu K\u03b11', str(self.lim.transition))
         self.assertAlmostEqual(0.05, self.lim.uncertainty, 4)
 
     def testtransitions(self):
-        self.lim.transitions.update(La(29))
-        self.assertEqual(3, len(self.lim.transitions))
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.lim)
-        lim = mapper.from_xml(element)
-
-        self.assertEqual(1, len(self.lim.transitions))
-        self.assertEqual('Cu K\u03b11', str(list(self.lim.transitions)[0]))
-        self.assertAlmostEqual(0.05, lim.uncertainty, 4)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.lim)
-
-        child = list(element.find('transitions'))[0]
-        self.assertEqual(29, int(child.get('z')))
-        self.assertEqual(4, int(child.get('src')))
-        self.assertEqual(1, int(child.get('dest')))
-
-        self.assertAlmostEqual(0.05, float(element.get('uncertainty')), 4)
+        self.lim.transition = list(La(29))
+        self.assertEqual(2, len(self.lim.transition))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

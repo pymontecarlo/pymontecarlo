@@ -31,40 +31,33 @@ import math
 import numpy as np
 
 # Local modules.
-from pymontecarlo.options.parameter import \
-    (ParameterizedMetaClass, Parameter, AngleParameter, UnitParameter,
-     SimpleValidator, EnumValidator, CastValidator)
-from pymontecarlo.util.mathutil import vector3d
-
-from pymontecarlo.options.xmlmapper import \
-    mapper, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
-from pymontecarlo.options.particle import ParticleType
+from pymontecarlo.util.parameter import \
+    (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
+     range_validator, enum_validator)
+from pymontecarlo.options.particle import _Particle
 
 # Globals and constants variables.
 from pymontecarlo.options.particle import ELECTRON, PARTICLES
 
-class _Beam(object, metaclass=ParameterizedMetaClass):
-    pass
+def _direction_validator(value):
+    if value.u ** +value.v ** 2 + value.w ** 2 == 0:
+        raise ValueError('Direction cannot be a null vector')
 
-_energy_validator = SimpleValidator(lambda e: e > 0.0,
-                                    "Energy must be greater than 0 eV.")
-_aperture_validator = SimpleValidator(lambda x: 0.0 <= x <= math.pi / 2,
-                                      "Aperture must be between [0, pi/2] rad")
+class _Beam(object, metaclass=ParameterizedMetaclass):
+    pass
 
 class PencilBeam(_Beam):
 
-    energy = UnitParameter('eV', _energy_validator,
-                          "Initial energy of the particle(s)")
-    particle = Parameter(EnumValidator(PARTICLES),
-                         "Type of particles (see :mod:`.particle`)")
-    origin = UnitParameter('m', CastValidator(vector3d),
-                           """Initial location of the particle(s).
-                             Location saved as a tuple of length 3 for the x, y and z spatial coordinates.""")
-    direction = Parameter(CastValidator(vector3d),
-                          """Direction of the particle(s).
-                          Direction is represented by a tuple of length 3 for the x, y and z coordinates.""")
-    aperture = AngleParameter(_aperture_validator,
-                              "Angular aperture of the electron beam")
+    energy = UnitParameter('eV', range_validator(0.0),
+                           doc="Initial energy of the particle(s)")
+    particle = Parameter(_Particle, enum_validator(PARTICLES),
+                         doc="Type of particles (see :mod:`.particle`)")
+    origin = UnitParameter('m', fields=('x', 'y', 'z'),
+                           doc="Initial location of the particle(s)")
+    direction = Parameter(np.float, _direction_validator, ('u', 'v', 'w'),
+                          doc="Direction of the particle(s).")
+    aperture = AngleParameter(range_validator(0.0, math.pi / 2),
+                              doc="Angular aperture of the electron beam")
 
     def __init__(self, energy_eV, particle=ELECTRON,
                  origin_m=(0, 0, 1), direction=(0, 0, -1),
@@ -101,30 +94,38 @@ class PencilBeam(_Beam):
         """
         Angle of the beam with respect to the positive z-axis. (read-only)
         """
-        norm = np.linalg.norm(self.direction)
-        return math.acos(self.direction[2] / norm);
+        directions = np.array(self.direction, ndmin=1)
+
+        angles = []
+        for direction in directions:
+            norm = np.linalg.norm((direction.u, direction.v, direction.w))
+            angles.append(math.acos(direction.w / norm))
+
+        if len(angles) == 1:
+            return angles[0]
+        else:
+            return angles
 
     @property
     def direction_azimuth_rad(self):
         """
         Angle of the beam with respect to the positive x-axis in the x-y plane.  (read-only)
         """
-        return math.atan2(self.direction[1], self.direction[0]);
+        directions = np.array(self.direction, ndmin=1)
 
-mapper.register(PencilBeam, '{http://pymontecarlo.sf.net}pencilBeam',
-                ParameterizedAttribute('energy_eV', PythonType(float), 'energy'),
-                ParameterizedAttribute('particle', ParticleType()),
-                ParameterizedElement('origin_m', UserType(vector3d), 'origin'),
-                ParameterizedElement('direction', UserType(vector3d)),
-                ParameterizedAttribute('aperture_rad', PythonType(float), 'aperture'))
+        angles = []
+        for direction in directions:
+            angles.append(math.atan2(direction.v, direction.u))
 
-_diameter_validator = \
-    SimpleValidator(lambda d: d >= 0, "Diameter must be equal or greater than 0")
+        if len(angles) == 1:
+            return angles[0]
+        else:
+            return angles
 
 class GaussianBeam(PencilBeam):
 
-    diameter = UnitParameter("m", _diameter_validator,
-                             "Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
+    diameter = UnitParameter("m", range_validator(0.0),
+                             doc="Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
 
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
@@ -155,9 +156,6 @@ class GaussianBeam(PencilBeam):
     def __repr__(self):
         return '<GaussianBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
             (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
-
-mapper.register(GaussianBeam, '{http://pymontecarlo.sf.net}gaussianBeam',
-                ParameterizedAttribute('diameter_m', PythonType(float), 'diameter'))
 
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """

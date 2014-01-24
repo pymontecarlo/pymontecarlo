@@ -27,180 +27,72 @@ __all__ = ['GrainBoundaries',
 # Standard library modules.
 from operator import attrgetter
 from math import pi
-# import itertools
-from xml.etree import ElementTree
 
 # Third party modules.
 import numpy as np
 
 # Local modules.
-from pymontecarlo.options.parameter import \
-    (ParameterizedMetaClass, Parameter, UnitParameter, AngleParameter,
-     FrozenParameter, ParameterAlias, SimpleValidator, ParameterizedMutableSequence)
-from pymontecarlo.options.body import Body, Layer
-from pymontecarlo.options.material import VACUUM
-from pymontecarlo.options.xmlmapper import \
-    (mapper, ParameterizedElement, ParameterizedElementSequence,
-     ParameterizedAttribute, PythonType, UserType, _XMLItem)
+from pymontecarlo.util.parameter import \
+    (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
+     range_validator)
+from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
 _MATERIAL_GETTER = attrgetter('material')
 _THICKNESS_GETTER = attrgetter('thickness_m')
-POSINF = float('inf')
-NEGINF = float('-inf')
 
-class _MaterialParameterAlias(ParameterAlias):
+class _Body(object, metaclass=ParameterizedMetaclass):
 
-    def __get__(self, obj, objtype=None):
-        body = ParameterAlias.__get__(self, obj, objtype)
-        return body.material
+    material = Parameter(Material, doc="Material of this body")
 
-    def __set__(self, obj, value):
-        body = ParameterAlias.__get__(self, obj)
-        body.material = value
+    def __init__(self, geometry, material):
+        """
+        Body of a geometry.
 
-class _Dimension(object):
-    """
-    Dimensions in x, y and z of a body.
-    """
+        :arg geometry: geometry of this body
+        :type geometry: :class:`.Geometry`
 
-    def __init__(self,
-                 xmin=NEGINF, xmax=POSINF,
-                 ymin=NEGINF, ymax=POSINF,
-                 zmin=NEGINF, zmax=POSINF):
-        self._xmin = xmin
-        self._xmax = xmax
-        self._ymin = ymin
-        self._ymax = ymax
-        self._zmin = zmin
-        self._zmax = zmax
+        :arg material: material of this body
+        :type material: :class:`Material`
+        """
+        self._geometry = geometry
+        self.material = material
 
     def __repr__(self):
-        return '<Dimension(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)>' % \
-            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
+        return '<Body(material=%s)>' % str(self.material)
 
-    def __str__(self):
-        return '(xmin=%s, xmax=%s, ymin=%s, ymax=%s, zmin=%s, zmax=%s)' % \
-            (self.xmin_m, self.xmax_m, self.ymin_m, self.ymax_m, self.zmin_m, self.zmax_m)
+    @property
+    def geometry(self):
+        """
+        Geometry containing this body.
+        """
+        return self._geometry
 
     @property
     def xmin_m(self):
-        return self._xmin
+        return float('-inf')
 
     @property
     def xmax_m(self):
-        return self._xmax
+        return float('inf')
 
     @property
     def ymin_m(self):
-        return self._ymin
+        return float('-inf')
 
     @property
     def ymax_m(self):
-        return self._ymax
+        return float('inf')
 
     @property
     def zmin_m(self):
-        return self._zmin
+        return float('-inf')
 
     @property
     def zmax_m(self):
-        return self._zmax
+        return float('inf')
 
-    def to_tuple(self):
-        return self.xmin_m, self.xmax_m, \
-               self.ymin_m, self.ymax_m, \
-               self.zmin_m, self.zmax_m
-
-_tilt_validator = SimpleValidator(lambda t:-pi <= t <= pi,
-                                  "Tilt must be between [-pi, pi]")
-_rotation_validator = SimpleValidator(lambda r:-pi <= r <= pi,
-                                      "Rotation must be between [-pi, pi]")
-
-class _BodyXMLElement(_XMLItem):
-
-    def __init__(self, *args, **kwargs):
-        _XMLItem.__init__(self, None, None)
-
-    def _get_object_values(self, obj, manager):
-        # Bodies
-        bodies_lookup = {}
-        for i, body in enumerate(obj.get_bodies()):
-            bodies_lookup[body] = i
-
-        # Materials
-        materials_lookup = {}
-        for i, material in enumerate(obj.get_materials()):
-            materials_lookup[material] = i + 1
-
-        return bodies_lookup, materials_lookup
-
-    def _update_element(self, element, values, manager):
-        bodies_lookup, materials_lookup = values
-
-        # Materials
-        subelement = ElementTree.Element('materials')
-
-        for material, index in materials_lookup.iteritems():
-            subsubelement = manager.to_xml(material)
-            subsubelement.set('index', str(index))
-            subelement.append(subsubelement)
-
-        element.append(subelement)
-
-        # Bodies
-        subelement = ElementTree.Element('bodies')
-
-        for body, index in bodies_lookup.iteritems():
-            subsubelement = manager.to_xml(body)
-            subsubelement.set('index', str(index))
-
-            subsubelement.remove(subsubelement.find('material')) # remove material element
-
-            material = body.__dict__['material'].get_list()
-            subsubelement.set('material', str(materials_lookup[body.material]))
-
-            subelement.append(subsubelement)
-
-        element.append(subelement)
-
-    def _update_element_bodies(self, obj, element, bodies_lookup):
-        raise NotImplementedError
-
-    def dump(self, obj, element, manager):
-        values = self._get_object_values(obj, manager)
-        self._update_element(element, values, manager)
-        self._update_element_bodies(obj, element, values[0])
-
-    def _extract_values(self, element, manager):
-        # Materials
-        materials_lookup = {0: VACUUM}
-        for subelement in element.find('materials'):
-            index = int(subelement.get('index'))
-            material = manager.from_xml(subelement)
-            materials_lookup[index] = material
-
-        # Bodies
-        bodies_lookup = {}
-        for subelement in element.find('bodies'):
-            index = int(subelement.get('index'))
-            body = manager.from_xml(subelement)
-
-            material_index = int(subelement.get('material'))
-            body.material = materials_lookup[material_index]
-
-            bodies_lookup[index] = body
-
-        return bodies_lookup
-
-    def _set_object_bodies(self, obj, element, bodies_lookup):
-        raise NotImplementedError
-
-    def load(self, obj, element, manager):
-        bodies_lookup = self._extract_values(element, manager)
-        self._set_object_bodies(obj, element, bodies_lookup)
-
-class _Geometry(object, metaclass=ParameterizedMetaClass):
+class _Geometry(object, metaclass=ParameterizedMetaclass):
     """
     Base class for all geometry representations.
 
@@ -211,12 +103,12 @@ class _Geometry(object, metaclass=ParameterizedMetaClass):
     the same material.
     """
 
-    tilt = AngleParameter(_tilt_validator,
-                          "Specimen tilt in radians along the x-axis")
-    rotation = AngleParameter(_rotation_validator,
-                              "Specimen rotation in radians along the z-axis")
+    tilt = AngleParameter(range_validator(-pi, pi),
+                          doc="Specimen tilt in radians along the x-axis")
+    rotation = AngleParameter(range_validator(-pi, pi),
+                              doc="Specimen rotation in radians along the z-axis")
 
-    def __init__(self, tilt_rad=0, rotation_rad=0):
+    def __init__(self, tilt_rad=0.0, rotation_rad=0.0):
         self.tilt_rad = tilt_rad
         self.rotation_rad = rotation_rad
 
@@ -241,139 +133,137 @@ class _Geometry(object, metaclass=ParameterizedMetaClass):
         """
         raise NotImplementedError
 
-    def get_dimensions(self, body):
-        """
-        Returns a class:`Dimension <._Dimension>` corresponding to the
-        dimensions of the body inside the geometry.
-        All dimensions are in meters.
+class _SubstrateBody(_Body):
 
-        :arg body: body to get the dimensions for
-        """
-        raise NotImplementedError
-
-mapper.register(_Geometry, '{http://pymontecarlo.sf.net}_geometry',
-                ParameterizedAttribute('tilt_rad', PythonType(float), 'tilt'),
-                ParameterizedAttribute('rotation_rad', PythonType(float), 'rotation'))
+    @property
+    def zmax_m(self):
+        return 0.0
 
 class Substrate(_Geometry):
 
-    body = Parameter(doc="Body of this substrate")
-    material = _MaterialParameterAlias(body, doc="Material of this substrate")
+    body = Parameter(_SubstrateBody, doc="Body of this substrate")
 
-    def __init__(self, material):
-        _Geometry.__init__(self)
-        self.body = Body(material)
+    def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
+        _Geometry.__init__(self, tilt_rad, rotation_rad)
+        self.body = _SubstrateBody(self, material)
+
+        self.__parameters__['body'].freeze(self)
 
     def __repr__(self):
-        return '<Substrate(material=%s)>' % str(self.material)
+        return '<Substrate(material=%s)>' % str(self.body.material)
 
     def get_bodies(self):
-        bodies = self.__dict__['body'].get_list()
-        return set(bodies)
+        return set(np.array(self.body, ndmin=1))
 
-    def get_dimensions(self, body):
-        if body is self.body:
-            return _Dimension(zmax=0.0)
-        else:
-            raise ValueError("Unknown body: %s" % body)
+class _InclusionBody(_Body):
 
-mapper.register(Substrate, '{http://pymontecarlo.sf.net}substrate',
-                ParameterizedElement('body', UserType(Body), 'substrate'))
+    diameter = UnitParameter("m", range_validator(0.0, inclusive=False),
+                             doc="Inclusion diameter")
 
-_diameter_validator = SimpleValidator(lambda d: d > 0.0,
-                                      "Diameter must be greater than 0.0")
+    def __init__(self, geometry, material, diameter_m):
+        _Body.__init__(self, geometry, material)
+        self.diameter_m = diameter_m
+
+    @property
+    def xmin_m(self):
+        return -self.diameter_m / 2.0
+
+    @property
+    def xmax_m(self):
+        return self.diameter_m / 2.0
+
+    @property
+    def ymin_m(self):
+        return -self.diameter_m / 2.0
+
+    @property
+    def ymax_m(self):
+        return self.diameter_m / 2.0
+
+    @property
+    def zmin_m(self):
+        return -self.diameter_m / 2.0
+
+    @property
+    def zmax_m(self):
+        return 0.0
 
 class Inclusion(_Geometry):
 
-    substrate_body = Parameter(doc="Body of the substrate")
-    substrate_material = _MaterialParameterAlias(substrate_body,
-                                                doc="Material of the substrate")
+    substrate = Parameter(_SubstrateBody, doc="Body of the substrate")
+    inclusion = Parameter(_InclusionBody, doc="Body of the inclusion")
 
-    inclusion_body = Parameter(doc="Body of the inclusion")
-    inclusion_material = _MaterialParameterAlias(inclusion_body,
-                                                doc="Material of the inclusion")
+    def __init__(self, substrate_material,
+                 inclusion_material, inclusion_diameter_m,
+                 tilt_rad=0.0, rotation_rad=0.0):
+        _Geometry.__init__(self, tilt_rad, rotation_rad)
 
-    inclusion_diameter = UnitParameter("m", _diameter_validator,
-                                       "Inclusion diameter (in meters)")
+        self.substrate = _SubstrateBody(self, substrate_material)
+        self.inclusion = _InclusionBody(self, inclusion_material, inclusion_diameter_m)
 
-    def __init__(self, substrate_material, inclusion_material, inclusion_diameter_m):
-        _Geometry.__init__(self)
-
-        self.substrate_body = Body(substrate_material)
-        self.inclusion_body = Body(inclusion_material)
-        self.inclusion_diameter_m = inclusion_diameter_m
+        self.__parameters__['substrate'].freeze(self)
+        self.__parameters__['inclusion'].freeze(self)
 
     def __repr__(self):
         return '<Inclusion(substrate_material=%s, inclusion_material=%s, inclusion_diameter=%s m)>' % \
-            (str(self.substrate_material), str(self.inclusion_material), self.inclusion_diameter_m)
+            (str(self.substrate.material), str(self.inclusion.material), self.inclusion.diameter_m)
 
     def get_bodies(self):
-        return set([self.substrate_body, self.inclusion_body])
+        bodies = set()
+        bodies.update(np.array(self.substrate, ndmin=1))
+        bodies.update(np.array(self.inclusion, ndmin=1))
+        return bodies
 
-    def get_dimensions(self, body):
-        if body is self.substrate_body:
-            return _Dimension(zmax=0.0)
-        elif body is self.inclusion_body:
-            radius = self.inclusion_diameter_m / 2.0
-            return _Dimension(-radius, radius, -radius, radius, -radius, 0.0)
-        else:
-            raise ValueError("Unknown body: %s" % body)
+class _Layer(_Body):
 
-mapper.register(Inclusion, '{http://pymontecarlo.sf.net}inclusion',
-                ParameterizedElement('substrate_body', UserType(Body), 'substrate'),
-                ParameterizedElement('inclusion_body', UserType(Body), 'inclusion'),
-                ParameterizedAttribute('inclusion_diameter_m', PythonType(float), 'diameter'))
+    thickness = UnitParameter("m", range_validator(0.0, inclusive=False),
+                              doc="Thickness of this layer")
 
-class _Layers(ParameterizedMutableSequence):
-    pass
-
-class _LayeredGeometry(_Geometry):
-
-    layers = FrozenParameter(_Layers, "Layers from top to bottom (multi-layers) or from left to right (grain boundaries).")
-
-    def __init__(self, layers=None):
-        _Geometry.__init__(self)
-
-        if layers is not None:
-            self.layers.extend(layers)
-
-    def add_layer(self, material, thickness):
+    def __init__(self, geometry, material, thickness_m):
         """
-        Adds a layer to the geometry.
-        The layer is added after the previous layers.
-
-        This method is equivalent to::
-
-            geometry.layers.append(Layer(material, thickness))
+        Layer of a geometry.
 
         :arg material: material of the layer
         :type material: :class:`Material`
 
-        :arg thickness: thickness of the layer in meters
+        :arg thickness_m: thickness of the layer in meters
         """
-        layer = Layer(material, thickness)
-        self.layers.append(layer)
-        return layer
+        _Body.__init__(self, geometry, material)
 
-    def clear(self):
-        """
-        Removes all layers.
-        """
-        del self.layers[:]
+        self.thickness_m = thickness_m
 
-    def get_bodies(self):
-        return list(self.layers) # copy
+    def __repr__(self):
+        return '<Layer(material=%s, thickness=%s m)>' % \
+                    (str(self.material), self.thickness_m)
 
-mapper.register(_LayeredGeometry, '{http://pymontecarlo.sf.net}layeredGeometry',
-                ParameterizedElementSequence('layers', UserType(Layer)))
+class _HorizontalLayer(_Layer):
 
-class MultiLayers(_LayeredGeometry):
+    @property
+    def zmin_m(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        indexbottom = len(layers) - np.where(layers[::-1] == self)[0][0]
+        return -sum(map(_THICKNESS_GETTER, layers[:indexbottom]))
 
-    substrate_body = Parameter(doc="Body of the substrate")
-    substrate_material = \
-        _MaterialParameterAlias(substrate_body, doc="Material of the substrate")
+    @property
+    def zmax_m(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        indextop = np.where(layers == self)[0][0]
+        return -sum(map(_THICKNESS_GETTER, layers[:indextop]))
 
-    def __init__(self, substrate_material=None, layers=None):
+class _HorizontalSubstrateBody(_SubstrateBody):
+
+    @property
+    def zmax_m(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        return -sum(map(_THICKNESS_GETTER, layers))
+
+class HorizontalLayers(_Geometry):
+
+    substrate = Parameter(_HorizontalSubstrateBody, doc="Body of the substrate")
+    layers = Parameter(_HorizontalLayer, doc="Layers from top to bottom")
+
+    def __init__(self, substrate_material=None, layers=None,
+                 tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a multi-layers geometry.
         The layers are assumed to be in the x-y plane (normal parallel to z).
@@ -384,16 +274,22 @@ class MultiLayers(_LayeredGeometry):
             If ``None``, the geometry does not have a substrate, only layers
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        _LayeredGeometry.__init__(self, layers)
+        _Geometry.__init__(self, tilt_rad, rotation_rad)
 
         if substrate_material is None:
             substrate_material = VACUUM
-        self.substrate_body = Body(substrate_material)
+        self.substrate = _HorizontalSubstrateBody(self, substrate_material)
+
+        if layers is None:
+            layers = []
+        self.layers = layers
+
+        self.__parameters__['substrate'].freeze(self)
 
     def __repr__(self):
         if self.has_substrate():
             return '<MultiLayers(substrate_material=%s, layers_count=%i)>' % \
-                (str(self.substrate_material), len(self.layers))
+                (str(self.substrate.material), len(self.layers))
         else:
             return '<MultiLayers(No substrate, layers_count=%i)>' % len(self.layers)
 
@@ -401,70 +297,47 @@ class MultiLayers(_LayeredGeometry):
         """
         Returns ``True`` if a substrate material has been defined.
         """
-        return self.substrate_body.material is not VACUUM
+        return self.substrate.material is not VACUUM
+
+    def add_layer(self, material, thickness_m):
+        """
+        Adds a layer to the geometry.
+        The layer is added after the previous layers.
+
+        :arg material: material of the layer
+        :type material: :class:`Material`
+
+        :arg thickness: thickness of the layer in meters
+        """
+        layer = _HorizontalLayer(self, material, thickness_m)
+
+        layers = np.array(self.layers, ndmin=1).tolist()
+        layers.append(layer)
+        self.layers = layers
+
+        return layer
 
     def get_bodies(self):
-        bodies = _LayeredGeometry.get_bodies(self)
+        bodies = set()
+        bodies.update(np.array(self.layers, ndmin=1))
 
         if self.has_substrate():
-            bodies.append(self.substrate_body)
+            bodies.add(self.substrate)
 
         return bodies
 
-    def get_dimensions(self, body):
-        if body is self.substrate_body and body is not None:
-            zmax = -sum(map(_THICKNESS_GETTER, self.layers))
-            return _Dimension(zmax=zmax)
-        elif body in self.layers:
-            indextop = self.layers.index(body)
-            indexbottom = len(self.layers) - self.layers[::-1].index(body)
-            zmax = -sum(map(_THICKNESS_GETTER, self.layers[:indextop]))
-            zmin = -sum(map(_THICKNESS_GETTER, self.layers[:indexbottom]))
-            return _Dimension(zmin=zmin, zmax=zmax)
-        else:
-            raise ValueError("Unknown body: %s" % body)
+class _VerticalBody(_Body):
 
-mapper.register(MultiLayers, '{http://pymontecarlo.sf.net}multiLayers',
-                ParameterizedElement('substrate_body', UserType(Body), 'substrate'))
+    depth = UnitParameter("m", range_validator(0.0, inclusive=False),
+                          doc="Depth (z thickness)")
 
-class GrainBoundaries(_LayeredGeometry):
+    def __init__(self, geometry, material, depth_m=float('inf')):
+        _Body.__init__(self, geometry, material)
+        self.depth_m = depth_m
 
-    left_body = Parameter(doc="Body of left side")
-    left_material = _MaterialParameterAlias(left_body, doc="Material of left side")
-
-    right_body = Parameter(doc="Body of right side")
-    right_material = _MaterialParameterAlias(right_body, doc="Material of right side")
-
-    def __init__(self, left_material, right_material, layers=None):
-        """
-        Creates a grain boundaries geometry.
-        It consists of 0 or many layers in the y-z plane (normal parallel to x)
-        simulating interfaces between different materials.
-        If no layer is defined, the geometry is a couple.
-
-        :arg left_material: material on the left side
-        :arg right_material: material on the right side
-        :arg layers: :class:`list` of :class:`.Layer`
-        """
-        _LayeredGeometry.__init__(self, layers)
-
-        self.left_body = Body(left_material)
-        self.right_body = Body(right_material)
-
-    def __repr__(self):
-        return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
-            (str(self.left_material), str(self.right_material), len(self.layers))
-
-    def get_bodies(self):
-        bodies = _LayeredGeometry.get_bodies(self)
-
-        bodies.append(self.left_body)
-        bodies.append(self.right_body)
-
-        return bodies
-
-    def get_dimensions(self, body):
-        thicknesses = list(map(_THICKNESS_GETTER, self.layers))
+    def _calculate_positions(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        thicknesses = list(map(_THICKNESS_GETTER, layers))
 
         positions = []
         if thicknesses: # simple couple
@@ -475,68 +348,168 @@ class GrainBoundaries(_LayeredGeometry):
         else:
             positions.append(0.0)
 
-        if body is self.left_body:
-            return _Dimension(xmax=positions[0], zmax=0)
-        elif body is self.right_body:
-            return _Dimension(xmin=positions[-1], zmax=0)
-        elif body in self.layers:
-            indexleft = self.layers.index(body)
-            indexright = len(self.layers) - self.layers[::-1].index(body)
-            return _Dimension(xmin=positions[indexleft],
-                              xmax=positions[indexright],
-                              zmax=0)
-        else:
-            raise ValueError("Unknown body: %s" % body)
+        return positions
 
-mapper.register(GrainBoundaries, '{http://pymontecarlo.sf.net}grainBoundaries',
-                ParameterizedElement('left_body', UserType(Body), 'left'),
-                ParameterizedElement('right_body', UserType(Body), 'right'))
+    @property
+    def zmin_m(self):
+        return -self.depth_m
 
-_thickness_validator = SimpleValidator(lambda t: t > 0,
-                                       'Thickness must be greater than 0')
+class _VerticalLayer(_Layer, _VerticalBody):
 
-class ThinGrainBoundaries(GrainBoundaries):
+    def __init__(self, geometry, material, thickness_m, depth_m=float('inf')):
+        _Layer.__init__(self, geometry, material, thickness_m)
+        _VerticalBody.__init__(self, geometry, material, depth_m)
 
-    thickness = UnitParameter("m", _thickness_validator,
-                              "Thickness of geometry (in meters)")
+    @property
+    def xmin_m(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        positions = self._calculate_positions()
+        indexleft = np.where(layers == self)[0][0]
+        return positions[indexleft]
 
-    def __init__(self, left_material, right_material, thickness_m, layers=None):
+    @property
+    def xmax_m(self):
+        layers = np.array(self.geometry.layers, ndmin=1)
+        positions = self._calculate_positions()
+        indexright = len(layers) - np.where(layers[::-1] == self)[0][0]
+        return positions[indexright]
+
+    @property
+    def zmax_m(self):
+        return 0.0
+
+class _VerticalLeftSubstrateBody(_SubstrateBody, _VerticalBody):
+
+    def __init__(self, geometry, material, depth_m=float('inf')):
+        _SubstrateBody.__init__(self, geometry, material)
+        _VerticalBody.__init__(self, geometry, material, depth_m)
+
+    @property
+    def xmax_m(self):
+        positions = self._calculate_positions()
+        return positions[0]
+
+class _VerticalRightSubstrateBody(_SubstrateBody, _VerticalBody):
+
+    def __init__(self, geometry, material, depth_m=float('inf')):
+        _SubstrateBody.__init__(self, geometry, material)
+        _VerticalBody.__init__(self, geometry, material, depth_m)
+
+    @property
+    def xmin_m(self):
+        positions = self._calculate_positions()
+        return positions[-1]
+
+class VerticalLayers(_Geometry):
+
+    left_substrate = Parameter(_VerticalLeftSubstrateBody,
+                               doc="Body of left side")
+    right_substrate = Parameter(_VerticalRightSubstrateBody,
+                                doc="Body of right side")
+    layers = Parameter(_VerticalLayer, doc="Layers from left to right")
+
+    def __init__(self, left_material, right_material, layers=None,
+                 tilt_rad=0.0, rotation_rad=0.0):
         """
-        Creates a thin film consisting of a grain boundaries geometry.
+        Creates a grain boundaries geometry.
         It consists of 0 or many layers in the y-z plane (normal parallel to x)
         simulating interfaces between different materials.
         If no layer is defined, the geometry is a couple.
 
         :arg left_material: material on the left side
         :arg right_material: material on the right side
-        :arg thickness_m: thickness of the geometry (in meters)
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        GrainBoundaries.__init__(self, left_material, right_material, layers)
-        self.thickness_m = thickness_m
+        _Geometry.__init__(self, tilt_rad, rotation_rad)
+
+        self.left_substrate = _VerticalLeftSubstrateBody(self, left_material)
+        self.right_substrate = _VerticalRightSubstrateBody(self, right_material)
+
+        if layers is None:
+            layers = []
+        self.layers = layers
+
+        self.__parameters__['left_substrate'].freeze(self)
+        self.__parameters__['right_substrate'].freeze(self)
 
     def __repr__(self):
-        return '<ThinGrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i, thickness=%s m)>' % \
-            (str(self.left_material), str(self.right_material),
-             len(self.layers), self.thickness_m)
+        return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
+            (str(self.left_substrate.material),
+             str(self.right_substrate.material),
+             len(self.layers))
 
-    def get_dimensions(self, body):
-        dim = GrainBoundaries.get_dimensions(self, body)
-        dim._zmin = -self.thickness_m
-        return dim
+    def add_layer(self, material, thickness, depth_m=None):
+        """
+        Adds a layer to the geometry.
+        The layer is added after the previous layers.
 
-mapper.register(ThinGrainBoundaries, '{http://pymontecarlo.sf.net}thinGrainBoundaries',
-                ParameterizedAttribute('thickness_m', PythonType(float), 'thickness'))
+        :arg material: material of the layer
+        :type material: :class:`Material`
+
+        :arg thickness: thickness of the layer in meters
+        """
+        if depth_m is None:
+            depth_m = self.left_substrate.depth_m
+        layer = _VerticalLayer(self, material, thickness, depth_m)
+
+        layers = np.array(self.layers, ndmin=1).tolist()
+        layers.append(layer)
+        self.layers = layers
+
+        return layer
+
+    def get_bodies(self):
+        bodies = set()
+        bodies.update(np.array(self.layers, ndmin=1))
+        bodies.add(self.left_substrate)
+        bodies.add(self.right_substrate)
+        return bodies
+
+    def set_depth_m(self, depth_m):
+        """
+        Sets the depth of all layers and substrates
+        """
+        for body in self.get_bodies():
+            body.depth_m = depth_m
+
+class _SphereBody(_Body):
+
+    diameter = UnitParameter("m", range_validator(0.0, inclusive=False),
+                             doc="Diameter")
+
+    def __init__(self, geometry, material, diameter_m):
+        _Body.__init__(self, geometry, material)
+        self.diameter_m = diameter_m
+
+    @property
+    def xmin_m(self):
+        return -self.diameter_m / 2.0
+
+    @property
+    def xmax_m(self):
+        return self.diameter_m / 2.0
+
+    @property
+    def ymin_m(self):
+        return -self.diameter_m / 2.0
+
+    @property
+    def ymax_m(self):
+        return self.diameter_m / 2.0
+
+    @property
+    def zmin_m(self):
+        return -self.diameter_m
+
+    @property
+    def zmax_m(self):
+        return 0.0
 
 class Sphere(_Geometry):
 
-    body = Parameter(doc="Body of this sphere")
-    material = _MaterialParameterAlias(body, doc="Material of this sphere")
+    body = Parameter(_SphereBody, doc="Body of this sphere")
 
-    diameter = UnitParameter("m", _diameter_validator,
-                             "Diameter of this sphere (in meters)")
-
-    def __init__(self, material, diameter_m):
+    def __init__(self, material, diameter_m, tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a geometry consisting of a sphere.
         The sphere is entirely located below the ``z=0`` plane.
@@ -544,223 +517,215 @@ class Sphere(_Geometry):
         :arg material: material
         :arg diameter_m: diameter (in meters)
         """
-        _Geometry.__init__(self)
+        _Geometry.__init__(self, tilt_rad, rotation_rad)
 
-        self.body = Body(material)
-        self.diameter_m = diameter_m
+        self.body = _SphereBody(self, material, diameter_m)
+
+        self.__parameters__['body'].freeze(self)
 
     def __repr__(self):
         return '<Sphere(material=%s, diameter=%s m)>' % \
-                    (str(self.material), self.diameter_m)
+                    (str(self.body.material), self.diameter_m)
 
     def get_bodies(self):
-        return set([self.body])
+        return set(np.array(self.body, ndmin=1))
 
-    def get_dimensions(self, body):
-        if body is self.body:
-            d = self.diameter_m
-            r = d / 2.0
-            return _Dimension(xmin=-r, xmax=r,
-                              ymin=-r, ymax=r,
-                              zmin=-d, zmax=0.0)
-        else:
-            raise ValueError("Unknown body: %s" % body)
 
-mapper.register(Sphere, '{http://pymontecarlo.sf.net}sphere',
-                ParameterizedElement('body', UserType(Body), 'body'),
-                ParameterizedAttribute('diameter_m', PythonType(float), 'diameter'))
-#
-# class Cuboids2D(_Geometry):
-#
-#    class __Cuboids2DBody(object):
-#        def __init__(self, bodies):
-#            self._bodies = bodies
-#
-#        def __getitem__(self, index):
-#            if index not in self._bodies:
-#                raise IndexError, 'No body at index (%i, %i)' % index
-#            return self._bodies[index]
-#
-#    class __Cuboids2DMaterial(object):
-#        def __init__(self, bodies):
-#            self._bodies = bodies
-#
-#        def __getitem__(self, index):
-#            if index not in self._bodies:
-#                raise IndexError, 'No material at index (%i, %i)' % index
-#            return self._bodies[index].material
-#
-#        def __setitem__(self, index, material):
-#            if index not in self._bodies:
-#                raise IndexError, 'No material at index (%i, %i)' % index
-#            self._bodies[index].material = material
-#
-#    def __init__(self, nx, ny, xsize_m, ysize_m):
-#        """
-#        Creates a geometry made of *nx* by *ny* adjacent cuboids with
-#        infinite depth.
-#        Each cuboid was a size of *xsize* by *ysize*.
-#        The number of cuboids in x and y-direction must be odd, so that the
-#        cuboid (nx/2+1, ny/2+1) is located at the center.
-#
-#        The position (0, 0) is given to the center cuboid.
-#        Cuboids on the upper-left quadrant have positive indexes whereas
-#        cuboids on the bottom-right quadrant have negative indexes.
-#
-#        The material of each cuboid can be access as follows::
-#
-#            >>> print geometry.material[0,0] # center cuboid
-#            >>> print geometry.material[1,0] # cuboid to the left of the center cuboid
-#            >>> print geometry.material[0,1] # cuboid above the center cuboid
-#            >>> print geometry.material[1,-2] # cuboid one up and 2 to the right of the center cuboid
-#
-#        .. note::
-#
-#           When the geometry is created, all cuboids have no material (i.e. vacuum).
-#
-#        :arg nx: number of cuboids in x-direction (odd number)
-#        :type nx: :class:`int`
-#
-#        :arg ny: number of cuboids in y-direction (odd number)
-#        :type ny: :class:`int`
-#
-#        :arg xsize_m: size of a cuboid in x-direction (in meters)
-#        :type xsize_m: :class:`float`
-#
-#        :arg ysize_m: size of a cuboid in y-direction (in meters)
-#        :type ysize_m: :class:`float`
-#        """
-#        _Geometry.__init__(self)
-#
-#        if nx < 1 and nx % 2 == 1:
-#            raise ValueError, 'nx must be greater or equal to 1 and an odd number'
-#        self._props['nx'] = nx
-#
-#        if ny < 1 and ny % 2 == 1:
-#            raise ValueError, 'ny must be greater or equal to 1 and an odd number'
-#        self._props['ny'] = ny
-#
-#        self.xsize_m = xsize_m
-#        self.ysize_m = ysize_m
-#
-#        # Create empty bodies
-#        self._bodies = {}
-#
-#        for position in itertools.product(range(-(nx / 2), nx / 2 + 1),
-#                                          range(-(ny / 2), ny / 2 + 1)):
-#            body = Body(VACUUM)
-#            self._bodies[position] = body
-#
-#        self._body = self.__Cuboids2DBody(self._bodies)
-#        self._material = self.__Cuboids2DMaterial(self._bodies)
-#
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
-#
-#        nx = int(element.get('nx'))
-#        ny = int(element.get('ny'))
-#        xsize_m = float(element.get('xsize'))
-#        ysize_m = float(element.get('ysize'))
-#
-#        obj = cls(nx, ny, xsize_m, ysize_m)
-#        obj.tilt_rad = tilt_rad
-#        obj.rotation_rad = rotation_rad
-#
-#        children = list(element.find('positions'))
-#        for child in children:
-#            index = int(child.get('index'))
-#            position = int(child.get('x')), int(child.get('y'))
-#            body = bodies_lookup[index]
-#
-#            obj._bodies[position] = body
-#
-#        return obj
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        _Geometry.__savexml__(self, element, *args, **kwargs)
-#
-#        element.set('nx', str(self.nx))
-#        element.set('ny', str(self.ny))
-#        element.set('xsize', str(self.xsize_m))
-#        element.set('ysize', str(self.ysize_m))
-#
-#        child = Element('positions')
-#        for position, body in self._bodies.iteritems():
-#            grandchild = Element('position')
-#            grandchild.set('index', str(body._index))
-#            grandchild.set('x', str(position[0]))
-#            grandchild.set('y', str(position[1]))
-#            child.append(grandchild)
-#        element.append(child)
-#
-#    @property
-#    def nx(self):
-#        """
-#        Number of cuboids in x-direction (read-only).
-#        """
-#        return self._props['nx']
-#
-#    @property
-#    def ny(self):
-#        """
-#        Number of cuboids in y-direction (read-only).
-#        """
-#        return self._props['ny']
-#
-#    @property
-#    def xsize_m(self):
-#        """
-#        Size of a cuboids in x-direction (in meters).
-#        """
-#        return self._props['xsize']
-#
-#    @xsize_m.setter
-#    def xsize_m(self, size):
-#        if size <= 0.0:
-#            raise ValueError, 'size must be greater than 0'
-#        self._props['xsize'] = size
-#
-#    @property
-#    def ysize_m(self):
-#        """
-#        Size of a cuboids in y-direction (in meters).
-#        """
-#        return self._props['ysize']
-#
-#    @ysize_m.setter
-#    def ysize_m(self, size):
-#        if size <= 0.0:
-#            raise ValueError, 'size must be greater than 0'
-#        self._props['ysize'] = size
-#
-#    @property
-#    def body(self):
-#        return self._body
-#
-#    @property
-#    def material(self):
-#        return self._material
-#
-#    def get_bodies(self):
-#        return set(self._bodies.values())
-#
-#    def get_dimensions(self, body):
-#        reverse_lookup = dict(zip(self._bodies.values(), self._bodies.keys()))
-#
-#        try:
-#            x, y = reverse_lookup[body]
-#        except IndexError:
-#            raise ValueError, "Unknown body: %s" % body
-#
-#        xsize = self.xsize_m
-#        ysize = self.ysize_m
-#
-#        xmin = (x * xsize) - xsize / 2
-#        xmax = (x * xsize) + xsize / 2
-#        ymin = (y * ysize) - ysize / 2
-#        ymax = (y * ysize) + ysize / 2
-#
-#        return _Dimension(xmin, xmax, ymin, ymax, zmax=0.0)
-#
-# XMLIO.register('{http://pymontecarlo.sf.net}cuboids2d', Cuboids2D)
+# # #
+# # # class Cuboids2D(_Geometry):
+# # #
+# # #    class __Cuboids2DBody(object):
+# # #        def __init__(self, bodies):
+# # #            self._bodies = bodies
+# # #
+# # #        def __getitem__(self, index):
+# # #            if index not in self._bodies:
+# # #                raise IndexError, 'No body at index (%i, %i)' % index
+# # #            return self._bodies[index]
+# # #
+# # #    class __Cuboids2DMaterial(object):
+# # #        def __init__(self, bodies):
+# # #            self._bodies = bodies
+# # #
+# # #        def __getitem__(self, index):
+# # #            if index not in self._bodies:
+# # #                raise IndexError, 'No material at index (%i, %i)' % index
+# # #            return self._bodies[index].material
+# # #
+# # #        def __setitem__(self, index, material):
+# # #            if index not in self._bodies:
+# # #                raise IndexError, 'No material at index (%i, %i)' % index
+# # #            self._bodies[index].material = material
+# # #
+# # #    def __init__(self, nx, ny, xsize_m, ysize_m):
+# # #        """
+# # #        Creates a geometry made of *nx* by *ny* adjacent cuboids with
+# # #        infinite depth.
+# # #        Each cuboid was a size of *xsize* by *ysize*.
+# # #        The number of cuboids in x and y-direction must be odd, so that the
+# # #        cuboid (nx/2+1, ny/2+1) is located at the center.
+# # #
+# # #        The position (0, 0) is given to the center cuboid.
+# # #        Cuboids on the upper-left quadrant have positive indexes whereas
+# # #        cuboids on the bottom-right quadrant have negative indexes.
+# # #
+# # #        The material of each cuboid can be access as follows::
+# # #
+# # #            >>> print geometry.material[0,0] # center cuboid
+# # #            >>> print geometry.material[1,0] # cuboid to the left of the center cuboid
+# # #            >>> print geometry.material[0,1] # cuboid above the center cuboid
+# # #            >>> print geometry.material[1,-2] # cuboid one up and 2 to the right of the center cuboid
+# # #
+# # #        .. note::
+# # #
+# # #           When the geometry is created, all cuboids have no material (i.e. vacuum).
+# # #
+# # #        :arg nx: number of cuboids in x-direction (odd number)
+# # #        :type nx: :class:`int`
+# # #
+# # #        :arg ny: number of cuboids in y-direction (odd number)
+# # #        :type ny: :class:`int`
+# # #
+# # #        :arg xsize_m: size of a cuboid in x-direction (in meters)
+# # #        :type xsize_m: :class:`float`
+# # #
+# # #        :arg ysize_m: size of a cuboid in y-direction (in meters)
+# # #        :type ysize_m: :class:`float`
+# # #        """
+# # #        _Geometry.__init__(self)
+# # #
+# # #        if nx < 1 and nx % 2 == 1:
+# # #            raise ValueError, 'nx must be greater or equal to 1 and an odd number'
+# # #        self._props['nx'] = nx
+# # #
+# # #        if ny < 1 and ny % 2 == 1:
+# # #            raise ValueError, 'ny must be greater or equal to 1 and an odd number'
+# # #        self._props['ny'] = ny
+# # #
+# # #        self.xsize_m = xsize_m
+# # #        self.ysize_m = ysize_m
+# # #
+# # #        # Create empty bodies
+# # #        self._bodies = {}
+# # #
+# # #        for position in itertools.product(range(-(nx / 2), nx / 2 + 1),
+# # #                                          range(-(ny / 2), ny / 2 + 1)):
+# # #            body = Body(VACUUM)
+# # #            self._bodies[position] = body
+# # #
+# # #        self._body = self.__Cuboids2DBody(self._bodies)
+# # #        self._material = self.__Cuboids2DMaterial(self._bodies)
+# # #
+# # #    @classmethod
+# # #    def __loadxml__(cls, element, *args, **kwargs):
+# # #        bodies_lookup, tilt_rad, rotation_rad = _Geometry._parse_xml(element)
+# # #
+# # #        nx = int(element.get('nx'))
+# # #        ny = int(element.get('ny'))
+# # #        xsize_m = float(element.get('xsize'))
+# # #        ysize_m = float(element.get('ysize'))
+# # #
+# # #        obj = cls(nx, ny, xsize_m, ysize_m)
+# # #        obj.tilt_rad = tilt_rad
+# # #        obj.rotation_rad = rotation_rad
+# # #
+# # #        children = list(element.find('positions'))
+# # #        for child in children:
+# # #            index = int(child.get('index'))
+# # #            position = int(child.get('x')), int(child.get('y'))
+# # #            body = bodies_lookup[index]
+# # #
+# # #            obj._bodies[position] = body
+# # #
+# # #        return obj
+# # #
+# # #    def __savexml__(self, element, *args, **kwargs):
+# # #        _Geometry.__savexml__(self, element, *args, **kwargs)
+# # #
+# # #        element.set('nx', str(self.nx))
+# # #        element.set('ny', str(self.ny))
+# # #        element.set('xsize', str(self.xsize_m))
+# # #        element.set('ysize', str(self.ysize_m))
+# # #
+# # #        child = Element('positions')
+# # #        for position, body in self._bodies.iteritems():
+# # #            grandchild = Element('position')
+# # #            grandchild.set('index', str(body._index))
+# # #            grandchild.set('x', str(position[0]))
+# # #            grandchild.set('y', str(position[1]))
+# # #            child.append(grandchild)
+# # #        element.append(child)
+# # #
+# # #    @property
+# # #    def nx(self):
+# # #        """
+# # #        Number of cuboids in x-direction (read-only).
+# # #        """
+# # #        return self._props['nx']
+# # #
+# # #    @property
+# # #    def ny(self):
+# # #        """
+# # #        Number of cuboids in y-direction (read-only).
+# # #        """
+# # #        return self._props['ny']
+# # #
+# # #    @property
+# # #    def xsize_m(self):
+# # #        """
+# # #        Size of a cuboids in x-direction (in meters).
+# # #        """
+# # #        return self._props['xsize']
+# # #
+# # #    @xsize_m.setter
+# # #    def xsize_m(self, size):
+# # #        if size <= 0.0:
+# # #            raise ValueError, 'size must be greater than 0'
+# # #        self._props['xsize'] = size
+# # #
+# # #    @property
+# # #    def ysize_m(self):
+# # #        """
+# # #        Size of a cuboids in y-direction (in meters).
+# # #        """
+# # #        return self._props['ysize']
+# # #
+# # #    @ysize_m.setter
+# # #    def ysize_m(self, size):
+# # #        if size <= 0.0:
+# # #            raise ValueError, 'size must be greater than 0'
+# # #        self._props['ysize'] = size
+# # #
+# # #    @property
+# # #    def body(self):
+# # #        return self._body
+# # #
+# # #    @property
+# # #    def material(self):
+# # #        return self._material
+# # #
+# # #    def get_bodies(self):
+# # #        return set(self._bodies.values())
+# # #
+# # #    def get_dimensions(self, body):
+# # #        reverse_lookup = dict(zip(self._bodies.values(), self._bodies.keys()))
+# # #
+# # #        try:
+# # #            x, y = reverse_lookup[body]
+# # #        except IndexError:
+# # #            raise ValueError, "Unknown body: %s" % body
+# # #
+# # #        xsize = self.xsize_m
+# # #        ysize = self.ysize_m
+# # #
+# # #        xmin = (x * xsize) - xsize / 2
+# # #        xmax = (x * xsize) + xsize / 2
+# # #        ymin = (y * ysize) - ysize / 2
+# # #        ymax = (y * ysize) + ysize / 2
+# # #
+# # #        return _Dimension(xmin, xmax, ymin, ymax, zmax=0.0)
+# # #
+# # # XMLIO.register('{http://pymontecarlo.sf.net}cuboids2d', Cuboids2D)
+
+
+

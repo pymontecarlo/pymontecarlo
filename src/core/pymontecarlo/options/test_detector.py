@@ -19,14 +19,12 @@ from math import radians
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.detector import \
-    (_DelimitedDetector, _ChannelsDetector,
-     _SpatialDetector, _EnergyDetector,
+    (_DelimitedDetector, _ChannelsDetector, _EnergyDetector, _SpatialDetector,
      _PolarAngularDetector, _AzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector,
-     TimeDetector, ElectronFractionDetector, TrajectoryDetector,
-     ShowersStatisticsDetector)
-from pymontecarlo.options.xmlmapper import mapper
+    TimeDetector, ElectronFractionDetector, TrajectoryDetector,
+    ShowersStatisticsDetector)
 
 # Globals and constants variables.
 
@@ -46,11 +44,19 @@ class Test_DelimitedDetector(TestCase):
         self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
         self.assertAlmostEqual(35, self.d.elevation_deg[0], 2)
         self.assertAlmostEqual(45, self.d.elevation_deg[1], 2)
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad.lower, 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad.upper, 4)
+        self.assertAlmostEqual(35, self.d.elevation_deg.lower, 2)
+        self.assertAlmostEqual(45, self.d.elevation_deg.upper, 2)
 
         self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
         self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
         self.assertAlmostEqual(0, self.d.azimuth_deg[0], 2)
         self.assertAlmostEqual(360.0, self.d.azimuth_deg[1], 2)
+        self.assertAlmostEqual(0, self.d.azimuth_rad.lower, 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad.upper, 4)
+        self.assertAlmostEqual(0, self.d.azimuth_deg.lower, 2)
+        self.assertAlmostEqual(360.0, self.d.azimuth_deg.upper, 2)
 
         self.assertAlmostEqual(0.704001, self.d.solidangle_sr, 4)
 
@@ -74,37 +80,47 @@ class Test_DelimitedDetector(TestCase):
         self.assertAlmostEqual(0, det.azimuth_deg[0], 2)
         self.assertAlmostEqual(360.0, det.azimuth_deg[1], 2)
 
+    def testannular2(self):
+        det = _DelimitedDetector.annular(radians(40), [radians(5), radians(1)])
+
+        self.assertAlmostEqual(radians(35), det.elevation_rad[0].lower, 4)
+        self.assertAlmostEqual(radians(45), det.elevation_rad[0].upper, 4)
+        self.assertAlmostEqual(radians(39), det.elevation_rad[1].lower, 4)
+        self.assertAlmostEqual(radians(41), det.elevation_rad[1].upper, 4)
+
+        self.assertAlmostEqual(0, det.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), det.azimuth_rad[1], 4)
+        self.assertAlmostEqual(0, det.azimuth_deg[0], 2)
+        self.assertAlmostEqual(360.0, det.azimuth_deg[1], 2)
+
     def testelevation_rad(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (-4, 0))
         self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (0, 4))
         self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', (1, 1))
-        self.assertRaises(TypeError, self.d.__setattr__, 'elevation_rad', 0)
+        self.assertRaises(ValueError, self.d.__setattr__, 'elevation_rad', 0)
 
     def testazimuth_rad(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (-1, 0))
         self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (0, 7))
         self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', (1, 1))
-        self.assertRaises(TypeError, self.d.__setattr__, 'azimuth_rad', 0)
+        self.assertRaises(ValueError, self.d.__setattr__, 'azimuth_rad', 0)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
+    def testsolidangle_sr(self):
+        det = _DelimitedDetector.annular(radians(40), [radians(5), radians(1)])
 
-        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
-        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
+        solidangles = det.solidangle_sr
 
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
+        self.assertEqual(2, len(solidangles))
+        self.assertAlmostEqual(0.704001, solidangles[0], 4)
+        self.assertAlmostEqual(0.140972, solidangles[1], 4)
 
-        subelement = list(element.find('elevation'))[0]
-        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
+    def testtakeoffangle(self):
+        det = _DelimitedDetector.annular([radians(40), radians(41)], radians(5))
 
-        subelement = list(element.find('azimuth'))[0]
-        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
+        self.assertAlmostEqual(radians(40), det.takeoffangle_rad[0], 4)
+        self.assertAlmostEqual(40, det.takeoffangle_deg[0], 2)
+        self.assertAlmostEqual(radians(41), det.takeoffangle_rad[1], 4)
+        self.assertAlmostEqual(41, det.takeoffangle_deg[1], 2)
 
 class Test_ChannelsDetector(TestCase):
 
@@ -122,37 +138,6 @@ class Test_ChannelsDetector(TestCase):
     def testchannels(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertEqual(10, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        self.assertEqual(10, int(element.get('channels')))
-
-# class Test_BoundedChannelsDetector(TestCase):
-#
-#    def setUp(self):
-#        TestCase.setUp(self)
-#
-#        self.d = _BoundedChannelsDetector((10, 60))
-#
-#    def tearDown(self):
-#        TestCase.tearDown(self)
-#
-#    def testskeleton(self):
-#        self.assertTrue(True)
-#
-#    def test_set_limits(self):
-#        self.assertRaises(ValueError, self.d._set_limits, (8, 56.78))
-#        self.assertRaises(ValueError, self.d._set_limits, (12.34, 62))
-#
-#    def testchannels(self):
-#        self.assertRaises(ValueError, self.d.__setattr__, 'channels', 0)
-#
 class Test_SpatialDetector(TestCase):
 
     def setUp(self):
@@ -193,46 +178,12 @@ class Test_SpatialDetector(TestCase):
     def testzbins(self):
         self.assertRaises(ValueError, self.d.__setattr__, 'zbins', 0)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(12.34, d.xlimits_m[0], 4)
-        self.assertAlmostEqual(56.78, d.xlimits_m[1], 4)
-        self.assertEqual(2, d.xbins)
-
-        self.assertAlmostEqual(21.43, d.ylimits_m[0], 4)
-        self.assertAlmostEqual(65.87, d.ylimits_m[1], 4)
-        self.assertEqual(3, d.ybins)
-
-        self.assertAlmostEqual(34.12, d.zlimits_m[0], 4)
-        self.assertAlmostEqual(78.56, d.zlimits_m[1], 4)
-        self.assertEqual(4, d.zbins)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('xlimits'))[0]
-        self.assertAlmostEqual(12.34, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(56.78, float(subelement.get('upper')), 4)
-        self.assertEqual(2, int(element.get('xbins')))
-
-        subelement = list(element.find('ylimits'))[0]
-        self.assertAlmostEqual(21.43, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(65.87, float(subelement.get('upper')), 4)
-        self.assertEqual(3, int(element.get('ybins')))
-
-        subelement = list(element.find('zlimits'))[0]
-        self.assertAlmostEqual(34.12, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(78.56, float(subelement.get('upper')), 4)
-        self.assertEqual(4, int(element.get('zbins')))
-
 class Test_EnergyDetector(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
 
-        self.d = _EnergyDetector((12.34, 56.78), 1000)
+        self.d = _EnergyDetector(1000, (12.34, 56.78))
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -250,22 +201,6 @@ class Test_EnergyDetector(TestCase):
         self.assertRaises(ValueError, setattr, self.d, 'limits_eV', (-1.0, 5.0))
         self.assertRaises(ValueError, setattr, self.d, 'limits_eV', (5.0, -1.0))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(12.34, d.limits_eV[0], 4)
-        self.assertAlmostEqual(56.78, d.limits_eV[1], 4)
-        self.assertEqual(1000, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('limits'))[0]
-        self.assertAlmostEqual(12.34, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(56.78, float(subelement.get('upper')), 4)
-        self.assertEqual(1000, int(element.get('channels')))
-#
 class Test_PolarAngularDetector(TestCase):
 
     def setUp(self):
@@ -283,22 +218,6 @@ class Test_PolarAngularDetector(TestCase):
 
     def test__repr__(self):
         self.assertTrue(repr(self.d).startswith('<_PolarAngularDetector('))
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(-90), d.limits_rad[0], 4)
-        self.assertAlmostEqual(radians(90), d.limits_rad[1], 4)
-        self.assertEqual(50, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('limits'))[0]
-        self.assertAlmostEqual(radians(-90), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(90), float(subelement.get('upper')), 4)
-        self.assertEqual(50, int(element.get('channels')))
 
 class Test_AzimuthalAngularDetector(TestCase):
 
@@ -318,22 +237,6 @@ class Test_AzimuthalAngularDetector(TestCase):
     def test__repr__(self):
         self.assertTrue(repr(self.d).startswith('<_AzimuthalAngularDetector('))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(0), d.limits_rad[0], 4)
-        self.assertAlmostEqual(radians(360), d.limits_rad[1], 4)
-        self.assertEqual(50, self.d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('limits'))[0]
-        self.assertAlmostEqual(radians(0), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360), float(subelement.get('upper')), 4)
-        self.assertEqual(50, int(element.get('channels')))
-#
 class TestPhotonSpectrumDetector(TestCase):
 
     def setUp(self):
@@ -341,7 +244,7 @@ class TestPhotonSpectrumDetector(TestCase):
 
         self.d = PhotonSpectrumDetector((radians(35), radians(45)),
                                         (0, radians(360.0)),
-                                        (12.34, 56.78), 1000)
+                                        1000, (12.34, 56.78))
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -359,35 +262,6 @@ class TestPhotonSpectrumDetector(TestCase):
         expected = '<PhotonSpectrumDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, limits=12.34 to 56.78 eV, channels=1000)>'
         self.assertEqual(expected, repr(self.d))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
-        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
-        self.assertAlmostEqual(12.34, d.limits_eV[0], 4)
-        self.assertAlmostEqual(56.78, d.limits_eV[1], 4)
-        self.assertEqual(1000, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('elevation'))[0]
-        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
-
-        subelement = list(element.find('azimuth'))[0]
-        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
-
-        subelement = list(element.find('limits'))[0]
-        self.assertAlmostEqual(12.34, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(56.78, float(subelement.get('upper')), 4)
-
-        self.assertEqual(1000, int(element.get('channels')))
-#
 class TestPhotonDepthDetector(TestCase):
 
     def setUp(self):
@@ -410,29 +284,6 @@ class TestPhotonDepthDetector(TestCase):
         expected = '<PhotonDepthDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
         self.assertEqual(expected, repr(self.d))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
-        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
-        self.assertEqual(1000, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('elevation'))[0]
-        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
-
-        subelement = list(element.find('azimuth'))[0]
-        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
-
-        self.assertEqual(1000, int(element.get('channels')))
-
 class TestPhotonRadialDetector(TestCase):
 
     def setUp(self):
@@ -454,29 +305,6 @@ class TestPhotonRadialDetector(TestCase):
     def test__repr__(self):
         expected = '<PhotonRadialDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
         self.assertEqual(expected, repr(self.d))
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
-        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
-        self.assertEqual(1000, d.channels)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('elevation'))[0]
-        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
-
-        subelement = list(element.find('azimuth'))[0]
-        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
-
-        self.assertEqual(1000, int(element.get('channels')))
 
 class TestPhotonEmissionMapDetector(TestCase):
 
@@ -502,33 +330,6 @@ class TestPhotonEmissionMapDetector(TestCase):
         expected = '<PhotonEmissionMapDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, bins=(5, 6, 7))>'
         self.assertEqual(expected, repr(self.d))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertAlmostEqual(radians(35), d.elevation_rad[0], 4)
-        self.assertAlmostEqual(radians(45), d.elevation_rad[1], 4)
-        self.assertAlmostEqual(0, d.azimuth_rad[0], 4)
-        self.assertAlmostEqual(radians(360.0), d.azimuth_rad[1], 4)
-        self.assertEqual(5, d.xbins)
-        self.assertEqual(6, d.ybins)
-        self.assertEqual(7, d.zbins)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        subelement = list(element.find('elevation'))[0]
-        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
-
-        subelement = list(element.find('azimuth'))[0]
-        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
-
-        self.assertEqual(5, int(element.get('xbins')))
-        self.assertEqual(6, int(element.get('ybins')))
-        self.assertEqual(7, int(element.get('zbins')))
-#
 class TestTimeDetector(TestCase):
 
     def setUp(self):
@@ -538,13 +339,6 @@ class TestTimeDetector(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        mapper.from_xml(element)
-
-    def testto_xml(self):
-        mapper.to_xml(self.d)
 
 class TestElectronFractionDetector(TestCase):
 
@@ -556,13 +350,6 @@ class TestElectronFractionDetector(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        mapper.from_xml(element)
-
-    def testto_xml(self):
-        mapper.to_xml(self.d)
-
 class TestShowersStatisticsDetector(TestCase):
 
     def setUp(self):
@@ -572,13 +359,6 @@ class TestShowersStatisticsDetector(TestCase):
 
     def tearDown(self):
         TestCase.tearDown(self)
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        mapper.from_xml(element)
-
-    def testto_xml(self):
-        mapper.to_xml(self.d)
 
 class TestTrajectoryDetector(TestCase):
 
@@ -592,17 +372,6 @@ class TestTrajectoryDetector(TestCase):
 
     def testskeleton(self):
         self.assertFalse(self.d.secondary)
-
-    def testfrom_xml(self):
-        element = mapper.to_xml(self.d)
-        d = mapper.from_xml(element)
-
-        self.assertFalse(d.secondary)
-
-    def testto_xml(self):
-        element = mapper.to_xml(self.d)
-
-        self.assertEqual('false', element.get('secondary'))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

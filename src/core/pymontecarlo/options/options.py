@@ -26,19 +26,16 @@ from copy import deepcopy
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.parameter import \
-    (ParameterizedMetaClass, Parameter, FrozenParameter, SimpleValidator,
-     ParameterizedMutableMapping, ParameterizedMutableSet)
 from pymontecarlo.options.beam import _Beam, GaussianBeam
-from pymontecarlo.options.material import pure
+from pymontecarlo.options.material import Material
 from pymontecarlo.options.geometry import _Geometry, Substrate
 from pymontecarlo.options.detector import _Detector
 from pymontecarlo.options.limit import _Limit
 from pymontecarlo.options.model import Model
-from pymontecarlo.options.xmlmapper import \
-    (mapper, parse, tostring, Attribute,
-     ParameterizedElement, ParameterizedElementSet, ParameterizedElementDict,
-     PythonType, UserType)
+
+from pymontecarlo.util.parameter import \
+    (ParameterizedMetaclass, Parameter, ParameterizedMutableMapping,
+     ParameterizedMutableSet)
 
 # Globals and constants variables.
 
@@ -53,12 +50,15 @@ class _Detectors(ParameterizedMutableMapping):
             * detector object
         """
         for key, parameter in self.__parameters__.items():
-            wrapper = parameter._get_wrapper(self)
-            for detector in wrapper:
+            detectors = parameter.__get__(self, simplify=False)
+            for detector in detectors.flat:
                 if isinstance(detector, clasz):
                     yield key, detector
 
 class _Limits(ParameterizedMutableSet):
+
+    def _get_key(self, item):
+        return str(hash(item.__class__))
 
     def iterclass(self, clasz):
         """
@@ -76,18 +76,13 @@ class _Models(ParameterizedMutableSet):
         """
         return (model for model in self if model.type == type_)
 
-_name_validator = SimpleValidator(lambda n: bool(n), "Name cannot be empty")
+class Options(object, metaclass=ParameterizedMetaclass):
 
-class Options(object, metaclass=ParameterizedMetaClass):
-
-    VERSION = '6'
-
-    name = Parameter(_name_validator, "Name")
-    beam = Parameter(doc="Beam")
-    geometry = Parameter(doc="Geometry")
-    detectors = FrozenParameter(_Detectors, "Detector(s)")
-    limits = FrozenParameter(_Limits, "Limit(s)")
-    models = FrozenParameter(_Models, "Model(s)")
+    beam = Parameter(_Beam, doc="Beam")
+    geometry = Parameter(_Geometry, doc="Geometry")
+    detectors = Parameter(doc="Detector(s)")
+    limits = Parameter(_Limits, doc="Limit(s)")
+    models = Parameter(_Models, doc="Model(s)")
 
     def __init__(self, name='Untitled'):
         """
@@ -101,7 +96,7 @@ class Options(object, metaclass=ParameterizedMetaClass):
           * :attr:`limits`: limit(s) when to stop the simulation
           * :attr:`models`: simulation models/algorithms
 
-        :arg name: name of the simulation (unicode accepted)
+        :arg name: name of the simulation
 
         By default, the beam is set to a Gaussian beam of 10 nm with an incident
         energy of 1 keV.
@@ -112,31 +107,16 @@ class Options(object, metaclass=ParameterizedMetaClass):
         self._uuid = None
 
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
-        self.geometry = Substrate(pure(79)) # Au substrate
-        self.detectors.clear()
-        self.limits.clear()
-        self.models.clear()
+        self.geometry = Substrate(Material.pure(79)) # Au substrate
 
-    @classmethod
-    def load(cls, source):
-        """
-        Loads the options from a file-object.
-        The file-object must correspond to a XML file where the options were
-        saved.
+        # Hack because numpy converts MutableMapping to empty array
+        detectors = _Detectors(_Detector)
+        detectors['dummy'] = _Detector()
+        self.detectors = detectors
+        del self.detectors['dummy']
 
-        :arg source: filepath or file-object
-
-        :return: loaded options
-        """
-        self_opened = False
-        if not hasattr(source, "read"):
-            source = open(source, "rb")
-            self_opened = True
-
-        element = parse(source).getroot()
-        if self_opened: source.close()
-
-        return mapper.from_xml(element)
+        self.limits = _Limits(_Limit)
+        self.models = _Models(Model)
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))
@@ -150,7 +130,7 @@ class Options(object, metaclass=ParameterizedMetaClass):
         result = cls.__new__(cls)
 
         result.__dict__.update(self.__dict__)
-        result.__dict__['_uuid'] = None
+        result.__dict__['_uuid'] = None # Reset
 
         return result
 
@@ -162,9 +142,19 @@ class Options(object, metaclass=ParameterizedMetaClass):
 
         for k, v in self.__dict__.items():
             result.__dict__[k] = deepcopy(v, memo)
-        result.__dict__['_uuid'] = None
+        result.__dict__['_uuid'] = None # Reset
 
         return result
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if not name:
+            raise ValueError('Name cannot be empty')
+        self._name = name
 
     @property
     def uuid(self):
@@ -175,181 +165,3 @@ class Options(object, metaclass=ParameterizedMetaClass):
             self._uuid = uuid.uuid4().hex
         return self._uuid
 
-    def save(self, source, pretty_print=True):
-        """
-        Saves this options to a file-object.
-        The file-object must correspond to a XML file where the options will
-        be saved.
-
-        :arg source: filepath or file-object
-        :arg pretty_print: format XML
-        """
-        element = mapper.to_xml(self)
-        output = tostring(element, pretty_print=pretty_print)
-
-        self_opened = False
-        if not hasattr(source, "write"):
-            source = open(source, "wb")
-            self_opened = True
-
-        source.write(output)
-
-        if self_opened: source.close()
-
-mapper.register(Options, '{http://pymontecarlo.sf.net}options',
-                Attribute('VERSION', PythonType(str), 'version'),
-                Attribute('name', PythonType(str)),
-                Attribute('_uuid', PythonType(str), 'uuid'),
-                ParameterizedElement('beam', UserType(_Beam)),
-                ParameterizedElement('geometry', UserType(_Geometry)),
-                ParameterizedElementDict('detectors', PythonType(str), UserType(_Detector), keyxmlname="_key"),
-                ParameterizedElementSet('limits', UserType(_Limit)),
-                ParameterizedElementSet('models', UserType(Model)),
-                )
-
-# class _OptionsSequenceParameters(Sequence):
-#
-#    def __init__(self):
-#        self._list_params = []
-#
-#    def __len__(self):
-#        return len(self._list_params)
-#
-#    def __getitem__(self, index):
-#        return self._list_params[index]
-#
-# class OptionsSequence(Sequence, objectxml):
-#    """
-#    :class:`.OptionsSequence` is a container of several :class:`.Options`.
-#    It preserves the order of the options.
-#    If a :class:`SequenceRunner` is used to simulate the options sequence, this
-#    order will also be preserved in the resultant :class:`.ResultsSequence`.
-#
-#    The class works like any other :class:`list` object, except that an options
-#    cannot be replaced by another options on the fly (:meth:`__setitem__`).
-#    To replace an options, the user should remove the old options and insert
-#    a new one.
-#
-#    The class also allows some parameter values to be associated with each
-#    options.
-#    Keyword arguments can be passed to the :meth:`append` and :meth:`insert`
-#    methods::
-#
-#        >>> ops_seq.append(ops1, param1=1.0, param2=3.0)
-#
-#    The parameters are saved in a dictionary for each options.
-#    Note that options can have different parameters.
-#    Parameters can be retrieved and modified using the property
-#    :attr:`parameters`::
-#
-#        >>> ops_seq.parameters[0]['param1'] = 2.0
-#        >>> ops_seq.parameters[0]['param1']
-#        >>> 2.0
-#
-#    """
-#    VERSION = "1"
-#
-#    def __init__(self):
-#        self._list_options = []
-#        self._params = _OptionsSequenceParameters()
-#
-#    @classmethod
-#    def __loadxml__(cls, element, *args, **kwargs):
-#        # Check version
-#        version = element.get('version')
-#        if version != cls.VERSION:
-#            raise IOError, "Incorrect version of options sequence %s. Only version %s is accepted" % \
-#                    (version, cls.VERSION)
-#
-#        # Identifiers
-#        identifiers = element.get('identifiers').split(',')
-#
-#        # Read options
-#        list_options = {}
-#        list_params = {}
-#
-#        for child in element.iter('{http://pymontecarlo.sf.net}options'):
-#            options = Options.from_xml(child)
-#
-#            identifier = options.uuid
-#            list_options[identifier] = options
-#
-#            params = {}
-#            for grandchild in child.iter('param'):
-#                key = grandchild.get('key')
-#                value = grandchild.get('value')
-#                try:
-#                    value = ast.literal_eval(value) # Parse to Python object
-#                except ValueError:
-#                    pass
-#                params[key] = value
-#
-#            list_params[identifier] = params
-#
-#        # Build sequence
-#        options_seq = cls()
-#
-#        if len(identifiers) != len(list_options):
-#            raise IOError, 'Number of identifiers do not match number of options'
-#
-#        for identifier in identifiers:
-#            options_seq.append(list_options[identifier], **list_params[identifier])
-#
-#        return options_seq
-#
-#    def __savexml__(self, element, *args, **kwargs):
-#        element.set('version', self.VERSION)
-#
-#        identifiers = []
-#        for options, params in zip(self, self._params):
-#            identifiers.append(options.uuid)
-#
-#            child = options.to_xml()
-#
-#            for key, value in params.iteritems():
-#                grandchild = Element('param')
-#                grandchild.set('key', str(key))
-#                grandchild.set('value', str(value))
-#                child.append(grandchild)
-#
-#            element.append(child)
-#
-#        element.set('identifiers', ','.join(identifiers))
-#
-#    def __repr__(self):
-#        return '<%s(%i options)>' % (self.__class__.__name__, len(self))
-#
-#    def __len__(self):
-#        return len(self._list_options)
-#
-#    def __getitem__(self, index):
-#        return self._list_options[index]
-#
-#    def __delitem__(self, index):
-#        del self._list_options[index]
-#        del self._params._list_params[index]
-#
-#    def append(self, options, **params):
-#        self.insert(len(self), options, **params)
-#
-#    def insert(self, index, options, **params):
-#        if options in self:
-#            raise ValueError, "Options already added"
-#        self._list_options.insert(index, options)
-#        self._params._list_params.insert(index, params.copy())
-#
-#    def remove(self, options):
-#        del self[self.index(options)]
-#
-#    def pop(self, index= -1):
-#        v = self[index]
-#        del self[index]
-#        return v
-#
-#    @property
-#    def parameters(self):
-#        return self._params
-#
-#    params = parameters
-#
-# #XMLIO.register('{http://pymontecarlo.sf.net}optionsSequence', OptionsSequence)

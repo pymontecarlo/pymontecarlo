@@ -40,17 +40,16 @@ __all__ = ['BackscatteredElectronAzimuthalAngularDetector',
 
 # Standard library modules.
 import math
+import itertools
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
-from pymontecarlo.options.parameter import \
-    (ParameterizedMetaClass, Parameter, AngleParameter, UnitParameter,
-     SimpleValidator, CastValidator)
-from pymontecarlo.options.xmlmapper import \
-    mapper, ParameterizedAttribute, ParameterizedElement, PythonType, UserType
-from pymontecarlo.options.bound import bound
 from pymontecarlo.util.human import camelcase_to_words
+from pymontecarlo.util.parameter import \
+    (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
+     range_validator)
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -75,36 +74,34 @@ def equivalent_opening(det1, det2, places=6):
 
     return True
 
-class _Detector(object, metaclass=ParameterizedMetaClass):
+class _Detector(object, metaclass=ParameterizedMetaclass):
 
     def __repr__(self):
         return '<%s()>' % self.__class__.__name__
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s' % camelcase_to_words(self.__class__.__name__)
 
-_equality_validator = \
-    SimpleValidator(lambda x: abs(x.high - x.low) > TOLERANCE,
-                    "Elevation angles cannot be equal")
-_elevation_validator = \
-    SimpleValidator(lambda x:-HALFPI - TOLERANCE <= x.low <= HALFPI + TOLERANCE and \
-                        - HALFPI - TOLERANCE <= x.high <= HALFPI + TOLERANCE,
-                    "Angle must be between [-pi/2, pi/2] rad")
-_azimuth_validator = \
-    SimpleValidator(lambda x: 0 <= x.low <= TWOPI + TOLERANCE and \
-                        0 <= x.high <= TWOPI + TOLERANCE,
-                    "Angle must be between [0, 2pi] rad")
+def _elevation_validator(value):
+    if value.lower >= value.upper:
+        raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
+                         (value.lower, value.upper))
+    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value.lower)
+    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value.upper)
+
+def _azimuth_validator(value):
+    if value.lower >= value.upper:
+        raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
+                         (value.lower, value.upper))
+    range_validator(0, TWOPI + TOLERANCE)(value.lower)
+    range_validator(0, TWOPI + TOLERANCE)(value.upper)
 
 class _DelimitedDetector(_Detector):
 
-    elevation = AngleParameter([CastValidator(bound),
-                                _equality_validator,
-                                _elevation_validator],
-                               "Elevation angle from the x-y plane")
-    azimuth = AngleParameter([CastValidator(bound),
-                              _equality_validator,
-                              _azimuth_validator],
-                               "Azimuth angle from the positive x-axis")
+    elevation = AngleParameter(_elevation_validator, ('lower', 'upper'),
+                               doc="Elevation angle from the x-y plane")
+    azimuth = AngleParameter(_azimuth_validator, ('lower', 'upper'),
+                             doc="Azimuth angle from the positive x-axis")
 
     def __init__(self, elevation_rad, azimuth_rad):
         """
@@ -135,56 +132,55 @@ class _DelimitedDetector(_Detector):
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg)>' % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1])
-
-    def __str__(self):
-        return '%s (elevation=%s to %s deg, azimuth=%s to %s deg)' % \
-            (camelcase_to_words(self.__class__.__name__),
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1])
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper)
 
     def __unicode__(self):
-        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0)' % \
+        return '%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0)' % \
             (camelcase_to_words(self.__class__.__name__),
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1])
-
-    @classmethod
-    def _annular(cls, takeoffangle_rad, opening_rad):
-        elevation_rad = (takeoffangle_rad - opening_rad, takeoffangle_rad + opening_rad)
-        azimuth_rad = (0.0, 2.0 * math.pi)
-        return elevation_rad, azimuth_rad
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper)
 
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad):
-        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
-        return cls(elevation_rad, azimuth_rad)
+        takeoffangles = np.array(takeoffangle_rad, ndmin=1)
+        openings = np.array(opening_rad, ndmin=1)
+
+        elevations = []
+        for takeoffangle, opening in itertools.product(takeoffangles, openings):
+            elevation = (takeoffangle - opening, takeoffangle + opening)
+            elevations.append(elevation)
+
+        return cls(elevations, (0.0, 2.0 * math.pi))
 
     @property
     def solidangle_sr(self):
-        return abs((self.azimuth_rad[1] - self.azimuth_rad[0]) * \
-                   (math.cos(self.elevation_rad[0]) - math.cos(self.elevation_rad[1])))
+        elevations = np.array(self.elevation_rad, ndmin=1)
+        azimuths = np.array(self.azimuth_rad, ndmin=1)
+
+        solidangles = []
+        for elevation, azimuth in itertools.product(elevations, azimuths):
+            solidangle = abs((azimuth[1] - azimuth[0]) * \
+                             (math.cos(elevation[0]) - math.cos(elevation[1])))
+            solidangles.append(solidangle)
+
+        if len(solidangles) == 1:
+            return solidangles[0]
+        else:
+            return solidangles
 
     @property
     def takeoffangle_rad(self):
-        return sum(self.elevation_rad) / 2.0
+        elevation = self.elevation_rad
+        return (elevation.lower + elevation.upper) / 2.0
 
     @property
     def takeoffangle_deg(self):
-        return math.degrees(self.takeoffangle_rad)
-
-mapper.register(_DelimitedDetector, '{http://pymontecarlo.sf.net}_delimitedDetector',
-                ParameterizedElement('elevation_rad', UserType(bound), 'elevation'),
-                ParameterizedElement('azimuth_rad', UserType(bound), 'azimuth'))
-
-_bins_validator = \
-    SimpleValidator(lambda x: x >= 1,
-                    'Number of channels must be greater or equal to 1')
+        return np.degrees(self.takeoffangle_rad)
 
 class _ChannelsDetector(_Detector):
 
-    channels = Parameter(_bins_validator, "Number of channels")
+    channels = Parameter(np.int, range_validator(1.0), doc="Number of channels")
 
     def __init__(self, channels):
         _Detector.__init__(self)
@@ -197,59 +193,14 @@ class _ChannelsDetector(_Detector):
         return '%s (channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__), self.channels)
 
-mapper.register(_ChannelsDetector, '{http://pymontecarlo.sf.net}_channelsDetector',
-                ParameterizedAttribute('channels', PythonType(int)))
-
-# class _BoundedChannelsDetector(_ChannelsDetector):
-#
-#    def __init__(self, extremums=(float('-inf'), float('inf'))):
-#        _ChannelsDetector.__init__(self, 1)
-#        self._extremums = extremums
-#
-#    def __repr__(self):
-#        limits = self._props['limits']
-#        return '<%s(limits=%s to %s, channels=%s)>' % \
-#            (self.__class__.__name__, limits[0], limits[1], self.channels)
-#
-# #    @classmethod
-# #    def __loadxml__(cls, element, *args, **kwargs):
-# #        limits = float(element.get('limit_min')), float(element.get('limit_max'))
-# #        channels = int(element.get('channels'))
-# #
-# #        return cls(limits, channels)
-# #
-# #    def __savexml__(self, element, *args, **kwargs):
-# #        limits = self._props['limits']
-# #
-# #        element.set('limit_min', str(limits[0]))
-# #        element.set('limit_max', str(limits[1]))
-# #        element.set('channels', str(self.channels))
-#
-#    def _set_limits(self, limits):
-#        low, high = limits
-#
-#        if abs(high - low) < TOLERANCE:
-#            raise ValueError, "Upper and lower limits are equal"
-#        if low < self._extremums[0] - TOLERANCE or low > self._extremums[1] + TOLERANCE:
-#            raise ValueError, "Lower limit (%s) must be between [%s, %s]." % \
-#                (low, self._extremums[0], self._extremums[1])
-#        if high < self._extremums[0] - TOLERANCE or high > self._extremums[1] + TOLERANCE:
-#            raise ValueError, "Upper limit (%s) must be between [%s, %s]." % \
-#                (high, self._extremums[0], self._extremums[1])
-#
-#        self._props['limits'] = min(low, high), max(low, high)
-#
-#    def _get_limits(self):
-#        return self._props['limits']
-
 class _SpatialDetector(_Detector):
 
-    xlimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in x")
-    xbins = Parameter(_bins_validator, "Number of bins in x")
-    ylimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in y")
-    ybins = Parameter(_bins_validator, "Number of bins in y")
-    zlimits = UnitParameter('m', validators=[CastValidator(bound)], doc="Limits in z")
-    zbins = Parameter(_bins_validator, "Number of bins in z")
+    xlimits = UnitParameter('m', fields=('lower', 'upper'), doc="Limits in x")
+    xbins = Parameter(np.int, range_validator(1.0), doc="Number of bins in x")
+    ylimits = UnitParameter('m', fields=('lower', 'upper'), doc="Limits in y")
+    ybins = Parameter(np.int, range_validator(1.0), doc="Number of bins in y")
+    zlimits = UnitParameter('m', fields=('lower', 'upper'), doc="Limits in z")
+    zbins = Parameter(np.int, range_validator(1.0), doc="Number of bins in z")
 
     def __init__(self, xlimits_m, xbins, ylimits_m, ybins, zlimits_m, zbins):
         _Detector.__init__(self)
@@ -265,50 +216,42 @@ class _SpatialDetector(_Detector):
     def __repr__(self):
         return "<%s(x=%s to %s m (%s), y=%s to %s m (%s), z=%s to %s m (%s))>" % \
             (self.__class__.__name__,
-             self.xlimits_m[0], self.xlimits_m[1], self.xbins,
-             self.ylimits_m[0], self.ylimits_m[1], self.ybins,
-             self.zlimits_m[0], self.zlimits_m[1], self.zbins)
+             self.xlimits_m.lower, self.xlimits_m.upper, self.xbins,
+             self.ylimits_m.lower, self.ylimits_m.upper, self.ybins,
+             self.zlimits_m.lower, self.zlimits_m.upper, self.zbins)
 
     def __unicode__(self):
         return "%s (x=%s to %s nm (%s), y=%s to %s nm (%s), z=%s to %s nm (%s))" % \
             (camelcase_to_words(self.__class__.__name__),
-             self.xlimits_m[0] * 1e9, self.xlimits_m[1] * 1e9, self.xbins,
-             self.ylimits_m[0] * 1e9, self.ylimits_m[1] * 1e9, self.ybins,
-             self.zlimits_m[0] * 1e9, self.zlimits_m[1] * 1e9, self.zbins)
+             self.xlimits_m.lower * 1e9, self.xlimits_m.upper * 1e9, self.xbins,
+             self.ylimits_m.lower * 1e9, self.ylimits_m.upper * 1e9, self.ybins,
+             self.zlimits_m.lower * 1e9, self.zlimits_m.upper * 1e9, self.zbins)
 
-mapper.register(_SpatialDetector, '{http://pymontecarlo.sf.net}_spatialDetector',
-                ParameterizedElement('xlimits_m', UserType(bound), 'xlimits'),
-                ParameterizedAttribute('xbins', PythonType(int)),
-                ParameterizedElement('ylimits_m', UserType(bound), 'ylimits'),
-                ParameterizedAttribute('ybins', PythonType(int)),
-                ParameterizedElement('zlimits_m', UserType(bound), 'zlimits'),
-                ParameterizedAttribute('zbins', PythonType(int)))
-
-_energy_limit_validator = \
-    SimpleValidator(lambda x: x[0] >= 0 and x[1] >= 0,
-                    "Energy must be greater or equal to 0.0")
+def _energy_limit_validator(value):
+    if value.lower >= value.upper:
+        raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
+                         (value.lower, value.upper))
+    range_validator(0.0)(value.lower)
+    range_validator(0.0)(value.upper)
 
 class _EnergyDetector(_ChannelsDetector):
 
-    limits = UnitParameter('eV',
-                           [CastValidator(bound), _energy_limit_validator],
-                           "Energy limits (in eV)")
+    limits = UnitParameter('eV', _energy_limit_validator, ('lower', 'upper'),
+                           doc="Energy limits (in eV)")
 
-    def __init__(self, limits_eV, channels):
+    def __init__(self, channels, limits_eV):
         _ChannelsDetector.__init__(self, channels)
         self.limits_eV = limits_eV
 
     def __repr__(self):
         return "<%s(limits=%s to %s eV, channels=%s)>" % \
-            (self.__class__.__name__, self.limits_eV[0], self.limits_eV[1], self.channels)
+            (self.__class__.__name__,
+             self.limits_eV.lower, self.limits_eV.upper, self.channels)
 
     def __unicode__(self):
         return '%s (limits=%s to %s eV, channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
-             self.limits_eV[0], self.limits_eV[1], self.channels)
-
-mapper.register(_EnergyDetector, '{http://pymontecarlo.sf.net}_energyDetector',
-                ParameterizedElement('limits_eV', UserType(bound), 'limits'))
+             self.limits_eV.lower, self.limits_eV.upper, self.channels)
 
 class _AngularDetector(_ChannelsDetector):
 
@@ -318,119 +261,89 @@ class _AngularDetector(_ChannelsDetector):
 
     def __repr__(self):
         return "<%s(limits=%s to %s rad, channels=%s)>" % \
-            (self.__class__.__name__, self.limits_rad[0], self.limits_rad[1], self.channels)
+            (self.__class__.__name__,
+             self.limits_rad.lower, self.limits_rad.upper, self.channels)
 
     def __unicode__(self):
         return u"%s (limits=%s to %s \u00b0, channels=%s)>" % \
             (camelcase_to_words(self.__class__.__name__),
-             self.limits_deg[0], self.limits_deg[1], self.channels)
-
-mapper.register(_AngularDetector, '{http://pymontecarlo.sf.net}_ngularDetector',
-                ParameterizedElement('limits_rad', UserType(bound), 'limits'))
+             self.limits_rad.lower, self.limits_rad.upper, self.channels)
 
 class _PolarAngularDetector(_AngularDetector):
 
-    limits = AngleParameter([CastValidator(bound), _elevation_validator],
-                            "Angular limits (in radians)")
+    limits = AngleParameter(_elevation_validator, ('lower', 'upper'),
+                            doc="Angular limits (in radians)")
 
     def __init__(self, channels, limits_rad=(-HALFPI, HALFPI)):
         _AngularDetector.__init__(self, channels, limits_rad)
 
-mapper.register(_PolarAngularDetector, '{http://pymontecarlo.sf.net}_polarAngularDetector')
-
 class _AzimuthalAngularDetector(_AngularDetector):
 
-    limits = AngleParameter([CastValidator(bound), _azimuth_validator],
-                            "Angular limits (in radians)")
+    limits = AngleParameter(_azimuth_validator, ('lower', 'upper'),
+                            doc="Angular limits (in radians)")
 
     def __init__(self, channels, limits_rad=(0, TWOPI)):
         _AngularDetector.__init__(self, channels, limits_rad)
-
-mapper.register(_AzimuthalAngularDetector, '{http://pymontecarlo.sf.net}_azimuthalAngularDetector')
-
+#
 class _PhotonDelimitedDetector(_DelimitedDetector):
     pass
-
-mapper.register(_PhotonDelimitedDetector, '{http://pymontecarlo.sf.net}_photonDelimitedDetector')
 
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
 
-mapper.register(BackscatteredElectronEnergyDetector, '{http://pymontecarlo.sf.net}backscatteredElectronEnergyDetector')
-
 class TransmittedElectronEnergyDetector(_EnergyDetector):
     pass
-
-mapper.register(TransmittedElectronEnergyDetector, '{http://pymontecarlo.sf.net}transmittedElectronEnergyDetector')
 
 class BackscatteredElectronPolarAngularDetector(_PolarAngularDetector):
     pass
 
-mapper.register(BackscatteredElectronPolarAngularDetector, '{http://pymontecarlo.sf.net}backscatteredElectronPolarAngularDetector')
-
 class TransmittedElectronPolarAngularDetector(_PolarAngularDetector):
     pass
-
-mapper.register(TransmittedElectronPolarAngularDetector, '{http://pymontecarlo.sf.net}transmittedElectronPolarAngularDetector')
 
 class BackscatteredElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
-mapper.register(BackscatteredElectronAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}backscatteredElectronAzimuthalAngularDetector')
-
 class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
-
-mapper.register(TransmittedElectronAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}transmittedElectronAzimuthalAngularDetector')
 
 class BackscatteredElectronRadialDetector(_ChannelsDetector):
     pass
 
-mapper.register(BackscatteredElectronRadialDetector, '{http://pymontecarlo.sf.net}backscatteredElectronRadialDetector')
-
 class PhotonPolarAngularDetector(_PolarAngularDetector):
     pass
-
-mapper.register(PhotonPolarAngularDetector, '{http://pymontecarlo.sf.net}photonPolarAngularDetector')
 
 class PhotonAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
-mapper.register(PhotonAzimuthalAngularDetector, '{http://pymontecarlo.sf.net}photonAzimuthalAngularDetector')
-
 class EnergyDepositedSpatialDetector(_SpatialDetector):
     pass
 
-mapper.register(EnergyDepositedSpatialDetector, '{http://pymontecarlo.sf.net}energyDepositedSpatialDetector')
-
 class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
 
-    def __init__(self, elevation_rad, azimuth_rad, limits_eV, channels):
+    def __init__(self, elevation_rad, azimuth_rad, channels, limits_eV):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
-        _EnergyDetector.__init__(self, limits_eV, channels)
+        _EnergyDetector.__init__(self, channels, limits_eV)
 
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
-        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
-        return cls(elevation_rad, azimuth_rad, limits_eV, channels)
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, limits_eV, channels)
 
     def __repr__(self):
         return "<%s(elevation=%s to %s deg, azimuth=%s to %s deg, limits=%s to %s eV, channels=%s)>" % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
-             self.limits_eV[0], self.limits_eV[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             self.limits_eV.lower, self.limits_eV.upper,
              self.channels)
 
     def __unicode__(self):
         return u"%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, limits=%s to %s eV, channels=%s)" % \
             (camelcase_to_words(self.__class__.__name__),
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
-             self.limits_eV[0], self.limits_eV[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             self.limits_eV.lower, self.limits_eV.upper,
              self.channels)
-
-mapper.register(PhotonSpectrumDetector, '{http://pymontecarlo.sf.net}photonSpectrumDetector')
 
 class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
@@ -440,24 +353,22 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad, channels):
-        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
-        return cls(elevation_rad, azimuth_rad, channels)
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
 
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
 
     def __unicode__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
-
-mapper.register(PhotonDepthDetector, '{http://pymontecarlo.sf.net}photonDepthDetector')
 
 class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
@@ -467,30 +378,28 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
-        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
-        return cls(elevation_rad, azimuth_rad, limits_eV, channels)
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
 
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
 
     def __unicode__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
-
-mapper.register(PhotonRadialDetector, '{http://pymontecarlo.sf.net}photonRadialDetector')
 
 class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
 
-    xbins = Parameter(_bins_validator, "Number of bins in x")
-    ybins = Parameter(_bins_validator, "Number of bins in y")
-    zbins = Parameter(_bins_validator, "Number of bins in z")
+    xbins = Parameter(np.int, range_validator(1.0), doc="Number of bins in x")
+    ybins = Parameter(np.int, range_validator(1.0), doc="Number of bins in y")
+    zbins = Parameter(np.int, range_validator(1.0), doc="Number of bins in z")
 
     def __init__(self, elevation_rad, azimuth_rad, xbins, ybins, zbins):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
@@ -501,32 +410,25 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
 
     @classmethod
     def annular(cls, takeoffangle_rad, opening_rad, xbins, ybins, zbins):
-        elevation_rad, azimuth_rad = cls._annular(takeoffangle_rad, opening_rad)
-        return cls(elevation_rad, azimuth_rad, xbins, ybins, zbins)
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, xbins, ybins, zbins)
 
     def __repr__(self):
         return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, bins=(%s, %s, %s))>' % \
             (self.__class__.__name__,
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.xbins, self.ybins, self.zbins)
 
     def __unicode__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, bins=(%s, %s, %s))' % \
             (camelcase_to_words(self.__class__.__name__),
-             self.elevation_deg[0], self.elevation_deg[1],
-             self.azimuth_deg[0], self.azimuth_deg[1],
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.xbins, self.ybins, self.zbins)
-
-mapper.register(PhotonEmissionMapDetector, '{http://pymontecarlo.sf.net}photonEmissionMapDetector',
-                ParameterizedAttribute('xbins', PythonType(int)),
-                ParameterizedAttribute('ybins', PythonType(int)),
-                ParameterizedAttribute('zbins', PythonType(int)))
 
 class PhotonIntensityDetector(_PhotonDelimitedDetector):
     pass
-
-mapper.register(PhotonIntensityDetector, '{http://pymontecarlo.sf.net}photonIntensityDetector')
 
 class TimeDetector(_Detector):
     """
@@ -534,15 +436,11 @@ class TimeDetector(_Detector):
     """
     pass
 
-mapper.register(TimeDetector, '{http://pymontecarlo.sf.net}timeDetector')
-
 class ElectronFractionDetector(_Detector):
     """
     Records backscattered, transmitted and absorbed fraction of primary electrons.
     """
     pass
-
-mapper.register(ElectronFractionDetector, '{http://pymontecarlo.sf.net}electronFractionDetector')
 
 class ShowersStatisticsDetector(_Detector):
     """
@@ -550,15 +448,12 @@ class ShowersStatisticsDetector(_Detector):
     """
     pass
 
-mapper.register(ShowersStatisticsDetector, '{http://pymontecarlo.sf.net}showersStatisticsDetector')
-
 class TrajectoryDetector(_Detector):
     """
     Records the trajectories of particles.
     """
 
-    secondary = Parameter(CastValidator(bool),
-                          "Whether to simulate secondary particles")
+    secondary = Parameter(doc="Whether to simulate secondary particles")
 
     def __init__(self, secondary=True):
         """
@@ -582,7 +477,4 @@ class TrajectoryDetector(_Detector):
         prep = 'with' if self.secondary else 'without'
         return '%s (%s secondary particles)' % \
             (camelcase_to_words(self.__class__.__name__), prep)
-
-mapper.register(TrajectoryDetector, '{http://pymontecarlo.sf.net}trajectoryDetector',
-                ParameterizedAttribute('secondary', PythonType(bool)))
 

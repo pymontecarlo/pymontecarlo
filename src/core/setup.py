@@ -27,9 +27,10 @@ from pymontecarlo.util.dist.command import clean
 # Globals and constants variables.
 
 packages = ['pymontecarlo',
-            'pymontecarlo.input',
-            'pymontecarlo.output',
+            'pymontecarlo.fileformat',
+            'pymontecarlo.options',
             'pymontecarlo.program',
+            'pymontecarlo.results',
             'pymontecarlo.runner',
             'pymontecarlo.ui',
             'pymontecarlo.ui.cli',
@@ -50,7 +51,45 @@ cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run'
                    'pymontecarlo-updater': 'pymontecarlo.ui.cli.updater:run'}
 gui_executables = {'pymontecarlo': 'pymontecarlo.ui.gui.main:run'}
 
-entry_points = {}
+entry_points = {'pymontecarlo.fileformat.options.material':
+                    ['Material = pymontecarlo.fileformat.options.material:MaterialXMLHandler'],
+                'pymontecarlo.fileformat.options.beam':
+                    ['PencilBeam = pymontecarlo.fileformat.options.beam:PencilBeamXMLHandler',
+                     'GaussianBeam = pymontecarlo.fileformat.options.beam:GaussianBeamXMLHandler', ],
+                'pymontecarlo.fileformat.options.geometry':
+                    ['Substrate = pymontecarlo.fileformat.options.geometry:SubstrateXMLHandler',
+                     'Inclusion = pymontecarlo.fileformat.options.geometry:InclusionXMLHandler',
+                     'HorizontalLayers = pymontecarlo.fileformat.options.geometry:HorizontalLayersXMLHandler',
+                     'VerticalLayers = pymontecarlo.fileformat.options.geometry:VerticalLayersXMLHandler',
+                     'Sphere = pymontecarlo.fileformat.options.geometry:SphereXMLHandler'],
+                'pymontecarlo.fileformat.options.detector':
+                    ['BackscatteredElectronEnergyDetector = pymontecarlo.fileformat.options.detector:BackscatteredElectronEnergyDetectorXMLHandler',
+                     'TransmittedElectronEnergyDetector = pymontecarlo.fileformat.options.detector:TransmittedElectronEnergyDetectorXMLHandler',
+                     'BackscatteredElectronPolarAngularDetector = pymontecarlo.fileformat.options.detector:BackscatteredElectronPolarAngularDetectorXMLHandler',
+                     'TransmittedElectronPolarAngularDetector = pymontecarlo.fileformat.options.detector:TransmittedElectronPolarAngularDetectorXMLHandler',
+                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.fileformat.options.detector:BackscatteredElectronAzimuthalAngularDetectorXMLHandler',
+                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.fileformat.options.detector:TransmittedElectronAzimuthalAngularDetectorXMLHandler',
+                     'BackscatteredElectronRadialDetector = pymontecarlo.fileformat.options.detector:BackscatteredElectronRadialDetectorXMLHandler',
+                     'PhotonPolarAngularDetector = pymontecarlo.fileformat.options.detector:PhotonPolarAngularDetectorXMLHandler',
+                     'PhotonAzimuthalAngularDetector = pymontecarlo.fileformat.options.detector:PhotonAzimuthalAngularDetectorXMLHandler',
+                     'EnergyDepositedSpatialDetector = pymontecarlo.fileformat.options.detector:EnergyDepositedSpatialDetectorXMLHandler',
+                     'PhotonSpectrumDetector = pymontecarlo.fileformat.options.detector:PhotonSpectrumDetectorXMLHandler',
+                     'PhotonDepthDetector = pymontecarlo.fileformat.options.detector:PhotonDepthDetectorXMLHandler',
+                     'PhotonRadialDetector = pymontecarlo.fileformat.options.detector:PhotonRadialDetectorXMLHandler',
+                     'PhotonEmissionMapDetector = pymontecarlo.fileformat.options.detector:PhotonEmissionMapDetectorXMLHandler',
+                     'PhotonIntensityDetector = pymontecarlo.fileformat.options.detector:PhotonIntensityDetectorXMLHandler',
+                     'TimeDetector = pymontecarlo.fileformat.options.detector:TimeDetectorXMLHandler',
+                     'ElectronFractionDetector = pymontecarlo.fileformat.options.detector:ElectronFractionDetectorXMLHandler',
+                     'ShowersStatisticsDetector = pymontecarlo.fileformat.options.detector:ShowersStatisticsDetectorXMLHandler',
+                     'TrajectoryDetector = pymontecarlo.fileformat.options.detector:TrajectoryDetectorXMLHandler', ],
+                'pymontecarlo.fileformat.options.limit':
+                    ['TimeLimit = pymontecarlo.fileformat.options.limit:TimeLimitXMLHandler',
+                     'ShowersLimit = pymontecarlo.fileformat.options.limit:ShowersLimitXMLHandler',
+                     'UncertaintyLimit = pymontecarlo.fileformat.options.limit:UncertaintyLimitXMLHandler'],
+                'pymontecarlo.fileformat.options.model':
+                    ['Model = pymontecarlo.fileformat.options.model:ModelXMLHandler']}
+
+
 entry_points['console_scripts'] = \
     ['%s = %s' % item for item in cli_executables.items()]
 entry_points['gui_scripts'] = \
@@ -100,7 +139,7 @@ setup(name="pyMonteCarlo",
       cmdclass=cmdclass,
 
       setup_requires=['nose>=1.0'],
-      install_requires=['pyparsing >=1.5.2, <2.0', 'numpy>=1.5',
+      install_requires=['pyparsing>=2.0', 'numpy>=1.5',
                         'h5py>=2.0.1', 'matplotlib>=1.1'],
 
       entry_points=entry_points,

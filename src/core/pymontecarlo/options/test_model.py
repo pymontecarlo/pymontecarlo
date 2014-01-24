@@ -18,7 +18,6 @@ import logging
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.model import ModelType
-from pymontecarlo.options.xmlmapper import mapper
 
 # Globals and constants variables.
 
@@ -87,30 +86,6 @@ class TestModel(TestCase):
         self.assertEqual('<Model(name1)>', repr(MTYPE.m1))
         self.assertEqual('<Model(name2)>', repr(MTYPE.m2))
 
-    def testfrom_xml(self):
-        element = mapper.to_xml(MTYPE.m1)
-        m1 = mapper.from_xml(element)
-
-        self.assertEqual('name1', m1.name)
-        self.assertEqual('ref1', m1.reference)
-        self.assertEqual(MTYPE, m1.type)
-
-        element = mapper.to_xml(MTYPE.m2)
-        m2 = mapper.from_xml(element)
-
-        self.assertEqual('name2', m2.name)
-        self.assertEqual('', m2.reference)
-        self.assertEqual(MTYPE, m2.type)
-#
-    def testto_xml(self):
-        element = mapper.to_xml(MTYPE.m1)
-        self.assertEqual('name1', element.get('name'))
-        self.assertEqual(str(MTYPE), element.get('type'))
-
-        element = mapper.to_xml(MTYPE.m2)
-        self.assertEqual('name2', element.get('name'))
-        self.assertEqual(str(MTYPE), element.get('type'))
-#
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

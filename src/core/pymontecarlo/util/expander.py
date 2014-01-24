@@ -24,11 +24,15 @@ import copy
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.parameter import Expander as _Expander
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import _DelimitedDetector
 
+from pymontecarlo.util.multipleloop import combine
+from pymontecarlo.util.parameter import iter_attributes
+
 # Globals and constants variables.
+
+
 
 class Expander(_Expander):
     """

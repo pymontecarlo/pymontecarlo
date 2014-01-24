@@ -36,8 +36,6 @@ import collections
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.xmlmapper import \
-    mapper, _XMLType, Attribute, PythonType
 
 # Globals and constants variables.
 
@@ -102,14 +100,6 @@ class ModelType(collections.Set):
     def __deepcopy__(self, memo=None):
         return self
 
-class _ModelXMLType(_XMLType):
-
-    def to_xml(self, type_):
-        return str(type_)
-
-    def from_xml(self, name):
-        return ModelType(name)
-
 class Model(object):
 
     def __new__(cls, type, name, reference=''): # @ReservedAssignment
@@ -154,10 +144,6 @@ class Model(object):
     @property
     def type(self):
         return self._type
-
-mapper.register(Model, "{http://pymontecarlo.sf.net}model",
-                Attribute('type', _ModelXMLType()),
-                Attribute('name', PythonType(str)))
 
 #-------------------------------------------------------------------------------
 
