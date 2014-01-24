@@ -28,6 +28,9 @@ import xml.dom.minidom as minidom
 
 # Globals and constants variables.
 
+def parse(source):
+    return etree.parse(source).getroot()
+
 def tostring(element, encoding='UTF-8', pretty_print=True):
     output = etree.tostring(element, encoding=encoding)
     if pretty_print:
