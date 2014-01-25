@@ -28,11 +28,11 @@ from zipfile import ZipFile
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+from pymontecarlo.program.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.program.casino3.input.converter import Converter
+from pymontecarlo.program.casino3.converter import Converter
 #from pymontecarlo.program.casino3.io.exporter import Exporter
-from pymontecarlo.program.casino3.output.importer import Importer
+from pymontecarlo.program.casino3.importer import Importer
 
 
 # Globals and constants variables.
@@ -47,7 +47,7 @@ class Worker(_Worker):
 
         self._executable = get_settings().casino3.exe
         if not os.path.isfile(self._executable):
-            raise IOError, 'Casino 3 executable (%s) cannot be found' % self._executable
+            raise IOError('Casino 3 executable (%s) cannot be found' % self._executable)
         logging.debug('Casino 3 executable: %s', self._executable)
 
     def _create(self, options, dirpath):

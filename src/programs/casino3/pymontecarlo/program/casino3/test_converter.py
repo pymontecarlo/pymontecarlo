@@ -18,11 +18,11 @@ import warnings
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.casino3.input.converter import Converter, ConversionException
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import TrajectoryDetector
+from pymontecarlo.program.casino3.converter import Converter, ConversionException
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.beam import PencilBeam
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import TrajectoryDetector
 
 # Globals and constants variables.
 warnings.simplefilter("always")
@@ -70,6 +70,6 @@ class TestPenelopeConverter(TestCase):
         # Convert
         self.assertRaises(ConversionException, self.converter.convert , ops)
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

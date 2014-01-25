@@ -24,10 +24,10 @@ import os
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.program.config import Program
-from pymontecarlo.program.casino3.input.converter import Converter
-#from pymontecarlo.program.casino3.io.exporter import Exporter
-from pymontecarlo.program.casino3.output.importer import Importer
-from pymontecarlo.program.casino3.runner.worker import Worker
+from pymontecarlo.program.casino3.converter import Converter
+#from pymontecarlo.program.casino3.exporter import Exporter
+from pymontecarlo.program.casino3.importer import Importer
+from pymontecarlo.program.casino3.worker import Worker
 
 # Globals and constants variables.
 
@@ -41,13 +41,13 @@ class _Casino3Program(Program):
         settings = get_settings()
 
         if 'casino3' not in settings:
-            raise AssertionError, "Missing 'casino3' section in settings"
+            raise AssertionError("Missing 'casino3' section in settings")
 
         if 'exe' not in settings.casino3:
-            raise AssertionError, "Missing 'exe' option in 'casino3' section of settings"
+            raise AssertionError("Missing 'exe' option in 'casino3' section of settings")
 
         exe = settings.casino3.exe
         if not os.path.isfile(exe):
-            raise AssertionError, "Specified Casino 3 executable (%s) does not exist" % exe
+            raise AssertionError("Specified Casino 3 executable (%s) does not exist" % exe)
 
 program = _Casino3Program()

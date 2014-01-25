@@ -26,17 +26,17 @@ import numpy as np
 # Local modules.
 from casinoTools.FileFormat.casino3.File import File
 
-from pymontecarlo.output.result import \
+from pymontecarlo.results.result import \
     (TrajectoryResult, Trajectory, ElectronFractionResult)
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.collision import NO_COLLISION, DELTA, HARD_INELASTIC
-from pymontecarlo.input.detector import \
-    (TrajectoryDetector, ElectronFractionDetector)
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.collision import NO_COLLISION, DELTA, HARD_INELASTIC
+from pymontecarlo.options.detector import \
+    TrajectoryDetector, ElectronFractionDetector
 
-from pymontecarlo.output.importer import Importer as _Importer
+from pymontecarlo.program.importer import Importer as _Importer
 
 # Globals and constants variables.
-from pymontecarlo.output.result import \
+from pymontecarlo.results.result import \
     EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED
 from casinoTools.FileFormat.casino3.TrajectoryCollision import \
     (COLLISION_TYPE_ATOM, COLLISION_TYPE_REGION,

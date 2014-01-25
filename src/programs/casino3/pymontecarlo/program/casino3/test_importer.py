@@ -18,14 +18,14 @@ import os
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import TrajectoryDetector, ElectronFractionDetector
-from pymontecarlo.program.casino3.output.importer import Importer
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import TrajectoryDetector, ElectronFractionDetector
+from pymontecarlo.program.casino3.importer import Importer
 
 # Globals and constants variables.
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.collision import NO_COLLISION
-from pymontecarlo.output.result import EXIT_STATE_ABSORBED
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.collision import NO_COLLISION
+from pymontecarlo.results.result import EXIT_STATE_ABSORBED
 
 class TestImporter(TestCase):
 
@@ -88,6 +88,6 @@ class TestImporter(TestCase):
         self.assertAlmostEqual(0.0, result.transmitted[0], 4)
         self.assertAlmostEqual(0.0, result.transmitted[1], 4)
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
