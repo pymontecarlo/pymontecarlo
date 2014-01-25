@@ -21,7 +21,6 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.parameter import iter_values
 from pymontecarlo.options.detector import _EnergyDetector
 
 # Globals and constants variables.
@@ -67,13 +66,3 @@ def ensure_emax(options, emax=None):
 
     return emax
 
-def expand(options):
-    """
-
-    """
-    prm_values = {}
-
-    for baseobj, name, value in iter_values(options):
-        prm_values.setdefault((baseobj, name), []).append(value)
-
-    print(prm_values)

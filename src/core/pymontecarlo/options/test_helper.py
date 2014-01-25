@@ -30,7 +30,7 @@ class TestModule(TestCase):
         self.ops = Options(name="Test")
         self.ops.beam.energy = 20e3
 
-        mat = Material('Brass', {29: 0.5, 30: 0.4, 50: 0.1})
+        mat = Material({29: 0.5, 30: 0.4, 50: 0.1}, 'Brass')
         self.ops.geometry.material = mat
 
     def tearDown(self):
