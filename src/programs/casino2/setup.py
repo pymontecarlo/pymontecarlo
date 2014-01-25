@@ -35,11 +35,8 @@ setup(name="pyMonteCarlo-Casino2",
 
       packages=['pymontecarlo',
                 'pymontecarlo.program',
-                'pymontecarlo.program.casino2',
-                'pymontecarlo.program.casino2.input',
-                'pymontecarlo.program.casino2.output',
-                'pymontecarlo.program.casino2.runner'],
-      package_data={'pymontecarlo.program.casino2.input': ['templates/*.sim']},
+                'pymontecarlo.program.casino2'],
+      package_data={'pymontecarlo.program.casino2': ['templates/*.sim']},
 
       install_requires=['casinoTools-Casino2>=0.1'],
       dependency_links=["https://bitbucket.org/pymontecarlo/pymontecarlo/downloads"],
@@ -52,7 +49,7 @@ setup(name="pyMonteCarlo-Casino2",
                         'casino2=pymontecarlo.program.casino2.config_cli:cli',
                     'pymontecarlo.program.gui':
                         'casino2=pymontecarlo.program.casino2.config_gui:gui', },
-      
+
       test_suite='nose.collector',
 )
 

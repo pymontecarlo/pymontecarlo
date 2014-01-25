@@ -23,14 +23,14 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import Converter as _Converter
+from pymontecarlo.program.converter import Converter as _Converter
 
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.beam import PencilBeam, GaussianBeam
-from pymontecarlo.input.geometry import \
-    Substrate, MultiLayers, GrainBoundaries
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.beam import PencilBeam, GaussianBeam
+from pymontecarlo.options.geometry import \
+    Substrate, HorizontalLayers, VerticalLayers
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     (BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      BackscatteredElectronRadialDetector,
@@ -41,17 +41,17 @@ from pymontecarlo.input.detector import \
      ElectronFractionDetector,
      TrajectoryDetector,
      )
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS,
      MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.input.expander import ExpanderSingleDetectorSameOpening
+from pymontecarlo.util.expander import ExpanderSingleDetectorSameOpening
 
 # Globals and constants variables.
 
 class Converter(_Converter):
     BEAMS = [GaussianBeam]
-    GEOMETRIES = [Substrate, MultiLayers, GrainBoundaries]
+    GEOMETRIES = [Substrate, HorizontalLayers, VerticalLayers]
     DETECTORS = [BackscatteredElectronEnergyDetector,
                  TransmittedElectronEnergyDetector,
                  BackscatteredElectronPolarAngularDetector,
@@ -87,10 +87,10 @@ class Converter(_Converter):
                       DIRECTION_COSINE: DIRECTION_COSINE.drouin1996,
                       ENERGY_LOSS: ENERGY_LOSS.joy_luo1989,
                       MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.heinrich_ixcom11}
-    
+
     def __init__(self):
         _Converter.__init__(self)
-        
+
         self._expander = ExpanderSingleDetectorSameOpening(self.DETECTORS)
 
     def _convert_beam(self, options):

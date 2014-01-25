@@ -27,8 +27,8 @@ import numpy as np
 from pyxray.transition import K_family, LIII, MV
 
 # Local modules.
-from pymontecarlo.output.importer import Importer as _Importer
-from pymontecarlo.output.result import \
+from pymontecarlo.program.importer import Importer as _Importer
+from pymontecarlo.results.result import \
     (
     PhotonIntensityResult,
     ElectronFractionResult,
@@ -43,7 +43,7 @@ from pymontecarlo.output.result import \
     TrajectoryResult,
     Trajectory,
     )
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.detector import \
     (
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
@@ -61,11 +61,11 @@ from casinoTools.FileFormat.casino2.File import File
 # Globals and constants variables.
 from casinoTools.FileFormat.casino2.Element import \
     LINE_K, LINE_L, LINE_M, GENERATED as CAS_GENERATED, EMITTED as CAS_EMITTED
-from pymontecarlo.output.result import \
+from pymontecarlo.results.result import \
     (GENERATED, EMITTED, NOFLUORESCENCE, TOTAL,
      EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED)
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.collision import NO_COLLISION
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.collision import NO_COLLISION
 
 LINE_LOOKUP = {LINE_K: K_family, LINE_L: LIII, LINE_M: MV}
 
@@ -236,7 +236,7 @@ class Importer(_Importer):
 
         data = np.array([graphdata.getPositions(), graphdata.getValues()]).T
         data[:, 0] *= 1e-9 # nm to m
-        data[:, 1] *= 1e9 ** 2# nm2 to m2
+        data[:, 1] *= 1e9 ** 2 # nm2 to m2
 
         return BackscatteredElectronRadialResult(data)
 

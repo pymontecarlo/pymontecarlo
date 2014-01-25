@@ -20,14 +20,14 @@ import shutil
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import ElectronFractionDetector
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import ElectronFractionDetector
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.casino2.config import program
-from pymontecarlo.program.casino2.runner.worker import Worker
-from pymontecarlo.program.casino2.input.converter import Converter
+from pymontecarlo.program.casino2.worker import Worker
+from pymontecarlo.program.casino2.converter import Converter
 
 # Globals and constants variables.
 

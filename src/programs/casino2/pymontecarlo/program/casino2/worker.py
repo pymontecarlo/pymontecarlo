@@ -26,7 +26,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.runner.worker import Worker as _Worker
+from pymontecarlo.program.worker import Worker as _Worker
 
 # Globals and constants variables.
 
@@ -39,9 +39,9 @@ class Worker(_Worker):
 
         self._executable = get_settings().casino2.exe
         if not os.path.isfile(self._executable):
-            raise IOError, 'Casino 2 executable (%s) cannot be found' % self._executable
+            raise IOError('Casino 2 executable (%s) cannot be found' % self._executable)
         logging.debug('Casino 2 executable: %s', self._executable)
 
     def run(self, options, outputdir, workdir, *args, **kwargs):
-        raise NotImplementedError, "Simulations with Casino2 cannot be directly run. " + \
-            "Please use the create method to create the .sim files and run them in Casino 2."
+        raise NotImplementedError("Simulations with Casino2 cannot be directly run. " + \
+            "Please use the create method to create the .sim files and run them in Casino 2.")

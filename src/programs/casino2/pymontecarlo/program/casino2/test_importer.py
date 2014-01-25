@@ -19,9 +19,9 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.casino2.output.importer import Importer
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import \
+from pymontecarlo.program.casino2.importer import Importer
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import \
     (PhotonIntensityDetector, ElectronFractionDetector,
      PhotonDepthDetector, PhotonRadialDetector,
      BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
@@ -154,6 +154,6 @@ class TestCasino2Importer(TestCase):
 
         self.assertEqual(221, len(result))
 
-if __name__ == '__main__':  #pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.ERROR)
     unittest.main()

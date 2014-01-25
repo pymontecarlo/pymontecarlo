@@ -19,21 +19,21 @@ from operator import attrgetter
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.casino2.input.exporter import \
+from pymontecarlo.program.casino2.exporter import \
     Exporter, ExporterException
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import \
     (BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, BackscatteredElectronRadialDetector,
      PhotonIntensityDetector, PhotonDepthDetector, TrajectoryDetector)
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.material import Material
-from pymontecarlo.input.geometry import GrainBoundaries, MultiLayers
-from pymontecarlo.input.model import \
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.geometry import HorizontalLayers, VerticalLayers
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE)
-from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.options.particle import ELECTRON
 
 from casinoTools.FileFormat.casino2.SimulationOptions import \
     (DIRECTION_COSINES_SOUM, CROSS_SECTION_MOTT_EQUATION,
@@ -144,7 +144,7 @@ class TestCasino2Exporter(TestCase):
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
 
-        ops.geometry = GrainBoundaries(mat1, mat2)
+        ops.geometry = VerticalLayers(mat1, mat2)
         ops.geometry.add_layer(mat3, 25e-9)
 
         ops.limits.add(ShowersLimit(5678))
@@ -209,7 +209,7 @@ class TestCasino2Exporter(TestCase):
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
 
-        ops.geometry = MultiLayers(mat1)
+        ops.geometry = HorizontalLayers(mat1)
         ops.geometry.add_layer(mat2, 25e-9)
         ops.geometry.add_layer(mat3, 55e-9)
 
@@ -275,7 +275,7 @@ class TestCasino2Exporter(TestCase):
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
 
-        ops.geometry = MultiLayers(None)
+        ops.geometry = HorizontalLayers(None)
         ops.geometry.add_layer(mat1, 15e-9)
         ops.geometry.add_layer(mat2, 25e-9)
         ops.geometry.add_layer(mat3, 55e-9)

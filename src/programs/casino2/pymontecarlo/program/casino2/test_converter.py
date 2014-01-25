@@ -11,7 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import warnings
 from math import radians
 
 # Third party modules.
@@ -19,18 +18,17 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.beam import PencilBeam
+from pymontecarlo.options.detector import \
     (BackscatteredElectronEnergyDetector, PhotonSpectrumDetector,
      PhotonDepthDetector, PhotonIntensityDetector)
-from pymontecarlo.input.limit import ShowersLimit, TimeLimit
-from pymontecarlo.input.model import IONIZATION_CROSS_SECTION, ModelType
+from pymontecarlo.options.limit import ShowersLimit, TimeLimit
+from pymontecarlo.options.model import IONIZATION_CROSS_SECTION, ModelType
 
-from pymontecarlo.program.casino2.input.converter import Converter
+from pymontecarlo.program.casino2.converter import Converter
 
 # Globals and constants variables.
-warnings.simplefilter("always")
 
 class TestCasino2Converter(TestCase):
 
@@ -46,19 +44,15 @@ class TestCasino2Converter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy_eV = 1234
-        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
         ops.limits.add(ShowersLimit(5678))
         ops.models.add(IONIZATION_CROSS_SECTION.jakoby)
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
         # Test
         self.assertEqual(1, len(opss))
-
-        # 6 warnings for the default models
-        self.assertEqual(6, len(ws))
 
         self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
 
@@ -80,26 +74,18 @@ class TestCasino2Converter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam = PencilBeam(1234)
-        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
         ops.detectors['photon'] = \
             PhotonSpectrumDetector((radians(35), radians(45)), (0, radians(360.0)),
-                                   (12.34, 56.78), 1000)
+                                   1000, (12.34, 56.78))
         ops.limits.add(ShowersLimit(5678))
         ops.limits.add(TimeLimit(60))
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
         # Test
         self.assertEqual(1, len(opss))
-
-        # 4 warnings:
-        # PencilBeam -> GaussianBeam
-        # Remove PhotonSpectrumDetector
-        # Remove TimeLimit
-        # Set default models (7)
-        self.assertEqual(10, len(ws))
 
         self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
 
@@ -119,8 +105,8 @@ class TestCasino2Converter(TestCase):
         # Base options
         ops = Options(name="Test")
         ops.beam.energy_eV = 100e3
-        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
-        ops.detectors['bse2'] = BackscatteredElectronEnergyDetector((0, 1234), 1000)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
+        ops.detectors['bse2'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
         ops.limits.add(ShowersLimit(5678))
 
         # Convert
@@ -172,11 +158,9 @@ class TestCasino2Converter(TestCase):
         ops.limits.add(ShowersLimit(5678))
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
         self.assertEqual(1, len(opss))
-        self.assertEqual(8, len(ws))
 
     def testconvert7(self):
         # Base options

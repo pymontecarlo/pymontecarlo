@@ -23,20 +23,19 @@ import os
 from operator import itemgetter
 import warnings
 import math
-import pkgutil
-from StringIO import StringIO
 
 # Third party modules.
 import numpy as np
-
 import pyxray.element_properties as ep
+from pkg_resources import resource_stream #@UnresolvedImport
 
 # Local modules.
-from pymontecarlo.input.beam import GaussianBeam
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.geometry import  Substrate, MultiLayers, GrainBoundaries
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.geometry import  \
+    Substrate, HorizontalLayers, VerticalLayers
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
@@ -49,10 +48,10 @@ from pymontecarlo.input.detector import \
      equivalent_opening,
      TrajectoryDetector,
      )
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.input.exporter import \
+from pymontecarlo.program.exporter import \
     Exporter as _Exporter, ExporterException, ExporterWarning
 
 from casinoTools.FileFormat.casino2.File import File
@@ -91,8 +90,8 @@ class Exporter(_Exporter):
         self._beam_exporters[GaussianBeam] = self._beam_gaussian
 
         self._geometry_exporters[Substrate] = self._geometry_substrate
-        self._geometry_exporters[MultiLayers] = self._geometry_multilayers
-        self._geometry_exporters[GrainBoundaries] = self._geometry_grainboundaries
+        self._geometry_exporters[HorizontalLayers] = self._geometry_horizontal_layers
+        self._geometry_exporters[VerticalLayers] = self._geometry_vertical_layers
 
         self._detector_exporters[BackscatteredElectronEnergyDetector] = \
             self._detector_backscattered_electron_energy
@@ -132,7 +131,7 @@ class Exporter(_Exporter):
 
     def _export(self, options, dirpath, *args, **kwargs):
         casfile = self.export_cas(options)
-        
+
         filepath = os.path.join(dirpath, options.name + '.sim')
         casfile.write(filepath)
 
@@ -157,29 +156,23 @@ class Exporter(_Exporter):
         geometry_name = geometry.__class__.__name__
 
         if isinstance(geometry, Substrate):
-            data = pkgutil.get_data(__name__, "templates/Substrate.sim")
-            buffer = StringIO(data)
-            buffer.mode = 'rb'
-            return buffer
-        elif isinstance(geometry, (MultiLayers, GrainBoundaries)):
+            return resource_stream(__name__, "templates/Substrate.sim")
+        elif isinstance(geometry, (HorizontalLayers, VerticalLayers)):
             regions_count = len(geometry.layers)
 
-            if isinstance(geometry, MultiLayers):
+            if isinstance(geometry, HorizontalLayers):
                 if geometry.has_substrate(): regions_count += 1
             else: # GrainBoundaries
                 regions_count += 2 # left and right regions
 
             filename = "%s%i.sim" % (geometry_name, regions_count)
-            data = pkgutil.get_data(__name__, "templates/" + filename)
-            if data is None:
-                raise ExporterException, "No template for '%s' with region count: %i" % \
-                    (geometry_name, regions_count)
-
-            buffer = StringIO(data)
-            buffer.mode = 'rb'
+            buffer = resource_stream(__name__, "templates/" + filename)
+            if buffer is None:
+                raise ExporterException("No template for '%s' with region count: %i" % \
+                                        (geometry_name, regions_count))
             return buffer
         else:
-            raise ExporterException, "Unknown geometry: %s" % geometry_name
+            raise ExporterException("Unknown geometry: %s" % geometry_name)
 
     def _beam_gaussian(self, options, beam, simdata, simops):
         simops.setIncidentEnergy_keV(beam.energy_eV / 1000.0) # keV
@@ -222,7 +215,7 @@ class Exporter(_Exporter):
         region = regionops.getRegion(0)
         _setup_region_material(region, geometry.material)
 
-    def _geometry_multilayers(self, options, geometry, simdata, simops):
+    def _geometry_horizontal_layers(self, options, geometry, simdata, simops):
         regionops = simdata.getRegionOptions()
         layers = geometry.layers
 
@@ -244,7 +237,7 @@ class Exporter(_Exporter):
             parameters[2] = parameters[0] + 10.0
             region.setParameters(parameters)
 
-    def _geometry_grainboundaries(self, options, geometry, simdata, simops):
+    def _geometry_vertical_layers(self, options, geometry, simdata, simops):
         regionops = simdata.getRegionOptions()
         layers = geometry.layers
         assert len(layers) == regionops.getNumberRegions() - 2 # without substrates
@@ -292,7 +285,7 @@ class Exporter(_Exporter):
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
             if not all(c):
-                raise ExporterException, "Some delimited detectors do not have the same opening"
+                raise ExporterException("Some delimited detectors do not have the same opening")
 
         if dets:
             simops.TOA = math.degrees(dets[0].takeoffangle_rad) # deg
