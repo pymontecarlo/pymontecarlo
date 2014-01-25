@@ -211,16 +211,16 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
 
         materials_lookup = self._parse_materials(element)
 
-        subelement = element.find('left')
+        subelement = element.find('leftSubstrate')
         if subelement is None:
-            raise ValueError("Element 'left' not found")
+            raise ValueError("Element 'leftSubstrate' not found")
         indexes = self._parse_numerical_parameter(subelement, 'material')
         left_material = list(map(materials_lookup.get, indexes))
         left_depth_m = self._parse_numerical_parameter(subelement, 'depth')
 
-        subelement = element.find('right')
+        subelement = element.find('rightSubstrate')
         if subelement is None:
-            raise ValueError("Element 'right' not found")
+            raise ValueError("Element 'rightSubstrate' not found")
         indexes = self._parse_numerical_parameter(subelement, 'material')
         right_material = list(map(materials_lookup.get, indexes))
         right_depth_m = self._parse_numerical_parameter(subelement, 'depth')
@@ -248,13 +248,13 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
 
         materials_lookup = self._convert_materials(element, obj.get_materials())
 
-        subelement = etree.SubElement(element, 'left')
+        subelement = etree.SubElement(element, 'leftSubstrate')
         indexes = sorted(map(materials_lookup.get,
                              np.array(obj.left_substrate.material, ndmin=1)))
         self._convert_numerical_parameter(subelement, indexes, 'material')
         self._convert_numerical_parameter(subelement, obj.left_substrate.depth_m, 'depth')
 
-        subelement = etree.SubElement(element, 'right')
+        subelement = etree.SubElement(element, 'rightSubstrate')
         indexes = sorted(map(materials_lookup.get,
                              np.array(obj.right_substrate.material, ndmin=1)))
         self._convert_numerical_parameter(subelement, indexes, 'material')
