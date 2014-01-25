@@ -3,9 +3,7 @@
 	<name>pymontecarlo</name>
 	<comment></comment>
 	<projects>
-		<project>penelope</project>
 		<project>pyxray</project>
-		<project>wxtools2</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
