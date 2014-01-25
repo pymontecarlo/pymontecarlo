@@ -20,13 +20,15 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import logging
+import uuid
+import xml.etree.ElementTree as etree
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.util.updater import _Updater
-from pymontecarlo.options.options import Options
-from pymontecarlo.util.xmlmapper import parse, tostring
+import pymontecarlo.util.xmlutil as xmlutil
+from pymontecarlo.fileformat.options.options import load as load_options
 
 # Globals and constants variables.
 from pymontecarlo.options.particle import ELECTRON, PHOTON, POSITRON
@@ -51,16 +53,16 @@ class Updater(_Updater):
         self._updaters[5] = self._update_version5
 
     def _get_version(self, filepath):
-        root = parse(filepath).getroot()
+        root = xmlutil.parse(filepath)
         return int(root.get('version', 0))
 
     def _validate(self, filepath):
-        Options.load(filepath)
+        load_options(filepath)
 
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')
 
-        root = parse(filepath).getroot()
+        root = xmlutil.parse(filepath)
 
         if not root.tag.startswith("{") and \
                 root.tag.startswith('pymontecarlo.'):
@@ -119,14 +121,14 @@ class Updater(_Updater):
             root.set('version', '2')
 
             with open(filepath, 'wb') as fp:
-                fp.write(tostring(root, pretty_print=True))
+                fp.write(xmlutil.tostring(root, pretty_print=True))
 
         return self._update_version2(filepath)
 
     def _update_version2(self, filepath):
         logging.debug('Updating from "version 2"')
 
-        root = parse(filepath).getroot()
+        root = xmlutil.parse(filepath)
         root.set('version', '3')
 
         # Update beam
@@ -165,14 +167,14 @@ class Updater(_Updater):
                 element.set('collision', str(collision))
 
         with open(filepath, 'wb') as fp:
-            fp.write(tostring(root, pretty_print=True))
+            fp.write(xmlutil.tostring(root, pretty_print=True))
 
         return self._update_version3(filepath)
 
     def _update_version3(self, filepath):
         logging.debug('Updating from "version 3"')
 
-        root = parse(filepath).getroot()
+        root = xmlutil.parse(filepath)
         root.set('version', '4')
 
         elements = list(list(root.find('geometry'))[0].find('materials'))
@@ -180,14 +182,14 @@ class Updater(_Updater):
             element.set('absorptionEnergyPositron', '50.0')
 
         with open(filepath, 'wb') as fp:
-            fp.write(tostring(root, pretty_print=True))
+            fp.write(xmlutil.tostring(root, pretty_print=True))
 
         return self._update_version4(filepath)
 
     def _update_version4(self, filepath):
         logging.debug('Updating from "version 4"')
 
-        root = parse(filepath).getroot()
+        root = xmlutil.parse(filepath)
         root.set('version', '5')
 
         for element in root.find('detectors'):
@@ -195,10 +197,164 @@ class Updater(_Updater):
                 element.tag = '{http://pymontecarlo.sf.net}photonDepthDetector'
 
         with open(filepath, 'wb') as fp:
-            fp.write(tostring(root, pretty_print=True))
+            fp.write(xmlutil.tostring(root, pretty_print=True))
 
         return self._update_version5(filepath)
 
     def _update_version5(self, filepath):
+        logging.debug('Updating from "version 5"')
+
+        root = xmlutil.parse(filepath)
+
+        # Header
+        root.set('version', '6')
+        if 'uuid' not in root.attrib:
+            root.set('uuid', uuid.uuid4().hex)
+
+        # Beam
+        element = root.find('beam/*/direction')
+        element.set('u', element.attrib.pop('x'))
+        element.set('v', element.attrib.pop('y'))
+        element.set('w', element.attrib.pop('z'))
+
+        # Geometry
+        element = root.find('geometry/')
+
+        materials_lookup = {}
+        for subelement in element.findall('bodies/*'):
+            materials_lookup[subelement.get('index')] = subelement.get('material')
+
+        if element.tag == '{http://pymontecarlo.sf.net}substrate':
+            material = materials_lookup[element.attrib.pop('substrate')]
+            etree.SubElement(element, 'body', {'material': material})
+
+        elif element.tag == '{http://pymontecarlo.sf.net}inclusion':
+            material = materials_lookup[element.attrib.pop('substrate')]
+            etree.SubElement(element, 'substrate', {'material': material})
+
+            material = materials_lookup[element.attrib.pop('inclusion')]
+            diameter = element.attrib.pop('diameter')
+            etree.SubElement(element, 'inclusion',
+                             {'material': material, 'diameter': diameter})
+
+        elif element.tag == '{http://pymontecarlo.sf.net}multiLayers':
+            element.tag = '{http://pymontecarlo.sf.net}horizontalLayers'
+
+            if 'substrate' in element.attrib:
+                material = materials_lookup[element.attrib.pop('substrate')]
+                etree.SubElement(element, 'substrate', {'material': material})
+
+            thicknesses_lookup = {}
+            for subelement in element.findall('bodies/*'):
+                thicknesses_lookup[subelement.get('index')] = subelement.get('thickness')
+
+            subelement = etree.SubElement(element, 'layers')
+
+            for layer in element.get('layers').split(','):
+                etree.SubElement(subelement, layer,
+                                 {'material': materials_lookup[layer],
+                                  'thickness': thicknesses_lookup[layer]})
+
+        elif element.tag == '{http://pymontecarlo.sf.net}grainBoundaries' or \
+                element.tag == '':
+            element.tag = '{http://pymontecarlo.sf.net}verticalLayers'
+
+            depth = element.get('thickness', str(float('inf')))
+
+            material = materials_lookup[element.attrib.pop('left_substrate')]
+            etree.SubElement(element, 'leftSubstrate',
+                             {'material': material, 'depth': depth})
+
+            material = materials_lookup[element.attrib.pop('right_substrate')]
+            etree.SubElement(element, 'rightSubstrate',
+                             {'material': material, 'depth': depth})
+
+            thicknesses_lookup = {}
+            for subelement in element.findall('bodies/*'):
+                thicknesses_lookup[subelement.get('index')] = subelement.get('thickness')
+
+            subelement = etree.SubElement(element, 'layers')
+
+            for layer in element.get('layers').split(','):
+                etree.SubElement(subelement, layer,
+                                 {'material': materials_lookup[layer],
+                                  'thickness': thicknesses_lookup[layer],
+                                  'depth': depth})
+
+        elif element.tag == '{http://pymontecarlo.sf.net}sphere':
+            material = materials_lookup[element.attrib.pop('substrate')]
+            diameter = element.attrib.pop('diameter')
+            etree.SubElement(element, 'body',
+                             {'material': material, 'diameter': diameter})
+
+        else:
+            raise ValueError('Unknown geometry to update: %s' % element.tag)
+
+        element.remove(element.find('bodies'))
+
+        # Detectors
+        for element in root.findall('detectors/*'):
+            if 'elevation_min' in element.attrib and \
+                    'elevation_max' in element.attrib:
+                lower = element.attrib.pop('elevation_min')
+                upper = element.attrib.pop('elevation_max')
+                etree.SubElement(element, 'elevation',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'azimuth_min' in element.attrib and \
+                    'azimuth_max' in element.attrib:
+                lower = element.attrib.pop('azimuth_min')
+                upper = element.attrib.pop('azimuth_max')
+                etree.SubElement(element, 'azimuth',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'channels' in element.attrib:
+                subelement = etree.SubElement(element, 'channels')
+                subelement.text = element.attrib.pop('channels')
+
+            if 'xlimit_min' in element.attrib and \
+                    'xlimit_max' in element.attrib:
+                lower = element.attrib.pop('xlimit_min')
+                upper = element.attrib.pop('xlimit_max')
+                etree.SubElement(element, 'xlimits',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'ylimit_min' in element.attrib and \
+                    'ylimit_max' in element.attrib:
+                lower = element.attrib.pop('ylimit_min')
+                upper = element.attrib.pop('ylimit_max')
+                etree.SubElement(element, 'ylimits',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'zlimit_min' in element.attrib and \
+                    'zlimit_max' in element.attrib:
+                lower = element.attrib.pop('zlimit_min')
+                upper = element.attrib.pop('zlimit_max')
+                etree.SubElement(element, 'zlimits',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'limit_min' in element.attrib and \
+                    'limit_max' in element.attrib:
+                lower = element.attrib.pop('limit_min')
+                upper = element.attrib.pop('limit_max')
+                etree.SubElement(element, 'limits',
+                                 {'lower': min(lower, upper),
+                                  'upper': max(lower, upper)})
+
+            if 'secondary' in element.attrib:
+                subelement = etree.SubElement(element, 'secondary')
+                subelement.text = element.attrib.pop('secondary')
+
+        with open(filepath, 'wb') as fp:
+            fp.write(xmlutil.tostring(root, pretty_print=True))
+
+        return self._update_version6(filepath)
+
+    def _update_version6(self, filepath):
         logging.info('Nothing to update')
         return filepath

@@ -56,7 +56,7 @@ class OptionsXMLHandler(_XMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}options'
     CLASS = Options
-    VERSION = '7'
+    VERSION = '6'
 
     def parse(self, element):
         version = element.attrib['version']

@@ -20,7 +20,7 @@ import shutil
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.updater import Updater
+from pymontecarlo.fileformat.options.updater import Updater
 
 # Globals and constants variables.
 
@@ -30,7 +30,7 @@ class TestUpdater(TestCase):
         TestCase.setUp(self)
 
         self.tmpdir = tempfile.mkdtemp()
-        self.testdata = os.path.join(os.path.dirname(__file__), '../testdata')
+        self.testdata = os.path.join(os.path.dirname(__file__), '..', '..', 'testdata')
         self.updater = Updater()
 
     def tearDown(self):
