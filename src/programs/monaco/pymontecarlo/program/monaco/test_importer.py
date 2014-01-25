@@ -16,12 +16,13 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.monaco.output.importer import Importer
+from pymontecarlo.program.monaco.importer import Importer
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.detector import \
     PhotonIntensityDetector, PhotonDepthDetector
 
 # Globals and constants variables.
@@ -33,16 +34,15 @@ class TestImporter(unittest.TestCase):
 
         self.ops = Options('aatest')
         self.ops.beam.energy_eV = 4e3
-        self.ops.geometry.material.composition[6] = 0.4
-        self.ops.geometry.material.composition[13] = 0.6
-        self.ops.geometry.material.absorption_energy_eV[ELECTRON] = 234
+        self.ops.geometry.material = \
+            Material({6: 0.4, 13: 0.6}, absorption_energy_eV={ELECTRON: 234.0})
         self.ops.detectors['xray'] = PhotonIntensityDetector((0, 1), (2, 3))
         self.ops.detectors['prz'] = PhotonDepthDetector((0, 1), (2, 3), 128)
         self.ops.limits.add(ShowersLimit(1234))
 
         self.i = Importer()
 
-        self._testdata = os.path.join(os.path.dirname(__file__), '..', 'testdata')
+        self._testdata = os.path.join(os.path.dirname(__file__), 'testdata')
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

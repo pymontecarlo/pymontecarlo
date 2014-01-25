@@ -20,15 +20,16 @@ from math import radians as d2r
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.beam import PencilBeam
+from pymontecarlo.options.detector import PhotonIntensityDetector
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.monaco.config import program
-from pymontecarlo.program.monaco.runner.worker import Worker
-from pymontecarlo.program.monaco.input.converter import Converter
+from pymontecarlo.program.monaco.worker import Worker
+from pymontecarlo.program.monaco.converter import Converter
 
 # Globals and constants variables.
 
@@ -42,7 +43,8 @@ class TestWorker(TestCase):
 
         ops = Options('test')
         ops.beam = PencilBeam(5e3)
-        ops.geometry.material.absorption_energy_eV[ELECTRON] = 56.0
+        ops.geometry.material = \
+            Material({6: 0.4, 13: 0.6}, absorption_energy_eV={ELECTRON: 234.0})
         ops.detectors['xray'] = \
             PhotonIntensityDetector.annular(d2r(40.0), d2r(5.0))
         ops.limits.add(ShowersLimit(1))

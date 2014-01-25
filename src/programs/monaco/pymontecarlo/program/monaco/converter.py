@@ -23,15 +23,15 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import Converter as _Converter
+from pymontecarlo.program.converter import Converter as _Converter
 
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.geometry import Substrate
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.beam import PencilBeam
+from pymontecarlo.options.geometry import Substrate
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     PhotonIntensityDetector, PhotonDepthDetector
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
 
@@ -101,7 +101,7 @@ class Converter(_Converter):
     def _convert_detectors(self, options):
         if not _Converter._convert_detectors(self, options):
             return False
-        
+
         for _key, det in options.detectors.iterclass(PhotonDepthDetector):
             if det.channels != 128:
                 self._warn("Number of channels of phi-rho-z detector set to 128")

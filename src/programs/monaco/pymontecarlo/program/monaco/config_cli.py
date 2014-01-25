@@ -38,7 +38,7 @@ class _MonacoCLI(CLI):
         def validator(basedir):
             mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
             if not os.path.isfile(mccli32_exe):
-                raise ValueError, "No Mccli32.exe in Monaco base directory"
+                raise ValueError("No Mccli32.exe in Monaco base directory")
 
         section.basedir = \
             console.prompt_directory(question, default, should_exist=True,

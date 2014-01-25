@@ -28,12 +28,12 @@ import numpy as np
 from pyxray.transition import from_string
 
 # Local modules.
-from pymontecarlo.output.importer import Importer as _Importer, ImporterException
+from pymontecarlo.program.importer import Importer as _Importer, ImporterException
 
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.detector import \
     PhotonIntensityDetector, PhotonDepthDetector
 
-from pymontecarlo.output.result import \
+from pymontecarlo.results.result import \
     (PhotonIntensityResult, create_intensity_dict,
      PhotonDepthResult, create_photondist_dict)
 
@@ -53,9 +53,8 @@ class Importer(_Importer):
     def _import_photon_intensity(self, options, name, detector, jobdir):
         intensities_filepath = os.path.join(jobdir, 'intensities_%s.csv' % name)
         if not os.path.exists(intensities_filepath):
-            raise ImporterException, \
-                'Result file "intensites_%s.csv" not found in job directory (%s)' % \
-                    (name, jobdir)
+            raise ImporterException('Result file "intensites_%s.csv" not found in job directory (%s)' % \
+                                    (name, jobdir))
 
         intensities = {}
 
@@ -63,25 +62,24 @@ class Importer(_Importer):
             reader = csv.DictReader(fp)
             row = list(reader)[0]
 
-        for transition, intensity in row.iteritems():
+        for transition, intensity in row.items():
             transition = from_string(transition.strip())
             enf = (float(intensity.strip()), 0.0)
 
-            intensities.update(create_intensity_dict(transition, 
+            intensities.update(create_intensity_dict(transition,
                                                      enf=enf, et=enf))
-            
+
         return PhotonIntensityResult(intensities)
 
     def _import_photondepth(self, options, name, detector, jobdir):
         prz_filepath = os.path.join(jobdir, 'phi_%s.csv' % name)
         if not os.path.exists(prz_filepath):
-            raise ImporterException, \
-                'Result file "phi_%s.csv" not found in job directory (%s)' % \
-                    (name, jobdir)
+            raise ImporterException('Result file "phi_%s.csv" not found in job directory (%s)' % \
+                                    (name, jobdir))
 
         with open(prz_filepath, 'r') as fp:
             reader = csv.reader(fp)
-            header = reader.next()
+            header = next(reader)
 
             data = {}
             for row in reader:
@@ -89,9 +87,9 @@ class Importer(_Importer):
                     data.setdefault(header[i], []).append(float(val))
 
         rzs = np.array(data.pop('rho z'))
-        
+
         distributions = {}
-        for transition, values in data.iteritems():
+        for transition, values in data.items():
             transition = from_string(transition.strip())
 
             enf = np.array([rzs, values]).transpose()

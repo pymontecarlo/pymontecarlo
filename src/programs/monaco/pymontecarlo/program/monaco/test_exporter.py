@@ -18,12 +18,14 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.limit import ShowersLimit
 
-from pymontecarlo.program.monaco.input.exporter import Exporter
+from pymontecarlo.program.monaco.exporter import Exporter
 
 # Globals and constants variables.
+from pymontecarlo.options.particle import ELECTRON
 
 class TestExporter(unittest.TestCase):
 
@@ -36,9 +38,8 @@ class TestExporter(unittest.TestCase):
 
         self.ops = Options('aatest')
         self.ops.beam.energy_eV = 4e3
-        self.ops.geometry.material.composition[6] = 0.4
-        self.ops.geometry.material.composition[13] = 0.6
-        self.ops.geometry.material.absorption_energy_electron_eV = 234
+        self.ops.geometry.material = \
+            Material({6: 0.4, 13: 0.6}, absorption_energy_eV={ELECTRON: 234.0})
         self.ops.limits.add(ShowersLimit(1234))
 
     def tearDown(self):

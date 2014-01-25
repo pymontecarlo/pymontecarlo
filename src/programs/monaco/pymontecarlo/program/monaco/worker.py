@@ -35,12 +35,12 @@ from pyxray.transition import Ka, La, Ma
 # Local modules.
 from pymontecarlo.settings import get_settings
 
-from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+from pymontecarlo.program.worker import SubprocessWorker as _Worker
 
-from pymontecarlo.input.detector import PhotonIntensityDetector, PhotonDepthDetector
+from pymontecarlo.options.detector import PhotonIntensityDetector, PhotonDepthDetector
 
 # Globals and constants variables.
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (MASS_ABSORPTION_COEFFICIENT, IONIZATION_CROSS_SECTION,
      IONIZATION_POTENTIAL)
 
@@ -146,7 +146,7 @@ class Worker(_Worker):
         # Check that simulation ran
         nez_filepath = os.path.join(workdir, 'NEZ.1')
         if not os.path.exists(nez_filepath):
-            raise RuntimeError, 'Simulation did not run properly'
+            raise RuntimeError('Simulation did not run properly')
 
     def _extract_transitions(self, options):
         zs = set()
@@ -203,7 +203,7 @@ class Worker(_Worker):
         # Rename intensities.txt
         src_filepath = os.path.join(workdir, 'intensities.csv')
         if not os.path.exists(src_filepath):
-            raise RuntimeError, 'Could not extract intensities'
+            raise RuntimeError('Could not extract intensities')
 
         dst_filepath = os.path.join(workdir, 'intensities_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)
@@ -246,7 +246,7 @@ class Worker(_Worker):
         # Rename intensities.txt
         src_filepath = os.path.join(workdir, 'phi.csv')
         if not os.path.exists(src_filepath):
-            raise RuntimeError, 'Could not extract phi-rho-z'
+            raise RuntimeError('Could not extract phi-rho-z')
 
         dst_filepath = os.path.join(workdir, 'phi_%s.csv' % detector_key)
         shutil.move(src_filepath, dst_filepath)

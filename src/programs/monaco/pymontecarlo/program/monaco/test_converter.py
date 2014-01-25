@@ -18,12 +18,12 @@ import warnings
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.monaco.input.converter import Converter
+from pymontecarlo.program.monaco.converter import Converter
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.beam import PencilBeam
-from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.beam import PencilBeam
+from pymontecarlo.options.detector import PhotonIntensityDetector
+from pymontecarlo.options.limit import ShowersLimit
 
 # Globals and constants variables.
 

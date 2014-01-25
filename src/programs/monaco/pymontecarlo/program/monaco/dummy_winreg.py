@@ -44,5 +44,5 @@ def OpenKey(key, sub_key, res, sam):
 def CreateKey(key, sub_key):
     return _PyHKEY()
 
-def SetValueEx(key, value_name, reserved, type, value):
+def SetValueEx(key, value_name, reserved, type_, value):
     pass
