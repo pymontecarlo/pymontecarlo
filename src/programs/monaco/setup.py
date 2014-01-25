@@ -35,10 +35,7 @@ setup(name="pyMonteCarlo-MONACO",
 
       packages=['pymontecarlo',
                 'pymontecarlo.program',
-                'pymontecarlo.program.monaco',
-                'pymontecarlo.program.monaco.input',
-                'pymontecarlo.program.monaco.output',
-                'pymontecarlo.program.monaco.runner'],
+                'pymontecarlo.program.monaco'],
 
       cmdclass={'clean': clean},
 
@@ -48,7 +45,7 @@ setup(name="pyMonteCarlo-MONACO",
                         'monaco=pymontecarlo.program.monaco.config_cli:cli',
                     'pymontecarlo.program.gui':
                         'monaco=pymontecarlo.program.monaco.config_gui:gui', },
-      
+
       test_suite='nose.collector',
 )
 
