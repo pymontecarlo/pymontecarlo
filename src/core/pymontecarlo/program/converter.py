@@ -181,7 +181,7 @@ class Converter(object):
                                    "It is replaced by the default model (%s)." % default_model)
 
         # Remove extra model types
-        for model in options.models:
+        for model in list(options.models):
             if model.type not in self.DEFAULT_MODELS:
                 options.models.discard(model)
 
