@@ -24,9 +24,9 @@ import csv
 import logging
 import tempfile
 import shutil
-from io import BytesIO
+from io import BytesIO, StringIO
 from zipfile import ZipFile, is_zipfile
-from xml.etree.ElementTree import fromstring
+import uuid
 
 # Third party modules.
 import h5py
@@ -39,11 +39,14 @@ from pyxray.transition import from_string
 from pymontecarlo.util.updater import _Updater
 from pymontecarlo.util.config import ConfigParser
 import pymontecarlo.util.hdf5util as hdf5util
+import pymontecarlo.util.xmlutil as xmlutil
 
-from pymontecarlo.options.options import Options
-from pymontecarlo.options.updater import Updater as OptionsUpdater
+from pymontecarlo.fileformat.options.updater import Updater as OptionsUpdater
+from pymontecarlo.fileformat.options.options import \
+    load as load_options, save as save_options
+from pymontecarlo.fileformat.results.results import load as load_results
+from pymontecarlo.fileformat.handler import find_convert_handler
 
-from pymontecarlo.results.results import Results
 from pymontecarlo.results.result import \
     (PhotonIntensityResult, create_intensity_dict, PhotonSpectrumResult,
      PhotonDepthResult, create_photondist_dict, TimeResult, ShowersStatisticsResult,
@@ -72,7 +75,7 @@ def _update_options(source):
     OptionsUpdater().update(tmpfilepath)
 
     # Read options and update HDF5
-    with open(tmpfilepath, 'r') as fp:
+    with open(tmpfilepath, 'rb') as fp:
         source = fp.read()
 
     # Close temporary file and remove it
@@ -96,11 +99,12 @@ class Updater(_Updater):
         self._updaters[4] = self._update_version4
         self._updaters[5] = self._update_version5
         self._updaters[6] = self._update_version6
+        self._updaters[7] = self._update_version7
 
     def _get_version(self, filepath):
         if is_zipfile(filepath):
             with ZipFile(filepath, 'r') as z:
-                comment = z.comment
+                comment = z.comment.decode('ascii')
 
             try:
                 return int(comment.split('=')[1])
@@ -135,7 +139,7 @@ class Updater(_Updater):
         return bak_filepath
 
     def _validate(self, filepath):
-        Results.load(filepath)
+        load_results(filepath)
 
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')
@@ -145,13 +149,15 @@ class Updater(_Updater):
 
         # Update keys.ini
         config = ConfigParser()
-        config.read(oldzip.open(KEYS_INI_FILENAME, 'r'))
+
+        fp = oldzip.open(KEYS_INI_FILENAME, 'r')
+        config.read(StringIO(fp.read().decode('ascii')))
 
         for section, option, value in config:
             value = value.replace('pymontecarlo.result.base.result.', '')
             setattr(getattr(config, section), option, value)
 
-        fp = BytesIO()
+        fp = StringIO()
         config.write(fp)
         newzip.writestr(KEYS_INI_FILENAME, fp.getvalue())
 
@@ -164,7 +170,7 @@ class Updater(_Updater):
             newzip.writestr(zipinfo, data)
 
         # Add version
-        newzip.comment = 'version=%s' % '2'
+        newzip.comment = b'version=2'
 
         oldzip.close()
         newzip.close()
@@ -182,17 +188,17 @@ class Updater(_Updater):
         xmlfilepath = os.path.splitext(filepath)[0] + '.xml'
         if not os.path.exists(xmlfilepath):
             raise ValueError('Update requires an options file saved at %s' % xmlfilepath)
-        with open(xmlfilepath, 'r') as fp:
+        with open(xmlfilepath, 'rb') as fp:
             source = fp.read()
         source = _update_options(source)
-        options = Options.load(BytesIO(source))
+        options = load_options(BytesIO(source))
 
         oldzip = ZipFile(filepath, 'r')
         newzip = ZipFile(filepath + ".new", 'w')
 
         # Add options file
         fp = BytesIO()
-        options.save(fp)
+        save_options(options, fp)
         newzip.writestr(OPTIONS_FILENAME, fp.getvalue())
 
         # Add other files to new zip
@@ -201,7 +207,7 @@ class Updater(_Updater):
             newzip.writestr(zipinfo, data)
 
         # Add version
-        newzip.comment = 'version=%s' % '3'
+        newzip.comment = b'version=3'
 
         oldzip.close()
         newzip.close()
@@ -218,8 +224,9 @@ class Updater(_Updater):
         manager = {}
 
         def _load_photonintensity(zipfile, key):
-            reader = csv.reader(zipfile.open(key + '.csv', 'r'))
-            reader.next()
+            fp = zipfile.open(key + '.csv', 'r')
+            reader = csv.reader(StringIO(fp.read().decode('ascii')))
+            next(reader)
 
             intensities = {}
             for row in reader:
@@ -245,8 +252,9 @@ class Updater(_Updater):
         manager['PhotonIntensityResult'] = _load_photonintensity
 
         def _load_photonspectrum(zipfile, key):
-            reader = csv.reader(zipfile.open(key + '.csv', 'r'))
-            reader.next()
+            fp = zipfile.open(key + '.csv', 'r')
+            reader = csv.reader(StringIO(fp.read().decode('ascii')))
+            next(reader)
 
             energies_eV = []
             total_val = []
@@ -278,8 +286,9 @@ class Updater(_Updater):
                 transition = from_string(parts[-2].replace('_', ' '))
                 suffix = parts[-1]
 
-                reader = csv.reader(zipfile.open(arcname, 'r'))
-                reader.next()
+                fp = zipfile.open(arcname, 'r')
+                reader = csv.reader(StringIO(fp.read().decode('ascii')))
+                next(reader)
 
                 zs = []
                 values = []
@@ -294,7 +303,7 @@ class Updater(_Updater):
 
             # Construct distributions
             distributions = {}
-            for transition, datum in data.iteritems():
+            for transition, datum in data.items():
                 distributions.update(create_photondist_dict(transition, **datum))
 
             return PhotonDepthResult(distributions)
@@ -302,7 +311,7 @@ class Updater(_Updater):
         manager['PhiRhoZResult'] = _load_phirhoz
 
         def _load_time(zipfile, key):
-            element = fromstring(zipfile.open(key + '.xml', 'r').read())
+            element = xmlutil.parse(zipfile.open(key + '.xml', 'r'))
 
             child = element.find('time')
             if child is not None:
@@ -322,7 +331,7 @@ class Updater(_Updater):
         manager['TimeResult'] = _load_time
 
         def _load_showersstatistics(zipfile, key):
-            element = fromstring(zipfile.open(key + '.xml', 'r').read())
+            element = xmlutil.parse(zipfile.open(key + '.xml', 'r').read())
 
             child = element.find('showers')
             if child is not None:
@@ -335,7 +344,7 @@ class Updater(_Updater):
         manager['ShowersStatisticsResult'] = _load_showersstatistics
 
         def _load_electronfraction(zipfile, key):
-            element = fromstring(zipfile.open(key + '.xml', 'r').read())
+            element = xmlutil.parse(zipfile.open(key + '.xml', 'r'))
 
             child = element.find('absorbed')
             if child is not None:
@@ -379,8 +388,8 @@ class Updater(_Updater):
 
             for dataset in hdf5file['trajectories'].values():
                 primary = bool(dataset.attrs['primary'])
-                particle = particles_ref.get(dataset.attrs['particle'])
-                collision = collisions_ref.get(dataset.attrs['collision'])
+                particle = particles_ref.get(dataset.attrs['particle'].decode('ascii'))
+                collision = collisions_ref.get(dataset.attrs['collision'].decode('ascii'))
                 exit_state = int(dataset.attrs['exit_state'])
                 interactions = dataset[:]
 
@@ -407,47 +416,47 @@ class Updater(_Updater):
 
         manager['TransmittedElectronEnergyResult'] = _load_transmittedelectronenergy
 
-        def _load_results(filepath):
-            zipfile = ZipFile(filepath, 'r', allowZip64=True)
-
-            # Read options
-            try:
-                zipinfo = zipfile.getinfo(OPTIONS_FILENAME)
-            except KeyError:
-                raise IOError("Zip file (%s) does not contain a %s" % \
-                              (filepath, OPTIONS_FILENAME))
-            with zipfile.open(zipinfo, 'r') as fp:
-                source = fp.read()
-            source = _update_options(source)
-            options = Options.load(BytesIO(source))
-
-            # Parse keys.ini
-            try:
-                zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
-            except KeyError:
-                raise IOError("Zip file (%s) does not contain a %s" % \
-                              (filepath, KEYS_INI_FILENAME))
-
-            config = ConfigParser()
-            config.read(zipfile.open(zipinfo, 'r'))
-
-            # Load each results
-            items = list(getattr(config, SECTION_KEYS))
-
-            results = {}
-            for key, tag in items:
-                loader = manager[tag]
-                results[key] = loader(zipfile, key)
-
-            zipfile.close()
-
-            return Results(options, results)
-
-        # Update results
-        results = _load_results(filepath)
-
+        # Create HDF5
         newfilepath = os.path.splitext(filepath)[0] + '.h5'
-        results.save(newfilepath)
+        hdf5file = h5py.File(newfilepath, 'w')
+
+        zipfile = ZipFile(filepath, 'r', allowZip64=True)
+
+        ## Read options
+        try:
+            zipinfo = zipfile.getinfo(OPTIONS_FILENAME)
+        except KeyError:
+            raise IOError("Zip file (%s) does not contain a %s" % \
+                          (filepath, OPTIONS_FILENAME))
+        with zipfile.open(zipinfo, 'r') as fp:
+            source = fp.read()
+        source = _update_options(source)
+        hdf5file.attrs['options'] = source
+
+        ## Parse keys.ini
+        try:
+            zipinfo = zipfile.getinfo(KEYS_INI_FILENAME)
+        except KeyError:
+            raise IOError("Zip file (%s) does not contain a %s" % \
+                          (filepath, KEYS_INI_FILENAME))
+
+        config = ConfigParser()
+        config.read(StringIO(zipfile.open(zipinfo, 'r').read().decode('ascii')))
+
+        ## Load each results
+        items = list(getattr(config, SECTION_KEYS))
+
+        for key, tag in items:
+            loader = manager[tag]
+            result = loader(zipfile, key)
+
+            handler = find_convert_handler('pymontecarlo.fileformat.results.result', result)
+
+            group = hdf5file.create_group(key)
+            handler.convert(result, group)
+
+        zipfile.close()
+        hdf5file.close()
 
         # Create raw ZIP
         oldzip = ZipFile(filepath, 'r')
@@ -479,7 +488,7 @@ class Updater(_Updater):
         przgroups = []
 
         for result_group in hdf5file.values():
-            if result_group.attrs.get('_class') == 'PhiRhoZResult':
+            if result_group.attrs.get('_class') == b'PhiRhoZResult':
                 przgroups.append(result_group)
 
         # Convert datasets
@@ -510,25 +519,51 @@ class Updater(_Updater):
         hdf5file.attrs['version'] = '6' # Change version
 
         for result_group in hdf5file.values():
-            if result_group.attrs.get('_class') == 'PhiRhoZResult':
+            if result_group.attrs.get('_class') == b'PhiRhoZResult':
                 result_group.attrs['_class'] = 'PhotonDepthResult'
+
+        # Options
+        source = _update_options(hdf5file.attrs['options'])
+        hdf5file.attrs['options'] = source
 
         hdf5file.close()
 
         return self._update_version6(filepath)
 
     def _update_version6(self, filepath):
-        logging.info('Nothing to update')
-        return self._update_options(filepath)
-
-    def _update_options(self, filepath):
-        logging.info('Update options')
+        logging.debug('Updating from "version 6"')
 
         hdf5file = h5py.File(filepath, 'r+')
 
-        source = _update_options(hdf5file.attrs['options'])
-        hdf5file.attrs['options'] = source
+        hdf5file.attrs['version'] = '7' # Change version
+        hdf5file.attrs['_class'] = 'Results'
+
+        # Update root options
+        options_source = _update_options(hdf5file.attrs['options'])
+        hdf5file.attrs['options'] = options_source
+
+        # Create identifier of results
+        identifier = uuid.uuid4().hex
+        hdf5file.attrs.create('identifiers', [identifier],
+                              dtype=h5py.special_dtype(vlen=str))
+
+        result_groups = list(hdf5file)
+        group = hdf5file.create_group(identifier)
+        group.attrs['options'] = options_source
+
+        for result_group in result_groups:
+            if not isinstance(hdf5file[result_group].attrs['_class'], str):
+                hdf5file[result_group].attrs['_class'] = \
+                    hdf5file[result_group].attrs['_class'].decode('ascii')
+            hdf5file.copy(result_group, group)
+            del hdf5file[result_group]
 
         hdf5file.close()
 
+        return self._update_version7(filepath)
+
+    def _update_version7(self, filepath):
+        logging.info('Nothing to update')
         return filepath
+
+
