@@ -22,8 +22,11 @@ from pymontecarlo.options.model import ModelType
 # Globals and constants variables.
 
 MTYPE = ModelType('type1')
-MTYPE.m1 = ('name1', 'ref1')
-MTYPE.m2 = ('name2',)
+try:
+    MTYPE.m1 = ('name1', 'ref1')
+    MTYPE.m2 = ('name2',)
+except ValueError:
+    pass # Already imported
 
 class TestModelType(TestCase):
 
