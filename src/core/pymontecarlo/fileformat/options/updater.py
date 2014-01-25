@@ -51,6 +51,7 @@ class Updater(_Updater):
         self._updaters[3] = self._update_version3
         self._updaters[4] = self._update_version4
         self._updaters[5] = self._update_version5
+        self._updaters[6] = self._update_version6
 
     def _get_version(self, filepath):
         root = xmlutil.parse(filepath)
