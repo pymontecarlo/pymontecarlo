@@ -19,14 +19,15 @@ import shutil
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import TimeDetector
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.detector import TimeDetector
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.nistmonte.config import program
-from pymontecarlo.program.nistmonte.runner.worker import Worker
-from pymontecarlo.program.nistmonte.input.converter import Converter
+from pymontecarlo.program.nistmonte.worker import Worker
+from pymontecarlo.program.nistmonte.converter import Converter
 
 # Globals and constants variables.
 
@@ -39,7 +40,9 @@ class TestWorker(TestCase):
         self.workdir = tempfile.mkdtemp()
 
         ops = Options('test')
-        ops.geometry.material.absorption_energy_eV[ELECTRON] = 56.0
+        ops.beam.origin_m = (0.0, 0.0, 0.001)
+        ops.geometry.body.material = \
+            Material({79: 1.0}, absorption_energy_eV={ELECTRON: 56.0})
         ops.detectors['time'] = TimeDetector()
         ops.limits.add(ShowersLimit(1))
         self.ops = Converter().convert(ops)[0]

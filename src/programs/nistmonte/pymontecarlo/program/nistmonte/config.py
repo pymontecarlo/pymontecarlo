@@ -24,10 +24,10 @@ import os
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.program.config import Program
-from pymontecarlo.input.exporter import XMLExporter
-from pymontecarlo.output.importer import HDF5Importer
-from pymontecarlo.program.nistmonte.input.converter import Converter
-from pymontecarlo.program.nistmonte.runner.worker import Worker
+from pymontecarlo.program.exporter import XMLExporter
+from pymontecarlo.program.importer import HDF5Importer
+from pymontecarlo.program.nistmonte.converter import Converter
+from pymontecarlo.program.nistmonte.worker import Worker
 
 # Globals and constants variables.
 
@@ -41,24 +41,24 @@ class _NISTMonteProgram(Program):
         settings = get_settings()
 
         if 'nistmonte' not in settings:
-            raise AssertionError, "Missing 'nistmonte' section in settings"
+            raise AssertionError("Missing 'nistmonte' section in settings")
 
         if 'java' not in settings.nistmonte:
-            raise AssertionError, "Missing 'java' option in 'nistmonte' section of settings"
+            raise AssertionError("Missing 'java' option in 'nistmonte' section of settings")
 
         java = settings.nistmonte.java
         if not os.path.isfile(java):
-            raise AssertionError, "Specified Java executable (%s) does not exist" % java
+            raise AssertionError("Specified Java executable (%s) does not exist" % java)
         if not os.access(java, os.X_OK):
-            raise AssertionError, "Specified Java executable (%s) is not executable" % java
+            raise AssertionError("Specified Java executable (%s) is not executable" % java)
 
         if 'jar' not in settings.nistmonte:
-            raise AssertionError, "Missing 'jar' option in 'nistmonte' section of settings"
+            raise AssertionError("Missing 'jar' option in 'nistmonte' section of settings")
 
         jar = settings.nistmonte.jar
         if not os.path.isfile(jar):
-            raise AssertionError, "Specified jar path (%s) does not exist" % jar
+            raise AssertionError("Specified jar path (%s) does not exist" % jar)
         if os.path.splitext(jar)[1] != '.jar':
-            raise AssertionError, "Specified jar path (%s) is not a jar" % jar
+            raise AssertionError("Specified jar path (%s) is not a jar" % jar)
 
 program = _NISTMonteProgram()

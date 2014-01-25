@@ -23,14 +23,14 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import Converter as _Converter
+from pymontecarlo.program.converter import Converter as _Converter
 
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.beam import GaussianBeam, PencilBeam
-from pymontecarlo.input.geometry import \
-    Substrate, Inclusion, MultiLayers, GrainBoundaries, ThinGrainBoundaries
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.beam import GaussianBeam, PencilBeam
+from pymontecarlo.options.geometry import \
+    Substrate, Inclusion, HorizontalLayers, VerticalLayers
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     (
 #     BackscatteredElectronAzimuthalAngularDetector,
 #     BackscatteredElectronEnergyDetector,
@@ -48,7 +48,7 @@ from pymontecarlo.input.detector import \
      TrajectoryDetector,
 #     ElectronFractionDetector
      )
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT, FLUORESCENCE)
 
@@ -60,7 +60,7 @@ class Converter(_Converter):
     """
 
     BEAMS = [GaussianBeam, PencilBeam]
-    GEOMETRIES = [Substrate, Inclusion, MultiLayers, GrainBoundaries, ThinGrainBoundaries]
+    GEOMETRIES = [Substrate, Inclusion, HorizontalLayers, VerticalLayers]
     DETECTORS = [
                  #BackscatteredElectronAzimuthalAngularDetector,
                  #BackscatteredElectronEnergyDetector,

@@ -35,9 +35,7 @@ setup(name="pyMonteCarlo-NISTMonte",
 
       packages=['pymontecarlo',
                 'pymontecarlo.program',
-                'pymontecarlo.program.nistmonte',
-                'pymontecarlo.program.nistmonte.input',
-                'pymontecarlo.program.nistmonte.runner'],
+                'pymontecarlo.program.nistmonte'],
 
       cmdclass={'clean': clean},
 

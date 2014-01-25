@@ -11,7 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import warnings
 from math import radians
 
 # Third party modules.
@@ -19,13 +18,12 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import PhotonIntensityDetector
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.program.nistmonte.input.converter import Converter
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import PhotonIntensityDetector
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.program.nistmonte.converter import Converter
 
 # Globals and constants variables.
-warnings.simplefilter("always")
 
 class TestConverter(TestCase):
 
@@ -51,10 +49,8 @@ class TestConverter(TestCase):
         ops.detectors['det1'] = det
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
-        self.assertEqual(6, len(ws))
         self.assertEqual(1, len(opss))
 
         self.assertEqual(1, len(opss[0].detectors))
@@ -75,10 +71,8 @@ class TestConverter(TestCase):
         ops.detectors['det1'] = det
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(ops)
+        opss = self.converter.convert(ops)
 
-        self.assertEqual(2, len(ws))
         self.assertEqual(0, len(opss)) # No showers limit
 
 if __name__ == '__main__': #pragma: no cover
