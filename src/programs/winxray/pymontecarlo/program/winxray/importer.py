@@ -28,8 +28,8 @@ from pyxray.element_properties import symbol
 from pyxray.transition import from_string
 
 # Local modules.
-from pymontecarlo.output.importer import Importer as _Importer
-from pymontecarlo.output.result import \
+from pymontecarlo.program.importer import Importer as _Importer
+from pymontecarlo.results.result import \
     (
     PhotonIntensityResult,
     PhotonSpectrumResult,
@@ -39,7 +39,7 @@ from pymontecarlo.output.result import \
     create_intensity_dict,
     ShowersStatisticsResult,
     )
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.detector import \
     (
 #     BackscatteredElectronEnergyDetector,
 #     BackscatteredElectronPolarAngularDetector,
@@ -50,7 +50,7 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      ShowersStatisticsDetector,
      )
-from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.options.limit import ShowersLimit
 
 from winxrayTools.ResultsFile.BseResults import BseResults
 from winxrayTools.ResultsFile.GeneralResults import GeneralResults
@@ -65,7 +65,7 @@ from winxrayTools.ResultsFile.XRaySpectrum import \
     (ENERGY as WXRSPC_ENERGY,
      TOTAL as WXRSPC_TOTAL,
      BACKGROUND as WXRSPC_BACKGROUND)
-from pymontecarlo.output.result import EMITTED, GENERATED, NOFLUORESCENCE, TOTAL
+from pymontecarlo.results.result import EMITTED, GENERATED, NOFLUORESCENCE, TOTAL
 
 class Importer(_Importer):
 

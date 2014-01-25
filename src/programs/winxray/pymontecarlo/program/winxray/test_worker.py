@@ -19,14 +19,14 @@ import shutil
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import TimeDetector
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.particle import ELECTRON
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import TimeDetector
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.winxray.config import program
-from pymontecarlo.program.winxray.runner.worker import Worker
-from pymontecarlo.program.winxray.input.converter import Converter
+from pymontecarlo.program.winxray.worker import Worker
+from pymontecarlo.program.winxray.converter import Converter
 
 # Globals and constants variables.
 

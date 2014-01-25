@@ -27,11 +27,11 @@ from operator import itemgetter
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.beam import GaussianBeam
-from pymontecarlo.input.geometry import Substrate
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.geometry import Substrate
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     (_DelimitedDetector,
      BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
@@ -42,15 +42,13 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      equivalent_opening,
      )
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS, MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.input.exporter import \
+from pymontecarlo.program.exporter import \
     Exporter as _Exporter, ExporterWarning, ExporterException
 
 from winxrayTools.Configuration.OptionsFile import OptionsFile
-
-# Globals and constants variables.
 #import winxrayTools.Configuration.Crystal as Crystal
 import winxrayTools.Configuration.DirectionCosine as DirectionCosine
 import winxrayTools.Configuration.EnergyLoss as EnergyLoss
@@ -61,6 +59,8 @@ import winxrayTools.Configuration.IonizationPotential as IonizationPotential
 import winxrayTools.Configuration.MassAbsorptionCoefficient as MassAbsorptionCoefficient
 import winxrayTools.Configuration.RandomNumberGenerator as RandomNumberGenerator
 #import winxrayTools.Configuration.Window as Window
+
+# Globals and constants variables.
 
 class Exporter(_Exporter):
 
@@ -105,16 +105,16 @@ class Exporter(_Exporter):
 
     def _export(self, options, dirpath, *args, **kwargs):
         wxrops = self.export_wxroptions(options, dirpath)
-        
+
         filepath = os.path.join(dirpath, options.name + '.wxc')
         wxrops.write(filepath)
-        
+
         return filepath
 
     def export_wxroptions(self, options, dirpath=None):
         """
         Exports options to WinX-Ray options.
-        
+
         :rtype: :class:`OptionsFile <winxrayTools.Configuration.OptionsFile.OptionsFile>`
         """
         wxrops = OptionsFile()
@@ -167,7 +167,7 @@ class Exporter(_Exporter):
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
             if not all(c):
-                raise ExporterException, "Some delimited detectors do not have the same opening"
+                raise ExporterException("Some delimited detectors do not have the same opening")
 
         if dets:
             toa_deg = math.degrees(dets[0].takeoffangle_rad) # deg

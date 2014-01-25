@@ -29,7 +29,7 @@ from zipfile import ZipFile
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.runner.worker import SubprocessWorker as _Worker
+from pymontecarlo.program.worker import SubprocessWorker as _Worker
 
 # Globals and constants variables.
 from zipfile import ZIP_DEFLATED
@@ -44,7 +44,7 @@ class Worker(_Worker):
 
         self._executable = get_settings().winxray.exe
         if not os.path.isfile(self._executable):
-            raise IOError, 'WinX-Ray executable (%s) cannot be found' % self._executable
+            raise IOError('WinX-Ray executable (%s) cannot be found' % self._executable)
         logging.debug('WinX-Ray executable: %s', self._executable)
 
         self._executable_dir = os.path.dirname(self._executable)
@@ -74,7 +74,7 @@ class Worker(_Worker):
                       if os.path.isdir(os.path.join(workdir, name)) ]
         resultdirs.sort()
         if not resultdirs:
-            raise IOError, 'Cannot find results directories in %s' % workdir
+            raise IOError('Cannot find results directories in %s' % workdir)
 
         # Import results to pyMonteCarlo
         logging.debug('Importing results from WinXRay')

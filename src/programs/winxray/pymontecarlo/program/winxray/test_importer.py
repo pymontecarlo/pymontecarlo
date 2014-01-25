@@ -18,12 +18,12 @@ import os
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.winxray.output.importer import Importer
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import \
+from pymontecarlo.program.winxray.importer import Importer
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import \
     (PhotonIntensityDetector, PhotonDepthDetector, ElectronFractionDetector,
      TimeDetector, PhotonSpectrumDetector, ShowersStatisticsDetector)
-from pymontecarlo.input.limit import ShowersLimit
+from pymontecarlo.options.limit import ShowersLimit
 
 # Globals and constants variables.
 

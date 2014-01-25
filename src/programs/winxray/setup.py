@@ -35,10 +35,7 @@ setup(name="pyMonteCarlo-WinXRay",
 
       packages=['pymontecarlo',
                 'pymontecarlo.program',
-                'pymontecarlo.program.winxray',
-                'pymontecarlo.program.winxray.input',
-                'pymontecarlo.program.winxray.output',
-                'pymontecarlo.program.winxray.runner'],
+                'pymontecarlo.program.winxray'],
 
       install_requires=['winxrayTools>=0.1'],
       dependency_links=["https://bitbucket.org/pymontecarlo/pymontecarlo/downloads"],

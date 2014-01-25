@@ -23,13 +23,13 @@ __license__ = "GPL v3"
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.input.converter import Converter as _Converter
+from pymontecarlo.program.converter import Converter as _Converter
 
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.beam import PencilBeam, GaussianBeam
-from pymontecarlo.input.geometry import Substrate
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.beam import PencilBeam, GaussianBeam
+from pymontecarlo.options.geometry import Substrate
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.detector import \
     (BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector,
      PhotonDepthDetector,
@@ -39,11 +39,11 @@ from pymontecarlo.input.detector import \
      TimeDetector,
      ShowersStatisticsDetector,
      )
-from pymontecarlo.input.model import \
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, ENERGY_LOSS,
      MASS_ABSORPTION_COEFFICIENT)
-from pymontecarlo.input.expander import ExpanderSingleDetectorSameOpening
+from pymontecarlo.util.expander import ExpanderSingleDetectorSameOpening
 
 # Globals and constants variables.
 

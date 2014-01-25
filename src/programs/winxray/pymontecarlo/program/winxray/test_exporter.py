@@ -11,7 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import warnings
 from math import radians
 
 # Third party modules.
@@ -19,17 +18,17 @@ from math import radians
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.winxray.input.exporter import Exporter, ExporterException
+from pymontecarlo.program.winxray.exporter import Exporter, ExporterException
 
-from pymontecarlo.input.options import Options
-from pymontecarlo.input.detector import \
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.detector import \
     (BackscatteredElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, PhotonIntensityDetector,
      PhotonDepthDetector, PhotonSpectrumDetector)
-from pymontecarlo.input.limit import ShowersLimit
-from pymontecarlo.input.material import Material
-from pymontecarlo.input.particle import ELECTRON
-from pymontecarlo.input.model import \
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.model import \
     (ELASTIC_CROSS_SECTION, IONIZATION_CROSS_SECTION, IONIZATION_POTENTIAL,
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, MASS_ABSORPTION_COEFFICIENT)
 
@@ -77,11 +76,7 @@ class TestExporter(TestCase):
             PhotonDepthDetector((radians(30), radians(40)), (0, radians(360.0)), 750)
 
         # Export to WinX-Ray options
-        with warnings.catch_warnings(record=True) as ws:
-            wxrops = self.e.export_wxroptions(ops)
-
-        # 1 warning for beam origin
-        self.assertEqual(1, len(ws))
+        wxrops = self.e.export_wxroptions(ops)
 
         # Test
         self.assertAlmostEqual(1.234, wxrops.getIncidentEnergy_keV(), 4)
