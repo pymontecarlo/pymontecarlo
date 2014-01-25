@@ -76,7 +76,7 @@ class Importer(object, metaclass=ABCMeta):
         """
         results = {}
 
-        for key, detector in options.detectors.iteritems():
+        for key, detector in options.detectors.items():
             clasz = detector.__class__
             method = self._importers.get(clasz)
 
