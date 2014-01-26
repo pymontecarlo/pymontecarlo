@@ -24,10 +24,10 @@ import os
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.program._penelope.config import _PenelopeProgram
-from pymontecarlo.program.penepma.input.converter import Converter
-from pymontecarlo.program.penepma.input.exporter import Exporter
-from pymontecarlo.program.penepma.output.importer import Importer
-from pymontecarlo.program.penepma.runner.worker import Worker
+from pymontecarlo.program.penepma.converter import Converter
+from pymontecarlo.program.penepma.exporter import Exporter
+from pymontecarlo.program.penepma.importer import Importer
+from pymontecarlo.program.penepma.worker import Worker
 
 # Globals and constants variables.
 
@@ -43,19 +43,19 @@ class _PenepmaProgram(_PenelopeProgram):
         settings = get_settings()
 
         if 'penepma' not in settings:
-            raise AssertionError, "Missing 'penepma' section in settings"
+            raise AssertionError("Missing 'penepma' section in settings")
 
         if 'exe' not in settings.penepma:
-            raise AssertionError, "Missing 'exe' option in 'penepma' section of settings"
+            raise AssertionError("Missing 'exe' option in 'penepma' section of settings")
 
         pendbase = settings.penepma.pendbase
         if not os.path.isdir(pendbase):
-            raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
+            raise AssertionError("Specified PENELOPE pendbase directory (%s) does not exist" % pendbase)
 
         exe = settings.penepma.exe
         if not os.path.isfile(exe):
-            raise AssertionError, "Specified PENEPMA executable (%s) does not exist" % exe
+            raise AssertionError("Specified PENEPMA executable (%s) does not exist" % exe)
         if not os.access(exe, os.X_OK):
-            raise AssertionError, "Specified PENEPMA executable (%s) is not executable" % exe
+            raise AssertionError("Specified PENEPMA executable (%s) is not executable" % exe)
 
 program = _PenepmaProgram()

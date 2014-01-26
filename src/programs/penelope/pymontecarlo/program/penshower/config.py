@@ -24,10 +24,10 @@ import os
 # Local modules.
 from pymontecarlo.settings import get_settings
 from pymontecarlo.program._penelope.config import _PenelopeProgram
-from pymontecarlo.program.penshower.input.converter import Converter
-from pymontecarlo.program.penshower.input.exporter import Exporter
-from pymontecarlo.program.penshower.output.importer import Importer
-from pymontecarlo.program.penshower.runner.worker import Worker
+from pymontecarlo.program.penshower.converter import Converter
+from pymontecarlo.program.penshower.exporter import Exporter
+from pymontecarlo.program.penshower.importer import Importer
+from pymontecarlo.program.penshower.worker import Worker
 
 # Globals and constants variables.
 
@@ -43,19 +43,19 @@ class _PenshowerProgram(_PenelopeProgram):
         settings = get_settings()
 
         if 'penshower' not in settings:
-            raise AssertionError, "Missing 'penshower' section in settings"
+            raise AssertionError("Missing 'penshower' section in settings")
 
         if 'exe' not in settings.penshower:
-            raise AssertionError, "Missing 'exe' option in 'penshower' section of settings"
+            raise AssertionError("Missing 'exe' option in 'penshower' section of settings")
 
         pendbase = settings.penshower.pendbase
         if not os.path.isdir(pendbase):
-            raise AssertionError, "Specified PENELOPE pendbase directory (%s) does not exist" % pendbase
+            raise AssertionError("Specified PENELOPE pendbase directory (%s) does not exist" % pendbase)
 
         exe = settings.penshower.exe
         if not os.path.isfile(exe):
-            raise AssertionError, "Specified PENSHOWER executable (%s) does not exist" % exe
+            raise AssertionError("Specified PENSHOWER executable (%s) does not exist" % exe)
         if not os.access(exe, os.X_OK):
-            raise AssertionError, "Specified PENSHOWER executable (%s) is not executable" % exe
+            raise AssertionError("Specified PENSHOWER executable (%s) is not executable" % exe)
 
 program = _PenshowerProgram()
