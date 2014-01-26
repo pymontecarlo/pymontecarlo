@@ -30,6 +30,8 @@ from pymontecarlo.fileformat.handler import _Handler
 
 # Globals and constants variables.
 
+etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
+
 class _XMLHandler(_Handler):
 
     TAG = None
