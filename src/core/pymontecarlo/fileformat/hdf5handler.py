@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.fileformat.handler import _Handler
@@ -32,11 +33,11 @@ class _HDF5Handler(_Handler):
     CLASS = None
 
     def can_parse(self, group):
-        return group.attrs['_class'] == self.CLASS.__name__
+        return group.attrs['_class'] == np.string_(self.CLASS.__name__)
 
     def parse(self, group):
         return self.CLASS()
 
     def convert(self, obj, group):
-        group.attrs['_class'] = self.CLASS.__name__
+        group.attrs['_class'] = np.string_(self.CLASS.__name__)
         return group

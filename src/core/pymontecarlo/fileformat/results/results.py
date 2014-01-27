@@ -25,6 +25,7 @@ import uuid
 
 # Third party modules.
 import h5py
+import numpy as np
 
 # Local modules.
 from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
@@ -52,7 +53,7 @@ def save(results, filepath):
 class ResultsHDF5Handler(_HDF5Handler):
 
     CLASS = Results
-    VERSION = '7'
+    VERSION = b'7'
 
     def parse(self, group):
         task = progress.start_task('Loading results')
@@ -96,7 +97,7 @@ class ResultsHDF5Handler(_HDF5Handler):
                 # Results
                 list_results[identifier] = (options, results)
 
-            identifiers = group.attrs['identifiers']
+            identifiers = np.array(group.attrs['identifiers'], 'U')
             if len(identifiers) != len(list_results):
                 raise ValueError('Number of identifiers do not match number of results')
 
