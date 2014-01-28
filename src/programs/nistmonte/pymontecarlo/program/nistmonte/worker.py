@@ -61,7 +61,7 @@ class Worker(_Worker):
 
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
 
-        for line in iter(self._process.stdout.readline, ""):
+        for line in iter(self._process.stdout.readline, b""):
             infos = line.decode('ascii').split('\t')
             if len(infos) == 2:
                 self._progress = float(infos[0])
