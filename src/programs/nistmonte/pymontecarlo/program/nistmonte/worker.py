@@ -59,16 +59,15 @@ class Worker(_Worker):
         args += [xmlfilepath]
         logging.debug('Launching %s', ' '.join(args))
 
-        self._process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        with subprocess.Popen(args, stdout=subprocess.PIPE) as self._process:
+            for line in iter(self._process.stdout.readline, b""):
+                infos = line.decode('ascii').split('\t')
+                if len(infos) == 2:
+                    self._progress = float(infos[0])
+                    self._status = infos[1].strip()
 
-        for line in iter(self._process.stdout.readline, b""):
-            infos = line.decode('ascii').split('\t')
-            if len(infos) == 2:
-                self._progress = float(infos[0])
-                self._status = infos[1].strip()
-
-        self._process.wait()
-        retcode = self._process.returncode
+            self._process.wait()
+            retcode = self._process.returncode
 
         self._process = None
 
