@@ -38,7 +38,7 @@ class _NISTMonteCLI(CLI):
             console.prompt_file(question, default, should_exist=True, mode=os.X_OK)
 
         # jar
-        question = 'Path to pymontecarlo-nistmonte jar'
+        question = 'Path to pymontecarlo-dtsa jar'
         default = getattr(section, 'jar', None)
         section.jar = \
             console.prompt_file(question, default, should_exist=True, ext='.jar')
