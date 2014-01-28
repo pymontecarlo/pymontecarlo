@@ -53,7 +53,7 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         intensities = {}
 
         for transition, dataset in group.items():
-            transition = xraytransition.from_string(str(transition))
+            transition = xraytransition.from_string(transition)
 
             gcf = dataset.attrs['gcf']
             gbf = dataset.attrs['gbf']
@@ -75,7 +75,8 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         group = _HDF5Handler.convert(self, obj, group)
 
         for transition, intensities in obj._intensities.items():
-            dataset = group.create_dataset(str(transition), shape=())
+            name = '%s %s' % (transition.symbol, transition.iupac)
+            dataset = group.create_dataset(name, shape=())
 
             dataset.attrs['gcf'] = intensities[GENERATED][CHARACTERISTIC]
             dataset.attrs['gbf'] = intensities[GENERATED][BREMSSTRAHLUNG]
@@ -111,7 +112,7 @@ class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
     def parse(self, group):
         data = {}
         for transition, group in group.items():
-            transition = xraytransition.from_string(str(transition))
+            transition = xraytransition.from_string(transition)
 
             for suffix, dataset in group.items():
                 data.setdefault(transition, {})[suffix] = np.copy(dataset)
@@ -131,7 +132,8 @@ class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
 
         for suffix, absorption, fluorescence in distributions:
             for transition, data in obj.iter_transitions(absorption, fluorescence):
-                subgroup = group.require_group(str(transition))
+                name = '%s %s' % (transition.symbol, transition.iupac)
+                subgroup = group.require_group(name)
                 subgroup.create_dataset(suffix, data=data)
 
         return group

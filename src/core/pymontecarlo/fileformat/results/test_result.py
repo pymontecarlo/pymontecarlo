@@ -243,25 +243,25 @@ class TestPhotonDepthResultHDF5Handler(unittest.TestCase):
     def testconvert(self):
         group = self.hdf5file['det']
 
-        phirhoz = group['Cu L\u03b11']['gnf']
+        phirhoz = group['Cu L3-M5']['gnf']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
 
-        phirhoz = group['Cu L\u03b11']['gt']
+        phirhoz = group['Cu L3-M5']['gt']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
 
-        phirhoz = group['Cu L\u03b11']['enf']
+        phirhoz = group['Cu L3-M5']['enf']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
         self.assertAlmostEqual(0.21, phirhoz[0][2], 4)
 
-        phirhoz = group['Cu L\u03b11']['et']
+        phirhoz = group['Cu L3-M5']['et']
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
@@ -340,25 +340,25 @@ class TestPhotonRadialResultHDF5Handler(unittest.TestCase):
     def testconvert(self):
         group = self.hdf5file['det']
 
-        radial = group['Cu L\u03b11']['gnf']
+        radial = group['Cu L3-M5']['gnf']
         self.assertEqual((4, 3), radial.shape)
         self.assertAlmostEqual(1.0, radial[0][0], 4)
         self.assertAlmostEqual(0.0, radial[0][1], 4)
         self.assertAlmostEqual(0.01, radial[0][2], 4)
 
-        radial = group['Cu L\u03b11']['gt']
+        radial = group['Cu L3-M5']['gt']
         self.assertEqual((4, 3), radial.shape)
         self.assertAlmostEqual(1.0, radial[0][0], 4)
         self.assertAlmostEqual(10.0, radial[0][1], 4)
         self.assertAlmostEqual(0.11, radial[0][2], 4)
 
-        radial = group['Cu L\u03b11']['enf']
+        radial = group['Cu L3-M5']['enf']
         self.assertEqual((4, 3), radial.shape)
         self.assertAlmostEqual(1.0, radial[0][0], 4)
         self.assertAlmostEqual(20.0, radial[0][1], 4)
         self.assertAlmostEqual(0.21, radial[0][2], 4)
 
-        radial = group['Cu L\u03b11']['et']
+        radial = group['Cu L3-M5']['et']
         self.assertEqual((4, 3), radial.shape)
         self.assertAlmostEqual(1.0, radial[0][0], 4)
         self.assertAlmostEqual(30.0, radial[0][1], 4)
