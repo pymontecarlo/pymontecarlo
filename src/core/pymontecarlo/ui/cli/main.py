@@ -28,7 +28,7 @@ from optparse import OptionParser, OptionGroup
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.options.options import Options
+from pymontecarlo.fileformat.options.options import load as load_options
 
 from pymontecarlo.runner.local import LocalRunner, LocalCreator
 
@@ -37,7 +37,7 @@ from pymontecarlo.ui.cli.console import Console, ProgressBar
 # Globals and constants variables.
 
 
-def create_parser(programs):
+def _create_parser(programs):
     description = "pyMonteCarlo Command Line Interface. Runs simulation(s) " + \
                   "with different Monte Carlo programs from the same interface." + \
                   "After the simulations, the results are automatically saved " + \
@@ -74,14 +74,14 @@ def create_parser(programs):
 
     return parser
 
-def load_options(filepaths, list_options=[]):
+def _load(filepaths, list_options=[]):
     for filepath in filepaths:
         if os.path.isdir(filepath):
             load_options(glob.glob(os.path.join(filepath, '*.xml')), list_options)
             list_options.sort()
             return
-
-        list_options.append(Options.load(filepath))
+#
+        list_options.append(load_options(filepath))
 
 def run(argv=None):
     # Initialize
@@ -90,7 +90,7 @@ def run(argv=None):
 
     programs = get_settings().get_programs()
 
-    parser = create_parser(programs)
+    parser = _create_parser(programs)
 
     # Parse arguments
     (values, args) = parser.parse_args(argv)
@@ -125,7 +125,7 @@ def run(argv=None):
 
     list_options = []
     try:
-        load_options(args, list_options)
+        _load(args, list_options)
     except Exception as ex:
         console.print_error(str(ex))
 
