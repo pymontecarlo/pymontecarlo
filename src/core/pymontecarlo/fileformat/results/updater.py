@@ -26,7 +26,6 @@ import tempfile
 import shutil
 from io import BytesIO, StringIO
 from zipfile import ZipFile, is_zipfile
-import uuid
 
 # Third party modules.
 import h5py
@@ -419,6 +418,7 @@ class Updater(_Updater):
         # Create HDF5
         newfilepath = os.path.splitext(filepath)[0] + '.h5'
         hdf5file = h5py.File(newfilepath, 'w')
+        hdf5file.attrs['version'] = b'4'
 
         zipfile = ZipFile(filepath, 'r', allowZip64=True)
 
@@ -505,7 +505,7 @@ class Updater(_Updater):
                 del przgroup[name] # delete dataset
 
         # Change version
-        hdf5file.attrs['version'] = '5'
+        hdf5file.attrs['version'] = b'5'
 
         hdf5file.close()
 
@@ -516,7 +516,7 @@ class Updater(_Updater):
 
         hdf5file = h5py.File(filepath, 'r+')
 
-        hdf5file.attrs['version'] = '6' # Change version
+        hdf5file.attrs['version'] = b'6' # Change version
 
         for result_group in hdf5file.values():
             if result_group.attrs.get('_class') == b'PhiRhoZResult':
@@ -535,15 +535,15 @@ class Updater(_Updater):
 
         hdf5file = h5py.File(filepath, 'r+')
 
-        hdf5file.attrs['version'] = '7' # Change version
-        hdf5file.attrs['_class'] = 'Results'
+        hdf5file.attrs['version'] = b'7' # Change version
+        hdf5file.attrs['_class'] = b'Results'
 
         # Update root options
         options_source = _update_options(hdf5file.attrs['options'])
         hdf5file.attrs['options'] = options_source
 
         # Create identifier of results
-        identifier = uuid.uuid4().hex
+        identifier = load_options(BytesIO(options_source)).uuid
         hdf5file.attrs.create('identifiers', [identifier],
                               dtype=h5py.special_dtype(vlen=str))
 
@@ -552,9 +552,8 @@ class Updater(_Updater):
         group.attrs['options'] = options_source
 
         for result_group in result_groups:
-            if not isinstance(hdf5file[result_group].attrs['_class'], str):
-                hdf5file[result_group].attrs['_class'] = \
-                    hdf5file[result_group].attrs['_class'].decode('ascii')
+            hdf5file[result_group].attrs['_class'] = \
+                np.string_(hdf5file[result_group].attrs['_class'])
             hdf5file.copy(result_group, group)
             del hdf5file[result_group]
 

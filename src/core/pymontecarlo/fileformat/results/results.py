@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 from io import BytesIO
 import xml.etree.ElementTree as etree
-import uuid
+import logging
 
 # Third party modules.
 import h5py
@@ -80,6 +80,8 @@ class ResultsHDF5Handler(_HDF5Handler):
                 element = etree.parse(source).getroot()
                 options = self._parse_handlers('pymontecarlo.fileformat.options.options', element)
 
+                assert identifier == options.uuid
+
                 # Load each result
                 subgroup_size = len(subgroup)
 
@@ -90,6 +92,8 @@ class ResultsHDF5Handler(_HDF5Handler):
                     task.status = 'Loading %s' % key
                     task.progress = i / group_size + j / subgroup_size * 0.1
 
+                    logging.debug('Parsing %s (%s) result of %s',
+                                  key, subsubgroup.attrs['_class'], identifier)
                     result = self._parse_handlers('pymontecarlo.fileformat.results.result',
                                                   subsubgroup)
                     results[key] = result
@@ -130,7 +134,7 @@ class ResultsHDF5Handler(_HDF5Handler):
                 task.status = 'Saving results %i' % i
                 task.progress = i / obj_size
 
-                identifier = uuid.uuid4().hex
+                identifier = results.options.uuid
                 identifiers.append(identifier)
 
                 subgroup = group.create_group(identifier)
