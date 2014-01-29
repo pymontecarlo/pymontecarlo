@@ -133,13 +133,13 @@ class TestResultsHDF5Handler(unittest.TestCase):
         self.assertEqual(2, len(group))
         self.assertEqual(2, len(group.attrs['identifiers']))
 
-        subgroup = group[group.attrs['identifiers'][0]]
+        subgroup = group['result-' + group.attrs['identifiers'][0]]
         self.assertEqual(3, len(subgroup))
         self.assertIn('det1', subgroup)
         self.assertIn('det2', subgroup)
         self.assertIn('det3', subgroup)
 
-        subgroup = group[group.attrs['identifiers'][1]]
+        subgroup = group['result-' + group.attrs['identifiers'][1]]
         self.assertEqual(1, len(subgroup))
         self.assertIn('det1', subgroup)
 

@@ -73,6 +73,7 @@ class ResultsHDF5Handler(_HDF5Handler):
                 task.status = 'Reading results %i' % i
                 task.progress = i / group_size
                 identifier, subgroup = item
+                identifier = identifier[7:] # Remove "result-"
 
                 # Options
                 task.status = 'Reading options'
@@ -137,7 +138,7 @@ class ResultsHDF5Handler(_HDF5Handler):
                 identifier = results.options.uuid
                 identifiers.append(identifier)
 
-                subgroup = group.create_group(identifier)
+                subgroup = group.create_group('result-' + identifier)
 
                 # Save each result
                 results_size = len(results)

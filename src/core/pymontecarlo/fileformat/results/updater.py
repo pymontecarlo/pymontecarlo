@@ -548,7 +548,7 @@ class Updater(_Updater):
                               dtype=h5py.special_dtype(vlen=str))
 
         result_groups = list(hdf5file)
-        group = hdf5file.create_group(identifier)
+        group = hdf5file.create_group('result-' + identifier)
         group.attrs['options'] = options_source
 
         for result_group in result_groups:
