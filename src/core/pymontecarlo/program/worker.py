@@ -30,13 +30,13 @@ class Worker(object):
 
     def __init__(self, program):
         """
-        Base class for all workers. 
-        A worker is used to run simulations in a queue with a given program and 
+        Base class for all workers.
+        A worker is used to run simulations in a queue with a given program and
         return their results.
         It can also be used to create the simulation files required to run
         simulation(s) (without running them).
-        
-        A worker should not be directly used to start a simulation. 
+
+        A worker should not be directly used to start a simulation.
         One should rather use a runner.
         """
         self._program = program
@@ -69,14 +69,14 @@ class Worker(object):
         """
         Creates and runs a simulation from the specified options.
         This method should be implemented by derived class.
-        
+
         :arg options: options of simulation
         :arg outputdir: output directory where complementary results should be
             saved
         :arg workdir: work directory where temporary files should be saved
-        
+
         :return: results of simulation
-        :rtype: :class:`Results`
+        :rtype: :class:`ResultsContainer`
         """
         raise NotImplementedError
 
@@ -89,7 +89,7 @@ class Worker(object):
     def report(self):
         """
         Returns a tuple of:
-        
+
           * the progress of the current running simulation (between 0.0 and 1.0)
           * text indicating the status of the current running simulation
         """
