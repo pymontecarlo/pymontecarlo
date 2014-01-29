@@ -30,7 +30,7 @@ from pymontecarlo.util.parameter import freeze
 
 # Globals and constants variables.
 
-class _ResultsContainer(Mapping):
+class ResultsContainer(Mapping):
 
     def __init__(self, options, results={}):
         """
@@ -93,7 +93,7 @@ class Results(Sequence):
 
         self._list_results = []
         for options, results in list_results:
-            container = _ResultsContainer(options, results)
+            container = ResultsContainer(options, results)
             self._list_results.append(container)
 
     def __repr__(self):

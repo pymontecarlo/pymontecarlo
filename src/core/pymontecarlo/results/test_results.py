@@ -21,13 +21,13 @@ from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import \
     PhotonIntensityDetector, TimeDetector, ElectronFractionDetector
 
-from pymontecarlo.results.results import Results, _ResultsContainer
+from pymontecarlo.results.results import Results, ResultsContainer
 from pymontecarlo.results.result import \
     PhotonIntensityResult, TimeResult, ElectronFractionResult
 
 # Globals and constants variables.
 
-class Test_ResultsContainer(TestCase):
+class TestResultsContainer(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
@@ -44,7 +44,7 @@ class Test_ResultsContainer(TestCase):
         results['det2'] = TimeResult()
         results['det3'] = ElectronFractionResult()
 
-        self.results = _ResultsContainer(self.ops, results)
+        self.results = ResultsContainer(self.ops, results)
 
     def tearDown(self):
         TestCase.tearDown(self)
