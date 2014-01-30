@@ -18,7 +18,7 @@ import h5py
 
 # Local modules.
 from pymontecarlo.fileformat.results.results import \
-    ResultsHDF5Handler, load, save
+    ResultsHDF5Handler, load, save, append
 
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import \
@@ -70,6 +70,20 @@ class TestModule(unittest.TestCase):
         self.assertIn('det2', obj[0])
         self.assertIn('det3', obj[0])
         self.assertIn('det1', obj[1])
+
+    def testappend(self):
+        with tempfile.NamedTemporaryFile() as f:
+            save(self.obj, f.name)
+
+            # Append
+            ops3 = Options(name='test3')
+            newobj = Results(self.obj.options, [(ops3, {})])
+            append(newobj, f.name)
+
+            obj = load(f.name)
+
+            self.assertEqual(3, len(obj))
+
 
 class TestResultsHDF5Handler(unittest.TestCase):
 

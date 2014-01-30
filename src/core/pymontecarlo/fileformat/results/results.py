@@ -50,6 +50,44 @@ def save(results, filepath):
                                        results, hdf5file)
         return handler.convert(results, hdf5file)
 
+def append(results, filepath):
+    with h5py.File(filepath, 'r+') as hdf5file:
+        # Check UUID of base options
+        source = BytesIO(hdf5file.attrs['options'])
+        element = etree.parse(source).getroot()
+        handler = find_parse_handler('pymontecarlo.fileformat.options.options', element)
+        options = handler.parse(element)
+
+        if options.uuid != results.options.uuid:
+            raise ValueError('UUID of base options do not match: %s != %s' % \
+                             options.uuid, results.options.uuid)
+
+        # Save results
+        identifiers = np.array(hdf5file.attrs['identifiers'], 'U').tolist()
+        for container in results:
+            identifier = container.options.uuid
+            identifiers.append(identifier)
+
+            group = hdf5file.create_group('result-' + identifier)
+
+            # Save each result
+            for key, result in container.items():
+                subgroup = group.create_group(key)
+                handler = find_convert_handler('pymontecarlo.fileformat.results.result',
+                                               result, subgroup)
+                handler.convert(result, subgroup)
+
+            # Save options
+            handler = find_convert_handler('pymontecarlo.fileformat.options.options',
+                                           results.options)
+            element = handler.convert(container.options)
+            group.attrs['options'] = etree.tostring(element)
+
+        # Update identifiers
+        del hdf5file.attrs['identifiers']
+        hdf5file.attrs.create('identifiers', identifiers,
+                              dtype=h5py.special_dtype(vlen=str))
+
 class ResultsHDF5Handler(_HDF5Handler):
 
     CLASS = Results
