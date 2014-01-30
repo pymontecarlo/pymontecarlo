@@ -60,7 +60,7 @@ def append(results, filepath):
 
         if options.uuid != results.options.uuid:
             raise ValueError('UUID of base options do not match: %s != %s' % \
-                             options.uuid, results.options.uuid)
+                             (options.uuid, results.options.uuid))
 
         # Save results
         identifiers = np.array(hdf5file.attrs['identifiers'], 'U').tolist()
