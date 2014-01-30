@@ -377,7 +377,7 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
+    def annular(cls, takeoffangle_rad, opening_rad, channels):
         tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
         return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
 
