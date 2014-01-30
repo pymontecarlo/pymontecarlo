@@ -80,11 +80,11 @@ class Worker(object):
         """
         raise NotImplementedError
 
-    def stop(self):
+    def cancel(self):
         """
-        Stops worker.
+        Cacncels worker.
         """
-        self._status = 'Stopped'
+        self._status = 'Cancelled'
 
     def report(self):
         """
@@ -109,8 +109,8 @@ class SubprocessWorker(Worker):
         Worker.reset(self)
         self._process = None
 
-    def stop(self):
+    def cancel(self):
         if self._process is not None:
             self._process.kill()
-        Worker.stop(self)
+        Worker.cancel(self)
 
