@@ -87,13 +87,14 @@ class Results(Sequence):
         >>> 2.0
     """
 
-    def __init__(self, options, list_results):
+    def __init__(self, options, results):
         self._options = options
         freeze(self._options)
 
         self._list_results = []
-        for options, results in list_results:
-            container = ResultsContainer(options, results)
+        for container in results:
+            if not isinstance(container, ResultsContainer):
+                container = ResultsContainer(*container)
             self._list_results.append(container)
 
     def __repr__(self):
