@@ -40,17 +40,17 @@ class TestCasino2Importer(TestCase):
         self.ops.detectors['fraction'] = ElectronFractionDetector()
         self.ops.detectors['photondepth'] = PhotonDepthDetector((0, 1), (2, 3), 500)
         self.ops.detectors['photonradial'] = PhotonRadialDetector((0, 1), (2, 3), 500)
-        self.ops.detectors['bseenergy'] = BackscatteredElectronEnergyDetector((0, 30e3), 500)
-        self.ops.detectors['teenergy'] = TransmittedElectronEnergyDetector((0, 30e3), 500)
+        self.ops.detectors['bseenergy'] = BackscatteredElectronEnergyDetector(500, (0, 30e3))
+        self.ops.detectors['teenergy'] = TransmittedElectronEnergyDetector(500, (0, 30e3))
         self.ops.detectors['bseangle'] = BackscatteredElectronPolarAngularDetector(91)
         self.ops.detectors['bseradial'] = BackscatteredElectronRadialDetector(500)
         self.ops.detectors['trajs'] = TrajectoryDetector()
 
         filepath = os.path.join(os.path.dirname(__file__),
-                                '../testdata/result1.cas')
+                                'testdata', 'result1.cas')
         imp = Importer()
         with open(filepath, 'rb') as f:
-            self.results = imp.import_cas(self.ops, f)[0]
+            self.results = imp.import_cas(self.ops, f)
 
     def tearDown(self):
         TestCase.tearDown(self)

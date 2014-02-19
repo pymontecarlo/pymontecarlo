@@ -23,7 +23,6 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import ElectronFractionDetector
 from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.casino2.config import program
 from pymontecarlo.program.casino2.worker import Worker
@@ -39,7 +38,6 @@ class TestWorker(TestCase):
         self.outputdir = tempfile.mkdtemp()
 
         ops = Options('test')
-        ops.geometry.material.absorption_energy_eV[ELECTRON] = 56.0
         ops.detectors['fraction'] = ElectronFractionDetector()
         ops.limits.add(ShowersLimit(1))
         self.ops = Converter().convert(ops)[0]

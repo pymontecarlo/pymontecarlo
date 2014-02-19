@@ -56,10 +56,10 @@ from pymontecarlo.options.detector import \
      TrajectoryDetector,
      )
 
-from casinoTools.FileFormat.casino2.File import File
+from casinotools.fileformat.casino2.File import File
 
 # Globals and constants variables.
-from casinoTools.FileFormat.casino2.Element import \
+from casinotools.fileformat.casino2.Element import \
     LINE_K, LINE_L, LINE_M, GENERATED as CAS_GENERATED, EMITTED as CAS_EMITTED
 from pymontecarlo.results.result import \
     (GENERATED, EMITTED, NOFLUORESCENCE, TOTAL,

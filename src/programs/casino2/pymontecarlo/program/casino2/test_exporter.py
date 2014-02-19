@@ -35,7 +35,7 @@ from pymontecarlo.options.model import \
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE)
 from pymontecarlo.options.particle import ELECTRON
 
-from casinoTools.FileFormat.casino2.SimulationOptions import \
+from casinotools.fileformat.casino2.SimulationOptions import \
     (DIRECTION_COSINES_SOUM, CROSS_SECTION_MOTT_EQUATION,
      IONIZATION_CROSS_SECTION_GRYZINSKI, IONIZATION_POTENTIAL_HOVINGTON,
      RANDOM_NUMBER_GENERATOR_MERSENNE_TWISTER, ENERGY_LOSS_JOY_LUO)
@@ -57,17 +57,17 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_substrate(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                       absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
-        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 567), 123)
-        ops.detectors['te'] = TransmittedElectronEnergyDetector((1, 568), 124)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector(123, (0, 567))
+        ops.detectors['te'] = TransmittedElectronEnergyDetector(124, (1, 568))
         ops.detectors['bse polar'] = BackscatteredElectronPolarAngularDetector(125)
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
@@ -91,7 +91,7 @@ class TestCasino2Exporter(TestCase):
 
         self.assertEqual(1, regionops.getNumberRegions())
         region = regionops.getRegion(0)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
@@ -130,14 +130,12 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_grainboundaries(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat1.absorption_energy_eV[ELECTRON] = 123
-
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
-        mat2.absorption_energy_eV[ELECTRON] = 89
-
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
-        mat3.absorption_energy_eV[ELECTRON] = 89
+        mat1 = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                        absorption_energy_eV={ELECTRON: 123.0})
+        mat2 = Material({29: 0.5, 30: 0.5}, 'Mat2',
+                        absorption_energy_eV={ELECTRON: 89.0})
+        mat3 = Material({13: 0.5, 14: 0.5}, 'Mat3',
+                        absorption_energy_eV={ELECTRON: 89.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -164,7 +162,7 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(3, regionops.getNumberRegions())
 
         region = regionops.getRegion(0)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
@@ -172,7 +170,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(47 in elements)
 
         region = regionops.getRegion(1)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
@@ -180,7 +178,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(14 in elements)
 
         region = regionops.getRegion(2)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
@@ -195,14 +193,12 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_multilayers1(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat1.absorption_energy_eV[ELECTRON] = 123
-
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
-        mat2.absorption_energy_eV[ELECTRON] = 89
-
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
-        mat3.absorption_energy_eV[ELECTRON] = 89
+        mat1 = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                        absorption_energy_eV={ELECTRON: 123.0})
+        mat2 = Material({29: 0.5, 30: 0.5}, 'Mat2',
+                        absorption_energy_eV={ELECTRON: 89.0})
+        mat3 = Material({13: 0.5, 14: 0.5}, 'Mat3',
+                        absorption_energy_eV={ELECTRON: 89.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -230,7 +226,7 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(3, regionops.getNumberRegions())
 
         region = regionops.getRegion(0)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
@@ -238,7 +234,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(30 in elements)
 
         region = regionops.getRegion(1)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
@@ -246,7 +242,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(14 in elements)
 
         region = regionops.getRegion(2)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
@@ -261,14 +257,12 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_multilayers2(self):
         # Create options
-        mat1 = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat1.absorption_energy_eV[ELECTRON] = 123
-
-        mat2 = Material('Mat2', {29: 0.5, 30: 0.5})
-        mat2.absorption_energy_eV[ELECTRON] = 89
-
-        mat3 = Material('Mat3', {13: 0.5, 14: 0.5})
-        mat3.absorption_energy_eV[ELECTRON] = 89
+        mat1 = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                        absorption_energy_eV={ELECTRON: 123.0})
+        mat2 = Material({29: 0.5, 30: 0.5}, 'Mat2',
+                        absorption_energy_eV={ELECTRON: 89.0})
+        mat3 = Material({13: 0.5, 14: 0.5}, 'Mat3',
+                        absorption_energy_eV={ELECTRON: 89.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
@@ -297,7 +291,7 @@ class TestCasino2Exporter(TestCase):
         self.assertEqual(3, regionops.getNumberRegions())
 
         region = regionops.getRegion(0)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat1.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat1', region.Name)
         self.assertEqual(2, len(elements))
@@ -305,7 +299,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(47 in elements)
 
         region = regionops.getRegion(1)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat2.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat2', region.Name)
         self.assertEqual(2, len(elements))
@@ -313,7 +307,7 @@ class TestCasino2Exporter(TestCase):
         self.assertTrue(30 in elements)
 
         region = regionops.getRegion(2)
-        elements = map(attrgetter('Z'), region.getElements())
+        elements = list(map(attrgetter('Z'), region.getElements()))
         self.assertAlmostEqual(mat3.density_kg_m3 / 1000.0, region.Rho, 4)
         self.assertEqual('Mat3', region.Name)
         self.assertEqual(2, len(elements))
@@ -328,14 +322,14 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_models(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat',
+                        absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
 
         ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
@@ -367,14 +361,14 @@ class TestCasino2Exporter(TestCase):
 
     def testexport_different_openings(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat',
+                        absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))

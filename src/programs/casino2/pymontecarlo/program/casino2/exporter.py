@@ -22,7 +22,6 @@ __license__ = "GPL v3"
 import os
 from operator import itemgetter
 import warnings
-import math
 
 # Third party modules.
 import numpy as np
@@ -54,8 +53,8 @@ from pymontecarlo.options.model import \
 from pymontecarlo.program.exporter import \
     Exporter as _Exporter, ExporterException, ExporterWarning
 
-from casinoTools.FileFormat.casino2.File import File
-from casinoTools.FileFormat.casino2.SimulationOptions import \
+from casinotools.fileformat.casino2.File import File
+from casinotools.fileformat.casino2.SimulationOptions import \
     (DIRECTION_COSINES_SOUM, DIRECTION_COSINES_DROUIN,
      CROSS_SECTION_MOTT_JOY, CROSS_SECTION_MOTT_EQUATION,
      CROSS_SECTION_MOTT_BROWNING, CROSS_SECTION_MOTT_RUTHERFORD,
@@ -70,10 +69,9 @@ from casinoTools.FileFormat.casino2.SimulationOptions import \
 # Globals and constants variables.
 
 def _setup_region_material(region, material):
-    material.calculate()
     region.removeAllElements()
 
-    for z, fraction in material.composition.iteritems():
+    for z, fraction in material.composition.items():
         region.addElement(ep.symbol(z), weightFraction=fraction)
 
     region.update() # Calculate number of elements, mean atomic number
@@ -158,7 +156,7 @@ class Exporter(_Exporter):
         if isinstance(geometry, Substrate):
             return resource_stream(__name__, "templates/Substrate.sim")
         elif isinstance(geometry, (HorizontalLayers, VerticalLayers)):
-            regions_count = len(geometry.layers)
+            regions_count = len(np.array(geometry.layers, ndmin=1))
 
             if isinstance(geometry, HorizontalLayers):
                 if geometry.has_substrate(): regions_count += 1
@@ -188,10 +186,7 @@ class Exporter(_Exporter):
         simops.Beam_Diameter = 2.7947137 * beam.diameter_m * 1e9 / 2.0 # nm
 
         # Beam tilt
-        a = np.array(beam.direction)
-        b = np.array([0, 0, -1])
-        angle = np.arccos(np.vdot(a, b) / np.linalg.norm(a))
-        simops.Beam_angle = math.degrees(angle)
+        simops.Beam_angle = np.degrees(beam.direction_polar_rad)
 
     def _export_geometry(self, options, simdata, simops):
         _Exporter._export_geometry(self, options, simdata, simops)
@@ -213,7 +208,7 @@ class Exporter(_Exporter):
         regionops = simdata.getRegionOptions()
 
         region = regionops.getRegion(0)
-        _setup_region_material(region, geometry.material)
+        _setup_region_material(region, geometry.body.material)
 
     def _geometry_horizontal_layers(self, options, geometry, simdata, simops):
         regionops = simdata.getRegionOptions()
@@ -223,32 +218,29 @@ class Exporter(_Exporter):
             region = regionops.getRegion(i)
             _setup_region_material(region, layer.material)
 
-            dim = geometry.get_dimensions(layer)
-            parameters = [abs(dim.zmax_m) * 1e9, abs(dim.zmin_m) * 1e9, 0.0, 0.0]
+            parameters = [abs(layer.zmax_m) * 1e9, abs(layer.zmin_m) * 1e9, 0.0, 0.0]
             region.setParameters(parameters)
 
         if geometry.has_substrate():
             region = regionops.getRegion(regionops.getNumberRegions() - 1)
-            _setup_region_material(region, geometry.substrate_material)
+            _setup_region_material(region, geometry.substrate.material)
 
-            dim = geometry.get_dimensions('substrate')
             parameters = region.getParameters()
-            parameters[0] = abs(dim.zmax_m) * 1e9
+            parameters[0] = abs(geometry.substrate.zmax_m) * 1e9
             parameters[2] = parameters[0] + 10.0
             region.setParameters(parameters)
 
     def _geometry_vertical_layers(self, options, geometry, simdata, simops):
         regionops = simdata.getRegionOptions()
-        layers = geometry.layers
+        layers = np.array(geometry.layers, ndmin=1)
         assert len(layers) == regionops.getNumberRegions() - 2 # without substrates
 
         # Left substrate
         region = regionops.getRegion(0)
-        _setup_region_material(region, geometry.left_material)
+        _setup_region_material(region, geometry.left_substrate.material)
 
-        dim = geometry.get_dimensions('left')
         parameters = region.getParameters()
-        parameters[1] = dim.xmax_m * 1e9
+        parameters[1] = geometry.left_substrate.xmax_m * 1e9
         parameters[2] = parameters[1] - 10.0
         region.setParameters(parameters)
 
@@ -257,17 +249,15 @@ class Exporter(_Exporter):
             region = regionops.getRegion(i + 1)
             _setup_region_material(region, layer.material)
 
-            dim = geometry.get_dimensions(layer)
-            parameters = [dim.xmin_m * 1e9, dim.xmax_m * 1e9, 0.0, 0.0]
+            parameters = [layer.xmin_m * 1e9, layer.xmax_m * 1e9, 0.0, 0.0]
             region.setParameters(parameters)
 
         # Right substrate
         region = regionops.getRegion(regionops.getNumberRegions() - 1)
-        _setup_region_material(region, geometry.right_material)
+        _setup_region_material(region, geometry.right_substrate.material)
 
-        dim = geometry.get_dimensions('right')
         parameters = region.getParameters()
-        parameters[0] = dim.xmin_m * 1e9
+        parameters[0] = geometry.right_substrate.xmin_m * 1e9
         parameters[2] = parameters[0] + 10.0
         region.setParameters(parameters)
 
@@ -280,7 +270,7 @@ class Exporter(_Exporter):
 
         # Detector position
         dets = options.detectors.iterclass(_DelimitedDetector)
-        dets = map(itemgetter(1), dets)
+        dets = list(map(itemgetter(1), dets))
 
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
@@ -288,8 +278,8 @@ class Exporter(_Exporter):
                 raise ExporterException("Some delimited detectors do not have the same opening")
 
         if dets:
-            simops.TOA = math.degrees(dets[0].takeoffangle_rad) # deg
-            simops.PhieRX = math.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg
+            simops.TOA = np.degrees(dets[0].takeoffangle_rad) # deg
+            simops.PhieRX = np.degrees(sum(dets[0].azimuth_rad) / 2.0) # deg
 
     def _detector_backscattered_electron_energy(self, options, name,
                                                 detector, simdata, simops):
@@ -312,8 +302,8 @@ class Exporter(_Exporter):
         simops.FDbang = 1
         simops.FDbangLog = 0
         simops.NbPointDBANG = detector.channels
-        simops.DbangMin = math.degrees(detector.limits_rad[0]) # deg
-        simops.DbangMax = math.degrees(detector.limits_rad[1]) # deg
+        simops.DbangMin = np.degrees(detector.limits_rad[0]) # deg
+        simops.DbangMax = np.degrees(detector.limits_rad[1]) # deg
 
     def _detector_backscattered_electron_radial(self, options, name,
                                                 detector, simdata, simops):
