@@ -10,7 +10,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
@@ -33,12 +33,9 @@ setup(name="pyMonteCarlo-WinXRay",
                    'Topic :: Scientific/Engineering',
                    'Topic :: Scientific/Engineering :: Physics'],
 
-      packages=['pymontecarlo',
-                'pymontecarlo.program',
-                'pymontecarlo.program.winxray'],
+      packages=find_packages(),
 
-      install_requires=['winxrayTools>=0.1'],
-      dependency_links=["https://bitbucket.org/pymontecarlo/pymontecarlo/downloads"],
+      install_requires=['pyWinxrayTools>=0.1'],
 
       cmdclass={'clean': clean},
 

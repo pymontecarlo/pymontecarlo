@@ -10,7 +10,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
@@ -33,9 +33,7 @@ setup(name="pyMonteCarlo-MONACO",
                    'Topic :: Scientific/Engineering',
                    'Topic :: Scientific/Engineering :: Physics'],
 
-      packages=['pymontecarlo',
-                'pymontecarlo.program',
-                'pymontecarlo.program.monaco'],
+      packages=find_packages(),
 
       cmdclass={'clean': clean},
 
