@@ -56,7 +56,7 @@ class TestWorker(TestCase):
 
     def testrun(self):
         results = self.worker.run(self.ops, self.outputdir, self.workdir)
-        self.assertIn('time', results[0])
+        self.assertIn('time', results)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
