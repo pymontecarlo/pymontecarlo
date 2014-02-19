@@ -128,7 +128,7 @@ class Exporter(object, metaclass=ABCMeta):
             * detector object
             * optional arguments and keyword-arguments
         """
-        for name, detector in options.detectors.iteritems():
+        for name, detector in options.detectors.items():
             clasz = detector.__class__
             method = self._detector_exporters.get(clasz)
 
