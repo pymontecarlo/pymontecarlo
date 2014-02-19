@@ -40,13 +40,13 @@ class TestImporter(TestCase):
         self.ops.detectors['showers'] = ShowersStatisticsDetector()
         self.ops.detectors['prz'] = PhotonDepthDetector((0, 1), (2, 3), 100)
         self.ops.detectors['spectrum'] = \
-            PhotonSpectrumDetector((0, 1), (2, 3), (0, 1000), 500)
+            PhotonSpectrumDetector((0, 1), (2, 3), 500, (0, 1000))
 
         self.ops.limits.add(ShowersLimit(1000))
 
         dirpath = os.path.join(os.path.dirname(__file__),
-                               '../testdata/al_10keV_1ke_001')
-        self.results = Importer().import_(self.ops, dirpath)[0]
+                               'testdata', 'al_10keV_1ke_001')
+        self.results = Importer().import_(self.ops, dirpath)
 
     def tearDown(self):
         TestCase.tearDown(self)

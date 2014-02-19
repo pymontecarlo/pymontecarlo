@@ -52,16 +52,16 @@ from pymontecarlo.options.detector import \
      )
 from pymontecarlo.options.limit import ShowersLimit
 
-from winxrayTools.ResultsFile.BseResults import BseResults
-from winxrayTools.ResultsFile.GeneralResults import GeneralResults
-from winxrayTools.ResultsFile.CharacteristicIntensity import CharacteristicIntensity
-from winxrayTools.ResultsFile.CharateristicPhirhoz import CharateristicPhirhoz
-from winxrayTools.ResultsFile.XRaySpectrum import XRaySpectrum
+from winxraytools.results.BseResults import BseResults
+from winxraytools.results.GeneralResults import GeneralResults
+from winxraytools.results.CharacteristicIntensity import CharacteristicIntensity
+from winxraytools.results.CharateristicPhirhoz import CharateristicPhirhoz
+from winxraytools.results.XRaySpectrum import XRaySpectrum
 
 # Globals and constants variables.
-from winxrayTools.ResultsFile.CharacteristicIntensity import \
+from winxraytools.results.CharacteristicIntensity import \
     EMITTED as WXREMITTED, GENERATED as WXRGENERATED
-from winxrayTools.ResultsFile.XRaySpectrum import \
+from winxraytools.results.XRaySpectrum import \
     (ENERGY as WXRSPC_ENERGY,
      TOTAL as WXRSPC_TOTAL,
      BACKGROUND as WXRSPC_BACKGROUND)
@@ -105,8 +105,8 @@ class Importer(_Importer):
             data = wxrresult.intensities[z][line]
             transition = from_string("%s %s" % (symbol(z), line))
 
-            gt = map(mul, data[WXRGENERATED], [factor] * 2)
-            et = map(mul, data[WXREMITTED], [factor] * 2)
+            gt = list(map(mul, data[WXRGENERATED], [factor] * 2))
+            et = list(map(mul, data[WXREMITTED], [factor] * 2))
 
             tmpints = create_intensity_dict(transition,
                                             gnf=gt, gt=gt,

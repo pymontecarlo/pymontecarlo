@@ -33,16 +33,14 @@ from pymontecarlo.options.model import \
      RANDOM_NUMBER_GENERATOR, DIRECTION_COSINE, MASS_ABSORPTION_COEFFICIENT)
 
 # Globals and constants variables.
-import winxrayTools.Configuration.DirectionCosine as DirectionCosine
-import winxrayTools.Configuration.EnergyLoss as EnergyLoss
-import winxrayTools.Configuration.EvPerChannel as EvPerChannel
-import winxrayTools.Configuration.ElectronElasticCrossSection as ElectronElasticCrossSection
-import winxrayTools.Configuration.IonizationCrossSection as IonizationCrossSection
-import winxrayTools.Configuration.IonizationPotential as IonizationPotential
-import winxrayTools.Configuration.MassAbsorptionCoefficient as MassAbsorptionCoefficient
-import winxrayTools.Configuration.RandomNumberGenerator as RandomNumberGenerator
-
-warnings.simplefilter("always")
+import winxraytools.configuration.DirectionCosine as DirectionCosine
+import winxraytools.configuration.EnergyLoss as EnergyLoss
+import winxraytools.configuration.EvPerChannel as EvPerChannel
+import winxraytools.configuration.ElectronElasticCrossSection as ElectronElasticCrossSection
+import winxraytools.configuration.IonizationCrossSection as IonizationCrossSection
+import winxraytools.configuration.IonizationPotential as IonizationPotential
+import winxraytools.configuration.MassAbsorptionCoefficient as MassAbsorptionCoefficient
+import winxraytools.configuration.RandomNumberGenerator as RandomNumberGenerator
 
 class TestExporter(TestCase):
 
@@ -59,16 +57,16 @@ class TestExporter(TestCase):
 
     def testexport_substrate(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                       absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
         ops.beam.origin_m = (100e-9, 0, 1)
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
-        ops.detectors['bse'] = BackscatteredElectronEnergyDetector((0, 567), 123)
+        ops.detectors['bse'] = BackscatteredElectronEnergyDetector(123, (0, 567))
         ops.detectors['bse polar'] = BackscatteredElectronPolarAngularDetector(125)
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
@@ -104,17 +102,17 @@ class TestExporter(TestCase):
 
     def testexport_spectrum(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                       absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
         ops.detectors['spectrum'] = \
             PhotonSpectrumDetector((radians(30), radians(40)), (0, radians(360.0)),
-                                   (0, 1234), 500)
+                                   500, (0, 1234))
 
         # Export to WinX-Ray options
         wxrops = self.e.export_wxroptions(ops)
@@ -130,13 +128,13 @@ class TestExporter(TestCase):
 
     def testexport_models(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                       absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
 
         ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
@@ -162,13 +160,13 @@ class TestExporter(TestCase):
 
     def testexport_different_opening(self):
         # Create options
-        mat = Material('Mat1', {79: 0.5, 47: 0.5})
-        mat.absorption_energy_eV[ELECTRON] = 123
+        mat = Material({79: 0.5, 47: 0.5}, 'Mat1',
+                       absorption_energy_eV={ELECTRON: 123.0})
 
         ops = Options()
         ops.beam.energy_eV = 1234
         ops.beam.diameter_m = 25e-9
-        ops.geometry.material = mat
+        ops.geometry.body.material = mat
         ops.limits.add(ShowersLimit(5678))
         ops.detectors['xrays'] = \
             PhotonIntensityDetector((radians(30), radians(40)), (0, radians(360.0)))
@@ -177,7 +175,6 @@ class TestExporter(TestCase):
 
         # Test
         self.assertRaises(ExporterException, self.e.export_wxroptions, ops)
-
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

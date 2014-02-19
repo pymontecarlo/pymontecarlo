@@ -48,17 +48,17 @@ from pymontecarlo.options.model import \
 from pymontecarlo.program.exporter import \
     Exporter as _Exporter, ExporterWarning, ExporterException
 
-from winxrayTools.Configuration.OptionsFile import OptionsFile
-#import winxrayTools.Configuration.Crystal as Crystal
-import winxrayTools.Configuration.DirectionCosine as DirectionCosine
-import winxrayTools.Configuration.EnergyLoss as EnergyLoss
-import winxrayTools.Configuration.EvPerChannel as EvPerChannel
-import winxrayTools.Configuration.ElectronElasticCrossSection as ElectronElasticCrossSection
-import winxrayTools.Configuration.IonizationCrossSection as IonizationCrossSection
-import winxrayTools.Configuration.IonizationPotential as IonizationPotential
-import winxrayTools.Configuration.MassAbsorptionCoefficient as MassAbsorptionCoefficient
-import winxrayTools.Configuration.RandomNumberGenerator as RandomNumberGenerator
-#import winxrayTools.Configuration.Window as Window
+from winxraytools.configuration.OptionsFile import OptionsFile
+#import winxraytools.configuration.Crystal as Crystal
+import winxraytools.configuration.DirectionCosine as DirectionCosine
+import winxraytools.configuration.EnergyLoss as EnergyLoss
+import winxraytools.configuration.EvPerChannel as EvPerChannel
+import winxraytools.configuration.ElectronElasticCrossSection as ElectronElasticCrossSection
+import winxraytools.configuration.IonizationCrossSection as IonizationCrossSection
+import winxraytools.configuration.IonizationPotential as IonizationPotential
+import winxraytools.configuration.MassAbsorptionCoefficient as MassAbsorptionCoefficient
+import winxraytools.configuration.RandomNumberGenerator as RandomNumberGenerator
+#import winxraytools.configuration.Window as Window
 
 # Globals and constants variables.
 
@@ -115,7 +115,7 @@ class Exporter(_Exporter):
         """
         Exports options to WinX-Ray options.
 
-        :rtype: :class:`OptionsFile <winxrayTools.Configuration.OptionsFile.OptionsFile>`
+        :rtype: :class:`OptionsFile <winxraytools.configuration.OptionsFile.OptionsFile>`
         """
         wxrops = OptionsFile()
 
@@ -162,7 +162,7 @@ class Exporter(_Exporter):
 
         # Detector position
         dets = options.detectors.iterclass(_DelimitedDetector)
-        dets = map(itemgetter(1), dets)
+        dets = list(map(itemgetter(1), dets))
 
         if len(dets) >= 2:
             c = map(equivalent_opening, dets[:-1], dets[1:])
@@ -199,17 +199,15 @@ class Exporter(_Exporter):
         #wxrops.setBeamTheta_deg
 
     def _geometry_substrate(self, options, geometry, wxrops):
-        material = geometry.material
-#        material.calculate()
+        material = geometry.body.material
 
         composition = material.composition.items()
-        zs = map(itemgetter(0), composition)
-        wfs = map(itemgetter(1), composition)
+        zs = list(map(itemgetter(0), composition))
+        wfs = list(map(itemgetter(1), composition))
 
         wxrops.setElements(zs, wfs)
 
-        if material.has_density_defined():
-            warnings.warn('WinXRay does not support user defined density', ExporterWarning)
+        warnings.warn('WinXRay does not support user defined density', ExporterWarning)
         #wxrops.setMeanDensity_g_cm3(material.density_kg_m3)
 
         if options.geometry.tilt_rad != 0.0:
@@ -255,16 +253,16 @@ class Exporter(_Exporter):
         ev_per_channel = options.beam.energy_eV / detector.channels
         if ev_per_channel < 10:
             wxrops.setTypeEVChannel(EvPerChannel.TYPE_5)
-            wxrops.setNumberChannel(options.beam.energy_eV / 5)
+            wxrops.setNumberChannel(options.beam.energy_eV // 5)
         elif ev_per_channel < 20:
             wxrops.setTypeEVChannel(EvPerChannel.TYPE_10)
-            wxrops.setNumberChannel(options.beam.energy_eV / 10)
+            wxrops.setNumberChannel(options.beam.energy_eV // 10)
         elif ev_per_channel < 40:
             wxrops.setTypeEVChannel(EvPerChannel.TYPE_20)
-            wxrops.setNumberChannel(options.beam.energy_eV / 20)
+            wxrops.setNumberChannel(options.beam.energy_eV // 20)
         else:
             wxrops.setTypeEVChannel(EvPerChannel.TYPE_40)
-            wxrops.setNumberChannel(options.beam.energy_eV / 40)
+            wxrops.setNumberChannel(options.beam.energy_eV // 40)
 
     def _detector_electron_fraction(self, options, name, detector, wxrops):
         wxrops.setComputeBSEDistribution(True) # Required to get distribution

@@ -22,7 +22,6 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import TimeDetector
 from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.particle import ELECTRON
 
 from pymontecarlo.program.winxray.config import program
 from pymontecarlo.program.winxray.worker import Worker
@@ -39,7 +38,6 @@ class TestWorker(TestCase):
         self.workdir = tempfile.mkdtemp()
 
         ops = Options('test')
-        ops.geometry.material.absorption_energy_eV[ELECTRON] = 56.0
         ops.detectors['time'] = TimeDetector()
         ops.limits.add(ShowersLimit(1))
         self.ops = Converter().convert(ops)[0]
@@ -53,7 +51,7 @@ class TestWorker(TestCase):
 
     def testrun(self):
         results = self.worker.run(self.ops, self.outputdir, self.workdir)
-        self.assertIn('time', results[0])
+        self.assertIn('time', results)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
