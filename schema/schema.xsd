@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<xsd:schema targetNamespace="http://pymontecarlo.sf.net"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://pymontecarlo.sf.net">
-    
-    <xsd:include schemaLocation="util/util.xsd" />
-    <xsd:include schemaLocation="input/input.xsd" />
-    <xsd:include schemaLocation="quant/input/input.xsd" />
-</xsd:schema>
