@@ -33,7 +33,7 @@ class TestImporter(TestCase):
         TestCase.setUp(self)
 
         self.testdata = os.path.join(os.path.dirname(__file__),
-                                     '../testdata/test1')
+                                     'testdata', 'test1')
 
         self.i = Importer()
 
@@ -51,7 +51,7 @@ class TestImporter(TestCase):
 
         # Import
         filepath = os.path.join(self.testdata, 'gold_15kev.cas')
-        results = self.i.import_from_cas(ops, filepath)
+        results = self.i.import_cas(ops, filepath)
 
         # Test
         result = results['trajectories']
@@ -74,7 +74,7 @@ class TestImporter(TestCase):
 
         # Import
         filepath = os.path.join(self.testdata, 'gold_15kev.cas')
-        results = self.i.import_from_cas(ops, filepath)
+        results = self.i.import_cas(ops, filepath)
 
         # Test
         result = results['electron-fraction']

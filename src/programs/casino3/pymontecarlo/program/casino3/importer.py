@@ -19,12 +19,13 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 
 # Third party modules.
 import numpy as np
 
 # Local modules.
-from casinoTools.FileFormat.casino3.File import File
+from casinotools.fileformat.casino3.File import File
 
 from pymontecarlo.results.result import \
     (TrajectoryResult, Trajectory, ElectronFractionResult)
@@ -38,7 +39,7 @@ from pymontecarlo.program.importer import Importer as _Importer
 # Globals and constants variables.
 from pymontecarlo.results.result import \
     EXIT_STATE_ABSORBED, EXIT_STATE_BACKSCATTERED, EXIT_STATE_TRANSMITTED
-from casinoTools.FileFormat.casino3.TrajectoryCollision import \
+from casinotools.fileformat.casino3.TrajectoryCollision import \
     (COLLISION_TYPE_ATOM, COLLISION_TYPE_REGION,
      COLLISION_TYPE_NODE, COLLISION_TYPE_RECALC)
 
@@ -52,17 +53,23 @@ class Importer(_Importer):
     def __init__(self):
         _Importer.__init__(self)
 
-        self._detector_importers[TrajectoryDetector] = self._detector_trajectory
-        self._detector_importers[ElectronFractionDetector] = \
+        self._importers[TrajectoryDetector] = self._detector_trajectory
+        self._importers[ElectronFractionDetector] = \
             self._detector_electron_fraction
 
-    def import_from_cas(self, options, filepath):
+    def _import(self, options, dirpath, *args, **kwargs):
+        filepath = os.path.join(dirpath, options.name + '.cas')
+
+        with open(filepath, 'rb') as fileobj:
+            return self.import_from_cas(options, fileobj)
+
+    def import_cas(self, options, filepath):
         # Read cas
         casfile = File(filepath)
 
         simdata = casfile.getFirstSimulation()
 
-        return self._import_results(options, simdata)
+        return self._run_importers(options, simdata)
 
     def _detector_trajectory(self, options, key, detector, simdata, *args):
         trajectories = []

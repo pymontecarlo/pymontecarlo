@@ -11,21 +11,19 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import warnings
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.casino3.converter import Converter, ConversionException
+from pymontecarlo.program.casino3.converter import Converter
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import PencilBeam
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.detector import TrajectoryDetector
 
 # Globals and constants variables.
-warnings.simplefilter("always")
 
 class TestPenelopeConverter(TestCase):
 
@@ -48,19 +46,15 @@ class TestPenelopeConverter(TestCase):
         ops.detectors['trajectories'] = TrajectoryDetector(False)
 
         # Convert
-        with warnings.catch_warnings(record=True) as ws:
-            self.converter.convert(ops)
-
-        # 7 warning:
-        # PencilBeam -> GaussianBeam
-        # Set default models (5)
-        self.assertEqual(6, len(ws))
+        opss = self.converter.convert(ops)
 
         # Test
-        self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
-        self.assertAlmostEqual(0.0, ops.beam.diameter_m, 4)
+        self.assertEqual(1, len(opss))
 
-        self.assertEqual(5, len(ops.models))
+        self.assertAlmostEqual(1234, opss[0].beam.energy_eV, 4)
+        self.assertAlmostEqual(0.0, opss[0].beam.diameter_m, 4)
+
+        self.assertEqual(5, len(opss[0].models))
 
     def testconvert_nolimit(self):
         # Base options
@@ -68,7 +62,10 @@ class TestPenelopeConverter(TestCase):
         ops.detectors['trajectories'] = TrajectoryDetector(False)
 
         # Convert
-        self.assertRaises(ConversionException, self.converter.convert , ops)
+        opss = self.converter.convert(ops)
+
+        # Test
+        self.assertEqual(0, len(opss))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
