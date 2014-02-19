@@ -10,7 +10,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import glob
-from ConfigParser import SafeConfigParser
+from configparser import ConfigParser
 from subprocess import check_call
 
 # Third party modules.
@@ -22,14 +22,14 @@ from paver.easy import task, cmdopts
 
 # Read configuration
 _rootdir = os.path.dirname(__file__)
-_filepaths = filter(os.path.exists,
-                    [os.path.join(_rootdir, 'pavement_%s.cfg' % os.name),
-                     os.path.join(_rootdir, 'pavement.cfg')])
+_filepaths = list(filter(os.path.exists,
+                         [os.path.join(_rootdir, 'pavement_%s.cfg' % os.name),
+                          os.path.join(_rootdir, 'pavement.cfg')]))
 if not _filepaths:
-    raise IOError, 'No configuration "pavement.cfg" found'
+    raise IOError('No configuration "pavement.cfg" found')
 
-config = SafeConfigParser()
-print 'Reading configuration from %s' % _filepaths[0]
+config = ConfigParser()
+print('Reading configuration from %s' % _filepaths[0])
 config.read(_filepaths[0])
 
 def _call_setup(filepath, *args):
@@ -38,7 +38,7 @@ def _call_setup(filepath, *args):
     filename = os.path.basename(filepath)
     process_args = ('python', filename) + args
 
-    print '--Running %s' % filepath
+    print('--Running %s' % filepath)
     check_call(process_args, cwd=cwd)
 
 def _call_core_setup(*args):
@@ -71,13 +71,13 @@ def _call_dependency_setups(*args):
     Calls setup.py of all dependencies.
     """
     # casinoTools
-    projectdir = config.get('projects', 'casinoTools')
+    projectdir = config.get('projects', 'pyCasinoTools')
     if projectdir:
-        filepath = os.path.join(projectdir, 'setup_casino2.py')
+        filepath = os.path.join(projectdir, 'setup.py')
         _call_setup(filepath, *args)
 
     # winxrayTools
-    projectdir = config.get('projects', 'winxrayTools')
+    projectdir = config.get('projects', 'pyWinxrayTools')
     if projectdir:
         filepath = os.path.join(projectdir, 'setup.py')
         _call_setup(filepath, *args)
