@@ -19,66 +19,98 @@ __copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import sys
-import traceback
 import threading
-import atexit
-from queue import Empty, Queue as _Queue
+import queue
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.results.results import Results
 
 # Globals and constants variables.
 
-class Queue(_Queue):
-    def __init__(self, maxsize=0):
-        _Queue.__init__(self, maxsize)
+class _Runner(object):
 
-        self._exc_info = None
+    def __init__(self, program, max_workers=1):
 
-    def are_all_tasks_done(self):
-        if self._exc_info is not None:
-            traceback.print_exception(*self._exc_info)
-            raise self._exc_info[1]
+        if max_workers < 1:
+            raise ValueError("Number of workers must be greater or equal to 1.")
 
-        with self.all_tasks_done:
-            return not self.unfinished_tasks
-
-    def raise_exception(self):
-        self._exc_info = sys.exc_info()
-
-    def join(self):
-        with self.all_tasks_done:
-            while self.unfinished_tasks:
-                self.all_tasks_done.wait(1)
-
-                if self._exc_info is not None:
-                    traceback.print_exception(*self._exc_info)
-                    raise self._exc_info[1]
-
-class _Creator(object):
-
-    def __init__(self, program):
-        """
-        Creates a new creator to create simulation files of several simulations.
-
-        Use :meth:`put` to add simulation to the creation list and then use the
-        method :meth:`start` to start the creation.
-        The method :meth:`join` before closing an application to ensure that
-        all simulations were created and all workers are stopped.
-
-        :arg program: program used to run the simulations
-        """
         self._program = program
         self._converter = program.converter_class()
 
-        self._options_lookup = {}
-        self._options_names = []
-        self._queue_options = Queue()
+        self._queue_options = queue.Queue()
+        self._queue_results = queue.Queue()
 
-        atexit.register(self.close) # Ensures that the runner is properly closed
+        self._is_started = threading.Event()
+
+        self._dispatchers_options = set()
+        self._dispatchers_results = set()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exctype, value, tb):
+        self.close()
+        return False
+
+    def start(self):
+        """
+        Starts running the simulations.
+        """
+        if self._is_started.is_set():
+            raise RuntimeError('Runner already started')
+
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            dispatcher.start()
+
+        self._is_started.set()
+
+    def cancel(self):
+        """
+        Cancels all running simulations.
+        """
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            dispatcher.cancel()
+
+    def join(self):
+        """
+        Blocks until all options have been simulated.
+        """
+        self._queue_options.join()
+        self._queue_results.join()
+
+    def close(self):
+        """
+        Wait for simulation(s) to finish and closes the runner.
+        """
+        self.join()
+        self.cancel()
+
+    def is_alive(self):
+        """
+        Returns whether simulations are being executed.
+        """
+        return not self._queue_options.empty()
+
+    def report(self):
+        """
+        Returns a tuple of:
+
+          * counter of completed simulations
+          * the progress of *one* of the currently running simulations
+              (between 0.0 and 1.0)
+          * text indicating the status of *one* of the currently running
+              simulations
+        """
+        completed = 0.0 #len(self._options_names) - self._queue_options.unfinished_tasks
+
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            progress, status = dispatcher.report()
+            if progress > 0.0 and progress < 1.0: # active worker
+                return completed, progress, status
+
+        return completed, progress, status
 
     def put(self, options):
         """
@@ -98,67 +130,7 @@ class _Creator(object):
             raise ValueError('Options not compatible with this program')
 
         for options in list_options:
-            name = options.name
-            if name in self._options_names:
-                raise ValueError('An options with the name (%s) was already added' % name)
-
-            self._queue_options.put(options)
-            self._options_names.append(name)
-
-            self._options_lookup.setdefault(base_options, []).append(options.uuid)
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, exctype, value, tb):
-        self.close()
-
-    def start(self):
-        """
-        Starts running the simulations.
-        """
-        raise NotImplementedError
-
-    def stop(self):
-        """
-        Stops all running simulations.
-        The simulations can be restarted by calling :meth:`start`.
-        """
-        raise NotImplementedError
-
-    def close(self):
-        """
-        Stops all running simulations and closes the runner.
-        The runner cannot be restarted after calling :meth:`close`.
-        """
-        raise NotImplementedError
-
-    def is_alive(self):
-        """
-        Returns whether simulations are being executed.
-        """
-        return not self._queue_options.are_all_tasks_done()
-
-    def join(self):
-        """
-        Blocks until all options have been simulated.
-        """
-        self._queue_options.join()
-        self._options_names[:] = [] # clear
-
-    def report(self):
-        """
-        Returns a tuple of:
-
-          * counter of completed simulations
-          * the progress of *one* of the currently running simulations
-              (between 0.0 and 1.0)
-          * text indicating the status of *one* of the currently running
-              simulations
-        """
-        completed = len(self._options_names) - self._queue_options.unfinished_tasks
-        return completed, 0, ''
+            self._queue_options.put((base_options, options))
 
     @property
     def program(self):
@@ -167,79 +139,27 @@ class _Creator(object):
         """
         return self._program
 
-class _Runner(_Creator):
+class _RunnerDispatcher(threading.Thread):
 
     def __init__(self, program):
-        """
-        Creates a new runner to run several simulations.
-
-        Use :meth:`put` to add simulation to the run and then use the method
-        :meth:`start` to start the simulation(s).
-        Status of the simulations can be retrieved using the method
-        :meth:`report`.
-        The method :meth:`join` before closing an application to ensure that
-        all simulations were run and all workers are stopped.
-
-        :arg program: program used to run the simulations
-        """
-        _Creator.__init__(self, program)
-
-        self._queue_results = Queue()
-
-    def get_results(self):
-        """
-        Returns the results from the simulations.
-        This is a blocking method which calls :meth:`join` before returning
-        the results.
-        The order of the results may not match the order in which they were
-        put in queue.
-
-        :rtype: :class:`list` of :class:`.Results`
-        """
-        self.join()
-
-        # Get results from queue
-        raw_results = {}
-        while True:
-            try:
-                results = self._queue_results.get_nowait()
-                raw_results[results.options.uuid] = results
-            except Empty:
-                break
-
-        # Separate results
-        group_results = []
-        for base_options, uuids in self._options_lookup.items():
-            list_results = []
-            for uuid in uuids:
-                results = raw_results[uuid]
-                list_results.append((results.options, results[0]))
-
-            group_results.append(Results(base_options, list_results))
-
-        self._options_lookup.clear()
-
-        return group_results
-
-class _CreatorDispatcher(threading.Thread):
-
-    def __init__(self, program, queue_options):
         threading.Thread.__init__(self)
 
         self._program = program
-        self._queue_options = queue_options
 
-    def stop(self):
-        """
-        Stops running simulation.
-        """
-        pass
+        self._force_cancel = threading.Event()
+        self._is_cancelled = threading.Event()
 
-    def close(self):
+    def start(self):
+        if self._is_cancelled.is_set():
+            raise RuntimeError('Dispatcher already stopped')
+        threading.Thread.start(self)
+
+    def cancel(self):
         """
-        Stops running simulation and closes this dispatcher.
+        Cancels running simulation.
         """
-        pass
+        self._force_cancel.set()
+        self._is_cancelled.wait()
 
     def report(self):
         """
@@ -253,10 +173,221 @@ class _CreatorDispatcher(threading.Thread):
         """
         return 0.0, ''
 
-class _RunnerDispatcher(_CreatorDispatcher):
+class _RunnerOptionsDispatcher(_RunnerDispatcher):
 
     def __init__(self, program, queue_options, queue_results):
-        _CreatorDispatcher.__init__(self, program, queue_options)
+        _RunnerDispatcher.__init__(self, program)
+
+        self._queue_options = queue_options
+        self._queue_results = queue_results
+
+class _RunnerResultsDispatcher(_RunnerDispatcher):
+
+    def __init__(self, program, queue_results):
+        _RunnerDispatcher.__init__(self, program)
 
         self._queue_results = queue_results
+
+
+#class _Creator(object):
+#
+#    def __init__(self, program):
+#        """
+#        Creates a new creator to create simulation files of several simulations.
+#
+#        Use :meth:`put` to add simulation to the creation list and then use the
+#        method :meth:`start` to start the creation.
+#        The method :meth:`join` before closing an application to ensure that
+#        all simulations were created and all workers are stopped.
+#
+#        :arg program: program used to run the simulations
+#        """
+#        self._program = program
+#        self._converter = program.converter_class()
+#
+#        self._options_lookup = {}
+#        self._options_names = []
+#        self._queue_options = Queue()
+#
+#        atexit.register(self.close) # Ensures that the runner is properly closed
+#
+#    def put(self, options):
+#        """
+#        Puts an options in queue.
+#        The options are converted using the converter of this runner's program.
+#
+#        An :exc:`ValueError` is raised if an options with the same name was
+#        already added.
+#        This error is raised as options with the same name would lead to
+#        results been overwritten.
+#
+#        :arg options: options to be added to the queue
+#        """
+#        base_options = options
+#        list_options = self._converter.convert(base_options)
+#        if not list_options:
+#            raise ValueError('Options not compatible with this program')
+#
+#        for options in list_options:
+#            name = options.name
+#            if name in self._options_names:
+#                raise ValueError('An options with the name (%s) was already added' % name)
+#
+#            self._queue_options.put(options)
+#            self._options_names.append(name)
+#
+#            self._options_lookup.setdefault(base_options, []).append(options.uuid)
+#
+#    def __enter__(self):
+#        self.start()
+#        return self
+#
+#    def __exit__(self, exctype, value, tb):
+#        self.close()
+#
+#    def start(self):
+#        """
+#        Starts running the simulations.
+#        """
+#        raise NotImplementedError
+#
+#    def stop(self):
+#        """
+#        Stops all running simulations.
+#        The simulations can be restarted by calling :meth:`start`.
+#        """
+#        raise NotImplementedError
+#
+#    def close(self):
+#        """
+#        Stops all running simulations and closes the runner.
+#        The runner cannot be restarted after calling :meth:`close`.
+#        """
+#        raise NotImplementedError
+#
+#    def is_alive(self):
+#        """
+#        Returns whether simulations are being executed.
+#        """
+#        return not self._queue_options.are_all_tasks_done()
+#
+#    def join(self):
+#        """
+#        Blocks until all options have been simulated.
+#        """
+#        self._queue_options.join()
+#        self._options_names[:] = [] # clear
+#
+#    def report(self):
+#        """
+#        Returns a tuple of:
+#
+#          * counter of completed simulations
+#          * the progress of *one* of the currently running simulations
+#              (between 0.0 and 1.0)
+#          * text indicating the status of *one* of the currently running
+#              simulations
+#        """
+#        completed = len(self._options_names) - self._queue_options.unfinished_tasks
+#        return completed, 0, ''
+#
+#    @property
+#    def program(self):
+#        """
+#        Program of this runner.
+#        """
+#        return self._program
+
+#class _Runner(_Creator):
+#
+#    def __init__(self, program):
+#        """
+#        Creates a new runner to run several simulations.
+#
+#        Use :meth:`put` to add simulation to the run and then use the method
+#        :meth:`start` to start the simulation(s).
+#        Status of the simulations can be retrieved using the method
+#        :meth:`report`.
+#        The method :meth:`join` before closing an application to ensure that
+#        all simulations were run and all workers are stopped.
+#
+#        :arg program: program used to run the simulations
+#        """
+#        _Creator.__init__(self, program)
+#
+#        self._queue_results = Queue()
+#
+#    def get_results(self):
+#        """
+#        Returns the results from the simulations.
+#        This is a blocking method which calls :meth:`join` before returning
+#        the results.
+#        The order of the results may not match the order in which they were
+#        put in queue.
+#
+#        :rtype: :class:`list` of :class:`.Results`
+#        """
+#        self.join()
+#
+#        # Get results from queue
+#        raw_results = {}
+#        while True:
+#            try:
+#                results = self._queue_results.get_nowait()
+#                raw_results[results.options.uuid] = results
+#            except Empty:
+#                break
+#
+#        # Separate results
+#        group_results = []
+#        for base_options, uuids in self._options_lookup.items():
+#            list_results = []
+#            for uuid in uuids:
+#                results = raw_results[uuid]
+#                list_results.append((results.options, results[0]))
+#
+#            group_results.append(Results(base_options, list_results))
+#
+#        self._options_lookup.clear()
+#
+#        return group_results
+#
+#class _CreatorDispatcher(threading.Thread):
+#
+#    def __init__(self, program, queue_options):
+#        threading.Thread.__init__(self)
+#
+#        self._program = program
+#        self._queue_options = queue_options
+#
+#    def stop(self):
+#        """
+#        Stops running simulation.
+#        """
+#        pass
+#
+#    def close(self):
+#        """
+#        Stops running simulation and closes this dispatcher.
+#        """
+#        pass
+#
+#    def report(self):
+#        """
+#        Returns a tuple of:
+#
+#          * counter of completed simulations
+#          * the progress of *one* of the currently running simulations
+#              (between 0.0 and 1.0)
+#          * text indicating the status of *one* of the currently running
+#              simulations
+#        """
+#        return 0.0, ''
+#
+#class _RunnerDispatcher(_CreatorDispatcher):
+#
+#    def __init__(self, program, queue_options, queue_results):
+#        _CreatorDispatcher.__init__(self, program, queue_options)
+#
+#        self._queue_results = queue_results
 

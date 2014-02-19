@@ -28,9 +28,11 @@ from optparse import OptionParser, OptionGroup
 
 # Local modules.
 from pymontecarlo.settings import get_settings
-from pymontecarlo.fileformat.options.options import load as load_options
 
-from pymontecarlo.runner.local import LocalRunner, LocalCreator
+from pymontecarlo.fileformat.options.options import load as load_options
+from pymontecarlo.fileformat.results.results import save as save_results
+
+from pymontecarlo.runner.local import LocalRunner #, LocalCreator
 
 from pymontecarlo.ui.cli.console import Console, ProgressBar
 
@@ -134,7 +136,8 @@ def run(argv=None):
 
     # Setup
     if values.create:
-        runner = LocalCreator(selected_program, outputdir, overwrite, nbprocesses)
+        runner = None
+#        runner = LocalCreator(selected_program, outputdir, overwrite, nbprocesses)
     else:
         runner = LocalRunner(selected_program, outputdir, workdir, overwrite, nbprocesses)
 
@@ -142,20 +145,19 @@ def run(argv=None):
     if not quiet: progressbar.start()
 
     # Start simulation
-    for options in list_options:
-        runner.put(options)
+    with runner:
+        for options in list_options:
+            runner.put(options)
 
-    runner.start()
+        try:
+            while runner.is_alive():
+                counter, progress, status = runner.report()
+                if not quiet: progressbar.update(counter, progress, status)
+                time.sleep(1)
 
-    try:
-        while runner.is_alive():
-            counter, progress, status = runner.report()
-            if not quiet: progressbar.update(counter, progress, status)
-            time.sleep(1)
-    except Exception as ex:
-        console.print_exception(ex)
+        except Exception as ex:
+            console.print_exception(ex)
 
-    runner.close()
     if not quiet: progressbar.close()
 
     # Clean up
