@@ -4,6 +4,8 @@
 	<comment></comment>
 	<projects>
 		<project>penelope</project>
+		<project>pyCasinoTools</project>
+		<project>pyWinxrayTools</project>
 		<project>pyxray</project>
 	</projects>
 	<buildSpec>
