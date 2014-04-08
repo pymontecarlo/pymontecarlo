@@ -11,8 +11,7 @@ src/core/dist
 src/programs/*/build
 src/programs/*/dist
 
-lib/*
-dist/*
-
 syntax: regexp
 ^src/core/nose-1\.2\.1-py2\.7\.egg$
+^lib
+^dist

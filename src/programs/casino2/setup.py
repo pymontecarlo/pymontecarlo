@@ -14,6 +14,7 @@ from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
+from pymontecarlo.program.casino2.util.dist.command import bdist_deb_program
 
 # Globals and constants variables.
 
@@ -38,7 +39,7 @@ setup(name="pyMonteCarlo-Casino2",
 
       install_requires=['pyCasinoTools>=0.1'],
 
-      cmdclass={'clean': clean},
+      cmdclass={'clean': clean, 'bdist_deb_program': bdist_deb_program},
 
       entry_points={'pymontecarlo.program':
                         'casino2=pymontecarlo.program.casino2.config:program',
