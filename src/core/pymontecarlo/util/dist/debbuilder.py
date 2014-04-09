@@ -64,7 +64,7 @@ class ManPage(object):
         if self.long_description:
             lines.append('')
             lines.append('.SH DESCRIPTION')
-            lines.append(textwrap.fill(e(self.long_description), 80))
+            lines.append(e(self.long_description))
         if self.see_also:
             lines.append('')
             lines.append('.SH SEE ALSO')
@@ -99,7 +99,7 @@ class _DebBuilder(object):
     def __init__(self, package, fullname, version,
                  maintainer, authors,
                  section, short_description, long_description, date, license,
-                 homepage, priority='standard', depends=None):
+                 homepage, priority='standard', depends=None, recommends=None):
         self._package = package
         self._fullname = fullname
         self._version = version.rstrip('-1')
@@ -112,10 +112,8 @@ class _DebBuilder(object):
         self._license = license
         self._homepage = homepage
         self._priority = priority
-
-        if depends is None:
-            depends = ()
-        self._depends = tuple(depends)
+        self._depends = tuple(depends or ())
+        self._recommends = tuple(recommends or ())
 
     def _create_temp_dir(self, *args, **kwargs):
         return tempfile.mkdtemp()
@@ -140,6 +138,7 @@ class _DebBuilder(object):
                   'Priority': self._priority,
                   'Architecture': 'all',
                   'Depends': ', '.join(self._depends),
+                  'Recommends': ', '.join(self._recommends),
                   'Maintainer': self._maintainer,
                   'Description': description,
                   'Homepage': self._homepage,
