@@ -79,12 +79,6 @@ class Casino2DebBuilder(_DebBuilder):
                 if name in files:
                     return os.path.join(root, name)
 
-        os.makedirs(os.path.join(temp_dir, 'DEBIAN'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'bin'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', self._package))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'man', 'man1'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'doc', self._package))
-
         src_dir = os.path.join(temp_dir, 'zip')
         dst_dir = os.path.join(temp_dir, 'usr', 'share', self._package)
         for filename in os.listdir(src_dir):
@@ -126,6 +120,9 @@ class Casino2DebBuilder(_DebBuilder):
 
     def _build(self, temp_dir, *args, **kwargs):
         self._extract_zip(temp_dir, *args, **kwargs)
+
+        self._create_folder_structure(temp_dir, *args, **kwargs)
+
         self._reorganize_files(temp_dir, *args, **kwargs)
 
         lines = self._create_executable(temp_dir, *args, **kwargs)
@@ -146,8 +143,8 @@ class Casino2DebBuilder(_DebBuilder):
         lines = self._create_postrm(temp_dir, *args, **kwargs)
         self._write_postrm(lines, temp_dir, *args, **kwargs)
 
-        lines = self._create_man_page(temp_dir, *args, **kwargs)
-        self._write_man_page(lines, temp_dir, *args, **kwargs)
+        manpage = self._create_man_page(temp_dir, 'casino2', *args, **kwargs)
+        self._write_man_page(manpage, temp_dir, *args, **kwargs)
 
         lines = self._create_copyright(temp_dir, *args, **kwargs)
         self._write_copyright(lines, temp_dir, *args, **kwargs)
