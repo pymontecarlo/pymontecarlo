@@ -14,6 +14,7 @@ from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
+from pymontecarlo.program.monaco.util.dist.command import bdist_deb_program
 
 # Globals and constants variables.
 
@@ -35,7 +36,7 @@ setup(name="pyMonteCarlo-MONACO",
 
       packages=find_packages(),
 
-      cmdclass={'clean': clean},
+      cmdclass={'clean': clean, 'bdist_deb_program': bdist_deb_program},
 
       entry_points={'pymontecarlo.program':
                         'monaco=pymontecarlo.program.monaco.config:program',
