@@ -74,6 +74,11 @@ class _PenelopeProgramDebBuilder(_PenelopeDebBuilder):
         control['Architecture'] = kwargs['arch']
         return control
 
+    def build(self, outputdir, *args, **kwargs):
+        if 'arch' not in kwargs:
+            raise ValueError('Plese specify the architecture: amd64 or i386')
+        _PenelopeDebBuilder.build(self, outputdir, *args, **kwargs)
+
 class PenelopePendbaseDebBuilder(_PenelopeDebBuilder):
 
     def __init__(self, zip_path):
