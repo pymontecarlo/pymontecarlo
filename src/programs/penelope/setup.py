@@ -14,6 +14,10 @@ from setuptools import setup
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
+from pymontecarlo.program._penelope.util.dist.command import \
+    bdist_deb_pendbase, bdist_deb_material
+from pymontecarlo.program.penepma.util.dist.command import \
+    bdist_deb_penepma
 
 # Globals and constants variables.
 
@@ -44,7 +48,10 @@ setup(name="pyMonteCarlo-PENELOPE",
       install_requires=['penelopelib>=0.1'],
       dependency_links=["https://bitbucket.org/pymontecarlo/pymontecarlo/downloads"],
 
-      cmdclass={'clean': clean},
+      cmdclass={'clean': clean,
+                'bdist_deb_pendbase': bdist_deb_pendbase,
+                'bdist_deb_material': bdist_deb_material,
+                'bdist_deb_penepma': bdist_deb_penepma},
 
       entry_points={'pymontecarlo.program':
                         ['penepma=pymontecarlo.program.penepma.config:program',
