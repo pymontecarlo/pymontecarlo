@@ -37,6 +37,40 @@ from deb_pkg_tools.package import build_package
 
 # Globals and constants variables.
 
+class ManPage(object):
+
+    def __init__(self, package, name, short_description='', synopsis='',
+                 long_description='', see_also=''):
+        self.package = package
+        self.name = name
+        self.short_description = short_description
+        self.synopsis = synopsis
+        self.long_description = long_description
+        self.see_also = see_also
+
+    def __str__(self):
+        def e(s):
+            return s.replace('-', '\\-')
+
+        lines = []
+        lines.append('.TH %s 1 "" "" %s' % (e(self.name), e(self.package)))
+        lines.append('')
+        lines.append('.SH NAME')
+        lines.append('%s \\- %s' % (e(self.name), e(self.short_description)))
+        if self.synopsis:
+            lines.append('')
+            lines.append('.SH SYNOPSIS')
+            lines.append('%s' % e(self.synopsis))
+        if self.long_description:
+            lines.append('')
+            lines.append('.SH DESCRIPTION')
+            lines.append(textwrap.fill(e(self.long_description), 80))
+        if self.see_also:
+            lines.append('')
+            lines.append('.SH SEE ALSO')
+            lines.append('%s' % e(self.see_also))
+        return '\n'.join(lines)
+
 def extract_exe_info(filepath):
     cwd = os.path.dirname(__file__)
     command = ['wine', 'sigcheck.exe', '-a', '-q', filepath]
@@ -85,6 +119,13 @@ class _DebBuilder(object):
 
     def _create_temp_dir(self, *args, **kwargs):
         return tempfile.mkdtemp()
+
+    def _create_folder_structure(self, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'))
+        os.makedirs(os.path.join(temp_dir, 'usr', 'bin'))
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', self._package))
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'man', 'man1'))
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'doc', self._package))
 
     def _create_control(self, temp_dir, *args, **kwargs):
         wrapper = textwrap.TextWrapper(initial_indent=' ',
@@ -180,39 +221,22 @@ class _DebBuilder(object):
             fp.write('\n'.join(lines))
         os.chmod(filepath, 0o555)
 
-    def _create_man_page(self, temp_dir, *args, **kwargs):
-        def e(s):
-            return s.replace('-', '\\-')
+    def _create_man_page(self, temp_dir, application_name, *args, **kwargs):
+        manpage = ManPage(self._package, application_name)
+        manpage.short_description = \
+            kwargs.get('short_description') or self._short_description
+        manpage.long_description = \
+            kwargs.get('long_description') or self._long_description
+        manpage.synopsis = \
+            kwargs.get('synopsis') or '.B %s' % application_name
+        manpage.see_also = self._homepage
+        return manpage
 
-        lines = []
-        lines.append('.TH %s 1' % e(self._package))
-        lines.append('')
-        lines.append('.SH NAME')
-        lines.append('%s \\- %s' % (e(self._package), e(self._short_description)))
-        lines.append('')
-        lines.append('.SH SYNOPSYS')
-        lines.append('.B %s' % e(self._package))
-        lines.append('')
-        lines.append('.SH DESCRIPTION')
-        lines.append(textwrap.fill(e(self._long_description), 80))
-        lines.append('')
-        lines.append('.SH AUTHOR')
-        for author in self._authors:
-            lines.append('%s' % e(author))
-        lines.append('')
-        lines.append('.SH COPYRIGHT ')
-        lines.append('Copyright (c) %i %s' % (self._date.year, ', '.join(map(e, self._authors))))
-        lines.append('')
-        lines.append('.SH SEE ALSO')
-        lines.append('%s' % e(self._homepage))
-        return lines
-
-    def _write_man_page(self, lines, temp_dir, *args, **kwargs):
+    def _write_man_page(self, manpage, temp_dir, *args, **kwargs):
         filepath = os.path.join(temp_dir, 'usr', 'share', 'man', 'man1',
-                                '%s.1.gz' % self._package)
+                                '%s.1.gz' % manpage.name)
         with gzip.open(filepath, 'wb', 9) as z:
-            for line in lines:
-                z.write(line.encode('ascii') + b'\n')
+            z.write(str(manpage).encode('ascii') + b'\n')
 
     def _create_copyright(self, temp_dir, *args, **kwargs):
         wrapper = textwrap.TextWrapper(initial_indent=' ',
