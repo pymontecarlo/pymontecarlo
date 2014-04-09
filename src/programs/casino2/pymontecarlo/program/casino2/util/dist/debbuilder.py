@@ -74,11 +74,6 @@ class Casino2DebBuilder(_DebBuilder):
                 z.extract(filename, dirpath)
 
     def _reorganize_files(self, temp_dir, *args, **kwargs):
-        def _find(name, path):
-            for root, _dirs, files in os.walk(path):
-                if name in files:
-                    return os.path.join(root, name)
-
         src_dir = os.path.join(temp_dir, 'zip')
         dst_dir = os.path.join(temp_dir, 'usr', 'share', self._package)
         for filename in os.listdir(src_dir):
