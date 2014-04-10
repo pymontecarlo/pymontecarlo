@@ -23,7 +23,7 @@ import os
 import subprocess
 import textwrap
 import gzip
-from io import BytesIO
+from io import BytesIO, StringIO
 import shutil
 import tempfile
 
@@ -48,7 +48,7 @@ class ManPage(object):
         self.long_description = long_description
         self.see_also = see_also
 
-    def __str__(self):
+    def write(self, fp):
         def e(s):
             return s.replace('-', '\\-')
 
@@ -69,7 +69,100 @@ class ManPage(object):
             lines.append('')
             lines.append('.SH SEE ALSO')
             lines.append('%s' % e(self.see_also))
-        return '\n'.join(lines)
+        fp.write('\n'.join(lines))
+
+class DesktopEntry(object):
+
+    TYPE_APPLICATION = 'Application'
+    TYPE_LINK = 'Link'
+    TYPE_DIRECTORY = 'Directory'
+
+    def __init__(self, type_, name, version=1.0, genericname=None,
+                 nodisplay=None, comment=None, icon=None, hidden=None,
+                 onlyshowin=None, notshowin=None, dbusactivatable=None,
+                 tryexec=None, exec_=None, path=None, terminal=None,
+                 actions=None, mimetype=None, categories=None, keywords=None,
+                 startupnotify=None, startupwmclass=None, url=None):
+        """
+        Creates a desktop entry.
+        """
+        if type_ is self.TYPE_LINK and url is None:
+            raise ValueError('url is required')
+
+        self.type_ = type_
+        self.name = name
+        self.version = version
+        self.genericname = genericname
+        self.nodisplay = nodisplay
+        self.comment = comment
+        self.icon = icon
+        self.hidden = hidden
+        self.onlyshowin = tuple(onlyshowin or ())
+        self.notshowin = tuple(notshowin or ())
+        self.dbusactivatable = dbusactivatable
+        self.tryexec = tryexec
+        self.exec_ = exec_
+        self.path = path
+        self.terminal = terminal
+        self.actions = actions
+        self.mimetype = tuple(mimetype or ())
+        self.categories = tuple(categories or ())
+        self.keywords = tuple(keywords or ())
+        self.startupnotify = startupnotify
+        self.startupwmclass = startupwmclass
+        self.url = url
+
+    def write(self, fp):
+        def b(v):
+            return 'true' if v else 'false'
+        def l(v):
+            return ';'.join(map(lambda x: x.replace(';', '\\;'), v)) + ';'
+
+        lines = []
+        lines.append('[Desktop Entry]')
+        lines.append('Type=%s' % self.type_)
+        lines.append('Version=%s' % self.version)
+        lines.append('Name=%s' % self.name)
+        if self.genericname is not None:
+            lines.append('GenericName=%s' % self.genericname)
+        if self.comment is not None:
+            lines.append('Comment=%s' % self.comment)
+        if self.nodisplay is not None:
+            lines.append('NoDisplay=%s' % b(self.nodisplay))
+        if self.icon is not None:
+            lines.append('Icon=%s' % self.icon)
+        if self.hidden is not None:
+            lines.append('Hidden=%s' % b(self.hidden))
+        if self.onlyshowin:
+            lines.append('OnlyShowIn=%s' % l(self.onlyshowin))
+        if self.notshowin:
+            lines.append('NotShowIn=%s' % l(self.notshowin))
+        if self.dbusactivatable is not None:
+            lines.append('DBusActivatable=%s' % b(self.dbusactivatable))
+        if self.tryexec is not None:
+            lines.append('TryExec=%s' % self.tryexec)
+        if self.exec_ is not None:
+            lines.append('Exec=%s' % self.exec_)
+        if self.path is not None:
+            lines.append('Path=%s' % self.path)
+        if self.terminal is not None:
+            lines.append('Terminal=%s' % b(self.terminal))
+        if self.actions:
+            lines.append('Actions=%s' % l(self.actions))
+        if self.mimetype:
+            lines.append('MimeType=%s' % l(self.mimetype))
+        if self.categories:
+            lines.append('Categories=%s' % l(self.categories))
+        if self.keywords:
+            lines.append('Keywords=%s' % l(self.keywords))
+        if self.startupnotify is not None:
+            lines.append('StartupNotify=%s' % b(self.startupnotify))
+        if self.startupwmclass is not None:
+            lines.append('StartupWMClass=%s' % self.startupwmclass)
+        if self.url is not None:
+            lines.append('URL=%s' % self.url)
+
+        fp.write('\n'.join(lines))
 
 def extract_exe_info(filepath):
     cwd = os.path.dirname(__file__)
@@ -100,54 +193,48 @@ class _DebBuilder(object):
                  maintainer, authors,
                  section, short_description, long_description, date, license,
                  homepage, priority='standard', depends=None, recommends=None):
-        self._package = package
-        self._fullname = fullname
-        self._version = version.rstrip('-1')
-        self._maintainer = maintainer
-        self._authors = tuple(authors)
-        self._section = section
-        self._short_description = short_description
-        self._long_description = long_description
-        self._date = date
-        self._license = license
-        self._homepage = homepage
-        self._priority = priority
-        self._depends = tuple(depends or ())
-        self._recommends = tuple(recommends or ())
+        self.package = package
+        self.fullname = fullname
+        self.version = version.rstrip('-1')
+        self.maintainer = maintainer
+        self.authors = tuple(authors)
+        self.section = section
+        self.short_description = short_description
+        self.long_description = long_description
+        self.date = date
+        self.license = license
+        self.homepage = homepage
+        self.priority = priority
+        self.depends = tuple(depends or ())
+        self.recommends = tuple(recommends or ())
 
     def _create_temp_dir(self, *args, **kwargs):
         return tempfile.mkdtemp()
-
-    def _create_folder_structure(self, temp_dir, *args, **kwargs):
-        os.makedirs(os.path.join(temp_dir, 'DEBIAN'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'bin'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', self._package))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'man', 'man1'))
-        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'doc', self._package))
 
     def _create_control(self, temp_dir, *args, **kwargs):
         wrapper = textwrap.TextWrapper(initial_indent=' ',
                                        subsequent_indent=' ',
                                        width=80)
         description = \
-            self._short_description + '\n' + wrapper.fill(self._long_description)
+            self.short_description + '\n' + wrapper.fill(self.long_description)
 
-        fields = {'Package': self._package,
-                  'Version': self._version + '-1',
-                  'Section': self._section,
-                  'Priority': self._priority,
+        fields = {'Package': self.package,
+                  'Version': self.version + '-1',
+                  'Section': self.section,
+                  'Priority': self.priority,
                   'Architecture': 'all',
-                  'Depends': ', '.join(self._depends),
-                  'Recommends': ', '.join(self._recommends),
-                  'Maintainer': self._maintainer,
+                  'Depends': ', '.join(self.depends),
+                  'Recommends': ', '.join(self.recommends),
+                  'Maintainer': self.maintainer,
                   'Description': description,
-                  'Homepage': self._homepage,
+                  'Homepage': self.homepage,
                   }
         control = Deb822()
         control.update(fields)
         return control
 
     def _write_control(self, control, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'), exist_ok=True)
         control_filepath = os.path.join(temp_dir, 'DEBIAN', 'control')
         with open(control_filepath, 'wb') as fp:
             control.dump(fp)
@@ -157,16 +244,17 @@ class _DebBuilder(object):
         lines.append('#!/bin/sh')
         lines.append('set -e')
         lines.append('if [ "$1" = "install" ] ; then')
-        lines.append('  echo "Installing %s"' % self._package)
+        lines.append('  echo "Installing %s"' % self.package)
         lines.append('fi')
         lines.append('')
         lines.append('if [ "$1" = "upgrade" ] ; then')
-        lines.append('  echo "Upgrading %s"' % self._package)
+        lines.append('  echo "Upgrading %s"' % self.package)
         lines.append('fi')
         lines.append('exit 0')
         return lines
 
     def _write_preinst(self, lines, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'), exist_ok=True)
         filepath = os.path.join(temp_dir, 'DEBIAN', 'preinst')
         with open(filepath, 'w') as fp:
             fp.write('\n'.join(lines))
@@ -177,12 +265,13 @@ class _DebBuilder(object):
         lines.append('#!/bin/sh')
         lines.append('set -e')
         lines.append('if [ "$1" = "configure" ] ; then')
-        lines.append('  echo "Configuring %s"' % self._package)
+        lines.append('  echo "Configuring %s"' % self.package)
         lines.append('fi')
         lines.append('exit 0')
         return lines
 
     def _write_postinst(self, lines, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'), exist_ok=True)
         filepath = os.path.join(temp_dir, 'DEBIAN', 'postinst')
         with open(filepath, 'w') as fp:
             fp.write('\n'.join(lines))
@@ -193,12 +282,13 @@ class _DebBuilder(object):
         lines.append('#!/bin/sh')
         lines.append('set -e')
         lines.append('if [ "$1" = "remove" ] ; then')
-        lines.append('  echo "Removing %s"' % self._package)
+        lines.append('  echo "Removing %s"' % self.package)
         lines.append('fi')
         lines.append('exit 0')
         return lines
 
     def _write_prerm(self, lines, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'), exist_ok=True)
         filepath = os.path.join(temp_dir, 'DEBIAN', 'prerm')
         with open(filepath, 'w') as fp:
             fp.write('\n'.join(lines))
@@ -209,33 +299,37 @@ class _DebBuilder(object):
         lines.append('#!/bin/sh')
         lines.append('set -e')
         lines.append('if [ "$1" = "purge" ] ; then')
-        lines.append('  echo "Purging %s"' % self._package)
+        lines.append('  echo "Purging %s"' % self.package)
         lines.append('fi')
         lines.append('exit 0')
         return lines
 
     def _write_postrm(self, lines, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'DEBIAN'), exist_ok=True)
         filepath = os.path.join(temp_dir, 'DEBIAN', 'postrm')
         with open(filepath, 'w') as fp:
             fp.write('\n'.join(lines))
         os.chmod(filepath, 0o555)
 
-    def _create_man_page(self, temp_dir, application_name, *args, **kwargs):
-        manpage = ManPage(self._package, application_name)
-        manpage.short_description = \
-            kwargs.get('short_description') or self._short_description
-        manpage.long_description = \
-            kwargs.get('long_description') or self._long_description
-        manpage.synopsis = \
-            kwargs.get('synopsis') or '.B %s' % application_name
-        manpage.see_also = self._homepage
-        return manpage
-
     def _write_man_page(self, manpage, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'man', 'man1'),
+                    exist_ok=True)
         filepath = os.path.join(temp_dir, 'usr', 'share', 'man', 'man1',
                                 '%s.1.gz' % manpage.name)
         with gzip.open(filepath, 'wb', 9) as z:
-            z.write(str(manpage).encode('ascii') + b'\n')
+            buf = StringIO()
+            manpage.write(buf)
+            z.write(buf.getvalue().encode('ascii'))
+
+    def _write_desktop_entry(self, entry, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'applications'),
+                    exist_ok=True)
+
+        name = os.path.basename(entry.exec_)
+        filepath = os.path.join(temp_dir, 'usr', 'share', 'applications',
+                                '%s.desktop' % name)
+        with open(filepath, 'wt') as fp:
+            entry.write(fp)
 
     def _create_copyright(self, temp_dir, *args, **kwargs):
         wrapper = textwrap.TextWrapper(initial_indent=' ',
@@ -244,40 +338,43 @@ class _DebBuilder(object):
 
         lines = []
         lines.append('Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/')
-        lines.append('Upstream-Name: %s' % self._fullname)
-        lines.append('Upstream-Contact: %s' % self._maintainer)
+        lines.append('Upstream-Name: %s' % self.fullname)
+        lines.append('Upstream-Contact: %s' % self.maintainer)
         lines.append('')
         lines.append('Files: *')
-        lines.append('Copyright: %i %s' % (self._date.year, ', '.join(self._authors)))
+        lines.append('Copyright: %i %s' % (self.date.year, ', '.join(self.authors)))
         lines.append('License: Custom')
-        lines.append(wrapper.fill(self._license))
+        lines.append(wrapper.fill(self.license))
         return lines
 
     def _write_copyright(self, lines, temp_dir, *args, **kwargs):
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'doc', self.package),
+                    exist_ok=True)
         filepath = os.path.join(temp_dir, 'usr', 'share', 'doc',
-                                self._package, 'copyright')
+                                self.package, 'copyright')
         with open(filepath, 'w') as fp:
             fp.write('\n'.join(lines))
 
     def _create_changelog(self, temp_dir, *args, **kwargs):
         changelog = Changelog()
         changelog.new_block()
-        changelog.set_version(self._version)
-        changelog.set_package(self._package)
+        changelog.set_version(self.version)
+        changelog.set_package(self.package)
         changelog.set_distributions('all')
         changelog.set_urgency('low')
-        changelog.set_author(self._maintainer)
-        changelog.set_date(_format_debian_date(self._date))
-        changelog.add_change('  * Release of %s' % self._version)
+        changelog.set_author(self.maintainer)
+        changelog.set_date(_format_debian_date(self.date))
+        changelog.add_change('  * Release of %s' % self.version)
         return changelog
 
     def _write_changelog(self, changelog, temp_dir, *args, **kwargs):
-        buf = BytesIO()
-        buf.write(changelog.__bytes__())
-
+        os.makedirs(os.path.join(temp_dir, 'usr', 'share', 'doc', self.package),
+                    exist_ok=True)
         filepath = os.path.join(temp_dir, 'usr', 'share', 'doc',
-                                self._package, 'changelog.Debian.gz')
+                                self.package, 'changelog.Debian.gz')
         with gzip.open(filepath, 'wb', 9) as z:
+            buf = BytesIO()
+            buf.write(changelog.__bytes__())
             z.write(buf.getvalue())
 
     def _build_deb(self, temp_dir, outputdir, *args, **kwargs):
