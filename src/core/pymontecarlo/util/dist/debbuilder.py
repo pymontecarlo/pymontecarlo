@@ -378,6 +378,7 @@ class _DebBuilder(object):
             z.write(buf.getvalue())
 
     def _build_deb(self, temp_dir, outputdir, *args, **kwargs):
+        os.makedirs(outputdir, exist_ok=True)
         build_package(temp_dir, outputdir)
 
     def _cleanup(self, temp_dir, *args, **kwargs):

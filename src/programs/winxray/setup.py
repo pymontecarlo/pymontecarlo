@@ -14,9 +14,16 @@ from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
-from pymontecarlo.program.winxray.util.dist.command import bdist_deb_program
+try:
+    from pymontecarlo.program.casino2.util.dist.command import bdist_deb_program
+except ImportError:
+    bdist_deb_program = None
 
 # Globals and constants variables.
+
+cmdclass = {'clean': clean}
+if bdist_deb_program is not None:
+    cmdclass['bdist_deb_program'] = bdist_deb_program
 
 setup(name="pyMonteCarlo-WinXRay",
       version='0.1',
@@ -38,7 +45,7 @@ setup(name="pyMonteCarlo-WinXRay",
 
       install_requires=['pyWinxrayTools>=0.1'],
 
-      cmdclass={'clean': clean, 'bdist_deb_program': bdist_deb_program},
+      cmdclass=cmdclass,
 
       entry_points={'pymontecarlo.program':
                         'winxray=pymontecarlo.program.winxray.config:program',

@@ -14,9 +14,16 @@ from setuptools import setup, find_packages
 
 # Local modules.
 from pymontecarlo.util.dist.command import clean
-from pymontecarlo.program.mcxray.util.dist.command import bdist_deb_program
+try:
+    from pymontecarlo.program.casino2.util.dist.command import bdist_deb_program
+except ImportError:
+    bdist_deb_program = None
 
 # Globals and constants variables.
+
+cmdclass = {'clean': clean}
+if bdist_deb_program is not None:
+    cmdclass['bdist_deb_program'] = bdist_deb_program
 
 setup(name="pyMonteCarlo-MCXray",
       version='0.1',
@@ -36,7 +43,7 @@ setup(name="pyMonteCarlo-MCXray",
 
       packages=find_packages(),
 
-      cmdclass={'clean': clean, 'bdist_deb_program': bdist_deb_program},
+      cmdclass=cmdclass,
 
 #      entry_points={'pymontecarlo.program':
 #                        'mcxray=pymontecarlo.program.mcxray.config:program',
