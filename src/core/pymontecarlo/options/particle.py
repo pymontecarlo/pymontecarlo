@@ -22,6 +22,7 @@ __all__ = ['ELECTRON',
            'PARTICLES']
 
 # Standard library modules.
+from functools import total_ordering
 
 # Third party modules.
 
@@ -29,6 +30,7 @@ __all__ = ['ELECTRON',
 
 # Globals and constants variables.
 
+@total_ordering
 class _Particle(object):
     def __init__(self, name, index, charge):
         self._name = name
@@ -43,6 +45,15 @@ class _Particle(object):
 
     def __int__(self):
         return self._index
+
+    def __eq__(self, other):
+        return self._index == other._index
+
+    def __lt__(self, other):
+        return self._index < other._index
+
+    def __hash__(self):
+        return hash((self.__class__, self._index))
 
     def __copy__(self):
         return self
