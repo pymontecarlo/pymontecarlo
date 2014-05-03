@@ -40,7 +40,7 @@ from pymontecarlo.options.particle import _Particle
 from pymontecarlo.options.particle import ELECTRON, PARTICLES
 
 def _direction_validator(value):
-    if value.u ** +value.v ** 2 + value.w ** 2 == 0:
+    if value[0] ** 2 + value[1] ** 2 + value[2] ** 2 == 0:
         raise ValueError('Direction cannot be a null vector')
 
 class _Beam(object, metaclass=ParameterizedMetaclass):
