@@ -41,7 +41,20 @@ _digit = Word(string.digits + ".")
 _elementRef = Group(_symbol + Optional(_digit, default="1"))
 CHEMICAL_FORMULA_PARSER = OneOrMore(_elementRef)
 
+class _constant_factory(object):
+
+    def __init__(self, value):
+        self._value = value
+
+    def __repr__(self):
+        return str(self._value)
+
+    def __call__(self, *args, **kwargs):
+        return self._value
+
 class Material(object):
+
+    DEFAULT_ABSORPTION_ENERGY_eV = 50.0
 
     def __init__(self, composition, name=None, density_kg_m3=None,
                  absorption_energy_eV=None):
@@ -80,9 +93,11 @@ class Material(object):
         self._density_kg_m3 = density_kg_m3
 
         if isinstance(absorption_energy_eV, numbers.Number):
-            self._absorption_energy_eV = defaultdict(lambda: absorption_energy_eV)
+            self._absorption_energy_eV = \
+                defaultdict(_constant_factory(absorption_energy_eV))
         else:
-            self._absorption_energy_eV = defaultdict(lambda: 50.0)
+            self._absorption_energy_eV = \
+                defaultdict(_constant_factory(self.DEFAULT_ABSORPTION_ENERGY_eV))
         if absorption_energy_eV is not None:
             self._absorption_energy_eV.update(absorption_energy_eV)
 
