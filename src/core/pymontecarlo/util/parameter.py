@@ -99,6 +99,14 @@ class Parameter(object):
         if not obj.__dict__.get(self.name, np.array([])).flags.writeable:
             raise ValueError("Frozen parameter")
 
+        values = self._parse_values(values)
+        self.validate(self._simplify_values(values))
+        obj.__dict__[self.name] = values
+
+    def _new(self, cls, clsname, bases, methods, name):
+        self._name = name
+
+    def _parse_values(self, values):
         # Hack when values are numpy record
         if hasattr(values, 'tolist'):
             values = values.tolist()
@@ -127,13 +135,7 @@ class Parameter(object):
             dtype = [(field, values.dtype) for field in self._fields]
             values = np.rec.fromarrays(values.transpose(), dtype)
 
-        # Validate
-        self._validate(self._simplify_values(values))
-
-        obj.__dict__[self.name] = values
-
-    def _new(self, cls, clsname, bases, methods, name):
-        self._name = name
+        return values
 
     def _simplify_values(self, values):
         if values.size == 1:
@@ -147,7 +149,7 @@ class Parameter(object):
             else:
                 return values
 
-    def _validate(self, values):
+    def validate(self, values):
         if not hasattr(values, '__iter__'):
             values = [values]
         for value in values:
@@ -166,6 +168,10 @@ class Parameter(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def dtype(self):
+        return self._dtype
 
 class Alias(object):
 
@@ -298,24 +304,24 @@ class UnitParameter(Parameter):
         print obj.distance_m # 1.56
     """
 
-    _prefix = {'y': 1e-24, # yocto
-               'z': 1e-21, # zepto
-               'a': 1e-18, # atto
-               'f': 1e-15, # femto
-               'p': 1e-12, # pico
-               'n': 1e-9, # nano
-               'u': 1e-6, # micro
-               'm': 1e-3, # mili
-               'c': 1e-2, # centi
-               'd': 1e-1, # deci
-               'k': 1e3, # kilo
-               'M': 1e6, # mega
-               'G': 1e9, # giga
-               'T': 1e12, # tera
-               'P': 1e15, # peta
-               'E': 1e18, # exa
-               'Z': 1e21, # zetta
-               'Y': 1e24} # yotta
+    _PREFIXES = [('y', 1e-24), # yocto
+                 ('z', 1e-21), # zepto
+                 ('a', 1e-18), # atto
+                 ('f', 1e-15), # femto
+                 ('p', 1e-12), # pico
+                 ('n', 1e-9), # nano
+                 ('u', 1e-6), # micro
+                 ('m', 1e-3), # mili
+                 ('c', 1e-2), # centi
+                 ('d', 1e-1), # deci
+                 ('k', 1e3), # kilo
+                 ('M', 1e6), # mega
+                 ('G', 1e9), # giga
+                 ('T', 1e12), # tera
+                 ('P', 1e15), # peta
+                 ('E', 1e18), # exa
+                 ('Z', 1e21), # zetta
+                 ('Y', 1e24)] # yotta
 
     def __init__(self, unit, validators=None, fields=None, doc=None):
         Parameter.__init__(self, float, validators, fields, doc)
@@ -323,13 +329,17 @@ class UnitParameter(Parameter):
 
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
-        methods[name + '_' + self._unit] = parameter
+        methods[name + '_' + self.unit] = parameter
 
-        for prefix, factor in self._prefix.items():
-            methods['%s_%s%s' % (name, prefix, self._unit)] = \
+        for prefix, factor in self._PREFIXES:
+            methods['%s_%s%s' % (name, prefix, self.unit)] = \
                 FactorAlias(parameter, factor)
 
-        Parameter._new(self, cls, clsname, bases, methods, name + "_" + self._unit)
+        Parameter._new(self, cls, clsname, bases, methods, name + "_" + self.unit)
+
+    @property
+    def unit(self):
+        return self._unit
 
 class TimeParameter(Parameter):
     """
