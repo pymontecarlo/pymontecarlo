@@ -275,7 +275,7 @@ class HorizontalLayers(_Geometry):
         """
         _Geometry.__init__(self, tilt_rad, rotation_rad)
 
-        if substrate_material is None:
+        if not substrate_material:
             substrate_material = VACUUM
         self.substrate = _HorizontalSubstrateBody(self, substrate_material)
 
@@ -286,11 +286,12 @@ class HorizontalLayers(_Geometry):
         self.__parameters__['substrate'].freeze(self)
 
     def __repr__(self):
+        layers = np.array(self.layers, ndmin=1)
         if self.has_substrate():
             return '<MultiLayers(substrate_material=%s, layers_count=%i)>' % \
-                (str(self.substrate.material), len(self.layers))
+                (str(self.substrate.material), len(layers))
         else:
-            return '<MultiLayers(No substrate, layers_count=%i)>' % len(self.layers)
+            return '<MultiLayers(No substrate, layers_count=%i)>' % len(layers)
 
     def has_substrate(self):
         """
@@ -327,13 +328,6 @@ class HorizontalLayers(_Geometry):
 
 class _VerticalBody(_Body):
 
-    depth = UnitParameter("m", range_validator(0.0, inclusive=False),
-                          doc="Depth (z thickness)")
-
-    def __init__(self, geometry, material, depth_m=float('inf')):
-        _Body.__init__(self, geometry, material)
-        self.depth_m = depth_m
-
     def _calculate_positions(self):
         layers = np.array(self.geometry.layers, ndmin=1)
         thicknesses = list(map(_THICKNESS_GETTER, layers))
@@ -351,13 +345,13 @@ class _VerticalBody(_Body):
 
     @property
     def zmin_m(self):
-        return -self.depth_m
+        return -self.geometry.depth_m
 
 class _VerticalLayer(_Layer, _VerticalBody):
 
-    def __init__(self, geometry, material, thickness_m, depth_m=float('inf')):
+    def __init__(self, geometry, material, thickness_m):
         _Layer.__init__(self, geometry, material, thickness_m)
-        _VerticalBody.__init__(self, geometry, material, depth_m)
+        _VerticalBody.__init__(self, geometry, material)
 
     @property
     def xmin_m(self):
@@ -379,9 +373,9 @@ class _VerticalLayer(_Layer, _VerticalBody):
 
 class _VerticalLeftSubstrateBody(_SubstrateBody, _VerticalBody):
 
-    def __init__(self, geometry, material, depth_m=float('inf')):
+    def __init__(self, geometry, material):
         _SubstrateBody.__init__(self, geometry, material)
-        _VerticalBody.__init__(self, geometry, material, depth_m)
+        _VerticalBody.__init__(self, geometry, material)
 
     @property
     def xmax_m(self):
@@ -390,9 +384,9 @@ class _VerticalLeftSubstrateBody(_SubstrateBody, _VerticalBody):
 
 class _VerticalRightSubstrateBody(_SubstrateBody, _VerticalBody):
 
-    def __init__(self, geometry, material, depth_m=float('inf')):
+    def __init__(self, geometry, material):
         _SubstrateBody.__init__(self, geometry, material)
-        _VerticalBody.__init__(self, geometry, material, depth_m)
+        _VerticalBody.__init__(self, geometry, material)
 
     @property
     def xmin_m(self):
@@ -406,9 +400,11 @@ class VerticalLayers(_Geometry):
     right_substrate = Parameter(_VerticalRightSubstrateBody,
                                 doc="Body of right side")
     layers = Parameter(_VerticalLayer, doc="Layers from left to right")
+    depth = UnitParameter("m", range_validator(0.0, inclusive=False),
+                          doc="Depth (z thickness)")
 
     def __init__(self, left_material, right_material, layers=None,
-                 tilt_rad=0.0, rotation_rad=0.0):
+                 depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a grain boundaries geometry.
         It consists of 0 or many layers in the y-z plane (normal parallel to x)
@@ -428,16 +424,19 @@ class VerticalLayers(_Geometry):
             layers = []
         self.layers = layers
 
+        self.depth_m = depth_m
+
         self.__parameters__['left_substrate'].freeze(self)
         self.__parameters__['right_substrate'].freeze(self)
 
     def __repr__(self):
+        layers = np.array(self.layers, ndmin=1)
         return '<GrainBoundaries(left_material=%s, right_materials=%s, layers_count=%i)>' % \
             (str(self.left_substrate.material),
              str(self.right_substrate.material),
-             len(self.layers))
+             len(layers))
 
-    def add_layer(self, material, thickness, depth_m=None):
+    def add_layer(self, material, thickness):
         """
         Adds a layer to the geometry.
         The layer is added after the previous layers.
@@ -447,9 +446,7 @@ class VerticalLayers(_Geometry):
 
         :arg thickness: thickness of the layer in meters
         """
-        if depth_m is None:
-            depth_m = self.left_substrate.depth_m
-        layer = _VerticalLayer(self, material, thickness, depth_m)
+        layer = _VerticalLayer(self, material, thickness)
 
         layers = np.array(self.layers, ndmin=1).tolist()
         layers.append(layer)
@@ -463,13 +460,6 @@ class VerticalLayers(_Geometry):
         bodies.add(self.left_substrate)
         bodies.add(self.right_substrate)
         return bodies
-
-    def set_depth_m(self, depth_m):
-        """
-        Sets the depth of all layers and substrates
-        """
-        for body in self.get_bodies():
-            body.depth_m = depth_m
 
 class _SphereBody(_Body):
 

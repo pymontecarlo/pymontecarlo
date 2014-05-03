@@ -266,7 +266,7 @@ class TestVerticalLayers(TestCase):
 
         self.g3 = VerticalLayers(Material.pure(29), Material.pure(30))
         self.g3.add_layer(Material.pure(31), 500.0)
-        self.g3.set_depth_m(400.0)
+        self.g3.depth_m = 400.0
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -291,13 +291,10 @@ class TestVerticalLayers(TestCase):
 
         # Vertical layers 3
         self.assertEqual('Copper', str(self.g3.left_substrate.material))
-        self.assertAlmostEqual(400.0, self.g3.left_substrate.depth_m, 4)
         self.assertEqual('Zinc', str(self.g3.right_substrate.material))
-        self.assertAlmostEqual(400.0, self.g3.right_substrate.depth_m, 4)
 
         self.assertEqual('Gallium', str(self.g3.layers.material))
         self.assertAlmostEqual(500.0, self.g3.layers.thickness_m, 4)
-        self.assertAlmostEqual(400.0, self.g3.layers.depth_m, 4)
 
     def testget_bodies(self):
         self.assertEqual(3, len(self.g1.get_bodies()))
