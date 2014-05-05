@@ -53,8 +53,9 @@ class _Programs(MutableSet):
         return x in self._programs.keys() or x in self._programs.values()
 
     def __iter__(self):
-        for alias, program in self._programs.items():
-            yield program or alias # If no program, return alias
+        for program in self._programs.values():
+            if program is not None:
+                yield program
 
     def __len__(self):
         return len(self._programs)
