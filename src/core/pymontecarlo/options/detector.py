@@ -83,18 +83,18 @@ class _Detector(object, metaclass=ParameterizedMetaclass):
         return '%s' % camelcase_to_words(self.__class__.__name__)
 
 def _elevation_validator(value):
-    if value.lower >= value.upper:
+    if value[0] >= value[1]:
         raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
-                         (value.lower, value.upper))
-    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value.lower)
-    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value.upper)
+                         (value[0], value[1]))
+    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value[0])
+    range_validator(-HALFPI - TOLERANCE, HALFPI + TOLERANCE)(value[1])
 
 def _azimuth_validator(value):
-    if value.lower >= value.upper:
+    if value[0] >= value[1]:
         raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
-                         (value.lower, value.upper))
-    range_validator(0, TWOPI + TOLERANCE)(value.lower)
-    range_validator(0, TWOPI + TOLERANCE)(value.upper)
+                         (value[0], value[1]))
+    range_validator(0, TWOPI + TOLERANCE)(value[0])
+    range_validator(0, TWOPI + TOLERANCE)(value[1])
 
 class _DelimitedDetector(_Detector):
 
@@ -135,7 +135,7 @@ class _DelimitedDetector(_Detector):
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0)' % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
@@ -189,7 +189,7 @@ class _ChannelsDetector(_Detector):
     def __repr__(self):
         return '<%s(channels=%s)>' % (self.__class__.__name__, self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__), self.channels)
 
@@ -220,7 +220,7 @@ class _SpatialDetector(_Detector):
              self.ylimits_m.lower, self.ylimits_m.upper, self.ybins,
              self.zlimits_m.lower, self.zlimits_m.upper, self.zbins)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (x=%s to %s nm (%s), y=%s to %s nm (%s), z=%s to %s nm (%s))" % \
             (camelcase_to_words(self.__class__.__name__),
              self.xlimits_m.lower * 1e9, self.xlimits_m.upper * 1e9, self.xbins,
@@ -228,11 +228,11 @@ class _SpatialDetector(_Detector):
              self.zlimits_m.lower * 1e9, self.zlimits_m.upper * 1e9, self.zbins)
 
 def _energy_limit_validator(value):
-    if value.lower >= value.upper:
+    if value[0] >= value[1]:
         raise ValueError("Lower value '%s' greater or equal to upper value '%s'" % \
-                         (value.lower, value.upper))
-    range_validator(0.0)(value.lower)
-    range_validator(0.0)(value.upper)
+                         (value[0], value[1]))
+    range_validator(0.0)(value[0])
+    range_validator(0.0)(value[1])
 
 class _EnergyDetector(_ChannelsDetector):
 
@@ -248,7 +248,7 @@ class _EnergyDetector(_ChannelsDetector):
             (self.__class__.__name__,
              self.limits_eV.lower, self.limits_eV.upper, self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (limits=%s to %s eV, channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
              self.limits_eV.lower, self.limits_eV.upper, self.channels)
@@ -264,7 +264,7 @@ class _AngularDetector(_ChannelsDetector):
             (self.__class__.__name__,
              self.limits_rad.lower, self.limits_rad.upper, self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (limits=%s to %s \u00b0, channels=%s)>" % \
             (camelcase_to_words(self.__class__.__name__),
              self.limits_rad.lower, self.limits_rad.upper, self.channels)
@@ -284,7 +284,7 @@ class _AzimuthalAngularDetector(_AngularDetector):
 
     def __init__(self, channels, limits_rad=(0, TWOPI)):
         _AngularDetector.__init__(self, channels, limits_rad)
-#
+
 class _PhotonDelimitedDetector(_DelimitedDetector):
     pass
 
@@ -337,7 +337,7 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
              self.limits_eV.lower, self.limits_eV.upper,
              self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, limits=%s to %s eV, channels=%s)" % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
@@ -363,7 +363,7 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
              self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
@@ -388,7 +388,7 @@ class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
              self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
             (self.__class__.__name__,
              self.elevation_deg.lower, self.elevation_deg.upper,
@@ -420,7 +420,7 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
              self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.xbins, self.ybins, self.zbins)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, bins=(%s, %s, %s))' % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
@@ -473,7 +473,7 @@ class TrajectoryDetector(_Detector):
         prep = 'with' if self.secondary else 'without'
         return '<%s(%s secondary particles)>' % (self.__class__.__name__, prep)
 
-    def __unicode__(self):
+    def __str__(self):
         prep = 'with' if self.secondary else 'without'
         return '%s (%s secondary particles)' % \
             (camelcase_to_words(self.__class__.__name__), prep)
