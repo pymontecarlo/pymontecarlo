@@ -31,11 +31,14 @@ from pyxray.transition import Transition
 # Local modules.
 from pymontecarlo.util.parameter import \
     ParameterizedMetaclass, Parameter, TimeParameter, range_validator
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
 class _Limit(object, metaclass=ParameterizedMetaclass):
-    pass
+
+    def __str__(self):
+        return '%s' % camelcase_to_words(self.__class__.__name__)
 
 class _TransitionLimit(_Limit):
 
@@ -55,6 +58,10 @@ class TimeLimit(_Limit):
     def __repr__(self):
         return '<TimeLimit(time=%s s)>' % self.time_s
 
+    def __str__(self):
+        return '%s (time=%s s)' % \
+            (camelcase_to_words(self.__class__.__name__), self.time_s)
+
 class ShowersLimit(_Limit):
 
     showers = Parameter(np.int, range_validator(1),
@@ -65,6 +72,10 @@ class ShowersLimit(_Limit):
 
     def __repr__(self):
         return '<ShowersLimit(showers=%s)>' % self.showers
+
+    def __str__(self):
+        return '%s (showers=%s)' % \
+            (camelcase_to_words(self.__class__.__name__), self.showers)
 
 class UncertaintyLimit(_TransitionLimit):
 
@@ -79,3 +90,8 @@ class UncertaintyLimit(_TransitionLimit):
     def __repr__(self):
         return '<UncertaintyLimit(%i transitions, uncertainty=%s %%)>' % \
             (len(self.transitions), self.uncertainty * 100.0)
+
+    def __str__(self):
+        return '%s (%i transitions, uncertainty=%s %%)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             len(self.transitions), self.uncertainty * 100.0)
