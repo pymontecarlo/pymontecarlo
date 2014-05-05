@@ -69,6 +69,11 @@ class OptionsXMLHandler(_XMLHandler):
 
         obj._uuid = element.attrib['uuid']
 
+        subelement = element.find('programs')
+        if subelement is not None:
+            for subsubelement in subelement:
+                obj.programs.add(subsubelement.text)
+
         subelement = element.find('beam')
         if subelement is None:
             raise ValueError("Element 'beam' not found")
@@ -115,6 +120,11 @@ class OptionsXMLHandler(_XMLHandler):
         element.set('version', self.VERSION)
         element.set('name', obj.name)
         element.set('uuid', obj._uuid or 'xsi:nil')
+
+        subelement = etree.SubElement(element, 'programs')
+        for alias in obj.programs.aliases():
+            subsubelement = etree.SubElement(subelement, 'program')
+            subsubelement.text = alias
 
         subelement = etree.SubElement(element, 'beam')
         for beam in np.array(obj.beam, ndmin=1):

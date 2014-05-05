@@ -17,6 +17,7 @@ import copy
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.program.test_config import DummyProgram
 
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import BackscatteredElectronEnergyDetector
@@ -31,6 +32,9 @@ class TestOptions(TestCase):
         TestCase.setUp(self)
 
         self.ops = Options(name="Test")
+
+        self.ops.programs.add(DummyProgram())
+
         self.ops.beam.energy_eV = 1234
 
         self.ops.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
@@ -41,6 +45,8 @@ class TestOptions(TestCase):
         TestCase.tearDown(self)
 
     def testskeleton(self):
+        self.assertEqual(1, len(self.ops.programs))
+
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
 
         self.assertEqual(1, len(self.ops.detectors))
@@ -62,6 +68,8 @@ class TestOptions(TestCase):
         uuid = self.ops.uuid
         ops = copy.copy(self.ops)
 
+        self.assertEqual(1, len(ops.programs))
+
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)
         self.assertEqual(self.ops.beam, ops.beam)
@@ -76,6 +84,8 @@ class TestOptions(TestCase):
     def testdeepcopy(self):
         uuid = self.ops.uuid
         ops = copy.deepcopy(self.ops)
+
+        self.assertEqual(1, len(ops.programs))
 
         self.assertAlmostEqual(1234, self.ops.beam.energy_eV, 4)
         self.assertAlmostEqual(1234, ops.beam.energy_eV, 4)

@@ -22,6 +22,7 @@ __all__ = ['Options']
 # Standard library modules.
 import uuid
 from copy import deepcopy
+from collections import MutableSet
 
 # Third party modules.
 
@@ -33,11 +34,53 @@ from pymontecarlo.options.detector import _Detector
 from pymontecarlo.options.limit import _Limit
 from pymontecarlo.options.model import Model
 
+from pymontecarlo.program.config import Program
+
+from pymontecarlo.settings import get_settings
+
 from pymontecarlo.util.parameter import \
     (ParameterizedMetaclass, Parameter, ParameterizedMutableMapping,
      ParameterizedMutableSet)
 
 # Globals and constants variables.
+
+class _Programs(MutableSet):
+
+    def __init__(self):
+        self._programs = {}
+
+    def __contains__(self, x):
+        return x in self._programs.keys() or x in self._programs.values()
+
+    def __iter__(self):
+        for alias, program in self._programs.items():
+            yield program or alias # If no program, return alias
+
+    def __len__(self):
+        return len(self._programs)
+
+    def __repr__(self):
+        return '<Programs(%s)>' % ','.join(map(str, self))
+
+    def add(self, value):
+        if isinstance(value, Program):
+            alias = value.alias
+            program = value
+        else:
+            alias = value
+            try:
+                program = get_settings().get_program(alias, validate=False)
+            except ValueError:
+                program = None
+        self._programs[alias] = program
+
+    def discard(self, value):
+        if isinstance(value, Program):
+            value = value.alias
+        self._programs.pop(value)
+
+    def aliases(self):
+        return iter(self._programs.keys())
 
 class _Detectors(ParameterizedMutableMapping):
 
@@ -106,6 +149,8 @@ class Options(object, metaclass=ParameterizedMetaclass):
         self._name = name
         self._uuid = uuid.uuid4().hex
 
+        self._programs = _Programs()
+
         self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
         self.geometry = Substrate(Material.pure(79)) # Au substrate
 
@@ -153,4 +198,8 @@ class Options(object, metaclass=ParameterizedMetaclass):
     @property
     def uuid(self):
         return self._uuid
+
+    @property
+    def programs(self):
+        return self._programs
 
