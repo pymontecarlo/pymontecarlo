@@ -40,7 +40,8 @@ from pymontecarlo.ui.gui.util.widget import \
     UnitComboBox, MultiNumericalLineEdit, AngleComboBox
 from pymontecarlo.ui.gui.util.tango import color as c, getIcon
 from pymontecarlo.ui.gui.util.layout import merge_formlayout
-from pymontecarlo.ui.gui.options.options import _ExpandableOptionsWizardPage
+from pymontecarlo.ui.gui.options.wizard.options import \
+    _ExpandableOptionsWizardPage
 
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector, _EnergyDetector,
@@ -945,7 +946,7 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         cb_model.clear()
 
         # Populate combo box
-        it = self._iter_widgets('pymontecarlo.ui.gui.options.detector',
+        it = self._iter_widgets('pymontecarlo.ui.gui.options.wizard.detector',
                                 'DETECTORS')
         for clasz, widget_class, programs in it:
             widget = widget_class()

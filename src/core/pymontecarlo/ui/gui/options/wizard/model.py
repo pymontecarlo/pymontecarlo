@@ -29,7 +29,8 @@ from PySide.QtCore import \
     Qt, QModelIndex, QAbstractTableModel, QAbstractListModel
 
 # Local modules.
-from pymontecarlo.ui.gui.options.options import _ExpandableOptionsWizardPage
+from pymontecarlo.ui.gui.options.wizard.options import \
+    _ExpandableOptionsWizardPage
 from pymontecarlo.ui.gui.util.tango import getIcon
 
 # Globals and constants variables.

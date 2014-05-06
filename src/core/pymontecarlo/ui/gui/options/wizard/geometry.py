@@ -37,9 +37,10 @@ from pymontecarlo.ui.gui.util.parameter import \
 from pymontecarlo.ui.gui.util.widget import \
     MultiNumericalLineEdit, NumericalValidator, UnitComboBox
 from pymontecarlo.ui.gui.util.tango import getIcon, color as c
-from pymontecarlo.ui.gui.options.material import \
+from pymontecarlo.ui.gui.options.wizard.material import \
     MaterialListWidget, MaterialListDialog, MaterialDialog
-from pymontecarlo.ui.gui.options.options import _ExpandableOptionsWizardPage
+from pymontecarlo.ui.gui.options.wizard.options import \
+    _ExpandableOptionsWizardPage
 
 from pymontecarlo.options.geometry import \
     (_Geometry, Substrate, _SubstrateBody, Inclusion, _InclusionBody,
@@ -626,7 +627,7 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
             self._wdg_geometry.removeWidget(self._wdg_geometry.widget(i))
 
         # Populate combo box
-        it = self._iter_widgets('pymontecarlo.ui.gui.options.geometry',
+        it = self._iter_widgets('pymontecarlo.ui.gui.options.wizard.geometry',
                                 'GEOMETRIES')
         for clasz, widget_class, programs in it:
             widget = widget_class()

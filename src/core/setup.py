@@ -12,7 +12,7 @@ import os
 import sys
 
 # Third party modules.
-from setuptools import setup
+from setuptools import setup, find_packages
 
 try:
     from cx_Freeze.dist import Distribution, build, build_exe
@@ -26,24 +26,14 @@ from pymontecarlo.util.dist.command import clean
 
 # Globals and constants variables.
 
-packages = ['pymontecarlo',
-            'pymontecarlo.fileformat',
-            'pymontecarlo.options',
-            'pymontecarlo.program',
-            'pymontecarlo.results',
-            'pymontecarlo.runner',
-            'pymontecarlo.ui',
-            'pymontecarlo.ui.cli',
-            'pymontecarlo.util']
-
+packages = find_packages()
 namespace_packages = ['pymontecarlo',
                       'pymontecarlo.program',
                       'pymontecarlo.runner']
 
 build_exe_options = {"packages": packages,
                      "namespace_packages": namespace_packages,
-                     "excludes": ["Tkinter"],
-                     "includes": ["wx", "wx.lib.pubsub"],
+                     "excludes": ["Tkinter", "wx", "scipy", "PyQt4"],
                      "init_script": os.path.abspath('initscripts/Console.py')}
 
 cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
@@ -105,7 +95,43 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'BackscatteredElectronPolarAngularResult = pymontecarlo.fileformat.results.result:BackscatteredElectronPolarAngularResultHDF5Handler',
                      'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
                 'pymontecarlo.fileformat.results.results':
-                    ['Results = pymontecarlo.fileformat.results.results:ResultsHDF5Handler'], }
+                    ['Results = pymontecarlo.fileformat.results.results:ResultsHDF5Handler'],
+
+                'pymontecarlo.ui.gui.options.wizard.beam':
+                    ['PencilBeam = pymontecarlo.ui.gui.options.wizard.beam:PencilBeamWidget',
+                     'GaussianBeam = pymontecarlo.ui.gui.options.wizard.beam:GaussianBeamWidget', ],
+                'pymontecarlo.ui.gui.options.wizard.geometry':
+                    ['Substrate = pymontecarlo.ui.gui.options.wizard.geometry:SubstrateWidget',
+                     'Inclusion = pymontecarlo.ui.gui.options.wizard.geometry:InclusionWidget',
+                     'HorizontalLayers = pymontecarlo.ui.gui.options.wizard.geometry:HorizontalLayersWidget',
+                     'VerticalLayers = pymontecarlo.ui.gui.options.wizard.geometry:VerticalLayersWidget',
+                     'Sphere = pymontecarlo.ui.gui.options.wizard.geometry:SphereWidget'],
+                'pymontecarlo.ui.gui.options.wizard.detector':
+                    ['BackscatteredElectronEnergyDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronEnergyDetectorWidget',
+                     'TransmittedElectronEnergyDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronEnergyDetectorWidget',
+                     'BackscatteredElectronPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronPolarAngularDetectorWidget',
+                     'TransmittedElectronPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronPolarAngularDetectorWidget',
+                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronAzimuthalAngularDetectorWidget',
+                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronAzimuthalAngularDetectorWidget',
+                     'BackscatteredElectronRadialDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronRadialDetectorWidget',
+                     'PhotonPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonPolarAngularDetectorWidget',
+                     'PhotonAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonAzimuthalAngularDetectorWidget',
+#                     'EnergyDepositedSpatialDetector = pymontecarlo.ui.gui.options.wizard.detector:EnergyDepositedSpatialDetectorWidget',
+                     'PhotonSpectrumDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonSpectrumDetectorWidget',
+                     'PhotonDepthDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonDepthDetectorWidget',
+                     'PhotonRadialDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonRadialDetectorWidget',
+                     'PhotonEmissionMapDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonEmissionMapDetectorWidget',
+                     'PhotonIntensityDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonIntensityDetectorWidget',
+                     'TimeDetector = pymontecarlo.ui.gui.options.wizard.detector:TimeDetectorWidget',
+                     'ElectronFractionDetector = pymontecarlo.ui.gui.options.wizard.detector:ElectronFractionDetectorWidget',
+                     'ShowersStatisticsDetector = pymontecarlo.ui.gui.options.wizard.detector:ShowersStatisticsDetectorWidget',
+                     'TrajectoryDetector = pymontecarlo.ui.gui.options.wizard.detector:TrajectoryDetectorWidget', ],
+                'pymontecarlo.ui.gui.options.wizard.limit':
+                    ['TimeLimit = pymontecarlo.ui.gui.options.wizard.limit:TimeLimitWidget',
+                     'ShowersLimit = pymontecarlo.ui.gui.options.wizard.limit:ShowersLimitWidget',
+#                     'UncertaintyLimit = pymontecarlo.ui.gui.options.wizard.limit:UncertaintyLimitWidget '
+                    ],
+                }
 
 
 entry_points['console_scripts'] = \
@@ -128,7 +154,7 @@ if has_cx_freeze:
         executables.append(_make_executable(target_name, script, True))
 
     distclass = Distribution
-    cmdclass = {'clean': clean, "build": build, "build_exe": build_exe},
+    cmdclass = {'clean': clean, "build": build, "build_exe": build_exe}
 else:
     distclass = None
     cmdclass = {'clean': clean}
@@ -150,15 +176,13 @@ setup(name="pyMonteCarlo",
                    'Topic :: Scientific/Engineering :: Physics'],
 
       packages=packages,
-      package_data={'pymontecarlo.util': ['data/*']},
       namespace_packages=namespace_packages,
 
       distclass=distclass,
       cmdclass=cmdclass,
 
-      setup_requires=['nose>=1.0'],
-      install_requires=['pyparsing>=2.0', 'numpy>=1.5',
-                        'h5py>=2.0.1', 'matplotlib>=1.1'],
+      setup_requires=['nose'],
+      install_requires=['pyparsing', 'numpy', 'h5py', 'matplotlib'],
 
       entry_points=entry_points,
       executables=executables,

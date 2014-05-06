@@ -34,7 +34,8 @@ from pymontecarlo.ui.gui.util.parameter import \
      AngleParameterWidget)
 from pymontecarlo.ui.gui.util.widget import UnitComboBox, MultiNumericalLineEdit
 from pymontecarlo.ui.gui.util.tango import color as c
-from pymontecarlo.ui.gui.options.options import _ExpandableOptionsWizardPage
+from pymontecarlo.ui.gui.options.wizard.options import \
+    _ExpandableOptionsWizardPage
 
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
 from pymontecarlo.options.particle import PARTICLES
@@ -378,7 +379,7 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
             self._wdg_beam.removeWidget(self._wdg_beam.widget(i))
 
         # Populate combo box
-        it = self._iter_widgets('pymontecarlo.ui.gui.options.beam', 'BEAMS')
+        it = self._iter_widgets('pymontecarlo.ui.gui.options.wizard.beam', 'BEAMS')
         for clasz, widget_class, programs in it:
             widget = widget_class()
             self._widgets[clasz] = widget

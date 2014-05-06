@@ -33,7 +33,8 @@ from PySide.QtCore import \
 from pymontecarlo.ui.gui.util.parameter import \
     _ParameterizedClassWidget, NumericalParameterWidget
 from pymontecarlo.ui.gui.util.tango import color as c, getIcon
-from pymontecarlo.ui.gui.options.options import _ExpandableOptionsWizardPage
+from pymontecarlo.ui.gui.options.wizard.options import \
+    _ExpandableOptionsWizardPage
 
 from pymontecarlo.options.limit import TimeLimit, ShowersLimit
 
@@ -387,7 +388,7 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         limits_text = {}
 
         # Populate combo box
-        it = self._iter_widgets('pymontecarlo.ui.gui.options.limit', 'LIMITS')
+        it = self._iter_widgets('pymontecarlo.ui.gui.options.wizard.limit', 'LIMITS')
         for limit_class, widget_class, programs in it:
             widget = widget_class()
             self._widgets[limit_class] = widget_class

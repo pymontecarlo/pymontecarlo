@@ -211,22 +211,22 @@ class OptionsWizard(QWizard):
         # Pages
         self.addPage(ProgramWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.beam import BeamWizardPage
+        from pymontecarlo.ui.gui.options.wizard.beam import BeamWizardPage
         self.addPage(BeamWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.geometry import GeometryWizardPage
+        from pymontecarlo.ui.gui.options.wizard.geometry import GeometryWizardPage
         self.addPage(GeometryWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.detector import DetectorWizardPage
+        from pymontecarlo.ui.gui.options.wizard.detector import DetectorWizardPage
         self.addPage(DetectorWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.limit import LimitWizardPage
+        from pymontecarlo.ui.gui.options.wizard.limit import LimitWizardPage
         self.addPage(LimitWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.model import ModelWizardPage
+        from pymontecarlo.ui.gui.options.wizard.model import ModelWizardPage
         self.addPage(ModelWizardPage(options))
 
-        from pymontecarlo.ui.gui.options.warning import WarningWizardPage
+        from pymontecarlo.ui.gui.options.wizard.warning import WarningWizardPage
         self.addPage(WarningWizardPage(options))
 
     def options(self):

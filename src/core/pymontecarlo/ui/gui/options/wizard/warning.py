@@ -26,7 +26,7 @@ from PySide.QtGui import QTableView, QHeaderView, QFrame, QHBoxLayout
 from PySide.QtCore import Qt, QAbstractTableModel
 
 # Local modules.
-from pymontecarlo.ui.gui.options.options import \
+from pymontecarlo.ui.gui.options.wizard.options import \
     _OptionsWizardPage, SimulationCountLabel
 
 # Globals and constants variables.
