@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`options` -- Options wizard and wizard page
+:mod:`options` -- Base wizard pages
 ================================================================================
 
 .. module:: options
-   :synopsis: Options wizard and wizard page
+   :synopsis: Base wizard pages
 
 .. inheritance-diagram:: pymontecarlo.ui.gui.options.wizard.options
 
@@ -23,13 +23,13 @@ from operator import attrgetter
 
 # Third party modules.
 from PySide.QtGui import \
-    QWizard, QWizardPage, QVBoxLayout, QFormLayout, QHBoxLayout, QLabel, QFrame
+    QWizardPage, QVBoxLayout, QFormLayout, QHBoxLayout, QLabel, QFrame
 from PySide.QtCore import Qt, Signal
 
 from pkg_resources import iter_entry_points
 
 # Local modules.
-from pymontecarlo.options.options import Options
+
 # Globals and constants variables.
 
 class SimulationCountLabel(QLabel):
@@ -130,63 +130,3 @@ class _ExpandableOptionsWizardPage(_OptionsWizardPage):
     def expandCount(self):
         raise NotImplementedError
 
-class OptionsWizard(QWizard):
-
-    def __init__(self, options=None, parent=None):
-        QWizard.__init__(self, parent)
-        if options is None:
-            self.setWindowTitle("Create new options")
-        else:
-            self.setWindowTitle("Modify options")
-
-        # Variables
-        if options is None:
-            options = Options()
-        self._options = options
-
-        # Pages
-        from pymontecarlo.ui.gui.options.wizard.program import ProgramWizardPage
-        self.addPage(ProgramWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.beam import BeamWizardPage
-        self.addPage(BeamWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.geometry import GeometryWizardPage
-        self.addPage(GeometryWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.detector import DetectorWizardPage
-        self.addPage(DetectorWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.limit import LimitWizardPage
-        self.addPage(LimitWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.model import ModelWizardPage
-        self.addPage(ModelWizardPage(options))
-
-        from pymontecarlo.ui.gui.options.wizard.warning import WarningWizardPage
-        self.addPage(WarningWizardPage(options))
-
-    def options(self):
-        return self._options
-
-def __run():
-    import sys
-    from PySide.QtGui import QApplication
-
-    app = QApplication(sys.argv)
-
-    from pymontecarlo.options.detector import TimeDetector
-    from pymontecarlo.options.limit import ShowersLimit
-    options = Options()
-    options.detectors['time'] = TimeDetector()
-    options.limits.add(ShowersLimit(1000))
-
-    wizard = OptionsWizard(options)
-    wizard.show()
-
-    app.exec_()
-
-    print(wizard.options())
-
-if __name__ == '__main__':
-    __run()
