@@ -97,39 +97,39 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                 'pymontecarlo.fileformat.results.results':
                     ['Results = pymontecarlo.fileformat.results.results:ResultsHDF5Handler'],
 
-                'pymontecarlo.ui.gui.options.wizard.beam':
-                    ['PencilBeam = pymontecarlo.ui.gui.options.wizard.beam:PencilBeamWidget',
-                     'GaussianBeam = pymontecarlo.ui.gui.options.wizard.beam:GaussianBeamWidget', ],
-                'pymontecarlo.ui.gui.options.wizard.geometry':
-                    ['Substrate = pymontecarlo.ui.gui.options.wizard.geometry:SubstrateWidget',
-                     'Inclusion = pymontecarlo.ui.gui.options.wizard.geometry:InclusionWidget',
-                     'HorizontalLayers = pymontecarlo.ui.gui.options.wizard.geometry:HorizontalLayersWidget',
-                     'VerticalLayers = pymontecarlo.ui.gui.options.wizard.geometry:VerticalLayersWidget',
-                     'Sphere = pymontecarlo.ui.gui.options.wizard.geometry:SphereWidget'],
-                'pymontecarlo.ui.gui.options.wizard.detector':
-                    ['BackscatteredElectronEnergyDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronEnergyDetectorWidget',
-                     'TransmittedElectronEnergyDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronEnergyDetectorWidget',
-                     'BackscatteredElectronPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronPolarAngularDetectorWidget',
-                     'TransmittedElectronPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronPolarAngularDetectorWidget',
-                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronAzimuthalAngularDetectorWidget',
-                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:TransmittedElectronAzimuthalAngularDetectorWidget',
-                     'BackscatteredElectronRadialDetector = pymontecarlo.ui.gui.options.wizard.detector:BackscatteredElectronRadialDetectorWidget',
-                     'PhotonPolarAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonPolarAngularDetectorWidget',
-                     'PhotonAzimuthalAngularDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonAzimuthalAngularDetectorWidget',
-#                     'EnergyDepositedSpatialDetector = pymontecarlo.ui.gui.options.wizard.detector:EnergyDepositedSpatialDetectorWidget',
-                     'PhotonSpectrumDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonSpectrumDetectorWidget',
-                     'PhotonDepthDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonDepthDetectorWidget',
-                     'PhotonRadialDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonRadialDetectorWidget',
-                     'PhotonEmissionMapDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonEmissionMapDetectorWidget',
-                     'PhotonIntensityDetector = pymontecarlo.ui.gui.options.wizard.detector:PhotonIntensityDetectorWidget',
-                     'TimeDetector = pymontecarlo.ui.gui.options.wizard.detector:TimeDetectorWidget',
-                     'ElectronFractionDetector = pymontecarlo.ui.gui.options.wizard.detector:ElectronFractionDetectorWidget',
-                     'ShowersStatisticsDetector = pymontecarlo.ui.gui.options.wizard.detector:ShowersStatisticsDetectorWidget',
-                     'TrajectoryDetector = pymontecarlo.ui.gui.options.wizard.detector:TrajectoryDetectorWidget', ],
-                'pymontecarlo.ui.gui.options.wizard.limit':
-                    ['TimeLimit = pymontecarlo.ui.gui.options.wizard.limit:TimeLimitWidget',
-                     'ShowersLimit = pymontecarlo.ui.gui.options.wizard.limit:ShowersLimitWidget',
-#                     'UncertaintyLimit = pymontecarlo.ui.gui.options.wizard.limit:UncertaintyLimitWidget '
+                'pymontecarlo.ui.gui.options.beam':
+                    ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
+                     'GaussianBeam = pymontecarlo.ui.gui.options.beam:GaussianBeamWidget', ],
+                'pymontecarlo.ui.gui.options.geometry':
+                    ['Substrate = pymontecarlo.ui.gui.options.geometry:SubstrateWidget',
+                     'Inclusion = pymontecarlo.ui.gui.options.geometry:InclusionWidget',
+                     'HorizontalLayers = pymontecarlo.ui.gui.options.geometry:HorizontalLayersWidget',
+                     'VerticalLayers = pymontecarlo.ui.gui.options.geometry:VerticalLayersWidget',
+                     'Sphere = pymontecarlo.ui.gui.options.geometry:SphereWidget'],
+                'pymontecarlo.ui.gui.options.detector':
+                    ['BackscatteredElectronEnergyDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronEnergyDetectorWidget',
+                     'TransmittedElectronEnergyDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronEnergyDetectorWidget',
+                     'BackscatteredElectronPolarAngularDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronPolarAngularDetectorWidget',
+                     'TransmittedElectronPolarAngularDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronPolarAngularDetectorWidget',
+                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronAzimuthalAngularDetectorWidget',
+                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronAzimuthalAngularDetectorWidget',
+                     'BackscatteredElectronRadialDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronRadialDetectorWidget',
+                     'PhotonPolarAngularDetector = pymontecarlo.ui.gui.options.detector:PhotonPolarAngularDetectorWidget',
+                     'PhotonAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:PhotonAzimuthalAngularDetectorWidget',
+#                     'EnergyDepositedSpatialDetector = pymontecarlo.ui.gui.options.detector:EnergyDepositedSpatialDetectorWidget',
+                     'PhotonSpectrumDetector = pymontecarlo.ui.gui.options.detector:PhotonSpectrumDetectorWidget',
+                     'PhotonDepthDetector = pymontecarlo.ui.gui.options.detector:PhotonDepthDetectorWidget',
+                     'PhotonRadialDetector = pymontecarlo.ui.gui.options.detector:PhotonRadialDetectorWidget',
+                     'PhotonEmissionMapDetector = pymontecarlo.ui.gui.options.detector:PhotonEmissionMapDetectorWidget',
+                     'PhotonIntensityDetector = pymontecarlo.ui.gui.options.detector:PhotonIntensityDetectorWidget',
+                     'TimeDetector = pymontecarlo.ui.gui.options.detector:TimeDetectorWidget',
+                     'ElectronFractionDetector = pymontecarlo.ui.gui.options.detector:ElectronFractionDetectorWidget',
+                     'ShowersStatisticsDetector = pymontecarlo.ui.gui.options.detector:ShowersStatisticsDetectorWidget',
+                     'TrajectoryDetector = pymontecarlo.ui.gui.options.detector:TrajectoryDetectorWidget', ],
+                'pymontecarlo.ui.gui.options.limit':
+                    ['TimeLimit = pymontecarlo.ui.gui.options.limit:TimeLimitWidget',
+                     'ShowersLimit = pymontecarlo.ui.gui.options.limit:ShowersLimitWidget',
+#                     'UncertaintyLimit = pymontecarlo.ui.gui.options.limit:UncertaintyLimitWidget '
                     ],
                 }
 

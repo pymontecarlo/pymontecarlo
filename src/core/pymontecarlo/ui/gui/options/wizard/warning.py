@@ -7,7 +7,7 @@
 .. module:: warning
    :synopsis: Warning wizard page
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.options.warning
+.. inheritance-diagram:: pymontecarlo.ui.gui.options.wizard.warning
 
 """
 
@@ -30,8 +30,6 @@ from pymontecarlo.ui.gui.options.wizard.options import \
     _OptionsWizardPage, SimulationCountLabel
 
 # Globals and constants variables.
-
-#--- Wizard page
 
 class WarningWizardPage(_OptionsWizardPage):
 

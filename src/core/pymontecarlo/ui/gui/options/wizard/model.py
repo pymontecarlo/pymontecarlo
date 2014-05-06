@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`model` -- Model widget
+:mod:`model` -- Model wizard page
 ================================================================================
 
 .. module:: model
-   :synopsis: Model widget
+   :synopsis: Model wizard page
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.options.model
+.. inheritance-diagram:: pymontecarlo.ui.gui.options.wizard.model
 
 """
 
@@ -34,8 +34,6 @@ from pymontecarlo.ui.gui.options.wizard.options import \
 from pymontecarlo.ui.gui.util.tango import getIcon
 
 # Globals and constants variables.
-
-#--- Wizard page
 
 class ModelWizardPage(_ExpandableOptionsWizardPage):
 

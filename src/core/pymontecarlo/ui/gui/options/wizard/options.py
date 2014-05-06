@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`options` -- Options widgets and wizard
+:mod:`options` -- Options wizard and wizard page
 ================================================================================
 
 .. module:: options
-   :synopsis: Options widgets and wizard
+   :synopsis: Options wizard and wizard page
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.options.options
+.. inheritance-diagram:: pymontecarlo.ui.gui.options.wizard.options
 
 """
 
@@ -19,20 +19,17 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import attrgetter, methodcaller
+from operator import attrgetter
 
 # Third party modules.
 from PySide.QtGui import \
-    (QWizard, QWizardPage, QVBoxLayout, QFormLayout, QCheckBox, QPushButton,
-     QHBoxLayout, QSpacerItem, QSizePolicy, QLabel, QFrame)
+    QWizard, QWizardPage, QVBoxLayout, QFormLayout, QHBoxLayout, QLabel, QFrame
 from PySide.QtCore import Qt, Signal
 
 from pkg_resources import iter_entry_points
 
 # Local modules.
 from pymontecarlo.options.options import Options
-from pymontecarlo.settings import get_settings
-
 # Globals and constants variables.
 
 class SimulationCountLabel(QLabel):
@@ -133,67 +130,6 @@ class _ExpandableOptionsWizardPage(_OptionsWizardPage):
     def expandCount(self):
         raise NotImplementedError
 
-class ProgramWizardPage(_OptionsWizardPage):
-
-    def __init__(self, options, parent=None):
-        _OptionsWizardPage.__init__(self, options, parent)
-        self.setTitle("Program")
-
-    def _initUI(self):
-        # Variable
-        settings = get_settings()
-
-        # Widgets
-        self._checkboxes = {}
-        for program in settings.get_available_programs():
-            self._checkboxes[program] = QCheckBox(program.name)
-
-        btn_selectall = QPushButton('Select all')
-        btn_deselectall = QPushButton('Deselect all')
-
-        # Layouts
-        layout = _OptionsWizardPage._initUI(self)
-        for checkbox in self._checkboxes.values():
-            layout.addRow(checkbox)
-
-        spacer = QSpacerItem(0, 1000, QSizePolicy.Expanding, QSizePolicy.Expanding)
-        layout.addItem(spacer)
-
-        sublayout = QHBoxLayout()
-        sublayout.addWidget(btn_selectall)
-        sublayout.addWidget(btn_deselectall)
-        layout.addRow(sublayout)
-
-        # Signals
-        btn_selectall.released.connect(self._onSelectAll)
-        btn_deselectall.released.connect(self._onDeselectAll)
-
-        return layout
-
-    def _onSelectAll(self):
-        for checkbox in self._checkboxes.values():
-            checkbox.setChecked(True)
-
-    def _onDeselectAll(self):
-        for checkbox in self._checkboxes.values():
-            checkbox.setChecked(False)
-
-    def initializePage(self):
-        programs = self.options().programs
-        for program, checkbox in self._checkboxes.items():
-            checkbox.setChecked(program in programs)
-
-    def validatePage(self):
-        if not any(map(methodcaller('isChecked'), self._checkboxes.values())):
-            return False
-
-        self.options().programs.clear()
-        for program, checkbox in self._checkboxes.items():
-            if checkbox.isChecked():
-                self.options().programs.add(program)
-
-        return True
-
 class OptionsWizard(QWizard):
 
     def __init__(self, options=None, parent=None):
@@ -209,6 +145,7 @@ class OptionsWizard(QWizard):
         self._options = options
 
         # Pages
+        from pymontecarlo.ui.gui.options.wizard.program import ProgramWizardPage
         self.addPage(ProgramWizardPage(options))
 
         from pymontecarlo.ui.gui.options.wizard.beam import BeamWizardPage

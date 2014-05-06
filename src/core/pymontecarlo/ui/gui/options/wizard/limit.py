@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`limit` -- Limit widgets
+:mod:`limit` -- Limit wizard page
 ================================================================================
 
 .. module:: limit
-   :synopsis: Limit widgets
+   :synopsis: Limit wizard page
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.options.limit
+.. inheritance-diagram:: pymontecarlo.ui.gui.options.wizard.limit
 
 """
 
@@ -30,70 +30,13 @@ from PySide.QtCore import \
     Qt, QModelIndex, QAbstractTableModel, QAbstractListModel
 
 # Local modules.
-from pymontecarlo.ui.gui.util.parameter import \
-    _ParameterizedClassWidget, NumericalParameterWidget
-from pymontecarlo.ui.gui.util.tango import color as c, getIcon
+from pymontecarlo.ui.gui.util.tango import getIcon
 from pymontecarlo.ui.gui.options.wizard.options import \
     _ExpandableOptionsWizardPage
-
-from pymontecarlo.options.limit import TimeLimit, ShowersLimit
 
 from pymontecarlo.util.parameter import expand
 
 # Globals and constants variables.
-
-#--- Limit widgets
-
-class _LimitWidget(_ParameterizedClassWidget):
-    pass
-
-class TimeLimitWidget(_LimitWidget):
-
-    def __init__(self, parent=None):
-        _LimitWidget.__init__(self, parent)
-        self.setAccessibleName('Time')
-
-    def _initUI(self):
-        # Widgets
-        self._txt_time = NumericalParameterWidget(TimeLimit.time_s)
-
-        # Layouts
-        layout = _LimitWidget._initUI(self)
-        layout.addRow(c('Time', 'blue'), self._txt_time)
-
-        return layout
-
-    def value(self):
-        return TimeLimit(time_s=self._txt_time.values())
-
-    def setValue(self, value):
-        if hasattr(value, 'time_s'):
-            self._txt_time.setValues(value.time_s)
-
-class ShowersLimitWidget(_LimitWidget):
-
-    def __init__(self, parent=None):
-        _LimitWidget.__init__(self, parent)
-        self.setAccessibleName('Showers')
-
-    def _initUI(self):
-        # Widgets
-        self._txt_showers = NumericalParameterWidget(ShowersLimit.showers)
-
-        # Layouts
-        layout = _LimitWidget._initUI(self)
-        layout.addRow(c('Number of electron showers', 'blue'), self._txt_showers)
-
-        return layout
-
-    def value(self):
-        return ShowersLimit(showers=self._txt_showers.values())
-
-    def setValue(self, value):
-        if hasattr(value, 'showers'):
-            self._txt_showers.setValues(value.showers)
-
-#--- Wizard page
 
 class _LimitDialog(QDialog):
 
@@ -388,7 +331,7 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         limits_text = {}
 
         # Populate combo box
-        it = self._iter_widgets('pymontecarlo.ui.gui.options.wizard.limit', 'LIMITS')
+        it = self._iter_widgets('pymontecarlo.ui.gui.options.limit', 'LIMITS')
         for limit_class, widget_class, programs in it:
             widget = widget_class()
             self._widgets[limit_class] = widget_class
