@@ -100,6 +100,10 @@ class ModelType(collections.Set):
     def __deepcopy__(self, memo=None):
         return self
 
+    @property
+    def name(self):
+        return self._name
+
 class Model(object):
 
     def __new__(cls, type, name, reference=''): # @ReservedAssignment
