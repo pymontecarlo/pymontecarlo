@@ -109,6 +109,12 @@ class PhotonIntensityResult(_Result):
     def __contains__(self, transition):
         return self.has_intensity(transition)
 
+    def __len__(self):
+        return len(self._intensities)
+
+    def __iter__(self):
+        yield from self._intensities.keys()
+
     def _get_intensity(self, key, transition, absorption=True):
         if isinstance(transition, str):
             transition = from_string(transition)
@@ -458,6 +464,12 @@ class _PhotonDistributionResult(_Result):
         """
         _Result.__init__(self)
         self._distributions = distributions
+
+    def __len__(self):
+        return len(self._distributions)
+
+    def __iter__(self):
+        yield from self._distributions.keys()
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
