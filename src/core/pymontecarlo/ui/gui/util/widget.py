@@ -32,6 +32,7 @@ from PySide.QtCore import Signal
 import numpy as np
 
 # Local modules.
+import pymontecarlo.ui.gui.util.messagebox as messagebox
 
 # Globals and constants variables.
 
@@ -78,7 +79,10 @@ class _BrowseWidget(QWidget):
         else:
             self.pathChanged.emit(newpath)
 
-        self.setPath(newpath)
+        try:
+            self.setPath(newpath)
+        except Exception as ex:
+            messagebox.exception(self, ex)
 
     def setBaseDir(self, path):
         if not path:
@@ -131,7 +135,7 @@ class FileBrowseWidget(_BrowseWidget):
 
     def _showDialog(self, basedir):
         filter = ';;'.join(self.nameFilters())
-        return QFileDialog.getOpenFileName(self, "Browse file", basedir, filter)
+        return QFileDialog.getOpenFileName(self, "Browse file", basedir, filter)[0]
 
     def _validatePath(self, path):
         if not os.path.isfile(path):
