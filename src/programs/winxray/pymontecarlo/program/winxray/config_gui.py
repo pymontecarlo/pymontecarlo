@@ -20,64 +20,57 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-import wx
 
 # Local modules.
-from pymontecarlo.program.config_gui import GUI, ConfigurePanel
+from pymontecarlo.program.config_gui import GUI, _ConfigurePanelWidget
 from pymontecarlo.program.winxray.config import program
 
-from wxtools2.browse import FileBrowseCtrl
-from wxtools2.dialog import show_error_dialog
+from pymontecarlo.ui.gui.util.widget import FileBrowseWidget
 
 # Globals and constants variables.
 
-class _WinXRayConfigurePanel(ConfigurePanel):
+class _WinXRayConfigurePanelWidget(_ConfigurePanelWidget):
 
-    def _create_controls(self, sizer, settings):
-        # Controls
-        lbl_exe = wx.StaticText(self, label='Full path to WinXRay.exe')
+    def _initUI(self, settings):
+        # Widgets
+        self._brw_exe = FileBrowseWidget()
+        self._brw_exe.setNameFilter('Application files (*.exe)')
 
-        filetypes = [('Application files (*.exe)', 'exe')]
-        self._brw_exe = FileBrowseCtrl(self, filetypes=filetypes)
-
-        # Sizer
-        sizer.Add(lbl_exe, 0)
-        sizer.Add(self._brw_exe, 0, wx.GROW)
+        # Layouts
+        layout = _ConfigurePanelWidget._initUI(self, settings)
+        layout.addRow('Full path to WinXRay.exe', self._brw_exe)
 
         # Values
         if 'winxray' in settings:
             path = getattr(settings.winxray, 'exe', None)
             try:
-                self._brw_exe.SetPath(path)
+                self._brw_exe.setPath(path)
             except ValueError:
                 pass
 
-    def Validate(self):
-        if not ConfigurePanel.Validate(self):
-            return False
+        return layout
 
-        if not self._brw_exe.GetPath():
-            show_error_dialog(self, 'Please specify the WinXRay path')
+    def hasAcceptableInput(self):
+        if not self._brw_exe.path():
             return False
-        if not os.access(self._brw_exe.GetPath(), os.X_OK):
-            show_error_dialog(self, 'Specified file is not executable')
+        if not os.access(self._brw_exe.path(), os.X_OK):
             return False
-
         return True
 
-    def save(self, settings):
-        section = settings.add_section('winxray')
+    def updateSettings(self, settings):
+        section = _ConfigurePanelWidget.updateSettings(self, settings)
         section.exe = self._brw_exe.GetPath()
+        return section
 
 class _WinXRayGUI(GUI):
 
-    def create_configure_panel(self, parent, settings):
+    def create_configure_panel(self, parent=None):
         """
         Returns the configure panel for this program.
-        
+
         :arg parent: parent window
         :arg settings: settings object
         """
-        return _WinXRayConfigurePanel(parent, program, settings)
+        return _WinXRayConfigurePanelWidget(program, parent)
 
 gui = _WinXRayGUI()

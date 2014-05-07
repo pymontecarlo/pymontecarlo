@@ -20,64 +20,51 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-import wx
 
 # Local modules.
-from pymontecarlo.program.config_gui import GUI, ConfigurePanel
+from pymontecarlo.program.config_gui import GUI, _ConfigurePanelWidget
 from pymontecarlo.program.casino2.config import program
 
-from wxtools2.browse import FileBrowseCtrl
-from wxtools2.dialog import show_error_dialog
+from pymontecarlo.ui.gui.util.widget import FileBrowseWidget
 
 # Globals and constants variables.
 
-class _Casino2ConfigurePanel(ConfigurePanel):
+class _Casino2ConfigurePanelWidget(_ConfigurePanelWidget):
 
-    def _create_controls(self, sizer, settings):
-        # Controls
-        lbl_exe = wx.StaticText(self, label='Full path to WinCasino.exe')
+    def _initUI(self, settings):
+        # Widgets
+        self._brw_exe = FileBrowseWidget()
+        self._brw_exe.setNameFilter('Application files (*.exe)')
 
-        filetypes = [('Application files (*.exe)', 'exe')]
-        self._brw_exe = FileBrowseCtrl(self, filetypes=filetypes)
+        # Layouts
+        layout = _ConfigurePanelWidget._initUI(self, settings)
+        layout.addRow('Full path to WinCasino.exe', self._brw_exe)
 
-        # Sizer
-        sizer.Add(lbl_exe, 0)
-        sizer.Add(self._brw_exe, 0, wx.GROW)
-
-        # Values
+        # Defaults
         if 'casino2' in settings:
             path = getattr(settings.casino2, 'exe', None)
             try:
-                self._brw_exe.SetPath(path)
+                self._brw_exe.setPath(path)
             except ValueError:
                 pass
 
-    def Validate(self):
-        if not ConfigurePanel.Validate(self):
-            return False
+        return layout
 
-        if not self._brw_exe.GetPath():
-            show_error_dialog(self, 'Please specify the WinCasino path')
+    def hasAcceptableInput(self):
+        if not self._brw_exe.path():
             return False
-        if not os.access(self._brw_exe.GetPath(), os.X_OK):
-            show_error_dialog(self, 'Specified file is not executable')
+        if not os.access(self._brw_exe.path(), os.X_OK):
             return False
-
         return True
 
-    def save(self, settings):
-        section = settings.add_section('casino2')
-        section.exe = self._brw_exe.GetPath()
+    def updateSettings(self, settings):
+        section = _ConfigurePanelWidget.updateSettings(self, settings)
+        section.exe = self._brw_exe.path()
+        return section
 
 class _Casino2GUI(GUI):
 
-    def create_configure_panel(self, parent, settings):
-        """
-        Returns the configure panel for this program.
-        
-        :arg parent: parent window
-        :arg settings: settings object
-        """
-        return _Casino2ConfigurePanel(parent, program, settings)
+    def create_configure_panel(self, parent=None):
+        return _Casino2ConfigurePanelWidget(program, parent)
 
 gui = _Casino2GUI()

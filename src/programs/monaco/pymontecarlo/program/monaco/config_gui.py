@@ -20,66 +20,60 @@ __license__ = "GPL v3"
 import os
 
 # Third party modules.
-import wx
 
 # Local modules.
-from pymontecarlo.program.config_gui import GUI, ConfigurePanel
+from pymontecarlo.program.config_gui import GUI, _ConfigurePanelWidget
 from pymontecarlo.program.monaco.config import program
 
-from wxtools2.browse import DirBrowseCtrl
-from wxtools2.dialog import show_error_dialog
+from pymontecarlo.ui.gui.util.widget import DirBrowseWidget
 
 # Globals and constants variables.
 
-class _MonacoConfigurePanel(ConfigurePanel):
+class _MonacoConfigurePanelWidget(_ConfigurePanelWidget):
 
-    def _create_controls(self, sizer, settings):
-        # Controls
-        lbl_basedir = wx.StaticText(self, label='Full path to base directory')
+    def _initUI(self, settings):
+        # Widgets
+        self._brw_basedir = DirBrowseWidget()
 
-        self._brw_basedir = DirBrowseCtrl(self)
-
-        # Sizer
-        sizer.Add(lbl_basedir, 0)
-        sizer.Add(self._brw_basedir, 0, wx.GROW)
+        # Layouts
+        layout = _ConfigurePanelWidget._initUI(self, settings)
+        layout.addRow('Full path to base directory', self._brw_basedir)
 
         # Values
         if 'monaco' in settings:
             path = getattr(settings.monaco, 'basedir', None)
             try:
-                self._brw_basedir.SetPath(path)
+                self._brw_basedir.setPath(path)
             except ValueError:
                 pass
 
-    def Validate(self):
-        if not ConfigurePanel.Validate(self):
-            return False
+        return layout
 
-        basedir = self._brw_basedir.GetPath()
+    def hasAcceptableInput(self):
+        basedir = self._brw_basedir.path()
         if not basedir:
-            show_error_dialog(self, 'Please specify the base directory')
             return False
 
         mccli32_exe = os.path.join(basedir, 'Mccli32.exe')
         if not os.path.isfile(mccli32_exe):
-            show_error_dialog(self, "No Mccli32.exe in Monaco base directory (%s)" % basedir)
             return False
 
         return True
 
-    def save(self, settings):
-        section = settings.add_section('monaco')
+    def updateSettings(self, settings):
+        section = _ConfigurePanelWidget.updateSettings(self, settings)
         section.basedir = self._brw_basedir.GetPath()
+        return section
 
 class _MonacoGUI(GUI):
 
-    def create_configure_panel(self, parent, settings):
+    def create_configure_panel(self, parent=None):
         """
         Returns the configure panel for this program.
-        
+
         :arg parent: parent window
         :arg settings: settings object
         """
-        return _MonacoConfigurePanel(parent, program, settings)
+        return _MonacoConfigurePanelWidget(program, parent)
 
 gui = _MonacoGUI()

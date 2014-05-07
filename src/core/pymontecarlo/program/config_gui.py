@@ -21,58 +21,57 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
-import wx
-from wx.lib.scrolledpanel import ScrolledPanel
+from PySide.QtGui import QWidget, QLabel, QFormLayout, QVBoxLayout
 
 # Local modules.
+from pymontecarlo.settings import get_settings
 
 # Globals and constants variables.
 
-class ConfigurePanel(ScrolledPanel):
+class _ConfigurePanelWidget(QWidget):
 
-    def __init__(self, parent, program, settings):
-        ScrolledPanel.__init__(self, parent)
+    def __init__(self, program, parent=None):
+        QWidget.__init__(self, parent)
 
         # Variables
         self._program = program
+        settings = get_settings()
 
         # Controls
-        lbl_program = wx.StaticText(self, label=program.name)
-        font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.BOLD)
-        lbl_program.SetFont(font)
+        lbl_program = QLabel(program.name)
+        font = lbl_program.font()
+        font.setBold(True)
+        font.setPointSize(14)
+        lbl_program.setFont(font)
 
         # Sizer
-        mainsizer = wx.BoxSizer(wx.VERTICAL)
-        mainsizer.Add(lbl_program, 0, wx.BOTTOM, 10)
+        layout = QVBoxLayout()
+        layout.addWidget(lbl_program)
+        layout.addLayout(self._initUI(settings))
+        layout.addStretch()
+        self.setLayout(layout)
 
-        self.SetSizer(mainsizer)
+    def _initUI(self, settings):
+        return QFormLayout()
 
-        # Extra controls
-        self._create_controls(mainsizer, settings)
+    def program(self):
+        return self._program
 
-        self.SetupScrolling(False, True)
-
-    def _create_controls(self, sizer, settings):
-        """
-        Adds extra controls to the panel.
-        """
-        lbl_none = wx.StaticText(self, label='No configuration required')
-        sizer.Add(lbl_none, 0)
-
-    def save(self, settings):
-        """
-        Validates and saves the information from this panel in the settings.
-        Returns ``True`` if the information were valid, ``False`` otherwise.
-        """
-        settings.add_section(self._program.alias)
+    def hasAcceptableInput(self):
         return True
+
+    def updateSettings(self, settings):
+        """
+        Update the settings from the information inside the widget
+        """
+        return settings.add_section(self.program().alias)
 
 class GUI(object):
 
-    def create_configure_panel(self, parent, settings):
+    def create_configure_panel(self, parent=None):
         """
         Returns the configure panel for this program.
-        
+
         :arg parent: parent window
         :arg settings: settings object
         """
