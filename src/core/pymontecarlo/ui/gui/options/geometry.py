@@ -36,8 +36,10 @@ from pymontecarlo.ui.gui.util.parameter import \
 from pymontecarlo.ui.gui.util.widget import \
     MultiNumericalLineEdit, NumericalValidator, UnitComboBox
 from pymontecarlo.ui.gui.util.tango import getIcon, color as c
+
 from pymontecarlo.ui.gui.options.material import \
     MaterialListWidget, MaterialListDialog, MaterialDialog
+from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.geometry import \
     (_Geometry, Substrate, _SubstrateBody, Inclusion, _InclusionBody,
@@ -563,3 +565,8 @@ class SphereWidget(_GeometryWidget):
             self._lst_material.setValues(geometry.body.material)
         if hasattr(geometry, 'body') and hasattr(geometry.body, 'diameter_m'):
             self._txt_diameter.setValues(geometry.body.diameter_m)
+
+#--- Functions
+
+def get_widget_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.options.geometry', clasz)

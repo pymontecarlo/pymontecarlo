@@ -27,6 +27,8 @@ from pymontecarlo.ui.gui.util.parameter import \
     _ParameterizedClassWidget, NumericalParameterWidget
 from pymontecarlo.ui.gui.util.tango import color as c
 
+from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+
 from pymontecarlo.options.limit import TimeLimit, ShowersLimit
 
 # Globals and constants variables.
@@ -81,3 +83,8 @@ class ShowersLimitWidget(_LimitWidget):
     def setValue(self, value):
         if hasattr(value, 'showers'):
             self._txt_showers.setValues(value.showers)
+
+#--- Functions
+
+def get_widget_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.options.limit', clasz)

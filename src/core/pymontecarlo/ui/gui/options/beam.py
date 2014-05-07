@@ -34,6 +34,8 @@ from pymontecarlo.ui.gui.util.parameter import \
 from pymontecarlo.ui.gui.util.widget import UnitComboBox, MultiNumericalLineEdit
 from pymontecarlo.ui.gui.util.tango import color as c
 
+from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
 from pymontecarlo.options.particle import PARTICLES
 
@@ -326,3 +328,8 @@ class GaussianBeamWidget(PencilBeamWidget):
         PencilBeamWidget.setValue(self, beam)
         if hasattr(beam, 'diameter_m'):
             self._wdg_diameter.setValues(beam.diameter_m)
+
+#--- Functions
+
+def get_widget_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.options.beam', clasz)
