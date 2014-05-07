@@ -35,6 +35,8 @@ from pymontecarlo.ui.gui.util.widget import \
 from pymontecarlo.ui.gui.util.tango import color as c
 from pymontecarlo.ui.gui.util.layout import merge_formlayout
 
+from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector, _EnergyDetector,
      _PolarAngularDetector, _AzimuthalAngularDetector,
@@ -563,3 +565,8 @@ class TrajectoryDetectorWidget(_DetectorWidget):
 
     def setValue(self, value):
         self._chk_secondary.setChecked(value.secondary)
+
+#--- Functions
+
+def get_widget_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.options.detector', clasz)
