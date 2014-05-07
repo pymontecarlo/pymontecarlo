@@ -325,9 +325,9 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
         _EnergyDetector.__init__(self, channels, limits_eV)
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad, limits_eV, channels):
+    def annular(cls, takeoffangle_rad, opening_rad, channels, limits_eV):
         tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
-        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, limits_eV, channels)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels, limits_eV)
 
     def __repr__(self):
         return "<%s(elevation=%s to %s deg, azimuth=%s to %s deg, limits=%s to %s eV, channels=%s)>" % \
