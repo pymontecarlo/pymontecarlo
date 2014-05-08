@@ -35,7 +35,7 @@ from pymontecarlo.ui.gui.util.parameter import \
      AngleParameterWidget)
 from pymontecarlo.ui.gui.util.widget import \
     MultiNumericalLineEdit, NumericalValidator, UnitComboBox
-from pymontecarlo.ui.gui.util.tango import getIcon, color as c
+from pymontecarlo.ui.gui.util.tango import getIcon
 
 from pymontecarlo.ui.gui.options.material import \
     MaterialListWidget, MaterialListDialog, MaterialDialog
@@ -177,12 +177,14 @@ class LayerListWidget(_ParameterWidget):
 
         def __init__(self, parent=None):
             QItemDelegate.__init__(self, parent)
+            self._readonly = False
 
         def createEditor(self, parent, option, index):
             column = index.column()
             if column == 1:
                 editor = MultiNumericalLineEdit(parent)
                 editor.setStyleSheet("background: none")
+                editor.setReadOnly(self.isReadOnly())
                 editor.setValidator(LayerListWidget._ThicknessValidator())
                 return editor
 
@@ -203,6 +205,12 @@ class LayerListWidget(_ParameterWidget):
                 except:
                     return
                 model.setData(index, values)
+
+        def setReadOnly(self, state):
+            self._readonly = state
+
+        def isReadOnly(self):
+            return self._readonly
 
     def __init__(self, parameter, parent=None):
         _ParameterWidget.__init__(self, parameter, parent)
@@ -283,6 +291,8 @@ class LayerListWidget(_ParameterWidget):
             dialog = MaterialListDialog()
             dialog.setValues(materials)
 
+        dialog.setReadOnly(self.isReadOnly())
+
         if not dialog.exec_():
             return
 
@@ -332,12 +342,16 @@ class LayerListWidget(_ParameterWidget):
             model.setData(model.index(i, 1), layer.thickness_m / factor)
 
     def isReadOnly(self):
-        return not self._tbl_layers.isEnabled() and \
-                not self._tlb_layers.isEnabled()
+        return not self._cb_unit.isEnabled() and \
+            not self._tlb_layers.isVisible()
 
     def setReadOnly(self, state):
-        self._tbl_layers.setEnabled(not state)
-        self._tlb_layers.setEnabled(not state)
+        self._cb_unit.setEnabled(not state)
+        self._tlb_layers.setVisible(not state)
+
+        style = 'color: none' if state else 'color: blue'
+        self._tbl_layers.horizontalHeader().setStyleSheet(style)
+        self._tbl_layers.itemDelegate().setReadOnly(state)
 
 #--- Geometry widgets
 
@@ -345,19 +359,30 @@ class _GeometryWidget(_ParameterizedClassWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_tilt = QLabel('Tilt')
+        self._lbl_tilt.setStyleSheet('color: blue')
         self._txt_tilt = TiltWidget(_Geometry.tilt_rad)
+
+        self._lbl_rotation = QLabel('Rotation')
+        self._lbl_rotation.setStyleSheet('color: blue')
         self._txt_rotation = RotationWidget(_Geometry.rotation_rad)
 
         # Layouts
         layout = _ParameterizedClassWidget._initUI(self)
-        layout.addRow(c('Tilt', 'blue'), self._txt_tilt)
-        layout.addRow(c('Rotation', 'blue'), self._txt_rotation)
+        layout.addRow(self._lbl_tilt, self._txt_tilt)
+        layout.addRow(self._lbl_rotation, self._txt_rotation)
 
         return layout
 
     def setValue(self, geometry):
         self._txt_tilt.setValues(geometry.tilt_rad)
         self._txt_rotation.setValues(geometry.rotation_rad)
+
+    def setReadOnly(self, state):
+        _ParameterizedClassWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_tilt.setStyleSheet(style)
+        self._lbl_rotation.setStyleSheet(style)
 
 class SubstrateWidget(_GeometryWidget):
 
@@ -367,11 +392,13 @@ class SubstrateWidget(_GeometryWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_material = QLabel('Material')
+        self._lbl_material.setStyleSheet('color: blue')
         self._lst_material = MaterialListWidget(_SubstrateBody.material)
 
         # Layouts
         layout = _GeometryWidget._initUI(self)
-        layout.insertRow(0, QLabel(c("Material", 'blue')))
+        layout.insertRow(0, self._lbl_material)
         layout.insertRow(1, self._lst_material)
 
         return layout
@@ -386,6 +413,11 @@ class SubstrateWidget(_GeometryWidget):
         if hasattr(geometry, 'body') and hasattr(geometry.body, 'material'):
             self._lst_material.setValues(geometry.body.material)
 
+    def setReadOnly(self, state):
+        _GeometryWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_material.setStyleSheet(style)
+
 class InclusionWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -394,17 +426,25 @@ class InclusionWidget(_GeometryWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_substrate = QLabel('Substrate')
+        self._lbl_substrate.setStyleSheet('color: blue')
         self._lst_substrate = MaterialListWidget(_SubstrateBody.material)
+
+        self._lbl_inclusion = QLabel('Inclusion')
+        self._lbl_inclusion.setStyleSheet('color: blue')
         self._lst_inclusion = MaterialListWidget(_InclusionBody.material)
+
+        self._lbl_diameter = QLabel('Inclusion diameter')
+        self._lbl_diameter.setStyleSheet('color: blue')
         self._txt_diameter = DiameterWidget(_InclusionBody.diameter_m)
 
         # Layouts
         layout = _GeometryWidget._initUI(self)
-        layout.insertRow(0, QLabel(c("Substrate", 'blue')))
+        layout.insertRow(0, self._lbl_substrate)
         layout.insertRow(1, self._lst_substrate)
-        layout.insertRow(2, QLabel(c("Inclusion", 'blue')))
+        layout.insertRow(2, self._lbl_inclusion)
         layout.insertRow(3, self._lst_inclusion)
-        layout.insertRow(4, c("Inclusion diameter", 'blue'), self._txt_diameter)
+        layout.insertRow(4, self._lbl_diameter, self._txt_diameter)
 
         return layout
 
@@ -427,6 +467,13 @@ class InclusionWidget(_GeometryWidget):
                 hasattr(geometry.inclusion, 'diameter_m'):
             self._txt_diameter.setValues(geometry.inclusion.diameter_m)
 
+    def setReadOnly(self, state):
+        _GeometryWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_substrate.setStyleSheet(style)
+        self._lbl_inclusion.setStyleSheet(style)
+        self._lbl_diameter.setStyleSheet(style)
+
 class HorizontalLayersWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -435,15 +482,20 @@ class HorizontalLayersWidget(_GeometryWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_layer = QLabel('Layer')
+        self._lbl_layer.setStyleSheet('color: blue')
         self._lst_layer = LayerListWidget(HorizontalLayers.layers)
+
+        self._lbl_substrate = QLabel("Substrate (optional)")
+        self._lbl_substrate.setStyleSheet('color: blue')
         self._lst_substrate = MaterialListWidget(_HorizontalSubstrateBody.material)
         self._lst_substrate.setRequired(False)
 
         # Layouts
         layout = _GeometryWidget._initUI(self)
-        layout.insertRow(0, QLabel(c("Layer", 'blue')))
+        layout.insertRow(0, self._lbl_layer)
         layout.insertRow(1, self._lst_layer)
-        layout.insertRow(2, QLabel(c("Substrate (optional)", 'blue')))
+        layout.insertRow(2, self._lbl_substrate)
         layout.insertRow(3, self._lst_substrate)
 
         return layout
@@ -467,6 +519,12 @@ class HorizontalLayersWidget(_GeometryWidget):
         if hasattr(geometry, 'layers'):
             self._lst_layer.setValues(geometry.layers)
 
+    def setReadOnly(self, state):
+        _GeometryWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_layer.setStyleSheet(style)
+        self._lbl_substrate.setStyleSheet(style)
+
 class VerticalLayersWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -475,13 +533,21 @@ class VerticalLayersWidget(_GeometryWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_left = QLabel('Left substrate')
+        self._lbl_left.setStyleSheet('color: blue')
         self._lst_left = MaterialListWidget(_VerticalLeftSubstrateBody.material)
 
+        self._lbl_layer = QLabel('Layer')
+        self._lbl_layer.setStyleSheet('color: blue')
         self._lst_layer = LayerListWidget(VerticalLayers.layers)
         self._lst_layer.setRequired(False)
 
+        self._lbl_right = QLabel('Right substrate')
+        self._lbl_right.setStyleSheet('color: blue')
         self._lst_right = MaterialListWidget(_VerticalRightSubstrateBody.material)
 
+        self._lbl_depth = QLabel('Depth')
+        self._lbl_depth.setStyleSheet('color: blue')
         self._txt_depth = UnitParameterWidget(VerticalLayers.depth_m)
 
         # Layouts
@@ -490,22 +556,22 @@ class VerticalLayersWidget(_GeometryWidget):
         sublayout = QHBoxLayout()
 
         subsublayout = QVBoxLayout()
-        subsublayout.addWidget(QLabel(c("Left substrate", 'blue')))
+        subsublayout.addWidget(self._lbl_left)
         subsublayout.addWidget(self._lst_left)
         sublayout.addLayout(subsublayout)
 
         subsublayout = QVBoxLayout()
-        subsublayout.addWidget(QLabel(c("Layer", 'blue')))
+        subsublayout.addWidget(self._lbl_layer)
         subsublayout.addWidget(self._lst_layer)
         sublayout.addLayout(subsublayout)
 
         subsublayout = QVBoxLayout()
-        subsublayout.addWidget(QLabel(c("Right substrate", 'blue')))
+        subsublayout.addWidget(self._lbl_right)
         subsublayout.addWidget(self._lst_right)
         sublayout.addLayout(subsublayout)
 
         layout.insertRow(0, sublayout)
-        layout.insertRow(1, c("Depth", 'blue'), self._txt_depth)
+        layout.insertRow(1, self._lbl_depth, self._txt_depth)
 
         return layout
 
@@ -534,6 +600,14 @@ class VerticalLayersWidget(_GeometryWidget):
         if hasattr(geometry, 'depth_m'):
             self._txt_depth.setValues(geometry.depth_m)
 
+    def setReadOnly(self, state):
+        _GeometryWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_left.setStyleSheet(style)
+        self._lbl_layer.setStyleSheet(style)
+        self._lbl_right.setStyleSheet(style)
+        self._lbl_depth.setStyleSheet(style)
+
 class SphereWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -542,14 +616,19 @@ class SphereWidget(_GeometryWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_material = QLabel('Material')
+        self._lbl_material.setStyleSheet('color: blue')
         self._lst_material = MaterialListWidget(_SphereBody.material)
+
+        self._lbl_diameter = QLabel('Diameter')
+        self._lbl_diameter.setStyleSheet('color: blue')
         self._txt_diameter = DiameterWidget(_SphereBody.diameter_m)
 
         # Layouts
         layout = _ParameterizedClassWidget._initUI(self)
-        layout.insertRow(0, QLabel(c("Material", 'blue')))
+        layout.insertRow(0, self._lbl_material)
         layout.insertRow(1, self._lst_material)
-        layout.insertRow(2, c("Sphere diameter", 'blue'), self._txt_diameter)
+        layout.insertRow(2, self._lbl_diameter, self._txt_diameter)
 
         return layout
 
@@ -566,7 +645,14 @@ class SphereWidget(_GeometryWidget):
         if hasattr(geometry, 'body') and hasattr(geometry.body, 'diameter_m'):
             self._txt_diameter.setValues(geometry.body.diameter_m)
 
+    def setReadOnly(self, state):
+        _GeometryWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_material.setStyleSheet(style)
+        self._lbl_diameter.setStyleSheet(style)
+
 #--- Functions
 
 def get_widget_class(clasz):
     return _get_widget_class('pymontecarlo.ui.gui.options.geometry', clasz)
+

@@ -23,7 +23,7 @@ from itertools import product
 from operator import itemgetter
 
 # Third party modules.
-from PySide.QtGui import QCheckBox, QHBoxLayout, QFormLayout
+from PySide.QtGui import QCheckBox, QHBoxLayout, QFormLayout, QLabel
 
 import numpy as np
 
@@ -32,7 +32,6 @@ from pymontecarlo.ui.gui.util.parameter import \
     (_ParameterizedClassWidget, _ParameterWidget, UnitParameterWidget,
      AngleParameterWidget)
 from pymontecarlo.ui.gui.util.widget import UnitComboBox, MultiNumericalLineEdit
-from pymontecarlo.ui.gui.util.tango import color as c
 
 from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
 
@@ -104,17 +103,26 @@ class OriginWidget(_ParameterWidget):
         _ParameterWidget.__init__(self, parameter, parent)
 
         # Widgets
+        self._lbl_x = QLabel('x')
+        self._lbl_x.setStyleSheet("color: blue")
         self._txt_x = MultiNumericalLineEdit()
+
+        self._lbl_y = QLabel('y')
+        self._lbl_y.setStyleSheet("color: blue")
         self._txt_y = MultiNumericalLineEdit()
+
+        self._lbl_z = QLabel('z')
+        self._lbl_z.setStyleSheet("color: blue")
         self._txt_z = MultiNumericalLineEdit()
+
         self._cb_unit = UnitComboBox(parameter.unit)
 
         # Layouts
         layout = QFormLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addRow(c('x', 'blue'), self._txt_x)
-        layout.addRow(c('y', 'blue'), self._txt_y)
-        layout.addRow(c('z', 'blue'), self._txt_z)
+        layout.addRow(self._lbl_x, self._txt_x)
+        layout.addRow(self._lbl_y, self._txt_y)
+        layout.addRow(self._lbl_z, self._txt_z)
         layout.addRow('Unit', self._cb_unit)
         self.setLayout(layout)
 
@@ -155,12 +163,18 @@ class OriginWidget(_ParameterWidget):
     def isReadOnly(self):
         return self._txt_x.isReadOnly() and \
                 self._txt_y.isReadOnly() and \
-                self._txt_z.isReadOnly()
+                self._txt_z.isReadOnly() and \
+                not self._cb_unit.isEnabled()
 
     def setReadOnly(self, state):
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_x.setStyleSheet(style)
         self._txt_x.setReadOnly(state)
+        self._lbl_y.setStyleSheet(style)
         self._txt_y.setReadOnly(state)
+        self._lbl_z.setStyleSheet(style)
         self._txt_z.setReadOnly(state)
+        self._cb_unit.setEnabled(not state)
 
     def hasAcceptableInput(self):
         if not _ParameterWidget.hasAcceptableInput(self):
@@ -181,16 +195,24 @@ class DirectionWidget(_ParameterWidget):
         _ParameterWidget.__init__(self, parameter, parent)
 
         # Widgets
+        self._lbl_u = QLabel('u')
+        self._lbl_u.setStyleSheet("color: blue")
         self._txt_u = MultiNumericalLineEdit()
+
+        self._lbl_v = QLabel('v')
+        self._lbl_v.setStyleSheet("color: blue")
         self._txt_v = MultiNumericalLineEdit()
+
+        self._lbl_w = QLabel('w')
+        self._lbl_w.setStyleSheet("color: blue")
         self._txt_w = MultiNumericalLineEdit()
 
         # Layouts
         layout = QFormLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addRow(c('u', 'blue'), self._txt_u)
-        layout.addRow(c('v', 'blue'), self._txt_v)
-        layout.addRow(c('w', 'blue'), self._txt_w)
+        layout.addRow(self._lbl_u, self._txt_u)
+        layout.addRow(self._lbl_v, self._txt_v)
+        layout.addRow(self._lbl_w, self._txt_w)
         self.setLayout(layout)
 
         # Signals
@@ -231,8 +253,12 @@ class DirectionWidget(_ParameterWidget):
                 self._txt_w.isReadOnly()
 
     def setReadOnly(self, state):
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_u.setStyleSheet(style)
         self._txt_u.setReadOnly(state)
+        self._lbl_v.setStyleSheet(style)
         self._txt_v.setReadOnly(state)
+        self._lbl_w.setStyleSheet(style)
         self._txt_w.setReadOnly(state)
 
     def hasAcceptableInput(self):
@@ -265,19 +291,33 @@ class PencilBeamWidget(_BeamWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_energy = QLabel('Initial energy')
+        self._lbl_energy.setStyleSheet("color: blue")
         self._wdg_energy = EnergyWidget(PencilBeam.energy_eV)
+
+        self._lbl_particle = QLabel('Type of particle')
+        self._lbl_particle.setStyleSheet("color: blue")
         self._wdg_particle = ParticleWidget(PencilBeam.particle)
+
+        self._lbl_origin = QLabel('Origin')
+        self._lbl_origin.setStyleSheet("color: blue")
         self._wdg_origin = OriginWidget(PencilBeam.origin_m)
+
+        self._lbl_direction = QLabel('Direction')
+        self._lbl_direction.setStyleSheet("color: blue")
         self._wdg_direction = DirectionWidget(PencilBeam.direction)
+
+        self._lbl_aperture = QLabel('Aperture')
+        self._lbl_aperture.setStyleSheet("color: blue")
         self._wdg_aperture = ApertureWidget(PencilBeam.aperture_rad)
 
         # Layouts
         layout = _BeamWidget._initUI(self)
-        layout.addRow(c('Initial energy', 'blue'), self._wdg_energy)
-        layout.addRow(c('Type of particle', 'blue'), self._wdg_particle)
-        layout.addRow(c('Origin', 'blue'), self._wdg_origin)
-        layout.addRow(c('Direction', 'blue'), self._wdg_direction)
-        layout.addRow(c('Aperture', 'blue'), self._wdg_aperture)
+        layout.addRow(self._lbl_energy, self._wdg_energy)
+        layout.addRow(self._lbl_particle, self._wdg_particle)
+        layout.addRow(self._lbl_origin, self._wdg_origin)
+        layout.addRow(self._lbl_direction, self._wdg_direction)
+        layout.addRow(self._lbl_aperture, self._wdg_aperture)
 
         return layout
 
@@ -300,6 +340,15 @@ class PencilBeamWidget(_BeamWidget):
         if hasattr(beam, 'aperture_rad'):
             self._wdg_aperture.setValues(beam.aperture_rad)
 
+    def setReadOnly(self, state):
+        _BeamWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_energy.setStyleSheet(style)
+        self._lbl_particle.setStyleSheet(style)
+        self._lbl_origin.setStyleSheet(style)
+        self._lbl_direction.setStyleSheet(style)
+        self._lbl_aperture.setStyleSheet(style)
+
 class GaussianBeamWidget(PencilBeamWidget):
 
     def __init__(self, parent=None):
@@ -308,11 +357,13 @@ class GaussianBeamWidget(PencilBeamWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_diameter = QLabel('Diameter')
+        self._lbl_diameter.setStyleSheet('color: blue')
         self._wdg_diameter = DiameterWidget(GaussianBeam.diameter_m)
 
         # Layouts
         layout = PencilBeamWidget._initUI(self)
-        layout.addRow(c('Diameter', 'blue'), self._wdg_diameter)
+        layout.addRow(self._lbl_diameter, self._wdg_diameter)
 
         return layout
 
@@ -328,6 +379,11 @@ class GaussianBeamWidget(PencilBeamWidget):
         PencilBeamWidget.setValue(self, beam)
         if hasattr(beam, 'diameter_m'):
             self._wdg_diameter.setValues(beam.diameter_m)
+
+    def setReadOnly(self, state):
+        PencilBeamWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_diameter.setStyleSheet(style)
 
 #--- Functions
 

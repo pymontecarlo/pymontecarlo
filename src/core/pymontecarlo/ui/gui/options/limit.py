@@ -21,11 +21,11 @@ __license__ = "GPL v3"
 # Standard library modules.
 
 # Third party modules.
+from PySide.QtGui import QLabel
 
 # Local modules.
 from pymontecarlo.ui.gui.util.parameter import \
     _ParameterizedClassWidget, NumericalParameterWidget
-from pymontecarlo.ui.gui.util.tango import color as c
 
 from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
 
@@ -46,11 +46,13 @@ class TimeLimitWidget(_LimitWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_time = QLabel('Time')
+        self._lbl_time.setStyleSheet("color: blue")
         self._txt_time = NumericalParameterWidget(TimeLimit.time_s)
 
         # Layouts
         layout = _LimitWidget._initUI(self)
-        layout.addRow(c('Time', 'blue'), self._txt_time)
+        layout.addRow(self._lbl_time, self._txt_time)
 
         return layout
 
@@ -61,6 +63,11 @@ class TimeLimitWidget(_LimitWidget):
         if hasattr(value, 'time_s'):
             self._txt_time.setValues(value.time_s)
 
+    def setReadOnly(self, state):
+        _LimitWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_time.setStyleSheet(style)
+
 class ShowersLimitWidget(_LimitWidget):
 
     def __init__(self, parent=None):
@@ -69,11 +76,13 @@ class ShowersLimitWidget(_LimitWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_showers = QLabel('Number of electron showers')
+        self._lbl_showers.setStyleSheet("color: blue")
         self._txt_showers = NumericalParameterWidget(ShowersLimit.showers)
 
         # Layouts
         layout = _LimitWidget._initUI(self)
-        layout.addRow(c('Number of electron showers', 'blue'), self._txt_showers)
+        layout.addRow(self._lbl_showers, self._txt_showers)
 
         return layout
 
@@ -83,6 +92,11 @@ class ShowersLimitWidget(_LimitWidget):
     def setValue(self, value):
         if hasattr(value, 'showers'):
             self._txt_showers.setValues(value.showers)
+
+    def setReadOnly(self, state):
+        _LimitWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_showers.setStyleSheet(style)
 
 #--- Functions
 

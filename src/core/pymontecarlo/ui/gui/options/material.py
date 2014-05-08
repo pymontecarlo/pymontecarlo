@@ -40,7 +40,7 @@ from pymontecarlo.ui.gui.util.widget import \
     (MultiNumericalLineEdit, NumericalLineEdit, NumericalValidator,
      UnitComboBox)
 from pymontecarlo.ui.gui.util.parameter import _ParameterWidget
-from pymontecarlo.ui.gui.util.tango import getIcon, color as c
+from pymontecarlo.ui.gui.util.tango import getIcon
 
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.particle import PARTICLES
@@ -247,11 +247,13 @@ class MaterialDialog(QDialog):
 
         self._wdg_abs_energies = {}
         for particle in PARTICLES:
+            label = QLabel(str(particle))
+            label.setStyleSheet("color: blue")
             txt_energy = MultiNumericalLineEdit()
             txt_energy.setAccessibleName(str(particle))
             txt_energy.setValidator(self._AbsorptionEnergyValidator())
             cb_unit = UnitComboBox('eV')
-            self._wdg_abs_energies[particle] = (txt_energy, cb_unit)
+            self._wdg_abs_energies[particle] = (label, txt_energy, cb_unit)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
@@ -275,8 +277,8 @@ class MaterialDialog(QDialog):
         sublayout = QGridLayout()
         sublayout.setContentsMargins(20, 0, 0, 0)
         for row, particle in enumerate(sorted(self._wdg_abs_energies.keys())):
-            txt_energy, cb_unit = self._wdg_abs_energies[particle]
-            sublayout.addWidget(QLabel(c(str(particle), 'blue')), row, 0)
+            label, txt_energy, cb_unit = self._wdg_abs_energies[particle]
+            sublayout.addWidget(label, row, 0)
             sublayout.addWidget(txt_energy, row, 1)
             sublayout.addWidget(cb_unit, row, 2)
         layout.addLayout(sublayout)
@@ -301,7 +303,7 @@ class MaterialDialog(QDialog):
         act_add.triggered.connect(self._onCompositionAdd)
         act_remove.triggered.connect(self._onCompositionRemove)
 
-        for txt_energy, _ in self._wdg_abs_energies.values():
+        for _, txt_energy, _ in self._wdg_abs_energies.values():
             txt_energy.textChanged.connect(self._onAbsEnergyChanged)
 
         buttons.accepted.connect(self._onOk)
@@ -395,6 +397,10 @@ class MaterialDialog(QDialog):
             txt_energy.setStyleSheet("background: pink")
 
     def _onOk(self):
+        if self.isReadOnly():
+            self.reject()
+            return
+
         errors = []
 
         if not self._chk_name_auto.isChecked() and \
@@ -414,7 +420,7 @@ class MaterialDialog(QDialog):
             except Exception as ex:
                 errors.append(str(ex))
 
-        for txt_energy, _ in self._wdg_abs_energies.values():
+        for _, txt_energy, _ in self._wdg_abs_energies.values():
             if not txt_energy.hasAcceptableInput():
                 name = txt_energy.accessibleName()
                 errors.append('Invalid absorption energy for %s' % name)
@@ -448,7 +454,7 @@ class MaterialDialog(QDialog):
         # Absorption energies
         absorption_energies = {}
         for particle in self._wdg_abs_energies.keys():
-            txt_energy, cb_unit = self._wdg_abs_energies[particle]
+            _, txt_energy, cb_unit = self._wdg_abs_energies[particle]
             values = txt_energy.values() * cb_unit.factor()
             if len(values) == 0:
                 values = [Material.DEFAULT_ABSORPTION_ENERGY_eV]
@@ -489,12 +495,37 @@ class MaterialDialog(QDialog):
             model.setData(model.index(row, 1), [composition[z]])
 
         # Absorption energy
-        for txt_energy, cb_unit in self._wdg_abs_energies.values():
+        for _, txt_energy, cb_unit in self._wdg_abs_energies.values():
             txt_energy.setText('')
             cb_unit.setUnit('eV')
 
         for particle, energy in material.absorption_energy_eV.items():
-            self._wdg_abs_energies[particle][0].setValues(energy)
+            self._wdg_abs_energies[particle][1].setValues(energy)
+
+    def setReadOnly(self, state):
+        style = 'color: none' if state else 'color: blue'
+
+        self._txt_name.setReadOnly(state)
+        self._chk_name_auto.setEnabled(not state)
+        self._txt_density.setReadOnly(state)
+        self._chk_density_user.setEnabled(not state)
+        self._tbl_composition.setEnabled(not state)
+        self._tbl_composition.horizontalHeader().setStyleSheet(style)
+        self._tlb_composition.setVisible(not state)
+        for label, txt_energy, cb_unit in self._wdg_abs_energies.values():
+            label.setStyleSheet(style)
+            txt_energy.setReadOnly(state)
+            cb_unit.setEnabled(not state)
+
+    def isReadOnly(self):
+        return self._txt_name.isReadOnly() and \
+            not self._chk_name_auto.isEnabled() and \
+            self._txt_density.isReadOnly() and \
+            not self._chk_density_user.isEnabled() and \
+            not self._tbl_composition.isEnabled() and \
+            not self._tlb_composition.isVisible() and \
+            all(map(lambda w: w[1].isReadOnly() and not w[2].isEnabled(),
+                    self._wdg_abs_energies.values()))
 
 class MaterialListWidget(_ParameterWidget):
 
@@ -639,6 +670,7 @@ class MaterialListWidget(_ParameterWidget):
 
         dialog = MaterialDialog()
         dialog.setValue(material)
+        dialog.setReadOnly(self.isReadOnly())
         if not dialog.exec_():
             return
 
@@ -677,12 +709,10 @@ class MaterialListWidget(_ParameterWidget):
         return self._lst_materials.model().materials()
 
     def isReadOnly(self):
-        return not self._lst_materials.isEnabled() and \
-                not self._tlb_materials.isEnabled()
+        return not self._tlb_materials.isVisible()
 
     def setReadOnly(self, state):
-        self._lst_materials.setEnabled(not state)
-        self._tlb_materials.setEnabled(not state)
+        self._tlb_materials.setVisible(not state)
 
 class MaterialListDialog(QDialog):
 
@@ -710,6 +740,12 @@ class MaterialListDialog(QDialog):
 
     def setValues(self, materials):
         self._lst_materials.setValues(materials)
+
+    def isReadOnly(self):
+        return self._lst_materials.isReadOnly()
+
+    def setReadOnly(self, state):
+        self._lst_materials.setReadOnly(state)
 
 def __run():
     import sys

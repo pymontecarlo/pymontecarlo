@@ -32,7 +32,6 @@ from pymontecarlo.ui.gui.util.parameter import \
     _ParameterizedClassWidget, _ParameterWidget, NumericalParameterWidget
 from pymontecarlo.ui.gui.util.widget import \
     UnitComboBox, MultiNumericalLineEdit, AngleComboBox
-from pymontecarlo.ui.gui.util.tango import color as c
 from pymontecarlo.ui.gui.util.layout import merge_formlayout
 
 from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
@@ -179,13 +178,18 @@ class _DelimitedDetectorWidget(_DetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_elevation = QLabel("Elevation")
+        self._lbl_elevation.setStyleSheet("color: blue")
         self._txt_elevation = _AngleRangeWidget(_DelimitedDetector.elevation_rad)
+
+        self._lbl_azimuth = QLabel('Azimuth')
+        self._lbl_azimuth.setStyleSheet("color: blue")
         self._txt_azimuth = _AngleRangeWidget(_DelimitedDetector.azimuth_rad)
 
         # Layouts
         layout = _DetectorWidget._initUI(self)
-        layout.addRow(c('Elevation', 'blue'), self._txt_elevation)
-        layout.addRow(c('Azimuth', 'blue'), self._txt_azimuth)
+        layout.addRow(self._lbl_elevation, self._txt_elevation)
+        layout.addRow(self._lbl_azimuth, self._txt_azimuth)
 
         return layout
 
@@ -193,40 +197,70 @@ class _DelimitedDetectorWidget(_DetectorWidget):
         self._txt_elevation.setValues(value.elevation_rad)
         self._txt_azimuth.setValues(value.azimuth_rad)
 
+    def setReadOnly(self, state):
+        _DetectorWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_elevation.setStyleSheet(style)
+        self._lbl_azimuth.setStyleSheet(style)
+
 class _ChannelsDetectorWidget(_ParameterizedClassWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_channels = QLabel('Channels')
+        self._lbl_channels.setStyleSheet("color: blue")
         self._txt_channels = NumericalParameterWidget(_ChannelsDetector.channels)
 
         # Layouts
         layout = _ParameterizedClassWidget._initUI(self)
-        layout.addRow(c('Channels', 'blue'), self._txt_channels)
+        layout.addRow(self._lbl_channels, self._txt_channels)
 
         return layout
 
     def setValue(self, value):
         self._txt_channels.setValues(value.channels)
 
+    def setReadOnly(self, state):
+        _ParameterizedClassWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_channels.setStyleSheet(style)
+
 class _SpatialDetectorWidget(_ParameterizedClassWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_xlimits = QLabel('X limits')
+        self._lbl_xlimits.setStyleSheet("color: blue")
         self._txt_xlimits = _UnitRangeWidget(_SpatialDetector.xlimits_m)
+
+        self._lbl_xbins = QLabel('X bins')
+        self._lbl_xbins.setStyleSheet("color: blue")
         self._txt_xbins = NumericalParameterWidget(_SpatialDetector.xbins)
+
+        self._lbl_ylimits = QLabel('Y limits')
+        self._lbl_ylimits.setStyleSheet("color: blue")
         self._txt_ylimits = _UnitRangeWidget(_SpatialDetector.ylimits_m)
+
+        self._lbl_ybins = QLabel('Y bins')
+        self._lbl_ybins.setStyleSheet("color: blue")
         self._txt_ybins = NumericalParameterWidget(_SpatialDetector.ybins)
+
+        self._lbl_zlimits = QLabel('Z limits')
+        self._lbl_zlimits.setStyleSheet("color: blue")
         self._txt_zlimits = _UnitRangeWidget(_SpatialDetector.zlimits_m)
+
+        self._lbl_zbins = QLabel('Z bins')
+        self._lbl_zbins.setStyleSheet("color: blue")
         self._txt_zbins = NumericalParameterWidget(_SpatialDetector.zbins)
 
         # Layouts
         layout = _ParameterizedClassWidget._initUI(self)
-        layout.addRow(c("X limits", "blue"), self._txt_xlimits)
-        layout.addRow(c("X bins", "blue"), self._txt_xbins)
-        layout.addRow(c("Y limits", "blue"), self._txt_ylimits)
-        layout.addRow(c("Y bins", "blue"), self._txt_ybins)
-        layout.addRow(c("Z limits", "blue"), self._txt_zlimits)
-        layout.addRow(c("Z bins", "blue"), self._txt_zbins)
+        layout.addRow(self._lbl_xlimits, self._txt_xlimits)
+        layout.addRow(self._lbl_xbins, self._txt_xbins)
+        layout.addRow(self._lbl_ylimits, self._txt_ylimits)
+        layout.addRow(self._lbl_ybins, self._txt_ybins)
+        layout.addRow(self._lbl_zlimits, self._txt_zlimits)
+        layout.addRow(self._lbl_zbins, self._txt_zbins)
 
         return layout
 
@@ -238,21 +272,38 @@ class _SpatialDetectorWidget(_ParameterizedClassWidget):
         self._txt_zlimits.setValues(value.zlimits_m)
         self._txt_zbins.setValues(value.zbins)
 
+    def setReadOnly(self, state):
+        _ParameterizedClassWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_xlimits.setStyleSheet(style)
+        self._lbl_xbins.setStyleSheet(style)
+        self._lbl_ylimits.setStyleSheet(style)
+        self._lbl_ybins.setStyleSheet(style)
+        self._lbl_zlimits.setStyleSheet(style)
+        self._lbl_zbins.setStyleSheet(style)
+
 class _EnergyDetectorWidget(_ChannelsDetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_limits = QLabel('Limits')
+        self._lbl_limits.setStyleSheet('color: blue')
         self._txt_limits = _UnitRangeWidget(_EnergyDetector.limits_eV)
 
         # Layouts
         layout = _ChannelsDetectorWidget._initUI(self)
-        layout.addRow(c('Limits', 'blue'), self._txt_limits)
+        layout.addRow(self._lbl_limits, self._txt_limits)
 
         return layout
 
     def setValue(self, value):
         _ChannelsDetectorWidget.setValue(self, value)
         self._txt_limits.setValues(value.limits_eV)
+
+    def setReadOnly(self, state):
+        _ChannelsDetectorWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_limits.setStyleSheet(style)
 
 class _AngularDetectorWidget(_ChannelsDetectorWidget):
     pass
@@ -261,35 +312,49 @@ class _PolarAngularDetectorWidget(_AngularDetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_limits = QLabel('Limits')
+        self._lbl_limits.setStyleSheet('color: blue')
         self._txt_limits = _AngleRangeWidget(_PolarAngularDetector.limits_rad)
         self._txt_limits.setValues([(-HALFPI, HALFPI)])
 
         # Layouts
         layout = _AngularDetectorWidget._initUI(self)
-        layout.addRow(c("Limits", 'blue'), self._txt_limits)
+        layout.addRow(self._lbl_limits, self._txt_limits)
 
         return layout
 
     def setValue(self, value):
         _AngularDetectorWidget.setValue(self, value)
         self._txt_limits.setValues(value.limits_rad)
+
+    def setReadOnly(self, state):
+        _AngularDetectorWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_limits.setStyleSheet(style)
 
 class _AzimuthalAngularDetectorWidget(_AngularDetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_limits = QLabel('Limits')
+        self._lbl_limits.setStyleSheet('color: blue')
         self._txt_limits = _AngleRangeWidget(_AzimuthalAngularDetector.limits_rad)
         self._txt_limits.setValues([(0, TWOPI)])
 
         # Layouts
         layout = _AngularDetectorWidget._initUI(self)
-        layout.addRow(c("Limits", 'blue'), self._txt_limits)
+        layout.addRow(self._lbl_limits, self._txt_limits)
 
         return layout
 
     def setValue(self, value):
         _AngularDetectorWidget.setValue(self, value)
         self._txt_limits.setValues(value.limits_rad)
+
+    def setReadOnly(self, state):
+        _AngularDetectorWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_limits.setStyleSheet(style)
 
 class _PhotonDelimitedDetectorWidget(_DelimitedDetectorWidget):
     pass
@@ -416,6 +481,10 @@ class PhotonSpectrumDetectorWidget(_PhotonDelimitedDetectorWidget,
         _PhotonDelimitedDetectorWidget.setValue(self, value)
         _EnergyDetectorWidget.setValue(self, value)
 
+    def setReadOnly(self, state):
+        _PhotonDelimitedDetectorWidget.setReadOnly(self, state)
+        _EnergyDetectorWidget.setReadOnly(self, state)
+
 class PhotonDepthDetectorWidget(_PhotonDelimitedDetectorWidget,
                                 _ChannelsDetectorWidget):
 
@@ -437,6 +506,10 @@ class PhotonDepthDetectorWidget(_PhotonDelimitedDetectorWidget,
     def setValue(self, value):
         _PhotonDelimitedDetectorWidget.setValue(self, value)
         _ChannelsDetectorWidget.setValue(self, value)
+
+    def setReadOnly(self, state):
+        _PhotonDelimitedDetectorWidget.setReadOnly(self, state)
+        _ChannelsDetectorWidget.setReadOnly(self, state)
 
 class PhotonRadialDetectorWidget(_PhotonDelimitedDetectorWidget,
                                  _ChannelsDetectorWidget):
@@ -460,6 +533,10 @@ class PhotonRadialDetectorWidget(_PhotonDelimitedDetectorWidget,
         _PhotonDelimitedDetectorWidget.setValue(self, value)
         _ChannelsDetectorWidget.setValue(self, value)
 
+    def setReadOnly(self, state):
+        _PhotonDelimitedDetectorWidget.setReadOnly(self, state)
+        _ChannelsDetectorWidget.setReadOnly(self, state)
+
 class PhotonEmissionMapDetectorWidget(_PhotonDelimitedDetectorWidget):
 
     def __init__(self, parent=None):
@@ -468,15 +545,23 @@ class PhotonEmissionMapDetectorWidget(_PhotonDelimitedDetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._lbl_xbins = QLabel('X bins')
+        self._lbl_xbins.setStyleSheet("color: blue")
         self._txt_xbins = NumericalParameterWidget(PhotonEmissionMapDetector.xbins)
+
+        self._lbl_ybins = QLabel('Y bins')
+        self._lbl_ybins.setStyleSheet("color: blue")
         self._txt_ybins = NumericalParameterWidget(PhotonEmissionMapDetector.ybins)
+
+        self._lbl_zbins = QLabel('Z bins')
+        self._lbl_zbins.setStyleSheet("color: blue")
         self._txt_zbins = NumericalParameterWidget(PhotonEmissionMapDetector.zbins)
 
         # Layouts
         layout = _PhotonDelimitedDetectorWidget._initUI(self)
-        layout.addRow(c('X bins', 'blue'), self._txt_xbins)
-        layout.addRow(c('Y bins', 'blue'), self._txt_ybins)
-        layout.addRow(c('Z bins', 'blue'), self._txt_zbins)
+        layout.addRow(self._lbl_xbins, self._txt_xbins)
+        layout.addRow(self._lbl_ybins, self._txt_ybins)
+        layout.addRow(self._lbl_zbins, self._txt_zbins)
 
         return layout
 
@@ -494,6 +579,13 @@ class PhotonEmissionMapDetectorWidget(_PhotonDelimitedDetectorWidget):
         self._txt_xbins.setValues(value.xbins)
         self._txt_ybins.setValues(value.ybins)
         self._txt_zbins.setValues(value.zbins)
+
+    def setReadOnly(self, state):
+        _PhotonDelimitedDetectorWidget.setReadOnly(self, state)
+        style = 'color: none' if state else 'color: blue'
+        self._lbl_xbins.setStyleSheet(style)
+        self._lbl_ybins.setStyleSheet(style)
+        self._lbl_zbins.setStyleSheet(style)
 
 class PhotonIntensityDetectorWidget(_PhotonDelimitedDetectorWidget):
 
