@@ -524,6 +524,10 @@ class ParameterizedMutableSet(MutableSet):
         del self.__parameters__[key]
         del self.__dict__[key]
 
+    def update(self, items):
+        for item in items:
+            self.add(item)
+
 def iter_parameters(obj):
     """
     Recursively iterates over all parameters defined in the specified object.

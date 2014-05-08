@@ -80,6 +80,10 @@ class _Programs(MutableSet):
             value = value.alias
         self._programs.pop(value)
 
+    def update(self, values):
+        for value in values:
+            self.add(value)
+
     def aliases(self):
         return iter(self._programs.keys())
 
