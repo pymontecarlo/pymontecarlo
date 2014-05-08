@@ -135,6 +135,30 @@ class TestOptions(TestCase):
         models = list(self.ops.models.iterclass(ELASTIC_CROSS_SECTION))
         self.assertEqual(2, len(models))
 
+    def testto_from_element(self):
+        element = self.ops.toelement()
+        obj = Options.fromelement(element)
+
+        self.assertEqual(1, len(obj.programs))
+
+        self.assertAlmostEqual(1234, obj.beam.energy_eV, 4)
+
+        self.assertEqual(1, len(obj.detectors))
+        det = obj.detectors['bse']
+        self.assertAlmostEqual(0, det.limits_eV[0], 4)
+        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
+        self.assertEqual(1000, det.channels)
+
+        self.assertEqual(1, len(obj.limits))
+        limits = list(obj.limits.iterclass(ShowersLimit))
+        self.assertEqual(1, len(limits))
+        self.assertEqual(5678, limits[0].showers)
+
+        self.assertEqual(1, len(obj.models))
+        models = list(obj.models.iterclass(ELASTIC_CROSS_SECTION))
+        self.assertEqual(1, len(models))
+        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
+
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

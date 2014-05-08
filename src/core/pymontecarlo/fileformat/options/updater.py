@@ -28,7 +28,8 @@ import xml.etree.ElementTree as etree
 # Local modules.
 from pymontecarlo.util.updater import _Updater
 import pymontecarlo.util.xmlutil as xmlutil
-from pymontecarlo.fileformat.options.options import load as load_options
+
+from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
 from pymontecarlo.options.particle import ELECTRON, PHOTON, POSITRON
@@ -58,7 +59,7 @@ class Updater(_Updater):
         return int(root.get('version', 0))
 
     def _validate(self, filepath):
-        load_options(filepath)
+        Options.read(filepath)
 
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')

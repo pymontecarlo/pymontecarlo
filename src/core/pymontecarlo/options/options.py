@@ -132,6 +132,20 @@ class Options(object, metaclass=ParameterizedMetaclass):
     limits = Parameter(_Limits, doc="Limit(s)")
     models = Parameter(_Models, doc="Model(s)")
 
+    @classmethod
+    def read(cls, source):
+        from pymontecarlo.fileformat.options.options import OptionsReader
+        reader = OptionsReader()
+        reader.read(source)
+        return reader.get()
+
+    @classmethod
+    def fromelement(cls, element):
+        from pymontecarlo.fileformat.options.options import OptionsReader
+        reader = OptionsReader()
+        reader.parse(element)
+        return reader.get()
+
     def __init__(self, name='Untitled'):
         """
         Options for a simulation.
@@ -195,6 +209,18 @@ class Options(object, metaclass=ParameterizedMetaclass):
         result.__dict__['_uuid'] = uuid.uuid4().hex # Reset
 
         return result
+
+    def write(self, source):
+        from pymontecarlo.fileformat.options.options import OptionsWriter
+        writer = OptionsWriter()
+        writer.write(self, source)
+        writer.join()
+
+    def toelement(self):
+        from pymontecarlo.fileformat.options.options import OptionsWriter
+        writer = OptionsWriter()
+        writer.convert(self)
+        return writer.get()
 
     @property
     def name(self):

@@ -17,8 +17,7 @@ import xml.etree.ElementTree as etree
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.fileformat.options.options import \
-    OptionsXMLHandler, load, save
+from pymontecarlo.fileformat.options.options import OptionsReader, OptionsWriter
 
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import BackscatteredElectronEnergyDetector
@@ -29,65 +28,12 @@ from pymontecarlo.program.test_config import DummyProgram
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestOptionsReader(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
 
-        self.obj = Options(name="Test")
-
-        self.obj.programs.add(DummyProgram())
-
-        self.obj.beam.energy_eV = 1234
-
-        self.obj.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
-        self.obj.limits.add(ShowersLimit(5678))
-        self.obj.models.add(ELASTIC_CROSS_SECTION.rutherford)
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testloadsave(self):
-        buf = BytesIO()
-        save(self.obj, buf)
-        obj = load(BytesIO(buf.getvalue()))
-
-        self.assertEqual(1, len(obj.programs))
-
-        self.assertAlmostEqual(1234, obj.beam.energy_eV, 4)
-
-        self.assertEqual(1, len(obj.detectors))
-        det = obj.detectors['bse']
-        self.assertAlmostEqual(0, det.limits_eV[0], 4)
-        self.assertAlmostEqual(1234, det.limits_eV[1], 4)
-        self.assertEqual(1000, det.channels)
-
-        self.assertEqual(1, len(obj.limits))
-        limits = list(obj.limits.iterclass(ShowersLimit))
-        self.assertEqual(1, len(limits))
-        self.assertEqual(5678, limits[0].showers)
-
-        self.assertEqual(1, len(obj.models))
-        models = list(obj.models.iterclass(ELASTIC_CROSS_SECTION))
-        self.assertEqual(1, len(models))
-        self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
-
-class TestOptionsXMLHandler(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.h = OptionsXMLHandler()
-
-        self.obj = Options(name="Test")
-
-        self.obj.programs.add(DummyProgram())
-
-        self.obj.beam.energy_eV = 1234
-
-        self.obj.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
-        self.obj.limits.add(ShowersLimit(5678))
-        self.obj.models.add(ELASTIC_CROSS_SECTION.rutherford)
+        self.reader = OptionsReader()
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
         source = BytesIO(b'<mc:options xmlns:mc="http://pymontecarlo.sf.net" name="Test" uuid="51d62e0261f2449eb41a74e4cb4501e0" version="6"><programs><program>dummy</program></programs><beam><mc:pencilBeam aperture="0.0" energy="1234.0" particle="electron"><origin x="0.0" y="0.0" z="1.0" /><direction u="0.0" v="0.0" w="-1.0" /></mc:pencilBeam></beam><geometry><mc:substrate rotation="0.0" tilt="0.0"><materials><mc:material _index="1" density="19300.0" name="Gold"><composition><element weightFraction="1.0" z="79" /></composition></mc:material></materials><body material="1" /></mc:substrate></geometry><detectors><mc:backscatteredElectronEnergyDetector _key="bse"><channels>1000</channels><limits lower="0.0" upper="1234.0" /></mc:backscatteredElectronEnergyDetector></detectors><limits><mc:showersLimit showers="5678" /></limits><models><mc:model name="Rutherford" type="elastic cross section" /></models></mc:options>')
@@ -97,10 +43,11 @@ class TestOptionsXMLHandler(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def testcan_parse(self):
-        self.assertTrue(self.h.can_parse(self.element))
+        self.assertTrue(self.reader.can_parse(self.element))
 
     def testparse(self):
-        obj = self.h.parse(self.element)
+        self.reader.parse(self.element)
+        obj = self.reader.get()
 
         self.assertEqual("Test", obj.name)
         self.assertEqual('51d62e0261f2449eb41a74e4cb4501e0', obj.uuid)
@@ -126,11 +73,32 @@ class TestOptionsXMLHandler(unittest.TestCase):
         self.assertEqual(1, len(models))
         self.assertEqual(ELASTIC_CROSS_SECTION.rutherford, models[0])
 
+class TestOptionsWriter(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.writer = OptionsWriter()
+
+        self.obj = Options(name="Test")
+
+        self.obj.programs.add(DummyProgram())
+
+        self.obj.beam.energy_eV = 1234
+
+        self.obj.detectors['bse'] = BackscatteredElectronEnergyDetector(1000, (0, 1234))
+        self.obj.limits.add(ShowersLimit(5678))
+        self.obj.models.add(ELASTIC_CROSS_SECTION.rutherford)
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
     def testcan_convert(self):
-        self.assertTrue(self.h.can_convert(self.obj))
+        self.assertTrue(self.writer.can_convert(self.obj))
 
     def testconvert(self):
-        element = self.h.convert(self.obj)
+        self.writer.convert(self.obj)
+        element = self.writer.get()
 
         self.assertEqual('Test', element.get('name'))
 
@@ -156,7 +124,8 @@ class TestOptionsXMLHandler(unittest.TestCase):
 
     def testconvert2(self):
         uuid = self.obj.uuid
-        element = self.h.convert(self.obj)
+        self.writer.convert(self.obj)
+        element = self.writer.get()
         self.assertEqual(uuid, element.get('uuid'))
 
 if __name__ == '__main__': # pragma: no cover

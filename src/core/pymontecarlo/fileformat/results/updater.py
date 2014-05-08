@@ -40,9 +40,8 @@ from pymontecarlo.util.config import ConfigParser
 import pymontecarlo.util.hdf5util as hdf5util
 import pymontecarlo.util.xmlutil as xmlutil
 
+from pymontecarlo.fileformat.options.options import Options
 from pymontecarlo.fileformat.options.updater import Updater as OptionsUpdater
-from pymontecarlo.fileformat.options.options import \
-    load as load_options, save as save_options
 from pymontecarlo.fileformat.results.results import load as load_results
 from pymontecarlo.fileformat.handler import find_convert_handler
 
@@ -190,14 +189,14 @@ class Updater(_Updater):
         with open(xmlfilepath, 'rb') as fp:
             source = fp.read()
         source = _update_options(source)
-        options = load_options(BytesIO(source))
+        options = Options.read(BytesIO(source))
 
         oldzip = ZipFile(filepath, 'r')
         newzip = ZipFile(filepath + ".new", 'w')
 
         # Add options file
         fp = BytesIO()
-        save_options(options, fp)
+        options.write(fp)
         newzip.writestr(OPTIONS_FILENAME, fp.getvalue())
 
         # Add other files to new zip
@@ -543,7 +542,7 @@ class Updater(_Updater):
         hdf5file.attrs['options'] = options_source
 
         # Create identifier of results
-        identifier = load_options(BytesIO(options_source)).uuid
+        identifier = Options.read(BytesIO(options_source)).uuid
         hdf5file.attrs.create('identifiers', [identifier],
                               dtype=h5py.special_dtype(vlen=str))
 

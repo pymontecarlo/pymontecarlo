@@ -78,8 +78,6 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'UncertaintyLimit = pymontecarlo.fileformat.options.limit:UncertaintyLimitXMLHandler'],
                 'pymontecarlo.fileformat.options.model':
                     ['Model = pymontecarlo.fileformat.options.model:ModelXMLHandler'],
-                'pymontecarlo.fileformat.options.options':
-                    ['Options = pymontecarlo.fileformat.options.options:OptionsXMLHandler'],
 
                 'pymontecarlo.fileformat.results.result':
                     ['PhotonIntensityResult = pymontecarlo.fileformat.results.result:PhotonIntensityResultHDF5Handler',
