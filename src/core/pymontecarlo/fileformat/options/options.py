@@ -219,6 +219,7 @@ class _OptionsWriterThread(_MonitorableThread):
             self_opened = True
         dest.write(xmlutil.tostring(element))
         if self_opened: dest.close()
+        return source
 
     def _write_version(self, options, element):
         element.set('version', VERSION)
