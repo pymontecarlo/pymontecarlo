@@ -31,12 +31,4 @@ else:
     name, ext = os.path.splitext(os.path.basename(os.path.normcase(FILE_NAME)))
     moduleName = "%s__main__" % name
 code = importer.get_code(moduleName)
-exec code in m.__dict__
-
-versionInfo = sys.version_info[:3]
-if versionInfo >= (2, 5, 0) and versionInfo <= (2, 6, 4):
-    module = sys.modules.get("threading")
-    if module is not None:
-        module._shutdown()
-
-
+exec(code, m.__dict__)
