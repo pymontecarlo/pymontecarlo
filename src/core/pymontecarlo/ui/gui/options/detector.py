@@ -23,7 +23,9 @@ from itertools import product
 from operator import itemgetter
 
 # Third party modules.
-from PySide.QtGui import QHBoxLayout, QLabel, QCheckBox
+from PySide.QtGui import \
+    QHBoxLayout, QLabel, QCheckBox, QWidget, QTabWidget, QVBoxLayout
+from PySide.QtCore import Qt
 
 import numpy as np
 
@@ -657,6 +659,74 @@ class TrajectoryDetectorWidget(_DetectorWidget):
 
     def setValue(self, value):
         self._chk_secondary.setChecked(value.secondary)
+
+#--- Group widgets
+
+class DetectorsWidget(QWidget):
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+
+        # Variables
+        self._tabs = {}
+        self._widgets = {}
+        self._readonly = False
+
+        # Widgets
+        self._wdg_tab = QTabWidget()
+
+        # Layouts
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._wdg_tab)
+        self.setLayout(layout)
+
+    def addDetector(self, key, detector):
+        if key in self._tabs:
+            raise ValueError('Detector with key %s already added' % key)
+
+        clasz = detector.__class__
+        wdg_detector = get_widget_class(clasz)()
+        wdg_detector.setValue(detector)
+        wdg_detector.setReadOnly(self._readonly)
+        self._widgets[key] = wdg_detector
+
+        lbl_class = QLabel(clasz.__name__)
+        lbl_class.setAlignment(Qt.AlignRight)
+        font = lbl_class.font()
+        font.setItalic(True)
+        lbl_class.setFont(font)
+
+        layout = QVBoxLayout()
+        layout.addWidget(lbl_class)
+        layout.addWidget(wdg_detector, 1)
+
+        widget = QWidget()
+        widget.setLayout(layout)
+        index = self._wdg_tab.addTab(widget, key)
+        self._tabs[key] = index
+
+    def addDetectors(self, detectors):
+        for key in sorted(detectors.keys()):
+            self.addDetector(key, detectors[key])
+
+    def removeDetector(self, key):
+        index = self._tabs.pop(key)
+        self._wdg_tab.removeTab(index)
+        del self._widgets[key]
+
+    def clear(self):
+        self._wdg_tab.clear()
+        self._tabs.clear()
+        self._widgets.clear()
+
+    def setReadOnly(self, state):
+        self._readonly = state
+        for widget in self._widgets.values():
+            widget.setReadOnly(state)
+
+    def isReadOnly(self):
+        return self._readonly
 
 #--- Functions
 
