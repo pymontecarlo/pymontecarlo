@@ -19,16 +19,16 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import methodcaller, attrgetter
+from operator import attrgetter
 
 # Third party modules.
 from PySide.QtGui import \
-    (QComboBox, QTableView, QToolBar, QPushButton, QSizePolicy,
-     QWidget, QHeaderView, QHBoxLayout, QMessageBox)
-from PySide.QtCore import \
-    Qt, QModelIndex, QAbstractTableModel, QAbstractListModel
+    (QComboBox, QToolBar, QPushButton, QSizePolicy, QWidget, QHBoxLayout,
+     QMessageBox)
+from PySide.QtCore import Qt, QAbstractListModel
 
 # Local modules.
+from pymontecarlo.ui.gui.options.model import ModelTableWidget
 from pymontecarlo.ui.gui.options.wizard.options import \
     _ExpandableOptionsWizardPage
 from pymontecarlo.ui.gui.util.tango import getIcon
@@ -113,119 +113,11 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
             self._models[model.type].remove(model)
             self.reset()
 
-    class _ModelTableModel(QAbstractTableModel):
-
-        def __init__(self):
-            QAbstractTableModel.__init__(self)
-            self._models = []
-
-        def rowCount(self, *args, **kwargs):
-            return len(self._models)
-
-        def columnCount(self, *args, **kwargs):
-            return 2
-
-        def data(self, index, role=Qt.DisplayRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._models)):
-                return None
-
-            if role == Qt.TextAlignmentRole:
-                return Qt.AlignCenter
-
-            if role != Qt.DisplayRole:
-                return None
-
-            model = self._models[index.row()]
-            if model is None:
-                return ''
-
-            column = index.column()
-            if column == 0:
-                return str(model.type)
-            elif column == 1:
-                return str(model)
-
-        def headerData(self, section , orientation, role):
-            if role != Qt.DisplayRole:
-                return None
-            if orientation == Qt.Horizontal:
-                if section == 0:
-                    return 'Type'
-                elif section == 1:
-                    return 'Model'
-            elif orientation == Qt.Vertical:
-                return str(section + 1)
-
-        def flags(self, index):
-            if not index.isValid():
-                return Qt.ItemIsEnabled
-
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index))
-
-        def setData(self, index, value, role=Qt.EditRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._models)):
-                return False
-
-            row = index.row()
-            self._models[row] = value
-
-            self.dataChanged.emit(index, index)
-            return True
-
-        def insertRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginInsertRows(parent, row, row + count - 1)
-
-            for _ in range(count):
-                self._models.insert(row, None)
-
-            self.endInsertRows()
-            return True
-
-        def removeRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginRemoveRows(parent, row, row + count - 1)
-
-            for index in reversed(range(row, row + count)):
-                self._models.pop(index)
-
-            self.endRemoveRows()
-            return True
-
-        def append(self, model):
-            self.insert(self.rowCount(), model)
-
-        def insert(self, index, model):
-            self.insertRows(index)
-            self.setData(self.createIndex(index, 0), model)
-
-        def remove(self, model):
-            index = self._models.index(model)
-            self.removeRows(index)
-
-        def clear(self):
-            self.removeRows(0, self.rowCount())
-
-        def models(self):
-            models = set(self._models)
-            models.discard(None)
-            return models
-
-        def model(self, index):
-            return self._models[index.row()]
-
     def __init__(self, options, parent=None):
         _ExpandableOptionsWizardPage.__init__(self, options, parent)
         self.setTitle('Model')
 
     def _initUI(self):
-        # Variables
-        tbl_model = self._ModelTableModel()
-
         # Widgets
         self._cb_model_type = QComboBox()
         self._cb_model_type.setModel(self._ModelTypeComboBoxModel())
@@ -237,13 +129,7 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
         btn_model_add = QPushButton()
         btn_model_add.setIcon(getIcon("list-add"))
 
-        self._tbl_model = QTableView()
-        self._tbl_model.setModel(tbl_model)
-        header = self._tbl_model.horizontalHeader()
-        header.setResizeMode(QHeaderView.Stretch)
-        policy = self._tbl_model.sizePolicy()
-        policy.setVerticalStretch(True)
-        self._tbl_model.setSizePolicy(policy)
+        self._tbl_model = ModelTableWidget()
 
         tlb_model = QToolBar()
         spacer = QWidget()
@@ -269,10 +155,6 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
 
         self._cb_model_type.currentIndexChanged.connect(self._onModelTypeChanged)
 
-        tbl_model.dataChanged.connect(self.valueChanged)
-        tbl_model.rowsInserted.connect(self.valueChanged)
-        tbl_model.rowsRemoved.connect(self.valueChanged)
-
         return layout
 
     def _onModelTypeChanged(self):
@@ -285,7 +167,6 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
         self._cb_model.setCurrentIndex(0)
 
     def _onModelAdd(self):
-        tbl_model = self._tbl_model.model()
         cb_model = self._cb_model.model()
 
         index = self._cb_model.currentIndex()
@@ -293,23 +174,22 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
             model = cb_model.model(index)
         except IndexError: # No entry
             return
-        tbl_model.append(model) # Insert table row
+        self._tbl_model.addModel(model)
         cb_model.remove(model) # Remove model from combo box
 
         self._cb_model.setCurrentIndex(index)
 
     def _onModelRemove(self):
-        selection = self._tbl_model.selectionModel().selection().indexes()
-        if len(selection) == 0:
+        models = self._tbl_model.currentModels()
+        if len(models) == 0:
             QMessageBox.warning(self, "Model", "Select a row")
             return
 
-        tbl_model = self._tbl_model.model()
         cb_model = self._cb_model.model()
-        for row in sorted(map(methodcaller('row'), selection), reverse=True):
-            model = tbl_model.model(tbl_model.createIndex(row, 0))
+
+        for model in models:
             cb_model.add(model) # Show model in combo box
-            tbl_model.removeRow(row) # Remove row
+            self._tbl_model.removeModel(model)
 
         if self._cb_model.currentIndex() < 0:
             self._cb_model.setCurrentIndex(0)
@@ -361,16 +241,12 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
         self._cb_model.setCurrentIndex(0)
 
         # Add model(s)
-        tbl_model = self._tbl_model.model()
-        tbl_model.clear()
-
-        for model in self.options().models:
-            tbl_model.append(model)
+        self._tbl_model.clear()
+        self._tbl_model.addModels(self.options().models)
 
     def validatePage(self):
-        tbl_model = self._tbl_model.model()
         self.options().models.clear()
-        for model in tbl_model.models():
+        for model in self._tbl_model.models():
             self.options().models.add(model)
 
         return True
@@ -380,7 +256,7 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
             count = 1
 
             models = {}
-            for model in self._tbl_model.model().models():
+            for model in self._tbl_model.models():
                 models.setdefault(model.type, []).append(model)
 
             for values in models.values():
