@@ -85,6 +85,7 @@ class _ResultsReaderThread(_MonitorableThread):
     def _run(self, group):
         try:
             self._update_status(0.1, "Check version")
+            if self.is_cancelled(): return
             version = self._read_version(group)
             if version != VERSION:
                 raise ValueError('Incompatible version: %s != %s' % \
@@ -96,11 +97,15 @@ class _ResultsReaderThread(_MonitorableThread):
             list_results = {}
             for i, item in enumerate(group.items()):
                 self._update_status(i / group_size * 0.9, 'Reading results %i' % i)
+                if self.is_cancelled(): return
+
                 identifier, subgroup = item
                 identifier = identifier[7:] # Remove "result-"
 
                 # Options
                 self._update_status(i / group_size * 0.9, 'Reading options')
+                if self.is_cancelled(): return
+
                 options = self._read_options(subgroup)
                 assert identifier == options.uuid
 
@@ -113,6 +118,7 @@ class _ResultsReaderThread(_MonitorableThread):
 
                     self._update_status(i / group_size * 0.9 + j / subgroup_size * 0.1,
                                         'Loading %s' % key)
+                    if self.is_cancelled(): return
 
                     logging.debug('Parsing %s (%s) result of %s',
                                   key, subsubgroup.attrs['_class'], identifier)
@@ -129,6 +135,7 @@ class _ResultsReaderThread(_MonitorableThread):
 
             # Read options
             self._update_status(0.9, 'Reading base options')
+            if self.is_cancelled(): return
             options = self._read_options(group)
 
             return Results(options, list_results)
@@ -177,9 +184,11 @@ class _ResultsWriterThread(_MonitorableThread):
     def _run(self, results, group, close):
         try:
             self._update_status(0.03, 'Write class')
+            if self.is_cancelled(): return
             self._write_class(results, group)
 
             self._update_status(0.06, 'Write version')
+            if self.is_cancelled(): return
             self._write_version(results, group)
 
             # Save results
@@ -189,6 +198,7 @@ class _ResultsWriterThread(_MonitorableThread):
             for i, container in enumerate(results):
                 self._update_status(i / results_size * 0.8 + 0.1,
                                     'Saving results %i' % i)
+                if self.is_cancelled(): return
 
                 identifier = container.options.uuid
                 identifiers.append(identifier)
@@ -203,6 +213,7 @@ class _ResultsWriterThread(_MonitorableThread):
 
                     self._update_status(i / results_size * 0.8 + 0.1 + j / container_size * 0.1,
                                         'Saving result %s' % key)
+                    if self.is_cancelled(): return
 
                     subsubgroup = subgroup.create_group(key)
                     self._write_result(result, subsubgroup)
@@ -215,6 +226,7 @@ class _ResultsWriterThread(_MonitorableThread):
 
             # Save options
             self._update_status(0.9, 'Saving options')
+            if self.is_cancelled(): return
             self._write_options(results.options, group)
 
             return group

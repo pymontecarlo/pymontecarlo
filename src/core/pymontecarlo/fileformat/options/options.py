@@ -43,34 +43,43 @@ class _OptionsReaderThread(_MonitorableThread):
 
     def _run(self, element):
         self._update_status(0.1, "Check version")
+        if self.is_cancelled(): return
         version = self._read_version(element)
         if version != VERSION:
             raise ValueError('Incompatible version: %s != %s' % \
                              (version, VERSION))
 
         self._update_status(0.13, "Reading name")
+        if self.is_cancelled(): return
         name = self._read_name(element)
         options = Options(name)
 
         self._update_status(0.16, "Reading UUID")
+        if self.is_cancelled(): return
         options._uuid = self._read_uuid(element)
 
         self._update_status(0.2, "Reading programs")
+        if self.is_cancelled(): return
         options.programs.update(self._read_programs(element))
 
         self._update_status(0.3, "Reading beams")
+        if self.is_cancelled(): return
         options.beam = self._read_beams(element)
 
         self._update_status(0.4, "Reading geometries")
+        if self.is_cancelled(): return
         options.geometry = self._read_geometries(element)
 
         self._update_status(0.6, "Reading detectors")
+        if self.is_cancelled(): return
         options.detectors.update(self._read_detectors(element))
 
         self._update_status(0.8, "Reading limits")
+        if self.is_cancelled(): return
         options.limits.update(self._read_limits(element))
 
         self._update_status(0.9, "Reading models")
+        if self.is_cancelled(): return
         options.models.update(self._read_models(element))
 
         return options
@@ -184,30 +193,39 @@ class _OptionsWriterThread(_MonitorableThread):
         element = etree.Element('{http://pymontecarlo.sf.net}options')
 
         self._update_status(0.1, "Writing version")
+        if self.is_cancelled(): return
         self._write_version(options, element)
 
         self._update_status(0.13, "Writing name")
+        if self.is_cancelled(): return
         self._write_name(options, element)
 
         self._update_status(0.16, "Writing UUID")
+        if self.is_cancelled(): return
         self._write_uuid(options, element)
 
         self._update_status(0.2, "Writing programs")
+        if self.is_cancelled(): return
         self._write_programs(options, element)
 
         self._update_status(0.3, "Writing beams")
+        if self.is_cancelled(): return
         self._write_beams(options, element)
 
         self._update_status(0.4, "Writing geometries")
+        if self.is_cancelled(): return
         self._write_geometries(options, element)
 
         self._update_status(0.6, "Writing detectors")
+        if self.is_cancelled(): return
         self._write_detectors(options, element)
 
         self._update_status(0.8, "Writing limits")
+        if self.is_cancelled(): return
         self._write_limits(options, element)
 
         self._update_status(0.9, "Writing models")
+        if self.is_cancelled(): return
         self._write_models(options, element)
 
         if source is None:
