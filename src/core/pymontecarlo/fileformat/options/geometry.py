@@ -216,20 +216,17 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
             raise ValueError("Element 'leftSubstrate' not found")
         indexes = self._parse_numerical_parameter(subelement, 'material')
         left_material = list(map(materials_lookup.get, indexes))
-        left_depth_m = self._parse_numerical_parameter(subelement, 'depth')
 
         subelement = element.find('rightSubstrate')
         if subelement is None:
             raise ValueError("Element 'rightSubstrate' not found")
         indexes = self._parse_numerical_parameter(subelement, 'material')
         right_material = list(map(materials_lookup.get, indexes))
-        right_depth_m = self._parse_numerical_parameter(subelement, 'depth')
 
-        obj = VerticalLayers(left_material, right_material, None,
+        depth_m = self._parse_numerical_parameter(subelement, 'depth')
+
+        obj = VerticalLayers(left_material, right_material, None, depth_m,
                              geo.tilt_rad, geo.rotation_rad)
-
-        obj.left_substrate.depth_m = left_depth_m
-        obj.right_substrate.depth_m = right_depth_m
 
         subelement = element.find('layers')
         if subelement is None:
@@ -238,8 +235,7 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
             indexes = self._parse_numerical_parameter(subsubelement, 'material')
             material = list(map(materials_lookup.get, indexes))
             thickness_m = self._parse_numerical_parameter(subsubelement, 'thickness')
-            depth_m = self._parse_numerical_parameter(subsubelement, 'depth')
-            obj.add_layer(material, thickness_m, depth_m)
+            obj.add_layer(material, thickness_m)
 
         return obj
 
@@ -252,13 +248,13 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
         indexes = sorted(map(materials_lookup.get,
                              np.array(obj.left_substrate.material, ndmin=1)))
         self._convert_numerical_parameter(subelement, indexes, 'material')
-        self._convert_numerical_parameter(subelement, obj.left_substrate.depth_m, 'depth')
 
         subelement = etree.SubElement(element, 'rightSubstrate')
         indexes = sorted(map(materials_lookup.get,
                              np.array(obj.right_substrate.material, ndmin=1)))
         self._convert_numerical_parameter(subelement, indexes, 'material')
-        self._convert_numerical_parameter(subelement, obj.right_substrate.depth_m, 'depth')
+
+        self._convert_numerical_parameter(element, obj.depth_m, 'depth')
 
         subelement = etree.SubElement(element, 'layers')
         for layer in np.array(obj.layers, ndmin=1):
@@ -267,7 +263,6 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
                                  np.array(layer.material, ndmin=1)))
             self._convert_numerical_parameter(subsubelement, indexes, 'material')
             self._convert_numerical_parameter(subsubelement, layer.thickness_m, 'thickness')
-            self._convert_numerical_parameter(subsubelement, layer.depth_m, 'depth')
 
         return element
 

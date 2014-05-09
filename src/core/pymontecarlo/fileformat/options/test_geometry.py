@@ -233,12 +233,13 @@ class TestVerticalLayersXMLHandler(unittest.TestCase):
 
         self.h = VerticalLayersXMLHandler()
 
-        self.obj1 = VerticalLayers(Material.pure(29), Material.pure(30), None, 1.1, 2.2)
+        self.obj1 = VerticalLayers(Material.pure(29), Material.pure(30), None,
+                                   tilt_rad=1.1, rotation_rad=2.2)
         self.obj1.add_layer(Material.pure(31), 500.0)
 
         self.obj2 = VerticalLayers(Material.pure(29), Material.pure(30))
         self.obj2.add_layer(Material.pure(31), 500.0)
-        self.obj2.set_depth_m(400.0)
+        self.obj2.depth_m = 400.0
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
         source = BytesIO(b'<mc:verticalLayers xmlns:mc="http://pymontecarlo.sf.net" rotation="2.2" tilt="1.1"><materials><mc:material _index="1" density="5910.0" name="Gallium"><composition><element weightFraction="1.0" z="31" /></composition></mc:material><mc:material _index="2" density="8960.0" name="Copper"><composition><element weightFraction="1.0" z="29" /></composition></mc:material><mc:material _index="3" density="7140.0" name="Zinc"><composition><element weightFraction="1.0" z="30" /></composition></mc:material></materials><leftSubstrate depth="inf" material="2" /><rightSubstrate depth="inf" material="3" /><layers><layer depth="inf" material="1" thickness="500.0" /></layers></mc:verticalLayers>')
@@ -271,14 +272,13 @@ class TestVerticalLayersXMLHandler(unittest.TestCase):
         # Vertical layers 2
         obj = self.h.parse(self.element2)
 
+        self.assertAlmostEqual(400.0, obj.depth_m, 4)
+
         self.assertEqual('Copper', str(obj.left_substrate.material))
-        self.assertAlmostEqual(400.0, obj.left_substrate.depth_m, 4)
         self.assertEqual('Zinc', str(obj.right_substrate.material))
-        self.assertAlmostEqual(400.0, obj.right_substrate.depth_m, 4)
 
         self.assertEqual('Gallium', str(obj.layers.material))
         self.assertAlmostEqual(500.0, obj.layers.thickness_m, 4)
-        self.assertAlmostEqual(400.0, obj.layers.depth_m, 4)
 
         self.assertAlmostEqual(0.0, obj.tilt_rad, 4)
         self.assertAlmostEqual(0.0, obj.rotation_rad, 4)
