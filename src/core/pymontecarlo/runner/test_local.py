@@ -13,6 +13,7 @@ import unittest
 import logging
 import tempfile
 import shutil
+import os
 
 # Third party modules.
 
@@ -44,17 +45,13 @@ class TestLocalRunner(unittest.TestCase):
         self.runner.start()
         self.runner.put(Options('test1'))
         self.runner.put(Options('test2'))
-        self.assertEqual(2, len(self.runner.get_results()))
+        self.runner.join()
+        self.assertEqual(2, len(os.listdir(self.tmpdir)))
 
         # Run another options
         self.runner.put(Options('test3'))
-        self.assertEqual(1, len(self.runner.get_results()))
-
-        # Stop and restart
-        self.runner.stop()
-        self.runner.start()
-        self.runner.put(Options('test4'))
-        self.assertEqual(1, len(self.runner.get_results()))
+        self.runner.join()
+        self.assertEqual(3, len(os.listdir(self.tmpdir)))
 
         # Close and cannot restart
         self.runner.close()

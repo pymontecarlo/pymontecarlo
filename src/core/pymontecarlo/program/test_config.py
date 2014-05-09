@@ -20,7 +20,7 @@ from pymontecarlo.program.converter import Converter
 from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
 from pymontecarlo.program.importer import Importer
-from pymontecarlo.results.results import Results
+from pymontecarlo.results.results import Results, ResultsContainer
 
 # Globals and constants variables.
 
@@ -63,7 +63,7 @@ class DummyWorker(Worker):
         self._status = 'Completed'
         self._progress = 1.0
 
-        return Results(options, [(options, {})])
+        return ResultsContainer(options, {})
 
 class DummyImporter(Importer):
 

@@ -24,6 +24,7 @@ import logging
 import tempfile
 import shutil
 import queue
+import random
 
 # Third party modules.
 
@@ -48,15 +49,15 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
         self._workdir = workdir
         self._user_defined_workdir = self._workdir is not None
 
-    def run(self):
-        while not self._force_cancel.is_set():
+    def _run(self):
+        while not self.is_cancelled():
+            # Retrieve options
             try:
-                # Retrieve options
-                try:
-                    base_options, options = self._queue_options.get(timeout=1)
-                except queue.Empty:
-                    continue
+                base_options, options = self._queue_options.get(timeout=0.1)
+            except queue.Empty:
+                continue
 
+            try:
                 # Create working directory
                 if not self._user_defined_workdir:
                     workdir = tempfile.mkdtemp()
@@ -79,21 +80,20 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
                 # Put results in queue
                 self._queue_results.put(Results(base_options, [results]))
-
+            finally:
                 self._queue_options.task_done()
-            except:
-                logging.critical('Exception in dispatcher', exc_info=True)
-                self._queue_options.task_done()
-                break
-
-        self._is_cancelled.set()
 
     def cancel(self):
         self._worker.cancel()
         _RunnerOptionsDispatcher.cancel(self)
 
-    def report(self):
-        return self._worker.report()
+    @property
+    def progress(self):
+        return self._worker.progress
+
+    @property
+    def status(self):
+        return self._worker.status
 
 class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
 
@@ -102,15 +102,17 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
 
         self._outputdir = outputdir
 
-    def run(self):
-        while not self._force_cancel.is_set():
+    def _run(self):
+        while not self.is_cancelled():
+            # Retrieve results
             try:
-                # Retrieve results
-                try:
-                    results = self._queue_results.get(timeout=1)
-                except queue.Empty:
-                    continue
+                results = self._queue_results.get(timeout=0.1)
+            except queue.Empty:
+                continue
 
+            try:
+                self._update_status(random.random(),
+                                    'Saving %s' % results.options.name)
                 h5filepath = os.path.join(self._outputdir,
                                           results.options.name + '.h5')
 
@@ -119,13 +121,8 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
                 else:
                     results.write(h5filepath)
 
+            finally:
                 self._queue_results.task_done()
-            except:
-                logging.critical('Exception in dispatcher', exc_info=True)
-                self._queue_results.task_done()
-                break
-
-        self._is_cancelled.set()
 
 class LocalRunner(_Runner):
 

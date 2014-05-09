@@ -84,21 +84,28 @@ class _MonitorableThread(threading.Thread):
         self._result = result
 
     def is_alive(self):
-        if self._exception is not None:
-            raise self._exception
+        self.raise_exception()
         return threading.Thread.is_alive(self)
 
     def is_cancelled(self):
         return self._cancel_event.is_set()
 
+    def is_exception_raised(self):
+        return self._exception is not None
+
+    def raise_exception(self):
+        if self.is_exception_raised():
+            try:
+                raise self._exception
+            finally:
+                self._exception = None
+
     def join(self, timeout=None):
-        if self._exception is not None:
-            raise self._exception
+        self.raise_exception()
 
         threading.Thread.join(self, timeout)
 
-        if self._exception is not None:
-            raise self._exception
+        self.raise_exception()
 
     def cancel(self):
         self._update_status(1.0, 'Cancelled')
@@ -107,8 +114,7 @@ class _MonitorableThread(threading.Thread):
     def get(self):
         self.join()
 
-        if self._exception is not None:
-            raise self._exception
+        self.raise_exception()
 
         if self._result is None:
             raise RuntimeError('No result')

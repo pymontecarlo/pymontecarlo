@@ -99,6 +99,14 @@ class Worker(object):
     def program(self):
         return self._program
 
+    @property
+    def progress(self):
+        return self._progress
+
+    @property
+    def status(self):
+        return self._status
+
 class SubprocessWorker(Worker):
 
     def __init__(self, program):

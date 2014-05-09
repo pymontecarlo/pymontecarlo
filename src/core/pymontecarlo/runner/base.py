@@ -25,12 +25,14 @@ import queue
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.monitorable import _Monitorable, _MonitorableThread
 
 # Globals and constants variables.
 
-class _Runner(object):
+class _Runner(_Monitorable):
 
     def __init__(self, program, max_workers=1):
+        _Monitorable.__init__(self)
 
         if max_workers < 1:
             raise ValueError("Number of workers must be greater or equal to 1.")
@@ -54,7 +56,7 @@ class _Runner(object):
         self.close()
         return False
 
-    def start(self):
+    def _start(self):
         """
         Starts running the simulations.
         """
@@ -66,6 +68,9 @@ class _Runner(object):
 
         self._is_started.set()
 
+    def start(self):
+        self._start()
+
     def cancel(self):
         """
         Cancels all running simulations.
@@ -73,12 +78,24 @@ class _Runner(object):
         for dispatcher in self._dispatchers_options | self._dispatchers_results:
             dispatcher.cancel()
 
+    def is_alive(self):
+        """
+        Returns whether simulations are being executed.
+        """
+        return not self._queue_options.empty()
+
     def join(self):
         """
         Blocks until all options have been simulated.
         """
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            dispatcher.raise_exception()
+
         self._queue_options.join()
         self._queue_results.join()
+
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            dispatcher.raise_exception()
 
     def close(self):
         """
@@ -86,31 +103,6 @@ class _Runner(object):
         """
         self.join()
         self.cancel()
-
-    def is_alive(self):
-        """
-        Returns whether simulations are being executed.
-        """
-        return not self._queue_options.empty()
-
-    def report(self):
-        """
-        Returns a tuple of:
-
-          * counter of completed simulations
-          * the progress of *one* of the currently running simulations
-              (between 0.0 and 1.0)
-          * text indicating the status of *one* of the currently running
-              simulations
-        """
-        completed = 0.0 #len(self._options_names) - self._queue_options.unfinished_tasks
-
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
-            progress, status = dispatcher.report()
-            if progress > 0.0 and progress < 1.0: # active worker
-                return completed, progress, status
-
-        return completed, progress, status
 
     def put(self, options):
         """
@@ -139,39 +131,39 @@ class _Runner(object):
         """
         return self._program
 
-class _RunnerDispatcher(threading.Thread):
+    @property
+    def progress(self):
+        progress = 0.0
+
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            progress = dispatcher.progress
+            if progress > 0.0 and progress < 1.0: # active worker
+                return progress
+
+        return progress
+
+    @property
+    def status(self):
+        status = ''
+
+        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+            progress = dispatcher.progress
+            status = dispatcher.status
+            if progress > 0.0 and progress < 1.0: # active worker
+                return status
+
+        return status
+
+class _RunnerDispatcher(_MonitorableThread):
 
     def __init__(self, program):
-        threading.Thread.__init__(self)
+        _MonitorableThread.__init__(self)
 
         self._program = program
 
-        self._force_cancel = threading.Event()
-        self._is_cancelled = threading.Event()
-
-    def start(self):
-        if self._is_cancelled.is_set():
-            raise RuntimeError('Dispatcher already stopped')
-        threading.Thread.start(self)
-
-    def cancel(self):
-        """
-        Cancels running simulation.
-        """
-        self._force_cancel.set()
-        self._is_cancelled.wait()
-
-    def report(self):
-        """
-        Returns a tuple of:
-
-          * counter of completed simulations
-          * the progress of *one* of the currently running simulations
-              (between 0.0 and 1.0)
-          * text indicating the status of *one* of the currently running
-              simulations
-        """
-        return 0.0, ''
+    @property
+    def program(self):
+        return self._program
 
 class _RunnerOptionsDispatcher(_RunnerDispatcher):
 
