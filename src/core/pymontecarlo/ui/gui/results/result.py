@@ -47,6 +47,7 @@ import pymontecarlo.util.physics as physics
 from pymontecarlo.settings import get_settings
 
 from pymontecarlo.ui.gui.util.tango import getIcon
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.ui.gui.options.detector import \
     get_widget_class as get_detector_widget_class
@@ -945,6 +946,12 @@ class PhotonRadialResultWidget(_PhotonDistributionResultWidget):
     def _drawFigure(self):
         self._ax.set_xlabel('Radius (m)')
         _PhotonDistributionResultWidget._drawFigure(self)
+
+#--- Functions
+
+def get_widget_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.results.result', clasz)
+
 
 def __run():
     import sys
