@@ -819,6 +819,12 @@ class _Tree(QTreeWidget):
     def controller(self):
         return self._controller
 
+    def requestCloseAll(self):
+        for uid in list(self._results_items.keys()):
+            self._results_items[uid]['root'].requestClose()
+        for uid in list(self._options_items.keys()):
+            self._options_items[uid]['root'].requestClose()
+
 class MainWindow(QMainWindow):
 
     def __init__(self, parent):
@@ -836,7 +842,10 @@ class MainWindow(QMainWindow):
         self._act_open = QAction(getIcon("document-open"), "&Open", self)
         self._act_open.setShortcut(QKeySequence.Open)
         self._act_close = QAction("&Close", self)
+        self._act_close.setShortcut(QKeySequence.Close)
         self._act_close.setEnabled(False)
+        self._act_closeall = QAction("Close all", self)
+        self._act_closeall.setEnabled(False)
         self._act_save = QAction(getIcon('document-save'), '&Save', self)
         self._act_save.setShortcut(QKeySequence.Save)
         self._act_save.setEnabled(False)
@@ -877,6 +886,7 @@ class MainWindow(QMainWindow):
         mnu_file.addAction(self._act_open)
         mnu_file.addSeparator()
         mnu_file.addAction(self._act_close)
+        mnu_file.addAction(self._act_closeall)
         mnu_file.addSeparator()
         mnu_file.addAction(self._act_save)
         mnu_file.addAction(self._act_saveas)
@@ -913,6 +923,7 @@ class MainWindow(QMainWindow):
         self._act_save.triggered.connect(self._onSave)
         self._act_saveas.triggered.connect(self._onSaveAs)
         self._act_close.triggered.connect(self._onClose)
+        self._act_closeall.triggered.connect(self._onCloseAll)
         self._act_preferences.triggered.connect(self._onPreferences)
         self._act_exit.triggered.connect(self._onExit)
         self._act_window_cascade.triggered.connect(self._onWindowCascade)
@@ -948,9 +959,13 @@ class MainWindow(QMainWindow):
         self.controller().optionsSaveAsRequested.connect(self._onOptionsSaveAsRequested)
         self.controller().optionsSaved.connect(self._onOptionsSaved)
         self.controller().optionsOpened.connect(self._onOptionsOpened)
+        self.controller().optionsAdded.connect(self._onTreeChanged)
+        self.controller().optionsRemoved.connect(self._onTreeChanged)
 
         self.controller().resultsSaveAsRequested.connect(self._onResultsSaveAsRequested)
         self.controller().resultsOpened.connect(self._onResultsOpened)
+        self.controller().resultsAdded.connect(self._onTreeChanged)
+        self.controller().resultsRemoved.connect(self._onTreeChanged)
 
         # Defaults
         settings = self.controller().settings()
@@ -1016,6 +1031,9 @@ class MainWindow(QMainWindow):
             return
         item.requestClose()
 
+    def _onCloseAll(self):
+        self._tree.requestCloseAll()
+
     def _onPreferences(self):
         dialog = ConfigureDialog()
         dialog.exec_()
@@ -1050,6 +1068,9 @@ class MainWindow(QMainWindow):
         self._act_close.setEnabled(item.canClose())
         self._act_save.setEnabled(item.canSave())
         self._act_saveas.setEnabled(item.canSaveAs())
+
+    def _onTreeChanged(self):
+        self._act_closeall.setEnabled(self._tree.topLevelItemCount() > 0)
 
     def _onDialogProgressProgress(self, progress, status):
         self._dlg_progress.setValue(progress * 100)
