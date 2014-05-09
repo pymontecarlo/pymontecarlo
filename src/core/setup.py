@@ -92,8 +92,6 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'TransmittedElectronEnergyResult = pymontecarlo.fileformat.results.result:TransmittedElectronEnergyResultHDF5Handler',
                      'BackscatteredElectronPolarAngularResult = pymontecarlo.fileformat.results.result:BackscatteredElectronPolarAngularResultHDF5Handler',
                      'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
-                'pymontecarlo.fileformat.results.results':
-                    ['Results = pymontecarlo.fileformat.results.results:ResultsHDF5Handler'],
 
                 'pymontecarlo.ui.gui.options.beam':
                     ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
