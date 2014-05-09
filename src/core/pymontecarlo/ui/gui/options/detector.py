@@ -35,8 +35,7 @@ from pymontecarlo.ui.gui.util.parameter import \
 from pymontecarlo.ui.gui.util.widget import \
     UnitComboBox, MultiNumericalLineEdit, AngleComboBox
 from pymontecarlo.ui.gui.util.layout import merge_formlayout
-
-from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector, _EnergyDetector,

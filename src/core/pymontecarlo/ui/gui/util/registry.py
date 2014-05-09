@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ================================================================================
-:mod:`optiosn` -- Options widgets and utilities
+:mod:`registry` -- Access entry points
 ================================================================================
 
-.. module:: optiosn
-   :synopsis: Options widgets and utilities
+.. module:: registry
+   :synopsis: Access entry points
 
-.. inheritance-diagram:: pymontecarlo.ui.gui.options.options
+.. inheritance-diagram:: pymontecarlo.ui.gui.util.registry
 
 """
 

@@ -32,8 +32,7 @@ from pymontecarlo.ui.gui.util.parameter import \
     (_ParameterizedClassWidget, _ParameterWidget, UnitParameterWidget,
      AngleParameterWidget)
 from pymontecarlo.ui.gui.util.widget import UnitComboBox, MultiNumericalLineEdit
-
-from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
 from pymontecarlo.options.particle import PARTICLES

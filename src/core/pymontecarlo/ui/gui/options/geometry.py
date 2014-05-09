@@ -36,10 +36,10 @@ from pymontecarlo.ui.gui.util.parameter import \
 from pymontecarlo.ui.gui.util.widget import \
     MultiNumericalLineEdit, NumericalValidator, UnitComboBox
 from pymontecarlo.ui.gui.util.tango import getIcon
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.ui.gui.options.material import \
     MaterialListWidget, MaterialListDialog, MaterialDialog
-from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.geometry import \
     (_Geometry, Substrate, _SubstrateBody, Inclusion, _InclusionBody,

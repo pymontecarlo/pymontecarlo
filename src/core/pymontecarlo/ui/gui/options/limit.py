@@ -26,8 +26,7 @@ from PySide.QtGui import QLabel, QWidget, QVBoxLayout, QTabWidget
 # Local modules.
 from pymontecarlo.ui.gui.util.parameter import \
     _ParameterizedClassWidget, NumericalParameterWidget
-
-from pymontecarlo.ui.gui.options.options import get_widget_class as _get_widget_class
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.limit import TimeLimit, ShowersLimit
 
