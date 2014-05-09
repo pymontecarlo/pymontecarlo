@@ -40,9 +40,10 @@ from pymontecarlo.util.config import ConfigParser
 import pymontecarlo.util.hdf5util as hdf5util
 import pymontecarlo.util.xmlutil as xmlutil
 
-from pymontecarlo.fileformat.options.options import Options
+from pymontecarlo.options.options import Options
+from pymontecarlo.results.results import Results
+
 from pymontecarlo.fileformat.options.updater import Updater as OptionsUpdater
-from pymontecarlo.fileformat.results.results import load as load_results
 from pymontecarlo.fileformat.handler import find_convert_handler
 
 from pymontecarlo.results.result import \
@@ -137,7 +138,7 @@ class Updater(_Updater):
         return bak_filepath
 
     def _validate(self, filepath):
-        load_results(filepath)
+        Results.read(filepath)
 
     def _update_noversion(self, filepath):
         logging.debug('Updating from "no version"')

@@ -87,6 +87,13 @@ class Results(Sequence):
         >>> 2.0
     """
 
+    @classmethod
+    def read(cls, filepath):
+        from pymontecarlo.fileformat.results.results import ResultsReader
+        reader = ResultsReader()
+        reader.read(filepath)
+        return reader.get()
+
     def __init__(self, options, results):
         self._options = options
         freeze(self._options)
@@ -105,6 +112,12 @@ class Results(Sequence):
 
     def __getitem__(self, index):
         return self._list_results[index]
+
+    def write(self, filepath):
+        from pymontecarlo.fileformat.results.results import ResultsWriter
+        writer = ResultsWriter()
+        writer.write(self, filepath)
+        writer.join()
 
     @property
     def options(self):

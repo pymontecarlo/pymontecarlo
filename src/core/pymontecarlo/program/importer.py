@@ -26,8 +26,7 @@ from abc import ABCMeta, abstractmethod
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.results.results import ResultsContainer
-from pymontecarlo.fileformat.results.results import load as load_results
+from pymontecarlo.results.results import ResultsContainer, Results
 
 # Globals and constants variables.
 
@@ -94,4 +93,4 @@ class HDF5Importer(Importer):
 
     def _import(self, options, dirpath, *args, **kwargs):
         filepath = os.path.join(dirpath, options.name + '.h5')
-        return load_results(filepath)[0]
+        return Results.read(filepath)[0]

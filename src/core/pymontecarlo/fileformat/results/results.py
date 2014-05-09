@@ -28,35 +28,24 @@ import h5py
 import numpy as np
 
 # Local modules.
-from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
 from pymontecarlo.fileformat.handler import \
     find_convert_handler, find_parse_handler
+from pymontecarlo.fileformat.options.options import OptionsReader, OptionsWriter
 
 from pymontecarlo.results.results import Results
 
-import pymontecarlo.util.progress as progress
+from pymontecarlo.util.monitorable import _MonitorableThread, _Monitorable
 
 # Globals and constants variables.
-
-def load(filepath):
-    with h5py.File(filepath, 'r') as hdf5file:
-        handler = find_parse_handler('pymontecarlo.fileformat.results.results',
-                                     hdf5file)
-        return handler.parse(hdf5file)
-
-def save(results, filepath):
-    with h5py.File(filepath, 'w') as hdf5file:
-        handler = find_convert_handler('pymontecarlo.fileformat.results.results',
-                                       results, hdf5file)
-        return handler.convert(results, hdf5file)
+VERSION = b'7'
 
 def append(results, filepath):
     with h5py.File(filepath, 'r+') as hdf5file:
         # Check UUID of base options
         source = BytesIO(hdf5file.attrs['options'])
-        element = etree.parse(source).getroot()
-        handler = find_parse_handler('pymontecarlo.fileformat.options.options', element)
-        options = handler.parse(element)
+        reader = OptionsReader()
+        reader.read(source)
+        options = reader.get()
 
         if options.uuid != results.options.uuid:
             raise ValueError('UUID of base options do not match: %s != %s' % \
@@ -78,9 +67,9 @@ def append(results, filepath):
                 handler.convert(result, subgroup)
 
             # Save options
-            handler = find_convert_handler('pymontecarlo.fileformat.options.options',
-                                           results.options)
-            element = handler.convert(container.options)
+            writer = OptionsWriter()
+            writer.convert(container.options)
+            element = writer.get()
             group.attrs['options'] = etree.tostring(element)
 
         # Update identifiers
@@ -88,37 +77,31 @@ def append(results, filepath):
         hdf5file.attrs.create('identifiers', identifiers,
                               dtype=h5py.special_dtype(vlen=str))
 
-class ResultsHDF5Handler(_HDF5Handler):
+class _ResultsReaderThread(_MonitorableThread):
 
-    CLASS = Results
-    VERSION = b'7'
+    def __init__(self, group):
+        _MonitorableThread.__init__(self, args=(group,))
 
-    def parse(self, group):
-        task = progress.start_task('Loading results')
-
+    def _run(self, group):
         try:
-            # Check version
-            version = group.attrs['version']
-            if version != self.VERSION:
+            self._update_status(0.1, "Check version")
+            version = self._read_version(group)
+            if version != VERSION:
                 raise ValueError('Incompatible version: %s != %s' % \
-                                 (version, self.VERSION))
+                                 (version, VERSION))
 
             # Read results
             group_size = len(group)
 
             list_results = {}
             for i, item in enumerate(group.items()):
-                task.status = 'Reading results %i' % i
-                task.progress = i / group_size
+                self._update_status(i / group_size * 0.9, 'Reading results %i' % i)
                 identifier, subgroup = item
                 identifier = identifier[7:] # Remove "result-"
 
                 # Options
-                task.status = 'Reading options'
-                source = BytesIO(subgroup.attrs['options'])
-                element = etree.parse(source).getroot()
-                options = self._parse_handlers('pymontecarlo.fileformat.options.options', element)
-
+                self._update_status(i / group_size * 0.9, 'Reading options')
+                options = self._read_options(subgroup)
                 assert identifier == options.uuid
 
                 # Load each result
@@ -128,14 +111,12 @@ class ResultsHDF5Handler(_HDF5Handler):
                 for j, item in enumerate(subgroup.items()):
                     key, subsubgroup = item
 
-                    task.status = 'Loading %s' % key
-                    task.progress = i / group_size + j / subgroup_size * 0.1
+                    self._update_status(i / group_size * 0.9 + j / subgroup_size * 0.1,
+                                        'Loading %s' % key)
 
                     logging.debug('Parsing %s (%s) result of %s',
                                   key, subsubgroup.attrs['_class'], identifier)
-                    result = self._parse_handlers('pymontecarlo.fileformat.results.result',
-                                                  subsubgroup)
-                    results[key] = result
+                    results[key] = self._read_result(subsubgroup)
 
                 # Results
                 list_results[identifier] = (options, results)
@@ -147,66 +128,130 @@ class ResultsHDF5Handler(_HDF5Handler):
             list_results = [list_results[identifier] for identifier in identifiers]
 
             # Read options
-            task.status = 'Reading base options'
-            source = BytesIO(group.attrs['options'])
-            element = etree.parse(source).getroot()
-            options = self._parse_handlers('pymontecarlo.fileformat.options.options', element)
+            self._update_status(0.9, 'Reading base options')
+            options = self._read_options(group)
 
             return Results(options, list_results)
         finally:
-            progress.stop_task(task)
+            if hasattr(group, 'close'):
+                group.close()
 
-    def convert(self, obj, group):
-        group = _HDF5Handler.convert(self, obj, group)
+    def _read_version(self, group):
+        return group.attrs['version']
 
-        task = progress.start_task('Saving results')
+    def _read_options(self, group):
+        source = BytesIO(group.attrs['options'])
+        element = etree.parse(source).getroot()
 
+        reader = OptionsReader()
+        reader.parse(element)
+        return reader.get()
+
+    def _read_result(self, group):
+        handler = find_parse_handler('pymontecarlo.fileformat.results.result', group)
+        return handler.parse(group)
+
+class ResultsReader(_Monitorable):
+
+    def _create_thread(self, group, *args, **kwargs):
+        return _ResultsReaderThread(group)
+
+    def can_read(self, filepath):
+        with h5py.File(filepath, 'r') as group:
+            return self.can_parse(group)
+
+    def can_parse(self, group):
+        return group.attrs['_class'] == np.string_(Results.__name__) #@UndefinedVariable
+
+    def read(self, filepath):
+        self.parse(h5py.File(filepath, 'r'))
+
+    def parse(self, group):
+        self._start(group)
+
+class _ResultsWriterThread(_MonitorableThread):
+
+    def __init__(self, results, group, close=False):
+        _MonitorableThread.__init__(self, args=(results, group, close))
+
+    def _run(self, results, group, close):
         try:
-            # Save version
-            group.attrs['version'] = self.VERSION
+            self._update_status(0.03, 'Write class')
+            self._write_class(results, group)
+
+            self._update_status(0.06, 'Write version')
+            self._write_version(results, group)
 
             # Save results
-            obj_size = len(obj)
+            results_size = len(results)
 
             identifiers = []
-            for i, results in enumerate(obj):
-                task.status = 'Saving results %i' % i
-                task.progress = i / obj_size
+            for i, container in enumerate(results):
+                self._update_status(i / results_size * 0.8 + 0.1,
+                                    'Saving results %i' % i)
 
-                identifier = results.options.uuid
+                identifier = container.options.uuid
                 identifiers.append(identifier)
 
                 subgroup = group.create_group('result-' + identifier)
 
                 # Save each result
-                results_size = len(results)
+                container_size = len(container)
 
-                for j, item in enumerate(results.items()):
+                for j, item in enumerate(container.items()):
                     key, result = item
 
-                    task.status = 'Saving result %s' % key
-                    task.progress = i / obj_size + j / results_size * 0.1
+                    self._update_status(i / results_size * 0.8 + 0.1 + j / container_size * 0.1,
+                                        'Saving result %s' % key)
 
                     subsubgroup = subgroup.create_group(key)
-                    self._convert_handlers('pymontecarlo.fileformat.results.result',
-                                           result, subsubgroup)
+                    self._write_result(result, subsubgroup)
 
                 # Save options
-                task.status = 'Saving options'
-                element = self._convert_handlers('pymontecarlo.fileformat.options.options',
-                                                 results.options)
-                subgroup.attrs['options'] = etree.tostring(element)
+                self._write_options(container.options, subgroup)
 
             group.attrs.create('identifiers', identifiers,
                                dtype=h5py.special_dtype(vlen=str))
 
             # Save options
-            task.status = 'Saving options'
-            element = self._convert_handlers('pymontecarlo.fileformat.options.options',
-                                             obj.options)
-            group.attrs['options'] = etree.tostring(element)
+            self._update_status(0.9, 'Saving options')
+            self._write_options(results.options, group)
+
+            return group
         finally:
-            progress.stop_task(task)
+            if hasattr(group, 'close') and close:
+                group.close()
 
-        return group
+    def _write_class(self, results, group):
+        group.attrs['_class'] = np.string_(results.__class__.__name__)
 
+    def _write_version(self, results, group):
+        group.attrs['version'] = VERSION
+
+    def _write_options(self, options, group):
+        writer = OptionsWriter()
+        writer.convert(options)
+        element = writer.get()
+        group.attrs['options'] = etree.tostring(element)
+
+    def _write_result(self, result, group):
+        handler = find_convert_handler('pymontecarlo.fileformat.results.result', result)
+        handler.convert(result, group)
+
+class ResultsWriter(_Monitorable):
+
+    def _create_thread(self, results, group, close=False, *args, **kwargs):
+        return _ResultsWriterThread(results, group, close)
+
+    def can_write(self, results):
+        return self.can_convert(results)
+
+    def can_convert(self, results):
+        return type(results) is Results
+
+    def write(self, results, filepath):
+        group = h5py.File(filepath, 'w')
+        self._start(results, group, True)
+
+    def convert(self, results, group):
+        self._start(results, group, False)

@@ -11,6 +11,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
+import tempfile
 
 # Third party modules.
 
@@ -97,6 +98,20 @@ class TestResults(TestCase):
         self.assertEqual('test1', self.results[0].options.name)
         self.assertEqual('test2', self.results[1].options.name)
         self.assertRaises(IndexError, self.results.__getitem__, 2)
+
+    def testreadwrite(self):
+        with tempfile.NamedTemporaryFile() as f:
+            self.results.write(f.name)
+            obj = Results.read(f.name)
+
+        self.assertEqual(2, len(obj))
+        self.assertEqual('test1', obj[0].options.name)
+        self.assertEqual('test2', obj[1].options.name)
+
+        self.assertIn('det1', obj[0])
+        self.assertIn('det2', obj[0])
+        self.assertIn('det3', obj[0])
+        self.assertIn('det1', obj[1])
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

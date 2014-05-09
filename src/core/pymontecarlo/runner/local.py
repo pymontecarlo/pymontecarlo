@@ -32,7 +32,7 @@ from pymontecarlo.runner.base import \
     _Runner, _RunnerOptionsDispatcher, _RunnerResultsDispatcher
 from pymontecarlo.results.results import Results
 from pymontecarlo.fileformat.results.results import \
-    append as append_results, save as save_results
+    append as append_results
 
 # Globals and constants variables.
 
@@ -117,7 +117,7 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
                 if os.path.exists(h5filepath):
                     append_results(results, h5filepath)
                 else:
-                    save_results(results, h5filepath)
+                    results.write(h5filepath)
 
                 self._queue_results.task_done()
             except:
