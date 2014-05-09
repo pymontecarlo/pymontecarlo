@@ -29,7 +29,7 @@ from PySide.QtGui import \
     (QMainWindow, QMdiArea, QTreeWidget, QAction, QKeySequence, QDockWidget,
      QProgressDialog, QApplication, QTreeWidgetItem, QMenu, QMdiSubWindow,
      QScrollArea, QFileDialog, QMessageBox)
-from PySide.QtCore import Qt
+from PySide.QtCore import Qt, QPoint, QSize
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -47,6 +47,7 @@ from pymontecarlo.ui.gui.options.limit import LimitsWidget
 from pymontecarlo.ui.gui.options.model import ModelTableWidget
 from pymontecarlo.ui.gui.results.result import \
     get_widget_class as get_result_widget_class
+from pymontecarlo.ui.gui.configure import ConfigureDialog
 
 from pymontecarlo.ui.gui.util.tango import getIcon
 import pymontecarlo.ui.gui.util.messagebox as messagebox
@@ -912,6 +913,7 @@ class MainWindow(QMainWindow):
         self._act_save.triggered.connect(self._onSave)
         self._act_saveas.triggered.connect(self._onSaveAs)
         self._act_close.triggered.connect(self._onClose)
+        self._act_preferences.triggered.connect(self._onPreferences)
         self._act_exit.triggered.connect(self._onExit)
         self._act_window_cascade.triggered.connect(self._onWindowCascade)
         self._act_window_tile.triggered.connect(self._onWindowTile)
@@ -951,16 +953,21 @@ class MainWindow(QMainWindow):
         self.controller().resultsOpened.connect(self._onResultsOpened)
 
         # Defaults
-#        settings = self.controller().settings()
-#        self.move(settings.value("pos", self.pos()))
-#        self.resize(settings.value("size", self.size()))
+        settings = self.controller().settings()
+        section = settings.add_section('gui')
+        if hasattr(section, 'position'):
+            pos = list(map(int, section.position.split(',')))
+            self.move(QPoint(*pos))
+        if hasattr(section, 'size'):
+            size = list(map(int, section.size.split(',')))
+            self.resize(QSize(*size))
 
     def _onNew(self):
         self.controller().optionsNewRequested.emit()
 
     def _onOpen(self):
         settings = self.controller().settings()
-        curdir = getattr(settings, 'opendir', os.getcwd())
+        curdir = getattr(settings.gui, 'opendir', os.getcwd())
         namefilters = {'Options [*.xml] (*.xml)': '.xml',
                        'Results [*.h5] (*.h5)': '.h5'}
 
@@ -970,7 +977,7 @@ class MainWindow(QMainWindow):
 
         if not filepath or not namefilter:
             return
-        settings.opendir = os.path.dirname(filepath)
+        settings.gui.opendir = os.path.dirname(filepath)
 
         ext = namefilters[namefilter]
         if not filepath.endswith(ext):
@@ -1008,6 +1015,10 @@ class MainWindow(QMainWindow):
         if item is None:
             return
         item.requestClose()
+
+    def _onPreferences(self):
+        dialog = ConfigureDialog()
+        dialog.exec_()
 
     def _onExit(self):
         self.close()
@@ -1091,7 +1102,7 @@ class MainWindow(QMainWindow):
 
     def _onOptionsSaveAsRequested(self, uid):
         settings = self.controller().settings()
-        curdir = getattr(settings, "savedir", os.getcwd())
+        curdir = getattr(settings.gui, "savedir", os.getcwd())
 
         filepath, namefilter = \
             QFileDialog.getSaveFileName(self, "Save as", curdir,
@@ -1099,7 +1110,7 @@ class MainWindow(QMainWindow):
 
         if not filepath or not namefilter:
             return
-        settings.savedir = os.path.dirname(filepath)
+        settings.gui.savedir = os.path.dirname(filepath)
 
         if not filepath.endswith('.xml'):
             filepath += '.xml'
@@ -1120,7 +1131,7 @@ class MainWindow(QMainWindow):
 
     def _onResultsSaveAsRequested(self, uid):
         settings = self.controller().settings()
-        curdir = getattr(settings, "savedir", os.getcwd())
+        curdir = getattr(settings.gui, "savedir", os.getcwd())
 
         filepath, namefilter = \
             QFileDialog.getSaveFileName(self, "Save as", curdir,
@@ -1128,7 +1139,7 @@ class MainWindow(QMainWindow):
 
         if not filepath or not namefilter:
             return
-        settings.savedir = os.path.dirname(filepath)
+        settings.gui.savedir = os.path.dirname(filepath)
 
         if not filepath.endswith('.h5'):
             filepath += '.h5'
@@ -1139,6 +1150,20 @@ class MainWindow(QMainWindow):
 
     def _onResultsOpened(self, results, filepath):
         self._dlg_progress.hide()
+
+    def closeEvent(self, event):
+        settings = self.controller().settings()
+        section = settings.add_section('gui')
+
+        pos = self.pos()
+        section.position = '%i,%i' % (pos.x(), pos.y())
+
+        size = self.size()
+        section.size = '%i,%i' % (size.width(), size.height())
+
+        settings.write()
+
+        event.accept()
 
     def controller(self):
         return self._controller

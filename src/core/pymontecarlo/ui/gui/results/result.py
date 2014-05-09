@@ -233,7 +233,9 @@ class _SaveableResultWidget(_ResultWidget):
         clipboard.setText(text)
 
     def save(self):
-        curdir = getattr(get_settings(), 'savedir', os.getcwd())
+        settings = get_settings()
+        section = settings.add_section('gui')
+        curdir = getattr(section, 'savedir', os.getcwd())
         namefilters = ';;'.join(sorted(self._save_namefilters.keys()))
 
         filepath, namefilter = \
@@ -241,7 +243,7 @@ class _SaveableResultWidget(_ResultWidget):
 
         if not filepath:
             return
-        get_settings().savedir = os.path.dirname(filepath)
+        section.savedir = os.path.dirname(filepath)
 
         exts = self._save_namefilters[namefilter]
         if not any(filter(lambda ext: filepath.endswith(ext), exts)):
