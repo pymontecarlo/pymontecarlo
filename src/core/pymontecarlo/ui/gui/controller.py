@@ -232,6 +232,9 @@ class Controller(QObject):
         self.resultsRemoved.connect(self._onResultsRemoved, Qt.QueuedConnection)
 
     def _onOptionsOpen(self, filepath):
+        if not self.canOpenOptions(filepath):
+            raise IOError('Options is already opened')
+
         self._options_reader_thread = _OptionsReaderWrapperThread(filepath)
         func = lambda ops, f = filepath: self.optionsOpened.emit(ops, f)
         self._options_reader_thread.resultReady.connect(func)
@@ -300,6 +303,9 @@ class Controller(QObject):
         self._options_edited[uid] = True
 
     def _onResultsOpen(self, filepath):
+        if not self.canOpenResults(filepath):
+            raise IOError('Results is already opened')
+
         self._results_reader_thread = _ResultsReaderWrapperThread(filepath)
         func = lambda ops, f = filepath: self.resultsOpened.emit(ops, f)
         self._results_reader_thread.resultReady.connect(func)
@@ -413,11 +419,17 @@ class Controller(QObject):
     def optionsFilepath(self, uid):
         return self._options_filepath.get(uid)
 
+    def canOpenOptions(self, filepath):
+        return filepath not in self._options_filepath.values()
+
     def results(self, uid):
         return self._list_results[uid]
 
     def resultsFilepath(self, uid):
         return self._results_filepath.get(uid)
+
+    def canOpenResults(self, filepath):
+        return filepath not in self._results_filepath.values()
 
     def resultsContainer(self, uid, index):
         return self._list_results[uid][index]

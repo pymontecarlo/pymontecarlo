@@ -976,13 +976,20 @@ class MainWindow(QMainWindow):
         if not filepath.endswith(ext):
             filepath += ext
 
-        self._dlg_progress.reset()
-        self._dlg_progress.show()
+        if ext == '.xml' and not self.controller().canOpenOptions(filepath):
+            QMessageBox.critical(self, 'Open', 'Options already opened')
+            return
+        elif ext == '.h5' and not self.controller().canOpenResults(filepath):
+            QMessageBox.critical(self, 'Open', 'Results already opened')
+            return
 
         if ext == '.xml':
             self.controller().optionsOpen.emit(filepath)
-        else:
+        elif ext == '.h5':
             self.controller().resultsOpen.emit(filepath)
+
+        self._dlg_progress.reset()
+        self._dlg_progress.show()
 
     def _onSave(self):
         item = self._tree.currentItem()
