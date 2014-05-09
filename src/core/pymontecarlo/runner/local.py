@@ -39,12 +39,10 @@ from pymontecarlo.fileformat.results.results import \
 
 class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
-    def __init__(self, program, queue_options, queue_results,
-                 outputdir, workdir=None):
-        _RunnerOptionsDispatcher.__init__(self, program, queue_options, queue_results)
+    def __init__(self, queue_options, queue_results, outputdir, workdir=None):
+        _RunnerOptionsDispatcher.__init__(self, queue_options, queue_results)
 
-        self._worker = program.worker_class(program)
-
+        self._worker = None
         self._outputdir = outputdir
         self._workdir = workdir
         self._user_defined_workdir = self._workdir is not None
@@ -68,6 +66,8 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
                 # Run
                 logging.debug('Running program specific worker')
 
+                program = next(iter(options.programs))
+                self._worker = program.worker_class(program)
                 self._worker.reset()
                 results = self._worker.run(options, self._outputdir, workdir)
 
@@ -81,10 +81,12 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
                 # Put results in queue
                 self._queue_results.put(Results(base_options, [results]))
             finally:
+                self._worker = None
                 self._queue_options.task_done()
 
     def cancel(self):
-        self._worker.cancel()
+        if self._worker:
+            self._worker.cancel()
         _RunnerOptionsDispatcher.cancel(self)
 
     @property
@@ -97,8 +99,8 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
 class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
 
-    def __init__(self, program, queue_results, outputdir):
-        _RunnerResultsDispatcher.__init__(self, program, queue_results)
+    def __init__(self, queue_results, outputdir):
+        _RunnerResultsDispatcher.__init__(self, queue_results)
 
         self._outputdir = outputdir
 
@@ -126,7 +128,7 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
 
 class LocalRunner(_Runner):
 
-    def __init__(self, program, outputdir, workdir=None, overwrite=True,
+    def __init__(self, outputdir, workdir=None, overwrite=True,
                  max_workers=1):
         """
         Creates a new runner to run several simulations.
@@ -151,7 +153,7 @@ class LocalRunner(_Runner):
 
         :arg nbprocesses: number of processes/threads to use (default: 1)
         """
-        _Runner.__init__(self, program, max_workers)
+        _Runner.__init__(self, max_workers)
 
         if not os.path.isdir(outputdir):
             raise ValueError('Output directory (%s) is not a directory' % outputdir)
@@ -165,12 +167,12 @@ class LocalRunner(_Runner):
         # Create dispatchers
         for _ in range(max(1, max_workers - 1)):
             dispatcher = \
-                _LocalRunnerOptionsDispatcher(program, self._queue_options,
-                                              self._queue_results, outputdir,
-                                              workdir)
+                _LocalRunnerOptionsDispatcher(self._queue_options,
+                                              self._queue_results,
+                                              outputdir, workdir)
             self._dispatchers_options.add(dispatcher)
 
-        dispatcher = _LocalRunnerResultsDispatcher(program, self._queue_results,
+        dispatcher = _LocalRunnerResultsDispatcher(self._queue_results,
                                                    outputdir)
         self._dispatchers_results.add(dispatcher)
 

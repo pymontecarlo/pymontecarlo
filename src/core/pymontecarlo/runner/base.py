@@ -31,14 +31,11 @@ from pymontecarlo.util.monitorable import _Monitorable, _MonitorableThread
 
 class _Runner(_Monitorable):
 
-    def __init__(self, program, max_workers=1):
+    def __init__(self, max_workers=1):
         _Monitorable.__init__(self)
 
         if max_workers < 1:
             raise ValueError("Number of workers must be greater or equal to 1.")
-
-        self._program = program
-        self._converter = program.converter_class()
 
         self._queue_options = queue.Queue()
         self._queue_results = queue.Queue()
@@ -116,20 +113,19 @@ class _Runner(_Monitorable):
 
         :arg options: options to be added to the queue
         """
+        if not options.programs:
+            raise ValueError('No program associated with options')
+
         base_options = options
-        list_options = self._converter.convert(base_options)
-        if not list_options:
-            raise ValueError('Options not compatible with this program')
 
-        for options in list_options:
-            self._queue_options.put((base_options, options))
+        for program in base_options.programs:
+            converter = program.converter_class()
+            list_options = converter.convert(base_options)
 
-    @property
-    def program(self):
-        """
-        Program of this runner.
-        """
-        return self._program
+            for options in list_options:
+                options.programs.clear()
+                options.programs.add(program)
+                self._queue_options.put((base_options, options))
 
     @property
     def progress(self):
@@ -155,28 +151,20 @@ class _Runner(_Monitorable):
         return status
 
 class _RunnerDispatcher(_MonitorableThread):
-
-    def __init__(self, program):
-        _MonitorableThread.__init__(self)
-
-        self._program = program
-
-    @property
-    def program(self):
-        return self._program
+    pass
 
 class _RunnerOptionsDispatcher(_RunnerDispatcher):
 
-    def __init__(self, program, queue_options, queue_results):
-        _RunnerDispatcher.__init__(self, program)
+    def __init__(self, queue_options, queue_results):
+        _RunnerDispatcher.__init__(self)
 
         self._queue_options = queue_options
         self._queue_results = queue_results
 
 class _RunnerResultsDispatcher(_RunnerDispatcher):
 
-    def __init__(self, program, queue_results):
-        _RunnerDispatcher.__init__(self, program)
+    def __init__(self, queue_results):
+        _RunnerDispatcher.__init__(self)
 
         self._queue_results = queue_results
 

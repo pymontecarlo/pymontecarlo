@@ -24,6 +24,7 @@ from pymontecarlo.program.test_config import DummyProgram
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
+DUMMY_PROGRAM = DummyProgram()
 
 class TestLocalRunner(unittest.TestCase):
 
@@ -32,8 +33,7 @@ class TestLocalRunner(unittest.TestCase):
 
         self.tmpdir = tempfile.mkdtemp()
 
-        program = DummyProgram()
-        self.runner = LocalRunner(program, self.tmpdir)
+        self.runner = LocalRunner(self.tmpdir)
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -43,13 +43,23 @@ class TestLocalRunner(unittest.TestCase):
     def testrun(self):
         # Run two options
         self.runner.start()
-        self.runner.put(Options('test1'))
-        self.runner.put(Options('test2'))
+
+        ops1 = Options('test1')
+        ops1.programs.add(DUMMY_PROGRAM)
+        self.runner.put(ops1)
+
+        ops2 = Options('test2')
+        ops2.programs.add(DUMMY_PROGRAM)
+        self.runner.put(ops2)
+
         self.runner.join()
         self.assertEqual(2, len(os.listdir(self.tmpdir)))
 
         # Run another options
-        self.runner.put(Options('test3'))
+        ops3 = Options('test3')
+        ops3.programs.add(DUMMY_PROGRAM)
+        self.runner.put(ops3)
+
         self.runner.join()
         self.assertEqual(3, len(os.listdir(self.tmpdir)))
 
@@ -60,7 +70,9 @@ class TestLocalRunner(unittest.TestCase):
     def testrun_exception(self):
         self.runner.start()
 
-        self.runner.put(Options('error'))
+        ops = Options('error')
+        ops.programs.add(DUMMY_PROGRAM)
+        self.runner.put(ops)
 
         self.assertRaises(RuntimeError, self.runner.join)
 
