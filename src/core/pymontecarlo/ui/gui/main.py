@@ -45,6 +45,8 @@ from pymontecarlo.ui.gui.options.geometry import \
 from pymontecarlo.ui.gui.options.detector import DetectorsWidget
 from pymontecarlo.ui.gui.options.limit import LimitsWidget
 from pymontecarlo.ui.gui.options.model import ModelTableWidget
+from pymontecarlo.ui.gui.results.result import \
+    get_widget_class as get_result_widget_class
 
 from pymontecarlo.ui.gui.util.tango import getIcon
 import pymontecarlo.ui.gui.util.messagebox as messagebox
@@ -71,6 +73,9 @@ class _ActionTreeItem(QTreeWidgetItem):
     def insertAction(self, index, action):
         self._menu.insertAction(index, action)
 
+    def addSeparator(self):
+        self._menu.addSeparator()
+
     def setDefaultAction(self, action):
         self._menu.setDefaultAction(action)
 
@@ -85,57 +90,66 @@ class _BaseTreeItem(_ActionTreeItem):
         # Variables
         self._uid = uid
 
+    def uid(self):
+        return self._uid
+
+    def canSave(self):
+        return False
+
+    def requestSave(self):
+        pass
+
+    def canSaveAs(self):
+        return False
+
+    def requestSaveAs(self):
+        pass
+
+    def canClose(self):
+        return False
+
+    def requestClose(self):
+        pass
+
+class _OptionsTreeItem(_BaseTreeItem):
+
+    def __init__(self, uid, controller, parent):
+        _BaseTreeItem.__init__(self, uid, controller, parent)
+        self.setText(0, controller.options(uid).name)
+        self.setToolTip(0, controller.optionsFilepath(uid))
+
         # Actions
+        self._act_modify = QAction("Modify", self.treeWidget())
+        self.addAction(self._act_modify)
+        self.addSeparator()
+
         self._act_save = QAction("Save", self.treeWidget())
         self._act_save.setEnabled(self.canSave())
         self.addAction(self._act_save)
 
         self._act_saveas = QAction("Save As", self.treeWidget())
-        self._act_saveas.setEnabled(self.canSaveAs())
         self.addAction(self._act_saveas)
+        self.addSeparator()
 
         self._act_close = QAction("Close", self.treeWidget())
-        self._act_close.setEnabled(self.canClose())
         self.addAction(self._act_close)
 
         # Signals
+        self._act_modify.triggered.connect(self.requestModify)
         self._act_save.triggered.connect(self.requestSave)
         self._act_saveas.triggered.connect(self.requestSaveAs)
         self._act_close.triggered.connect(self.requestClose)
 
-    def uid(self):
-        return self._uid
-
-    def canSave(self):
-        raise NotImplementedError
-
-    def requestSave(self):
-        raise NotImplementedError
-
-    def canSaveAs(self):
-        raise NotImplementedError
-
-    def requestSaveAs(self):
-        raise NotImplementedError
-
-    def canClose(self):
-        raise NotImplementedError
-
-    def requestClose(self):
-        raise NotImplementedError
-
-class _BaseOptionsTreeItem(_BaseTreeItem):
-
-    def __init__(self, uid, controller, parent):
-        _BaseTreeItem.__init__(self, uid, controller, parent)
-
-        # Signals
         self.controller().optionsModified.connect(self._onOptionsModified)
+        self.controller().optionsSaved.connect(self._onOptionsSaved)
 
     def _onOptionsModified(self, uid, options):
         self._act_save.setEnabled(self.canSave())
-        self._act_saveas.setEnabled(self.canSaveAs())
-        self._act_close.setEnabled(self.canClose())
+        self.setText(0, options.name)
+
+    def _onOptionsSaved(self, uid, filepath):
+        self._act_save.setEnabled(self.canSave())
+        self.setToolTip(0, filepath)
 
     def canSave(self):
         has_filepath = bool(self.controller().optionsFilepath(self.uid()))
@@ -157,36 +171,13 @@ class _BaseOptionsTreeItem(_BaseTreeItem):
     def requestClose(self):
         self.controller().optionsRemoveRequested.emit(self.uid())
 
-class _OptionsTreeItem(_BaseOptionsTreeItem):
-
-    def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
-        self.setText(0, controller.options(uid).name)
-        self.setToolTip(0, controller.optionsFilepath(uid))
-
-        # Actions
-        act_modify = QAction("Modify", self.treeWidget())
-        self.addAction(act_modify)
-
-        # Signals
-        act_modify.triggered.connect(self.requestModify)
-
-        self.controller().optionsSaved.connect(self._onOptionsSaved)
-
-    def _onOptionsModified(self, uid, options):
-        _BaseOptionsTreeItem._onOptionsModified(self, uid, options)
-        self.setText(0, options.name)
-
-    def _onOptionsSaved(self, uid, filepath):
-        self.setToolTip(0, filepath)
-
     def requestModify(self):
         self.controller().optionsModifyRequested.emit(self.uid())
 
-class _BeamTreeItem(_BaseOptionsTreeItem):
+class _BeamTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
+        _BaseTreeItem.__init__(self, uid, controller, parent)
         self.setText(0, 'Beam')
 
         # Actions
@@ -200,10 +191,10 @@ class _BeamTreeItem(_BaseOptionsTreeItem):
     def requestDisplay(self):
         self.controller().beamDisplayRequested.emit(self.uid())
 
-class _GeometryTreeItem(_BaseOptionsTreeItem):
+class _GeometryTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
+        _BaseTreeItem.__init__(self, uid, controller, parent)
         self.setText(0, 'Geometry')
 
         # Actions
@@ -217,10 +208,10 @@ class _GeometryTreeItem(_BaseOptionsTreeItem):
     def requestDisplay(self):
         self.controller().geometryDisplayRequested.emit(self.uid())
 
-class _DetectorsTreeItem(_BaseOptionsTreeItem):
+class _DetectorsTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
+        _BaseTreeItem.__init__(self, uid, controller, parent)
         self.setText(0, 'Detectors')
 
         # Actions
@@ -234,10 +225,10 @@ class _DetectorsTreeItem(_BaseOptionsTreeItem):
     def requestDisplay(self):
         self.controller().detectorsDisplayRequested.emit(self.uid())
 
-class _LimitsTreeItem(_BaseOptionsTreeItem):
+class _LimitsTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
+        _BaseTreeItem.__init__(self, uid, controller, parent)
         self.setText(0, 'Limits')
 
         # Actions
@@ -251,10 +242,10 @@ class _LimitsTreeItem(_BaseOptionsTreeItem):
     def requestDisplay(self):
         self.controller().limitsDisplayRequested.emit(self.uid())
 
-class _ModelsTreeItem(_BaseOptionsTreeItem):
+class _ModelsTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
-        _BaseOptionsTreeItem.__init__(self, uid, controller, parent)
+        _BaseTreeItem.__init__(self, uid, controller, parent)
         self.setText(0, 'Models')
 
         # Actions
@@ -267,6 +258,83 @@ class _ModelsTreeItem(_BaseOptionsTreeItem):
 
     def requestDisplay(self):
         self.controller().modelsDisplayRequested.emit(self.uid())
+
+class _ResultsTreeItem(_BaseTreeItem):
+
+    def __init__(self, uid, controller, parent):
+        _BaseTreeItem.__init__(self, uid, controller, parent)
+        self.setText(0, controller.results(uid).options.name)
+        self.setToolTip(0, controller.resultsFilepath(uid))
+
+        # Actions
+        self._act_saveas = QAction("Save As", self.treeWidget())
+        self.addAction(self._act_saveas)
+        self.addSeparator()
+
+        self._act_close = QAction("Close", self.treeWidget())
+        self.addAction(self._act_close)
+
+        # Signals
+        self._act_saveas.triggered.connect(self.requestSaveAs)
+        self._act_close.triggered.connect(self.requestClose)
+
+    def canSaveAs(self):
+        return True
+
+    def requestSaveAs(self):
+        self.controller().resultsSaveAsRequested.emit(self.uid())
+
+    def canClose(self):
+        return True
+
+    def requestClose(self):
+        self.controller().resultsRemoveRequested.emit(self.uid())
+
+class _ResultsOptionsTreeItem(_BaseTreeItem):
+
+    def __init__(self, uid, controller, parent):
+        _BaseTreeItem.__init__(self, uid, controller, parent)
+        self.setText(0, 'Options')
+
+class _ResultsContainerTreeItem(_BaseTreeItem):
+
+    def __init__(self, uid, index, controller, parent):
+        _BaseTreeItem.__init__(self, uid, controller, parent)
+        container = controller.results(uid)[index]
+        self.setText(0, '%i - %s' % (index, container.options.name))
+
+        # Variables
+        self._index = index
+
+    def index(self):
+        return self._index
+
+class _ResultTreeItem(_BaseTreeItem):
+
+    def __init__(self, uid, index, key, controller, parent):
+        _BaseTreeItem.__init__(self, uid, controller, parent)
+        self.setText(0, key)
+
+        # Variables
+        self._index = index
+        self._key = key
+
+        # Actions
+        act_display = QAction("Display", self.treeWidget())
+        self.addAction(act_display)
+        self.setDefaultAction(act_display)
+
+        # Signals
+        act_display.triggered.connect(self.requestDisplay)
+
+    def requestDisplay(self):
+        self.controller().resultDisplayRequested.emit(self.uid(), self.index(), self.key())
+
+    def index(self):
+        return self._index
+
+    def key(self):
+        return self._key
 
 #--- Sub-windows
 
@@ -323,7 +391,7 @@ class _BeamSubWindow(_SubOptionsWidgetSubWindow):
 
     def closeEvent(self, event):
         self.controller().beamDisplayClosed.emit(self.uid())
-        return _WidgetSubWindow.closeEvent(self, event)
+        return _SubOptionsWidgetSubWindow.closeEvent(self, event)
 
 class _GeometrySubWindow(_SubOptionsWidgetSubWindow):
 
@@ -340,7 +408,7 @@ class _GeometrySubWindow(_SubOptionsWidgetSubWindow):
 
     def closeEvent(self, event):
         self.controller().geometryDisplayClosed.emit(self.uid())
-        return _WidgetSubWindow.closeEvent(self, event)
+        return _SubOptionsWidgetSubWindow.closeEvent(self, event)
 
 class _DetectorsSubWindow(_SubOptionsWidgetSubWindow):
 
@@ -357,7 +425,7 @@ class _DetectorsSubWindow(_SubOptionsWidgetSubWindow):
 
     def closeEvent(self, event):
         self.controller().detectorsDisplayClosed.emit(self.uid())
-        return _WidgetSubWindow.closeEvent(self, event)
+        return _SubOptionsWidgetSubWindow.closeEvent(self, event)
 
 class _LimitsSubWindow(_SubOptionsWidgetSubWindow):
 
@@ -374,7 +442,7 @@ class _LimitsSubWindow(_SubOptionsWidgetSubWindow):
 
     def closeEvent(self, event):
         self.controller().limitsDisplayClosed.emit(self.uid())
-        return _WidgetSubWindow.closeEvent(self, event)
+        return _SubOptionsWidgetSubWindow.closeEvent(self, event)
 
 class _ModelsSubWindow(_SubOptionsWidgetSubWindow):
 
@@ -390,6 +458,37 @@ class _ModelsSubWindow(_SubOptionsWidgetSubWindow):
 
     def closeEvent(self, event):
         self.controller().modelsDisplayClosed.emit(self.uid())
+        return _SubOptionsWidgetSubWindow.closeEvent(self, event)
+
+class _ResultSubWindow(_WidgetSubWindow):
+
+    def __init__(self, uid, index, key, controller, parent=None):
+        _WidgetSubWindow.__init__(self, controller, parent)
+        self.setWindowTitle(key)
+
+        # Variables
+        self._uid = uid
+        self._index = index
+        self._key = key
+
+        # Widgets
+        result = controller.result(uid, index, key)
+        options = controller.resultsContainer(uid, index)
+        widget_class = get_result_widget_class(result.__class__)
+        widget = widget_class(key, result, options)
+        self.setWidget(widget)
+
+    def uid(self):
+        return self._uid
+
+    def index(self):
+        return self._index
+
+    def key(self):
+        return self._key
+
+    def closeEvent(self, event):
+        self.controller().resultDisplayClosed.emit(self.uid(), self.index(), self.key())
         return _WidgetSubWindow.closeEvent(self, event)
 
 #--- Main widgets
@@ -404,10 +503,13 @@ class _Area(QMdiArea):
         # Variables
         self._controller = controller
         self._options_windows = {}
+        self._results_windows = {}
 
         # Signals
         self.controller().optionsModified.connect(self._onOptionsModified)
         self.controller().optionsRemoved.connect(self._onOptionsRemoved)
+
+        self.controller().resultsRemoved.connect(self._onResultsRemoved)
 
         self.controller().beamDisplayRequested.connect(self._onBeamDisplayRequested)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -419,14 +521,28 @@ class _Area(QMdiArea):
         self.controller().limitsDisplayClosed.connect(self._onLimitsDisplayClosed)
         self.controller().modelsDisplayRequested.connect(self._onModelsDisplayRequested)
         self.controller().modelsDisplayClosed.connect(self._onModelsDisplayClosed)
+        self.controller().resultDisplayRequested.connect(self._onResultDisplayRequested)
+        self.controller().resultDisplayClosed.connect(self._onResultDisplayClosed)
 
     def _onOptionsModified(self, uid, options):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
-    def _onOptionsRemoved(self, uid):
+    def _onOptionsRemoved(self, uid, options):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
+
+    def _onResultsRemoved(self, uid, results):
+        def _closeOptionsWindow(options_uid):
+            for window in list(self._options_windows.get(options_uid, {}).values()):
+                window.close()
+
+        for window in list(self._results_windows.get(uid, {}).values()):
+            window.close()
+
+        _closeOptionsWindow(results.options.uuid)
+        for container in results:
+            _closeOptionsWindow(container.options.uuid)
 
     def _onBeamDisplayRequested(self, uid):
         window = self._getOptionsWindow(uid, 'beam', _BeamSubWindow)
@@ -468,11 +584,26 @@ class _Area(QMdiArea):
     def _onModelsDisplayClosed(self, uid):
         self._options_windows[uid].pop('models')
 
+    def _onResultDisplayRequested(self, uid, index, key):
+        window = self._getResultWindow(uid, index, key, _ResultSubWindow)
+        self._showWindow(window)
+        self.controller().resultDisplayed.emit(uid, index, key)
+
+    def _onResultDisplayClosed(self, uid, index, key):
+        self._results_windows[uid].pop((index, key))
+
     def _getOptionsWindow(self, uid, name, clasz):
         window = self._options_windows.get(uid, {}).get(name)
         if window is None:
             window = clasz(uid, self.controller())
             self._options_windows.setdefault(uid, {})[name] = window
+        return window
+
+    def _getResultWindow(self, uid, index, key, clasz):
+        window = self._results_windows.get(uid, {}).get((index, key))
+        if window is None:
+            window = clasz(uid, index, key, self.controller())
+            self._results_windows.setdefault(uid, {})[(index, key)] = window
         return window
 
     def _showWindow(self, window):
@@ -496,6 +627,7 @@ class _Tree(QTreeWidget):
         # Variables
         self._controller = controller
         self._options_items = {}
+        self._results_items = {}
 
         # Signals
         self.customContextMenuRequested.connect(self._onContextMenu)
@@ -503,7 +635,9 @@ class _Tree(QTreeWidget):
 
         self.controller().optionsAdded.connect(self._onOptionsAdded)
         self.controller().optionsRemoved.connect(self._onOptionsRemoved)
-        self.controller().optionsSaved.connect(self._onOptionsSaved)
+
+        self.controller().resultsAdded.connect(self._onResultsAdded)
+        self.controller().resultsRemoved.connect(self._onResultsRemoved)
 
         self.controller().beamDisplayed.connect(self._onBeamDisplayed)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -515,6 +649,8 @@ class _Tree(QTreeWidget):
         self.controller().limitsDisplayClosed.connect(self._onLimitsDisplayClosed)
         self.controller().modelsDisplayed.connect(self._onModelsDisplayed)
         self.controller().modelsDisplayClosed.connect(self._onModelsDisplayClosed)
+        self.controller().resultDisplayed.connect(self._onResultDisplayed)
+        self.controller().resultDisplayClosed.connect(self._onResultDisplayClosed)
 
     def _onContextMenu(self, point):
         item = self.itemAt(point)
@@ -545,7 +681,7 @@ class _Tree(QTreeWidget):
         c = self.controller()
 
         itm_options = _OptionsTreeItem(uid, c, self)
-        self._options_items.setdefault(uid, {})['options'] = itm_options
+        self._options_items.setdefault(uid, {})['root'] = itm_options
 
         itm_beam = _BeamTreeItem(uid, c, itm_options)
         self._options_items[uid]['beam'] = itm_beam
@@ -564,12 +700,62 @@ class _Tree(QTreeWidget):
 
         self.expandItem(itm_options)
 
-    def _onOptionsRemoved(self, uid):
-        item = self._options_items.pop(uid)
-        self.headerItem().removeChild(item['options'])
+    def _onOptionsRemoved(self, uid, options):
+        item = self._options_items.pop(uid)['root']
+        self.headerItem().removeChild(item)
         self.setCurrentItem(None) # Hack to ensure refresh of actions
 
-    def _onOptionsSaved(self, uid, filepath):
+    def _onResultsAdded(self, uid, results):
+        c = self.controller()
+
+        def _addOptions(options, parent):
+            options_uid = options.uuid
+            self._options_items.setdefault(options_uid, {})
+
+            itm_beam = _BeamTreeItem(options_uid, c, parent)
+            self._options_items[options_uid]['beam'] = itm_beam
+
+            itm_geometry = _GeometryTreeItem(options_uid, c, parent)
+            self._options_items[options_uid]['geometry'] = itm_geometry
+
+            itm_detectors = _DetectorsTreeItem(options_uid, c, parent)
+            self._options_items[options_uid]['detectors'] = itm_detectors
+
+            itm_limits = _LimitsTreeItem(options_uid, c, parent)
+            self._options_items[options_uid]['limits'] = itm_limits
+
+            itm_models = _ModelsTreeItem(options_uid, c, parent)
+            self._options_items[options_uid]['models'] = itm_models
+
+        # Root results
+
+        itm_results = _ResultsTreeItem(uid, c, self)
+        self._results_items.setdefault(uid, {})['root'] = itm_results
+
+        itm_options = _ResultsOptionsTreeItem(uid, c, itm_results)
+        _addOptions(results.options, itm_options)
+
+        # Containers
+        for index, container in enumerate(results):
+            itm_container = _ResultsContainerTreeItem(uid, index, c, itm_results)
+
+            itm_options = _ResultsOptionsTreeItem(uid, c, itm_container)
+            _addOptions(container.options, itm_options)
+
+            for key in container.keys():
+                itm_result = _ResultTreeItem(uid, index, key, c, itm_container)
+                self._results_items[uid][(index, key)] = itm_result
+
+        self.expandItem(itm_results)
+
+    def _onResultsRemoved(self, uid, results):
+        item = self._results_items.pop(uid)['root']
+
+        self._options_items.pop(results.options.uuid)
+        for container in results:
+            self._options_items.pop(container.options.uuid)
+
+        self.headerItem().removeChild(item)
         self.setCurrentItem(None) # Hack to ensure refresh of actions
 
     def _onBeamDisplayed(self, uid):
@@ -610,6 +796,14 @@ class _Tree(QTreeWidget):
 
     def _onModelsDisplayClosed(self, uid):
         item = self._options_items[uid]['models']
+        self._itemClosed(item)
+
+    def _onResultDisplayed(self, uid, index, key):
+        item = self._results_items[uid][(index, key)]
+        self._itemOpened(item)
+
+    def _onResultDisplayClosed(self, uid, index, key):
+        item = self._results_items[uid][(index, key)]
         self._itemClosed(item)
 
     def _itemOpened(self, item):
@@ -737,10 +931,25 @@ class MainWindow(QMainWindow):
         self.controller().optionsSaveCancel.connect(self._onDialogProgressCancel)
         self.controller().optionsSaveException.connect(self._onDialogProgressException)
 
+        self._dlg_progress.canceled.connect(self.controller().resultsOpenCancel)
+        self.controller().resultsOpenProgress.connect(self._onDialogProgressProgress)
+        self.controller().resultsOpenCancel.connect(self._onDialogProgressCancel)
+        self.controller().resultsOpenException.connect(self._onDialogProgressException)
+
+        self._dlg_progress.canceled.connect(self.controller().resultsSaveCancel)
+        self.controller().resultsSaveProgress.connect(self._onDialogProgressProgress)
+        self.controller().resultsSaveCancel.connect(self._onDialogProgressCancel)
+        self.controller().resultsSaveException.connect(self._onDialogProgressException)
+
         self.controller().optionsNewRequested.connect(self._onOptionsNewRequested)
         self.controller().optionsModifyRequested.connect(self._onOptionsModifyRequested)
         self.controller().optionsSaveRequested.connect(self._onOptionsSaveRequested)
         self.controller().optionsSaveAsRequested.connect(self._onOptionsSaveAsRequested)
+        self.controller().optionsSaved.connect(self._onOptionsSaved)
+        self.controller().optionsOpened.connect(self._onOptionsOpened)
+
+        self.controller().resultsSaveAsRequested.connect(self._onResultsSaveAsRequested)
+        self.controller().resultsOpened.connect(self._onResultsOpened)
 
         # Defaults
 #        settings = self.controller().settings()
@@ -774,7 +983,7 @@ class MainWindow(QMainWindow):
         if ext == '.xml':
             self.controller().optionsOpen.emit(filepath)
         else:
-            print('Open results')
+            self.controller().resultsOpen.emit(filepath)
 
     def _onSave(self):
         item = self._tree.currentItem()
@@ -892,6 +1101,38 @@ class MainWindow(QMainWindow):
         self._dlg_progress.reset()
         self._dlg_progress.show()
         self.controller().optionsSave.emit(uid, filepath)
+
+    def _onOptionsOpened(self, options, filepath):
+        self._dlg_progress.hide()
+
+    def _onOptionsSaved(self, uid, filepath):
+        self._dlg_progress.hide()
+
+        QMessageBox.information(self, 'pyMonteCarlo', 'Saved')
+
+        self._act_save.setEnabled(False)
+
+    def _onResultsSaveAsRequested(self, uid):
+        settings = self.controller().settings()
+        curdir = getattr(settings, "savedir", os.getcwd())
+
+        filepath, namefilter = \
+            QFileDialog.getSaveFileName(self, "Save as", curdir,
+                                        "Results [*.h5] (*.h5)")
+
+        if not filepath or not namefilter:
+            return
+        settings.savedir = os.path.dirname(filepath)
+
+        if not filepath.endswith('.h5'):
+            filepath += '.h5'
+
+        self._dlg_progress.reset()
+        self._dlg_progress.show()
+        self.controller().resultsSave.emit(uid, filepath)
+
+    def _onResultsOpened(self, results, filepath):
+        self._dlg_progress.hide()
 
     def controller(self):
         return self._controller

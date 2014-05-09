@@ -26,8 +26,10 @@ from PySide.QtCore import QObject, Signal, QThread
 
 # Local modules.
 from pymontecarlo.options.options import Options
+from pymontecarlo.results.results import Results
 
 from pymontecarlo.fileformat.options.options import OptionsReader, OptionsWriter
+from pymontecarlo.fileformat.results.results import ResultsReader, ResultsWriter
 
 from pymontecarlo.settings import get_settings
 
@@ -99,50 +101,92 @@ class _OptionsWriterWrapperThread(_MonitorableWrapperThread):
     def _start_monitorable(self):
         self._monitorable.write(*self._args, **self._kwargs)
 
+class _ResultsReaderWrapperThread(_MonitorableWrapperThread):
+
+    def __init__(self, filepath):
+        monitorable = ResultsReader()
+        args = (filepath,)
+        _MonitorableWrapperThread.__init__(self, monitorable, args=args)
+
+    def _start_monitorable(self):
+        self._monitorable.read(*self._args, **self._kwargs)
+
+class _ResultsWriterWrapperThread(_MonitorableWrapperThread):
+
+    def __init__(self, results, filepath):
+        monitorable = ResultsWriter()
+        args = (results, filepath)
+        _MonitorableWrapperThread.__init__(self, monitorable, args=args)
+
+    def _start_monitorable(self):
+        self._monitorable.write(*self._args, **self._kwargs)
+
 class Controller(QObject):
 
     optionsNewRequested = Signal()
 
-    optionsOpen = Signal(str)
+    optionsOpen = Signal(str) # filepath
     optionsOpenCancel = Signal()
-    optionsOpenProgress = Signal(float, str)
-    optionsOpenException = Signal(Exception)
-    optionsOpened = Signal(Options, str)
+    optionsOpenProgress = Signal(float, str) # progress, status
+    optionsOpenException = Signal(Exception) # exception
+    optionsOpened = Signal(Options, str) # options, filepath
 
-    optionsAddRequested = Signal(Options)
-    optionsAdded = Signal(str, Options)
-    optionsRemoveRequested = Signal(str)
-    optionsRemoved = Signal(str)
-    optionsModifyRequested = Signal(str)
-    optionsModified = Signal(str, Options)
+    optionsAddRequested = Signal(Options) # options
+    optionsAdded = Signal(str, Options) # uid, options
+    optionsRemoveRequested = Signal(str) # uid
+    optionsRemoved = Signal(str, Options) # uid, options
+    optionsModifyRequested = Signal(str) # uid
+    optionsModified = Signal(str, Options) # uid, options
 
-    optionsSaveRequested = Signal(str)
-    optionsSaveAsRequested = Signal(str)
-    optionsSave = Signal(str, str)
+    optionsSaveRequested = Signal(str) # uid
+    optionsSaveAsRequested = Signal(str) # uid
+    optionsSave = Signal(str, str) # uid, filepath
     optionsSaveCancel = Signal()
-    optionsSaveProgress = Signal(float, str)
-    optionsSaveException = Signal(Exception)
-    optionsSaved = Signal(str, str)
+    optionsSaveProgress = Signal(float, str) # progress, status
+    optionsSaveException = Signal(Exception) # exception
+    optionsSaved = Signal(str, str) # uid, filepath
 
-    beamDisplayRequested = Signal(str)
-    beamDisplayed = Signal(str)
-    beamDisplayClosed = Signal(str)
+    resultsOpen = Signal(str) # filepath
+    resultsOpenCancel = Signal()
+    resultsOpenProgress = Signal(float, str) # progress, status
+    resultsOpenException = Signal(Exception) # exception
+    resultsOpened = Signal(Results, str) # results, filepath
 
-    geometryDisplayRequested = Signal(str)
-    geometryDisplayed = Signal(str)
-    geometryDisplayClosed = Signal(str)
+    resultsAddRequested = Signal(Results) # results
+    resultsAdded = Signal(str, Results) # uid, results
+    resultsRemoveRequested = Signal(str) # uid
+    resultsRemoved = Signal(str, Results) # uid, results
 
-    detectorsDisplayRequested = Signal(str)
-    detectorsDisplayed = Signal(str)
-    detectorsDisplayClosed = Signal(str)
+    resultsSaveAsRequested = Signal(str) # uid
+    resultsSave = Signal(str, str) # uid, filepath
+    resultsSaveCancel = Signal()
+    resultsSaveProgress = Signal(float, str) # progress, status
+    resultsSaveException = Signal(Exception) # exception
+    resultsSaved = Signal(str, str) # uid, filepath
 
-    limitsDisplayRequested = Signal(str)
-    limitsDisplayed = Signal(str)
-    limitsDisplayClosed = Signal(str)
+    beamDisplayRequested = Signal(str) # uid
+    beamDisplayed = Signal(str) # uid
+    beamDisplayClosed = Signal(str) # uid
 
-    modelsDisplayRequested = Signal(str)
-    modelsDisplayed = Signal(str)
-    modelsDisplayClosed = Signal(str)
+    geometryDisplayRequested = Signal(str) # uid
+    geometryDisplayed = Signal(str) # uid
+    geometryDisplayClosed = Signal(str) # uid
+
+    detectorsDisplayRequested = Signal(str) # uid
+    detectorsDisplayed = Signal(str) # uid
+    detectorsDisplayClosed = Signal(str) # uid
+
+    limitsDisplayRequested = Signal(str) # uid
+    limitsDisplayed = Signal(str) # uid
+    limitsDisplayClosed = Signal(str) # uid
+
+    modelsDisplayRequested = Signal(str) # uid
+    modelsDisplayed = Signal(str) # uid
+    modelsDisplayClosed = Signal(str) # uid
+
+    resultDisplayRequested = Signal(str, int, str) # uid, index, key
+    resultDisplayed = Signal(str, int, str) # uid, index, key
+    resultDisplayClosed = Signal(str, int, str) # uid, index, key
 
     def __init__(self):
         QObject.__init__(self) # Required to activate signals
@@ -151,95 +195,197 @@ class Controller(QObject):
         self._list_options = {}
         self._options_edited = {}
         self._options_filepath = {}
+        self._options_reader_thread = None
+        self._options_writer_thread = None
 
-        self._reader_thread = None
-        self._writer_thread = None
+        self._list_results = {}
+        self._results_filepath = {}
+        self._results_reader_thread = None
+        self._results_writer_thread = None
 
         # Signals
         self.optionsOpen.connect(self._onOptionsOpen)
         self.optionsOpenCancel.connect(self._onOptionsOpenCancel)
         self.optionsOpenException.connect(self._onOptionsOpenException)
         self.optionsOpened.connect(self._onOptionsOpened)
-
         self.optionsSave.connect(self._onOptionsSave)
         self.optionsSaveCancel.connect(self._onOptionsSaveCancel)
         self.optionsSaveException.connect(self._onOptionsSaveException)
         self.optionsSaved.connect(self._onOptionsSaved)
-
         self.optionsAddRequested.connect(self._onOptionsAddRequested)
         self.optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
         self.optionsModified.connect(self._onOptionsModified)
 
+        self.resultsOpen.connect(self._onResultsOpen)
+        self.resultsOpenCancel.connect(self._onResultsOpenCancel)
+        self.resultsOpenException.connect(self._onResultsOpenException)
+        self.resultsOpened.connect(self._onResultsOpened)
+        self.resultsSave.connect(self._onResultsSave)
+        self.resultsSaveCancel.connect(self._onResultsSaveCancel)
+        self.resultsSaveException.connect(self._onResultsSaveException)
+        self.resultsSaved.connect(self._onResultsSaved)
+        self.resultsAddRequested.connect(self._onResultsAddRequested)
+        self.resultsRemoveRequested.connect(self._onResultsRemoveRequested)
+
     def _onOptionsOpen(self, filepath):
-        self._reader_thread = _OptionsReaderWrapperThread(filepath)
-        self._reader_thread.resultReady.connect(lambda ops, f=filepath: self.optionsOpened.emit(ops, f))
-        self._reader_thread.progressUpdated.connect(self.optionsOpenProgress)
-        self._reader_thread.exceptionRaised.connect(self.optionsOpenException)
-        self._reader_thread.start()
+        self._options_reader_thread = _OptionsReaderWrapperThread(filepath)
+        func = lambda ops, f = filepath: self.optionsOpened.emit(ops, f)
+        self._options_reader_thread.resultReady.connect(func)
+        self._options_reader_thread.progressUpdated.connect(self.optionsOpenProgress)
+        self._options_reader_thread.exceptionRaised.connect(self.optionsOpenException)
+        self._options_reader_thread.start()
 
     def _onOptionsOpenCancel(self):
-        if self._reader_thread is None:
+        if self._options_reader_thread is None:
             return
-        self._reader_thread.cancel()
-        self._reader_thread.quit()
-        self._reader_thread.wait()
+        self._options_reader_thread.cancel()
+        self._options_reader_thread.quit()
+        self._options_reader_thread.wait()
 
     def _onOptionsOpenException(self):
-        self._reader_thread.quit()
-        self._reader_thread.wait()
+        self._options_reader_thread.quit()
+        self._options_reader_thread.wait()
 
     def _onOptionsOpened(self, options, filepath):
-        self._reader_thread.quit()
-        self._reader_thread.wait()
-        self._reader_thread = None
+        self._options_reader_thread.quit()
+        self._options_reader_thread.wait()
+        self._options_reader_thread = None
 
         self._options_filepath[options.uuid] = filepath
         self.optionsAddRequested.emit(options)
 
     def _onOptionsSave(self, uid, filepath):
         options = self._list_options[uid]
-        self._writer_thread = _OptionsWriterWrapperThread(options, filepath)
-        self._writer_thread.resultReady.connect(lambda f, u=uid: self.optionsSaved.emit(u, f))
-        self._writer_thread.progressUpdated.connect(self.optionsSaveProgress)
-        self._writer_thread.exceptionRaised.connect(self.optionsSaveException)
-        self._writer_thread.start()
+        self._options_writer_thread = _OptionsWriterWrapperThread(options, filepath)
+        func = lambda f, u = uid: self.optionsSaved.emit(u, f)
+        self._options_writer_thread.resultReady.connect(func)
+        self._options_writer_thread.progressUpdated.connect(self.optionsSaveProgress)
+        self._options_writer_thread.exceptionRaised.connect(self.optionsSaveException)
+        self._options_writer_thread.start()
 
     def _onOptionsSaveCancel(self):
-        if self._writer_thread is None:
+        if self._options_writer_thread is None:
             return
-        self._writer_thread.cancel()
-        self._writer_thread.quit()
-        self._writer_thread.wait()
+        self._options_writer_thread.cancel()
+        self._options_writer_thread.quit()
+        self._options_writer_thread.wait()
 
     def _onOptionsSaveException(self):
-        self._writer_thread.quit()
-        self._writer_thread.wait()
+        self._options_writer_thread.quit()
+        self._options_writer_thread.wait()
 
     def _onOptionsSaved(self, uid, filepath):
-        self._writer_thread.quit()
-        self._writer_thread.wait()
-        self._writer_thread = None
+        self._options_writer_thread.quit()
+        self._options_writer_thread.wait()
+        self._options_writer_thread = None
         self._options_edited[uid] = False
         self._options_filepath[uid] = filepath
 
     def _onOptionsAddRequested(self, options):
-        uid = options.uuid
-        if uid in self._list_options:
-            raise ValueError('Already opened')
-
-        self._list_options[uid] = options
+        uid = self._addOptions(options)
         self._options_edited[uid] = False
         self.optionsAdded.emit(uid, options)
 
     def _onOptionsRemoveRequested(self, uid):
-        self._list_options.pop(uid)
-        self._options_edited.pop(uid, None)
-        self._options_filepath.pop(uid, None)
-        self.optionsRemoved.emit(uid)
+        options = self._removeOptions(uid)
+        self.optionsRemoved.emit(uid, options)
 
     def _onOptionsModified(self, uid, options):
         self._list_options[uid] = options
         self._options_edited[uid] = True
+
+    def _onResultsOpen(self, filepath):
+        self._results_reader_thread = _ResultsReaderWrapperThread(filepath)
+        func = lambda ops, f = filepath: self.resultsOpened.emit(ops, f)
+        self._results_reader_thread.resultReady.connect(func)
+        self._results_reader_thread.progressUpdated.connect(self.resultsOpenProgress)
+        self._results_reader_thread.exceptionRaised.connect(self.resultsOpenException)
+        self._results_reader_thread.start()
+
+    def _onResultsOpenCancel(self):
+        if self._results_reader_thread is None:
+            return
+        self._results_reader_thread.cancel()
+        self._results_reader_thread.quit()
+        self._results_reader_thread.wait()
+
+    def _onResultsOpenException(self):
+        self._results_reader_thread.quit()
+        self._results_reader_thread.wait()
+
+    def _onResultsOpened(self, results, filepath):
+        self._results_reader_thread.quit()
+        self._results_reader_thread.wait()
+        self._results_reader_thread = None
+
+        self._results_filepath[results.options.uuid] = filepath
+        self.resultsAddRequested.emit(results)
+
+    def _onResultsSave(self, uid, filepath):
+        results = self._list_results[uid]
+        self._results_writer_thread = _ResultsWriterWrapperThread(results, filepath)
+        func = lambda f, u = uid: self.resultsSaved.emit(u, f)
+        self._results_writer_thread.resultReady.connect(func)
+        self._results_writer_thread.progressUpdated.connect(self.resultsSaveProgress)
+        self._results_writer_thread.exceptionRaised.connect(self.resultsSaveException)
+        self._results_writer_thread.start()
+
+    def _onResultsSaveCancel(self):
+        if self._results_writer_thread is None:
+            return
+        self._results_writer_thread.cancel()
+        self._results_writer_thread.quit()
+        self._results_writer_thread.wait()
+
+    def _onResultsSaveException(self):
+        self._results_writer_thread.quit()
+        self._results_writer_thread.wait()
+
+    def _onResultsSaved(self, uid, filepath):
+        self._results_writer_thread.quit()
+        self._results_writer_thread.wait()
+        self._results_writer_thread = None
+        self._results_filepath[uid] = filepath
+
+    def _onResultsAddRequested(self, results):
+        uid = results.options.uuid
+        if uid in self._list_results:
+            raise ValueError('Already opened')
+        if uid in self._list_options:
+            raise ValueError('Options for this results is opened')
+
+        self._list_results[uid] = results
+
+        # Add options
+        self._addOptions(results.options)
+        for container in results:
+            self._addOptions(container.options)
+
+        self.resultsAdded.emit(uid, results)
+
+    def _onResultsRemoveRequested(self, uid):
+        results = self._list_results.pop(uid)
+        self._results_filepath.pop(uid, None)
+
+        # Remove options
+        self._removeOptions(results.options.uuid)
+        for container in results:
+            self._removeOptions(container.options.uuid)
+
+        self.resultsRemoved.emit(uid, results)
+
+    def _addOptions(self, options):
+        uid = options.uuid
+        if uid in self._list_options:
+            raise ValueError('Already opened')
+        self._list_options[uid] = options
+        return uid
+
+    def _removeOptions(self, uid):
+        options = self._list_options.pop(uid)
+        self._options_edited.pop(uid, None)
+        self._options_filepath.pop(uid, None)
+        return options
 
     def settings(self):
         return get_settings()
@@ -252,3 +398,17 @@ class Controller(QObject):
 
     def optionsFilepath(self, uid):
         return self._options_filepath.get(uid)
+
+    def results(self, uid):
+        return self._list_results[uid]
+
+    def resultsFilepath(self, uid):
+        return self._results_filepath.get(uid)
+
+    def resultsContainer(self, uid, index):
+        return self._list_results[uid][index]
+
+    def result(self, uid, index, key):
+        return self._list_results[uid][index][key]
+
+
