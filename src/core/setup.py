@@ -127,6 +127,19 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'ShowersLimit = pymontecarlo.ui.gui.options.limit:ShowersLimitWidget',
 #                     'UncertaintyLimit = pymontecarlo.ui.gui.options.limit:UncertaintyLimitWidget '
                     ],
+                'pymontecarlo.ui.gui.results.result':
+                    ['PhotonIntensityResult = pymontecarlo.ui.gui.results.result:PhotonIntensityResultWidget',
+                     'PhotonSpectrumResult = pymontecarlo.ui.gui.results.result:PhotonSpectrumResultWidget',
+                     'PhotonDepthResult = pymontecarlo.ui.gui.results.result:PhotonDepthResultWidget',
+                     'PhotonRadialResult = pymontecarlo.ui.gui.results.result:PhotonRadialResultWidget',
+                     'TimeResult = pymontecarlo.ui.gui.results.result:TimeResultWidget',
+                     'ShowersStatisticsResult = pymontecarlo.ui.gui.results.result:ShowersStatisticsResultWidget',
+                     'ElectronFractionResult = pymontecarlo.ui.gui.results.result:ElectronFractionResultWidget',
+                     'TrajectoryResult = pymontecarlo.ui.gui.results.result:TrajectoryResultWidget',
+                     'BackscatteredElectronEnergyResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronEnergyResultWidget',
+                     'TransmittedElectronEnergyResult = pymontecarlo.ui.gui.results.result:TransmittedElectronEnergyResultWidget',
+                     'BackscatteredElectronPolarAngularResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronPolarAngularResultWidget',
+                     'BackscatteredElectronRadialResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronRadialResultWidget', ],
                 }
 
 
