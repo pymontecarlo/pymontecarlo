@@ -20,9 +20,10 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import time
+import uuid
 
 # Third party modules.
-from PySide.QtCore import QObject, Signal, QThread
+from PySide.QtCore import Qt, QObject, Signal, QThread
 
 # Local modules.
 from pymontecarlo.options.options import Options
@@ -131,10 +132,10 @@ class Controller(QObject):
     optionsOpenException = Signal(Exception) # exception
     optionsOpened = Signal(Options, str) # options, filepath
 
-    optionsAddRequested = Signal(Options) # options
+    optionsAddRequested = Signal(Options, str) # options, filepath (optional)
     optionsAdded = Signal(str, Options) # uid, options
     optionsRemoveRequested = Signal(str) # uid
-    optionsRemoved = Signal(str, Options) # uid, options
+    optionsRemoved = Signal(str) # uid
     optionsModifyRequested = Signal(str) # uid
     optionsModified = Signal(str, Options) # uid, options
 
@@ -152,10 +153,10 @@ class Controller(QObject):
     resultsOpenException = Signal(Exception) # exception
     resultsOpened = Signal(Results, str) # results, filepath
 
-    resultsAddRequested = Signal(Results) # results
+    resultsAddRequested = Signal(Results, str) # results, filepath (optional)
     resultsAdded = Signal(str, Results) # uid, results
     resultsRemoveRequested = Signal(str) # uid
-    resultsRemoved = Signal(str, Results) # uid, results
+    resultsRemoved = Signal(str) # uid
 
     resultsSaveAsRequested = Signal(str) # uid
     resultsSave = Signal(str, str) # uid, filepath
@@ -199,6 +200,7 @@ class Controller(QObject):
         self._options_writer_thread = None
 
         self._list_results = {}
+        self._results_options = {}
         self._results_filepath = {}
         self._results_reader_thread = None
         self._results_writer_thread = None
@@ -214,6 +216,7 @@ class Controller(QObject):
         self.optionsSaved.connect(self._onOptionsSaved)
         self.optionsAddRequested.connect(self._onOptionsAddRequested)
         self.optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
+        self.optionsRemoved.connect(self._onOptionsRemoved, Qt.QueuedConnection)
         self.optionsModified.connect(self._onOptionsModified)
 
         self.resultsOpen.connect(self._onResultsOpen)
@@ -226,6 +229,7 @@ class Controller(QObject):
         self.resultsSaved.connect(self._onResultsSaved)
         self.resultsAddRequested.connect(self._onResultsAddRequested)
         self.resultsRemoveRequested.connect(self._onResultsRemoveRequested)
+        self.resultsRemoved.connect(self._onResultsRemoved, Qt.QueuedConnection)
 
     def _onOptionsOpen(self, filepath):
         self._options_reader_thread = _OptionsReaderWrapperThread(filepath)
@@ -250,9 +254,7 @@ class Controller(QObject):
         self._options_reader_thread.quit()
         self._options_reader_thread.wait()
         self._options_reader_thread = None
-
-        self._options_filepath[options.uuid] = filepath
-        self.optionsAddRequested.emit(options)
+        self.optionsAddRequested.emit(options, filepath)
 
     def _onOptionsSave(self, uid, filepath):
         options = self._list_options[uid]
@@ -281,14 +283,17 @@ class Controller(QObject):
         self._options_edited[uid] = False
         self._options_filepath[uid] = filepath
 
-    def _onOptionsAddRequested(self, options):
+    def _onOptionsAddRequested(self, options, filepath):
         uid = self._addOptions(options)
         self._options_edited[uid] = False
+        self._options_filepath[uid] = filepath
         self.optionsAdded.emit(uid, options)
 
     def _onOptionsRemoveRequested(self, uid):
-        options = self._removeOptions(uid)
-        self.optionsRemoved.emit(uid, options)
+        self.optionsRemoved.emit(uid)
+
+    def _onOptionsRemoved(self, uid):
+        self._removeOptions(uid)
 
     def _onOptionsModified(self, uid, options):
         self._list_options[uid] = options
@@ -317,9 +322,7 @@ class Controller(QObject):
         self._results_reader_thread.quit()
         self._results_reader_thread.wait()
         self._results_reader_thread = None
-
-        self._results_filepath[results.options.uuid] = filepath
-        self.resultsAddRequested.emit(results)
+        self.resultsAddRequested.emit(results, filepath)
 
     def _onResultsSave(self, uid, filepath):
         results = self._list_results[uid]
@@ -347,35 +350,40 @@ class Controller(QObject):
         self._results_writer_thread = None
         self._results_filepath[uid] = filepath
 
-    def _onResultsAddRequested(self, results):
-        uid = results.options.uuid
+    def _onResultsAddRequested(self, results, filepath):
+        uid = uuid.uuid4().hex
         if uid in self._list_results:
             raise ValueError('Already opened')
         if uid in self._list_options:
             raise ValueError('Options for this results is opened')
 
         self._list_results[uid] = results
+        self._results_filepath[uid] = filepath
+        self._results_options.setdefault(uid, {})
 
         # Add options
-        self._addOptions(results.options)
-        for container in results:
-            self._addOptions(container.options)
+        options_uid = self._addOptions(results.options)
+        self._results_options[uid]['base'] = options_uid
+
+        for index, container in enumerate(results):
+            options_uid = self._addOptions(container.options)
+            self._results_options[uid][index] = options_uid
 
         self.resultsAdded.emit(uid, results)
 
     def _onResultsRemoveRequested(self, uid):
-        results = self._list_results.pop(uid)
+        self.resultsRemoved.emit(uid)
+
+    def _onResultsRemoved(self, uid):
+        self._list_results.pop(uid)
         self._results_filepath.pop(uid, None)
 
         # Remove options
-        self._removeOptions(results.options.uuid)
-        for container in results:
-            self._removeOptions(container.options.uuid)
-
-        self.resultsRemoved.emit(uid, results)
+        for options_uid in self._results_options.pop(uid).values():
+            self._removeOptions(options_uid)
 
     def _addOptions(self, options):
-        uid = options.uuid
+        uid = uuid.uuid4().hex
         if uid in self._list_options:
             raise ValueError('Already opened')
         self._list_options[uid] = options
@@ -386,6 +394,12 @@ class Controller(QObject):
         self._options_edited.pop(uid, None)
         self._options_filepath.pop(uid, None)
         return options
+
+    def _resultsOptionsUID(self, uid, key='base'):
+        return self._resultsOptionsUIDs(uid)[key]
+
+    def _resultsOptionsUIDs(self, uid):
+        return self._results_options[uid]
 
     def settings(self):
         return get_settings()

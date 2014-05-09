@@ -507,9 +507,9 @@ class _Area(QMdiArea):
 
         # Signals
         self.controller().optionsModified.connect(self._onOptionsModified)
-        self.controller().optionsRemoved.connect(self._onOptionsRemoved)
+        self.controller().optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
 
-        self.controller().resultsRemoved.connect(self._onResultsRemoved)
+        self.controller().resultsRemoveRequested.connect(self._onResultsRemoveRequested)
 
         self.controller().beamDisplayRequested.connect(self._onBeamDisplayRequested)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -528,21 +528,17 @@ class _Area(QMdiArea):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
-    def _onOptionsRemoved(self, uid, options):
+    def _onOptionsRemoveRequested(self, uid):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
-    def _onResultsRemoved(self, uid, results):
-        def _closeOptionsWindow(options_uid):
-            for window in list(self._options_windows.get(options_uid, {}).values()):
-                window.close()
-
+    def _onResultsRemoveRequested(self, uid):
         for window in list(self._results_windows.get(uid, {}).values()):
             window.close()
 
-        _closeOptionsWindow(results.options.uuid)
-        for container in results:
-            _closeOptionsWindow(container.options.uuid)
+        for options_uid in self.controller()._resultsOptionsUIDs(uid).values():
+            for window in list(self._options_windows.get(options_uid, {}).values()):
+                window.close()
 
     def _onBeamDisplayRequested(self, uid):
         window = self._getOptionsWindow(uid, 'beam', _BeamSubWindow)
@@ -634,10 +630,10 @@ class _Tree(QTreeWidget):
         self.itemDoubleClicked.connect(self._onDoubleClicked)
 
         self.controller().optionsAdded.connect(self._onOptionsAdded)
-        self.controller().optionsRemoved.connect(self._onOptionsRemoved)
+        self.controller().optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
 
         self.controller().resultsAdded.connect(self._onResultsAdded)
-        self.controller().resultsRemoved.connect(self._onResultsRemoved)
+        self.controller().resultsRemoveRequested.connect(self._onResultsRemoveRequested)
 
         self.controller().beamDisplayed.connect(self._onBeamDisplayed)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -700,7 +696,7 @@ class _Tree(QTreeWidget):
 
         self.expandItem(itm_options)
 
-    def _onOptionsRemoved(self, uid, options):
+    def _onOptionsRemoveRequested(self, uid):
         item = self._options_items.pop(uid)['root']
         self.headerItem().removeChild(item)
         self.setCurrentItem(None) # Hack to ensure refresh of actions
@@ -708,8 +704,8 @@ class _Tree(QTreeWidget):
     def _onResultsAdded(self, uid, results):
         c = self.controller()
 
-        def _addOptions(options, parent):
-            options_uid = options.uuid
+        def _addOptions(options, index, parent):
+            options_uid = c._resultsOptionsUID(uid, index)
             self._options_items.setdefault(options_uid, {})
 
             itm_beam = _BeamTreeItem(options_uid, c, parent)
@@ -727,20 +723,24 @@ class _Tree(QTreeWidget):
             itm_models = _ModelsTreeItem(options_uid, c, parent)
             self._options_items[options_uid]['models'] = itm_models
 
+            return options_uid
+
         # Root results
 
         itm_results = _ResultsTreeItem(uid, c, self)
         self._results_items.setdefault(uid, {})['root'] = itm_results
 
         itm_options = _ResultsOptionsTreeItem(uid, c, itm_results)
-        _addOptions(results.options, itm_options)
+        options_uid = _addOptions(results.options, 'base', itm_options)
+        self._results_items[uid].setdefault('options', set()).add(options_uid)
 
         # Containers
         for index, container in enumerate(results):
             itm_container = _ResultsContainerTreeItem(uid, index, c, itm_results)
 
             itm_options = _ResultsOptionsTreeItem(uid, c, itm_container)
-            _addOptions(container.options, itm_options)
+            options_uid = _addOptions(container.options, index, itm_options)
+            self._results_items[uid]['options'].add(options_uid)
 
             for key in container.keys():
                 itm_result = _ResultTreeItem(uid, index, key, c, itm_container)
@@ -748,14 +748,13 @@ class _Tree(QTreeWidget):
 
         self.expandItem(itm_results)
 
-    def _onResultsRemoved(self, uid, results):
-        item = self._results_items.pop(uid)['root']
+    def _onResultsRemoveRequested(self, uid):
+        items = self._results_items.pop(uid)
 
-        self._options_items.pop(results.options.uuid)
-        for container in results:
-            self._options_items.pop(container.options.uuid)
+        for options_uid in items['options']:
+            self._options_items.pop(options_uid)
 
-        self.headerItem().removeChild(item)
+        self.headerItem().removeChild(items['root'])
         self.setCurrentItem(None) # Hack to ensure refresh of actions
 
     def _onBeamDisplayed(self, uid):
@@ -1062,7 +1061,7 @@ class MainWindow(QMainWindow):
         options.limits.add(ShowersLimit(1000))
 
 #        options = dialog.options()
-        self.controller().optionsAddRequested.emit(options)
+        self.controller().optionsAddRequested.emit(options, None)
 
     def _onOptionsModifyRequested(self, uid):
         options = self.controller().options(uid)
