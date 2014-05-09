@@ -65,12 +65,14 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
                 # Run
                 logging.debug('Running program specific worker')
+                self.options_running.fire(options)
 
                 program = next(iter(options.programs))
                 self._worker = program.worker_class(program)
                 self._worker.reset()
                 results = self._worker.run(options, self._outputdir, workdir)
 
+                self.options_simulated.fire(options)
                 logging.debug('End program specific worker')
 
                 # Cleanup
@@ -123,6 +125,7 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
                 else:
                     results.write(h5filepath)
 
+                self.results_saved.fire(results)
             finally:
                 self._queue_results.task_done()
 
@@ -170,10 +173,13 @@ class LocalRunner(_Runner):
                 _LocalRunnerOptionsDispatcher(self._queue_options,
                                               self._queue_results,
                                               outputdir, workdir)
+            dispatcher.options_running.connect(self.options_running)
+            dispatcher.options_simulated.connect(self.options_simulated)
             self._dispatchers_options.add(dispatcher)
 
         dispatcher = _LocalRunnerResultsDispatcher(self._queue_results,
                                                    outputdir)
+        dispatcher.results_saved.connect(self.results_saved)
         self._dispatchers_results.add(dispatcher)
 
     def put(self, options):

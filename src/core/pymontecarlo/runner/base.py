@@ -26,6 +26,7 @@ import queue
 
 # Local modules.
 from pymontecarlo.util.monitorable import _Monitorable, _MonitorableThread
+from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
@@ -44,6 +45,11 @@ class _Runner(_Monitorable):
 
         self._dispatchers_options = set()
         self._dispatchers_results = set()
+
+        self.options_added = Signal()
+        self.options_running = Signal()
+        self.options_simulated = Signal()
+        self.results_saved = Signal()
 
     def __enter__(self):
         self.start()
@@ -126,6 +132,7 @@ class _Runner(_Monitorable):
                 options.programs.clear()
                 options.programs.add(program)
                 self._queue_options.put((base_options, options))
+                self.options_added.fire(options)
 
     @property
     def progress(self):
@@ -161,12 +168,17 @@ class _RunnerOptionsDispatcher(_RunnerDispatcher):
         self._queue_options = queue_options
         self._queue_results = queue_results
 
+        self.options_running = Signal()
+        self.options_simulated = Signal()
+
 class _RunnerResultsDispatcher(_RunnerDispatcher):
 
     def __init__(self, queue_results):
         _RunnerDispatcher.__init__(self)
 
         self._queue_results = queue_results
+
+        self.results_saved = Signal()
 
 
 #class _Creator(object):
