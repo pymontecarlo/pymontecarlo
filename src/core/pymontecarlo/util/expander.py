@@ -54,7 +54,7 @@ class Expander(_Expander):
 
             name = '+'.join(parts)
             name = name.replace(',', '_')
-            options._name = name
+            options.name = name
 
         return opss
 
