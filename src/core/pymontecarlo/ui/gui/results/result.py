@@ -189,8 +189,8 @@ class UnknownResultWidget(_ResultWidget):
 
 class _SaveableResultWidget(_ResultWidget):
 
-    def __init__(self, options, key, result, parent=None):
-        _ResultWidget.__init__(self, options, key, result, parent)
+    def __init__(self, key, result, options, parent=None):
+        _ResultWidget.__init__(self, key, result, options, parent)
 
         self._save_namefilters = {}
         self._save_methods = {}
@@ -262,8 +262,8 @@ class _SaveableResultWidget(_ResultWidget):
 
 class _FigureResultWidget(_SaveableResultWidget):
 
-    def __init__(self, options, key, result, parent=None):
-        _SaveableResultWidget.__init__(self, options, key, result, parent)
+    def __init__(self, key, result, options, parent=None):
+        _SaveableResultWidget.__init__(self, key, result, options, parent)
 
         for ext_name, exts in \
                 self._canvas.get_supported_filetypes_grouped().items():
