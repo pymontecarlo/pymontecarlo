@@ -1100,22 +1100,10 @@ class MainWindow(QMainWindow):
         messagebox.exception(self, ex)
 
     def _onOptionsNewRequested(self):
-#        dialog = OptionsWizard()
-#        if not dialog.exec_():
-#            return
-
-        from pymontecarlo.options.options import Options
-        from pymontecarlo.options.geometry import HorizontalLayers
-        from pymontecarlo.options.material import Material
-        from pymontecarlo.options.detector import ElectronFractionDetector
-        from pymontecarlo.options.limit import ShowersLimit
-        options = Options()
-        options.geometry = HorizontalLayers(Material.pure(79))
-        options.geometry.add_layer(Material.pure(13), 50e-6)
-        options.detectors['fraction'] = ElectronFractionDetector()
-        options.limits.add(ShowersLimit(1000))
-
-#        options = dialog.options()
+        dialog = OptionsWizard()
+        if not dialog.exec_():
+            return
+        options = dialog.options()
         self.controller().optionsAddRequested.emit(options, None)
 
     def _onOptionsModifyRequested(self, uid):
