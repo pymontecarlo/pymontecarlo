@@ -21,16 +21,24 @@ __license__ = "GPL v3"
 # Standard library modules.
 import threading
 import queue
+from collections import Counter
+from operator import itemgetter
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.util.monitorable import _Monitorable, _MonitorableThread
 from pymontecarlo.util.signal import Signal
+from pymontecarlo.util.parameter import freeze
 
 # Globals and constants variables.
 
 class _Runner(_Monitorable):
+
+    STATE_QUEUED = 'queued'
+    STATE_RUNNING = 'running'
+    STATE_SIMULATED = 'simulated'
+    STATE_ERROR = 'error'
 
     def __init__(self, max_workers=1):
         _Monitorable.__init__(self)
@@ -38,18 +46,45 @@ class _Runner(_Monitorable):
         if max_workers < 1:
             raise ValueError("Number of workers must be greater or equal to 1.")
 
+        self._is_started = threading.Event()
+
+        # State
+        self._options_state_lock = threading.Lock()
+        self._options_state = {}
+
+        # Queues
         self._queue_options = queue.Queue()
         self._queue_results = queue.Queue()
 
-        self._is_started = threading.Event()
-
-        self._dispatchers_options = set()
-        self._dispatchers_results = set()
-
+        # Signals
         self.options_added = Signal()
         self.options_running = Signal()
         self.options_simulated = Signal()
+        self.options_error = Signal()
         self.results_saved = Signal()
+        self.results_error = Signal()
+
+        self.options_added.connect(self._on_options_added)
+        self.options_running.connect(self._on_options_running)
+        self.options_simulated.connect(self._on_options_simulated)
+        self.options_error.connect(self._on_options_error)
+
+        # Dispatchers
+        self._dispatchers_options = set()
+        for _ in range(max(1, max_workers - 1)):
+            dispatcher = self._create_options_dispatcher()
+            dispatcher.options_running.connect(self.options_running)
+            dispatcher.options_simulated.connect(self.options_simulated)
+            dispatcher.options_error.connect(self.options_error)
+            self._dispatchers_options.add(dispatcher)
+
+        self._dispatchers_results = set()
+        dispatcher = self._create_results_dispatcher()
+        dispatcher.results_saved.connect(self.results_saved)
+        dispatcher.results_error.connect(self.results_error)
+        self._dispatchers_results.add(dispatcher)
+
+        self._dispatchers = self._dispatchers_options | self._dispatchers_results
 
     def __enter__(self):
         self.start()
@@ -66,10 +101,16 @@ class _Runner(_Monitorable):
         if self._is_started.is_set():
             raise RuntimeError('Runner already started')
 
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+        for dispatcher in self._dispatchers:
             dispatcher.start()
 
         self._is_started.set()
+
+    def _create_options_dispatcher(self):
+        raise NotImplementedError
+
+    def _create_results_dispatcher(self):
+        raise NotImplementedError
 
     def start(self):
         self._start()
@@ -78,34 +119,38 @@ class _Runner(_Monitorable):
         """
         Cancels all running simulations.
         """
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+        for dispatcher in self._dispatchers:
             dispatcher.cancel()
 
     def is_alive(self):
         """
         Returns whether simulations are being executed.
         """
-        return not self._queue_options.empty()
+        for dispatcher in self._dispatchers:
+            if not dispatcher.is_alive():
+                return False
+        return True
 
     def join(self):
         """
         Blocks until all options have been simulated.
         """
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+        for dispatcher in self._dispatchers:
             dispatcher.raise_exception()
 
         self._queue_options.join()
         self._queue_results.join()
 
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
+        for dispatcher in self._dispatchers:
             dispatcher.raise_exception()
 
     def close(self):
         """
         Wait for simulation(s) to finish and closes the runner.
         """
-        self.join()
         self.cancel()
+        for dispatcher in self._dispatchers:
+            dispatcher.join()
 
     def put(self, options):
         """
@@ -124,38 +169,89 @@ class _Runner(_Monitorable):
 
         base_options = options
 
+        list_options = []
         for program in base_options.programs:
             converter = program.converter_class()
-            list_options = converter.convert(base_options)
 
-            for options in list_options:
+            for options in converter.convert(base_options):
                 options.programs.clear()
                 options.programs.add(program)
+                options.name = options.name + '+' + program.alias
+                freeze(options)
+
                 self._queue_options.put((base_options, options))
+                list_options.append(options)
                 self.options_added.fire(options)
+
+        return list_options
+
+    def _on_options_added(self, options):
+        with self._options_state_lock:
+            self._options_state[options] = (self.STATE_QUEUED, 'queued')
+
+    def _on_options_running(self, options):
+        with self._options_state_lock:
+            self._options_state[options] = (self.STATE_RUNNING, 'running')
+
+    def _on_options_simulated(self, options):
+        with self._options_state_lock:
+            self._options_state[options] = (self.STATE_SIMULATED, 'simulated')
+
+    def _on_options_error(self, options, ex):
+        with self._options_state_lock:
+            self._options_state[options] = (self.STATE_ERROR, str(ex))
+
+    def options_state(self, options):
+        with self._options_state_lock:
+            return self._options_state[options][0]
+
+    def options_progress(self, options):
+        with self._options_state_lock:
+            state, _message = self._options_state[options]
+
+        if state == self.STATE_SIMULATED:
+            return 1.0
+        elif state == self.STATE_RUNNING:
+            for dispatcher in self._dispatchers_options:
+                if dispatcher.current_options != options:
+                    continue
+                return dispatcher.progress
+        else:
+            return 0.0
+
+    def options_status(self, options):
+        with self._options_state_lock:
+            state, message = self._options_state[options]
+
+        if state == self.STATE_RUNNING:
+            for dispatcher in self._dispatchers_options:
+                if dispatcher.current_options != options:
+                    continue
+                return dispatcher.status
+        else:
+            return message
 
     @property
     def progress(self):
-        progress = 0.0
-
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
-            progress = dispatcher.progress
-            if progress > 0.0 and progress < 1.0: # active worker
-                return progress
-
-        return progress
+        with self._options_state_lock:
+            counter = Counter(map(itemgetter(0), self._options_state.values()))
+            simulated = counter[self.STATE_SIMULATED]
+            error = counter[self.STATE_ERROR]
+            total = len(self._options_state)
+            return (simulated + error) / total
 
     @property
     def status(self):
-        status = ''
-
-        for dispatcher in self._dispatchers_options | self._dispatchers_results:
-            progress = dispatcher.progress
-            status = dispatcher.status
-            if progress > 0.0 and progress < 1.0: # active worker
-                return status
-
-        return status
+        if not self._is_started.is_set():
+            return 'not started'
+        elif self.is_cancelled():
+            return 'cancelled'
+        elif self.is_exception_raised():
+            return 'error occurred'
+        elif self.is_alive():
+            return 'running'
+        else:
+            return 'unknown'
 
 class _RunnerDispatcher(_MonitorableThread):
     pass
@@ -170,6 +266,11 @@ class _RunnerOptionsDispatcher(_RunnerDispatcher):
 
         self.options_running = Signal()
         self.options_simulated = Signal()
+        self.options_error = Signal()
+
+    @property
+    def current_options(self):
+        raise NotImplementedError
 
 class _RunnerResultsDispatcher(_RunnerDispatcher):
 
@@ -179,6 +280,7 @@ class _RunnerResultsDispatcher(_RunnerDispatcher):
         self._queue_results = queue_results
 
         self.results_saved = Signal()
+        self.results_error = Signal()
 
 
 #class _Creator(object):

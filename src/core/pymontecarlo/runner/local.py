@@ -43,6 +43,7 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
         _RunnerOptionsDispatcher.__init__(self, queue_options, queue_results)
 
         self._worker = None
+        self._options = None
         self._outputdir = outputdir
         self._workdir = workdir
         self._user_defined_workdir = self._workdir is not None
@@ -67,10 +68,12 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
                 logging.debug('Running program specific worker')
                 self.options_running.fire(options)
 
+                self._options = options
                 program = next(iter(options.programs))
                 self._worker = program.worker_class(program)
                 self._worker.reset()
                 results = self._worker.run(options, self._outputdir, workdir)
+                self._options = None
 
                 self.options_simulated.fire(options)
                 logging.debug('End program specific worker')
@@ -82,6 +85,8 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
                 # Put results in queue
                 self._queue_results.put(Results(base_options, [results]))
+            except Exception as ex:
+                self.options_error.fire(options, ex)
             finally:
                 self._worker = None
                 self._queue_options.task_done()
@@ -90,6 +95,10 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
         if self._worker:
             self._worker.cancel()
         _RunnerOptionsDispatcher.cancel(self)
+
+    @property
+    def current_options(self):
+        return self._options
 
     @property
     def progress(self):
@@ -126,6 +135,8 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
                     results.write(h5filepath)
 
                 self.results_saved.fire(results)
+            except Exception as ex:
+                self.results_error.fire(results, ex)
             finally:
                 self._queue_results.task_done()
 
@@ -156,39 +167,33 @@ class LocalRunner(_Runner):
 
         :arg nbprocesses: number of processes/threads to use (default: 1)
         """
-        _Runner.__init__(self, max_workers)
-
         if not os.path.isdir(outputdir):
             raise ValueError('Output directory (%s) is not a directory' % outputdir)
         self._outputdir = outputdir
 
         if workdir is not None and not os.path.isdir(workdir):
             raise ValueError('Work directory (%s) is not a directory' % workdir)
+        self._workdir = workdir
 
         self._overwrite = overwrite
 
-        # Create dispatchers
-        for _ in range(max(1, max_workers - 1)):
-            dispatcher = \
-                _LocalRunnerOptionsDispatcher(self._queue_options,
-                                              self._queue_results,
-                                              outputdir, workdir)
-            dispatcher.options_running.connect(self.options_running)
-            dispatcher.options_simulated.connect(self.options_simulated)
-            self._dispatchers_options.add(dispatcher)
+        _Runner.__init__(self, max_workers)
 
-        dispatcher = _LocalRunnerResultsDispatcher(self._queue_results,
-                                                   outputdir)
-        dispatcher.results_saved.connect(self.results_saved)
-        self._dispatchers_results.add(dispatcher)
+    def _create_options_dispatcher(self):
+        return _LocalRunnerOptionsDispatcher(self._queue_options,
+                                             self._queue_results,
+                                             self._outputdir, self._workdir)
+
+    def _create_results_dispatcher(self):
+        return _LocalRunnerResultsDispatcher(self._queue_results,
+                                             self._outputdir)
 
     def put(self, options):
         h5filepath = os.path.join(self._outputdir, options.name + '.h5')
         if os.path.exists(h5filepath) and not self._overwrite:
-            logging.info('Skipping %s as results already exists', options.name)
-            return
+            raise IOError('Results already exists: %s' % h5filepath)
 
-        _Runner.put(self, options)
+        return _Runner.put(self, options)
 
 #class _LocalCreatorDispatcher(_CreatorDispatcher):
 #
