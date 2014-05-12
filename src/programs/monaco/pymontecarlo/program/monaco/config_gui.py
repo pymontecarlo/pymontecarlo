@@ -62,7 +62,7 @@ class _MonacoConfigurePanelWidget(_ConfigurePanelWidget):
 
     def updateSettings(self, settings):
         section = _ConfigurePanelWidget.updateSettings(self, settings)
-        section.basedir = self._brw_basedir.GetPath()
+        section.basedir = self._brw_basedir.path()
         return section
 
 class _MonacoGUI(GUI):

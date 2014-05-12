@@ -59,7 +59,7 @@ class _WinXRayConfigurePanelWidget(_ConfigurePanelWidget):
 
     def updateSettings(self, settings):
         section = _ConfigurePanelWidget.updateSettings(self, settings)
-        section.exe = self._brw_exe.GetPath()
+        section.exe = self._brw_exe.path()
         return section
 
 class _WinXRayGUI(GUI):
