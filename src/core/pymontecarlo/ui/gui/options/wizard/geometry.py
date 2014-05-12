@@ -108,8 +108,7 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
 
         widget = self._widgets.get(geometry.__class__)
         if widget is None:
-            raise ValueError('No widget for geometry class: %s' % \
-                            geometry.__class__.__name__)
+            widget = next(iter(self._widgets.values()))
 
         widget.setValue(geometry)
         self._wdg_geometry.setCurrentWidget(widget)

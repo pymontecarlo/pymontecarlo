@@ -431,6 +431,8 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         for key, detectors in self.options().detectors.items():
             detectors = np.array(detectors, ndmin=1)
             for detector in detectors:
+                if not detector.__class__ in self._widgets:
+                    continue
                 tbl_model.append(key, detector)
 
     def validatePage(self):

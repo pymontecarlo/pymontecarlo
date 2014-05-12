@@ -95,7 +95,7 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
 
         widget = self._widgets.get(beam.__class__)
         if widget is None:
-            raise ValueError('No widget for beam class: %s' % beam.__class__.__name__)
+            widget = next(iter(self._widgets.values()))
 
         widget.setValue(beam)
         self._wdg_beam.setCurrentWidget(widget)

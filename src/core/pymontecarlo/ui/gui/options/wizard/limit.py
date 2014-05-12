@@ -360,6 +360,8 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
 
         self.options().limits.clear()
         for limit in tbl_model.limits():
+            if not limit.__class__ in self._widgets:
+                continue
             self.options().limits.add(limit)
 
         return True
