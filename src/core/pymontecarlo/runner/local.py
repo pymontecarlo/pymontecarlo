@@ -190,8 +190,11 @@ class LocalRunner(_Runner):
 
     def put(self, options):
         h5filepath = os.path.join(self._outputdir, options.name + '.h5')
-        if os.path.exists(h5filepath) and not self._overwrite:
-            raise IOError('Results already exists: %s' % h5filepath)
+        if os.path.exists(h5filepath):
+            if self._overwrite:
+                os.remove(h5filepath)
+            else:
+                raise IOError('Results already exists: %s' % h5filepath)
 
         return _Runner.put(self, options)
 
