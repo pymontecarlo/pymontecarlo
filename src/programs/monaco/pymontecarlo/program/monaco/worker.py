@@ -25,9 +25,9 @@ import shutil
 import subprocess
 
 try:
-    import _winreg as winreg
+    import winreg
 except ImportError:
-    import dummy_winreg as winreg
+    import pymontecarlo.program.monaco.dummy_winreg as winreg
 
 # Third party modules.
 from pyxray.transition import Ka, La, Ma
