@@ -117,8 +117,12 @@ class _OptionsModelMixin(object):
         self.insertRows(index)
         self.setData(self.createIndex(index, 0), options)
 
-    def removeOptions(self, index):
+    def popOptions(self, index):
         self.removeRows(index)
+
+    def removeOptions(self, options):
+        index = self._list_options.index(options)
+        self.popOptions(index)
 
     def clearOptions(self):
         self.removeRows(0, self.rowCount())
@@ -291,8 +295,11 @@ class RunnerDialog(QDialog):
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         tlb_available.addWidget(spacer)
-        act_open = tlb_available.addAction(getIcon("document-open"), "&Open")
+        act_open = tlb_available.addAction(getIcon("document-open"), "Open")
         act_open.setShortcut(QKeySequence.Open)
+        tlb_available.addSeparator()
+        act_remove = tlb_available.addAction(getIcon("list-remove"), "Remove")
+        act_clear = tlb_available.addAction(getIcon("edit-clear"), "Clear")
 
         self._btn_addtoqueue = QPushButton(getIcon("go-next"), "")
         self._btn_addtoqueue.setToolTip("Add to queue")
@@ -369,6 +376,8 @@ class RunnerDialog(QDialog):
         self._running_timer.timeout.connect(self._onRunningTimer)
 
         act_open.triggered.connect(self._onOpen)
+        act_remove.triggered.connect(self._onRemove)
+        act_clear.triggered.connect(self._onClear)
 
         self._btn_addtoqueue.released.connect(self._onAddToQueue)
         self._btn_addalltoqueue.released.connect(self._onAddAllToQueue)
@@ -438,7 +447,24 @@ class RunnerDialog(QDialog):
         self._options_reader_thread.quit()
         self._options_reader_thread.wait()
         self._options_reader_thread = None
-        self.addAvailableOptions(options)
+
+        try:
+            self._lst_available.model().addOptions(options)
+        except Exception as ex:
+            messagebox.exception(self, ex)
+
+    def _onRemove(self):
+        selection = self._lst_available.selectionModel().selection().indexes()
+        if len(selection) == 0:
+            QMessageBox.warning(self, "Queue", "Select an options")
+            return
+
+        model = self._lst_available.model()
+        for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            model.popOptions(row)
+
+    def _onClear(self):
+        self._lst_available.model().clearOptions()
 
     def _onAddToQueue(self):
         selection = self._lst_available.selectionModel().selection().indexes()
@@ -455,7 +481,7 @@ class RunnerDialog(QDialog):
                 messagebox.exception(self, ex)
                 return
             else:
-                model.removeOptions(row)
+                model.popOptions(row)
 
     def _onAddAllToQueue(self):
         model = self._lst_available.model()
@@ -467,7 +493,7 @@ class RunnerDialog(QDialog):
                 messagebox.exception(self, ex)
                 return
             else:
-                model.removeOptions(row)
+                model.popOptions(row)
 
     def _onStart(self):
         outputdir = self._txt_outputdir.path()
@@ -563,10 +589,13 @@ class RunnerDialog(QDialog):
         event.accept()
 
     def addAvailableOptions(self, options):
-        try:
-            self._lst_available.model().addOptions(options)
-        except Exception as ex:
-            messagebox.exception(self, ex)
+        self._lst_available.model().addOptions(options)
+
+    def removeAvailableOptions(self, options):
+        self._lst_available.model().removeOptions(options)
+
+    def clearAvailableOptions(self):
+        self._lbl_available.model().clearOptions()
 
 def __run():
     import sys
