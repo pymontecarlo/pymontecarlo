@@ -974,6 +974,7 @@ class MainWindow(QMainWindow):
         self.controller().optionsAdded.connect(self._onTreeChanged)
         self.controller().optionsAdded.connect(self._onOptionsAdded)
         self.controller().optionsRemoved.connect(self._onTreeChanged)
+        self.controller().optionsModified.connect(self._onOptionsModified)
 
         self.controller().resultsSaveAsRequested.connect(self._onResultsSaveAsRequested)
         self.controller().resultsOpened.connect(self._onResultsOpened)
@@ -1148,7 +1149,16 @@ class MainWindow(QMainWindow):
         self._dlg_progress.hide()
 
     def _onOptionsAdded(self, uid, options):
-        self._dlg_runner.addAvailableOptions(options)
+        try:
+            self._dlg_runner.addAvailableOptions(options)
+        except:
+            pass
+
+    def _onOptionsModified(self, uid, options):
+        try:
+            self._dlg_runner.addAvailableOptions(options)
+        except:
+            pass
 
     def _onOptionsSaved(self, uid, filepath):
         self._dlg_progress.hide()
