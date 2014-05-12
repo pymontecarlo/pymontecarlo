@@ -53,7 +53,10 @@ class _MonacoProgram(Program):
         try:
             mccli32_exe = settings.monaco.exe
         except AttributeError:
-            mccli32_exe = os.path.join(settings.monaco.basedir, 'Mccli32.exe')
+            filename = 'Mccli32'
+            if os.name == 'nt':
+                filename += '.exe'
+            mccli32_exe = os.path.join(settings.monaco.basedir, filename)
         if not os.path.isfile(mccli32_exe):
             raise AssertionError("No Mccli32.exe in Monaco base directory (%s)" % basedir)
         if not os.access(mccli32_exe, os.X_OK):
