@@ -63,6 +63,7 @@ class _AngleRangeWidget(_ParameterWidget):
         self._txt_lower = MultiNumericalLineEdit()
         self._txt_upper = MultiNumericalLineEdit()
         self._cb_unit = AngleComboBox()
+        self._cb_unit.setUnit(u'\u00b0')
 
         # Layouts
         layout = QHBoxLayout()
@@ -98,9 +99,9 @@ class _AngleRangeWidget(_ParameterWidget):
 
     def setValues(self, values):
         values = np.array(values, ndmin=1)
-        self._txt_lower.setValues(list(map(itemgetter(0), values)))
-        self._txt_upper.setValues(list(map(itemgetter(1), values)))
-        self._cb_unit.setUnit('rad')
+        self._txt_lower.setValues(list(map(np.degrees, map(itemgetter(0), values))))
+        self._txt_upper.setValues(list(map(np.degrees, map(itemgetter(1), values))))
+        self._cb_unit.setUnit(u'\u00b0')
 
     def isReadOnly(self):
         return self._txt_lower.isReadOnly() and \

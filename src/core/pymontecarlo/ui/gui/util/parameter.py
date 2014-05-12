@@ -25,15 +25,13 @@ from PySide.QtGui import \
     QWidget, QHBoxLayout, QVBoxLayout, QFormLayout, QValidator
 from PySide.QtCore import Signal
 
+import numpy as np
+
 # Local modules.
 from pymontecarlo.ui.gui.util.widget import \
     NumericalValidator, MultiNumericalLineEdit, UnitComboBox, AngleComboBox
 
 # Globals and constants variables.
-
-#--- Base widgets
-
-#--- Parameter widgets
 
 class _ParameterWidget(QWidget):
 
@@ -259,6 +257,7 @@ class AngleParameterWidget(_ParameterWidget):
 
         # Widgets
         self._cb_unit = AngleComboBox()
+        self._cb_unit.setUnit(u'\u00b0')
 
         self._txt_values = MultiNumericalLineEdit()
         validator = _AngleParameterValidator(parameter, self._cb_unit)
@@ -290,8 +289,8 @@ class AngleParameterWidget(_ParameterWidget):
         return self._txt_values.values() * self._cb_unit.factor()
 
     def setValues(self, values):
-        self._txt_values.setValues(values)
-        self._cb_unit.setCurrentIndex(0)
+        self._txt_values.setValues(np.degrees(values))
+        self._cb_unit.setUnit(u'\u00b0')
 
     def isReadOnly(self):
         return self._txt_values.isReadOnly() and not self._cb_unit.isEnabled()
