@@ -95,6 +95,12 @@ class _BaseTreeItem(_ActionTreeItem):
     def uid(self):
         return self._uid
 
+    def canReload(self):
+        return False
+
+    def requestReload(self):
+        pass
+
     def canSave(self):
         return False
 
@@ -125,6 +131,11 @@ class _OptionsTreeItem(_BaseTreeItem):
         self.addAction(self._act_modify)
         self.addSeparator()
 
+        self._act_reload = QAction("Reload", self.treeWidget())
+        self._act_reload.setEnabled(self.canReload())
+        self.addAction(self._act_reload)
+        self.addSeparator()
+
         self._act_save = QAction("Save", self.treeWidget())
         self._act_save.setEnabled(self.canSave())
         self.addAction(self._act_save)
@@ -138,20 +149,32 @@ class _OptionsTreeItem(_BaseTreeItem):
 
         # Signals
         self._act_modify.triggered.connect(self.requestModify)
+        self._act_reload.triggered.connect(self.requestReload)
         self._act_save.triggered.connect(self.requestSave)
         self._act_saveas.triggered.connect(self.requestSaveAs)
         self._act_close.triggered.connect(self.requestClose)
 
         self.controller().optionsModified.connect(self._onOptionsModified)
+        self.controller().optionsReloaded.connect(self._onOptionsReloaded)
         self.controller().optionsSaved.connect(self._onOptionsSaved)
 
     def _onOptionsModified(self, uid, options):
         self._act_save.setEnabled(self.canSave())
         self.setText(0, options.name)
 
+    def _onOptionsReloaded(self, uid, options):
+        self.setText(0, options.name)
+
     def _onOptionsSaved(self, uid, filepath):
+        self._act_reload.setEnabled(self.canReload())
         self._act_save.setEnabled(self.canSave())
         self.setToolTip(0, filepath)
+
+    def canReload(self):
+        return bool(self.controller().optionsFilepath(self.uid()))
+
+    def requestReload(self):
+        self.controller().optionsReloadRequested.emit(self.uid())
 
     def canSave(self):
         has_filepath = bool(self.controller().optionsFilepath(self.uid()))
@@ -273,12 +296,28 @@ class _ResultsTreeItem(_BaseTreeItem):
         self.addAction(self._act_saveas)
         self.addSeparator()
 
+        self._act_reload = QAction("Reload", self.treeWidget())
+        self.addAction(self._act_reload)
+        self.addSeparator()
+
         self._act_close = QAction("Close", self.treeWidget())
         self.addAction(self._act_close)
 
         # Signals
         self._act_saveas.triggered.connect(self.requestSaveAs)
+        self._act_reload.triggered.connect(self.requestReload)
         self._act_close.triggered.connect(self.requestClose)
+
+        self.controller().resultsSaved.connect(self._onResultsSaved)
+
+    def _onResultsSaved(self, uid, filepath):
+        self.setToolTip(0, filepath)
+
+    def canReload(self):
+        return True
+
+    def requestReload(self):
+        self.controller().resultsReloadRequested.emit(self.uid())
 
     def canSaveAs(self):
         return True
@@ -509,9 +548,11 @@ class _Area(QMdiArea):
 
         # Signals
         self.controller().optionsModified.connect(self._onOptionsModified)
-        self.controller().optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
+        self.controller().optionsRemoveRequestApproved.connect(self._onOptionsRemoveRequestApproved)
+        self.controller().optionsReloadRequestApproved.connect(self._onOptionsReloadRequestApproved)
 
-        self.controller().resultsRemoveRequested.connect(self._onResultsRemoveRequested)
+        self.controller().resultsRemoveRequestApproved.connect(self._onResultsRemoveRequestApproved)
+        self.controller().resultsReloadRequestApproved.connect(self._onResultsReloadRequestApproved)
 
         self.controller().beamDisplayRequested.connect(self._onBeamDisplayRequested)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -530,11 +571,23 @@ class _Area(QMdiArea):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
-    def _onOptionsRemoveRequested(self, uid):
+    def _onOptionsReloadRequestApproved(self, uid):
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
-    def _onResultsRemoveRequested(self, uid):
+    def _onOptionsRemoveRequestApproved(self, uid):
+        for window in list(self._options_windows.get(uid, {}).values()):
+            window.close()
+
+    def _onResultsReloadRequestApproved(self, uid):
+        for window in list(self._results_windows.get(uid, {}).values()):
+            window.close()
+
+        for options_uid in self.controller()._resultsOptionsUIDs(uid).values():
+            for window in list(self._options_windows.get(options_uid, {}).values()):
+                window.close()
+
+    def _onResultsRemoveRequestApproved(self, uid):
         for window in list(self._results_windows.get(uid, {}).values()):
             window.close()
 
@@ -632,10 +685,12 @@ class _Tree(QTreeWidget):
         self.itemDoubleClicked.connect(self._onDoubleClicked)
 
         self.controller().optionsAdded.connect(self._onOptionsAdded)
-        self.controller().optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
+        self.controller().optionsRemoveRequestApproved.connect(self._onOptionsRemoveRequestApproved)
 
         self.controller().resultsAdded.connect(self._onResultsAdded)
-        self.controller().resultsRemoveRequested.connect(self._onResultsRemoveRequested)
+        self.controller().resultsRemoveRequestApproved.connect(self._onResultsRemoveRequestApproved)
+        self.controller().resultsReloadRequestApproved.connect(self._onResultsReloadRequestApproved)
+        self.controller().resultsReloaded.connect(self._onResultsReloaded)
 
         self.controller().beamDisplayed.connect(self._onBeamDisplayed)
         self.controller().beamDisplayClosed.connect(self._onBeamDisplayClosed)
@@ -698,7 +753,7 @@ class _Tree(QTreeWidget):
 
         self.expandItem(itm_options)
 
-    def _onOptionsRemoveRequested(self, uid):
+    def _onOptionsRemoveRequestApproved(self, uid):
         item = self._options_items.pop(uid)['root']
         self.headerItem().removeChild(item)
         self.setCurrentItem(None) # Hack to ensure refresh of actions
@@ -750,7 +805,7 @@ class _Tree(QTreeWidget):
 
         self.expandItem(itm_results)
 
-    def _onResultsRemoveRequested(self, uid):
+    def _onResultsRemoveRequestApproved(self, uid):
         items = self._results_items.pop(uid)
 
         for options_uid in items['options']:
@@ -758,6 +813,12 @@ class _Tree(QTreeWidget):
 
         self.headerItem().removeChild(items['root'])
         self.setCurrentItem(None) # Hack to ensure refresh of actions
+
+    def _onResultsReloadRequestApproved(self, uid):
+        self._onResultsRemoveRequestApproved(uid)
+
+    def _onResultsReloaded(self, uid, results):
+        self._onResultsAdded(uid, results)
 
     def _onBeamDisplayed(self, uid):
         item = self._options_items[uid]['beam']
@@ -842,6 +903,9 @@ class MainWindow(QMainWindow):
         self._act_new.setShortcut(QKeySequence.New)
         self._act_open = QAction(getIcon("document-open"), "&Open", self)
         self._act_open.setShortcut(QKeySequence.Open)
+        self._act_reload = QAction(getIcon('document-revert'), 'Reload', self)
+        self._act_reload.setShortcut(QKeySequence.Refresh)
+        self._act_reload.setEnabled(False)
         self._act_close = QAction("&Close", self)
         self._act_close.setShortcut(QKeySequence.Close)
         self._act_close.setEnabled(False)
@@ -891,6 +955,7 @@ class MainWindow(QMainWindow):
         mnu_file = self.menuBar().addMenu("&File")
         mnu_file.addAction(self._act_new)
         mnu_file.addAction(self._act_open)
+        mnu_file.addAction(self._act_reload)
         mnu_file.addSeparator()
         mnu_file.addAction(self._act_close)
         mnu_file.addAction(self._act_closeall)
@@ -931,6 +996,7 @@ class MainWindow(QMainWindow):
         # Signals
         self._act_new.triggered.connect(self._onNew)
         self._act_open.triggered.connect(self._onOpen)
+        self._act_reload.triggered.connect(self._onReload)
         self._act_save.triggered.connect(self._onSave)
         self._act_saveas.triggered.connect(self._onSaveAs)
         self._act_close.triggered.connect(self._onClose)
@@ -966,20 +1032,29 @@ class MainWindow(QMainWindow):
         self.controller().resultsSaveException.connect(self._onDialogProgressException)
 
         self.controller().optionsNewRequested.connect(self._onOptionsNewRequested)
+        self.controller().optionsOpenRequested.connect(self._onOptionsOpenRequested)
+        self.controller().optionsReloadRequested.connect(self._onOptionsReloadRequested)
         self.controller().optionsModifyRequested.connect(self._onOptionsModifyRequested)
         self.controller().optionsSaveRequested.connect(self._onOptionsSaveRequested)
         self.controller().optionsSaveAsRequested.connect(self._onOptionsSaveAsRequested)
         self.controller().optionsSaved.connect(self._onOptionsSaved)
         self.controller().optionsOpened.connect(self._onOptionsOpened)
+        self.controller().optionsAddRequested.connect(self._onOptionsAddRequested)
         self.controller().optionsAdded.connect(self._onTreeChanged)
         self.controller().optionsAdded.connect(self._onOptionsAdded)
+        self.controller().optionsRemoveRequested.connect(self._onOptionsRemoveRequested)
         self.controller().optionsRemoved.connect(self._onTreeChanged)
         self.controller().optionsModified.connect(self._onOptionsModified)
 
         self.controller().resultsSaveAsRequested.connect(self._onResultsSaveAsRequested)
+        self.controller().resultsReloadRequested.connect(self._onResultsReloadRequested)
         self.controller().resultsOpened.connect(self._onResultsOpened)
+        self.controller().resultsReloaded.connect(self._onResultsReloaded)
+        self.controller().resultsAddRequested.connect(self._onResultsAddRequested)
         self.controller().resultsAdded.connect(self._onTreeChanged)
+        self.controller().resultsRemoveRequested.connect(self._onResultsRemoveRequested)
         self.controller().resultsRemoved.connect(self._onTreeChanged)
+        self.controller().resultsSaved.connect(self._onResultsSaved)
 
         # Defaults
         settings = self.controller().settings()
@@ -995,37 +1070,13 @@ class MainWindow(QMainWindow):
         self.controller().optionsNewRequested.emit()
 
     def _onOpen(self):
-        settings = self.controller().settings()
-        curdir = getattr(settings.gui, 'opendir', os.getcwd())
-        namefilters = {'Options [*.xml] (*.xml)': '.xml',
-                       'Results [*.h5] (*.h5)': '.h5'}
+        self.controller().optionsOpenRequested.emit()
 
-        filepath, namefilter = \
-            QFileDialog.getOpenFileName(self, "Open", curdir,
-                                        ';;'.join(namefilters.keys()))
-
-        if not filepath or not namefilter:
+    def _onReload(self):
+        item = self._tree.currentItem()
+        if item is None:
             return
-        settings.gui.opendir = os.path.dirname(filepath)
-
-        ext = namefilters[namefilter]
-        if not filepath.endswith(ext):
-            filepath += ext
-
-        if ext == '.xml' and not self.controller().canOpenOptions(filepath):
-            QMessageBox.critical(self, 'Open', 'Options already opened')
-            return
-        elif ext == '.h5' and not self.controller().canOpenResults(filepath):
-            QMessageBox.critical(self, 'Open', 'Results already opened')
-            return
-
-        if ext == '.xml':
-            self.controller().optionsOpen.emit(filepath)
-        elif ext == '.h5':
-            self.controller().resultsOpen.emit(filepath)
-
-        self._dlg_progress.reset()
-        self._dlg_progress.show()
+        item.requestReload()
 
     def _onSave(self):
         item = self._tree.currentItem()
@@ -1077,11 +1128,13 @@ class MainWindow(QMainWindow):
     def _onTreeSelectionChanged(self):
         item = self._tree.currentItem()
         if item is None:
+            self._act_reload.setEnabled(False)
             self._act_close.setEnabled(False)
             self._act_save.setEnabled(False)
             self._act_saveas.setEnabled(False)
             return
 
+        self._act_reload.setEnabled(item.canReload())
         self._act_close.setEnabled(item.canClose())
         self._act_save.setEnabled(item.canSave())
         self._act_saveas.setEnabled(item.canSaveAs())
@@ -1106,6 +1159,48 @@ class MainWindow(QMainWindow):
             return
         options = dialog.options()
         self.controller().optionsAddRequested.emit(options, None)
+
+    def _onOptionsOpenRequested(self):
+        settings = self.controller().settings()
+        curdir = getattr(settings.gui, 'opendir', os.getcwd())
+        namefilters = {'Options [*.xml] (*.xml)': '.xml',
+                       'Results [*.h5] (*.h5)': '.h5'}
+
+        filepath, namefilter = \
+            QFileDialog.getOpenFileName(self, "Open", curdir,
+                                        ';;'.join(namefilters.keys()))
+
+        if not filepath or not namefilter:
+            return
+        settings.gui.opendir = os.path.dirname(filepath)
+
+        ext = namefilters[namefilter]
+        if not filepath.endswith(ext):
+            filepath += ext
+
+        if ext == '.xml' and not self.controller().canOpenOptions(filepath):
+            QMessageBox.critical(self, 'Open', 'Options already opened')
+            return
+        elif ext == '.h5' and not self.controller().canOpenResults(filepath):
+            QMessageBox.critical(self, 'Open', 'Results already opened')
+            return
+
+        if ext == '.xml':
+            self.controller().optionsOpen.emit(filepath)
+        elif ext == '.h5':
+            self.controller().resultsOpen.emit(filepath)
+
+        self._dlg_progress.reset()
+        self._dlg_progress.show()
+
+    def _onOptionsReloadRequested(self, uid):
+        if not self._checkOptionsSave(uid):
+            return
+
+        self.controller().optionsReloadRequestApproved.emit(uid)
+        self.controller().optionsReload.emit(uid)
+        self._dlg_progress.reset()
+        self._dlg_progress.show()
 
     def _onOptionsModifyRequested(self, uid):
         options = self.controller().options(uid)
@@ -1148,6 +1243,12 @@ class MainWindow(QMainWindow):
     def _onOptionsOpened(self, options, filepath):
         self._dlg_progress.hide()
 
+    def _onOptionsReloaded(self, uid, options):
+        self._dlg_progress.hide()
+
+    def _onOptionsAddRequested(self, options, filepath):
+        self.controller().optionsAddRequestApproved.emit(options, filepath)
+
     def _onOptionsAdded(self, uid, options):
         try:
             self._dlg_runner.addAvailableOptions(options)
@@ -1159,6 +1260,11 @@ class MainWindow(QMainWindow):
             self._dlg_runner.addAvailableOptions(options)
         except:
             pass
+
+    def _onOptionsRemoveRequested(self, uid):
+        if not self._checkOptionsSave(uid):
+            return
+        self.controller().optionsRemoveRequestApproved.emit(uid)
 
     def _onOptionsSaved(self, uid, filepath):
         self._dlg_progress.hide()
@@ -1186,8 +1292,39 @@ class MainWindow(QMainWindow):
         self._dlg_progress.show()
         self.controller().resultsSave.emit(uid, filepath)
 
+    def _onResultsReloadRequested(self, uid):
+        self.controller().resultsReloadRequestApproved.emit(uid)
+        self.controller().resultsReload.emit(uid)
+        self._dlg_progress.reset()
+        self._dlg_progress.show()
+
     def _onResultsOpened(self, results, filepath):
         self._dlg_progress.hide()
+
+    def _onResultsReloaded(self, uid, results):
+        self._dlg_progress.hide()
+
+    def _onResultsSaved(self, uid, filepath):
+        self._dlg_progress.hide()
+        QMessageBox.information(self, 'pyMonteCarlo', 'Saved')
+
+    def _onResultsAddRequested(self, options, filepath):
+        self.controller().resultsAddRequestApproved.emit(options, filepath)
+
+    def _onResultsRemoveRequested(self, uid):
+        self.controller().resultsRemoveRequestApproved.emit(uid)
+
+    def _checkOptionsSave(self, uid):
+        if not self.controller().isOptionsEdited(uid):
+            return True
+
+        message = 'Modifications not saved. Do you want to continue?'
+        answer = QMessageBox.question(self, 'Save modification', message,
+                                      QMessageBox.Yes | QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            return True
+        elif answer == QMessageBox.No:
+            return False
 
     def closeEvent(self, event):
         settings = self.controller().settings()
