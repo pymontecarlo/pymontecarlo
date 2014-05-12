@@ -271,7 +271,6 @@ class RunnerDialog(QDialog):
 
         lbl_outputdir = QLabel("Output directory")
         self._txt_outputdir = DirBrowseWidget()
-        self._txt_outputdir.setPath('/tmp')
 
         max_workers = cpu_count() #@UndefinedVariable
         lbl_workers = QLabel('Number of workers')
@@ -377,6 +376,17 @@ class RunnerDialog(QDialog):
         self._btn_cancel.released.connect(self._onCancel)
         self._btn_close.released.connect(self._onClose)
 
+        # Defaults
+        settings = get_settings()
+        section = settings.add_section('gui')
+        if hasattr(section, 'outputdir'):
+            self._txt_outputdir.setPath(section.outputdir)
+        if hasattr(section, 'maxworkers'):
+            self._spn_workers.setValue(int(section.maxworkers))
+        if hasattr(section, 'overwrite'):
+            state = True if section.overwrite.lower() == 'true' else False
+            self._chk_overwrite.setChecked(state)
+
     def _onDialogProgressProgress(self, progress, status):
         self._dlg_progress.setValue(progress * 100)
         self._dlg_progress.setLabelText(status)
@@ -428,11 +438,7 @@ class RunnerDialog(QDialog):
         self._options_reader_thread.quit()
         self._options_reader_thread.wait()
         self._options_reader_thread = None
-
-        try:
-            self._lst_available.model().addOptions(options)
-        except Exception as ex:
-            messagebox.exception(self, ex)
+        self.addAvailableOptions(options)
 
     def _onAddToQueue(self):
         selection = self._lst_available.selectionModel().selection().indexes()
@@ -483,6 +489,7 @@ class RunnerDialog(QDialog):
         self._btn_addalltoqueue.setEnabled(True)
         self._btn_start.setEnabled(False)
         self._btn_cancel.setEnabled(True)
+        self._btn_close.setEnabled(False)
 
         self._runner.options_added.connect(self._onOptionsAdded)
         self._runner.options_running.connect(self._onOptionsRunning)
@@ -509,6 +516,7 @@ class RunnerDialog(QDialog):
         self._btn_addalltoqueue.setEnabled(False)
         self._btn_start.setEnabled(True)
         self._btn_cancel.setEnabled(False)
+        self._btn_close.setEnabled(True)
 
     def _onClose(self):
         if self._runner is not None:
@@ -537,8 +545,28 @@ class RunnerDialog(QDialog):
         self._tbl_options.model().resetOptions(options)
 
     def closeEvent(self, event):
+        if self._runner is not None and self._runner.is_alive():
+            event.ignore()
+            return
+
         self._dlg_progress.close()
-        return QDialog.closeEvent(self, event)
+
+        settings = get_settings()
+        section = settings.add_section('gui')
+
+        section.outputdir = self._txt_outputdir.path()
+        section.maxworkers = str(self._spn_workers.value())
+        section.overwrite = str(self._chk_overwrite.isChecked())
+
+        settings.write()
+
+        event.accept()
+
+    def addAvailableOptions(self, options):
+        try:
+            self._lst_available.model().addOptions(options)
+        except Exception as ex:
+            messagebox.exception(self, ex)
 
 def __run():
     import sys

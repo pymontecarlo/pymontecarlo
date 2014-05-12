@@ -48,6 +48,7 @@ from pymontecarlo.ui.gui.options.model import ModelTableWidget
 from pymontecarlo.ui.gui.results.result import \
     get_widget_class as get_result_widget_class
 from pymontecarlo.ui.gui.configure import ConfigureDialog
+from pymontecarlo.ui.gui.runner import RunnerDialog
 
 from pymontecarlo.ui.gui.util.tango import getIcon
 import pymontecarlo.ui.gui.util.messagebox as messagebox
@@ -857,6 +858,9 @@ class MainWindow(QMainWindow):
         self._act_exit = QAction('Exit', self)
         self._act_exit.setShortcut(QKeySequence.Quit)
 
+        self._act_run = QAction(getIcon("media-playback-start"), 'Run simulations', self)
+        self._act_run.setShortcut(QKeySequence(Qt.Key_F5))
+
         self._act_window_cascade = QAction("Cascade", self)
         self._act_window_tile = QAction("Tile", self)
         self._act_window_closeall = QAction("Close all", self)
@@ -880,6 +884,9 @@ class MainWindow(QMainWindow):
         self._dlg_progress.setModal(True)
         self._dlg_progress.hide()
 
+        self._dlg_runner = RunnerDialog()
+        self._dlg_runner.hide()
+
         # Menu
         mnu_file = self.menuBar().addMenu("&File")
         mnu_file.addAction(self._act_new)
@@ -896,6 +903,8 @@ class MainWindow(QMainWindow):
         mnu_file.addAction(self._act_exit)
 
         mnu_windows = self.menuBar().addMenu("Window")
+        mnu_windows.addAction(self._act_run)
+        mnu_windows.addSeparator()
         mnu_windows.addAction(self._act_window_cascade)
         mnu_windows.addAction(self._act_window_tile)
         mnu_windows.addSeparator()
@@ -905,13 +914,15 @@ class MainWindow(QMainWindow):
         mnu_help.addAction(self._act_about)
 
         # Toolbar
-        tbl_file = self.addToolBar("File")
-        tbl_file.setMovable(False)
-        tbl_file.addAction(self._act_new)
-        tbl_file.addAction(self._act_open)
-        tbl_file.addSeparator()
-        tbl_file.addAction(self._act_save)
-        tbl_file.addAction(self._act_saveas)
+        tlb_file = self.addToolBar("File")
+        tlb_file.setMovable(False)
+        tlb_file.addAction(self._act_new)
+        tlb_file.addAction(self._act_open)
+        tlb_file.addSeparator()
+        tlb_file.addAction(self._act_save)
+        tlb_file.addAction(self._act_saveas)
+        tlb_file.addSeparator()
+        tlb_file.addAction(self._act_run)
 
         # Layouts
         self.setCentralWidget(self._area)
@@ -926,6 +937,7 @@ class MainWindow(QMainWindow):
         self._act_closeall.triggered.connect(self._onCloseAll)
         self._act_preferences.triggered.connect(self._onPreferences)
         self._act_exit.triggered.connect(self._onExit)
+        self._act_run.triggered.connect(self._onRun)
         self._act_window_cascade.triggered.connect(self._onWindowCascade)
         self._act_window_tile.triggered.connect(self._onWindowTile)
         self._act_window_closeall.triggered.connect(self._onWindowCloseall)
@@ -960,6 +972,7 @@ class MainWindow(QMainWindow):
         self.controller().optionsSaved.connect(self._onOptionsSaved)
         self.controller().optionsOpened.connect(self._onOptionsOpened)
         self.controller().optionsAdded.connect(self._onTreeChanged)
+        self.controller().optionsAdded.connect(self._onOptionsAdded)
         self.controller().optionsRemoved.connect(self._onTreeChanged)
 
         self.controller().resultsSaveAsRequested.connect(self._onResultsSaveAsRequested)
@@ -1040,6 +1053,9 @@ class MainWindow(QMainWindow):
 
     def _onExit(self):
         self.close()
+
+    def _onRun(self):
+        self._dlg_runner.show()
 
     def _onWindowCascade(self):
         self._area.cascadeSubWindows()
@@ -1142,6 +1158,9 @@ class MainWindow(QMainWindow):
 
     def _onOptionsOpened(self, options, filepath):
         self._dlg_progress.hide()
+
+    def _onOptionsAdded(self, uid, options):
+        self._dlg_runner.addAvailableOptions(options)
 
     def _onOptionsSaved(self, uid, filepath):
         self._dlg_progress.hide()
