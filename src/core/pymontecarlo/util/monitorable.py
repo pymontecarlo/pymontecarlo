@@ -149,6 +149,12 @@ class _Monitorable(object):
     def is_alive(self):
         return self._thread.is_alive()
 
+    def is_cancelled(self):
+        return self._thread.is_cancelled()
+
+    def is_exception_raised(self):
+        return self._thread.is_exception_raised()
+
     def join(self, timeout=None):
         return self._thread.join(timeout)
 
