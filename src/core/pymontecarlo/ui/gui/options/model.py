@@ -22,13 +22,15 @@ __license__ = "GPL v3"
 
 # Third party modules.
 from PySide.QtGui import QWidget, QTableView, QHeaderView, QVBoxLayout
-from PySide.QtCore import Qt, QAbstractTableModel, QModelIndex
+from PySide.QtCore import Qt, QAbstractTableModel, QModelIndex, Signal
 
 # Local modules.
 
 # Globals and constants variables.
 
 class ModelTableWidget(QWidget):
+
+    dataChanged = Signal(QModelIndex, QModelIndex)
 
     class _ModelTableModel(QAbstractTableModel):
 
@@ -155,6 +157,9 @@ class ModelTableWidget(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self._tbl_models)
         self.setLayout(layout)
+
+        # Signals
+        model.dataChanged.connect(self.dataChanged)
 
     def addModel(self, model):
         self._tbl_models.model().append(model)

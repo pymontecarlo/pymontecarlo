@@ -403,6 +403,8 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         tbl_model.modify(index.row(), dialog.key(), dialog.detector())
 
     def initializePage(self):
+        _ExpandableOptionsWizardPage.initializePage(self)
+
         tbl_model = self._tbl_detector.model()
         cb_model = self._cb_detector.model()
 

@@ -79,6 +79,7 @@ class _ExpandableOptionsWizardPage(_OptionsWizardPage):
         # Widgets
         self._lbl_count = SimulationCountLabel()
         self._lbl_count.setAlignment(Qt.AlignCenter)
+        self._lbl_count.setValue(1)
 
         # Layouts
         layout = self.layout()
@@ -129,4 +130,7 @@ class _ExpandableOptionsWizardPage(_OptionsWizardPage):
 
     def expandCount(self):
         raise NotImplementedError
+
+    def initializePage(self):
+        self._onChanged()
 

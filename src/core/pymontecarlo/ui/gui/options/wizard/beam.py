@@ -71,6 +71,8 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
         self._wdg_beam.setCurrentIndex(newindex)
 
     def initializePage(self):
+        _ExpandableOptionsWizardPage.initializePage(self)
+
         # Clear
         self._widgets.clear()
         for i in reversed(range(self._cb_beam.count())):

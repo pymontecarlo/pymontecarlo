@@ -155,6 +155,8 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
 
         self._cb_model_type.currentIndexChanged.connect(self._onModelTypeChanged)
 
+        self._tbl_model.dataChanged.connect(self.valueChanged)
+
         return layout
 
     def _onModelTypeChanged(self):
@@ -212,6 +214,8 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
             yield model, programs, defaults
 
     def initializePage(self):
+        _ExpandableOptionsWizardPage.initializePage(self)
+
         # Populate combo boxes
         model_types = set()
         models_text = {}

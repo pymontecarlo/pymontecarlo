@@ -326,6 +326,8 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         tbl_model.modify(index.row(), dialog.limit())
 
     def initializePage(self):
+        _ExpandableOptionsWizardPage.initializePage(self)
+
         # Clear
         self._widgets.clear()
         limits_text = {}

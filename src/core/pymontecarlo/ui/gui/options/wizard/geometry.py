@@ -81,6 +81,8 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
         self._wdg_geometry.adjustSize()
 
     def initializePage(self):
+        _ExpandableOptionsWizardPage.initializePage(self)
+
         # Clear
         self._widgets.clear()
         for i in reversed(range(self._cb_geometry.count())):
