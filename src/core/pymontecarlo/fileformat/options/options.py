@@ -232,11 +232,13 @@ class _OptionsWriterThread(_MonitorableThread):
             return element
 
         self_opened = False
-        if not hasattr(source, "write"):
-            source = open(source, "wb")
+        if hasattr(source, "write"):
+            fp = source
+        else:
+            fp = open(source, "wb")
             self_opened = True
-        source.write(xmlutil.tostring(element))
-        if self_opened: source.close()
+        fp.write(xmlutil.tostring(element))
+        if self_opened: fp.close()
         return source
 
     def _write_version(self, options, element):
