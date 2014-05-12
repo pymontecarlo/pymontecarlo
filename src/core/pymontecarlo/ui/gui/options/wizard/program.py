@@ -44,7 +44,7 @@ class ProgramWizardPage(_OptionsWizardPage):
 
         # Widgets
         self._checkboxes = {}
-        for program in settings.get_available_programs():
+        for program in settings.get_programs():
             self._checkboxes[program] = QCheckBox(program.name)
 
         btn_selectall = QPushButton('Select all')
