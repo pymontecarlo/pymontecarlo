@@ -130,11 +130,11 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignCenter
 
-            if role != Qt.DisplayRole:
-                return None
+            if role == Qt.DisplayRole or role == Qt.ToolTipRole:
+                limit = self._limits[index.row()]
+                return str(limit) if limit is not None else ''
 
-            limit = self._limits[index.row()]
-            return str(limit) if limit is not None else ''
+            return None
 
         def headerData(self, section , orientation, role):
             if role != Qt.DisplayRole:

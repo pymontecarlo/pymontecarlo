@@ -52,18 +52,18 @@ class ModelTableWidget(QWidget):
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignCenter
 
-            if role != Qt.DisplayRole:
-                return None
-
             model = self._models[index.row()]
             if model is None:
                 return ''
 
-            column = index.column()
-            if column == 0:
-                return str(model.type)
-            elif column == 1:
-                return str(model)
+            if role == Qt.DisplayRole or role == Qt.ToolTipRole:
+                column = index.column()
+                if column == 0:
+                    return str(model.type)
+                elif column == 1:
+                    return str(model)
+
+            return None
 
         def headerData(self, section , orientation, role):
             if role != Qt.DisplayRole:

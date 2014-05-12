@@ -186,15 +186,15 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
             if role == Qt.TextAlignmentRole:
                 return Qt.AlignCenter
 
-            if role != Qt.DisplayRole:
-                return None
+            if role == Qt.DisplayRole or role == Qt.ToolTipRole:
+                key, detector = self._detectors[index.row()]
+                column = index.column()
+                if column == 0:
+                    return key
+                elif column == 1:
+                    return str(detector) if detector is not None else ''
 
-            key, detector = self._detectors[index.row()]
-            column = index.column()
-            if column == 0:
-                return key
-            elif column == 1:
-                return str(detector) if detector is not None else ''
+            return None
 
         def headerData(self, section , orientation, role):
             if role != Qt.DisplayRole:
