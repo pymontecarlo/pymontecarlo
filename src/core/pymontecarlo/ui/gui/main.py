@@ -475,7 +475,7 @@ class _ResultSubWindow(_WidgetSubWindow):
 
         # Widgets
         result = controller.result(uid, index, key)
-        options = controller.resultsContainer(uid, index)
+        options = controller.resultsContainer(uid, index).options
         widget_class = get_result_widget_class(result.__class__)
         widget = widget_class(key, result, options)
         self.setWidget(widget)
