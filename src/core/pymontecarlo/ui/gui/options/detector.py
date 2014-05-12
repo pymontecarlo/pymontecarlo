@@ -24,14 +24,16 @@ from operator import itemgetter
 
 # Third party modules.
 from PySide.QtGui import \
-    QHBoxLayout, QLabel, QCheckBox, QWidget, QTabWidget, QVBoxLayout
+    (QHBoxLayout, QLabel, QCheckBox, QWidget, QTabWidget, QVBoxLayout,
+     QRadioButton, QFormLayout)
 from PySide.QtCore import Qt
 
 import numpy as np
 
 # Local modules.
 from pymontecarlo.ui.gui.util.parameter import \
-    _ParameterizedClassWidget, _ParameterWidget, NumericalParameterWidget
+    (_ParameterizedClassWidget, _ParameterWidget, NumericalParameterWidget,
+     AngleParameterWidget)
 from pymontecarlo.ui.gui.util.widget import \
     UnitComboBox, MultiNumericalLineEdit, AngleComboBox
 from pymontecarlo.ui.gui.util.layout import merge_formlayout
@@ -48,6 +50,8 @@ from pymontecarlo.options.detector import \
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector, PhotonIntensityDetector, TimeDetector,
      ElectronFractionDetector, ShowersStatisticsDetector, TrajectoryDetector)
+
+from pymontecarlo.util.parameter import AngleParameter, range_validator
 
 # Globals and constants variables.
 from pymontecarlo.options.detector import HALFPI, TWOPI
@@ -180,30 +184,110 @@ class _DelimitedDetectorWidget(_DetectorWidget):
 
     def _initUI(self):
         # Widgets
+        self._rb_delimited = QRadioButton('Delimited')
+        self._rb_delimited.setChecked(False)
+
         self._lbl_elevation = QLabel("Elevation")
         self._lbl_elevation.setStyleSheet("color: blue")
         self._txt_elevation = _AngleRangeWidget(_DelimitedDetector.elevation_rad)
+        self._txt_elevation.setEnabled(False)
+        self._txt_elevation.setRequired(False)
 
         self._lbl_azimuth = QLabel('Azimuth')
         self._lbl_azimuth.setStyleSheet("color: blue")
         self._txt_azimuth = _AngleRangeWidget(_DelimitedDetector.azimuth_rad)
+        self._txt_azimuth.setEnabled(False)
+        self._txt_azimuth.setRequired(False)
+
+        self._rb_annular = QRadioButton('Annular')
+        self._rb_annular.setChecked(True)
+
+        self._lbl_takeoffangle = QLabel('Take-off angle')
+        self._lbl_takeoffangle.setStyleSheet("color: blue")
+        param_takeoffangle = \
+            AngleParameter(validators=range_validator(0.0, HALFPI),
+                           doc='Take-off angle from the x-y plane')
+        param_takeoffangle._name = 'takeoffangle'
+        self._txt_takeoffangle = AngleParameterWidget(param_takeoffangle)
+
+        self._lbl_opening = QLabel('Opening')
+        self._lbl_opening.setStyleSheet("color: blue")
+        param_opening = \
+            AngleParameter(validators=range_validator(0.0, HALFPI, False),
+                           doc='Opening angle from the take-off angle (above and below)')
+        param_opening._name = 'opening'
+        self._txt_opening = AngleParameterWidget(param_opening)
 
         # Layouts
         layout = _DetectorWidget._initUI(self)
-        layout.addRow(self._lbl_elevation, self._txt_elevation)
-        layout.addRow(self._lbl_azimuth, self._txt_azimuth)
+
+        layout.addRow(self._rb_delimited)
+
+        sublayout = QFormLayout()
+        sublayout.setContentsMargins(10, 0, 0, 0)
+        sublayout.addRow(self._lbl_elevation, self._txt_elevation)
+        sublayout.addRow(self._lbl_azimuth, self._txt_azimuth)
+        layout.addRow(sublayout)
+
+        layout.addRow(self._rb_annular)
+
+        sublayout = QFormLayout()
+        sublayout.setContentsMargins(10, 0, 0, 0)
+        sublayout.addRow(self._lbl_takeoffangle, self._txt_takeoffangle)
+        sublayout.addRow(self._lbl_opening, self._txt_opening)
+        layout.addRow(sublayout)
+
+        # Signals
+        self._rb_delimited.toggled.connect(self._onToggle)
+        self._rb_annular.toggled.connect(self._onToggle)
 
         return layout
 
+    def _onToggle(self):
+        state = self._rb_delimited.isChecked()
+        self._txt_elevation.setEnabled(state)
+        self._txt_azimuth.setEnabled(state)
+        self._txt_elevation.setRequired(state)
+        self._txt_azimuth.setRequired(state)
+        self._txt_takeoffangle.setEnabled(not state)
+        self._txt_opening.setEnabled(not state)
+        self._txt_takeoffangle.setRequired(not state)
+        self._txt_opening.setRequired(not state)
+
+    def _getElevationValues(self):
+        if self._rb_delimited.isChecked():
+            return self._txt_elevation.values()
+        else:
+            takeoffangles = self._txt_takeoffangle.values()
+            openings = self._txt_opening.values()
+
+            elevations = []
+            for takeoffangle, opening in product(takeoffangles, openings):
+                elevation = (takeoffangle - opening, takeoffangle + opening)
+                elevations.append(elevation)
+
+            return elevations
+
+    def _getAzimuthValues(self):
+        if self._rb_delimited.isChecked():
+            return self._txt_azimuth.values()
+        else:
+            return [(0.0, TWOPI)]
+
     def setValue(self, value):
+        self._rb_delimited.setChecked(True)
         self._txt_elevation.setValues(value.elevation_rad)
         self._txt_azimuth.setValues(value.azimuth_rad)
+        self._txt_takeoffangle.setValues([])
+        self._txt_opening.setValues([])
 
     def setReadOnly(self, state):
         _DetectorWidget.setReadOnly(self, state)
         style = 'color: none' if state else 'color: blue'
         self._lbl_elevation.setStyleSheet(style)
         self._lbl_azimuth.setStyleSheet(style)
+        self._lbl_takeoffangle.setStyleSheet(style)
+        self._lbl_opening.setStyleSheet(style)
 
 class _ChannelsDetectorWidget(_ParameterizedClassWidget):
 
@@ -472,8 +556,8 @@ class PhotonSpectrumDetectorWidget(_PhotonDelimitedDetectorWidget,
         return merge_formlayout(layout1, layout2)
 
     def value(self):
-        elevation_rad = self._txt_elevation.values()
-        azimuth_rad = self._txt_azimuth.values()
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
         channels = self._txt_channels.values()
         limits_eV = self._txt_limits.values()
         return PhotonSpectrumDetector(elevation_rad, azimuth_rad,
@@ -500,8 +584,8 @@ class PhotonDepthDetectorWidget(_PhotonDelimitedDetectorWidget,
         return merge_formlayout(layout1, layout2)
 
     def value(self):
-        elevation_rad = self._txt_elevation.values()
-        azimuth_rad = self._txt_azimuth.values()
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
         channels = self._txt_channels.values()
         return PhotonDepthDetector(elevation_rad, azimuth_rad, channels)
 
@@ -526,8 +610,8 @@ class PhotonRadialDetectorWidget(_PhotonDelimitedDetectorWidget,
         return merge_formlayout(layout1, layout2)
 
     def value(self):
-        elevation_rad = self._txt_elevation.values()
-        azimuth_rad = self._txt_azimuth.values()
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
         channels = self._txt_channels.values()
         return PhotonRadialDetector(elevation_rad, azimuth_rad, channels)
 
@@ -568,8 +652,8 @@ class PhotonEmissionMapDetectorWidget(_PhotonDelimitedDetectorWidget):
         return layout
 
     def value(self):
-        elevation_rad = self._txt_elevation.values()
-        azimuth_rad = self._txt_azimuth.values()
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
         xbins = self._txt_xbins.values()
         ybins = self._txt_ybins.values()
         zbins = self._txt_zbins.values()
@@ -596,8 +680,8 @@ class PhotonIntensityDetectorWidget(_PhotonDelimitedDetectorWidget):
         self.setAccessibleName("Photon intensity")
 
     def value(self):
-        elevation_rad = self._txt_elevation.values()
-        azimuth_rad = self._txt_azimuth.values()
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
         return PhotonIntensityDetector(elevation_rad, azimuth_rad)
 
 class TimeDetectorWidget(_DetectorWidget):
