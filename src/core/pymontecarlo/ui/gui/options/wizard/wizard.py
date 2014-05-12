@@ -26,6 +26,7 @@ from PySide.QtGui import QWizard
 # Local modules.
 from pymontecarlo.options.options import Options
 
+from pymontecarlo.ui.gui.options.wizard.name import NameWizardPage
 from pymontecarlo.ui.gui.options.wizard.program import ProgramWizardPage
 from pymontecarlo.ui.gui.options.wizard.beam import BeamWizardPage
 from pymontecarlo.ui.gui.options.wizard.geometry import GeometryWizardPage
@@ -51,6 +52,7 @@ class OptionsWizard(QWizard):
         self._options = options
 
         # Pages
+        self.addPage(NameWizardPage(options))
         self.addPage(ProgramWizardPage(options))
         self.addPage(BeamWizardPage(options))
         self.addPage(GeometryWizardPage(options))
