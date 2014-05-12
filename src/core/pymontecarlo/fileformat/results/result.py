@@ -37,8 +37,6 @@ from pymontecarlo.results.result import \
      TransmittedElectronEnergyResult, BackscatteredElectronPolarAngularResult,
      BackscatteredElectronRadialResult)
 
-import pymontecarlo.util.progress as progress
-
 # Globals and constants variables.
 from pymontecarlo.results.result import \
     GENERATED, EMITTED, NOFLUORESCENCE, CHARACTERISTIC, BREMSSTRAHLUNG, TOTAL
@@ -212,13 +210,7 @@ class TrajectoryResultHDF5Handler(_HDF5Handler):
 
         trajectories = []
 
-        size = float(len(group))
-        task = progress.start_task()
-        task.status = 'Loading trajectories'
-
-        for i, dataset in enumerate(group.values()):
-            task.progress = i / size
-
+        for dataset in group.values():
             primary = bool(dataset.attrs['primary'])
             particle = particles_ref[dataset.attrs['particle']]
             collision = collisions_ref[dataset.attrs['collision']]
@@ -228,8 +220,6 @@ class TrajectoryResultHDF5Handler(_HDF5Handler):
             trajectory = Trajectory(primary, particle, collision,
                                     exit_state, interactions)
             trajectories.append(trajectory)
-
-        progress.stop_task(task)
 
         return TrajectoryResult(trajectories)
 
