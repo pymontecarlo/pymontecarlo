@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import threading
 
 # Third party modules.
 
@@ -26,10 +27,12 @@ __license__ = "GPL v3"
 
 # Globals and constants variables.
 
+
 class Signal(object):
 
     def __init__(self):
         self._handlers = set()
+        self._lock = threading.Lock()
 
     def __call__(self, *args):
         self.fire(*args)
@@ -37,6 +40,13 @@ class Signal(object):
     def connect(self, handler):
         self._handlers.add(handler)
 
+    def disconnect(self, handler):
+        self._handlers.discard(handler)
+
     def fire(self, *args):
-        for handler in self._handlers:
-            handler(*args)
+        with self._lock:
+            for handler in self._handlers:
+                try:
+                    handler(*args)
+                except:
+                    continue
