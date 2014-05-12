@@ -15,7 +15,7 @@ from setuptools import setup, find_packages
 # Local modules.
 from pymontecarlo.util.dist.command import clean
 try:
-    from pymontecarlo.program.casino2.util.dist.command import bdist_deb_program
+    from pymontecarlo.program.monaco.util.dist.command import bdist_deb_program
 except ImportError:
     bdist_deb_program = None
 
