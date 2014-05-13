@@ -32,14 +32,14 @@ def find_parse_handler(handler_name, *args, **kwargs):
         handler = entry_point.load()()
         if handler.can_parse(*args, **kwargs):
             return handler
-    raise ValueError("No handler found")
+    raise ValueError("No handler found for %s" % handler_name)
 
 def find_convert_handler(handler_name, *args, **kwargs):
     for entry_point in iter_entry_points(handler_name):
         handler = entry_point.load()()
         if handler.can_convert(*args, **kwargs):
             return handler
-    raise ValueError("No handler found")
+    raise ValueError("No handler found for %s" % handler_name)
 
 class _Handler(object):
 
@@ -55,7 +55,7 @@ class _Handler(object):
         return find_parse_handler(handler_name, *args, **kwargs).parse(*args, **kwargs)
 
     def can_convert(self, obj, *args, **kwargs):
-        return isinstance(obj, self.CLASS)
+        return type(obj) is self.CLASS
 
     def convert(self, obj, *args, **kwargs):
         raise NotImplementedError
