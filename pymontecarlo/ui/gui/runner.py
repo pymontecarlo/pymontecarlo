@@ -258,6 +258,7 @@ class RunnerDialog(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         self.setWindowTitle('Runner')
+        self.setMinimumWidth(750)
 
         # Runner
         self._runner = None
