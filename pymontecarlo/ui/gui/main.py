@@ -1213,7 +1213,7 @@ class MainWindow(QMainWindow):
 
     def _onOptionsSaveRequested(self, uid):
         filepath = self.controller().optionsFilepath(uid)
-        if filepath is None:
+        if not filepath:
             self.controller().optionsSaveAsRequested.emit(uid)
             return
 
