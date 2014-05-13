@@ -78,7 +78,7 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
                 limits_text = {}
             self._limits_text = limits_text.copy()
 
-            self._limits = sorted(limits_text.keys())
+            self._limits = list(limits_text.keys())
 
         def rowCount(self, *args, **kwargs):
             return len(self._limits)
