@@ -284,10 +284,16 @@ class _DelimitedDetectorWidget(_DetectorWidget):
     def setReadOnly(self, state):
         _DetectorWidget.setReadOnly(self, state)
         style = 'color: none' if state else 'color: blue'
+        self._rb_delimited.setEnabled(not state)
+        self._rb_annular.setEnabled(not state)
         self._lbl_elevation.setStyleSheet(style)
+        self._txt_elevation.setReadOnly(state)
         self._lbl_azimuth.setStyleSheet(style)
+        self._txt_azimuth.setReadOnly(state)
         self._lbl_takeoffangle.setStyleSheet(style)
+        self._txt_takeoffangle.setReadOnly(state)
         self._lbl_opening.setStyleSheet(style)
+        self._txt_opening.setReadOnly(state)
 
 class _ChannelsDetectorWidget(_ParameterizedClassWidget):
 
