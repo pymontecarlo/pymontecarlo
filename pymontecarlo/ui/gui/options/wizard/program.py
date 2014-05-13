@@ -19,7 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-from operator import methodcaller
+from operator import methodcaller, attrgetter
 
 # Third party modules.
 from PySide.QtGui import \
@@ -52,8 +52,8 @@ class ProgramWizardPage(_OptionsWizardPage):
 
         # Layouts
         layout = _OptionsWizardPage._initUI(self)
-        for checkbox in self._checkboxes.values():
-            layout.addRow(checkbox)
+        for program in sorted(self._checkboxes.keys() , key=attrgetter('name')):
+            layout.addRow(self._checkboxes[program])
 
         spacer = QSpacerItem(0, 1000, QSizePolicy.Expanding, QSizePolicy.Expanding)
         layout.addItem(spacer)
