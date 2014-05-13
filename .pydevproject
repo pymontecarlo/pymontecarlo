@@ -4,17 +4,7 @@
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 3.0</pydev_property>
 
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
-<path>/pymontecarlo/src/programs/nistmonte</path>
-<path>/pymontecarlo/src/programs/casino2</path>
-<path>/pymontecarlo/src/programs/casino3</path>
-<path>/pymontecarlo/src/programs/penelope</path>
-<path>/pymontecarlo/src/programs/pouchou</path>
-<path>/pymontecarlo/src/programs/winxray</path>
-<path>/pymontecarlo/src/programs/monaco</path>
-<path>/pymontecarlo/src/core</path>
-<path>/pymontecarlo/src/exp</path>
-<path>/pymontecarlo/src/sphinxext</path>
-<path>/${PROJECT_DIR_NAME}/src/programs/mcxray</path>
+<path>/${PROJECT_DIR_NAME}</path>
 </pydev_pathproperty>
 
 

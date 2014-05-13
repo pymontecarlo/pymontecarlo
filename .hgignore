@@ -3,16 +3,10 @@ syntax: glob
 *.bak
 *.pyc
 *.egg-info
-pavement*.cfg
 
-src/core/pymontecarlo/testdata/settings.cfg
-src/core/build
-src/core/dist
-src/programs/*/build
-src/programs/*/dist
-src/programs/*/app
+pymontecarlo/testdata/settings.cfg
 
 syntax: regexp
-^src/core/nose-1\.2\.1-py2\.7\.egg$
 ^lib
 ^dist
+^build
