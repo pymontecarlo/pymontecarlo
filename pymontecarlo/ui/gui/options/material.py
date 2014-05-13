@@ -27,7 +27,7 @@ from PySide.QtGui import \
     (QDialog, QLineEdit, QCheckBox, QRegExpValidator,
      QVBoxLayout, QLabel, QDialogButtonBox, QTableView, QItemDelegate,
      QHeaderView, QGridLayout, QToolBar, QAction, QMessageBox, QValidator,
-     QWidget, QSizePolicy, QListView)
+     QWidget, QSizePolicy, QListView, QGroupBox)
 from PySide.QtCore import Qt, QRegExp, QAbstractTableModel, QModelIndex
 
 import pyxray.element_properties as ep
@@ -209,12 +209,26 @@ class MaterialDialog(QDialog):
         QDialog.__init__(self, parent)
         self.setWindowTitle('Material')
 
+        # Widgets
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # Layouts
+        layout = QVBoxLayout()
+        layout.addLayout(self._initUI())
+        layout.addWidget(buttons)
+        self.setLayout(layout)
+
+        # Signals
+        buttons.accepted.connect(self._onOk)
+        buttons.rejected.connect(self._onCancel)
+
+    def _initUI(self):
         # Variables
         model = self._CompositionModel()
 
         # Actions
-        act_add = QAction(getIcon("list-add"), "Add element", self)
-        act_remove = QAction(getIcon("list-remove"), "Remove element", self)
+        act_add_element = QAction(getIcon("list-add"), "Add element", self)
+        act_remove_element = QAction(getIcon("list-remove"), "Remove element", self)
 
         # Widgets
         self._txt_name = QLineEdit()
@@ -242,8 +256,8 @@ class MaterialDialog(QDialog):
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._tlb_composition.addWidget(spacer)
-        self._tlb_composition.addAction(act_add)
-        self._tlb_composition.addAction(act_remove)
+        self._tlb_composition.addAction(act_add_element)
+        self._tlb_composition.addAction(act_remove_element)
 
         self._wdg_abs_energies = {}
         for particle in PARTICLES:
@@ -254,8 +268,6 @@ class MaterialDialog(QDialog):
             txt_energy.setValidator(self._AbsorptionEnergyValidator())
             cb_unit = UnitComboBox('eV')
             self._wdg_abs_energies[particle] = (label, txt_energy, cb_unit)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         # Layouts
         layout = QVBoxLayout()
@@ -269,23 +281,22 @@ class MaterialDialog(QDialog):
         sublayout.addWidget(self._chk_density_user, 1, 2)
         layout.addLayout(sublayout)
 
-        layout.addWidget(QLabel('Composition'))
-        layout.addWidget(self._tbl_composition)
-        layout.addWidget(self._tlb_composition)
+        box_composition = QGroupBox('Composition')
+        boxlayout = QVBoxLayout()
+        boxlayout.addWidget(self._tbl_composition)
+        boxlayout.addWidget(self._tlb_composition)
+        box_composition.setLayout(boxlayout)
+        layout.addWidget(box_composition)
 
-        layout.addWidget(QLabel('Absorption energy'))
-        sublayout = QGridLayout()
-        sublayout.setContentsMargins(20, 0, 0, 0)
+        box_absorption_energy = QGroupBox('Absorption energy')
+        boxlayout = QGridLayout()
         for row, particle in enumerate(sorted(self._wdg_abs_energies.keys())):
             label, txt_energy, cb_unit = self._wdg_abs_energies[particle]
-            sublayout.addWidget(label, row, 0)
-            sublayout.addWidget(txt_energy, row, 1)
-            sublayout.addWidget(cb_unit, row, 2)
-        layout.addLayout(sublayout)
-
-        layout.addWidget(buttons)
-
-        self.setLayout(layout)
+            boxlayout.addWidget(label, row, 0)
+            boxlayout.addWidget(txt_energy, row, 1)
+            boxlayout.addWidget(cb_unit, row, 2)
+        box_absorption_energy.setLayout(boxlayout)
+        layout.addWidget(box_absorption_energy)
 
         # Signals
         self._txt_name.textChanged.connect(self._onNameChanged)
@@ -300,14 +311,13 @@ class MaterialDialog(QDialog):
         model.rowsInserted.connect(self._onCompositionChanged)
         model.rowsRemoved.connect(self._onCompositionChanged)
 
-        act_add.triggered.connect(self._onCompositionAdd)
-        act_remove.triggered.connect(self._onCompositionRemove)
+        act_add_element.triggered.connect(self._onCompositionAdd)
+        act_remove_element.triggered.connect(self._onCompositionRemove)
 
         for _, txt_energy, _ in self._wdg_abs_energies.values():
             txt_energy.textChanged.connect(self._onAbsEnergyChanged)
 
-        buttons.accepted.connect(self._onOk)
-        buttons.rejected.connect(self._onCancel)
+        return layout
 
     def _onNameChanged(self):
         if self._txt_name.hasAcceptableInput() or \
@@ -756,14 +766,14 @@ def __run():
 
     app = QApplication(sys.argv)
 
-#    dialog = MaterialDialog(None)
-#    dialog.setValue(material)
-#    if dialog.exec_():
-#        print(dialog.values())
+    dialog = MaterialDialog(None)
+    dialog.setValue(material)
+    if dialog.exec_():
+        print(dialog.values())
 
-    dialog = MaterialListDialog()
-    dialog.setValues([material])
-    dialog.show()
+#    dialog = MaterialListDialog()
+#    dialog.setValues([material])
+#    dialog.show()
 
 #    window = QMainWindow()
 #    window.setCentralWidget(widget)
