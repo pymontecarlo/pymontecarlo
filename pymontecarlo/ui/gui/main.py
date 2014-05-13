@@ -1327,6 +1327,8 @@ class MainWindow(QMainWindow):
             return False
 
     def closeEvent(self, event):
+        self._dlg_runner.close()
+
         settings = self.controller().settings()
         section = settings.add_section('gui')
 
