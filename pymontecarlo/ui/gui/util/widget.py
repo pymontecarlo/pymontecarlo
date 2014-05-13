@@ -221,7 +221,7 @@ class NumericalLineEdit(QLineEdit):
 class MultiNumericalLineEdit(QLineEdit):
 
     _VALUE_SEPARATOR = ';'
-    _PATTERN = r'(?P<start>inf|[\d\.\-]*)(?:\:(?P<stop>[\d\.\-]*))?(?:\:(?P<step>[\d\.\-]*))?'
+    _PATTERN = r'(?P<start>inf|[\de\.\-]*)(?:\:(?P<stop>[\de\.\-]*))?(?:\:(?P<step>[\de\.\-]*))?'
 
     @classmethod
     def _parse_text(cls, text):
