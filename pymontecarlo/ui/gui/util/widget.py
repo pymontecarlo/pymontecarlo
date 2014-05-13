@@ -72,9 +72,9 @@ class _BrowseWidget(QWidget):
         oldpath = self.path()
         newpath = self._showDialog(self.baseDir())
 
-        if newpath is None and oldpath is None:
+        if not newpath and not oldpath:
             return
-        elif newpath is None and oldpath is not None:
+        elif not newpath and oldpath:
             newpath = oldpath
         else:
             self.pathChanged.emit(newpath)
