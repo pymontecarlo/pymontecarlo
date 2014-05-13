@@ -251,6 +251,8 @@ class FactorAlias(Alias):
         self._factor = factor
 
     def __get__(self, obj, objtype=None, simplify=True):
+        if obj is None:
+            return self
         values = Alias.__get__(self, obj, objtype, False)
 
         # Hack since record and recarray do not have ufunc
@@ -358,14 +360,14 @@ class TimeParameter(Parameter):
                 'month': 2628000.0,
                 'day': 86400.0,
                 'hr': 3600.0,
-                'min': 60.0,
-                's': 1.0}
+                'min': 60.0}
 
     def __init__(self, validators=None, fields=None, doc=None):
         Parameter.__init__(self, np.float, validators, fields, doc)
 
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
+        methods[name + '_s'] = parameter
 
         for unit, factor in self._factors.items():
             methods['%s_%s' % (name, unit)] = \
