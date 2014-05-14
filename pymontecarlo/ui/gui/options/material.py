@@ -230,6 +230,7 @@ class MaterialDialog(QDialog):
         # Actions
         act_add_element = QAction(getIcon("list-add"), "Add element", self)
         act_remove_element = QAction(getIcon("list-remove"), "Remove element", self)
+        act_clear_element = QAction(getIcon("edit-clear"), "Clear", self)
 
         # Widgets
         self._txt_name = QLineEdit()
@@ -259,6 +260,7 @@ class MaterialDialog(QDialog):
         self._tlb_composition.addWidget(spacer)
         self._tlb_composition.addAction(act_add_element)
         self._tlb_composition.addAction(act_remove_element)
+        self._tlb_composition.addAction(act_clear_element)
 
         self._wdg_abs_energies = {}
         for particle in PARTICLES:
@@ -314,6 +316,7 @@ class MaterialDialog(QDialog):
 
         act_add_element.triggered.connect(self._onCompositionAdd)
         act_remove_element.triggered.connect(self._onCompositionRemove)
+        act_clear_element.triggered.connect(self._onCompositionClear)
 
         for _, txt_energy, _ in self._wdg_abs_energies.values():
             txt_energy.textChanged.connect(self._onAbsEnergyChanged)
@@ -398,6 +401,11 @@ class MaterialDialog(QDialog):
 
         model = self._tbl_composition.model()
         for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            model.removeRow(row)
+
+    def _onCompositionClear(self):
+        model = self._tbl_composition.model()
+        for row in reversed(range(model.rowCount())):
             model.removeRow(row)
 
     def _onAbsEnergyChanged(self):
@@ -650,6 +658,7 @@ class MaterialListWidget(_ParameterWidget):
         # Actions
         act_add = QAction(getIcon("list-add"), "Add material", self)
         act_remove = QAction(getIcon("list-remove"), "Remove material", self)
+        act_clear = QAction(getIcon("edit-clear"), "Clear", self)
 
         # Widgets
         self._lst_materials = QListView()
@@ -662,6 +671,7 @@ class MaterialListWidget(_ParameterWidget):
         self._tlb_materials.addWidget(spacer)
         self._tlb_materials.addAction(act_add)
         self._tlb_materials.addAction(act_remove)
+        self._tlb_materials.addAction(act_clear)
 
         # Layouts
         layout = QVBoxLayout()
@@ -682,6 +692,7 @@ class MaterialListWidget(_ParameterWidget):
 
         act_add.triggered.connect(self._onAdd)
         act_remove.triggered.connect(self._onRemove)
+        act_clear.triggered.connect(self._onClear)
 
         self.validationRequested.emit()
 
@@ -731,6 +742,11 @@ class MaterialListWidget(_ParameterWidget):
 
         model = self._lst_materials.model()
         for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            model.removeRow(row)
+
+    def _onClear(self):
+        model = self._lst_materials.model()
+        for row in reversed(range(model.rowCount())):
             model.removeRow(row)
 
     def setValues(self, materials):

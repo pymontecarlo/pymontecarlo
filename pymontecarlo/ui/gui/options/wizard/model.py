@@ -136,6 +136,7 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         tlb_model.addWidget(spacer)
         act_remove = tlb_model.addAction(getIcon("list-remove"), "Remove model")
+        act_clear = tlb_model.addAction(getIcon("edit-clear"), "Clear")
 
         # Layouts
         layout = _ExpandableOptionsWizardPage._initUI(self)
@@ -152,6 +153,7 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
         # Signals
         btn_model_add.released.connect(self._onModelAdd)
         act_remove.triggered.connect(self._onModelRemove)
+        act_clear.triggered.connect(self._onModelClear)
 
         self._cb_model_type.currentIndexChanged.connect(self._onModelTypeChanged)
 
@@ -187,6 +189,17 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
             QMessageBox.warning(self, "Model", "Select a row")
             return
 
+        cb_model = self._cb_model.model()
+
+        for model in models:
+            cb_model.add(model) # Show model in combo box
+            self._tbl_model.removeModel(model)
+
+        if self._cb_model.currentIndex() < 0:
+            self._cb_model.setCurrentIndex(0)
+
+    def _onModelClear(self):
+        models = self._tbl_model.models()
         cb_model = self._cb_model.model()
 
         for model in models:

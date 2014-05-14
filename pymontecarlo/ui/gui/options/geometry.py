@@ -222,8 +222,9 @@ class LayerListWidget(_ParameterWidget):
         self._material_class = Material
 
         # Actions
-        act_add = QAction(getIcon("list-add"), "Add material", self)
-        act_remove = QAction(getIcon("list-remove"), "Remove material", self)
+        act_add = QAction(getIcon("list-add"), "Add layer", self)
+        act_remove = QAction(getIcon("list-remove"), "Remove layer", self)
+        act_clean = QAction(getIcon('edit-clear'), "Clear", self)
 
         # Widgets
         self._cb_unit = UnitComboBox('m')
@@ -242,6 +243,7 @@ class LayerListWidget(_ParameterWidget):
         self._tlb_layers.addWidget(spacer)
         self._tlb_layers.addAction(act_add)
         self._tlb_layers.addAction(act_remove)
+        self._tlb_layers.addAction(act_clean)
 
         # Layouts
         layout = QVBoxLayout()
@@ -263,6 +265,7 @@ class LayerListWidget(_ParameterWidget):
 
         act_add.triggered.connect(self._onAdd)
         act_remove.triggered.connect(self._onRemove)
+        act_clean.triggered.connect(self._onClear)
 
         self._tbl_layers.doubleClicked.connect(self._onDoubleClicked)
 
@@ -319,6 +322,11 @@ class LayerListWidget(_ParameterWidget):
 
         model = self._tbl_layers.model()
         for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            model.removeRow(row)
+
+    def _onClear(self):
+        model = self._tbl_layers.model()
+        for row in reversed(range(model.rowCount())):
             model.removeRow(row)
 
     def values(self):

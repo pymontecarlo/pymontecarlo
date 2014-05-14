@@ -337,6 +337,7 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         tlb_detector.addWidget(spacer)
         act_remove = tlb_detector.addAction(getIcon("list-remove"), "Remove detector")
+        act_clear = tlb_detector.addAction(getIcon("edit-clear"), "Clear")
 
         # Layouts
         layout = _ExpandableOptionsWizardPage._initUI(self)
@@ -352,6 +353,7 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         # Signals
         btn_detector_add.released.connect(self._onDetectorAdd)
         act_remove.triggered.connect(self._onDetectorRemove)
+        act_clear.triggered.connect(self._onDetectorClear)
 
         self._tbl_detector.doubleClicked.connect(self._onDetectorDoubleClicked)
 
@@ -384,6 +386,11 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         tbl_model = self._tbl_detector.model()
         for row in sorted(map(methodcaller('row'), selection), reverse=True):
             tbl_model.removeRow(row)
+
+    def _onDetectorClear(self):
+        model = self._tbl_detector.model()
+        for row in reversed(range(model.rowCount())):
+            model.removeRow(row)
 
     def _onDetectorDoubleClicked(self, index):
         if index.column() != 1:

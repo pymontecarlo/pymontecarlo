@@ -252,6 +252,7 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         tlb_limit.addWidget(spacer)
         act_remove = tlb_limit.addAction(getIcon("list-remove"), "Remove limit")
+        act_clear = tlb_limit.addAction(getIcon("edit-clear"), "Clear")
 
         # Layouts
         layout = _ExpandableOptionsWizardPage._initUI(self)
@@ -267,6 +268,7 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         # Signals
         btn_limit_add.released.connect(self._onLimitAdd)
         act_remove.triggered.connect(self._onLimitRemove)
+        act_clear.triggered.connect(self._onLimitClear)
 
         self._tbl_limit.doubleClicked.connect(self._onLimitDoubleClicked)
 
@@ -305,6 +307,17 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         tbl_model = self._tbl_limit.model()
         cb_model = self._cb_limit.model()
         for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            limit = tbl_model.limit(tbl_model.createIndex(row, 0))
+            cb_model.add(limit.__class__) # Show limit to combo box
+            tbl_model.removeRow(row) # Remove row
+
+        if self._cb_limit.currentIndex() < 0:
+            self._cb_limit.setCurrentIndex(0)
+
+    def _onLimitClear(self):
+        tbl_model = self._tbl_limit.model()
+        cb_model = self._cb_limit.model()
+        for row in reversed(range(tbl_model.rowCount())):
             limit = tbl_model.limit(tbl_model.createIndex(row, 0))
             cb_model.add(limit.__class__) # Show limit to combo box
             tbl_model.removeRow(row) # Remove row
