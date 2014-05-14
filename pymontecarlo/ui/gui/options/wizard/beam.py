@@ -32,7 +32,6 @@ from pymontecarlo.ui.gui.options.wizard.options import \
 from pymontecarlo.util.parameter import expand
 
 # Globals and constants variables.
-from pymontecarlo.options.particle import PARTICLES
 
 class BeamWizardPage(_ExpandableOptionsWizardPage):
 
@@ -91,6 +90,12 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
             self._cb_beam.addItem(text)
             self._wdg_beam.addWidget(widget)
 
+            widget.setParticlesEnabled(False)
+            for program in programs:
+                converter = program.converter_class
+                for particle in converter.PARTICLES:
+                    widget.setParticleEnabled(particle, True)
+
             widget.valueChanged.connect(self.valueChanged)
 
         # Select beam
@@ -101,14 +106,6 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
             widget = next(iter(self._widgets.values()))
 
         widget.setValue(beam)
-
-        program_particles = set()
-        for program in self.options().programs:
-            converter = program.converter_class
-            program_particles.update(converter.PARTICLES)
-
-        for particle in PARTICLES:
-            widget.setParticleEnabled(particle, particle in program_particles)
 
         self._wdg_beam.setCurrentWidget(widget)
         self._cb_beam.setCurrentIndex(self._wdg_beam.currentIndex())

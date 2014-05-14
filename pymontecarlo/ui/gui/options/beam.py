@@ -20,7 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from itertools import product
-from operator import itemgetter
+from operator import itemgetter, methodcaller
 
 # Third party modules.
 from PySide.QtGui import QCheckBox, QHBoxLayout, QFormLayout, QLabel
@@ -101,6 +101,13 @@ class ParticleWidget(_ParameterWidget):
 
     def isParticleEnabled(self, particle):
         return self._widgets[particle].isEnabled()
+
+    def setParticlesEnabled(self, state):
+        for widget in self._widgets.values():
+            widget.setEnabled(state)
+
+    def areParticlesEnabled(self):
+        return all(map(methodcaller('isEnabled'), self._widgets.values()))
 
 class OriginWidget(_ParameterWidget):
 
@@ -359,6 +366,12 @@ class PencilBeamWidget(_BeamWidget):
 
     def isParticleEnabled(self, particle):
         return self._wdg_particle.isParticleEnabled(particle)
+
+    def setParticlesEnabled(self, state):
+        self._wdg_particle.setParticlesEnabled(state)
+
+    def areParticlesEnabled(self):
+        return self._wdg_particle.areParticlesEnabled()
 
 class GaussianBeamWidget(PencilBeamWidget):
 
