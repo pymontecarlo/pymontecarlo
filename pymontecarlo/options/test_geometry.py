@@ -21,6 +21,7 @@ from pymontecarlo.options.geometry import \
     (_Body, _Geometry, Substrate, Inclusion, HorizontalLayers, VerticalLayers,
      Sphere)
 from pymontecarlo.options.material import Material, VACUUM
+from pymontecarlo.util.parameter import expand
 
 # Globals and constants variables.
 
@@ -252,6 +253,12 @@ class TestHorizontalLayers(TestCase):
         self.assertEqual(2, len(self.g2.get_materials()))
         self.assertEqual(3, len(self.g3.get_materials()))
 
+    def testexpand(self):
+        self.assertEqual(1, len(expand(self.g1)))
+
+        self.g1.add_layer(Material.pure(79), [1.0, 2.0])
+        self.assertEqual(2, len(expand(self.g1)))
+
 class TestVerticalLayers(TestCase):
 
     def setUp(self):
@@ -276,8 +283,8 @@ class TestVerticalLayers(TestCase):
         self.assertEqual('Copper', str(self.g1.left_substrate.material))
         self.assertEqual('Zinc', str(self.g1.right_substrate.material))
 
-        self.assertEqual('Gallium', str(self.g1.layers.material))
-        self.assertAlmostEqual(500.0, self.g1.layers.thickness_m, 4)
+        self.assertEqual('Gallium', str(self.g1.layers[0].material))
+        self.assertAlmostEqual(500.0, self.g1.layers[0].thickness_m, 4)
 
         # Vertical layers 2
         self.assertEqual('Copper', str(self.g2.left_substrate.material))
@@ -293,8 +300,8 @@ class TestVerticalLayers(TestCase):
         self.assertEqual('Copper', str(self.g3.left_substrate.material))
         self.assertEqual('Zinc', str(self.g3.right_substrate.material))
 
-        self.assertEqual('Gallium', str(self.g3.layers.material))
-        self.assertAlmostEqual(500.0, self.g3.layers.thickness_m, 4)
+        self.assertEqual('Gallium', str(self.g3.layers[0].material))
+        self.assertAlmostEqual(500.0, self.g3.layers[0].thickness_m, 4)
 
     def testget_bodies(self):
         self.assertEqual(3, len(self.g1.get_bodies()))
@@ -353,12 +360,12 @@ class TestVerticalLayers(TestCase):
 
     def testlayers(self):
         # Vertical layers 1
-        self.assertAlmostEqual(-250.0, self.g1.layers.xmin_m, 4)
-        self.assertAlmostEqual(250.0, self.g1.layers.xmax_m, 4)
-        self.assertEqual(float('-inf'), self.g1.layers.ymin_m)
-        self.assertEqual(float('inf'), self.g1.layers.ymax_m)
-        self.assertEqual(float('-inf'), self.g1.layers.zmin_m)
-        self.assertAlmostEqual(0.0, self.g1.layers.zmax_m, 4)
+        self.assertAlmostEqual(-250.0, self.g1.layers[0].xmin_m, 4)
+        self.assertAlmostEqual(250.0, self.g1.layers[0].xmax_m, 4)
+        self.assertEqual(float('-inf'), self.g1.layers[0].ymin_m)
+        self.assertEqual(float('inf'), self.g1.layers[0].ymax_m)
+        self.assertEqual(float('-inf'), self.g1.layers[0].zmin_m)
+        self.assertAlmostEqual(0.0, self.g1.layers[0].zmax_m, 4)
 
         # Vertical layers 2
         self.assertAlmostEqual(-150.0, self.g2.layers[0].xmin_m, 4)
@@ -376,12 +383,18 @@ class TestVerticalLayers(TestCase):
         self.assertAlmostEqual(0.0, self.g2.layers[1].zmax_m, 4)
 
         # Vertical layers 3
-        self.assertAlmostEqual(-250.0, self.g3.layers.xmin_m, 4)
-        self.assertAlmostEqual(250.0, self.g3.layers.xmax_m, 4)
-        self.assertEqual(float('-inf'), self.g3.layers.ymin_m)
-        self.assertEqual(float('inf'), self.g3.layers.ymax_m)
-        self.assertAlmostEqual(-400.0, self.g3.layers.zmin_m, 4)
-        self.assertAlmostEqual(0.0, self.g3.layers.zmax_m, 4)
+        self.assertAlmostEqual(-250.0, self.g3.layers[0].xmin_m, 4)
+        self.assertAlmostEqual(250.0, self.g3.layers[0].xmax_m, 4)
+        self.assertEqual(float('-inf'), self.g3.layers[0].ymin_m)
+        self.assertEqual(float('inf'), self.g3.layers[0].ymax_m)
+        self.assertAlmostEqual(-400.0, self.g3.layers[0].zmin_m, 4)
+        self.assertAlmostEqual(0.0, self.g3.layers[0].zmax_m, 4)
+
+    def testexpand(self):
+        self.assertEqual(1, len(expand(self.g1)))
+
+        self.g1.add_layer(Material.pure(79), [1.0, 2.0])
+        self.assertEqual(2, len(expand(self.g1)))
 
 class TestSphere(TestCase):
 

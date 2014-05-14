@@ -33,7 +33,7 @@ import numpy as np
 # Local modules.
 from pymontecarlo.util.parameter import \
     (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
-     range_validator)
+     ParameterizedMutableSequence, range_validator)
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -235,6 +235,9 @@ class _Layer(_Body):
         return '<Layer(material=%s, thickness=%s m)>' % \
                     (str(self.material), self.thickness_m)
 
+class _Layers(ParameterizedMutableSequence):
+    pass
+
 class _HorizontalLayer(_Layer):
 
     @property
@@ -260,7 +263,7 @@ class HorizontalLayers(_Geometry):
 
     substrate = Parameter(_HorizontalSubstrateBody, required=False,
                           doc="Body of the substrate")
-    layers = Parameter(_HorizontalLayer, required=False,
+    layers = Parameter(_Layers, required=False,
                        doc="Layers from top to bottom")
 
     def __init__(self, substrate_material=None, layers=None,
@@ -281,11 +284,14 @@ class HorizontalLayers(_Geometry):
             substrate_material = VACUUM
         self.substrate = _HorizontalSubstrateBody(self, substrate_material)
 
-        if layers is None:
-            layers = []
-        self.layers = layers
+        # Hack because numpy converts MutableSequence to array
+        layers = np.ndarray((1,), np.dtype(_Layers))
+        layers[0] = _Layers(_HorizontalLayer)
+        self.__dict__['layers'] = layers
+        self.layers.extend(layers or [])
 
         self.__parameters__['substrate'].freeze(self)
+        self.__parameters__['layers'].freeze(self)
 
     def __repr__(self):
         layers = np.array(self.layers, ndmin=1)
@@ -312,11 +318,7 @@ class HorizontalLayers(_Geometry):
         :arg thickness: thickness of the layer in meters
         """
         layer = _HorizontalLayer(self, material, thickness_m)
-
-        layers = np.array(self.layers, ndmin=1).tolist()
-        layers.append(layer)
-        self.layers = layers
-
+        self.layers.append(layer)
         return layer
 
     def get_bodies(self):
@@ -401,7 +403,7 @@ class VerticalLayers(_Geometry):
                                doc="Body of left side")
     right_substrate = Parameter(_VerticalRightSubstrateBody,
                                 doc="Body of right side")
-    layers = Parameter(_VerticalLayer, required=False,
+    layers = Parameter(_Layers, required=False,
                        doc="Layers from left to right")
     depth = UnitParameter("m", range_validator(0.0, inclusive=False),
                           doc="Depth (z thickness)")
@@ -423,13 +425,16 @@ class VerticalLayers(_Geometry):
         self.left_substrate = _VerticalLeftSubstrateBody(self, left_material)
         self.right_substrate = _VerticalRightSubstrateBody(self, right_material)
 
-        if layers is None:
-            layers = []
-        self.layers = layers
+        # Hack because numpy converts MutableSequence to array
+        layers = np.ndarray((1,), np.dtype(_Layers))
+        layers[0] = _Layers(_VerticalLayer)
+        self.__dict__['layers'] = layers
+        self.layers.extend(layers or [])
 
         self.depth_m = depth_m
 
         self.__parameters__['left_substrate'].freeze(self)
+        self.__parameters__['layers'].freeze(self)
         self.__parameters__['right_substrate'].freeze(self)
 
     def __repr__(self):
@@ -450,11 +455,7 @@ class VerticalLayers(_Geometry):
         :arg thickness: thickness of the layer in meters
         """
         layer = _VerticalLayer(self, material, thickness)
-
-        layers = np.array(self.layers, ndmin=1).tolist()
-        layers.append(layer)
-        self.layers = layers
-
+        self.layers.append(layer)
         return layer
 
     def get_bodies(self):

@@ -263,8 +263,8 @@ class TestVerticalLayersXMLHandler(unittest.TestCase):
         self.assertEqual('Copper', str(obj.left_substrate.material))
         self.assertEqual('Zinc', str(obj.right_substrate.material))
 
-        self.assertEqual('Gallium', str(obj.layers.material))
-        self.assertAlmostEqual(500.0, obj.layers.thickness_m, 4)
+        self.assertEqual('Gallium', str(obj.layers[0].material))
+        self.assertAlmostEqual(500.0, obj.layers[0].thickness_m, 4)
 
         self.assertAlmostEqual(1.1, obj.tilt_rad, 4)
         self.assertAlmostEqual(2.2, obj.rotation_rad, 4)
@@ -277,8 +277,8 @@ class TestVerticalLayersXMLHandler(unittest.TestCase):
         self.assertEqual('Copper', str(obj.left_substrate.material))
         self.assertEqual('Zinc', str(obj.right_substrate.material))
 
-        self.assertEqual('Gallium', str(obj.layers.material))
-        self.assertAlmostEqual(500.0, obj.layers.thickness_m, 4)
+        self.assertEqual('Gallium', str(obj.layers[0].material))
+        self.assertAlmostEqual(500.0, obj.layers[0].thickness_m, 4)
 
         self.assertAlmostEqual(0.0, obj.tilt_rad, 4)
         self.assertAlmostEqual(0.0, obj.rotation_rad, 4)
