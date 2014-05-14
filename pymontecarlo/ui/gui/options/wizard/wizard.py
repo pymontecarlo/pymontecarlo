@@ -47,6 +47,7 @@ class OptionsWizard(QWizard):
             self.setWindowTitle("Create new options")
         else:
             self.setWindowTitle("Modify options")
+        self.setWizardStyle(QWizard.WizardStyle.ClassicStyle)
 
         # Variables
         if options is None:
