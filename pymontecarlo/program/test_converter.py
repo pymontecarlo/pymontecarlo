@@ -32,6 +32,7 @@ warnings.simplefilter("always")
 
 class MockConverter(Converter):
 
+    MATERIALS = [Material]
     BEAMS = [PencilBeam]
     GEOMETRIES = [Substrate]
     DETECTORS = [TimeDetector]

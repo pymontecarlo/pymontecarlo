@@ -38,6 +38,7 @@ class Converter(object):
     Derived class shall modify the following class variables to specify
     the allowable classes for each of these parameters:
 
+        * :attr:`MATERIALS`: list of allowable material classes
         * :attr:`BEAM`: list of allowable beam classes
         * :attr:`GEOMETRIES`: list of allowable geometry classes
         * :attr:`DETECTORS`: list of allowable detector classes
@@ -52,6 +53,8 @@ class Converter(object):
        The keys for :attr:`MODELS` and :attr:`DEFAULT_MODELS` have to be the same.
     """
 
+    PARTICLES = []
+    MATERIALS = []
     BEAMS = []
     GEOMETRIES = []
     DETECTORS = []
@@ -113,6 +116,11 @@ class Converter(object):
                        "This options definition was removed.")
             return False
 
+        if options.beam.particle not in self.PARTICLES:
+            self._warn("Particle (%s) not supported" % options.beam.particle,
+                       "This options definition was removed.")
+            return False
+
         return True
 
     def _convert_geometry(self, options):
@@ -122,6 +130,14 @@ class Converter(object):
             self._warn("Cannot convert geometry (%s)." % clasz.__name__,
                        "This options definition was removed.")
             return False
+
+        # Check material
+        for material in options.geometry.get_materials():
+            if material.__class__ not in self.MATERIALS:
+                self._warn("Invalid material (%s) in geometry (%s)" % \
+                           (material.name, clasz.__name__),
+                           "This options definition was removed.")
+                return False
 
         return True
 
