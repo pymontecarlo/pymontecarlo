@@ -19,6 +19,7 @@ import warnings
 from pymontecarlo.program.converter import Converter
 
 from pymontecarlo.options.options import Options
+from pymontecarlo.options.particle import ELECTRON
 from pymontecarlo.options.beam import PencilBeam, GaussianBeam
 from pymontecarlo.options.geometry import Substrate, Inclusion
 from pymontecarlo.options.material import Material
@@ -32,6 +33,7 @@ warnings.simplefilter("always")
 
 class MockConverter(Converter):
 
+    PARTICLES = [ELECTRON]
     MATERIALS = [Material]
     BEAMS = [PencilBeam]
     GEOMETRIES = [Substrate]
