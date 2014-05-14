@@ -172,6 +172,9 @@ class Parameter(object):
     def has_field(self):
         return len(self._fields) > 0
 
+    def set_required(self, state):
+        self._required = state
+
     def is_required(self):
         return self._required
 
