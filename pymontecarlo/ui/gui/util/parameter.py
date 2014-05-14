@@ -29,7 +29,8 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.ui.gui.util.widget import \
-    NumericalValidator, MultiNumericalLineEdit, UnitComboBox, AngleComboBox
+    (NumericalValidator, MultiNumericalLineEdit, UnitComboBox, AngleComboBox,
+     TimeComboBox)
 
 # Globals and constants variables.
 
@@ -185,14 +186,14 @@ class NumericalParameterWidget(_ParameterWidget):
             return False
         return self._txt_values.hasAcceptableInput()
 
-class _UnitParameterValidator(_ParameterValidator):
+class _FactorParameterValidator(_ParameterValidator):
 
-    def __init__(self, parameter, cb_unit):
+    def __init__(self, parameter, combobox):
         _ParameterValidator.__init__(self, parameter)
-        self._cb_unit = cb_unit
+        self._combobox = combobox
 
     def validate(self, values):
-        values *= self._cb_unit.factor()
+        values *= self._combobox.factor()
         return _ParameterValidator.validate(self, values)
 
 class UnitParameterWidget(_ParameterWidget):
@@ -204,7 +205,7 @@ class UnitParameterWidget(_ParameterWidget):
         self._cb_unit = UnitComboBox(parameter.unit)
 
         self._txt_values = MultiNumericalLineEdit()
-        validator = _UnitParameterValidator(parameter, self._cb_unit)
+        validator = _FactorParameterValidator(parameter, self._cb_unit)
         self._txt_values.setValidator(validator)
 
         # Layouts
@@ -248,8 +249,6 @@ class UnitParameterWidget(_ParameterWidget):
             return False
         return self._txt_values.hasAcceptableInput()
 
-_AngleParameterValidator = _UnitParameterValidator
-
 class AngleParameterWidget(_ParameterWidget):
 
     def __init__(self, parameter, parent=None):
@@ -260,7 +259,7 @@ class AngleParameterWidget(_ParameterWidget):
         self._cb_unit.setUnit(u'\u00b0')
 
         self._txt_values = MultiNumericalLineEdit()
-        validator = _AngleParameterValidator(parameter, self._cb_unit)
+        validator = _FactorParameterValidator(parameter, self._cb_unit)
         self._txt_values.setValidator(validator)
 
         # Layouts
@@ -298,6 +297,61 @@ class AngleParameterWidget(_ParameterWidget):
     def setReadOnly(self, state):
         self._txt_values.setReadOnly(state)
         self._cb_unit.setEnabled(not state)
+
+    def hasAcceptableInput(self):
+        if not _ParameterWidget.hasAcceptableInput(self):
+            return False
+        return self._txt_values.hasAcceptableInput()
+
+_TimeParameterValidator = _ParameterValidator
+
+class TimeParameterWidget(_ParameterWidget):
+
+    def __init__(self, parameter, parent=None):
+        _ParameterWidget.__init__(self, parameter, parent=parent)
+
+        # Widgets
+        self._cb_time = TimeComboBox()
+
+        self._txt_values = MultiNumericalLineEdit()
+        validator = _FactorParameterValidator(parameter, self._cb_time)
+        self._txt_values.setValidator(validator)
+
+        # Layouts
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._txt_values, 1)
+        layout.addWidget(self._cb_time)
+        self.setLayout(layout)
+
+        # Signals
+        self.valuesChanged.connect(self._onChanged)
+        self.validationRequested.connect(self._onChanged)
+
+        self._txt_values.textChanged.connect(self.valuesChanged)
+        self._cb_time.currentIndexChanged.connect(self.valuesChanged)
+
+        self.validationRequested.emit()
+
+    def _onChanged(self):
+        if self.hasAcceptableInput():
+            self._txt_values.setStyleSheet("background: none")
+        else:
+            self._txt_values.setStyleSheet("background: pink")
+
+    def values(self):
+        return self._txt_values.values() * self._cb_time.factor()
+
+    def setValues(self, values):
+        self._txt_values.setValues(values)
+        self._cb_time.setScale('s')
+
+    def isReadOnly(self):
+        return self._txt_values.isReadOnly() and not self._cb_time.isEnabled()
+
+    def setReadOnly(self, state):
+        self._txt_values.setReadOnly(state)
+        self._cb_time.setEnabled(not state)
 
     def hasAcceptableInput(self):
         if not _ParameterWidget.hasAcceptableInput(self):

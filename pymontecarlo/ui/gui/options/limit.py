@@ -25,7 +25,7 @@ from PySide.QtGui import QLabel, QWidget, QVBoxLayout, QTabWidget
 
 # Local modules.
 from pymontecarlo.ui.gui.util.parameter import \
-    _ParameterizedClassWidget, NumericalParameterWidget
+    _ParameterizedClassWidget, NumericalParameterWidget, TimeParameterWidget
 from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.limit import TimeLimit, ShowersLimit
@@ -49,7 +49,7 @@ class TimeLimitWidget(_LimitWidget):
         # Widgets
         self._lbl_time = QLabel('Time')
         self._lbl_time.setStyleSheet("color: blue")
-        self._txt_time = NumericalParameterWidget(TimeLimit.time_s)
+        self._txt_time = TimeParameterWidget(TimeLimit.time_s)
 
         # Layouts
         layout = _LimitWidget._initUI(self)

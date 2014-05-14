@@ -369,3 +369,31 @@ class AngleComboBox(QComboBox):
 
     def factor(self):
         return 1.0 if self.currentIndex() == 0 else np.pi / 180.0
+
+class TimeComboBox(QComboBox):
+
+    _FACTORS = (('year', 31536000.0),
+                ('month', 2628000.0),
+                ('day', 86400.0),
+                ('hr', 3600.0),
+                ('min', 60.0),
+                ('s', 1.0))
+
+    def __init__(self, parent=None):
+        QComboBox.__init__(self, parent)
+
+        self._factors = {}
+        for scale, factor in self._FACTORS:
+            self.addItem(scale)
+            self._factors[scale] = factor
+
+        self.setScale('s')
+
+    def scale(self):
+        return self.currentText()
+
+    def setScale(self, scale):
+        self.setCurrentIndex(self.findText(scale))
+
+    def factor(self):
+        return self._factors[self.scale()]
