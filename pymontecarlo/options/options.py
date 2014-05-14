@@ -129,8 +129,8 @@ class Options(object, metaclass=ParameterizedMetaclass):
     beam = Parameter(_Beam, doc="Beam")
     geometry = Parameter(_Geometry, doc="Geometry")
     detectors = Parameter(doc="Detector(s)")
-    limits = Parameter(_Limits, doc="Limit(s)")
-    models = Parameter(_Models, doc="Model(s)")
+    limits = Parameter(_Limits, required=False, doc="Limit(s)")
+    models = Parameter(_Models, required=False, doc="Model(s)")
 
     @classmethod
     def read(cls, source):
