@@ -61,9 +61,10 @@ _MockLayer = namedtuple("_MockLayer", ("material", "thickness_m"))
 
 class _ThicknessValidator(NumericalValidator):
 
-    def validate(self, value):
-        if value <= 0.0:
-            return QValidator.Intermediate
+    def validate(self, values):
+        for value in values:
+            if value <= 0.0:
+                return QValidator.Intermediate
         return QValidator.Acceptable
 
 class _LayerModel(QAbstractTableModel):
