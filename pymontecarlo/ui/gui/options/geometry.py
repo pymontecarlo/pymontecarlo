@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from operator import attrgetter, methodcaller
+from collections import namedtuple
 
 # Third party modules.
 from PySide.QtGui import \
@@ -56,169 +57,161 @@ TiltWidget = AngleParameterWidget
 RotationWidget = AngleParameterWidget
 DiameterWidget = UnitParameterWidget
 
+_MockLayer = namedtuple("_MockLayer", ("material", "thickness_m"))
+
+class _ThicknessValidator(NumericalValidator):
+
+    def validate(self, value):
+        if value <= 0.0:
+            return QValidator.Intermediate
+        return QValidator.Acceptable
+
+class _LayerModel(QAbstractTableModel):
+
+    def __init__(self):
+        QAbstractTableModel.__init__(self)
+        self._layers = []
+
+    def rowCount(self, *args, **kwargs):
+        return len(self._layers)
+
+    def columnCount(self, *args, **kwargs):
+        return 2
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._layers)):
+            return None
+
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
+
+        if role != Qt.DisplayRole:
+            return None
+
+        row = index.row()
+        column = index.column()
+
+        materials, thicknesses = self._layers[row]
+        if column == 0:
+            if not materials:
+                return 'none'
+            else:
+                return ', '.join(map(attrgetter('name'), materials))
+        elif column == 1:
+            if thicknesses:
+                return ', '.join(map(str, thicknesses))
+
+    def headerData(self, section , orientation, role):
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal:
+            if section == 0:
+                return 'Material'
+            elif section == 1:
+                return 'Thickness'
+        elif orientation == Qt.Vertical:
+            return str(section + 1)
+
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.ItemIsEnabled
+
+        return Qt.ItemFlags(QAbstractTableModel.flags(self, index) |
+                            Qt.ItemIsEditable)
+
+    def setData(self, index, values, role=Qt.EditRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._layers)):
+            return False
+
+        values = np.array(values, ndmin=1)
+
+        row = index.row()
+        column = index.column()
+        self._layers[row][column].clear()
+        self._layers[row][column].extend(values)
+
+        self.dataChanged.emit(index, index)
+        return True
+
+    def insertRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginInsertRows(QModelIndex(), row, row + count - 1)
+
+        for _ in range(count):
+            self._layers.insert(row, ([], []))
+
+        self.endInsertRows()
+        return True
+
+    def removeRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginRemoveRows(QModelIndex(), row, row + count - 1)
+
+        for index in reversed(range(row, row + count)):
+            self._layers.pop(index)
+
+        self.endRemoveRows()
+        return True
+
+    def materials(self, index):
+        return self._layers[index.row()][0]
+
+    def thicknesses(self, index):
+        return self._layers[index.row()][1]
+
+    def layers(self):
+        return list(self._layers)
+
+class _LayerDelegate(QItemDelegate):
+
+    def __init__(self, parent=None):
+        QItemDelegate.__init__(self, parent)
+        self._readonly = False
+
+    def createEditor(self, parent, option, index):
+        column = index.column()
+        if column == 1:
+            editor = MultiNumericalLineEdit(parent)
+            editor.setStyleSheet("background: none")
+            editor.setReadOnly(self.isReadOnly())
+            editor.setValidator(_ThicknessValidator())
+            return editor
+
+    def setEditorData(self, editor, index):
+        column = index.column()
+        if column == 1:
+            thicknesses = index.model().thicknesses(index)
+            if thicknesses:
+                editor.setValues(thicknesses)
+
+    def setModelData(self, editor, model, index):
+        column = index.column()
+        if column == 1:
+            if not editor.hasAcceptableInput():
+                return
+            try:
+                values = editor.values()
+            except:
+                return
+            model.setData(index, values)
+
+    def setReadOnly(self, state):
+        self._readonly = state
+
+    def isReadOnly(self):
+        return self._readonly
+
 class LayerListWidget(_ParameterWidget):
-
-    class _MockLayer(object):
-
-        def __init__(self, material, thickness_m):
-            self.material = material
-            self.thickness_m = thickness_m
-
-        def __repr__(self):
-            return '<_MockLayer(material=%s, thickness=%s m)>' % \
-                (self.material, self.thickness_m)
-
-    class _ThicknessValidator(NumericalValidator):
-
-        def validate(self, value):
-            if value <= 0.0:
-                return QValidator.Intermediate
-            return QValidator.Acceptable
-
-    class _LayerModel(QAbstractTableModel):
-
-        def __init__(self):
-            QAbstractTableModel.__init__(self)
-            self._layers = []
-
-        def rowCount(self, *args, **kwargs):
-            return len(self._layers)
-
-        def columnCount(self, *args, **kwargs):
-            return 2
-
-        def data(self, index, role=Qt.DisplayRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._layers)):
-                return None
-
-            if role == Qt.TextAlignmentRole:
-                return Qt.AlignCenter
-
-            if role != Qt.DisplayRole:
-                return None
-
-            row = index.row()
-            column = index.column()
-
-            materials, thicknesses = self._layers[row]
-            if column == 0:
-                if not materials:
-                    return 'none'
-                else:
-                    return ', '.join(map(attrgetter('name'), materials))
-            elif column == 1:
-                if thicknesses:
-                    return ', '.join(map(str, thicknesses))
-
-        def headerData(self, section , orientation, role):
-            if role != Qt.DisplayRole:
-                return None
-            if orientation == Qt.Horizontal:
-                if section == 0:
-                    return 'Material'
-                elif section == 1:
-                    return 'Thickness'
-            elif orientation == Qt.Vertical:
-                return str(section + 1)
-
-        def flags(self, index):
-            if not index.isValid():
-                return Qt.ItemIsEnabled
-
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index) |
-                                Qt.ItemIsEditable)
-
-        def setData(self, index, values, role=Qt.EditRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._layers)):
-                return False
-
-            values = np.array(values, ndmin=1)
-
-            row = index.row()
-            column = index.column()
-            self._layers[row][column].clear()
-            self._layers[row][column].extend(values)
-
-            self.dataChanged.emit(index, index)
-            return True
-
-        def insertRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginInsertRows(QModelIndex(), row, row + count - 1)
-
-            for _ in range(count):
-                self._layers.insert(row, ([], []))
-
-            self.endInsertRows()
-            return True
-
-        def removeRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginRemoveRows(QModelIndex(), row, row + count - 1)
-
-            for index in reversed(range(row, row + count)):
-                self._layers.pop(index)
-
-            self.endRemoveRows()
-            return True
-
-        def materials(self, index):
-            return self._layers[index.row()][0]
-
-        def thicknesses(self, index):
-            return self._layers[index.row()][1]
-
-        def layers(self):
-            return list(self._layers)
-
-    class _LayerDelegate(QItemDelegate):
-
-        def __init__(self, parent=None):
-            QItemDelegate.__init__(self, parent)
-            self._readonly = False
-
-        def createEditor(self, parent, option, index):
-            column = index.column()
-            if column == 1:
-                editor = MultiNumericalLineEdit(parent)
-                editor.setStyleSheet("background: none")
-                editor.setReadOnly(self.isReadOnly())
-                editor.setValidator(LayerListWidget._ThicknessValidator())
-                return editor
-
-        def setEditorData(self, editor, index):
-            column = index.column()
-            if column == 1:
-                thicknesses = index.model().thicknesses(index)
-                if thicknesses:
-                    editor.setValues(thicknesses)
-
-        def setModelData(self, editor, model, index):
-            column = index.column()
-            if column == 1:
-                if not editor.hasAcceptableInput():
-                    return
-                try:
-                    values = editor.values()
-                except:
-                    return
-                model.setData(index, values)
-
-        def setReadOnly(self, state):
-            self._readonly = state
-
-        def isReadOnly(self):
-            return self._readonly
 
     def __init__(self, parameter, parent=None):
         _ParameterWidget.__init__(self, parameter, parent)
 
         # Variables
-        model = self._LayerModel()
+        model = _LayerModel()
         self._material_class = Material
 
         # Actions
@@ -232,7 +225,7 @@ class LayerListWidget(_ParameterWidget):
 
         self._tbl_layers = QTableView()
         self._tbl_layers.setModel(model)
-        self._tbl_layers.setItemDelegate(self._LayerDelegate())
+        self._tbl_layers.setItemDelegate(_LayerDelegate())
         header = self._tbl_layers.horizontalHeader()
         header.setResizeMode(QHeaderView.Stretch)
         header.setStyleSheet('color: blue')
@@ -337,7 +330,7 @@ class LayerListWidget(_ParameterWidget):
             if not material or not thickness:
                 continue
             thickness_m = np.array(thickness, ndmin=1) * factor
-            layers.append(self._MockLayer(material, thickness_m))
+            layers.append(_MockLayer(material, thickness_m))
 
         return layers
 
