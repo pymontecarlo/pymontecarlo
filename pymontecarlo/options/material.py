@@ -57,7 +57,7 @@ class Material(object):
     DEFAULT_ABSORPTION_ENERGY_eV = 50.0
 
     def __init__(self, composition, name=None, density_kg_m3=None,
-                 absorption_energy_eV=None):
+                 absorption_energy_eV=None, *args, **kwargs):
         """
         Creates a new material.
 

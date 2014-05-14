@@ -43,12 +43,12 @@ from pymontecarlo.ui.gui.util.parameter import _ParameterWidget
 from pymontecarlo.ui.gui.util.tango import getIcon
 
 from pymontecarlo.options.material import Material
-from pymontecarlo.options.particle import PARTICLES
 from pymontecarlo.options.geometry import _Body
 
 from pymontecarlo.util.multipleloop import combine
 
 # Globals and constants variables.
+from pymontecarlo.options.particle import PARTICLES, ELECTRON, PHOTON, POSITRON
 
 class _FractionValidator(NumericalValidator):
 
@@ -445,42 +445,64 @@ class MaterialDialog(QDialog):
     def _onCancel(self):
         self.reject()
 
-    def values(self):
-        # Name
+    def _getParametersDict(self):
+        params = {}
+
         if self._chk_name_auto.isChecked():
             name = None
         else:
             name = self._txt_name.text()
+        params['name'] = [name]
 
-        # Density
         if self._chk_density_user.isChecked():
             density = self._txt_density.value()
         else:
             density = None
+        params['density_kg_m3'] = [density]
 
-        # Compositions
-        compositions = self._tbl_composition.model().compositions()
+        params['composition'] = self._tbl_composition.model().compositions()
 
-        # Absorption energies
-        absorption_energies = {}
         for particle in self._wdg_abs_energies.keys():
             _, txt_energy, cb_unit = self._wdg_abs_energies[particle]
             values = txt_energy.values() * cb_unit.factor()
+            values = values.tolist()
             if len(values) == 0:
                 values = [Material.DEFAULT_ABSORPTION_ENERGY_eV]
-            absorption_energies[particle] = values
+            params[str(particle)] = values
 
-        combinations, names, _varied = combine(absorption_energies)
-        absorption_energies = [dict(zip(names, combination)) for combination in combinations]
+        return params
 
-        # Create materials
+    def _generateName(self, parameters, varied):
+        name = parameters.pop('name')
+        if name is None:
+            name = Material.generate_name(parameters['composition'])
+
+        parts = [name]
+        for key in varied:
+            if key == 'composition': continue
+            parts.append('{0:s}={1:n}'.format(key, parameters[key]))
+        return '+'.join(parts)
+
+    def _createMaterial(self, parameters, varied):
+        # Name
+        name = self._generateName(parameters, varied)
+
+        # Absorption energy
+        absorption_energy = {ELECTRON: parameters.pop(str(ELECTRON)),
+                             PHOTON: parameters.pop(str(PHOTON)),
+                             POSITRON: parameters.pop(str(POSITRON))}
+
+        return Material(name=name, absorption_energy_eV=absorption_energy,
+                        **parameters)
+
+    def values(self):
+        prm_values = [(key, value) for key, value in self._getParametersDict().items()]
+        combinations, names, varied = combine(prm_values)
+
         materials = []
-        for composition, absorption_energy in \
-                product(compositions, absorption_energies):
-            materials.append(Material(composition=composition,
-                                      name=name,
-                                      density_kg_m3=density,
-                                      absorption_energy_eV=absorption_energy))
+        for combination in combinations:
+            parameters = dict(zip(names, combination))
+            materials.append(self._createMaterial(parameters, varied))
 
         return materials
 
@@ -777,14 +799,15 @@ def __run():
 
     app = QApplication(sys.argv)
 
-#    dialog = MaterialDialog(None)
-#    dialog.setValue(material)
-#    if dialog.exec_():
-#        print(dialog.values())
+    dialog = MaterialDialog(None)
+    dialog.setValue(material)
+    if dialog.exec_():
+        for material in dialog.values():
+            print(repr(material))
 
-    dialog = MaterialListDialog()
-    dialog.setValues([material])
-    dialog.show()
+#    dialog = MaterialListDialog()
+#    dialog.setValues([material])
+#    dialog.show()
 
 #    window = QMainWindow()
 #    window.setCentralWidget(widget)
