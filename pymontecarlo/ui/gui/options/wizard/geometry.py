@@ -30,6 +30,8 @@ from pymontecarlo.ui.gui.options.wizard.options import \
 
 from pymontecarlo.util.parameter import expand
 
+from pymontecarlo.options.material import Material
+
 # Globals and constants variables.
 
 class GeometryWizardPage(_ExpandableOptionsWizardPage):
@@ -80,6 +82,17 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
         newwidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._wdg_geometry.adjustSize()
 
+    def _find_material_class(self, programs):
+        highest_class = Material
+
+        for program in programs:
+            converter = program.converter_class
+            for clasz in converter.MATERIALS:
+                if issubclass(clasz, highest_class):
+                    highest_class = clasz
+
+        return highest_class
+
     def initializePage(self):
         _ExpandableOptionsWizardPage.initializePage(self)
 
@@ -95,6 +108,7 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
         for clasz, widget_class, programs in it:
             widget = widget_class()
             widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            widget.setMaterialClass(self._find_material_class(programs))
 
             self._widgets[clasz] = widget
 

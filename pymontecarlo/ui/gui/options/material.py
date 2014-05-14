@@ -41,6 +41,7 @@ from pymontecarlo.ui.gui.util.widget import \
      UnitComboBox)
 from pymontecarlo.ui.gui.util.parameter import _ParameterWidget
 from pymontecarlo.ui.gui.util.tango import getIcon
+from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.geometry import _Body
@@ -644,7 +645,7 @@ class MaterialListWidget(_ParameterWidget):
 
         # Variables
         model = _MaterialModel()
-        self._dialog = MaterialDialog()
+        self._material_class = Material
 
         # Actions
         act_add = QAction(getIcon("list-add"), "Add material", self)
@@ -701,23 +702,25 @@ class MaterialListWidget(_ParameterWidget):
         model = self._lst_materials.model()
         material = model.material(index)
 
-        self.dialog().setValue(material)
-        self.dialog().setReadOnly(self.isReadOnly())
-        if not self.dialog().exec_():
+        dialog = get_dialog_class(material.__class__)()
+        dialog.setValue(material)
+        dialog.setReadOnly(self.isReadOnly())
+        if not dialog.exec_():
             return
 
         row = index.row()
-        materials = self.dialog().values()
+        materials = dialog.values()
         model.removeRow(row)
         self._insertMaterials(row, materials)
 
     def _onAdd(self):
         row = self._lst_materials.selectionModel().currentIndex().row() + 1
 
-        if not self.dialog().exec_():
+        dialog = get_dialog_class(self._material_class)()
+        if not dialog.exec_():
             return
 
-        materials = self.dialog().values()
+        materials = dialog.values()
         self._insertMaterials(row, materials)
 
     def _onRemove(self):
@@ -745,11 +748,11 @@ class MaterialListWidget(_ParameterWidget):
     def setReadOnly(self, state):
         self._tlb_materials.setVisible(not state)
 
-    def dialog(self):
-        return self._dialog
+    def materialClass(self):
+        return self._material_class
 
-    def setDialog(self, dialog):
-        self._dialog = dialog
+    def setMaterialClass(self, clasz):
+        self._material_class = clasz
 
 class MaterialListDialog(QDialog):
 
@@ -784,16 +787,18 @@ class MaterialListDialog(QDialog):
     def setReadOnly(self, state):
         self._lst_materials.setReadOnly(state)
 
-    def dialog(self):
-        return self._lst_materials.dialog()
+    def materialClass(self):
+        return self._lst_materials.materialClass()
 
-    def setDialog(self, dialog):
-        self._lst_materials.setDialog(dialog)
+    def setMaterialClass(self, clasz):
+        self._lst_materials.setMaterialClass(clasz)
+
+def get_dialog_class(clasz):
+    return _get_widget_class('pymontecarlo.ui.gui.options.material', clasz)
 
 def __run():
     import sys
-    from PySide.QtGui import QApplication, QMainWindow
-    from pymontecarlo.options.particle import ELECTRON
+    from PySide.QtGui import QApplication
 
     material = Material({5: 0.5, 6: 0.5}, absorption_energy_eV={ELECTRON: 60.0})
 

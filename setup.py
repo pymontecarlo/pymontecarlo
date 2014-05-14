@@ -96,6 +96,8 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                 'pymontecarlo.ui.gui.options.beam':
                     ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
                      'GaussianBeam = pymontecarlo.ui.gui.options.beam:GaussianBeamWidget', ],
+                'pymontecarlo.ui.gui.options.material':
+                    ['Material = pymontecarlo.ui.gui.options.material:MaterialDialog'],
                 'pymontecarlo.ui.gui.options.geometry':
                     ['Substrate = pymontecarlo.ui.gui.options.geometry:SubstrateWidget',
                      'Inclusion = pymontecarlo.ui.gui.options.geometry:InclusionWidget',

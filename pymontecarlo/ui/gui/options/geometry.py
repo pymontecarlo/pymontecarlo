@@ -39,8 +39,10 @@ from pymontecarlo.ui.gui.util.tango import getIcon
 from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
 from pymontecarlo.ui.gui.options.material import \
-    MaterialListWidget, MaterialListDialog, MaterialDialog
+    (MaterialListWidget, MaterialListDialog,
+     get_dialog_class as get_material_dialog_class)
 
+from pymontecarlo.options.material import Material
 from pymontecarlo.options.geometry import \
     (_Geometry, Substrate, _SubstrateBody, Inclusion, _InclusionBody,
      Sphere, _SphereBody, HorizontalLayers, _HorizontalSubstrateBody,
@@ -217,6 +219,7 @@ class LayerListWidget(_ParameterWidget):
 
         # Variables
         model = self._LayerModel()
+        self._material_class = Material
 
         # Actions
         act_add = QAction(getIcon("list-add"), "Add material", self)
@@ -283,12 +286,13 @@ class LayerListWidget(_ParameterWidget):
         materials = model.materials(index)
 
         if len(materials) == 0:
-            dialog = MaterialDialog()
+            dialog = get_material_dialog_class(self._material_class)()
         elif len(materials) == 1:
-            dialog = MaterialDialog()
+            dialog = get_material_dialog_class(self._material_class)()
             dialog.setValue(materials[0])
         else:
             dialog = MaterialListDialog()
+            dialog.setMaterialClass(self._material_class)
             dialog.setValues(materials)
 
         dialog.setReadOnly(self.isReadOnly())
@@ -353,6 +357,9 @@ class LayerListWidget(_ParameterWidget):
         self._tbl_layers.horizontalHeader().setStyleSheet(style)
         self._tbl_layers.itemDelegate().setReadOnly(state)
 
+    def setMaterialClass(self, clasz):
+        self._material_class = clasz
+
 #--- Geometry widgets
 
 class _GeometryWidget(_ParameterizedClassWidget):
@@ -383,6 +390,9 @@ class _GeometryWidget(_ParameterizedClassWidget):
         style = 'color: none' if state else 'color: blue'
         self._lbl_tilt.setStyleSheet(style)
         self._lbl_rotation.setStyleSheet(style)
+
+    def setMaterialClass(self, clasz):
+        raise NotImplementedError
 
 class SubstrateWidget(_GeometryWidget):
 
@@ -417,6 +427,9 @@ class SubstrateWidget(_GeometryWidget):
         _GeometryWidget.setReadOnly(self, state)
         style = 'color: none' if state else 'color: blue'
         self._lbl_material.setStyleSheet(style)
+
+    def setMaterialClass(self, clasz):
+        self._lst_material.setMaterialClass(clasz)
 
 class InclusionWidget(_GeometryWidget):
 
@@ -474,6 +487,10 @@ class InclusionWidget(_GeometryWidget):
         self._lbl_inclusion.setStyleSheet(style)
         self._lbl_diameter.setStyleSheet(style)
 
+    def setMaterialClass(self, clasz):
+        self._lst_substrate.setMaterialClass(clasz)
+        self._lst_inclusion.setMaterialClass(clasz)
+
 class HorizontalLayersWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -524,6 +541,10 @@ class HorizontalLayersWidget(_GeometryWidget):
         style = 'color: none' if state else 'color: blue'
         self._lbl_layer.setStyleSheet(style)
         self._lbl_substrate.setStyleSheet(style)
+
+    def setMaterialClass(self, clasz):
+        self._lst_layer.setMaterialClass(clasz)
+        self._lst_substrate.setMaterialClass(clasz)
 
 class VerticalLayersWidget(_GeometryWidget):
 
@@ -608,6 +629,11 @@ class VerticalLayersWidget(_GeometryWidget):
         self._lbl_right.setStyleSheet(style)
         self._lbl_depth.setStyleSheet(style)
 
+    def setMaterialClass(self, clasz):
+        self._lst_left.setMaterialClass(clasz)
+        self._lst_layer.setMaterialClass(clasz)
+        self._lst_right.setMaterialClass(clasz)
+
 class SphereWidget(_GeometryWidget):
 
     def __init__(self, parent=None):
@@ -650,6 +676,9 @@ class SphereWidget(_GeometryWidget):
         style = 'color: none' if state else 'color: blue'
         self._lbl_material.setStyleSheet(style)
         self._lbl_diameter.setStyleSheet(style)
+
+    def setMaterialClass(self, clasz):
+        self._lst_material.setMaterialClass(clasz)
 
 #--- Functions
 
