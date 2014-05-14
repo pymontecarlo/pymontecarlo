@@ -50,160 +50,160 @@ from pymontecarlo.util.multipleloop import combine
 
 # Globals and constants variables.
 
-class MaterialDialog(QDialog):
+class _FractionValidator(NumericalValidator):
 
-    class _FractionValidator(NumericalValidator):
-
-        def validate(self, values):
-            for value in values:
-                if value < 0.0 or value > 1.0:
-                    return QValidator.Intermediate
-            return QValidator.Acceptable
-
-    class _DensityValidator(NumericalValidator):
-
-        def validate(self, value):
-            if value <= 0.0:
+    def validate(self, values):
+        for value in values:
+            if value < 0.0 or value > 1.0:
                 return QValidator.Intermediate
-            return QValidator.Acceptable
+        return QValidator.Acceptable
 
-    class _AbsorptionEnergyValidator(NumericalValidator):
+class _DensityValidator(NumericalValidator):
 
-        def validate(self, values):
-            for value in values:
-                if value < 0.0:
-                    return QValidator.Intermediate
-            return QValidator.Acceptable
+    def validate(self, value):
+        if value <= 0.0:
+            return QValidator.Intermediate
+        return QValidator.Acceptable
 
-    class _CompositionModel(QAbstractTableModel):
+class _AbsorptionEnergyValidator(NumericalValidator):
 
-        def __init__(self):
-            QAbstractTableModel.__init__(self)
-            self._compositions = []
+    def validate(self, values):
+        for value in values:
+            if value < 0.0:
+                return QValidator.Intermediate
+        return QValidator.Acceptable
 
-        def rowCount(self, *args, **kwargs):
-            return len(self._compositions)
+class _CompositionModel(QAbstractTableModel):
 
-        def columnCount(self, *args, **kwargs):
-            return 2
+    def __init__(self):
+        QAbstractTableModel.__init__(self)
+        self._compositions = []
 
-        def data(self, index, role=Qt.DisplayRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._compositions)):
-                return None
+    def rowCount(self, *args, **kwargs):
+        return len(self._compositions)
 
-            if role == Qt.TextAlignmentRole:
-                return Qt.AlignCenter
+    def columnCount(self, *args, **kwargs):
+        return 2
 
-            if role != Qt.DisplayRole:
-                return None
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._compositions)):
+            return None
 
-            zs, fractions = self._compositions[index.row()]
-            column = index.column()
-            if column == 0:
-                if not zs:
-                    return 'none'
-                else:
-                    return ', '.join(map(ep.symbol, sorted(zs)))
-            elif column == 1:
-                if not fractions:
-                    return '?'
-                else:
-                    return ', '.join(map(str, fractions))
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
 
-        def headerData(self, section , orientation, role):
-            if role != Qt.DisplayRole:
-                return None
-            if orientation == Qt.Horizontal:
-                if section == 0:
-                    return 'Element'
-                elif section == 1:
-                    return 'Weight fraction'
-            elif orientation == Qt.Vertical:
-                return str(section + 1)
+        if role != Qt.DisplayRole:
+            return None
 
-        def flags(self, index):
-            if not index.isValid():
-                return Qt.ItemIsEnabled
+        zs, fractions = self._compositions[index.row()]
+        column = index.column()
+        if column == 0:
+            if not zs:
+                return 'none'
+            else:
+                return ', '.join(map(ep.symbol, sorted(zs)))
+        elif column == 1:
+            if not fractions:
+                return '?'
+            else:
+                return ', '.join(map(str, fractions))
 
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index) |
-                                Qt.ItemIsEditable)
+    def headerData(self, section , orientation, role):
+        if role != Qt.DisplayRole:
+            return None
+        if orientation == Qt.Horizontal:
+            if section == 0:
+                return 'Element'
+            elif section == 1:
+                return 'Weight fraction'
+        elif orientation == Qt.Vertical:
+            return str(section + 1)
 
-        def setData(self, index, values, role=Qt.EditRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._compositions)):
-                return False
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.ItemIsEnabled
 
-            row = index.row()
-            column = index.column()
-            self._compositions[row][column].clear()
-            self._compositions[row][column].extend(values)
+        return Qt.ItemFlags(QAbstractTableModel.flags(self, index) |
+                            Qt.ItemIsEditable)
 
-            self.dataChanged.emit(index, index)
-            return True
+    def setData(self, index, values, role=Qt.EditRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._compositions)):
+            return False
 
-        def insertRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginInsertRows(QModelIndex(), row, row + count - 1)
+        row = index.row()
+        column = index.column()
+        self._compositions[row][column].clear()
+        self._compositions[row][column].extend(values)
 
-            for _ in range(count):
-                self._compositions.insert(row, ([], []))
+        self.dataChanged.emit(index, index)
+        return True
 
-            self.endInsertRows()
-            return True
+    def insertRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginInsertRows(QModelIndex(), row, row + count - 1)
 
-        def removeRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginRemoveRows(QModelIndex(), row, row + count - 1)
+        for _ in range(count):
+            self._compositions.insert(row, ([], []))
 
-            for index in reversed(range(row, row + count)):
-                self._compositions.pop(index)
+        self.endInsertRows()
+        return True
 
-            self.endRemoveRows()
-            return True
+    def removeRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginRemoveRows(QModelIndex(), row, row + count - 1)
 
-        def compositions(self):
-            rows = []
-            for zs, fractions in self._compositions:
-                if not fractions:
-                    fractions = '?'
-                rows.append(product(zs, fractions))
+        for index in reversed(range(row, row + count)):
+            self._compositions.pop(index)
 
-            return [dict(c) for c in product(*rows)]
+        self.endRemoveRows()
+        return True
 
-    class _CompositionDelegate(QItemDelegate):
+    def compositions(self):
+        rows = []
+        for zs, fractions in self._compositions:
+            if not fractions:
+                fractions = '?'
+            rows.append(product(zs, fractions))
 
-        def __init__(self, parent=None):
-            QItemDelegate.__init__(self, parent)
+        return [dict(c) for c in product(*rows)]
 
-        def createEditor(self, parent, option, index):
-            column = index.column()
-            if column == 0:
-                return None
-            elif column == 1:
-                editor = MultiNumericalLineEdit(parent)
-                editor.setValidator(MaterialDialog._FractionValidator())
-                return editor
+class _CompositionDelegate(QItemDelegate):
 
-        def setEditorData(self, editor, index):
-            text = index.model().data(index, Qt.DisplayRole)
-            column = index.column()
-            if column == 1:
-                if text != '?':
-                    editor.setText(text)
+    def __init__(self, parent=None):
+        QItemDelegate.__init__(self, parent)
 
-        def setModelData(self, editor, model, index):
-            column = index.column()
-            if column == 1:
-                if not editor.hasAcceptableInput():
-                    return
-                try:
-                    values = editor.values()
-                except:
-                    return
-                model.setData(index, values)
+    def createEditor(self, parent, option, index):
+        column = index.column()
+        if column == 0:
+            return None
+        elif column == 1:
+            editor = MultiNumericalLineEdit(parent)
+            editor.setValidator(_FractionValidator())
+            return editor
+
+    def setEditorData(self, editor, index):
+        text = index.model().data(index, Qt.DisplayRole)
+        column = index.column()
+        if column == 1:
+            if text != '?':
+                editor.setText(text)
+
+    def setModelData(self, editor, model, index):
+        column = index.column()
+        if column == 1:
+            if not editor.hasAcceptableInput():
+                return
+            try:
+                values = editor.values()
+            except:
+                return
+            model.setData(index, values)
+
+class MaterialDialog(QDialog):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
@@ -224,7 +224,7 @@ class MaterialDialog(QDialog):
 
     def _initUI(self):
         # Variables
-        model = self._CompositionModel()
+        model = _CompositionModel()
 
         # Actions
         act_add_element = QAction(getIcon("list-add"), "Add element", self)
@@ -240,14 +240,14 @@ class MaterialDialog(QDialog):
 
         self._txt_density = NumericalLineEdit()
         self._txt_density.setEnabled(False)
-        self._txt_density.setValidator(self._DensityValidator())
+        self._txt_density.setValidator(_DensityValidator())
 
         self._chk_density_user = QCheckBox('user defined')
         self._chk_density_user.setChecked(False)
 
         self._tbl_composition = QTableView()
         self._tbl_composition.setModel(model)
-        self._tbl_composition.setItemDelegate(self._CompositionDelegate())
+        self._tbl_composition.setItemDelegate(_CompositionDelegate())
         header = self._tbl_composition.horizontalHeader()
         header.setResizeMode(QHeaderView.Stretch)
         header.setStyleSheet('color: blue')
@@ -265,7 +265,7 @@ class MaterialDialog(QDialog):
             label.setStyleSheet("color: blue")
             txt_energy = MultiNumericalLineEdit()
             txt_energy.setAccessibleName(str(particle))
-            txt_energy.setValidator(self._AbsorptionEnergyValidator())
+            txt_energy.setValidator(_AbsorptionEnergyValidator())
             cb_unit = UnitComboBox('eV')
             self._wdg_abs_energies[particle] = (label, txt_energy, cb_unit)
 
@@ -537,91 +537,92 @@ class MaterialDialog(QDialog):
             all(map(lambda w: w[1].isReadOnly() and not w[2].isEnabled(),
                     self._wdg_abs_energies.values()))
 
-class MaterialListWidget(_ParameterWidget):
+class _MaterialModel(QAbstractTableModel):
 
-    class _MaterialModel(QAbstractTableModel):
+    def __init__(self):
+        QAbstractTableModel.__init__(self)
+        self._materials = []
 
-        def __init__(self):
-            QAbstractTableModel.__init__(self)
-            self._materials = []
+    def rowCount(self, *args, **kwargs):
+        return len(self._materials)
 
-        def rowCount(self, *args, **kwargs):
-            return len(self._materials)
+    def columnCount(self, *args, **kwargs):
+        return 1
 
-        def columnCount(self, *args, **kwargs):
-            return 1
-
-        def data(self, index, role=Qt.DisplayRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._materials)):
-                return None
-
-            if role == Qt.TextAlignmentRole:
-                return Qt.AlignCenter
-
-            if role != Qt.DisplayRole:
-                return None
-
-            material = self._materials[index.row()]
-            if material is None:
-                return ''
-            return material.name
-
-        def headerData(self, section , orientation, role):
-            if role != Qt.DisplayRole:
-                return None
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._materials)):
             return None
 
-        def flags(self, index):
-            if not index.isValid():
-                return Qt.ItemIsEnabled
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
 
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index))
+        if role != Qt.DisplayRole:
+            return None
 
-        def setData(self, index, value, role=Qt.EditRole):
-            if not index.isValid() or \
-                    not (0 <= index.row() < len(self._materials)):
-                return False
+        material = self._materials[index.row()]
+        if material is None:
+            return ''
+        return material.name
 
-            row = index.row()
-            self._materials[row] = value
+    def headerData(self, section , orientation, role):
+        if role != Qt.DisplayRole:
+            return None
+        return None
 
-            self.dataChanged.emit(index, index)
-            return True
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.ItemIsEnabled
 
-        def insertRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginInsertRows(QModelIndex(), row, row + count - 1)
+        return Qt.ItemFlags(QAbstractTableModel.flags(self, index))
 
-            for _ in range(count):
-                self._materials.insert(row, None)
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid() or \
+                not (0 <= index.row() < len(self._materials)):
+            return False
 
-            self.endInsertRows()
-            return True
+        row = index.row()
+        self._materials[row] = value
 
-        def removeRows(self, row, count=1, parent=None):
-            if parent is None:
-                parent = QModelIndex()
-            self.beginRemoveRows(QModelIndex(), row, row + count - 1)
+        self.dataChanged.emit(index, index)
+        return True
 
-            for index in reversed(range(row, row + count)):
-                self._materials.pop(index)
+    def insertRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginInsertRows(QModelIndex(), row, row + count - 1)
 
-            self.endRemoveRows()
-            return True
+        for _ in range(count):
+            self._materials.insert(row, None)
 
-        def material(self, index):
-            return self._materials[index.row()]
+        self.endInsertRows()
+        return True
 
-        def materials(self):
-            return list(self._materials)
+    def removeRows(self, row, count=1, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+        self.beginRemoveRows(QModelIndex(), row, row + count - 1)
+
+        for index in reversed(range(row, row + count)):
+            self._materials.pop(index)
+
+        self.endRemoveRows()
+        return True
+
+    def material(self, index):
+        return self._materials[index.row()]
+
+    def materials(self):
+        return list(self._materials)
+
+class MaterialListWidget(_ParameterWidget):
 
     def __init__(self, parameter, parent=None):
         _ParameterWidget.__init__(self, parameter, parent)
 
         # Variables
-        model = self._MaterialModel()
+        model = _MaterialModel()
+        self._dialog = MaterialDialog()
 
         # Actions
         act_add = QAction(getIcon("list-add"), "Add material", self)
@@ -678,25 +679,23 @@ class MaterialListWidget(_ParameterWidget):
         model = self._lst_materials.model()
         material = model.material(index)
 
-        dialog = MaterialDialog()
-        dialog.setValue(material)
-        dialog.setReadOnly(self.isReadOnly())
-        if not dialog.exec_():
+        self.dialog().setValue(material)
+        self.dialog().setReadOnly(self.isReadOnly())
+        if not self.dialog().exec_():
             return
 
         row = index.row()
-        materials = dialog.values()
+        materials = self.dialog().values()
         model.removeRow(row)
         self._insertMaterials(row, materials)
 
     def _onAdd(self):
         row = self._lst_materials.selectionModel().currentIndex().row() + 1
 
-        dialog = MaterialDialog()
-        if not dialog.exec_():
+        if not self.dialog().exec_():
             return
 
-        materials = dialog.values()
+        materials = self.dialog().values()
         self._insertMaterials(row, materials)
 
     def _onRemove(self):
@@ -723,6 +722,12 @@ class MaterialListWidget(_ParameterWidget):
 
     def setReadOnly(self, state):
         self._tlb_materials.setVisible(not state)
+
+    def dialog(self):
+        return self._dialog
+
+    def setDialog(self, dialog):
+        self._dialog = dialog
 
 class MaterialListDialog(QDialog):
 
@@ -757,6 +762,12 @@ class MaterialListDialog(QDialog):
     def setReadOnly(self, state):
         self._lst_materials.setReadOnly(state)
 
+    def dialog(self):
+        return self._lst_materials.dialog()
+
+    def setDialog(self, dialog):
+        self._lst_materials.setDialog(dialog)
+
 def __run():
     import sys
     from PySide.QtGui import QApplication, QMainWindow
@@ -766,14 +777,14 @@ def __run():
 
     app = QApplication(sys.argv)
 
-    dialog = MaterialDialog(None)
-    dialog.setValue(material)
-    if dialog.exec_():
-        print(dialog.values())
+#    dialog = MaterialDialog(None)
+#    dialog.setValue(material)
+#    if dialog.exec_():
+#        print(dialog.values())
 
-#    dialog = MaterialListDialog()
-#    dialog.setValues([material])
-#    dialog.show()
+    dialog = MaterialListDialog()
+    dialog.setValues([material])
+    dialog.show()
 
 #    window = QMainWindow()
 #    window.setCentralWidget(widget)
