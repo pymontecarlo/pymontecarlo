@@ -96,6 +96,12 @@ class ParticleWidget(_ParameterWidget):
         for widget in self._widgets.values():
             widget.setEnabled(not state)
 
+    def setParticleEnabled(self, particle, state):
+        self._widgets[particle].setEnabled(state)
+
+    def isParticleEnabled(self, particle):
+        return self._widgets[particle].isEnabled()
+
 class OriginWidget(_ParameterWidget):
 
     def __init__(self, parameter, parent=None):
@@ -347,6 +353,12 @@ class PencilBeamWidget(_BeamWidget):
         self._lbl_origin.setStyleSheet(style)
         self._lbl_direction.setStyleSheet(style)
         self._lbl_aperture.setStyleSheet(style)
+
+    def setParticleEnabled(self, particle, state):
+        self._wdg_particle.setParticleEnabled(particle, state)
+
+    def isParticleEnabled(self, particle):
+        return self._wdg_particle.isParticleEnabled(particle)
 
 class GaussianBeamWidget(PencilBeamWidget):
 
