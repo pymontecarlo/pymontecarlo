@@ -581,7 +581,9 @@ class RunnerDialog(QDialog):
         settings = get_settings()
         section = settings.add_section('gui')
 
-        section.outputdir = self._txt_outputdir.path()
+        path = self._txt_outputdir.path()
+        if path:
+            section.outputdir = path
         section.maxworkers = str(self._spn_workers.value())
         section.overwrite = str(self._chk_overwrite.isChecked())
 
