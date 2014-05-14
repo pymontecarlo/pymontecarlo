@@ -60,7 +60,8 @@ class ParameterizedMetaclass(type):
 
 class Parameter(object):
 
-    def __init__(self, dtype=object, validators=None, fields=None, doc=None):
+    def __init__(self, dtype=object, validators=None, fields=None,
+                 required=True, doc=None):
         self._dtype = np.dtype(dtype)
         if self._dtype.hasobject:
             self._dtype = np.dtype(dtype, metadata={'class': dtype})
@@ -76,6 +77,8 @@ class Parameter(object):
         if fields is None:
             fields = []
         self._fields = fields
+
+        self._required = required
 
         self.__doc__ = doc
 
@@ -152,6 +155,10 @@ class Parameter(object):
     def validate(self, values):
         if not hasattr(values, '__iter__'):
             values = [values]
+
+        if self.is_required() and len(values) == 0:
+            raise ValueError('%s is required and no values are provided' % self.name)
+
         for value in values:
             for validator in self._validators:
                 validator(value)
@@ -164,6 +171,9 @@ class Parameter(object):
 
     def has_field(self):
         return len(self._fields) > 0
+
+    def is_required(self):
+        return self._required
 
     @property
     def name(self):
@@ -200,6 +210,9 @@ class Alias(object):
 
     def has_field(self):
         return self._alias.has_field()
+
+    def is_required(self):
+        return self._alias.is_required()
 
     def freeze(self, obj):
         self._alias.freeze(obj)
@@ -284,8 +297,8 @@ class AngleParameter(Parameter):
 
     """
 
-    def __init__(self, validators=None, fields=None, doc=None):
-        Parameter.__init__(self, np.float, validators, fields, doc)
+    def __init__(self, validators=None, fields=None, required=True, doc=None):
+        Parameter.__init__(self, np.float, validators, fields, required, doc)
 
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)
@@ -325,8 +338,8 @@ class UnitParameter(Parameter):
                  ('Z', 1e21), # zetta
                  ('Y', 1e24)] # yotta
 
-    def __init__(self, unit, validators=None, fields=None, doc=None):
-        Parameter.__init__(self, float, validators, fields, doc)
+    def __init__(self, unit, validators=None, fields=None, required=True, doc=None):
+        Parameter.__init__(self, float, validators, fields, required, doc)
         self._unit = unit
 
     def _new(self, cls, clsname, bases, methods, name):
@@ -362,8 +375,8 @@ class TimeParameter(Parameter):
                 'hr': 3600.0,
                 'min': 60.0}
 
-    def __init__(self, validators=None, fields=None, doc=None):
-        Parameter.__init__(self, np.float, validators, fields, doc)
+    def __init__(self, validators=None, fields=None, required=True, doc=None):
+        Parameter.__init__(self, np.float, validators, fields, required, doc)
 
     def _new(self, cls, clsname, bases, methods, name):
         parameter = methods.pop(name)

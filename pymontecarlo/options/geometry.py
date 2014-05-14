@@ -258,8 +258,10 @@ class _HorizontalSubstrateBody(_SubstrateBody):
 
 class HorizontalLayers(_Geometry):
 
-    substrate = Parameter(_HorizontalSubstrateBody, doc="Body of the substrate")
-    layers = Parameter(_HorizontalLayer, doc="Layers from top to bottom")
+    substrate = Parameter(_HorizontalSubstrateBody, required=False,
+                          doc="Body of the substrate")
+    layers = Parameter(_HorizontalLayer, required=False,
+                       doc="Layers from top to bottom")
 
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, rotation_rad=0.0):
@@ -399,7 +401,8 @@ class VerticalLayers(_Geometry):
                                doc="Body of left side")
     right_substrate = Parameter(_VerticalRightSubstrateBody,
                                 doc="Body of right side")
-    layers = Parameter(_VerticalLayer, doc="Layers from left to right")
+    layers = Parameter(_VerticalLayer, required=False,
+                       doc="Layers from left to right")
     depth = UnitParameter("m", range_validator(0.0, inclusive=False),
                           doc="Depth (z thickness)")
 
