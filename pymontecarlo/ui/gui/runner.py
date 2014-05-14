@@ -263,8 +263,6 @@ class RunnerDialog(QDialog):
         # Runner
         self._runner = None
 
-        self._running_count = 0
-
         self._running_timer = QTimer()
         self._running_timer.setInterval(500)
 
@@ -523,6 +521,7 @@ class RunnerDialog(QDialog):
         self._runner.options_simulated.connect(self._onOptionsSimulated)
         self._runner.options_error.connect(self._onOptionsError)
 
+        self._running_timer.start()
         self._runner.start()
 
     def _onCancel(self):
@@ -555,20 +554,12 @@ class RunnerDialog(QDialog):
         self._tbl_options.model().addOptions(options)
 
     def _onOptionsRunning(self, options):
-        self._running_count += 1
-        self._running_timer.start()
         self._tbl_options.model().resetOptions(options)
 
     def _onOptionsSimulated(self, options):
-        self._running_count -= 1
-        if self._running_count == 0:
-            self._running_timer.stop()
         self._tbl_options.model().resetOptions(options)
 
     def _onOptionsError(self, options, ex):
-        self._running_count -= 1
-        if self._running_count == 0:
-            self._running_timer.stop()
         self._tbl_options.model().resetOptions(options)
 
     def closeEvent(self, event):
