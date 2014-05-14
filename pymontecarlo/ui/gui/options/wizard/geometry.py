@@ -142,5 +142,5 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
         try:
             return len(expand(self._wdg_geometry.currentWidget().value()))
         except:
-            return 1
+            return 0
 

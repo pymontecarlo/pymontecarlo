@@ -122,4 +122,4 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
         try:
             return len(expand(self._wdg_beam.currentWidget().value()))
         except:
-            return 1
+            return 0

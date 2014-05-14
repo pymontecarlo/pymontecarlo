@@ -455,6 +455,9 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
         return True
 
     def expandCount(self):
+        if self._tbl_detector.model().rowCount() == 0:
+            return 0
+
         try:
             count = 1
 
@@ -465,5 +468,5 @@ class DetectorWizardPage(_ExpandableOptionsWizardPage):
 
             return count
         except:
-            return 1
+            return 0
 

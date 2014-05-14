@@ -35,11 +35,13 @@ from pkg_resources import iter_entry_points
 class SimulationCountLabel(QLabel):
 
     def setValue(self, value):
-        if value > 1:
-            text = '%i simulations defined'
+        if value == 0:
+            text = 'No simulation defined'
+        elif value > 1:
+            text = '%i simulations defined' % value
         else:
-            text = '%i simulation defined'
-        QLabel.setText(self, text % value)
+            text = '%i simulation defined' % value
+        QLabel.setText(self, text)
 
     def value(self):
         return int(QLabel.text(self).split(' ')[0])
@@ -98,13 +100,17 @@ class _ExpandableOptionsWizardPage(_OptionsWizardPage):
         self.valueChanged.connect(self._onChanged)
 
     def _onChanged(self):
-        wizard = self.parent().parent().parent()
+        pageids = set(self.wizard().visitedPages())
+        pageids.add(self.wizard().currentId())
+
+        if not pageids:
+            return 0
 
         count = 1
-        for pageid in wizard.pageIds():
-            page = wizard.page(pageid)
+        for pageid in pageids:
+            page = self.wizard().page(pageid)
             if hasattr(page, 'expandCount'):
-                count *= wizard.page(pageid).expandCount()
+                count *= page.expandCount()
 
         self._lbl_count.setValue(count)
 

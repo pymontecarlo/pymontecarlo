@@ -382,6 +382,9 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
         return True
 
     def expandCount(self):
+        if self._tbl_limit.model().rowCount() == 0:
+            return 0
+
         try:
             count = 1
 
@@ -390,4 +393,4 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
 
             return count
         except:
-            return 1
+            return 0

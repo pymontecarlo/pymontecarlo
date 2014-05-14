@@ -281,4 +281,4 @@ class ModelWizardPage(_ExpandableOptionsWizardPage):
 
             return count
         except:
-            return 1
+            return 0
