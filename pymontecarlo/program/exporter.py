@@ -25,7 +25,7 @@ from abc import ABCMeta, abstractmethod
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.expander import Expander
+from pymontecarlo.util.expander import OptionsExpander
 
 # Globals and constants variables.
 
@@ -41,7 +41,7 @@ class Exporter(object, metaclass=ABCMeta):
     """
 
     def __init__(self):
-        self._expander = Expander()
+        self._expander = OptionsExpander()
 
         self._beam_exporters = {}
         self._geometry_exporters = {}
