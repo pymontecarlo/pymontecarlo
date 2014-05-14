@@ -25,6 +25,7 @@ from copy import deepcopy
 from collections import MutableSet
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
 from pymontecarlo.options.beam import _Beam, GaussianBeam
@@ -174,10 +175,9 @@ class Options(object, metaclass=ParameterizedMetaclass):
         self.geometry = Substrate(Material.pure(79)) # Au substrate
 
         # Hack because numpy converts MutableMapping to empty array
-        detectors = _Detectors(_Detector)
-        detectors['dummy'] = _Detector()
-        self.detectors = detectors
-        del self.detectors['dummy']
+        detectors = np.ndarray((1,), np.dtype(_Detectors))
+        detectors[0] = _Detectors(_Detector)
+        self.__dict__['detectors'] = detectors
 
         self.limits = _Limits(_Limit)
         self.models = _Models(Model)
