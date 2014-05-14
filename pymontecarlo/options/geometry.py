@@ -254,6 +254,8 @@ class _HorizontalLayer(_Layer):
 
 class _HorizontalSubstrateBody(_SubstrateBody):
 
+    material = Parameter(Material, required=False, doc="Material of this body")
+
     @property
     def zmax_m(self):
         layers = np.array(self.geometry.layers, ndmin=1)
@@ -261,10 +263,9 @@ class _HorizontalSubstrateBody(_SubstrateBody):
 
 class HorizontalLayers(_Geometry):
 
-    substrate = Parameter(_HorizontalSubstrateBody, required=False,
+    substrate = Parameter(_HorizontalSubstrateBody,
                           doc="Body of the substrate")
-    layers = Parameter(_Layers, required=False,
-                       doc="Layers from top to bottom")
+    layers = Parameter(_Layers, doc="Layers from top to bottom")
 
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, rotation_rad=0.0):
@@ -281,7 +282,7 @@ class HorizontalLayers(_Geometry):
         _Geometry.__init__(self, tilt_rad, rotation_rad)
 
         if not substrate_material:
-            substrate_material = VACUUM
+            substrate_material = []
         self.substrate = _HorizontalSubstrateBody(self, substrate_material)
 
         # Hack because numpy converts MutableSequence to array
@@ -305,7 +306,10 @@ class HorizontalLayers(_Geometry):
         """
         Returns ``True`` if a substrate material has been defined.
         """
-        return self.substrate.material is not VACUUM
+        if self.substrate.material is VACUUM:
+            return False
+        substrate = np.array(self.substrate.material, ndmin=1)
+        return len(substrate) > 0
 
     def add_layer(self, material, thickness_m):
         """
@@ -403,8 +407,7 @@ class VerticalLayers(_Geometry):
                                doc="Body of left side")
     right_substrate = Parameter(_VerticalRightSubstrateBody,
                                 doc="Body of right side")
-    layers = Parameter(_Layers, required=False,
-                       doc="Layers from left to right")
+    layers = Parameter(_Layers, doc="Layers from left to right")
     depth = UnitParameter("m", range_validator(0.0, inclusive=False),
                           doc="Depth (z thickness)")
 
