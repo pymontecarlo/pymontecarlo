@@ -199,6 +199,7 @@ class Material(object):
             No wildcard are accepted.
         :type composition: :class:`dict`
         """
+        composition = Material.calculate_composition(composition)
         composition_atomic = Material.calculate_composition_atomic(composition)
 
         symbols = []
