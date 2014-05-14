@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 import copy
 import operator
 from operator import itemgetter
-from collections import MutableMapping, MutableSet
+from collections import MutableMapping, MutableSet, MutableSequence
 
 # Third party modules.
 import numpy as np
@@ -543,6 +543,66 @@ class ParameterizedMutableSet(MutableSet):
         for item in items:
             self.add(item)
 
+class ParameterizedMutableSequence(MutableSequence):
+
+    def __init__(self, *parameter_args, **parameter_kwargs):
+        self._parameter_args = parameter_args
+        self._parameter_kwargs = parameter_kwargs
+        self._parameter_keys = []
+        self.__parameters__ = {}
+
+    def __repr__(self):
+        valstr = ', '.join(map(str, self))
+        return '<%s(%s)>' % (self.__class__.__name__, valstr)
+
+    def __str__(self):
+        return str(list(self))
+
+    def __len__(self):
+        return len(self.__parameters__)
+
+    def __iter__(self):
+        for key in self._parameter_keys:
+            yield self.__parameters__[key].__get__(self)
+
+    def __contains__(self, item):
+        return self._get_key(item) in self._parameter_keys
+
+    def __setitem__(self, index, item):
+        oldkey = self._parameter_keys[index]
+        parameter = self.__parameters__.pop(oldkey)
+
+        newkey = self._get_key(item)
+        self._parameter_keys[index] = newkey
+        parameter.__set__(self, item)
+        parameter._name = newkey
+        self.__parameters__[newkey] = parameter
+
+    def __getitem__(self, index):
+        key = self._parameter_keys[index]
+        return self.__parameters__[key].__get__(self)
+
+    def __delitem__(self, index):
+        key = self._parameter_keys.pop(index)
+        del self._parameter_keys[key]
+
+    def _get_key(self, item):
+        return str(hash(item))
+
+    def insert(self, index, item):
+        try:
+            key = self._parameter_keys[index]
+        except IndexError:
+            key = self._get_key(item)
+            parameter = Parameter(*self._parameter_args, **self._parameter_kwargs)
+            parameter._name = key
+            self.__parameters__[key] = parameter
+            self._parameter_keys.insert(index, key)
+        else:
+            parameter = self.__parameters__[key]
+
+        parameter.__set__(self, item)
+
 def iter_parameters(obj):
     """
     Recursively iterates over all parameters defined in the specified object.
@@ -555,7 +615,10 @@ def iter_parameters(obj):
     :arg obj: object containing parameters
     """
     for name, parameter in getattr(obj, '__parameters__', {}).items():
-        subobj = getattr(obj, name, None)
+        try:
+            subobj = parameter.__get__(obj) # getattr(obj, name, None)
+        except AttributeError:
+            subobj = None
         if subobj is not None:
             yield from iter_parameters(subobj)
         yield obj, name, parameter

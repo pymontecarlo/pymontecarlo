@@ -20,6 +20,7 @@ from pymontecarlo.util.parameter import \
     (ParameterizedMetaclass, Parameter, Alias,
      AngleParameter, UnitParameter, TimeParameter,
      ParameterizedMutableMapping, ParameterizedMutableSet,
+     ParameterizedMutableSequence,
      range_validator, enum_validator,
      iter_parameters, iter_values,
      freeze, expand)
@@ -310,6 +311,15 @@ class TestParameter(unittest.TestCase):
         self.assertEqual(len(self.obj.__parameters__) + 1,
                          len(list(iter_parameters(self.obj))))
         self.assertEqual(1, len(list(iter_values(self.obj))))
+
+    def testparametrized_mutable_sequence(self):
+        s = ParameterizedMutableSequence()
+        s.append((4.0, 5.0))
+        self.obj.param1 = s
+
+        self.assertEqual(len(self.obj.__parameters__),
+                         len(list(iter_parameters(self.obj))))
+        self.assertEqual(2, len(list(iter_values(self.obj))))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
