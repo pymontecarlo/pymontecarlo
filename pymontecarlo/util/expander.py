@@ -31,7 +31,7 @@ from pymontecarlo.util.parameter import Expander as _Expander
 
 # Globals and constants variables.
 
-class Expander(_Expander):
+class OptionsExpander(_Expander):
     """
     Special expander for the options to automatically generate a meaningful
     name for each options based on the varied parameter.
@@ -58,7 +58,7 @@ class Expander(_Expander):
 
         return opss
 
-class ExpanderSingleDetector(Expander):
+class OptionsExpanderSingleDetector(OptionsExpander):
     """
     Further expansion to to ensure that there is only one type of detector
     per options.
@@ -71,12 +71,12 @@ class ExpanderSingleDetector(Expander):
 
         :arg detector_classes: list of detector classes that should be unique
         """
-        Expander.__init__(self)
+        OptionsExpander.__init__(self)
 
         self._detector_classes = list(detector_classes) # copy
 
     def expand(self, obj):
-        list_options = Expander.expand(self, obj)
+        list_options = OptionsExpander.expand(self, obj)
 
         # Check detector duplicates
         for detector_class in self._detector_classes:
@@ -104,7 +104,7 @@ class ExpanderSingleDetector(Expander):
         return list_options
 
     def is_expandable(self, obj):
-        if Expander.is_expandable(self, obj):
+        if OptionsExpander.is_expandable(self, obj):
             return True
 
         for detector_class in self._detector_classes:
@@ -114,7 +114,7 @@ class ExpanderSingleDetector(Expander):
 
         return False
 
-class ExpanderSingleDetectorSameOpening(ExpanderSingleDetector):
+class OptionsExpanderSingleDetectorSameOpening(OptionsExpanderSingleDetector):
     """
     Further expansion to to ensure that there is only one type of detector
     per options and that the delimited detectors have the same opening.
@@ -128,12 +128,12 @@ class ExpanderSingleDetectorSameOpening(ExpanderSingleDetector):
 
         :arg detector_classes: list of detector classes that should be unique
         """
-        ExpanderSingleDetector.__init__(self, detector_classes)
+        OptionsExpanderSingleDetector.__init__(self, detector_classes)
 
         self._precision = precision
 
     def expand(self, obj):
-        list_options = ExpanderSingleDetector.expand(self, obj)
+        list_options = OptionsExpanderSingleDetector.expand(self, obj)
 
         for options in list(list_options):
             detectors = list(options.detectors.iterclass(_DelimitedDetector))
@@ -187,7 +187,7 @@ class ExpanderSingleDetectorSameOpening(ExpanderSingleDetector):
         return openings
 
     def is_expandable(self, obj):
-        if ExpanderSingleDetector.is_expandable(self, obj):
+        if OptionsExpanderSingleDetector.is_expandable(self, obj):
             return True
 
         detectors = list(obj.detectors.iterclass(_DelimitedDetector))

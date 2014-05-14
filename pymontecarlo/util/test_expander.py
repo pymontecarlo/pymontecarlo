@@ -18,7 +18,8 @@ from math import radians as d2r
 
 # Local modules.
 from pymontecarlo.util.expander import \
-    Expander, ExpanderSingleDetector, ExpanderSingleDetectorSameOpening
+    (OptionsExpander, OptionsExpanderSingleDetector,
+     OptionsExpanderSingleDetectorSameOpening)
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.detector import \
     (TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
@@ -26,7 +27,7 @@ from pymontecarlo.options.detector import \
 
 # Globals and constants variables.
 
-class TestExpander(unittest.TestCase):
+class TestOptionsExpander(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -34,7 +35,7 @@ class TestExpander(unittest.TestCase):
         self.ops = Options("op1")
         self.ops.beam.energy_eV = [5e3, 10e3, 15e3]
 
-        self.expander = Expander()
+        self.expander = OptionsExpander()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -54,7 +55,7 @@ class TestExpander(unittest.TestCase):
         self.ops.beam.energy_eV = [5e3]
         self.assertFalse(self.expander.is_expandable(self.ops))
 
-class TestExpanderSingleDetector(unittest.TestCase):
+class TestOptionsExpanderSingleDetector(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -64,8 +65,8 @@ class TestExpanderSingleDetector(unittest.TestCase):
         self.ops.detectors['det2a'] = ElectronFractionDetector()
         self.ops.detectors['det3'] = ShowersStatisticsDetector()
 
-        self.expander = ExpanderSingleDetector([TimeDetector,
-                                                ElectronFractionDetector])
+        self.expander = OptionsExpanderSingleDetector([TimeDetector,
+                                                       ElectronFractionDetector])
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
@@ -151,7 +152,7 @@ class TestExpanderSingleDetector(unittest.TestCase):
         self.ops.detectors['det2b'] = ElectronFractionDetector()
         self.assertTrue(self.expander.is_expandable(self.ops))
 
-class TestExpanderSingleDetectorSameOpening(unittest.TestCase):
+class TestOptionsExpanderSingleDetectorSameOpening(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -165,7 +166,7 @@ class TestExpanderSingleDetectorSameOpening(unittest.TestCase):
             PhotonDepthDetector((d2r(30.0), d2r(40.0)), (0.0, d2r(360.0)), 100)
         self.ops.detectors['det3'] = ShowersStatisticsDetector()
 
-        self.expander = ExpanderSingleDetectorSameOpening([])
+        self.expander = OptionsExpanderSingleDetectorSameOpening([])
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)

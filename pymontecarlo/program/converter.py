@@ -24,7 +24,7 @@ import warnings
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.expander import Expander
+from pymontecarlo.util.expander import OptionsExpander
 
 # Globals and constants variables.
 
@@ -60,7 +60,7 @@ class Converter(object):
     DEFAULT_MODELS = {}
 
     def __init__(self):
-        self._expander = Expander()
+        self._expander = OptionsExpander()
 
     def _warn(self, *messages):
         message = ' '.join(messages)
