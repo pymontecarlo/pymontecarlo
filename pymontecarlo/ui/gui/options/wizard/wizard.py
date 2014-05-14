@@ -26,6 +26,8 @@ from PySide.QtGui import QWizard
 # Local modules.
 from pymontecarlo.options.options import Options
 
+from pymontecarlo.settings import get_settings
+
 from pymontecarlo.ui.gui.options.wizard.name import NameWizardPage
 from pymontecarlo.ui.gui.options.wizard.program import ProgramWizardPage
 from pymontecarlo.ui.gui.options.wizard.beam import BeamWizardPage
@@ -50,6 +52,10 @@ class OptionsWizard(QWizard):
         if options is None:
             options = Options()
         self._options = options
+
+        settings = get_settings()
+        if not settings.get_programs():
+            raise RuntimeError('No programs are defined. Run the configuration first.')
 
         # Pages
         self.addPage(NameWizardPage(options))
