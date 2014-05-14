@@ -62,11 +62,13 @@ class BeamWizardPage(_ExpandableOptionsWizardPage):
         newindex = self._cb_beam.currentIndex()
         oldwidget = self._wdg_beam.currentWidget()
         newwidget = self._wdg_beam.widget(newindex)
+        if newwidget is None:
+            return
 
         try:
             newwidget.setValue(oldwidget.value())
         except:
-            pass
+            newwidget.setValue(self.options().beam)
 
         self._wdg_beam.setCurrentIndex(newindex)
 

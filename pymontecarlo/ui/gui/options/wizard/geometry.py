@@ -73,7 +73,7 @@ class GeometryWizardPage(_ExpandableOptionsWizardPage):
         try:
             newwidget.setValue(oldwidget.value())
         except:
-            pass
+            newwidget.setValue(self.options().geometry)
 
         self._wdg_geometry.setCurrentIndex(newindex)
 
