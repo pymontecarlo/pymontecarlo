@@ -102,10 +102,14 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
     @property
     def progress(self):
+        if self._worker is None:
+            return 0.0
         return self._worker.progress
 
     @property
     def status(self):
+        if self._worker is None:
+            return ''
         return self._worker.status
 
 class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
