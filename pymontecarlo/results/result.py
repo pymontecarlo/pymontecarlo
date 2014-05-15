@@ -40,6 +40,14 @@ class _Result(object):
     A result is a read-only class where results of a detector are stored.
     """
 
+class _SummarizableResult(_Result):
+
+    def get_summary(self):
+        raise NotImplementedError
+
+    def get_labels(self):
+        raise NotImplementedError
+
 class PhotonKey(object):
 
     PRIMARY = 'P'
@@ -120,7 +128,7 @@ def _create_photon_keys(results, transition, absorption, primary,
 
     return keys
 
-class PhotonIntensityResult(_Result):
+class PhotonIntensityResult(_SummarizableResult):
 
     def __init__(self, intensities=None):
         """
@@ -130,14 +138,16 @@ class PhotonIntensityResult(_Result):
             The keys should be :class:`.PhotonKey` and the values a tuple or
             array of length 2 containing the intensity and its uncertainty
         """
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         if intensities is None:
             intensities = {}
 
         self._intensities = {}
         for key, intensity in intensities.items():
-            self._intensities[key] = np.array([intensity])
+            intensity = np.array([intensity])
+            intensity.flags.writeable = False
+            self._intensities[key] = intensity
 
     def __contains__(self, transition):
         return self.has_intensity(transition)
@@ -330,7 +340,13 @@ class PhotonIntensityResult(_Result):
         for transition in self.iter_transitions():
             yield transition, self.intensity(transition, absorption, fluorescence)
 
-class PhotonSpectrumResult(_Result):
+    def get_summary(self):
+        return {str(k): v for k, v in self._intensities.items()}
+
+    def get_labels(self):
+        return ['Intensity', 'Uncertainty']
+
+class PhotonSpectrumResult(_SummarizableResult):
 
     def __init__(self, total, background):
         """
@@ -360,13 +376,13 @@ class PhotonSpectrumResult(_Result):
                 raise ValueError('The data must contains at least two columns')
             if data.shape[1] == 2:
                 data = np.append(data, np.zeros((data.shape[0], 1)), 1)
-
+            data.flags.writeable = False
             return data
 
         if not np.allclose(total[:, 0], background[:, 0]):
             raise ValueError('Energies are different for the total and background array')
 
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         self._total = _check(total)
         self._background = _check(background)
@@ -391,7 +407,7 @@ class PhotonSpectrumResult(_Result):
         bin in eV, the second, the total intensity in counts/(sr.eV.electron)
         and the third (optional), the uncertainty on the total intensity.
         """
-        return np.copy(self._total)
+        return self._total
 
     def get_background(self):
         """
@@ -399,7 +415,7 @@ class PhotonSpectrumResult(_Result):
         bin in eV, the second, the background intensity in counts/(sr.eV.electron)
         and the third (optional), the uncertainty on the background intensity.
         """
-        return np.copy(self._background)
+        return self._background
 
     def _get_intensity(self, energy_eV, data):
         """
@@ -443,7 +459,14 @@ class PhotonSpectrumResult(_Result):
         """
         return self._get_intensity(energy_eV, self._background)
 
-class _PhotonDistributionResult(_Result):
+    def get_labels(self):
+        return ['Energy (eV)', 'Intensity']
+
+    def get_summary(self):
+        return {'Total': self._total,
+                'Background': self._background}
+
+class _PhotonDistributionResult(_SummarizableResult):
 
     def __init__(self, distributions=None):
         """
@@ -457,7 +480,7 @@ class _PhotonDistributionResult(_Result):
               * intensities
               * (optional) uncertainties on the intensities
         """
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         if distributions is None:
             distributions = {}
@@ -469,6 +492,7 @@ class _PhotonDistributionResult(_Result):
             if distribution.shape[1] == 2:
                 distribution = np.append(distribution, np.zeros((distribution.shape[0], 1)), 1)
 
+            distribution.flags.writeable = False
             self._distributions[key] = distribution
 
     def exists(self, transition, absorption=True, fluorescence=True):
@@ -579,6 +603,9 @@ class _PhotonDistributionResult(_Result):
             distribution = self.get(transition, absorption, fluorescence)
             yield transition, distribution
 
+    def get_summary(self):
+        return {str(k): v for k, v in self._distributions.items()}
+
 class PhotonDepthResult(_PhotonDistributionResult):
 
     def exists(self, transition, absorption=True, fluorescence=True):
@@ -683,6 +710,9 @@ class PhotonDepthResult(_PhotonDistributionResult):
         """
         return _PhotonDistributionResult.iter_distributions(self, absorption, fluorescence)
 
+    def get_labels(self):
+        return ['Depth (m)', 'Intensity', 'Uncertainty']
+
 class PhotonRadialResult(_PhotonDistributionResult):
 
     def exists(self, transition, absorption=True, fluorescence=True):
@@ -770,7 +800,10 @@ class PhotonRadialResult(_PhotonDistributionResult):
         """
         return _PhotonDistributionResult.iter_distributions(self, absorption, fluorescence)
 
-class TimeResult(_Result):
+    def get_labels(self):
+        return ['Radius (m)', 'Intensity', 'Uncertainty']
+
+class TimeResult(_SummarizableResult):
 
     def __init__(self, simulation_time_s=0.0, simulation_speed_s=(0.0, 0.0)):
         """
@@ -780,13 +813,20 @@ class TimeResult(_Result):
         :arg simulation_speed_s: time to simulation one electron (in seconds) and
             its uncertainty
         """
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         self._simulation_time_s = simulation_time_s
 
         if len(simulation_speed_s) != 2:
             raise ValueError("Simulation speed must be a tuple (value, uncertainty)")
         self._simulation_speed_s = simulation_speed_s
+
+    def get_summary(self):
+        return {'Time': np.array([self.simulation_time_s, 0.0]),
+                'Speed': np.array(self._simulation_speed_s)}
+
+    def get_labels(self):
+        return ['Value', 'Uncertainty']
 
     @property
     def simulation_time_s(self):
@@ -796,7 +836,7 @@ class TimeResult(_Result):
     def simulation_speed_s(self):
         return self._simulation_speed_s
 
-class ShowersStatisticsResult(_Result):
+class ShowersStatisticsResult(_SummarizableResult):
 
     def __init__(self, showers=0):
         """
@@ -804,20 +844,26 @@ class ShowersStatisticsResult(_Result):
 
         :arg showers: number of simulated particles
         """
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         self._showers = int(showers)
+
+    def get_summary(self):
+        return {'Showers': np.array([self.showers])}
+
+    def get_labels(self):
+        return ['Value']
 
     @property
     def showers(self):
         return self._showers
 
-class ElectronFractionResult(_Result):
+class ElectronFractionResult(_SummarizableResult):
 
     def __init__(self, absorbed=(0.0, 0.0),
                         backscattered=(0.0, 0.0),
                         transmitted=(0.0, 0.0)):
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         if len(absorbed) != 2:
             raise ValueError("Absorbed fraction must be a tuple (value, uncertainty)")
@@ -830,6 +876,14 @@ class ElectronFractionResult(_Result):
         if len(transmitted) != 2:
             raise ValueError("Transmitted fraction must be a tuple (value, uncertainty)")
         self._transmitted = transmitted
+
+    def get_summary(self):
+        return {'Absorbed': np.array(self.absorbed),
+                'Backscattered': np.array(self.backscattered),
+                'Transmitted': np.array(self.transmitted)}
+
+    def get_labels(self):
+        return ['Fraction', 'Uncertainty']
 
     @property
     def absorbed(self):
@@ -1001,7 +1055,7 @@ class TrajectoryResult(_Result, Iterable, Sized):
 
             yield trajectory
 
-class _ChannelsResult(_Result):
+class _ChannelsResult(_SummarizableResult):
 
     def __init__(self, data):
         """
@@ -1012,14 +1066,14 @@ class _ChannelsResult(_Result):
             density and the third (optional), the uncertainty (3 sigma) on
             the probability density.
         """
-        _Result.__init__(self)
+        _SummarizableResult.__init__(self)
 
         if data.shape[1] < 2:
             raise ValueError('The data must contains at least two columns')
         if data.shape[1] == 2:
             data = np.append(data, np.zeros((data.shape[0], 1)), 1)
-
-        self._data = data
+        data.flags.writeable = False
+        self._data = np.copy(data)
 
     def __iter__(self):
         return iter(self._data)
@@ -1028,7 +1082,10 @@ class _ChannelsResult(_Result):
         return len(self._data)
 
     def get_data(self):
-        return np.copy(self._data)
+        return self._data
+
+    def get_summary(self):
+        return {'Data': self._data}
 
 class BackscatteredElectronEnergyResult(_ChannelsResult):
     """
@@ -1040,7 +1097,9 @@ class BackscatteredElectronEnergyResult(_ChannelsResult):
         2. probability density (counts/(eV.electron))
         3. uncertainty of the probability density (counts/(eV.electron))
     """
-    pass
+
+    def get_labels(self):
+        return ['Energy (eV)', 'Probability density', 'Uncertainty']
 
 class TransmittedElectronEnergyResult(_ChannelsResult):
     """
@@ -1052,7 +1111,9 @@ class TransmittedElectronEnergyResult(_ChannelsResult):
         2. probability density (counts/(eV.electron))
         3. uncertainty of the probability density (counts/(eV.electron))
     """
-    pass
+
+    def get_labels(self):
+        return ['Energy (eV)', 'Probability density', 'Uncertainty']
 
 class BackscatteredElectronPolarAngularResult(_ChannelsResult):
     """
@@ -1064,7 +1125,9 @@ class BackscatteredElectronPolarAngularResult(_ChannelsResult):
         2. probability density (counts/(eV.electron))
         3. uncertainty of the probability density (counts/(eV.electron))
     """
-    pass
+
+    def get_labels(self):
+        return ['Angle (rad)', 'Probability density', 'Uncertainty']
 
 class BackscatteredElectronRadialResult(_ChannelsResult):
     """
@@ -1076,5 +1139,7 @@ class BackscatteredElectronRadialResult(_ChannelsResult):
         2. probability density, area normalized (counts/(eV.electron.m2))
         3. uncertainty of the probability density (counts/(eV.electron.m2))
     """
-    pass
+
+    def get_labels(self):
+        return ['Angle (rad)', 'Probability density', 'Uncertainty']
 
