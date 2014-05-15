@@ -19,36 +19,26 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
-import os
-import csv
 
 # Third party modules.
 from PySide.QtGui import \
-    (QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QToolBar,
-     QFileDialog, QSizePolicy, QAction, QToolBox, QCheckBox, QSplitter,
-     QComboBox, QFormLayout, QGroupBox, QTableView, QHeaderView,
-     QLineEdit)
-from PySide.QtCore import Qt, Signal, QAbstractTableModel, QAbstractListModel
+    (QApplication, QLabel, QVBoxLayout, QCheckBox, QComboBox, QFormLayout,
+     QGroupBox, QTableView, QHeaderView, QLineEdit)
+from PySide.QtCore import Qt, QAbstractTableModel, QAbstractListModel
 
 import numpy as np
 
 import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import \
-    (FigureCanvasQTAgg as FigureCanvas,
-     NavigationToolbar2QTAgg as NavigationToolbar)
 
 # Local modules.
 from pymontecarlo.util.human import camelcase_to_words, human_time
 import pymontecarlo.util.physics as physics
 
-from pymontecarlo.settings import get_settings
-
-from pymontecarlo.ui.gui.util.tango import getIcon
 from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
+from pymontecarlo.ui.gui.results.results import \
+    _BaseResultToolItem, _BaseResultWidget, _SaveableResultMixin, _FigureResultMixin
 from pymontecarlo.ui.gui.options.detector import \
     get_widget_class as get_detector_widget_class
 
@@ -56,29 +46,13 @@ from pymontecarlo.ui.gui.options.detector import \
 
 #--- Base widgets
 
-class _ResultToolItem(QWidget):
-
-    stateChanged = Signal()
+class _ResultToolItem(_BaseResultToolItem):
 
     def __init__(self, parent):
-        QWidget.__init__(self, parent)
-
-        # Variables
-        self._options = parent.options()
         self._key = parent.key()
         self._result = parent.result()
 
-        # Layouts
-        layout = QVBoxLayout()
-        layout.addLayout(self._initUI())
-        layout.addStretch()
-        self.setLayout(layout)
-
-    def _initUI(self):
-        return QFormLayout()
-
-    def options(self):
-        return self._options
+        _BaseResultToolItem.__init__(self, parent)
 
     def key(self):
         return self._key
@@ -101,72 +75,15 @@ class DetectorToolItem(_ResultToolItem):
 
         return layout
 
-class _ResultWidget(QWidget):
+class _ResultWidget(_BaseResultWidget):
 
     def __init__(self, key, result, options, parent=None):
-        QWidget.__init__(self, parent)
-
-        # Variables
-        self._options = options
         self._key = key
         self._result = result
 
-        # Widgets
-        lbl_key = QLabel(key)
-        font = lbl_key.font()
-        font.setBold(True)
-        font.setPointSize(14)
-        lbl_key.setFont(font)
-
-        lbl_class = QLabel(camelcase_to_words(result.__class__.__name__[:-6]))
-        font = lbl_class.font()
-        font.setItalic(True)
-        font.setPointSize(14)
-        lbl_class.setFont(font)
-
-        # Layouts
-        layout = QVBoxLayout()
-
-        sublayout = QHBoxLayout()
-        sublayout.addWidget(lbl_key)
-        sublayout.addStretch()
-        sublayout.addWidget(lbl_class)
-        layout.addLayout(sublayout)
-
-        wdglayout = QVBoxLayout()
-        wdglayout.addLayout(self._initUI(), 1)
-        wdglayout.addWidget(self._initToolbar())
-
-        toolbox = self._initToolbox()
-        if toolbox.count() == 0:
-            layout.addLayout(wdglayout)
-        else:
-            wdg_dummy = QWidget()
-            wdg_dummy.setLayout(wdglayout)
-
-            splitter = QSplitter()
-            splitter.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            splitter.addWidget(wdg_dummy)
-            splitter.addWidget(toolbox)
-            splitter.setCollapsible(0, False)
-            splitter.setCollapsible(1, True)
-            splitter.setStretchFactor(0, 3)
-            splitter.setStretchFactor(1, 1)
-            layout.addWidget(splitter)
-
-        self.setLayout(layout)
-
-    def _initUI(self):
-        return QVBoxLayout()
-
-    def _initToolbar(self):
-        return QToolBar()
-
-    def _initToolbox(self):
-        return QToolBox()
-
-    def options(self):
-        return self._options
+        _BaseResultWidget.__init__(self, options, parent)
+        self.setTitle(key)
+        self.setSubTitle(camelcase_to_words(result.__class__.__name__[:-6]))
 
     def key(self):
         return self._key
@@ -187,127 +104,18 @@ class UnknownResultWidget(_ResultWidget):
 
         return layout
 
-class _SaveableResultWidget(_ResultWidget):
+class _SaveableResultWidget(_SaveableResultMixin, _ResultWidget):
 
     def __init__(self, key, result, options, parent=None):
+        _SaveableResultMixin.__init__(self)
         _ResultWidget.__init__(self, key, result, options, parent)
 
-        self._save_namefilters = {}
-        self._save_methods = {}
-
-        self._register_save_method('CSV file', ('csv',), self._save_csv)
-
-    def _initToolbar(self):
-        toolbar = _ResultWidget._initToolbar(self)
-
-        # Actions
-        act_copy = toolbar.addAction(getIcon('edit-copy'), 'Copy')
-        act_save = toolbar.addAction(getIcon('document-save'), 'Save')
-
-        # Signals
-        act_copy.triggered.connect(self.copy)
-        act_save.triggered.connect(self.save)
-
-        return toolbar
-
-    def _register_save_method(self, ext_name, exts, method):
-        ext_text = ' '.join('*.' + ext for ext in exts)
-        namefilter = '%s [%s] (%s)' % (ext_name, ext_text, ext_text)
-        self._save_namefilters[namefilter] = exts
-        for ext in exts:
-            self._save_methods[ext] = method
-
-    def dump(self):
-        """
-        Dumps the result in a tabular format.
-        Returns a :class:`list` of :class`list`.
-        """
-        raise NotImplementedError
-
-    def copy(self, *args):
-        text = ''
-        for row in self.dump():
-            text += '\t'.join([str(item) for item in row]) + os.linesep
-
-        clipboard = QApplication.clipboard()
-        clipboard.setText(text)
-
-    def save(self):
-        settings = get_settings()
-        section = settings.add_section('gui')
-        curdir = getattr(section, 'savedir', os.getcwd())
-        namefilters = ';;'.join(sorted(self._save_namefilters.keys()))
-
-        filepath, namefilter = \
-            QFileDialog.getSaveFileName(self, "Save", curdir, namefilters)
-
-        if not filepath:
-            return
-        section.savedir = os.path.dirname(filepath)
-
-        exts = self._save_namefilters[namefilter]
-        if not any(filter(lambda ext: filepath.endswith(ext), exts)):
-            filepath += '.' + exts[0]
-
-        ext = os.path.splitext(filepath)[1][1:]
-        method = self._save_methods.get(ext)
-        print(method)
-        if method is not None:
-            method(filepath)
-
-    def _save_csv(self, filepath):
-        with open(filepath, 'w') as fp:
-            writer = csv.writer(fp)
-            writer.writerows(self.dump())
-
-class _FigureResultWidget(_SaveableResultWidget):
+class _FigureResultWidget(_FigureResultMixin, _SaveableResultWidget):
 
     def __init__(self, key, result, options, parent=None):
+        _FigureResultMixin.__init__(self)
         _SaveableResultWidget.__init__(self, key, result, options, parent)
-
-        for ext_name, exts in \
-                self._canvas.get_supported_filetypes_grouped().items():
-            self._register_save_method(ext_name, exts, self._canvas.print_figure)
-
         self._drawFigure()
-
-    def _createFigure(self):
-        raise NotImplementedError
-
-    def _drawFigure(self):
-        self._canvas.draw()
-
-    def _initUI(self):
-        # Variables
-        figure = self._createFigure()
-
-        # Widgets
-        self._canvas = FigureCanvas(figure)
-        self._canvas.setFocusPolicy(Qt.StrongFocus)
-        self._canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self._canvas.updateGeometry()
-
-        # Layouts
-        layout = _SaveableResultWidget._initUI(self)
-        layout.addWidget(self._canvas, 1)
-
-        return layout
-
-    def _initToolbar(self):
-        toolbar = NavigationToolbar(self._canvas, self.parent())
-
-        act_save = toolbar._actions['save_figure']
-
-        act_copy = QAction(getIcon('edit-copy'), 'Copy', toolbar)
-        toolbar.insertAction(act_save, act_copy)
-
-        # Signals
-        act_save.triggered.disconnect(toolbar.save_figure)
-        act_save.triggered.connect(self.save)
-
-        act_copy.triggered.connect(self.copy)
-
-        return toolbar
 
 #--- Result widgets
 
@@ -994,36 +802,36 @@ def __run():
 #    r = PhotonSpectrumResult(total, background)
 #    widget = PhotonSpectrumResultWidget("spectrum", r, ops)
 
-    t1 = Transition(29, 9, 4)
-    t2 = K_family(14)
-    t3 = Transition(29, siegbahn='La2')
-    intensities = {}
-    intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
-    intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
-    intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
-    intensities[PhotonKey(t1, False, PhotonKey.T)] = (6.0, 0.4)
-    intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
-    intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
-    intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
-    intensities[PhotonKey(t1, True, PhotonKey.T)] = (18.0, 0.8)
-    intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
-    intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
-    intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
-    intensities[PhotonKey(t2, False, PhotonKey.T)] = (36.0, 0.4)
-    intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
-    intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
-    intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
-    intensities[PhotonKey(t2, True, PhotonKey.T)] = (48.0, 0.8)
-    intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
-    intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
-    intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
-    intensities[PhotonKey(t3, False, PhotonKey.T)] = (66.0, 0.4)
-    intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
-    intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
-    intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
-    intensities[PhotonKey(t3, True, PhotonKey.T)] = (78.0, 0.8)
-    r = PhotonIntensityResult(intensities)
-    widget = PhotonIntensityResultWidget("intensity", r, ops)
+#    t1 = Transition(29, 9, 4)
+#    t2 = K_family(14)
+#    t3 = Transition(29, siegbahn='La2')
+#    intensities = {}
+#    intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
+#    intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
+#    intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
+#    intensities[PhotonKey(t1, False, PhotonKey.T)] = (6.0, 0.4)
+#    intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
+#    intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
+#    intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
+#    intensities[PhotonKey(t1, True, PhotonKey.T)] = (18.0, 0.8)
+#    intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
+#    intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
+#    intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
+#    intensities[PhotonKey(t2, False, PhotonKey.T)] = (36.0, 0.4)
+#    intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
+#    intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
+#    intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
+#    intensities[PhotonKey(t2, True, PhotonKey.T)] = (48.0, 0.8)
+#    intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
+#    intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
+#    intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
+#    intensities[PhotonKey(t3, False, PhotonKey.T)] = (66.0, 0.4)
+#    intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
+#    intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
+#    intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
+#    intensities[PhotonKey(t3, True, PhotonKey.T)] = (78.0, 0.8)
+#    r = PhotonIntensityResult(intensities)
+#    widget = PhotonIntensityResultWidget("intensity", r, ops)
 
 #    r = TimeResult(5.0, (1.0, 0.5))
 #    widget = TimeResultWidget("time", r, ops)
@@ -1034,29 +842,29 @@ def __run():
 #    r = ShowersStatisticsResult(6)
 #    widget = ShowersStatisticsResultWidget('showers', r, ops)
 
-#    t1 = Transition(29, 9, 4)
-#    distributions = {}
-#    gnf_zs = [1.0, 2.0, 3.0, 4.0]
-#    gnf_values = [0.0, 5.0, 4.0, 1.0]
-#    gnf_uncs = [0.01, 0.02, 0.03, 0.04]
-#    gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
-#    distributions[PhotonKey(t1, False, PhotonKey.P)] = gnf
-#    gt_zs = [1.0, 2.0, 3.0, 4.0]
-#    gt_values = [10.0, 15.0, 14.0, 11.0]
-#    gt_uncs = [0.11, 0.12, 0.13, 0.14]
-#    gt = np.array([gt_zs, gt_values, gt_uncs]).T
-#    distributions[PhotonKey(t1, False, PhotonKey.T)] = gt
-#    enf_zs = [1.0, 2.0, 3.0, 4.0]
-#    enf_values = [20.0, 25.0, 24.0, 21.0]
-#    enf = np.array([enf_zs, enf_values]).T
-#    distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
-#    et_zs = [1.0, 2.0, 3.0, 4.0]
-#    et_values = [30.0, 35.0, 34.0, 31.0]
-#    et_uncs = [0.31, 0.32, 0.33, 0.34]
-#    et = np.array([et_zs, et_values, et_uncs]).T
-#    distributions[PhotonKey(t1, True, PhotonKey.T)] = et
-#    r = PhotonDepthResult(distributions)
-#    widget = PhotonDepthResultWidget("photon-depth", r, ops)
+    t1 = Transition(29, 9, 4)
+    distributions = {}
+    gnf_zs = [1.0, 2.0, 3.0, 4.0]
+    gnf_values = [0.0, 5.0, 4.0, 1.0]
+    gnf_uncs = [0.01, 0.02, 0.03, 0.04]
+    gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
+    distributions[PhotonKey(t1, False, PhotonKey.P)] = gnf
+    gt_zs = [1.0, 2.0, 3.0, 4.0]
+    gt_values = [10.0, 15.0, 14.0, 11.0]
+    gt_uncs = [0.11, 0.12, 0.13, 0.14]
+    gt = np.array([gt_zs, gt_values, gt_uncs]).T
+    distributions[PhotonKey(t1, False, PhotonKey.T)] = gt
+    enf_zs = [1.0, 2.0, 3.0, 4.0]
+    enf_values = [20.0, 25.0, 24.0, 21.0]
+    enf = np.array([enf_zs, enf_values]).T
+    distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
+    et_zs = [1.0, 2.0, 3.0, 4.0]
+    et_values = [30.0, 35.0, 34.0, 31.0]
+    et_uncs = [0.31, 0.32, 0.33, 0.34]
+    et = np.array([et_zs, et_values, et_uncs]).T
+    distributions[PhotonKey(t1, True, PhotonKey.T)] = et
+    r = PhotonDepthResult(distributions)
+    widget = PhotonDepthResultWidget("photon-depth", r, ops)
 
     window.setCentralWidget(widget)
 
