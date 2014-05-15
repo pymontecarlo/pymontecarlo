@@ -26,7 +26,7 @@ from collections import Iterable, Sized
 # Third party modules.
 import numpy as np
 
-from pyxray.transition import from_string
+from pyxray.transition import from_string, transitionset
 
 # Local modules.
 
@@ -47,22 +47,48 @@ class _Result(object):
     A result is a read-only class where results of a detector are stored.
     """
 
-def create_intensity_dict(transition,
-                          gcf=(0.0, 0.0), gbf=(0.0, 0.0), gnf=(0.0, 0.0), gt=(0.0, 0.0),
-                          ecf=(0.0, 0.0), ebf=(0.0, 0.0), enf=(0.0, 0.0), et=(0.0, 0.0)):
-    return {transition: {
-                GENERATED: {
-                    CHARACTERISTIC: gcf,
-                    BREMSSTRAHLUNG: gbf,
-                    NOFLUORESCENCE: gnf,
-                    TOTAL: gt},
-                EMITTED: {
-                    CHARACTERISTIC: ecf,
-                    BREMSSTRAHLUNG: ebf,
-                    NOFLUORESCENCE: enf,
-                    TOTAL: et}
-                         }
-            }
+class PhotonKey(object):
+
+    PRIMARY = 'P'
+    CHARACTERISTIC_FLUORESCENCE = 'C'
+    BREMSSTRAHLUNG_FLUORESCENCE = 'B'
+    P = PRIMARY
+    C = CHARACTERISTIC_FLUORESCENCE
+    B = BREMSSTRAHLUNG_FLUORESCENCE
+
+    def __init__(self, transition, absorption, flag):
+        self._transition = transition
+        self._absorption = absorption
+        self._flag = flag
+
+        # Generate __str__
+        key = self._flag + 'E' if absorption else 'G'
+        self._str = str(self.transition) + ' ' + key
+
+    def __str__(self):
+        return self._str
+
+    def __hash__(self):
+        return hash((self.__class__, self._transition, self._absorption, self._flag))
+
+    def __eq__(self, other):
+        return self._transition == other.transition and \
+            self._absorption == other._absorption and \
+            self._flag == other._flag
+
+    def is_generated(self):
+        return not self._absorption
+
+    def is_emitted(self):
+        return self._absorption
+
+    @property
+    def transition(self):
+        return self._transition
+
+    @property
+    def flag(self):
+        return self._flag
 
 class PhotonIntensityResult(_Result):
 
@@ -75,34 +101,34 @@ class PhotonIntensityResult(_Result):
         """
         _Result.__init__(self)
 
-        # Check structure
-        def _check1(transition, data, key1, name1):
-            if key1 not in data:
-                raise ValueError("Transition %s is missing %s intensities" % \
-                        (transition, name1))
-
-        def _check2(transition, data, key1, name1, key2, name2):
-            if key2 not in data[key1]:
-                raise ValueError("Transition %s is missing %s %s intensities" % \
-                        (transition, name1, name2))
-
-            if len(data[key1][key2]) != 2:
-                raise ValueError('Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
-                                 (transition, name1, name2))
-
-        for transition, data in intensities.items():
-            _check1(transition, data, GENERATED, 'generated')
-            _check1(transition, data, EMITTED, 'emitted')
-
-            _check2(transition, data, GENERATED, 'generated', CHARACTERISTIC, 'characteristic')
-            _check2(transition, data, GENERATED, 'generated', BREMSSTRAHLUNG, 'bremsstrahlung')
-            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'no fluorescence')
-            _check2(transition, data, GENERATED, 'generated', TOTAL, 'total')
-
-            _check2(transition, data, EMITTED, 'emitted', CHARACTERISTIC, 'characteristic')
-            _check2(transition, data, EMITTED, 'emitted', BREMSSTRAHLUNG, 'bremsstrahlung')
-            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'no fluorescence')
-            _check2(transition, data, EMITTED, 'emitted', TOTAL, 'total')
+#        # Check structure
+#        def _check1(transition, data, key1, name1):
+#            if key1 not in data:
+#                raise ValueError("Transition %s is missing %s intensities" % \
+#                        (transition, name1))
+#
+#        def _check2(transition, data, key1, name1, key2, name2):
+#            if key2 not in data[key1]:
+#                raise ValueError("Transition %s is missing %s %s intensities" % \
+#                        (transition, name1, name2))
+#
+#            if len(data[key1][key2]) != 2:
+#                raise ValueError('Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
+#                                 (transition, name1, name2))
+#
+#        for transition, data in intensities.items():
+#            _check1(transition, data, GENERATED, 'generated')
+#            _check1(transition, data, EMITTED, 'emitted')
+#
+#            _check2(transition, data, GENERATED, 'generated', CHARACTERISTIC, 'characteristic')
+#            _check2(transition, data, GENERATED, 'generated', BREMSSTRAHLUNG, 'bremsstrahlung')
+#            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'no fluorescence')
+#            _check2(transition, data, GENERATED, 'generated', TOTAL, 'total')
+#
+#            _check2(transition, data, EMITTED, 'emitted', CHARACTERISTIC, 'characteristic')
+#            _check2(transition, data, EMITTED, 'emitted', BREMSSTRAHLUNG, 'bremsstrahlung')
+#            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'no fluorescence')
+#            _check2(transition, data, EMITTED, 'emitted', TOTAL, 'total')
 
         self._intensities = intensities
 
@@ -115,35 +141,49 @@ class PhotonIntensityResult(_Result):
     def __iter__(self):
         yield from self._intensities.keys()
 
-    def _get_intensity(self, key, transition, absorption=True):
+    def _get_intensity(self, transition, absorption, primary,
+                       characteristic_fluorescence, bremsstrahlung_fluorescence):
+        def _create_photon_keys(transition, absorption, primary,
+                                characteristic_fluorescence,
+                                bremsstrahlung_fluorescence):
+            keys = []
+            if primary:
+                keys.append(PhotonKey(transition, absorption, PhotonKey.P))
+            if characteristic_fluorescence:
+                keys.append(PhotonKey(transition, absorption, PhotonKey.C))
+            if bremsstrahlung_fluorescence:
+                keys.append(PhotonKey(transition, absorption, PhotonKey.B))
+            return keys
+
         if isinstance(transition, str):
             transition = from_string(transition)
 
-        # Get intensity data
-        data = []
-        if isinstance(transition, Iterable): # transitionset
-            if transition in self._intensities:
-                data.append(self._intensities[transition])
+        # Collect photon keys
+        list_keys = []
+        if isinstance(transition, transitionset): # transitionset
+            keys = _create_photon_keys(transition, absorption, primary,
+                                       characteristic_fluorescence,
+                                       bremsstrahlung_fluorescence)
+            for key in keys:
+                if key in self._intensities:
+                    list_keys.append(key)
             else:
                 for t in transition:
-                    if t in self._intensities: # Add only known transitions
-                        data.append(self._intensities[t])
-
-            if not data:
-                raise ValueError("No intensity for transition(s): %s" % transition)
+                    keys = _create_photon_keys(t, absorption, primary,
+                                               characteristic_fluorescence,
+                                               bremsstrahlung_fluorescence)
+                    list_keys.extend(keys)
         else: # single transition
-            try:
-                data.append(self._intensities[transition])
-            except KeyError:
-                raise ValueError("No intensity for transition(s): %s" % transition)
+            keys = _create_photon_keys(transition, absorption, primary,
+                                       characteristic_fluorescence,
+                                       bremsstrahlung_fluorescence)
+            list_keys.extend(keys)
 
         # Retrieve intensity (and its uncertainty)
-        absorption_key = EMITTED if absorption else GENERATED
-
         total_val = 0.0
         total_unc = 0.0
-        for datum in data:
-            val, unc = datum[absorption_key][key]
+        for key in list_keys:
+            val, unc = self._intensities.get(key, (0.0, 0.0))
             total_val += val
             total_unc += unc ** 2
 
@@ -162,23 +202,11 @@ class PhotonIntensityResult(_Result):
         if isinstance(transition, str):
             transition = from_string(transition)
 
-        # Get intensity data
-        data = []
-        if isinstance(transition, Iterable): # transitionset
-            if transition in self._intensities:
-                data.append(self._intensities[transition])
-            else:
-                for t in transition:
-                    if t in self._intensities: # Add only known transitions
-                        data.append(self._intensities[t])
+        for key in self._intensities.keys():
+            if key.transition == transition:
+                return True
 
-            if not data:
-                return False
-        else: # single transition
-            if transition not in self._intensities:
-                return False
-
-        return True
+        return False
 
     def intensity(self, transition, absorption=True, fluorescence=True):
         """
@@ -217,8 +245,8 @@ class PhotonIntensityResult(_Result):
         :raise: :class:`ValueError` if there is no intensity for the specified
             transition
         """
-        key = TOTAL if fluorescence else NOFLUORESCENCE
-        return self._get_intensity(key, transition, absorption)
+        return self._get_intensity(transition, absorption, True,
+                                   fluorescence, fluorescence)
 
     def characteristic_fluorescence(self, transition, absorption=True):
         """
@@ -235,7 +263,7 @@ class PhotonIntensityResult(_Result):
         :raise: :class:`ValueError` if there is no intensity for the specified
             transition
         """
-        return self._get_intensity(CHARACTERISTIC, transition, absorption)
+        return self._get_intensity(transition, absorption, False, True, False)
 
     def bremsstrahlung_fluorescence(self, transition, absorption=True):
         """
@@ -252,7 +280,7 @@ class PhotonIntensityResult(_Result):
         :raise: :class:`ValueError` if there is no intensity for the specified
             transition
         """
-        return self._get_intensity(BREMSSTRAHLUNG, transition, absorption)
+        return self._get_intensity(transition, absorption, False, False, True)
 
     def fluorescence(self, transition, absorption=True):
         """
@@ -269,11 +297,7 @@ class PhotonIntensityResult(_Result):
         :raise: :class:`ValueError` if there is no intensity for the specified
             transition
         """
-        # Note: TOTAL - FLUORESCENCE should be equal to CHARACTERISTIC + BREMSS
-        v1, e1 = self._get_intensity(NOFLUORESCENCE, transition, absorption)
-        v2, e2 = self._get_intensity(TOTAL, transition, absorption)
-
-        return v2 - v1, e1 + e2
+        return self._get_intensity(transition, absorption, False, True, True)
 
     def absorption(self, transition, fluorescence=True):
         """
@@ -293,7 +317,7 @@ class PhotonIntensityResult(_Result):
         v1, e1 = self.intensity(transition, absorption=False, fluorescence=fluorescence)
         v2, e2 = self.intensity(transition, absorption=True, fluorescence=fluorescence)
 
-        return v2 - v1, e1 + e2
+        return v2 - v1, np.sqrt(e1 ** 2 + e2 ** 2)
 
     def iter_transitions(self, absorption=True, fluorescence=True):
         """
@@ -306,7 +330,11 @@ class PhotonIntensityResult(_Result):
             If ``True``, intensity with fluorescence is returned, if ``false``
             intensity without fluorescence.
         """
-        for transition in self._intensities:
+        transitions = set()
+        for key in self._intensities:
+            transitions.add(key.transition)
+
+        for transition in transitions:
             yield transition, self.intensity(transition, absorption, fluorescence)
 
 class PhotonSpectrumResult(_Result):

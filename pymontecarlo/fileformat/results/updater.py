@@ -47,7 +47,7 @@ from pymontecarlo.fileformat.options.updater import Updater as OptionsUpdater
 from pymontecarlo.fileformat.handler import find_convert_handler
 
 from pymontecarlo.results.result import \
-    (PhotonIntensityResult, create_intensity_dict, PhotonSpectrumResult,
+    (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
      PhotonDepthResult, create_photondist_dict, TimeResult, ShowersStatisticsResult,
      ElectronFractionResult, BackscatteredElectronEnergyResult,
      TransmittedElectronEnergyResult, Trajectory, TrajectoryResult)
@@ -232,19 +232,18 @@ class Updater(_Updater):
                 transition = from_string(row[0])
                 # skip row[1] (energy)
 
-                gcf = float(row[2]), float(row[3])
-                gbf = float(row[4]), float(row[5])
-                gnf = float(row[6]), float(row[7])
-                gt = float(row[8]), float(row[9])
-
-                ecf = float(row[10]), float(row[11])
-                ebf = float(row[12]), float(row[13])
-                enf = float(row[14]), float(row[15])
-                et = float(row[16]), float(row[17])
-
-                intensities.update(create_intensity_dict(transition,
-                                                         gcf, gbf, gnf, gt,
-                                                         ecf, ebf, enf, et))
+                intensities[PhotonKey(transition, False, PhotonKey.P)] = \
+                    (float(row[6]), float(row[7]))
+                intensities[PhotonKey(transition, False, PhotonKey.C)] = \
+                    (float(row[2]), float(row[3]))
+                intensities[PhotonKey(transition, False, PhotonKey.B)] = \
+                    (float(row[4]), float(row[5]))
+                intensities[PhotonKey(transition, True, PhotonKey.P)] = \
+                    (float(row[14]), float(row[15]))
+                intensities[PhotonKey(transition, True, PhotonKey.C)] = \
+                    (float(row[10]), float(row[11]))
+                intensities[PhotonKey(transition, True, PhotonKey.B)] = \
+                    (float(row[12]), float(row[13]))
 
             return PhotonIntensityResult(intensities)
 

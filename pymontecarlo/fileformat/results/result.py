@@ -28,7 +28,7 @@ import numpy as np
 from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
 
 from pymontecarlo.results.result import \
-    (PhotonIntensityResult, create_intensity_dict, PhotonSpectrumResult,
+    (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
      _PhotonDistributionResult, create_photondist_dict, PhotonDepthResult,
      PhotonRadialResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
@@ -38,8 +38,6 @@ from pymontecarlo.results.result import \
      BackscatteredElectronRadialResult)
 
 # Globals and constants variables.
-from pymontecarlo.results.result import \
-    GENERATED, EMITTED, NOFLUORESCENCE, CHARACTERISTIC, BREMSSTRAHLUNG, TOTAL
 from pymontecarlo.options.particle import PARTICLES
 from pymontecarlo.options.collision import COLLISIONS
 
@@ -53,38 +51,32 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         for transition, dataset in group.items():
             transition = xraytransition.from_string(transition)
 
-            gcf = dataset.attrs['gcf']
-            gbf = dataset.attrs['gbf']
-            gnf = dataset.attrs['gnf']
-            gt = dataset.attrs['gt']
-
-            ecf = dataset.attrs['ecf']
-            ebf = dataset.attrs['ebf']
-            enf = dataset.attrs['enf']
-            et = dataset.attrs['et']
-
-            intensities.update(create_intensity_dict(transition,
-                                                     gcf, gbf, gnf, gt,
-                                                     ecf, ebf, enf, et))
+            intensities[PhotonKey(transition, False, PhotonKey.P)] = dataset.attrs['gnf']
+            intensities[PhotonKey(transition, False, PhotonKey.C)] = dataset.attrs['gcf']
+            intensities[PhotonKey(transition, False, PhotonKey.B)] = dataset.attrs['gbf']
+            intensities[PhotonKey(transition, True, PhotonKey.P)] = dataset.attrs['enf']
+            intensities[PhotonKey(transition, True, PhotonKey.C)] = dataset.attrs['ecf']
+            intensities[PhotonKey(transition, True, PhotonKey.B)] = dataset.attrs['ebf']
 
         return PhotonIntensityResult(intensities)
 
     def convert(self, obj, group):
         group = _HDF5Handler.convert(self, obj, group)
 
-        for transition, intensities in obj._intensities.items():
+        for key, intensity in obj._intensities.items():
+            transition = key.transition
             name = '%s %s' % (transition.symbol, transition.iupac)
-            dataset = group.create_dataset(name, shape=())
+            dataset = group.require_dataset(name, shape=(), dtype=np.float)
 
-            dataset.attrs['gcf'] = intensities[GENERATED][CHARACTERISTIC]
-            dataset.attrs['gbf'] = intensities[GENERATED][BREMSSTRAHLUNG]
-            dataset.attrs['gnf'] = intensities[GENERATED][NOFLUORESCENCE]
-            dataset.attrs['gt'] = intensities[GENERATED][TOTAL]
+            attrname = 'g' if key.is_generated() else 'e'
+            if key.flag == PhotonKey.PRIMARY:
+                attrname += 'nf'
+            elif key.flag == PhotonKey.CHARACTERISTIC_FLUORESCENCE:
+                attrname += 'cf'
+            elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
+                attrname += 'bf'
 
-            dataset.attrs['ecf'] = intensities[EMITTED][CHARACTERISTIC]
-            dataset.attrs['ebf'] = intensities[EMITTED][BREMSSTRAHLUNG]
-            dataset.attrs['enf'] = intensities[EMITTED][NOFLUORESCENCE]
-            dataset.attrs['et'] = intensities[EMITTED][TOTAL]
+            dataset.attrs[attrname] = intensity
 
         return group
 

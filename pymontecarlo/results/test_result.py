@@ -21,12 +21,12 @@ from pyxray.transition import Transition, K_family
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.results.result import \
-    (PhotonIntensityResult,
+    (PhotonKey,
+     PhotonIntensityResult,
      PhotonSpectrumResult,
      PhotonDepthResult,
      TimeResult,
      ElectronFractionResult,
-     create_intensity_dict,
      create_photondist_dict,
      Trajectory,
      TrajectoryResult,
@@ -43,25 +43,31 @@ class TestPhotonIntensityResult(TestCase):
     def setUp(self):
         TestCase.setUp(self)
 
-        intensities = {}
-
         self.t1 = Transition(29, 9, 4)
-        ints = create_intensity_dict(self.t1,
-                                     gcf=(1.0, 0.1), gbf=(2.0, 0.2), gnf=(3.0, 0.3), gt=(6.0, 0.4),
-                                     ecf=(5.0, 0.5), ebf=(6.0, 0.6), enf=(7.0, 0.7), et=(18.0, 0.8))
-        intensities.update(ints)
-
         self.t2 = K_family(14)
-        ints = create_intensity_dict(self.t2,
-                                     gcf=(11.0, 0.1), gbf=(12.0, 0.2), gnf=(13.0, 0.3), gt=(36.0, 0.4),
-                                     ecf=(15.0, 0.5), ebf=(16.0, 0.6), enf=(17.0, 0.7), et=(48.0, 0.8))
-        intensities.update(ints)
-
         self.t3 = Transition(29, siegbahn='La2')
-        ints = create_intensity_dict(self.t3,
-                                     gcf=(21.0, 0.1), gbf=(22.0, 0.2), gnf=(23.0, 0.3), gt=(66.0, 0.4),
-                                     ecf=(25.0, 0.5), ebf=(26.0, 0.6), enf=(27.0, 0.7), et=(78.0, 0.8))
-        intensities.update(ints)
+
+        intensities = {}
+        intensities[PhotonKey(self.t1, False, PhotonKey.P)] = (3.0, 0.3)
+        intensities[PhotonKey(self.t1, False, PhotonKey.C)] = (1.0, 0.1)
+        intensities[PhotonKey(self.t1, False, PhotonKey.B)] = (2.0, 0.2)
+        intensities[PhotonKey(self.t1, True, PhotonKey.P)] = (7.0, 0.7)
+        intensities[PhotonKey(self.t1, True, PhotonKey.C)] = (5.0, 0.5)
+        intensities[PhotonKey(self.t1, True, PhotonKey.B)] = (6.0, 0.6)
+
+        intensities[PhotonKey(self.t2, False, PhotonKey.P)] = (13.0, 0.3)
+        intensities[PhotonKey(self.t2, False, PhotonKey.C)] = (11.0, 0.1)
+        intensities[PhotonKey(self.t2, False, PhotonKey.B)] = (12.0, 0.2)
+        intensities[PhotonKey(self.t2, True, PhotonKey.P)] = (17.0, 0.7)
+        intensities[PhotonKey(self.t2, True, PhotonKey.C)] = (15.0, 0.5)
+        intensities[PhotonKey(self.t2, True, PhotonKey.B)] = (16.0, 0.6)
+
+        intensities[PhotonKey(self.t3, False, PhotonKey.P)] = (23.0, 0.3)
+        intensities[PhotonKey(self.t3, False, PhotonKey.C)] = (21.0, 0.1)
+        intensities[PhotonKey(self.t3, False, PhotonKey.B)] = (22.0, 0.2)
+        intensities[PhotonKey(self.t3, True, PhotonKey.P)] = (27.0, 0.7)
+        intensities[PhotonKey(self.t3, True, PhotonKey.C)] = (25.0, 0.5)
+        intensities[PhotonKey(self.t3, True, PhotonKey.B)] = (26.0, 0.6)
 
         self.r = PhotonIntensityResult(intensities)
 
@@ -72,15 +78,15 @@ class TestPhotonIntensityResult(TestCase):
         # Transition 1
         val, err = self.r.intensity(self.t1)
         self.assertAlmostEqual(18.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = self.r.intensity('Cu La1')
         self.assertAlmostEqual(18.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = self.r.intensity(self.t1, absorption=False)
         self.assertAlmostEqual(6.0, val, 4)
-        self.assertAlmostEqual(0.4, err, 4)
+        self.assertAlmostEqual(0.37416, err, 4)
 
         val, err = self.r.intensity(self.t1, fluorescence=False)
         self.assertAlmostEqual(7.0, val, 4)
@@ -93,15 +99,15 @@ class TestPhotonIntensityResult(TestCase):
         # Transition 2
         val, err = self.r.intensity(self.t2)
         self.assertAlmostEqual(48.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = self.r.intensity('Si K')
         self.assertAlmostEqual(48.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = self.r.intensity(self.t2, absorption=False)
         self.assertAlmostEqual(36.0, val, 4)
-        self.assertAlmostEqual(0.4, err, 4)
+        self.assertAlmostEqual(0.37416, err, 4)
 
         val, err = self.r.intensity(self.t2, fluorescence=False)
         self.assertAlmostEqual(17.0, val, 4)
@@ -114,7 +120,7 @@ class TestPhotonIntensityResult(TestCase):
         # Transition 1 + 3
         val, err = self.r.intensity('Cu La')
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(1.1314, err, 4)
+        self.assertAlmostEqual(1.4832, err, 4)
 
     def testhas_intensity(self):
         self.assertTrue(self.r.has_intensity(self.t1))
@@ -164,39 +170,39 @@ class TestPhotonIntensityResult(TestCase):
         # Transition 1
         val, err = self.r.fluorescence(self.t1)
         self.assertAlmostEqual(11.0, val, 4)
-        self.assertAlmostEqual(1.5, err, 4)
+        self.assertAlmostEqual(0.78102, err, 4)
 
         val, err = self.r.fluorescence(self.t1, absorption=False)
         self.assertAlmostEqual(3.0, val, 4)
-        self.assertAlmostEqual(0.7, err, 4)
+        self.assertAlmostEqual(0.2236, err, 4)
 
         # Transition 2
         val, err = self.r.fluorescence(self.t2)
         self.assertAlmostEqual(31.0, val, 4)
-        self.assertAlmostEqual(1.5, err, 4)
+        self.assertAlmostEqual(0.78102, err, 4)
 
         val, err = self.r.fluorescence(self.t2, absorption=False)
         self.assertAlmostEqual(23.0, val, 4)
-        self.assertAlmostEqual(0.7, err, 4)
+        self.assertAlmostEqual(0.2236, err, 4)
 
     def testabsorption(self):
         # Transition 1
         val, err = self.r.absorption(self.t1)
         self.assertAlmostEqual(12.0, val, 4)
-        self.assertAlmostEqual(1.2, err, 4)
+        self.assertAlmostEqual(1.1136, err, 4)
 
         val, err = self.r.absorption(self.t1, fluorescence=False)
         self.assertAlmostEqual(4.0, val, 4)
-        self.assertAlmostEqual(1.0, err, 4)
+        self.assertAlmostEqual(0.7616, err, 4)
 
         # Transition 2
         val, err = self.r.absorption(self.t2)
         self.assertAlmostEqual(12.0, val, 4)
-        self.assertAlmostEqual(1.2, err, 4)
+        self.assertAlmostEqual(1.1136, err, 4)
 
         val, err = self.r.absorption(self.t2, fluorescence=False)
         self.assertAlmostEqual(4.0, val, 4)
-        self.assertAlmostEqual(1.0, err, 4)
+        self.assertAlmostEqual(0.7616, err, 4)
 
     def testiter_transitions(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))

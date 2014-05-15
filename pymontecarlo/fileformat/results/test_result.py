@@ -29,7 +29,7 @@ from pymontecarlo.fileformat.results.result import \
      BackscatteredElectronRadialResultHDF5Handler)
 
 from pymontecarlo.results.result import \
-    (PhotonIntensityResult, create_intensity_dict, PhotonSpectrumResult,
+    (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
      PhotonDepthResult, PhotonRadialResult, create_photondist_dict,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      Trajectory, TrajectoryResult, BackscatteredElectronEnergyResult,
@@ -49,16 +49,32 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
         self.hdf5file = h5py.File('test.h5', 'a', driver='core', backing_store=False)
         self.h = PhotonIntensityResultHDF5Handler()
 
+        t1 = Transition(29, 9, 4)
+        t2 = K_family(14)
+        t3 = Transition(29, siegbahn='La2')
+
         intensities = {}
-        intensities.update(create_intensity_dict(Transition(29, 9, 4),
-                                                 gcf=(1.0, 0.1), gbf=(2.0, 0.2), gnf=(3.0, 0.3), gt=(6.0, 0.4),
-                                                 ecf=(5.0, 0.5), ebf=(6.0, 0.6), enf=(7.0, 0.7), et=(18.0, 0.8)))
-        intensities.update(create_intensity_dict(K_family(14),
-                                                 gcf=(11.0, 0.1), gbf=(12.0, 0.2), gnf=(13.0, 0.3), gt=(36.0, 0.4),
-                                                 ecf=(15.0, 0.5), ebf=(16.0, 0.6), enf=(17.0, 0.7), et=(48.0, 0.8)))
-        intensities.update(create_intensity_dict(Transition(29, siegbahn='La2'),
-                                                 gcf=(21.0, 0.1), gbf=(22.0, 0.2), gnf=(23.0, 0.3), gt=(66.0, 0.4),
-                                                 ecf=(25.0, 0.5), ebf=(26.0, 0.6), enf=(27.0, 0.7), et=(78.0, 0.8)))
+        intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
+        intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
+        intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
+        intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
+        intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
+        intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
+
+        intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
+        intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
+        intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
+        intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
+        intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
+        intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
+
+        intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
+        intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
+        intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
+        intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
+        intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
+        intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
+
         self.obj = PhotonIntensityResult(intensities)
 
         self.group = self.h.convert(self.obj, self.hdf5file.create_group('det'))
@@ -73,19 +89,19 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
     def testparse(self):
         obj = self.h.parse(self.group)
 
-        self.assertEqual(3, len(obj._intensities))
+        self.assertEqual(18, len(obj._intensities))
 
         val, err = obj.intensity(Transition(29, 9, 4))
         self.assertAlmostEqual(18.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = obj.intensity(K_family(14))
         self.assertAlmostEqual(48.0, val, 4)
-        self.assertAlmostEqual(0.8, err, 4)
+        self.assertAlmostEqual(1.0488, err, 4)
 
         val, err = obj.intensity('Cu La')
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(1.1314, err, 4)
+        self.assertAlmostEqual(1.4832, err, 4)
 
     def testcan_convert(self):
         self.assertTrue(self.h.can_convert(self.obj))
@@ -102,16 +118,12 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
         self.assertAlmostEqual(0.2, dataset.attrs['gbf'][1], 4)
         self.assertAlmostEqual(13.0, dataset.attrs['gnf'][0], 4)
         self.assertAlmostEqual(0.3, dataset.attrs['gnf'][1], 4)
-        self.assertAlmostEqual(36.0, dataset.attrs['gt'][0], 4)
-        self.assertAlmostEqual(0.4, dataset.attrs['gt'][1], 4)
         self.assertAlmostEqual(15.0, dataset.attrs['ecf'][0], 4)
         self.assertAlmostEqual(0.5, dataset.attrs['ecf'][1], 4)
         self.assertAlmostEqual(16.0, dataset.attrs['ebf'][0], 4)
         self.assertAlmostEqual(0.6, dataset.attrs['ebf'][1], 4)
         self.assertAlmostEqual(17.0, dataset.attrs['enf'][0], 4)
         self.assertAlmostEqual(0.7, dataset.attrs['enf'][1], 4)
-        self.assertAlmostEqual(48.0, dataset.attrs['et'][0], 4)
-        self.assertAlmostEqual(0.8, dataset.attrs['et'][1], 4)
 
 class TestPhotonSpectrumResultHDF5Handler(unittest.TestCase):
 
