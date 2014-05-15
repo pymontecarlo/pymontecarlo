@@ -76,7 +76,7 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
             elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
                 attrname += 'bf'
 
-            dataset.attrs[attrname] = intensity
+            dataset.attrs[attrname] = intensity[0]
 
         return group
 

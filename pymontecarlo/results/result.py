@@ -97,49 +97,21 @@ class PhotonIntensityResult(_Result):
         Creates a new result to store photon intensities.
 
         :arg intensities: :class:`dict` containing the intensities.
-            One should use :func:`.create_intensity_dict` to create the dictionary
+            The keys should be :class:`.PhotonKey` and the values a tuple or
+            array of length 2 containing the intensity and its uncertainty
         """
         _Result.__init__(self)
 
-#        # Check structure
-#        def _check1(transition, data, key1, name1):
-#            if key1 not in data:
-#                raise ValueError("Transition %s is missing %s intensities" % \
-#                        (transition, name1))
-#
-#        def _check2(transition, data, key1, name1, key2, name2):
-#            if key2 not in data[key1]:
-#                raise ValueError("Transition %s is missing %s %s intensities" % \
-#                        (transition, name1, name2))
-#
-#            if len(data[key1][key2]) != 2:
-#                raise ValueError('Intensity for %s %s %s must be a tuple (value, uncertainty)' % \
-#                                 (transition, name1, name2))
-#
-#        for transition, data in intensities.items():
-#            _check1(transition, data, GENERATED, 'generated')
-#            _check1(transition, data, EMITTED, 'emitted')
-#
-#            _check2(transition, data, GENERATED, 'generated', CHARACTERISTIC, 'characteristic')
-#            _check2(transition, data, GENERATED, 'generated', BREMSSTRAHLUNG, 'bremsstrahlung')
-#            _check2(transition, data, GENERATED, 'generated', NOFLUORESCENCE, 'no fluorescence')
-#            _check2(transition, data, GENERATED, 'generated', TOTAL, 'total')
-#
-#            _check2(transition, data, EMITTED, 'emitted', CHARACTERISTIC, 'characteristic')
-#            _check2(transition, data, EMITTED, 'emitted', BREMSSTRAHLUNG, 'bremsstrahlung')
-#            _check2(transition, data, EMITTED, 'emitted', NOFLUORESCENCE, 'no fluorescence')
-#            _check2(transition, data, EMITTED, 'emitted', TOTAL, 'total')
-
-        self._intensities = intensities
+        self._intensities = {}
+        for key, intensity in intensities.items():
+            self._intensities[key] = \
+                np.array([intensity], dtype=[('val', np.float), ('unc', np.float)])
 
     def __contains__(self, transition):
         return self.has_intensity(transition)
 
     def __len__(self):
         return len(self._intensities)
-
-    def __iter__(self):
-        yield from self._intensities.keys()
 
     def _get_intensity(self, transition, absorption, primary,
                        characteristic_fluorescence, bremsstrahlung_fluorescence):
@@ -183,9 +155,11 @@ class PhotonIntensityResult(_Result):
         total_val = 0.0
         total_unc = 0.0
         for key in list_keys:
-            val, unc = self._intensities.get(key, (0.0, 0.0))
-            total_val += val
-            total_unc += unc ** 2
+            intensity = self._intensities.get(key)
+            if intensity is None:
+                continue
+            total_val += intensity['val']
+            total_unc += intensity['unc'] ** 2
 
         total_unc = sqrt(total_unc)
 
