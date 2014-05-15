@@ -34,13 +34,6 @@ from pyxray.transition import from_string, transitionset
 from pymontecarlo.options.particle import PARTICLES
 from pymontecarlo.options.collision import COLLISIONS
 
-GENERATED = "g"
-EMITTED = "e"
-NOFLUORESCENCE = "nf"
-CHARACTERISTIC = "cf"
-BREMSSTRAHLUNG = "bf"
-TOTAL = "t"
-
 class _Result(object):
     """
     Base class of all results.
