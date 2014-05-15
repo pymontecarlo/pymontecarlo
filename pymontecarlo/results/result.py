@@ -68,7 +68,8 @@ class PhotonKey(object):
         self._flag = flag
 
         # Generate __str__
-        key = self._flag + 'E' if absorption else 'G'
+        key = self._flag
+        key += 'E' if absorption else 'G'
         self._str = str(self.transition) + ' ' + key
 
     def __str__(self):
@@ -145,7 +146,7 @@ class PhotonIntensityResult(_SummarizableResult):
 
         self._intensities = {}
         for key, intensity in intensities.items():
-            intensity = np.array([intensity])
+            intensity = np.array([intensity], ndmin=2)
             intensity.flags.writeable = False
             self._intensities[key] = intensity
 
@@ -822,8 +823,8 @@ class TimeResult(_SummarizableResult):
         self._simulation_speed_s = simulation_speed_s
 
     def get_summary(self):
-        return {'Time': np.array([self.simulation_time_s, 0.0]),
-                'Speed': np.array(self._simulation_speed_s)}
+        return {'Time': np.array([self.simulation_time_s, 0.0], ndmin=2),
+                'Speed': np.array(self._simulation_speed_s, ndmin=2)}
 
     def get_labels(self):
         return ['Value', 'Uncertainty']
@@ -849,7 +850,7 @@ class ShowersStatisticsResult(_SummarizableResult):
         self._showers = int(showers)
 
     def get_summary(self):
-        return {'Showers': np.array([self.showers])}
+        return {'Showers': np.array([self.showers], ndmin=2)}
 
     def get_labels(self):
         return ['Value']
@@ -878,9 +879,9 @@ class ElectronFractionResult(_SummarizableResult):
         self._transmitted = transmitted
 
     def get_summary(self):
-        return {'Absorbed': np.array(self.absorbed),
-                'Backscattered': np.array(self.backscattered),
-                'Transmitted': np.array(self.transmitted)}
+        return {'Absorbed': np.array(self.absorbed, ndmin=2),
+                'Backscattered': np.array(self.backscattered, ndmin=2),
+                'Transmitted': np.array(self.transmitted, ndmin=2)}
 
     def get_labels(self):
         return ['Fraction', 'Uncertainty']
