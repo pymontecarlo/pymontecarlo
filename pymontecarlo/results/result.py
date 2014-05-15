@@ -313,7 +313,13 @@ class PhotonIntensityResult(_Result):
 
         return v2 - v1, np.sqrt(e1 ** 2 + e2 ** 2)
 
-    def iter_transitions(self, absorption=True, fluorescence=True):
+    def iter_transitions(self):
+        transitions = set()
+        for key in self._intensities:
+            transitions.add(key.transition)
+        return transitions
+
+    def iter_intensities(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the transition and intensity.
 
@@ -324,11 +330,7 @@ class PhotonIntensityResult(_Result):
             If ``True``, intensity with fluorescence is returned, if ``false``
             intensity without fluorescence.
         """
-        transitions = set()
-        for key in self._intensities:
-            transitions.add(key.transition)
-
-        for transition in transitions:
+        for transition in self.iter_transitions():
             yield transition, self.intensity(transition, absorption, fluorescence)
 
 class PhotonSpectrumResult(_Result):
@@ -554,7 +556,13 @@ class _PhotonDistributionResult(_Result):
         width = abs(rzs[1] - rzs[0])
         return sum(vals) * width
 
-    def iter_transitions(self, absorption=True, fluorescence=True):
+    def iter_transitions(self):
+        transitions = set()
+        for key in self._distributions:
+            transitions.add(key.transition)
+        return transitions
+
+    def iter_distributions(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the:
 
@@ -570,11 +578,7 @@ class _PhotonDistributionResult(_Result):
             If ``True``, photon depth distribution with fluorescence is returned,
             if ``False`` photon depth distribution without fluorescence.
         """
-        transitions = set()
-        for key in self._distributions:
-            transitions.add(key.transition)
-
-        for transition in transitions:
+        for transition in self.iter_transitions():
             if not self.exists(transition, absorption, fluorescence):
                 continue
 
@@ -667,7 +671,7 @@ class PhotonDepthResult(_PhotonDistributionResult):
         F0chi = self.integral(transition, False, fluorescence)
         return Fchi / F0chi
 
-    def iter_transitions(self, absorption=True, fluorescence=True):
+    def iter_distributions(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the:
 
@@ -683,7 +687,7 @@ class PhotonDepthResult(_PhotonDistributionResult):
             If ``True``, photon depth distribution with fluorescence is returned,
             if ``False`` photon depth distribution without fluorescence.
         """
-        return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
+        return _PhotonDistributionResult.iter_distributions(self, absorption, fluorescence)
 
 class PhotonRadialResult(_PhotonDistributionResult):
 
@@ -754,7 +758,7 @@ class PhotonRadialResult(_PhotonDistributionResult):
         """
         return _PhotonDistributionResult.integral(self, transition, absorption, fluorescence)
 
-    def iter_transitions(self, absorption=True, fluorescence=True):
+    def iter_distributions(self, absorption=True, fluorescence=True):
         """
         Returns an iterator returning a tuple of the:
 
@@ -770,7 +774,7 @@ class PhotonRadialResult(_PhotonDistributionResult):
             If ``True``, photon depth distribution with fluorescence is returned,
             if ``False`` photon depth distribution without fluorescence.
         """
-        return _PhotonDistributionResult.iter_transitions(self, absorption, fluorescence)
+        return _PhotonDistributionResult.iter_distributions(self, absorption, fluorescence)
 
 class TimeResult(_Result):
 

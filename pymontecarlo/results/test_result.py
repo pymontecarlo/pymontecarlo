@@ -211,6 +211,9 @@ class TestPhotonIntensityResult(TestCase):
 
     def testiter_transitions(self):
         self.assertEqual(3, len(list(self.r.iter_transitions())))
+
+    def testiter_intensities(self):
+        self.assertEqual(3, len(list(self.r.iter_intensities())))
 #
 class TestPhotonSpectrumResult(TestCase):
 
@@ -387,8 +390,11 @@ class TestPhotonDepthResultResult(TestCase):
         val = self.r.fchi(self.t1, fluorescence=True)
         self.assertAlmostEqual(2.6, val, 4)
 
-    def testiter_transition(self):
+    def testiter_transitions(self):
         self.assertEqual(1, len(list(self.r.iter_transitions())))
+
+    def testiter_distributions(self):
+        self.assertEqual(1, len(list(self.r.iter_distributions())))
 
 class TestTimeResult(TestCase):
 
