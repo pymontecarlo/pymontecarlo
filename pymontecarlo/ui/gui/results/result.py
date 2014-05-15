@@ -524,7 +524,7 @@ class _PhotonIntensityResultTableModel(QAbstractTableModel):
     def __init__(self, result):
         QAbstractTableModel.__init__(self)
         self._result = result
-        self._transitions = list(result) # FIXME: Should be sorted
+        self._transitions = list(result.iter_transitions()) # FIXME: Should be sorted
 
         self._header_sections = \
             ['Transition', 'PG', 'PE', 'CG', 'CE', 'BG', 'BE', 'TG', 'TE']
@@ -542,14 +542,14 @@ class _PhotonIntensityResultTableModel(QAbstractTableModel):
         self._factor = 1.0
 
     def rowCount(self, *args, **kwargs):
-        return len(self._result)
+        return len(self._transitions)
 
     def columnCount(self, *args, **kwargs):
         return 9
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid() or \
-                not (0 <= index.row() < len(self._result)):
+                not (0 <= index.row() < len(self._transitions)):
             return None
 
         if role == Qt.TextAlignmentRole:
@@ -791,7 +791,7 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
     def _initUI(self):
         # Variables
         result = self.result()
-        transitions = list(result)
+        transitions = list(result.iter_transitions())
         transition0 = transitions[0]
         model = _TransitionListModel(transitions)
 
@@ -964,9 +964,9 @@ def __run():
          ShowersStatisticsDetector, PhotonSpectrumDetector,
          PhotonDepthDetector)
     from pymontecarlo.results.result import \
-        (PhotonSpectrumResult, PhotonIntensityResult, create_intensity_dict,
+        (PhotonKey, PhotonSpectrumResult, PhotonIntensityResult,
          TimeResult, ElectronFractionResult, ShowersStatisticsResult,
-         create_photondist_dict, PhotonDepthResult)
+         PhotonDepthResult)
     from pyxray.transition import Transition, K_family
 
     ops = Options()
@@ -994,24 +994,36 @@ def __run():
 #    r = PhotonSpectrumResult(total, background)
 #    widget = PhotonSpectrumResultWidget("spectrum", r, ops)
 
-#    intensities = {}
-#    t1 = Transition(29, 9, 4)
-#    ints = create_intensity_dict(t1,
-#                                 gcf=(1.0, 0.1), gbf=(2.0, 0.2), gnf=(3.0, 0.3), gt=(6.0, 0.4),
-#                                 ecf=(5.0, 0.5), ebf=(6.0, 0.6), enf=(7.0, 0.7), et=(18.0, 0.8))
-#    intensities.update(ints)
-#    t2 = K_family(14)
-#    ints = create_intensity_dict(t2,
-#                                 gcf=(11.0, 0.1), gbf=(12.0, 0.2), gnf=(13.0, 0.3), gt=(36.0, 0.4),
-#                                 ecf=(15.0, 0.5), ebf=(16.0, 0.6), enf=(17.0, 0.7), et=(48.0, 0.8))
-#    intensities.update(ints)
-#    t3 = Transition(29, siegbahn='La2')
-#    ints = create_intensity_dict(t3,
-#                                 gcf=(21.0, 0.1), gbf=(22.0, 0.2), gnf=(23.0, 0.3), gt=(66.0, 0.4),
-#                                 ecf=(25.0, 0.5), ebf=(26.0, 0.6), enf=(27.0, 0.7), et=(78.0, 0.8))
-#    intensities.update(ints)
-#    r = PhotonIntensityResult(intensities)
-#    widget = PhotonIntensityResultWidget("intensity", r, ops)
+    t1 = Transition(29, 9, 4)
+    t2 = K_family(14)
+    t3 = Transition(29, siegbahn='La2')
+    intensities = {}
+    intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
+    intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
+    intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
+    intensities[PhotonKey(t1, False, PhotonKey.T)] = (6.0, 0.4)
+    intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
+    intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
+    intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
+    intensities[PhotonKey(t1, True, PhotonKey.T)] = (18.0, 0.8)
+    intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
+    intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
+    intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
+    intensities[PhotonKey(t2, False, PhotonKey.T)] = (36.0, 0.4)
+    intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
+    intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
+    intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
+    intensities[PhotonKey(t2, True, PhotonKey.T)] = (48.0, 0.8)
+    intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
+    intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
+    intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
+    intensities[PhotonKey(t3, False, PhotonKey.T)] = (66.0, 0.4)
+    intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
+    intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
+    intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
+    intensities[PhotonKey(t3, True, PhotonKey.T)] = (78.0, 0.8)
+    r = PhotonIntensityResult(intensities)
+    widget = PhotonIntensityResultWidget("intensity", r, ops)
 
 #    r = TimeResult(5.0, (1.0, 0.5))
 #    widget = TimeResultWidget("time", r, ops)
@@ -1022,27 +1034,29 @@ def __run():
 #    r = ShowersStatisticsResult(6)
 #    widget = ShowersStatisticsResultWidget('showers', r, ops)
 
-    t1 = Transition(29, 9, 4)
-    gnf_zs = [1.0, 2.0, 3.0, 4.0]
-    gnf_values = [0.0, 5.0, 4.0, 1.0]
-    gnf_uncs = [0.01, 0.02, 0.03, 0.04]
-    gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
-    gt_zs = [1.0, 2.0, 3.0, 4.0]
-    gt_values = [10.0, 15.0, 14.0, 11.0]
-    gt_uncs = [0.11, 0.12, 0.13, 0.14]
-    gt = np.array([gt_zs, gt_values, gt_uncs]).T
-    enf_zs = [1.0, 2.0, 3.0, 4.0]
-    enf_values = [20.0, 25.0, 24.0, 21.0]
-    enf_uncs = [0.21, 0.22, 0.23, 0.24]
-    enf = np.array([enf_zs, enf_values, enf_uncs]).T
-    et_zs = [1.0, 2.0, 3.0, 4.0]
-    et_values = [30.0, 35.0, 34.0, 31.0]
-    et_uncs = [0.31, 0.32, 0.33, 0.34]
-    et = np.array([et_zs, et_values, et_uncs]).T
-    distributions = create_photondist_dict(t1, gnf=gnf, enf=enf, et=et)
-    r = PhotonDepthResult(distributions)
-
-    widget = PhotonDepthResultWidget("photon-depth", r, ops)
+#    t1 = Transition(29, 9, 4)
+#    distributions = {}
+#    gnf_zs = [1.0, 2.0, 3.0, 4.0]
+#    gnf_values = [0.0, 5.0, 4.0, 1.0]
+#    gnf_uncs = [0.01, 0.02, 0.03, 0.04]
+#    gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
+#    distributions[PhotonKey(t1, False, PhotonKey.P)] = gnf
+#    gt_zs = [1.0, 2.0, 3.0, 4.0]
+#    gt_values = [10.0, 15.0, 14.0, 11.0]
+#    gt_uncs = [0.11, 0.12, 0.13, 0.14]
+#    gt = np.array([gt_zs, gt_values, gt_uncs]).T
+#    distributions[PhotonKey(t1, False, PhotonKey.T)] = gt
+#    enf_zs = [1.0, 2.0, 3.0, 4.0]
+#    enf_values = [20.0, 25.0, 24.0, 21.0]
+#    enf = np.array([enf_zs, enf_values]).T
+#    distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
+#    et_zs = [1.0, 2.0, 3.0, 4.0]
+#    et_values = [30.0, 35.0, 34.0, 31.0]
+#    et_uncs = [0.31, 0.32, 0.33, 0.34]
+#    et = np.array([et_zs, et_values, et_uncs]).T
+#    distributions[PhotonKey(t1, True, PhotonKey.T)] = et
+#    r = PhotonDepthResult(distributions)
+#    widget = PhotonDepthResultWidget("photon-depth", r, ops)
 
     window.setCentralWidget(widget)
 
