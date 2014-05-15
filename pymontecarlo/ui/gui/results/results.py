@@ -111,7 +111,7 @@ class _BaseResultWidget(QWidget):
             splitter.addWidget(toolbox)
             splitter.setCollapsible(0, False)
             splitter.setCollapsible(1, True)
-            splitter.setStretchFactor(0, 3)
+            splitter.setStretchFactor(0, 2)
             splitter.setStretchFactor(1, 1)
             layout.addWidget(splitter)
 
@@ -220,6 +220,8 @@ class _FigureResultMixin(_SaveableResultMixin):
         raise NotImplementedError
 
     def _drawFigure(self):
+        self._ax.relim()
+        self._ax.autoscale_view(True, True, True)
         self._canvas.draw()
 
     def _initUI(self):
