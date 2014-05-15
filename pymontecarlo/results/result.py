@@ -142,9 +142,6 @@ class PhotonIntensityResult(_Result):
     def __contains__(self, transition):
         return self.has_intensity(transition)
 
-    def __len__(self):
-        return len(self._intensities)
-
     def _get_intensity(self, transition, absorption, primary,
                        characteristic_fluorescence, bremsstrahlung_fluorescence):
         def _create_photon_keys2(transition):
@@ -473,9 +470,6 @@ class _PhotonDistributionResult(_Result):
                 distribution = np.append(distribution, np.zeros((distribution.shape[0], 1)), 1)
 
             self._distributions[key] = distribution
-
-    def __len__(self):
-        return len(self._distributions)
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
