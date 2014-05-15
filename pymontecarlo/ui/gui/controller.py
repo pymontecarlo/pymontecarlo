@@ -126,6 +126,10 @@ class Controller(QObject):
     resultDisplayed = Signal(str, int, str) # uid, index, key
     resultDisplayClosed = Signal(str, int, str) # uid, index, key
 
+    summaryDisplayRequested = Signal(str) # uid
+    summaryDisplayed = Signal(str) # uid
+    summaryDisplayedClosed = Signal(str) # uid
+
     def __init__(self):
         QObject.__init__(self) # Required to activate signals
 

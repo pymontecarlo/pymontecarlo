@@ -47,6 +47,7 @@ from pymontecarlo.ui.gui.options.limit import LimitsWidget
 from pymontecarlo.ui.gui.options.model import ModelTableWidget
 from pymontecarlo.ui.gui.results.result import \
     get_widget_class as get_result_widget_class
+from pymontecarlo.ui.gui.results.summary import SummaryWidget
 from pymontecarlo.ui.gui.configure import ConfigureDialog
 from pymontecarlo.ui.gui.runner import RunnerDialog
 
@@ -288,10 +289,16 @@ class _ResultsTreeItem(_BaseTreeItem):
 
     def __init__(self, uid, controller, parent):
         _BaseTreeItem.__init__(self, uid, controller, parent)
-        self.setText(0, controller.results(uid).options.name)
+        results = controller.results(uid)
+        self.setText(0, results.options.name)
         self.setToolTip(0, controller.resultsFilepath(uid))
 
         # Actions
+        self._act_summary = QAction('Create summary', self.treeWidget())
+        self._act_summary.setEnabled(len(results) > 1)
+        self.addAction(self._act_summary)
+        self.addSeparator()
+
         self._act_saveas = QAction("Save As", self.treeWidget())
         self.addAction(self._act_saveas)
         self.addSeparator()
@@ -304,6 +311,7 @@ class _ResultsTreeItem(_BaseTreeItem):
         self.addAction(self._act_close)
 
         # Signals
+        self._act_summary.triggered.connect(self.requestSummary)
         self._act_saveas.triggered.connect(self.requestSaveAs)
         self._act_reload.triggered.connect(self.requestReload)
         self._act_close.triggered.connect(self.requestClose)
@@ -312,6 +320,9 @@ class _ResultsTreeItem(_BaseTreeItem):
 
     def _onResultsSaved(self, uid, filepath):
         self.setToolTip(0, filepath)
+
+    def requestSummary(self):
+        self.controller().summaryDisplayRequested.emit(self.uid())
 
     def canReload(self):
         return True
@@ -532,6 +543,27 @@ class _ResultSubWindow(_WidgetSubWindow):
         self.controller().resultDisplayClosed.emit(self.uid(), self.index(), self.key())
         return _WidgetSubWindow.closeEvent(self, event)
 
+class _SummarySubWindow(_WidgetSubWindow):
+
+    def __init__(self, uid, controller, parent=None):
+        _WidgetSubWindow.__init__(self, controller, parent)
+        self.setWindowTitle('Summary')
+
+        # Variables
+        self._uid = uid
+
+        # Widgets
+        results = controller.results(uid)
+        widget = SummaryWidget(results)
+        self.setWidget(widget)
+
+    def uid(self):
+        return self._uid
+
+    def closeEvent(self, event):
+        self.controller().summaryDisplayedClosed.emit(self.uid())
+        return _WidgetSubWindow.closeEvent(self, event)
+
 #--- Main widgets
 
 class _Area(QMdiArea):
@@ -566,6 +598,7 @@ class _Area(QMdiArea):
         self.controller().modelsDisplayClosed.connect(self._onModelsDisplayClosed)
         self.controller().resultDisplayRequested.connect(self._onResultDisplayRequested)
         self.controller().resultDisplayClosed.connect(self._onResultDisplayClosed)
+        self.controller().summaryDisplayRequested.connect(self._onSummaryDisplayRequested)
 
     def _onOptionsModified(self, uid, options):
         for window in list(self._options_windows.get(uid, {}).values()):
@@ -642,6 +675,11 @@ class _Area(QMdiArea):
 
     def _onResultDisplayClosed(self, uid, index, key):
         self._results_windows[uid].pop((index, key))
+
+    def _onSummaryDisplayRequested(self, uid):
+        window = _SummarySubWindow(uid, self.controller())
+        self._showWindow(window)
+        self.controller().summaryDisplayed.emit(uid)
 
     def _getOptionsWindow(self, uid, name, clasz):
         window = self._options_windows.get(uid, {}).get(name)
