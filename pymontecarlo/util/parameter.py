@@ -21,7 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import copy
 import operator
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 from collections import MutableMapping, MutableSet, MutableSequence
 
 # Third party modules.
@@ -649,6 +649,35 @@ def iter_values(obj):
             if hasattr(value, '__parameters__'):
                 continue
             yield baseobj, name, value
+
+def iter_getters(obj):
+    params = ()
+    return _iter_getters(obj, params)
+
+def _getter(params):
+    def _inside(obj):
+        for param in params:
+            try:
+                obj = param.__get__(obj)
+            except AttributeError:
+                obj = None
+        return obj
+    return _inside
+
+def _iter_getters(obj, params):
+    for name, parameter in obj.__parameters__.items():
+        newparams = params + (parameter,)
+
+        try:
+            subobj = parameter.__get__(obj)
+        except AttributeError:
+            continue
+
+        if hasattr(subobj, '__parameters__'):
+            yield from _iter_getters(subobj, newparams)
+        else:
+            name = '.'.join(map(attrgetter('name'), newparams))
+            yield name, _getter(newparams)
 
 def freeze(obj):
     """

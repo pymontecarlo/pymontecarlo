@@ -22,7 +22,7 @@ from pymontecarlo.util.parameter import \
      ParameterizedMutableMapping, ParameterizedMutableSet,
      ParameterizedMutableSequence,
      range_validator, enum_validator,
-     iter_parameters, iter_values,
+     iter_parameters, iter_values, iter_getters,
      freeze, expand)
 
 # Globals and constants variables.
@@ -236,7 +236,15 @@ class TestParameter(unittest.TestCase):
 
         items = list(iter_values(self.obj))
         self.assertEqual(4, len(items))
-#
+
+    def testiter_getters(self):
+        subobj1 = MockParameterization('subobj1')
+        subobj1.param1 = [88, 108]
+        self.obj.param1 = subobj1
+        self.obj.param3 = [98, 99]
+
+        self.assertEqual(2, len(list(iter_getters(self.obj))))
+
     def testfreeze(self):
         subobj1 = MockParameterization('subobj1')
         subobj1.param1 = [88, 108]
