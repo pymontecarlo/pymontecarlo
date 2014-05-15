@@ -186,14 +186,14 @@ class LocalRunner(_Runner):
     def _create_options_dispatcher(self):
         return _LocalRunnerOptionsDispatcher(self._queue_options,
                                              self._queue_results,
-                                             self._outputdir, self._workdir)
+                                             self.outputdir, self.workdir)
 
     def _create_results_dispatcher(self):
         return _LocalRunnerResultsDispatcher(self._queue_results,
-                                             self._outputdir)
+                                             self.outputdir)
 
     def put(self, options):
-        h5filepath = os.path.join(self._outputdir, options.name + '.h5')
+        h5filepath = os.path.join(self.outputdir, options.name + '.h5')
         if os.path.exists(h5filepath):
             if self._overwrite:
                 os.remove(h5filepath)
@@ -201,6 +201,14 @@ class LocalRunner(_Runner):
                 raise IOError('Results already exists: %s' % h5filepath)
 
         return _Runner.put(self, options)
+
+    @property
+    def outputdir(self):
+        return self._outputdir
+
+    @property
+    def workdir(self):
+        return self._workdir
 
 #class _LocalCreatorDispatcher(_CreatorDispatcher):
 #
