@@ -29,8 +29,7 @@ from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
 
 from pymontecarlo.results.result import \
     (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
-     _PhotonDistributionResult, create_photondist_dict, PhotonDepthResult,
-     PhotonRadialResult,
+     _PhotonDistributionResult, PhotonDepthResult, PhotonRadialResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      TrajectoryResult, Trajectory,
      _ChannelsResult, BackscatteredElectronEnergyResult,
@@ -112,31 +111,48 @@ class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
     CLASS = _PhotonDistributionResult
 
     def parse(self, group):
-        data = {}
+        distributions = {}
         for transition, group in group.items():
             transition = xraytransition.from_string(transition)
 
-            for suffix, dataset in group.items():
-                data.setdefault(transition, {})[suffix] = np.copy(dataset)
+            for dataset_name, dataset in group.items():
+                absorption = dataset_name.startswith('e')
+                if dataset_name[1:] == 'nf':
+                    flag = PhotonKey.PRIMARY
+                elif dataset_name[1:] == 'cf':
+                    flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
+                elif dataset_name[1:] == 'bf':
+                    flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
+                elif dataset_name[1:] == 't':
+                    flag = PhotonKey.TOTAL
+                elif dataset_name[1:] == 'f':
+                    flag = PhotonKey.FLUORESCENCE
 
-        # Construct distributions
-        distributions = {}
-        for transition, datum in data.items():
-            distributions.update(create_photondist_dict(transition, **datum))
+                distributions[PhotonKey(transition, absorption, flag)] = np.copy(dataset)
 
         return _PhotonDistributionResult(distributions)
 
     def convert(self, obj, group):
         group = _HDF5Handler.convert(self, obj, group)
 
-        distributions = [('gnf', False, False), ('gt', False, True),
-                         ('enf', True, False), ('et', True, True)]
+        for key, distribution in obj._distributions.items():
+            transition = key.transition
+            name = '%s %s' % (transition.symbol, transition.iupac)
+            subgroup = group.require_group(name)
 
-        for suffix, absorption, fluorescence in distributions:
-            for transition, data in obj.iter_transitions(absorption, fluorescence):
-                name = '%s %s' % (transition.symbol, transition.iupac)
-                subgroup = group.require_group(name)
-                subgroup.create_dataset(suffix, data=data)
+            dataset_name = 'g' if key.is_generated() else 'e'
+            if key.flag == PhotonKey.PRIMARY:
+                dataset_name += 'nf'
+            elif key.flag == PhotonKey.CHARACTERISTIC_FLUORESCENCE:
+                dataset_name += 'cf'
+            elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
+                dataset_name += 'bf'
+            elif key.flag == PhotonKey.TOTAL:
+                dataset_name += 't'
+            elif key.flag == PhotonKey.FLUORESCENCE:
+                dataset_name += 'f'
+
+            subgroup.create_dataset(dataset_name, data=distribution)
 
         return group
 

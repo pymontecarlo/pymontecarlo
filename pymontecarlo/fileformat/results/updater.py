@@ -48,7 +48,7 @@ from pymontecarlo.fileformat.handler import find_convert_handler
 
 from pymontecarlo.results.result import \
     (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
-     PhotonDepthResult, create_photondist_dict, TimeResult, ShowersStatisticsResult,
+     PhotonDepthResult, TimeResult, ShowersStatisticsResult,
      ElectronFractionResult, BackscatteredElectronEnergyResult,
      TransmittedElectronEnergyResult, Trajectory, TrajectoryResult)
 
@@ -282,11 +282,24 @@ class Updater(_Updater):
             arcnames = [name for name in zipfile.namelist() if name.startswith(key)]
 
             # Read files
-            data = {}
+            distributions = {}
             for arcname in arcnames:
                 parts = os.path.splitext(arcname)[0].split('+')
                 transition = from_string(parts[-2].replace('_', ' '))
                 suffix = parts[-1]
+
+                absorption = suffix.startswith('e')
+                if suffix[1:] == 'nf':
+                    flag = PhotonKey.PRIMARY
+                elif suffix[1:] == 'cf':
+                    flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
+                elif suffix[1:] == 'bf':
+                    flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
+                elif suffix[1:] == 't':
+                    flag = PhotonKey.TOTAL
+                elif suffix[1:] == 'f':
+                    flag = PhotonKey.FLUORESCENCE
+                key = PhotonKey(transition, absorption, flag)
 
                 fp = zipfile.open(arcname, 'r')
                 reader = csv.reader(StringIO(fp.read().decode('ascii')))
@@ -301,12 +314,7 @@ class Updater(_Updater):
                     uncs.append(float(row[2]))
 
                 datum = np.array([zs, values, uncs]).T
-                data.setdefault(transition, {})[suffix] = datum
-
-            # Construct distributions
-            distributions = {}
-            for transition, datum in data.items():
-                distributions.update(create_photondist_dict(transition, **datum))
+                distributions[key] = datum
 
             return PhotonDepthResult(distributions)
 

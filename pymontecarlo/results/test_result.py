@@ -27,7 +27,6 @@ from pymontecarlo.results.result import \
      PhotonDepthResult,
      TimeResult,
      ElectronFractionResult,
-     create_photondist_dict,
      Trajectory,
      TrajectoryResult,
      ShowersStatisticsResult,
@@ -309,27 +308,29 @@ class TestPhotonDepthResultResult(TestCase):
 
         self.t1 = Transition(29, 9, 4)
 
+        distributions = {}
         gnf_zs = [1.0, 2.0, 3.0, 4.0]
         gnf_values = [0.0, 5.0, 4.0, 1.0]
         gnf_uncs = [0.01, 0.02, 0.03, 0.04]
         gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
+        distributions[PhotonKey(self.t1, False, PhotonKey.P)] = gnf
 
         gt_zs = [1.0, 2.0, 3.0, 4.0]
         gt_values = [10.0, 15.0, 14.0, 11.0]
         gt_uncs = [0.11, 0.12, 0.13, 0.14]
         gt = np.array([gt_zs, gt_values, gt_uncs]).T
+        distributions[PhotonKey(self.t1, False, PhotonKey.T)] = gt
 
         enf_zs = [1.0, 2.0, 3.0, 4.0]
         enf_values = [20.0, 25.0, 24.0, 21.0]
-        enf_uncs = [0.21, 0.22, 0.23, 0.24]
-        enf = np.array([enf_zs, enf_values, enf_uncs]).T
+        enf = np.array([enf_zs, enf_values]).T
+        distributions[PhotonKey(self.t1, True, PhotonKey.P)] = enf
 
         et_zs = [1.0, 2.0, 3.0, 4.0]
         et_values = [30.0, 35.0, 34.0, 31.0]
         et_uncs = [0.31, 0.32, 0.33, 0.34]
         et = np.array([et_zs, et_values, et_uncs]).T
-
-        distributions = create_photondist_dict(self.t1, gnf, gt, enf, et)
+        distributions[PhotonKey(self.t1, True, PhotonKey.T)] = et
 
         self.r = PhotonDepthResult(distributions)
 
@@ -358,7 +359,7 @@ class TestPhotonDepthResultResult(TestCase):
         self.assertEqual((4, 3), phirhoz.shape)
         self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
         self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
-        self.assertAlmostEqual(0.21, phirhoz[0][2], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][2], 4)
 
         phirhoz = self.r.get(self.t1, absorption=True, fluorescence=True)
         self.assertEqual((4, 3), phirhoz.shape)

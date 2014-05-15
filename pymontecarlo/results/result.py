@@ -95,9 +95,41 @@ class PhotonKey(object):
     def flag(self):
         return self._flag
 
+def _create_photon_keys(results, transition, absorption, primary,
+                        characteristic_fluorescence, bremsstrahlung_fluorescence):
+    # Check for total photon key
+    if primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
+        key = PhotonKey(transition, absorption, PhotonKey.T)
+        if key in results:
+            return [key]
+
+    # Check for fluorescence key
+    elif not primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
+        key = PhotonKey(transition, absorption, PhotonKey.F)
+        if key in results:
+            return [key]
+
+    # All other cases
+    keys = []
+
+    if primary:
+        key = PhotonKey(transition, absorption, PhotonKey.P)
+        if key in results:
+            keys.append(key)
+    if characteristic_fluorescence:
+        key = PhotonKey(transition, absorption, PhotonKey.C)
+        if key in results:
+            keys.append(key)
+    if bremsstrahlung_fluorescence:
+        key = PhotonKey(transition, absorption, PhotonKey.B)
+        if key in results:
+            keys.append(key)
+
+    return keys
+
 class PhotonIntensityResult(_Result):
 
-    def __init__(self, intensities={}):
+    def __init__(self, intensities=None):
         """
         Creates a new result to store photon intensities.
 
@@ -107,10 +139,12 @@ class PhotonIntensityResult(_Result):
         """
         _Result.__init__(self)
 
+        if intensities is None:
+            intensities = {}
+
         self._intensities = {}
         for key, intensity in intensities.items():
-            self._intensities[key] = \
-                np.array([intensity], dtype=[('val', np.float), ('unc', np.float)])
+            self._intensities[key] = np.array([intensity])
 
     def __contains__(self, transition):
         return self.has_intensity(transition)
@@ -118,57 +152,30 @@ class PhotonIntensityResult(_Result):
     def __len__(self):
         return len(self._intensities)
 
-    def _create_photon_keys(self, transition, absorption, primary,
-                            characteristic_fluorescence,
-                            bremsstrahlung_fluorescence):
-        # Check for total photon key
-        if primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
-            key = PhotonKey(transition, absorption, PhotonKey.T)
-            if key in self._intensities:
-                return [key]
-
-        # Check for fluorescence key
-        elif not primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
-            key = PhotonKey(transition, absorption, PhotonKey.F)
-            if key in self._intensities:
-                return [key]
-
-        # All other cases
-        keys = []
-
-        if primary:
-            keys.append(PhotonKey(transition, absorption, PhotonKey.P))
-        if characteristic_fluorescence:
-            keys.append(PhotonKey(transition, absorption, PhotonKey.C))
-        if bremsstrahlung_fluorescence:
-            keys.append(PhotonKey(transition, absorption, PhotonKey.B))
-
-        return keys
-
     def _get_intensity(self, transition, absorption, primary,
                        characteristic_fluorescence, bremsstrahlung_fluorescence):
+        def _create_photon_keys2(transition):
+            return _create_photon_keys(self._intensities, transition,
+                                       absorption, primary,
+                                       characteristic_fluorescence,
+                                       bremsstrahlung_fluorescence)
+
         if isinstance(transition, str):
             transition = from_string(transition)
 
         # Collect photon keys
         list_keys = []
         if isinstance(transition, transitionset): # transitionset
-            keys = self._create_photon_keys(transition, absorption, primary,
-                                            characteristic_fluorescence,
-                                            bremsstrahlung_fluorescence)
+            keys = _create_photon_keys2(transition)
             for key in keys:
                 if key in self._intensities:
                     list_keys.append(key)
             else:
                 for t in transition:
-                    keys = self._create_photon_keys(t, absorption, primary,
-                                                    characteristic_fluorescence,
-                                                    bremsstrahlung_fluorescence)
+                    keys = _create_photon_keys2(t)
                     list_keys.extend(keys)
         else: # single transition
-            keys = self._create_photon_keys(transition, absorption, primary,
-                                            characteristic_fluorescence,
-                                            bremsstrahlung_fluorescence)
+            keys = _create_photon_keys2(transition)
             list_keys.extend(keys)
 
         # Retrieve intensity (and its uncertainty)
@@ -178,8 +185,8 @@ class PhotonIntensityResult(_Result):
             intensity = self._intensities.get(key)
             if intensity is None:
                 continue
-            total_val += intensity['val']
-            total_unc += intensity['unc'] ** 2
+            total_val += intensity[0][0]
+            total_unc += intensity[0][1] ** 2
 
         total_unc = sqrt(total_unc)
 
@@ -444,54 +451,36 @@ class PhotonSpectrumResult(_Result):
         """
         return self._get_intensity(energy_eV, self._background)
 
-def create_photondist_dict(transition, gnf=None, gt=None, enf=None, et=None):
-    """
-    Values of *gnf*, *gt*, *enf* and *et* must be a Numpy array containing two
-    or three columns:
-
-        * abscissa values
-        * intensities
-        * (optional) uncertainties on the intensities
-    """
-    def _check(data):
-        if data.shape[1] < 2:
-            raise ValueError('The data must contains at least two columns')
-        if data.shape[1] == 2:
-            data = np.append(data, np.zeros((data.shape[0], 1)), 1)
-
-        return data
-
-    dist = {transition: {}}
-
-    if gnf is not None:
-        dist[transition].setdefault(GENERATED, {})[NOFLUORESCENCE] = _check(gnf)
-    if gt is not None:
-        dist[transition].setdefault(GENERATED, {})[TOTAL] = _check(gt)
-    if enf is not None:
-        dist[transition].setdefault(EMITTED, {})[NOFLUORESCENCE] = _check(enf)
-    if et is not None:
-        dist[transition].setdefault(EMITTED, {})[TOTAL] = _check(et)
-
-    return dist
-
 class _PhotonDistributionResult(_Result):
 
-    def __init__(self, distributions={}):
+    def __init__(self, distributions=None):
         """
         Creates a new result to store photon distributions.
 
         :arg distributions: :class:`dict` containing the distributions.
-            One should use :func:`.create_photondist_dict` to create the
-            dictionary
+            The keys should be :class:`.PhotonKey` and the values a numpy array
+            containing two or three columns:
+
+              * abscissa values
+              * intensities
+              * (optional) uncertainties on the intensities
         """
         _Result.__init__(self)
-        self._distributions = distributions
+
+        if distributions is None:
+            distributions = {}
+
+        self._distributions = {}
+        for key, distribution in distributions.items():
+            if distribution.shape[1] < 2:
+                raise ValueError('The data must contains at least two columns')
+            if distribution.shape[1] == 2:
+                distribution = np.append(distribution, np.zeros((distribution.shape[0], 1)), 1)
+
+            self._distributions[key] = distribution
 
     def __len__(self):
         return len(self._distributions)
-
-    def __iter__(self):
-        yield from self._distributions.keys()
 
     def exists(self, transition, absorption=True, fluorescence=True):
         """
@@ -509,18 +498,23 @@ class _PhotonDistributionResult(_Result):
         if isinstance(transition, str):
             transition = from_string(transition)
 
-        if transition not in self._distributions:
-            return False
+        keys = _create_photon_keys(self._distributions, transition,
+                                   absorption, True, fluorescence, fluorescence)
+        return len(keys) == 1
 
-        absorption_key = EMITTED if absorption else GENERATED
-        if absorption_key not in self._distributions[transition]:
-            return False
+    def _get(self, transition, absorption, primary,
+             characteristic_fluorescence, bremsstrahlung_fluorescence):
+        if isinstance(transition, str):
+            transition = from_string(transition)
 
-        fluorescence_key = TOTAL if fluorescence else NOFLUORESCENCE
-        if fluorescence_key not in self._distributions[transition][absorption_key]:
-            return False
+        keys = _create_photon_keys(self._distributions, transition,
+                                   absorption, primary,
+                                   characteristic_fluorescence,
+                                   bremsstrahlung_fluorescence)
+        if len(keys) != 1:
+            raise ValueError('Distribution not found')
 
-        return True
+        return np.copy(self._distributions[keys[0]])
 
     def get(self, transition, absorption=True, fluorescence=True):
         """
@@ -543,21 +537,7 @@ class _PhotonDistributionResult(_Result):
         :raise: :class:`ValueError` if there is no distribution for the
             specified transition.
         """
-        if isinstance(transition, str):
-            transition = from_string(transition)
-
-        # Check existence
-        if not self.exists(transition, absorption, fluorescence):
-            raise ValueError("No distribution for transition(s): %s" % transition)
-
-        # Retrieve data
-        absorption_key = EMITTED if absorption else GENERATED
-        fluorescence_key = TOTAL if fluorescence else NOFLUORESCENCE
-
-        distribution = \
-            self._distributions[transition][absorption_key][fluorescence_key]
-
-        return np.copy(distribution)
+        return self._get(transition, absorption, True, fluorescence, fluorescence)
 
     def integral(self, transition, absorption=True, fluorescence=True):
         """
@@ -597,7 +577,11 @@ class _PhotonDistributionResult(_Result):
             If ``True``, photon depth distribution with fluorescence is returned,
             if ``False`` photon depth distribution without fluorescence.
         """
-        for transition in self._distributions:
+        transitions = set()
+        for key in self._distributions:
+            transitions.add(key.transition)
+
+        for transition in transitions:
             if not self.exists(transition, absorption, fluorescence):
                 continue
 
