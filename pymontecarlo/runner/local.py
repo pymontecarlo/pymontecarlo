@@ -25,6 +25,7 @@ import tempfile
 import shutil
 import queue
 import random
+import threading
 
 # Third party modules.
 
@@ -114,10 +115,12 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
 
 class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
 
-    def __init__(self, queue_results, outputdir):
+    def __init__(self, queue_results, outputdir, write_lock):
         _RunnerResultsDispatcher.__init__(self, queue_results)
 
         self._outputdir = outputdir
+
+        self._write_lock = write_lock
 
     def _run(self):
         while not self.is_cancelled():
@@ -133,10 +136,11 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
                 h5filepath = os.path.join(self._outputdir,
                                           results.options.name + '.h5')
 
-                if os.path.exists(h5filepath):
-                    append_results(results, h5filepath)
-                else:
-                    results.write(h5filepath)
+                with self._write_lock:
+                    if os.path.exists(h5filepath):
+                        append_results(results, h5filepath)
+                    else:
+                        results.write(h5filepath)
 
                 self.results_saved.fire(results)
             except Exception as ex:
@@ -181,6 +185,8 @@ class LocalRunner(_Runner):
 
         self._overwrite = overwrite
 
+        self._write_lock = threading.Lock()
+
         _Runner.__init__(self, max_workers)
 
     def _create_options_dispatcher(self):
@@ -190,7 +196,8 @@ class LocalRunner(_Runner):
 
     def _create_results_dispatcher(self):
         return _LocalRunnerResultsDispatcher(self._queue_results,
-                                             self.outputdir)
+                                             self.outputdir,
+                                             self._write_lock)
 
     def put(self, options):
         h5filepath = os.path.join(self.outputdir, options.name + '.h5')
