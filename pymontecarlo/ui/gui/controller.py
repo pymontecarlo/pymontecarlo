@@ -469,6 +469,10 @@ class Controller(QObject):
     def canOpenResults(self, filepath):
         return filepath not in self._results_filepath.values()
 
+    def resultsUIDFromFilepath(self, filepath):
+        r = {v: k for k, v in self._results_filepath.items()}
+        return r[filepath]
+
     def resultsContainer(self, uid, index):
         return self._list_results[uid][index]
 

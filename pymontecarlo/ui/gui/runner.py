@@ -262,7 +262,7 @@ class RunnerDialog(QDialog):
     options_running = Signal(Options)
     options_simulated = Signal(Options)
     options_error = Signal(Options, Exception)
-    results_saved = Signal(Results)
+    results_saved = Signal(Results, str)
     results_error = Signal(Results, Exception)
 
     def __init__(self, parent=None):
@@ -536,7 +536,7 @@ class RunnerDialog(QDialog):
         self._runner.options_running.connect(self.options_running.emit)
         self._runner.options_simulated.connect(self.options_simulated.emit)
         self._runner.options_error.connect(self.options_error.emit)
-        self._runner.results_saved.connect(self.results_saved.emit)
+        self._runner.results_saved.connect(self._onResultsSaved)
         self._runner.results_error.connect(self.results_error.emit)
 
         self._running_timer.start()
@@ -565,6 +565,11 @@ class RunnerDialog(QDialog):
 
     def _onResultsError(self, results, ex):
         self._tbl_options.model().reset()
+
+    def _onResultsSaved(self, results):
+        outputdir = self._runner.outputdir
+        h5filepath = os.path.join(outputdir, results.options.name + '.h5')
+        self.results_saved.emit(results, h5filepath)
 
     def closeEvent(self, event):
         if self._runner is not None and self._runner.is_alive():
@@ -603,7 +608,7 @@ class RunnerDialog(QDialog):
         self._runner.options_running.disconnect(self.options_running.emit)
         self._runner.options_simulated.disconnect(self.options_simulated.emit)
         self._runner.options_error.disconnect(self.options_error.emit)
-        self._runner.results_saved.disconnect(self.results_saved.emit)
+        self._runner.results_saved.disconnect(self._onResultsSaved)
         self._runner.results_error.disconnect(self.results_error.emit)
 
         self._runner = None

@@ -1031,6 +1031,8 @@ class MainWindow(QMainWindow):
         self.controller().resultsSaveCancel.connect(self._onDialogProgressCancel)
         self.controller().resultsSaveException.connect(self._onDialogProgressException)
 
+        self._dlg_runner.results_saved.connect(self._onDialogRunnerResultsSaved)
+
         self.controller().optionsNewRequested.connect(self._onOptionsNewRequested)
         self.controller().optionsOpenRequested.connect(self._onOptionsOpenRequested)
         self.controller().optionsReloadRequested.connect(self._onOptionsReloadRequested)
@@ -1152,6 +1154,13 @@ class MainWindow(QMainWindow):
     def _onDialogProgressException(self, ex):
         self._dlg_progress.hide()
         messagebox.exception(self, ex)
+
+    def _onDialogRunnerResultsSaved(self, results, filepath):
+        if self.controller().canOpenResults(filepath):
+            self.controller().resultsOpen.emit(filepath)
+        else:
+            uid = self.controller().resultsUIDFromFilepath(filepath)
+            self.controller().resultsReloadRequested.emit(uid)
 
     def _onOptionsNewRequested(self):
         dialog = OptionsWizard()
