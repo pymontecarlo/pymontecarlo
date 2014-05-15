@@ -35,10 +35,13 @@ from PySide.QtGui import \
      QItemDelegate, QKeySequence)
 from PySide.QtCore import \
     (Qt, QAbstractItemModel, QModelIndex, QAbstractListModel,
-     QAbstractTableModel, QTimer, QRect)
+     QAbstractTableModel, QTimer, QRect, Signal)
 
 # Local modules.
 from pymontecarlo.settings import get_settings
+
+from pymontecarlo.options.options import Options
+from pymontecarlo.results.results import Results
 
 from pymontecarlo.ui.gui.util.widget import DirBrowseWidget
 from pymontecarlo.ui.gui.util.tango import getIcon
@@ -255,6 +258,13 @@ class _StateOptionsItemDelegate(QItemDelegate):
 
 class RunnerDialog(QDialog):
 
+    options_added = Signal(Options)
+    options_running = Signal(Options)
+    options_simulated = Signal(Options)
+    options_error = Signal(Options, Exception)
+    results_saved = Signal(Results)
+    results_error = Signal(Results, Exception)
+
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         self.setWindowTitle('Runner')
@@ -383,6 +393,12 @@ class RunnerDialog(QDialog):
         self._btn_start.released.connect(self._onStart)
         self._btn_cancel.released.connect(self._onCancel)
         self._btn_close.released.connect(self._onClose)
+
+        self.options_added.connect(self._onOptionsAdded)
+        self.options_running.connect(self._onOptionsRunning)
+        self.options_simulated.connect(self._onOptionsSimulated)
+        self.options_error.connect(self._onOptionsError)
+        self.results_error.connect(self._onResultsError)
 
         # Defaults
         settings = get_settings()
@@ -516,33 +532,18 @@ class RunnerDialog(QDialog):
         self._btn_cancel.setEnabled(True)
         self._btn_close.setEnabled(False)
 
-        self._runner.options_added.connect(self._onOptionsAdded)
-        self._runner.options_running.connect(self._onOptionsRunning)
-        self._runner.options_simulated.connect(self._onOptionsSimulated)
-        self._runner.options_error.connect(self._onOptionsError)
+        self._runner.options_added.connect(self.options_added.emit)
+        self._runner.options_running.connect(self.options_running.emit)
+        self._runner.options_simulated.connect(self.options_simulated.emit)
+        self._runner.options_error.connect(self.options_error.emit)
+        self._runner.results_saved.connect(self.results_saved.emit)
+        self._runner.results_error.connect(self.results_error.emit)
 
         self._running_timer.start()
         self._runner.start()
 
     def _onCancel(self):
-        self._runner.cancel()
-        self._running_timer.stop()
-
-        self._runner.options_added.disconnect(self._onOptionsAdded)
-        self._runner.options_running.disconnect(self._onOptionsRunning)
-        self._runner.options_simulated.disconnect(self._onOptionsSimulated)
-        self._runner.options_error.disconnect(self._onOptionsError)
-
-        self._runner = None
-
-        self._spn_workers.setEnabled(True)
-        self._txt_outputdir.setEnabled(True)
-        self._chk_overwrite.setEnabled(True)
-        self._btn_addtoqueue.setEnabled(False)
-        self._btn_addalltoqueue.setEnabled(False)
-        self._btn_start.setEnabled(True)
-        self._btn_cancel.setEnabled(False)
-        self._btn_close.setEnabled(True)
+        self.cancel()
 
     def _onClose(self):
         if self._runner is not None:
@@ -561,6 +562,10 @@ class RunnerDialog(QDialog):
 
     def _onOptionsError(self, options, ex):
         self._tbl_options.model().resetOptions(options)
+
+    def _onResultsError(self, results, ex):
+        self.cancel()
+        messagebox.exception(self, ex)
 
     def closeEvent(self, event):
         if self._runner is not None and self._runner.is_alive():
@@ -590,6 +595,28 @@ class RunnerDialog(QDialog):
 
     def clearAvailableOptions(self):
         self._lbl_available.model().clearOptions()
+
+    def cancel(self):
+        self._runner.cancel()
+        self._running_timer.stop()
+
+        self._runner.options_added.disconnect(self.options_added.emit)
+        self._runner.options_running.disconnect(self.options_running.emit)
+        self._runner.options_simulated.disconnect(self.options_simulated.emit)
+        self._runner.options_error.disconnect(self.options_error.emit)
+        self._runner.results_saved.disconnect(self.results_saved.emit)
+        self._runner.results_error.disconnect(self.results_error.emit)
+
+        self._runner = None
+
+        self._spn_workers.setEnabled(True)
+        self._txt_outputdir.setEnabled(True)
+        self._chk_overwrite.setEnabled(True)
+        self._btn_addtoqueue.setEnabled(False)
+        self._btn_addalltoqueue.setEnabled(False)
+        self._btn_start.setEnabled(True)
+        self._btn_cancel.setEnabled(False)
+        self._btn_close.setEnabled(True)
 
 def __run():
     import sys
