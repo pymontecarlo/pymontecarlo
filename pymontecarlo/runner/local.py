@@ -72,7 +72,7 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
                 program = next(iter(options.programs))
                 self._worker = program.worker_class(program)
                 self._worker.reset()
-                results = self._worker.run(options, self._outputdir, workdir)
+                container = self._worker.run(options, self._outputdir, workdir)
                 self._options = None
 
                 self.options_simulated.fire(options)
@@ -84,7 +84,7 @@ class _LocalRunnerOptionsDispatcher(_RunnerOptionsDispatcher):
                     logging.debug('Removed temporary work directory: %s', workdir)
 
                 # Put results in queue
-                self._queue_results.put(Results(base_options, [results]))
+                self._queue_results.put(Results(base_options, [container]))
             except Exception as ex:
                 self.options_error.fire(options, ex)
             finally:

@@ -69,6 +69,7 @@ class _Runner(_Monitorable):
         self.options_running.connect(self._on_options_running)
         self.options_simulated.connect(self._on_options_simulated)
         self.options_error.connect(self._on_options_error)
+        self.results_error.connect(self._on_results_error)
 
         # Dispatchers
         self._dispatchers_options = set()
@@ -201,6 +202,11 @@ class _Runner(_Monitorable):
     def _on_options_error(self, options, ex):
         with self._options_state_lock:
             self._options_state[options] = (self.STATE_ERROR, str(ex))
+
+    def _on_results_error(self, results, ex):
+        with self._options_state_lock:
+            for container in results:
+                self._options_state[container.options] = (self.STATE_ERROR, str(ex))
 
     def options_state(self, options):
         with self._options_state_lock:
