@@ -564,8 +564,7 @@ class RunnerDialog(QDialog):
         self._tbl_options.model().resetOptions(options)
 
     def _onResultsError(self, results, ex):
-        self.cancel()
-        messagebox.exception(self, ex)
+        self._tbl_options.model().reset()
 
     def closeEvent(self, event):
         if self._runner is not None and self._runner.is_alive():
