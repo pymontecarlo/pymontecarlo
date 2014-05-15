@@ -57,23 +57,29 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
         intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
         intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
         intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
+        intensities[PhotonKey(t1, False, PhotonKey.T)] = (6.0, 0.4)
         intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
         intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
         intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
+        intensities[PhotonKey(t1, True, PhotonKey.T)] = (18.0, 0.8)
 
         intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
         intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
         intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
+        intensities[PhotonKey(t2, False, PhotonKey.T)] = (36.0, 0.4)
         intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
         intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
         intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
+        intensities[PhotonKey(t2, True, PhotonKey.T)] = (48.0, 0.8)
 
         intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
         intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
         intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
+        intensities[PhotonKey(t3, False, PhotonKey.T)] = (66.0, 0.4)
         intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
         intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
         intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
+        intensities[PhotonKey(t3, True, PhotonKey.T)] = (78.0, 0.8)
 
         self.obj = PhotonIntensityResult(intensities)
 
@@ -89,19 +95,19 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
     def testparse(self):
         obj = self.h.parse(self.group)
 
-        self.assertEqual(18, len(obj._intensities))
+        self.assertEqual(24, len(obj._intensities))
 
         val, err = obj.intensity(Transition(29, 9, 4))
         self.assertAlmostEqual(18.0, val, 4)
-        self.assertAlmostEqual(1.0488, err, 4)
+        self.assertAlmostEqual(0.8, err, 4)
 
         val, err = obj.intensity(K_family(14))
         self.assertAlmostEqual(48.0, val, 4)
-        self.assertAlmostEqual(1.0488, err, 4)
+        self.assertAlmostEqual(0.8, err, 4)
 
         val, err = obj.intensity('Cu La')
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
-        self.assertAlmostEqual(1.4832, err, 4)
+        self.assertAlmostEqual(1.1314, err, 4)
 
     def testcan_convert(self):
         self.assertTrue(self.h.can_convert(self.obj))

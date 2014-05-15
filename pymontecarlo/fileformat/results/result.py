@@ -51,12 +51,20 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         for transition, dataset in group.items():
             transition = xraytransition.from_string(transition)
 
-            intensities[PhotonKey(transition, False, PhotonKey.P)] = dataset.attrs['gnf']
-            intensities[PhotonKey(transition, False, PhotonKey.C)] = dataset.attrs['gcf']
-            intensities[PhotonKey(transition, False, PhotonKey.B)] = dataset.attrs['gbf']
-            intensities[PhotonKey(transition, True, PhotonKey.P)] = dataset.attrs['enf']
-            intensities[PhotonKey(transition, True, PhotonKey.C)] = dataset.attrs['ecf']
-            intensities[PhotonKey(transition, True, PhotonKey.B)] = dataset.attrs['ebf']
+            for attrname, intensity in dataset.attrs.items():
+                absorption = attrname.startswith('e')
+                if attrname[1:] == 'nf':
+                    flag = PhotonKey.PRIMARY
+                elif attrname[1:] == 'cf':
+                    flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
+                elif attrname[1:] == 'bf':
+                    flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
+                elif attrname[1:] == 't':
+                    flag = PhotonKey.TOTAL
+                elif attrname[1:] == 'f':
+                    flag = PhotonKey.FLUORESCENCE
+
+                intensities[PhotonKey(transition, absorption, flag)] = intensity
 
         return PhotonIntensityResult(intensities)
 
@@ -75,6 +83,10 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
                 attrname += 'cf'
             elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
                 attrname += 'bf'
+            elif key.flag == PhotonKey.TOTAL:
+                attrname += 't'
+            elif key.flag == PhotonKey.FLUORESCENCE:
+                attrname += 'f'
 
             dataset.attrs[attrname] = intensity[0]
 

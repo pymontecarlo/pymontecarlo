@@ -52,9 +52,14 @@ class PhotonKey(object):
     PRIMARY = 'P'
     CHARACTERISTIC_FLUORESCENCE = 'C'
     BREMSSTRAHLUNG_FLUORESCENCE = 'B'
+    FLUORESCENCE = 'F'
+    TOTAL = 'T'
+
     P = PRIMARY
     C = CHARACTERISTIC_FLUORESCENCE
     B = BREMSSTRAHLUNG_FLUORESCENCE
+    F = FLUORESCENCE
+    T = TOTAL
 
     def __init__(self, transition, absorption, flag):
         self._transition = transition
@@ -118,13 +123,28 @@ class PhotonIntensityResult(_Result):
         def _create_photon_keys(transition, absorption, primary,
                                 characteristic_fluorescence,
                                 bremsstrahlung_fluorescence):
+            # Check for total photon key
+            if primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
+                key = PhotonKey(transition, absorption, PhotonKey.T)
+                if key in self._intensities:
+                    return [key]
+
+            # Check for fluorescence key
+            elif not primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
+                key = PhotonKey(transition, absorption, PhotonKey.F)
+                if key in self._intensities:
+                    return [key]
+
+            # All other cases
             keys = []
+
             if primary:
                 keys.append(PhotonKey(transition, absorption, PhotonKey.P))
             if characteristic_fluorescence:
                 keys.append(PhotonKey(transition, absorption, PhotonKey.C))
             if bremsstrahlung_fluorescence:
                 keys.append(PhotonKey(transition, absorption, PhotonKey.B))
+
             return keys
 
         if isinstance(transition, str):

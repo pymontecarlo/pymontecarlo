@@ -238,12 +238,16 @@ class Updater(_Updater):
                     (float(row[2]), float(row[3]))
                 intensities[PhotonKey(transition, False, PhotonKey.B)] = \
                     (float(row[4]), float(row[5]))
+                intensities[PhotonKey(transition, False, PhotonKey.T)] = \
+                    (float(row[8]), float(row[9]))
                 intensities[PhotonKey(transition, True, PhotonKey.P)] = \
                     (float(row[14]), float(row[15]))
                 intensities[PhotonKey(transition, True, PhotonKey.C)] = \
                     (float(row[10]), float(row[11]))
                 intensities[PhotonKey(transition, True, PhotonKey.B)] = \
                     (float(row[12]), float(row[13]))
+                intensities[PhotonKey(transition, True, PhotonKey.T)] = \
+                    (float(row[16]), float(row[17]))
 
             return PhotonIntensityResult(intensities)
 
