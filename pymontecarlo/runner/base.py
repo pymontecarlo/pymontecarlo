@@ -23,6 +23,7 @@ import threading
 import queue
 from collections import Counter
 from operator import itemgetter
+import copy
 
 # Third party modules.
 
@@ -167,7 +168,7 @@ class _Runner(_Monitorable):
         if not options.programs:
             raise ValueError('No program associated with options')
 
-        base_options = options
+        base_options = copy.deepcopy(options)
 
         list_options = []
         for program in base_options.programs:
