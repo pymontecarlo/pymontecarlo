@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import logging
 import threading
 import queue
 from collections import Counter
@@ -105,6 +106,7 @@ class _Runner(_Monitorable):
 
         for dispatcher in self._dispatchers:
             dispatcher.start()
+            logging.debug('Start dispatcher: %s' % dispatcher)
 
         self._is_started.set()
 
@@ -123,6 +125,7 @@ class _Runner(_Monitorable):
         """
         for dispatcher in self._dispatchers:
             dispatcher.cancel()
+            logging.debug('Dispatcher cancelled: %s' % dispatcher)
 
     def is_alive(self):
         """
@@ -170,6 +173,7 @@ class _Runner(_Monitorable):
             raise ValueError('No program associated with options')
 
         base_options = copy.deepcopy(options)
+        logging.debug('Putting %s options is queue' % base_options)
 
         list_options = []
         for program in base_options.programs:
@@ -188,22 +192,27 @@ class _Runner(_Monitorable):
         return list_options
 
     def _on_options_added(self, options):
+        logging.debug('Options %s added' % options)
         with self._options_state_lock:
             self._options_state[options] = (self.STATE_QUEUED, 'queued')
 
     def _on_options_running(self, options):
+        logging.debug('Options %s running' % options)
         with self._options_state_lock:
             self._options_state[options] = (self.STATE_RUNNING, 'running')
 
     def _on_options_simulated(self, options):
+        logging.debug('Options %s simulated' % options)
         with self._options_state_lock:
             self._options_state[options] = (self.STATE_SIMULATED, 'simulated')
 
     def _on_options_error(self, options, ex):
+        logging.exception("Options %s error" % options)
         with self._options_state_lock:
             self._options_state[options] = (self.STATE_ERROR, str(ex))
 
     def _on_results_error(self, results, ex):
+        logging.exception("Results %s error" % results)
         with self._options_state_lock:
             for container in results:
                 self._options_state[container.options] = (self.STATE_ERROR, str(ex))

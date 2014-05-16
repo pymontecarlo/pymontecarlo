@@ -601,18 +601,22 @@ class _Area(QMdiArea):
         self.controller().summaryDisplayRequested.connect(self._onSummaryDisplayRequested)
 
     def _onOptionsModified(self, uid, options):
+        logging.debug('area: optionsModified')
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
     def _onOptionsReloadRequestApproved(self, uid):
+        logging.debug('area: optionsReloadRequestApproved')
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
     def _onOptionsRemoveRequestApproved(self, uid):
+        logging.debug('area: optionsRemoveRequestApproved')
         for window in list(self._options_windows.get(uid, {}).values()):
             window.close()
 
     def _onResultsReloadRequestApproved(self, uid):
+        logging.debug('area: resultsReloadRequestApproved')
         for window in list(self._results_windows.get(uid, {}).values()):
             window.close()
 
@@ -621,6 +625,7 @@ class _Area(QMdiArea):
                 window.close()
 
     def _onResultsRemoveRequestApproved(self, uid):
+        logging.debug('area: resultsRemoveRequestApproved')
         for window in list(self._results_windows.get(uid, {}).values()):
             window.close()
 
@@ -629,54 +634,67 @@ class _Area(QMdiArea):
                 window.close()
 
     def _onBeamDisplayRequested(self, uid):
+        logging.debug('area: beamDisplayRequested')
         window = self._getOptionsWindow(uid, 'beam', _BeamSubWindow)
         self._showWindow(window)
         self.controller().beamDisplayed.emit(uid)
 
     def _onBeamDisplayClosed(self, uid):
+        logging.debug('area: beamDisplayClosed')
         self._options_windows[uid].pop('beam')
 
     def _onGeometryDisplayRequested(self, uid):
+        logging.debug('area: geometryDisplayRequested')
         window = self._getOptionsWindow(uid, 'geometry', _GeometrySubWindow)
         self._showWindow(window)
         self.controller().geometryDisplayed.emit(uid)
 
     def _onGeometryDisplayClosed(self, uid):
+        logging.debug('area: geometryDisplayClosed')
         self._options_windows[uid].pop('geometry')
 
     def _onDetectorsDisplayRequested(self, uid):
+        logging.debug('area: detectorsDisplayRequested')
         window = self._getOptionsWindow(uid, 'detectors', _DetectorsSubWindow)
         self._showWindow(window)
         self.controller().detectorsDisplayed.emit(uid)
 
     def _onDetectorsDisplayClosed(self, uid):
+        logging.debug('area: detectorsDisplayClosed')
         self._options_windows[uid].pop('detectors')
 
     def _onLimitsDisplayRequested(self, uid):
+        logging.debug('area: limitsDisplayRequested')
         window = self._getOptionsWindow(uid, 'limits', _LimitsSubWindow)
         self._showWindow(window)
         self.controller().limitsDisplayed.emit(uid)
 
     def _onLimitsDisplayClosed(self, uid):
+        logging.debug('area: limitsDisplayClosed')
         self._options_windows[uid].pop('limits')
 
     def _onModelsDisplayRequested(self, uid):
+        logging.debug('area: modelsDisplayRequested')
         window = self._getOptionsWindow(uid, 'models', _ModelsSubWindow)
         self._showWindow(window)
         self.controller().modelsDisplayed.emit(uid)
 
     def _onModelsDisplayClosed(self, uid):
+        logging.debug('area: modelsDisplayClosed')
         self._options_windows[uid].pop('models')
 
     def _onResultDisplayRequested(self, uid, index, key):
+        logging.debug('area: resultDisplayRequested')
         window = self._getResultWindow(uid, index, key, _ResultSubWindow)
         self._showWindow(window)
         self.controller().resultDisplayed.emit(uid, index, key)
 
     def _onResultDisplayClosed(self, uid, index, key):
+        logging.debug('area: resultDisplayClosed')
         self._results_windows[uid].pop((index, key))
 
     def _onSummaryDisplayRequested(self, uid):
+        logging.debug('area: summaryDisplayRequested')
         window = _SummarySubWindow(uid, self.controller())
         self._showWindow(window)
         self.controller().summaryDisplayed.emit(uid)
@@ -744,6 +762,7 @@ class _Tree(QTreeWidget):
         self.controller().resultDisplayClosed.connect(self._onResultDisplayClosed)
 
     def _onContextMenu(self, point):
+        logging.debug('tree: contextMenu')
         item = self.itemAt(point)
         if item is None or not hasattr(item, 'popupMenu'):
             return
@@ -755,6 +774,7 @@ class _Tree(QTreeWidget):
         menu.exec_(self.mapToGlobal(point))
 
     def _onDoubleClicked(self, item, column):
+        logging.debug('tree: doubleClicked')
         if not hasattr(item, 'popupMenu'):
             return
 
@@ -769,6 +789,7 @@ class _Tree(QTreeWidget):
         action.trigger()
 
     def _onOptionsAdded(self, uid, options):
+        logging.debug('tree: optionsAdded')
         c = self.controller()
 
         itm_options = _OptionsTreeItem(uid, c, self)
@@ -792,11 +813,13 @@ class _Tree(QTreeWidget):
         self.expandItem(itm_options)
 
     def _onOptionsRemoveRequestApproved(self, uid):
+        logging.debug('tree: optionsRemoveRequestApproved')
         item = self._options_items.pop(uid)['root']
         self.headerItem().removeChild(item)
         self.setCurrentItem(None) # Hack to ensure refresh of actions
 
     def _onResultsAdded(self, uid, results):
+        logging.debug('tree: resultsAdded')
         c = self.controller()
 
         def _addOptions(options, index, parent):
@@ -844,6 +867,7 @@ class _Tree(QTreeWidget):
         self.expandItem(itm_results)
 
     def _onResultsRemoveRequestApproved(self, uid):
+        logging.debug('tree: resultsRemoveRequestApproved')
         items = self._results_items.pop(uid)
 
         for options_uid in items['options']:
@@ -853,56 +877,70 @@ class _Tree(QTreeWidget):
         self.setCurrentItem(None) # Hack to ensure refresh of actions
 
     def _onResultsReloadRequestApproved(self, uid):
+        logging.debug('tree: resultsReloadRequestApproved')
         self._onResultsRemoveRequestApproved(uid)
 
     def _onResultsReloaded(self, uid, results):
+        logging.debug('tree: resultsReloaded')
         self._onResultsAdded(uid, results)
 
     def _onBeamDisplayed(self, uid):
+        logging.debug('tree: beamDisplayed')
         item = self._options_items[uid]['beam']
         self._itemOpened(item)
 
     def _onBeamDisplayClosed(self, uid):
+        logging.debug('tree: beamDisplayClosed')
         item = self._options_items[uid]['beam']
         self._itemClosed(item)
 
     def _onGeometryDisplayed(self, uid):
+        logging.debug('tree: geometryDisplayed')
         item = self._options_items[uid]['geometry']
         self._itemOpened(item)
 
     def _onGeometryDisplayClosed(self, uid):
+        logging.debug('tree: geometryDisplayClosed')
         item = self._options_items[uid]['geometry']
         self._itemClosed(item)
 
     def _onDetectorsDisplayed(self, uid):
+        logging.debug('tree: detectorsDisplayed')
         item = self._options_items[uid]['detectors']
         self._itemOpened(item)
 
     def _onDetectorsDisplayClosed(self, uid):
+        logging.debug('tree: detectorsDisplayClosed')
         item = self._options_items[uid]['detectors']
         self._itemClosed(item)
 
     def _onLimitsDisplayed(self, uid):
+        logging.debug('tree: limitsDisplayed')
         item = self._options_items[uid]['limits']
         self._itemOpened(item)
 
     def _onLimitsDisplayClosed(self, uid):
+        logging.debug('tree: limitsDisplayClosed')
         item = self._options_items[uid]['limits']
         self._itemClosed(item)
 
     def _onModelsDisplayed(self, uid):
+        logging.debug('tree: modelsDisplayed')
         item = self._options_items[uid]['models']
         self._itemOpened(item)
 
     def _onModelsDisplayClosed(self, uid):
+        logging.debug('tree: modelsDisplayClosed')
         item = self._options_items[uid]['models']
         self._itemClosed(item)
 
     def _onResultDisplayed(self, uid, index, key):
+        logging.debug('tree: resultDisplayed')
         item = self._results_items[uid][(index, key)]
         self._itemOpened(item)
 
     def _onResultDisplayClosed(self, uid, index, key):
+        logging.debug('tree: resultDisplayClosed')
         item = self._results_items[uid][(index, key)]
         self._itemClosed(item)
 
@@ -1107,58 +1145,72 @@ class MainWindow(QMainWindow):
             self.resize(QSize(*size))
 
     def _onNew(self):
+        logging.debug('main: new')
         self.controller().optionsNewRequested.emit()
 
     def _onOpen(self):
+        logging.debug('main: open')
         self.controller().optionsOpenRequested.emit()
 
     def _onReload(self):
+        logging.debug('main: reload')
         item = self._tree.currentItem()
         if item is None:
             return
         item.requestReload()
 
     def _onSave(self):
+        logging.debug('main: save')
         item = self._tree.currentItem()
         if item is None:
             return
         item.requestSave()
 
     def _onSaveAs(self):
+        logging.debug('main: saveAs')
         item = self._tree.currentItem()
         if item is None:
             return
         item.requestSaveAs()
 
     def _onClose(self):
+        logging.debug('main: close')
         item = self._tree.currentItem()
         if item is None:
             return
         item.requestClose()
 
     def _onCloseAll(self):
+        logging.debug('main: closeAll')
         self._tree.requestCloseAll()
 
     def _onPreferences(self):
+        logging.debug('main: preferences')
         dialog = ConfigureDialog()
         dialog.exec_()
 
     def _onExit(self):
+        logging.debug('main: exit')
         self.close()
 
     def _onRun(self):
+        logging.debug('main: run')
         self._dlg_runner.show()
 
     def _onWindowCascade(self):
+        logging.debug('main: windowCascade')
         self._area.cascadeSubWindows()
 
     def _onWindowTile(self):
+        logging.debug('main: windowTile')
         self._area.tileSubWindows()
 
     def _onWindowCloseall(self):
+        logging.debug('main: windowCloseAll')
         self._area.closeAllSubWindows()
 
     def _onAbout(self):
+        logging.debug('main: about')
         fields = {'version': __version__,
                   'copyright': __copyright__,
                   'license': __license__}
@@ -1166,6 +1218,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(self, 'About', message)
 
     def _onTreeSelectionChanged(self):
+        logging.debug('main: treeSelectionChanged')
         item = self._tree.currentItem()
         if item is None:
             self._act_reload.setEnabled(False)
@@ -1180,20 +1233,25 @@ class MainWindow(QMainWindow):
         self._act_saveas.setEnabled(item.canSaveAs())
 
     def _onTreeChanged(self):
+        logging.debug('main: treeChanged')
         self._act_closeall.setEnabled(self._tree.topLevelItemCount() > 0)
 
     def _onDialogProgressProgress(self, progress, status):
+#        logging.debug('main: dialogProgressProgress')
         self._dlg_progress.setValue(progress * 100)
         self._dlg_progress.setLabelText(status)
 
     def _onDialogProgressCancel(self):
+        logging.debug('main: dialogProgressCancel')
         self._dlg_progress.hide()
 
     def _onDialogProgressException(self, ex):
+        logging.debug('main: dialogProgressException')
         self._dlg_progress.hide()
         messagebox.exception(self, ex)
 
     def _onDialogRunnerResultsSaved(self, results, filepath):
+        logging.debug('main: dialogRunnerResultsSaved')
         if self.controller().canOpenResults(filepath):
             self.controller().resultsOpen.emit(filepath)
         else:
@@ -1201,6 +1259,7 @@ class MainWindow(QMainWindow):
             self.controller().resultsReloadRequested.emit(uid)
 
     def _onOptionsNewRequested(self):
+        logging.debug('main: optionsNewRequested')
         dialog = OptionsWizard()
         if not dialog.exec_():
             return
@@ -1208,6 +1267,7 @@ class MainWindow(QMainWindow):
         self.controller().optionsAddRequested.emit(options, None)
 
     def _onOptionsOpenRequested(self):
+        logging.debug('main: optionsOpenRequested')
         settings = self.controller().settings()
         curdir = getattr(settings.gui, 'opendir', os.getcwd())
         namefilters = {'Options [*.xml] (*.xml)': '.xml',
@@ -1241,6 +1301,7 @@ class MainWindow(QMainWindow):
         self._dlg_progress.show()
 
     def _onOptionsReloadRequested(self, uid):
+        logging.debug('main: optionsReloadRequested')
         if not self._checkOptionsSave(uid):
             return
 
@@ -1250,6 +1311,7 @@ class MainWindow(QMainWindow):
         self._dlg_progress.show()
 
     def _onOptionsModifyRequested(self, uid):
+        logging.debug('main: optionsModifyRequested')
         options = self.controller().options(uid)
 
         dialog = OptionsWizard(options)
@@ -1259,6 +1321,7 @@ class MainWindow(QMainWindow):
         self.controller().optionsModified.emit(uid, dialog.options())
 
     def _onOptionsSaveRequested(self, uid):
+        logging.debug('main: optionsSaveRequested')
         filepath = self.controller().optionsFilepath(uid)
         if not filepath:
             self.controller().optionsSaveAsRequested.emit(uid)
@@ -1269,6 +1332,7 @@ class MainWindow(QMainWindow):
         self.controller().optionsSave.emit(uid, filepath)
 
     def _onOptionsSaveAsRequested(self, uid):
+        logging.debug('main: optionsSaveAsRequested')
         settings = self.controller().settings()
         curdir = getattr(settings.gui, "savedir", os.getcwd())
 
@@ -1288,32 +1352,39 @@ class MainWindow(QMainWindow):
         self.controller().optionsSave.emit(uid, filepath)
 
     def _onOptionsOpened(self, options, filepath):
+        logging.debug('main: optionsOpened')
         self._dlg_progress.hide()
 
     def _onOptionsReloaded(self, uid, options):
+        logging.debug('main: optionsReloaded')
         self._dlg_progress.hide()
 
     def _onOptionsAddRequested(self, options, filepath):
+        logging.debug('main: optionsAddRequested')
         self.controller().optionsAddRequestApproved.emit(options, filepath)
 
     def _onOptionsAdded(self, uid, options):
+        logging.debug('main: optionsAdded')
         try:
             self._dlg_runner.addAvailableOptions(options)
         except:
             pass
 
     def _onOptionsModified(self, uid, options):
+        logging.debug('main: optionsModified')
         try:
             self._dlg_runner.addAvailableOptions(options)
         except:
             pass
 
     def _onOptionsRemoveRequested(self, uid):
+        logging.debug('main: optionsRemoveRequested')
         if not self._checkOptionsSave(uid):
             return
         self.controller().optionsRemoveRequestApproved.emit(uid)
 
     def _onOptionsSaved(self, uid, filepath):
+        logging.debug('main: optionsSaved')
         self._dlg_progress.hide()
 
         QMessageBox.information(self, 'pyMonteCarlo', 'Saved')
@@ -1321,6 +1392,7 @@ class MainWindow(QMainWindow):
         self._act_save.setEnabled(False)
 
     def _onResultsSaveAsRequested(self, uid):
+        logging.debug('main: resultsSaveAsRequested')
         settings = self.controller().settings()
         curdir = getattr(settings.gui, "savedir", os.getcwd())
 
@@ -1340,25 +1412,31 @@ class MainWindow(QMainWindow):
         self.controller().resultsSave.emit(uid, filepath)
 
     def _onResultsReloadRequested(self, uid):
+        logging.debug('main: resultsReloadSRequested')
         self.controller().resultsReloadRequestApproved.emit(uid)
         self.controller().resultsReload.emit(uid)
         self._dlg_progress.reset()
         self._dlg_progress.show()
 
     def _onResultsOpened(self, results, filepath):
+        logging.debug('main: resultsOpened')
         self._dlg_progress.hide()
 
     def _onResultsReloaded(self, uid, results):
+        logging.debug('main: resultsReloaded')
         self._dlg_progress.hide()
 
     def _onResultsSaved(self, uid, filepath):
+        logging.debug('main: resultsSaved')
         self._dlg_progress.hide()
         QMessageBox.information(self, 'pyMonteCarlo', 'Saved')
 
     def _onResultsAddRequested(self, options, filepath):
+        logging.debug('main: resultsAddRequested')
         self.controller().resultsAddRequestApproved.emit(options, filepath)
 
     def _onResultsRemoveRequested(self, uid):
+        logging.debug('main: resultsRemoveRequested')
         self.controller().resultsRemoveRequestApproved.emit(uid)
 
     def _checkOptionsSave(self, uid):
