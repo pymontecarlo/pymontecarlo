@@ -653,7 +653,7 @@ class SphereWidget(_GeometryWidget):
         self._txt_diameter = DiameterWidget(_SphereBody.diameter_m)
 
         # Layouts
-        layout = _ParameterizedClassWidget._initUI(self)
+        layout = _GeometryWidget._initUI(self)
         layout.insertRow(0, self._lbl_material)
         layout.insertRow(1, self._lst_material)
         layout.insertRow(2, self._lbl_diameter, self._txt_diameter)
