@@ -60,9 +60,8 @@ class Settings(ConfigParser):
         for alias in self.get_available_program_aliases():
             try:
                 program = self.get_program(alias, validate=False)
-            except Exception as ex:
-                logging.error('The following exception occurred while loading program "%s": %s',
-                              alias, str(ex))
+            except:
+                logging.exception('While loading program "%s"', alias)
                 continue
 
             programs.append(program)
@@ -86,9 +85,8 @@ class Settings(ConfigParser):
         for alias in self.get_program_aliases():
             try:
                 program = self.get_program(alias)
-            except Exception as ex:
-                logging.error('The following exception occurred while loading program "%s": %s',
-                              alias, str(ex))
+            except:
+                logging.exception('While loading program "%s"', alias)
                 continue
 
             programs.append(program)

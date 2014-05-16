@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import logging
 try:
     cpu_count = os.cpu_count
 except AttributeError:
@@ -552,21 +553,27 @@ class RunnerDialog(QDialog):
         self.close()
 
     def _onOptionsAdded(self, options):
+        logging.debug('runner: optionsAdded')
         self._tbl_options.model().addOptions(options)
 
     def _onOptionsRunning(self, options):
+        logging.debug('runner: optionsRunning')
         self._tbl_options.model().resetOptions(options)
 
     def _onOptionsSimulated(self, options):
+        logging.debug('runner: optionsSimulated')
         self._tbl_options.model().resetOptions(options)
 
     def _onOptionsError(self, options, ex):
+        logging.debug('runner: optionsError')
         self._tbl_options.model().resetOptions(options)
 
     def _onResultsError(self, results, ex):
+        logging.debug('runner: resultsError')
         self._tbl_options.model().reset()
 
     def _onResultsSaved(self, results):
+        logging.debug('runner: resultsSaved')
         outputdir = self._runner.outputdir
         h5filepath = os.path.join(outputdir, results.options.name + '.h5')
         self.results_saved.emit(results, h5filepath)
