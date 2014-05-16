@@ -1426,6 +1426,14 @@ def _setup(argv):
         sys.__excepthook__(exc_type, exc_obj, exc_tb)
     sys.excepthook = _excepthook
 
+    filepath = os.path.join(dirpath, 'pymontecarlo.stdout')
+    sys.stdout = open(filepath, 'w')
+    logging.info('Redirected stdout to %s' % filepath)
+
+    filepath = os.path.join(dirpath, 'pymontecarlo.stderr')
+    sys.stderr = open(filepath, 'w')
+    logging.info('Redirected stderr to %s' % filepath)
+
 def run():
     argv = sys.argv
     _setup(argv)
