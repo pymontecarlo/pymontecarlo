@@ -185,13 +185,24 @@ if has_cx_freeze:
                                      "pymontecarlo-%s" % platform.machine())
             make_archive(base_name, 'zip', build_dir)
 
-packages = find_packages()
+packages = find_packages(exclude=('pymontecarlo.util.dist*',))
 namespace_packages = ['pymontecarlo',
                       'pymontecarlo.program']
+requirements = ['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
+                'pyxray', 'Pillow']
+
+excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'pywin.debugger',
+            'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',
+            'Tkconstants', 'tkinter', "wx", "scipy", "PyQt4",
+            'pyxray' # Because data files from pyxray are not copied in zip
+            ]
+includes = ['PIL' # Requires by some programs
+            ]
 
 build_exe_options = {"packages": packages,
                      "namespace_packages": namespace_packages,
-                     "excludes": ["Tkinter", "wx", "scipy", "PyQt4"],
+                     "excludes": excludes,
+                     "includes": includes,
                      "init_script": os.path.abspath('initscripts/Console.py')}
 
 cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
@@ -332,7 +343,7 @@ else:
     cmdclass = {'clean': clean}
 
 setup(name="pyMonteCarlo",
-      version=find_version(),
+      version=find_version('pymontecarlo', '__init__.py'),
       url='http://pymontecarlo.bitbucket.org',
       description="Python interface for Monte Carlo simulation programs",
       author="Hendrix Demers and Philippe T. Pinard",
@@ -354,8 +365,7 @@ setup(name="pyMonteCarlo",
       cmdclass=cmdclass,
 
       setup_requires=['nose'],
-      install_requires=['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
-                        'pyxray'],
+      install_requires=requirements,
 
       entry_points=entry_points,
       executables=executables,
