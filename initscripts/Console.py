@@ -16,8 +16,8 @@ sys.path = sys.path[:4]
 
 #------------------------------------------------------------------------------
 # Modification to automatically load programs
-sys.path.append(os.path.join(DIR_NAME, 'programs'))
-sys.path.extend(glob.glob(os.path.join(DIR_NAME, 'programs', '*.egg')))
+sys.path.extend(glob.glob(os.path.join(DIR_NAME, '*.egg')))
+sys.path.extend(glob.glob(os.path.expanduser('~/.pymontecarlo/*.egg')))
 #------------------------------------------------------------------------------
 
 os.environ["TCL_LIBRARY"] = os.path.join(DIR_NAME, "tcl")
