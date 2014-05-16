@@ -10,26 +10,184 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import sys
+import codecs
+import re
+import platform
+from distutils.core import Command
+from distutils.dir_util import remove_tree, copy_tree
+from distutils.file_util import copy_file
+from distutils.archive_util import make_archive
+from distutils import log
 
 # Third party modules.
 from setuptools import setup, find_packages
+import pkg_resources
 
 try:
-    from cx_Freeze.dist import Distribution, build, build_exe
+    from cx_Freeze.dist import Distribution, build, build_exe as _build_exe
     from cx_Freeze.freezer import Executable
+    from cx_Freeze.macdist import \
+        bdist_mac as _bdist_mac, bdist_dmg as _bdist_dmg
     has_cx_freeze = True
 except ImportError:
     has_cx_freeze = False
 
 # Local modules.
-from pymontecarlo.util.dist.command import clean
+from pymontecarlo.util.dist.command import clean as _clean
 
 # Globals and constants variables.
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+def find_version(*file_paths):
+    """
+    Read the version number from a source file.
+
+    .. note::
+
+       Why read it, and not import?
+       see https://groups.google.com/d/topic/pypa-dev/0PkjVpcxTzQ/discussion
+    """
+    # Open in Latin-1 so that we avoid encoding errors.
+    # Use codecs.open for Python 2 compatibility
+    with codecs.open(os.path.join(BASEDIR, *file_paths), 'r', 'latin1') as f:
+        version_file = f.read()
+
+    # The version line must have the form
+    # __version__ = 'ver'
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+class clean(_clean):
+
+    user_options = _clean.user_options + \
+        [('build-exe=', 'b',
+         'directory for built executables'), ]
+
+    def initialize_options(self):
+        _clean.initialize_options(self)
+        self.build_exe = None
+
+    def finalize_options(self):
+        _clean.finalize_options(self)
+        self.set_undefined_options('build_exe',
+                                   ('build_exe', 'build_exe'))
+
+    def run(self):
+        if self.all:
+            # remove build directories
+            for directory in (self.build_exe,):
+                if os.path.exists(directory):
+                    remove_tree(directory, dry_run=self.dry_run)
+                else:
+                    log.warn("'%s' does not exist -- can't clean it",
+                             directory)
+
+        _clean.run(self)
+
+if has_cx_freeze:
+    class build_exe(_build_exe):
+
+        def run(self):
+            _build_exe.run(self)
+
+            # Add egg info of dependencies
+            for dist in pkg_resources.require('pymontecarlo'):
+                egg_info_dirpath = dist._provider.egg_info or dist._provider.path
+                if egg_info_dirpath is None:
+                    log.warn('No egg-info found for project %s' % dist.project_name)
+                    continue
+
+                if os.path.isdir(egg_info_dirpath):
+                    if os.path.basename(egg_info_dirpath) == 'EGG-INFO':
+                        dst = os.path.join(self.build_exe, dist.egg_name() + '.egg-info')
+                    else:
+                        dst = os.path.join(self.build_exe,
+                                           os.path.basename(egg_info_dirpath))
+                    copy_tree(egg_info_dirpath, dst)
+                else:
+                    copy_file(egg_info_dirpath, self.build_exe)
+
+    class bdist_mac(_bdist_mac):
+
+        user_options = _bdist_mac.user_options + \
+            [('dist-dir=', 'd',
+              "directory to put final built distributions in "
+              "[default: dist]"), ]
+
+        def initialize_options(self):
+            _bdist_mac.initialize_options(self)
+            self.dist_dir = None
+
+        def finalize_options(self):
+            _bdist_mac.finalize_options(self)
+
+            if self.dist_dir is None:
+                self.dist_dir = "dist"
+
+        def run(self):
+            # Modify to run on all executables
+            for executable in list(self.distribution.executables):
+                self.distribution.executables.remove(executable)
+                self.distribution.executables.insert(0, executable)
+
+                _bdist_mac.run(self)
+
+                copy_tree(self.bundleDir,
+                          os.path.join(self.dist_dir, executable.shortcutName + '.app'))
+
+    class bdist_dmg(_bdist_dmg):
+
+        user_options = _bdist_dmg.user_options + \
+            [('dist-dir=', 'd',
+              "directory to put final built distributions in "
+              "[default: dist]"), ]
+
+        def initialize_options(self):
+            _bdist_dmg.initialize_options(self)
+            self.dist_dir = None
+
+        def finalize_options(self):
+            _bdist_dmg.finalize_options(self)
+
+            if self.dist_dir is None:
+                self.dist_dir = "dist"
+
+        def buildDMG(self):
+            for executable in list(self.distribution.executables):
+                self.volume_label = 'pymontecarlo-%s.dmg' % executable.shortcutName
+                self.dmgName = os.path.join(self.dist_dir, self.volume_label)
+                self.bundleDir = os.path.join(self.dist_dir,
+                                              executable.shortcutName + '.app')
+                _bdist_dmg.buildDMG(self)
+
+    class bdist_exe(Command):
+
+        user_options = _bdist_dmg.user_options + \
+            [('dist-dir=', 'd',
+              "directory to put final built distributions in "
+              "[default: dist]"), ]
+
+        def initialize_options(self):
+            self.dist_dir = None
+
+        def finalize_options(self):
+            if self.dist_dir is None:
+                self.dist_dir = "dist"
+
+        def run(self):
+            self.run_command('build_exe')
+
+            build_dir = self.get_finalized_command("build_exe").build_exe
+            base_name = os.path.join(self.dist_dir,
+                                     "pymontecarlo-%s" % platform.machine())
+            make_archive(base_name, 'zip', build_dir)
 
 packages = find_packages()
 namespace_packages = ['pymontecarlo',
-                      'pymontecarlo.program',
-                      'pymontecarlo.runner']
+                      'pymontecarlo.program']
 
 build_exe_options = {"packages": packages,
                      "namespace_packages": namespace_packages,
@@ -150,28 +308,31 @@ entry_points['console_scripts'] = \
 entry_points['gui_scripts'] = \
     ['%s = %s' % item for item in gui_executables.items()]
 
-executables = []
-
 if has_cx_freeze:
     def _make_executable(target_name, script, gui=False):
         path = os.path.join(*script.split(":")[0].split('.')) + '.py'
         if sys.platform == "win32": target_name += '.exe'
         base = "Win32GUI" if sys.platform == "win32" and gui else None
-        return Executable(path, targetName=target_name, base=base)
+        return Executable(path, targetName=target_name, base=base,
+                          shortcutName=target_name)
 
+    executables = []
     for target_name, script in cli_executables.items():
         executables.append(_make_executable(target_name, script, False))
     for target_name, script in gui_executables.items():
         executables.append(_make_executable(target_name, script, True))
 
     distclass = Distribution
-    cmdclass = {'clean': clean, "build": build, "build_exe": build_exe}
+    cmdclass = {"build": build, "build_exe": build_exe, "bdist_exe": bdist_exe,
+                "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg,
+                'clean': clean}
 else:
+    executables = []
     distclass = None
     cmdclass = {'clean': clean}
 
 setup(name="pyMonteCarlo",
-      version='0.1',
+      version=find_version(),
       url='http://pymontecarlo.bitbucket.org',
       description="Python interface for Monte Carlo simulation programs",
       author="Hendrix Demers and Philippe T. Pinard",
@@ -193,7 +354,8 @@ setup(name="pyMonteCarlo",
       cmdclass=cmdclass,
 
       setup_requires=['nose'],
-      install_requires=['pyparsing', 'numpy', 'h5py', 'matplotlib'],
+      install_requires=['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
+                        'pyxray'],
 
       entry_points=entry_points,
       executables=executables,
