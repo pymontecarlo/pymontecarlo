@@ -296,6 +296,9 @@ class RunnerDialog(QDialog):
         self._chk_overwrite = QCheckBox("Overwrite existing results in output directory")
         self._chk_overwrite.setChecked(True)
 
+        self._chk_autoresults = QCheckBox("Auto load results after simulation")
+        self._chk_autoresults.setChecked(True)
+
         self._lbl_available = QLabel('Available')
         self._lst_available = QListView()
         self._lst_available.setModel(_AvailableOptionsListModel())
@@ -354,6 +357,7 @@ class RunnerDialog(QDialog):
         layout.addLayout(sublayout)
 
         sublayout.addWidget(self._chk_overwrite, 2, 0, 1, 3)
+        sublayout.addWidget(self._chk_autoresults, 3, 0, 1, 3)
 
         sublayout = QGridLayout()
         sublayout.setColumnStretch(0, 1)
@@ -574,9 +578,10 @@ class RunnerDialog(QDialog):
 
     def _onResultsSaved(self, results):
         logging.debug('runner: resultsSaved')
-        outputdir = self._runner.outputdir
-        h5filepath = os.path.join(outputdir, results.options.name + '.h5')
-        self.results_saved.emit(results, h5filepath)
+        if self._chk_autoresults.isChecked():
+            outputdir = self._runner.outputdir
+            h5filepath = os.path.join(outputdir, results.options.name + '.h5')
+            self.results_saved.emit(results, h5filepath)
 
     def closeEvent(self, event):
         if self._runner is not None and self._runner.is_alive():
