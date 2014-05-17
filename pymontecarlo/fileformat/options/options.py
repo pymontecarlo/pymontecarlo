@@ -32,11 +32,12 @@ from pymontecarlo.options.options import Options
 
 import pymontecarlo.util.xmlutil as xmlutil
 from pymontecarlo.util.monitorable import _MonitorableThread, _Monitorable
+from pymontecarlo.util.filelock import FileLock
 
 # Globals and constants variables.
 VERSION = '6'
 
-class _OptionsReaderThread(_MonitorableThread):
+class _OptionsElementReaderThread(_MonitorableThread):
 
     def __init__(self, element):
         _MonitorableThread.__init__(self, args=(element,))
@@ -166,30 +167,61 @@ class _OptionsReaderThread(_MonitorableThread):
 
         return models
 
+class _OptionsSourceReaderThread(_OptionsElementReaderThread):
+
+    def __init__(self, source):
+        _MonitorableThread.__init__(self, args=(source,))
+
+    def _run(self, source):
+        element = xmlutil.parse(source)
+        return _OptionsElementReaderThread._run(self, element)
+
+class _OptionsFilepathReaderThread(_OptionsSourceReaderThread):
+
+    def __init__(self, filepath):
+        _MonitorableThread.__init__(self, args=(filepath,))
+
+    def _run(self, filepath):
+        with FileLock(filepath), open(filepath, 'rb') as fp:
+            return _OptionsSourceReaderThread._run(self, fp)
+
 class OptionsReader(_Monitorable):
 
-    def _create_thread(self, element, *args, **kwargs):
-        return _OptionsReaderThread(element)
+    def _create_thread(self, filepath=None, source=None, element=None, *args, **kwargs):
+        if filepath is not None:
+            return _OptionsFilepathReaderThread(filepath)
+        if source is not None:
+            return _OptionsSourceReaderThread(source)
+        elif element is not None:
+            return _OptionsElementReaderThread(element)
+        raise
 
-    def can_read(self, filepath):
-        element = xmlutil.parse(filepath)
+    def can_read(self, source):
+        if hasattr(source, 'read'):
+            element = xmlutil.parse(source)
+        else:
+            with FileLock(source), open(source, 'rb') as fp:
+                element = xmlutil.parse(fp)
         return self.can_parse(element)
 
     def can_parse(self, element):
         return element.tag == '{http://pymontecarlo.sf.net}options'
 
     def read(self, source):
-        self.parse(xmlutil.parse(source))
+        if hasattr(source, 'read'):
+            self._start(source=source)
+        else:
+            self._start(filepath=source)
 
     def parse(self, element):
-        self._start(element)
+        self._start(element=element)
 
-class _OptionsWriterThread(_MonitorableThread):
+class _OptionsElementWriterThread(_MonitorableThread):
 
-    def __init__(self, options, source=None):
-        _MonitorableThread.__init__(self, args=(options, source))
+    def __init__(self, options):
+        _MonitorableThread.__init__(self, args=(options,))
 
-    def _run(self, options, source):
+    def _run(self, options):
         element = etree.Element('{http://pymontecarlo.sf.net}options')
 
         self._update_status(0.1, "Writing version")
@@ -228,18 +260,7 @@ class _OptionsWriterThread(_MonitorableThread):
         if self.is_cancelled(): return
         self._write_models(options, element)
 
-        if source is None:
-            return element
-
-        self_opened = False
-        if hasattr(source, "write"):
-            fp = source
-        else:
-            fp = open(source, "wb")
-            self_opened = True
-        fp.write(xmlutil.tostring(element))
-        if self_opened: fp.close()
-        return source
+        return element
 
     def _write_version(self, options, element):
         element.set('version', VERSION)
@@ -289,19 +310,48 @@ class _OptionsWriterThread(_MonitorableThread):
             handler = find_convert_handler('pymontecarlo.fileformat.options.model', model)
             subelement.append(handler.convert(model))
 
+class _OptionsSourceWriterThread(_OptionsElementWriterThread):
+
+    def __init__(self, options, source):
+        _MonitorableThread.__init__(self, args=(options, source))
+
+    def _run(self, options, source):
+        element = _OptionsElementWriterThread._run(self, options)
+        source.write(xmlutil.tostring(element))
+        return source
+
+class _OptionsFilepathWriterThread(_OptionsElementWriterThread):
+
+    def __init__(self, options, filepath):
+        _MonitorableThread.__init__(self, args=(options, filepath))
+
+    def _run(self, options, filepath):
+        element = _OptionsElementWriterThread._run(self, options)
+        with FileLock(filepath), open(filepath, 'wb') as fp:
+            fp.write(xmlutil.tostring(element))
+        return filepath
+
 class OptionsWriter(_Monitorable):
 
-    def _create_thread(self, options, source=None, *args, **kwargs):
-        return _OptionsWriterThread(options, source)
+    def _create_thread(self, options, filepath=None, source=None, *args, **kwargs):
+        if filepath is not None:
+            return _OptionsFilepathWriterThread(options, filepath)
+        elif source is not None:
+            return _OptionsSourceWriterThread(options, source)
+        else:
+            return _OptionsElementWriterThread(options)
 
-    def can_write(self, options, source):
+    def can_write(self, options):
         return self.can_convert(options)
 
     def can_convert(self, options):
         return type(options) is Options
 
     def write(self, options, source):
-        self._start(options, source)
+        if hasattr(source, 'write'):
+            self._start(options, source=source)
+        else:
+            self._start(options, filepath=source)
 
     def convert(self, options):
         self._start(options)

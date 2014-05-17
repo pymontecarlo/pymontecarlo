@@ -101,6 +101,11 @@ class TestResultsReader(unittest.TestCase):
         writer.convert(cls.results, cls.group)
         writer.join()
 
+    @classmethod
+    def tearDownClass(cls):
+        super(TestResultsReader, cls).tearDownClass()
+        cls.group.close()
+
     def setUp(self):
         unittest.TestCase.setUp(self)
 
@@ -180,6 +185,8 @@ class TestResultsWriter(unittest.TestCase):
         subgroup = group['result-' + group.attrs['identifiers'][1]]
         self.assertEqual(1, len(subgroup))
         self.assertIn('det1', subgroup)
+
+        group.close()
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
