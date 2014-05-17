@@ -327,7 +327,6 @@ class Controller(QObject):
         if filepath is None:
             return
 
-        print(self._results_reader_thread)
         self._results_reader_thread = _ResultsReaderWrapperThread(filepath)
         func = lambda results, u = uid: self._onResultsReloadReady(u, results)
         self._results_reader_thread.resultReady.connect(func)
