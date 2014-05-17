@@ -296,9 +296,6 @@ class RunnerDialog(QDialog):
         self._chk_overwrite = QCheckBox("Overwrite existing results in output directory")
         self._chk_overwrite.setChecked(True)
 
-        self._chk_autoresults = QCheckBox("Auto load results after simulation")
-        self._chk_autoresults.setChecked(True)
-
         self._lbl_available = QLabel('Available')
         self._lst_available = QListView()
         self._lst_available.setModel(_AvailableOptionsListModel())
@@ -357,7 +354,6 @@ class RunnerDialog(QDialog):
         layout.addLayout(sublayout)
 
         sublayout.addWidget(self._chk_overwrite, 2, 0, 1, 3)
-        sublayout.addWidget(self._chk_autoresults, 3, 0, 1, 3)
 
         sublayout = QGridLayout()
         sublayout.setColumnStretch(0, 1)
@@ -531,7 +527,6 @@ class RunnerDialog(QDialog):
         self._spn_workers.setEnabled(False)
         self._txt_outputdir.setEnabled(False)
         self._chk_overwrite.setEnabled(False)
-        self._chk_autoresults.setEnabled(False)
         self._btn_addtoqueue.setEnabled(True)
         self._btn_addalltoqueue.setEnabled(True)
         self._btn_start.setEnabled(False)
@@ -542,7 +537,7 @@ class RunnerDialog(QDialog):
         self._runner.options_running.connect(self.options_running.emit)
         self._runner.options_simulated.connect(self.options_simulated.emit)
         self._runner.options_error.connect(self.options_error.emit)
-        self._runner.results_saved.connect(self._onResultsSaved)
+        self._runner.results_saved.connect(self.results_saved.emit)
         self._runner.results_error.connect(self.results_error.emit)
 
         self._running_timer.start()
@@ -576,13 +571,6 @@ class RunnerDialog(QDialog):
     def _onResultsError(self, results, ex):
         logging.debug('runner: resultsError')
         self._tbl_options.model().reset()
-
-    def _onResultsSaved(self, results):
-        logging.debug('runner: resultsSaved')
-        if self._chk_autoresults.isChecked():
-            outputdir = self._runner.outputdir
-            h5filepath = os.path.join(outputdir, results.options.name + '.h5')
-            self.results_saved.emit(results, h5filepath)
 
     def closeEvent(self, event):
         if self._runner is not None and self._runner.is_alive():
@@ -621,7 +609,7 @@ class RunnerDialog(QDialog):
         self._runner.options_running.disconnect(self.options_running.emit)
         self._runner.options_simulated.disconnect(self.options_simulated.emit)
         self._runner.options_error.disconnect(self.options_error.emit)
-        self._runner.results_saved.disconnect(self._onResultsSaved)
+        self._runner.results_saved.disconnect(self.results_saved.emit)
         self._runner.results_error.disconnect(self.results_error.emit)
 
         self._runner = None
@@ -629,7 +617,6 @@ class RunnerDialog(QDialog):
         self._spn_workers.setEnabled(True)
         self._txt_outputdir.setEnabled(True)
         self._chk_overwrite.setEnabled(True)
-        self._chk_autoresults.setEnabled(True)
         self._btn_addtoqueue.setEnabled(False)
         self._btn_addalltoqueue.setEnabled(False)
         self._btn_start.setEnabled(True)
