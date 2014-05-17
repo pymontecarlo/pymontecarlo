@@ -194,6 +194,7 @@ requirements = ['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
 excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'pywin.debugger',
             'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',
             'Tkconstants', 'tkinter', "wx", "scipy", "PyQt4",
+            'ConfigParser', 'IPython', 'pygments', 'sphinx',
             'pyxray' # Because data files from pyxray are not copied in zip
             ]
 includes = ['PIL' # Requires by some programs
