@@ -19,6 +19,8 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
+import subprocess
 
 # Third party modules.
 
@@ -112,6 +114,21 @@ class SubprocessWorker(Worker):
     def __init__(self, program):
         Worker.__init__(self, program)
         self._process = None
+
+    def _create_process(self, *args, **kwargs):
+        if sys.platform == "win32":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        else:
+            startupinfo = None
+        self._process = subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
+        return self._process
+
+    def _join_process(self):
+        self._process.wait()
+        returncode = self._process.returncode
+        self._process = None
+        return returncode
 
     def reset(self):
         Worker.reset(self)
