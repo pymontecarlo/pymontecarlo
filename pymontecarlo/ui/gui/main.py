@@ -1442,6 +1442,14 @@ class MainWindow(QMainWindow):
             return False
 
     def closeEvent(self, event):
+        if self._dlg_runner.is_running():
+            message = 'Runner is running. Do you want to continue?'
+            answer = QMessageBox.question(self, 'Runner', message,
+                                          QMessageBox.Yes | QMessageBox.No)
+            if answer == QMessageBox.No:
+                event.ignore()
+                return
+
         self._dlg_runner.close()
 
         settings = self.controller().settings()

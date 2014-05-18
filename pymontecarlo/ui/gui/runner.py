@@ -518,30 +518,7 @@ class RunnerDialog(QDialog):
             return
         max_workers = self._spn_workers.value()
         overwrite = self._chk_overwrite.isChecked()
-        self._runner = LocalRunner(outputdir=outputdir,
-                                   overwrite=overwrite,
-                                   max_workers=max_workers)
-
-        self._tbl_options.setModel(_StateOptionsTableModel(self._runner))
-
-        self._spn_workers.setEnabled(False)
-        self._txt_outputdir.setEnabled(False)
-        self._chk_overwrite.setEnabled(False)
-        self._btn_addtoqueue.setEnabled(True)
-        self._btn_addalltoqueue.setEnabled(True)
-        self._btn_start.setEnabled(False)
-        self._btn_cancel.setEnabled(True)
-        self._btn_close.setEnabled(False)
-
-        self._runner.options_added.connect(self.options_added.emit)
-        self._runner.options_running.connect(self.options_running.emit)
-        self._runner.options_simulated.connect(self.options_simulated.emit)
-        self._runner.options_error.connect(self.options_error.emit)
-        self._runner.results_saved.connect(self.results_saved.emit)
-        self._runner.results_error.connect(self.results_error.emit)
-
-        self._running_timer.start()
-        self._runner.start()
+        self.start(outputdir, overwrite, max_workers)
 
     def _onCancel(self):
         self.cancel()
@@ -573,10 +550,15 @@ class RunnerDialog(QDialog):
         self._tbl_options.model().reset()
 
     def closeEvent(self, event):
-        if self._runner is not None and self._runner.is_alive():
-            event.ignore()
-            return
+        if self.is_running():
+            message = 'Runner is running. Do you want to continue?'
+            answer = QMessageBox.question(self, 'Runner', message,
+                                          QMessageBox.Yes | QMessageBox.No)
+            if answer == QMessageBox.No:
+                event.ignore()
+                return
 
+        self.cancel()
         self._dlg_progress.close()
 
         settings = get_settings()
@@ -601,7 +583,35 @@ class RunnerDialog(QDialog):
     def clearAvailableOptions(self):
         self._lbl_available.model().clearOptions()
 
+    def start(self, outputdir, overwrite, max_workers):
+        self._runner = LocalRunner(outputdir=outputdir,
+                                   overwrite=overwrite,
+                                   max_workers=max_workers)
+
+        self._tbl_options.setModel(_StateOptionsTableModel(self._runner))
+
+        self._spn_workers.setEnabled(False)
+        self._txt_outputdir.setEnabled(False)
+        self._chk_overwrite.setEnabled(False)
+        self._btn_addtoqueue.setEnabled(True)
+        self._btn_addalltoqueue.setEnabled(True)
+        self._btn_start.setEnabled(False)
+        self._btn_cancel.setEnabled(True)
+        self._btn_close.setEnabled(False)
+
+        self._runner.options_added.connect(self.options_added.emit)
+        self._runner.options_running.connect(self.options_running.emit)
+        self._runner.options_simulated.connect(self.options_simulated.emit)
+        self._runner.options_error.connect(self.options_error.emit)
+        self._runner.results_saved.connect(self.results_saved.emit)
+        self._runner.results_error.connect(self.results_error.emit)
+
+        self._running_timer.start()
+        self._runner.start()
+
     def cancel(self):
+        if self._runner is None:
+            return
         self._runner.cancel()
         self._running_timer.stop()
 
@@ -622,6 +632,9 @@ class RunnerDialog(QDialog):
         self._btn_start.setEnabled(True)
         self._btn_cancel.setEnabled(False)
         self._btn_close.setEnabled(True)
+
+    def is_running(self):
+        return self._runner is not None and self._runner.is_alive()
 
 def __run():
     import sys
