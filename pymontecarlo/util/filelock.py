@@ -42,8 +42,7 @@ class FileLock(object):
             the maximum timeout and the delay between each attempt to lock.
         """
         self.is_locked = False
-        self.lockfile = os.path.join(os.path.dirname(file_name),
-                                     "%s.lock" % file_name)
+        self.lockfile = "%s.lock" % file_name
         self.file_name = file_name
         self.timeout = timeout
         self.delay = delay
