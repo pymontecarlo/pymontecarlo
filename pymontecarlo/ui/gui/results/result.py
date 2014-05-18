@@ -332,7 +332,7 @@ class _PhotonIntensityResultTableModel(QAbstractTableModel):
     def __init__(self, result):
         QAbstractTableModel.__init__(self)
         self._result = result
-        self._transitions = list(result.iter_transitions()) # FIXME: Should be sorted
+        self._transitions = sorted(result.iter_transitions())
 
         self._header_sections = \
             ['Transition', 'PG', 'PE', 'CG', 'CE', 'BG', 'BE', 'TG', 'TE']
@@ -599,7 +599,7 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
     def _initUI(self):
         # Variables
         result = self.result()
-        transitions = list(result.iter_transitions())
+        transitions = sorted(result.iter_transitions())
         transition0 = transitions[0]
         model = _TransitionListModel(transitions)
 
