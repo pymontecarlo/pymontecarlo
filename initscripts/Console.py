@@ -16,19 +16,19 @@ sys.path = sys.path[:4]
 
 #------------------------------------------------------------------------------
 # Modification to automatically load programs
-sys.path.extend(glob.glob(os.path.join(DIR_NAME, '*.egg')))
+sys.path.extend(glob.glob(os.path.join(DIR_NAME, '*.egg'))) #@UndefinedVariable
 sys.path.extend(glob.glob(os.path.expanduser('~/.pymontecarlo/*.egg')))
 #------------------------------------------------------------------------------
 
-os.environ["TCL_LIBRARY"] = os.path.join(DIR_NAME, "tcl")
-os.environ["TK_LIBRARY"] = os.path.join(DIR_NAME, "tk")
+os.environ["TCL_LIBRARY"] = os.path.join(DIR_NAME, "tcl") #@UndefinedVariable
+os.environ["TK_LIBRARY"] = os.path.join(DIR_NAME, "tk") #@UndefinedVariable
 
 m = __import__("__main__")
-importer = zipimport.zipimporter(INITSCRIPT_ZIP_FILE_NAME)
-if INITSCRIPT_ZIP_FILE_NAME != SHARED_ZIP_FILE_NAME:
+importer = zipimport.zipimporter(INITSCRIPT_ZIP_FILE_NAME) #@UndefinedVariable
+if INITSCRIPT_ZIP_FILE_NAME != SHARED_ZIP_FILE_NAME: #@UndefinedVariable
     moduleName = m.__name__
 else:
-    name, ext = os.path.splitext(os.path.basename(os.path.normcase(FILE_NAME)))
+    name, ext = os.path.splitext(os.path.basename(os.path.normcase(FILE_NAME))) #@UndefinedVariable
     moduleName = "%s__main__" % name
 code = importer.get_code(moduleName)
 exec(code, m.__dict__)
