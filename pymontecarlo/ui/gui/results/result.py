@@ -647,7 +647,6 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
         layout.addRow(box_generated)
 
         # Signals
-        self._cb_transition.currentIndexChanged.connect(self.stateChanged)
         self._cb_transition.currentIndexChanged.connect(self._onTransitionChanged)
         self._chk_pg.stateChanged.connect(self.stateChanged)
         self._chk_eg.stateChanged.connect(self.stateChanged)
@@ -667,6 +666,8 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
         self._chk_eg.setEnabled(result.exists(transition, True, False))
         self._chk_pt.setEnabled(result.exists(transition, False, True))
         self._chk_et.setEnabled(result.exists(transition, True, True))
+
+        self.stateChanged.emit()
 
     def transition(self):
         index = self._cb_transition.currentIndex()
