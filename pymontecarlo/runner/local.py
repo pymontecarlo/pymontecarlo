@@ -204,6 +204,10 @@ class LocalRunner(_Runner):
         if os.path.exists(h5filepath):
             if self._overwrite:
                 os.remove(h5filepath)
+
+                lockfilepath = h5filepath + '.lock'
+                if os.path.exists(lockfilepath):
+                    os.remove(lockfilepath)
             else:
                 raise IOError('Results already exists: %s' % h5filepath)
 
