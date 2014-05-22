@@ -204,7 +204,8 @@ build_exe_options = {"packages": packages,
                      "namespace_packages": namespace_packages,
                      "excludes": excludes,
                      "includes": includes,
-                     "init_script": os.path.abspath('initscripts/Console.py')}
+                     "init_script": os.path.abspath('initscripts/Console.py'),
+                     'include_msvcr': True}
 
 cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
                    'pymontecarlo-cli': 'pymontecarlo.ui.cli.main:run',
