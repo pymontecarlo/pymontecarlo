@@ -19,9 +19,9 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.coverage', 'sphinx.ext.pngmath',
               'sphinx.ext.ifconfig', 'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
-              'sphinxtools.ext.bibtex',
-              'sphinxcontrib.email',
-              'pymontecarlo.sphinxext.availability']
+              'pymontecarlo.util.dist.sphinxext.bibtex',
+              'pymontecarlo.util.dist.sphinxext.email',
+              'pymontecarlo.util.dist.sphinxext.availability']
 
 
 # Add any paths that contain templates here, relative to this directory.

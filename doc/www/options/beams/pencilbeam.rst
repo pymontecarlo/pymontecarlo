@@ -16,7 +16,7 @@ Availability
 ^^^^^^^^^^^^
 
 .. availability:: BEAMS
-   :only: pymontecarlo.input.beam.PencilBeam
+   :only: pymontecarlo.options.beam.PencilBeam
    
 .. note::
 
@@ -26,7 +26,7 @@ Availability
 API
 ^^^
 
-.. module:: pymontecarlo.input.beam
+.. module:: pymontecarlo.options.beam
 
 .. autoclass:: PencilBeam
    :members:

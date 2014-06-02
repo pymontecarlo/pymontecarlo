@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from operator import attrgetter
 
 # Third party modules.
 from docutils.parsers.rst.directives.tables import Table
@@ -40,7 +41,7 @@ class AvailabilityTableDirective(Table):
     def run(self):
         # Extract choices
         settings = get_settings()
-        programs = sorted(settings.get_available_programs())
+        programs = sorted(settings.get_available_programs(), key=attrgetter('name'))
         attr = self.arguments[0]
 
         choices = {}
@@ -71,7 +72,7 @@ class AvailabilityTableDirective(Table):
             classes = ['xref', 'ref']
 
             modulename = modulepath.rsplit('.', 1)[-1]
-            title = camelcase_to_words(modulename)
+            title = ' '.join(camelcase_to_words(modulename).split()[:-1])
             target = modulename.lower()
             rawtext = ':ref:`%s <%s>`' % (title, target)
 
@@ -109,7 +110,9 @@ class AvailabilityTableDirective(Table):
         tbody = nodes.tbody()
         tgroup += tbody
 
-        for modulepath, available_programs in choices.iteritems():
+        for modulepath in sorted(choices):
+            available_programs = choices[modulepath]
+
             if isonly and modulepath != self.options['only']:
                 continue
 

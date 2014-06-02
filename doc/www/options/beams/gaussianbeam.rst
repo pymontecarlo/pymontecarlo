@@ -4,7 +4,7 @@
 Gaussian beam
 #############
 
-.. module:: pymontecarlo.input.beam
+.. module:: pymontecarlo.options.beam
 
 .. autoclass:: GaussianBeam
    :members:
