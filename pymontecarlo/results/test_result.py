@@ -127,11 +127,11 @@ class TestPhotonIntensityResult(TestCase):
         self.assertAlmostEqual(78.0 + 18.0, val, 4)
         self.assertAlmostEqual(1.1314, err, 4)
 
-    def testhas_intensity(self):
-        self.assertTrue(self.r.has_intensity(self.t1))
-        self.assertTrue(self.r.has_intensity(self.t2))
-        self.assertTrue(self.r.has_intensity(self.t3))
-        self.assertFalse(self.r.has_intensity('U Ma'))
+    def testhas_transition(self):
+        self.assertTrue(self.r.has_transition(self.t1))
+        self.assertTrue(self.r.has_transition(self.t2))
+        self.assertTrue(self.r.has_transition(self.t3))
+        self.assertFalse(self.r.has_transition('U Ma'))
 
     def testcharacteristic_fluorescence(self):
         # Transition 1
@@ -214,7 +214,7 @@ class TestPhotonIntensityResult(TestCase):
 
     def testiter_intensities(self):
         self.assertEqual(3, len(list(self.r.iter_intensities())))
-#
+
 class TestPhotonSpectrumResult(TestCase):
 
     def setUp(self):
