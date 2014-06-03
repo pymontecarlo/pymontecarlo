@@ -48,7 +48,47 @@ from pymontecarlo.results.result import \
 from pymontecarlo.options.particle import PARTICLES
 from pymontecarlo.options.collision import COLLISIONS
 
-class PhotonIntensityResultHDF5Handler(_HDF5Handler):
+class _PhotonKeyResultHDF5Handler(_HDF5Handler):
+
+    def _create_key(self, transition, name):
+        transition = xraytransition.from_string(transition)
+
+        absorption = name.startswith('e')
+
+        if name[1:] == 'nf':
+            flag = PhotonKey.PRIMARY
+        elif name[1:] == 'cf':
+            flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
+        elif name[1:] == 'bf':
+            flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
+        elif name[1:] == 't':
+            flag = PhotonKey.TOTAL
+        elif name[1:] == 'f':
+            flag = PhotonKey.FLUORESCENCE
+
+        return PhotonKey(transition, absorption, flag)
+
+    def _create_group_name(self, key):
+        transition = key.transition
+        return '%s %s' % (transition.symbol, transition.iupac)
+
+    def _create_dataset_name(self, key):
+        dataset_name = 'g' if key.is_generated() else 'e'
+
+        if key.flag == PhotonKey.PRIMARY:
+            dataset_name += 'nf'
+        elif key.flag == PhotonKey.CHARACTERISTIC_FLUORESCENCE:
+            dataset_name += 'cf'
+        elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
+            dataset_name += 'bf'
+        elif key.flag == PhotonKey.TOTAL:
+            dataset_name += 't'
+        elif key.flag == PhotonKey.FLUORESCENCE:
+            dataset_name += 'f'
+
+        return dataset_name
+
+class PhotonIntensityResultHDF5Handler(_PhotonKeyResultHDF5Handler):
 
     CLASS = PhotonIntensityResult
 
@@ -56,22 +96,9 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         intensities = {}
 
         for transition, dataset in group.items():
-            transition = xraytransition.from_string(transition)
-
             for attrname, intensity in dataset.attrs.items():
-                absorption = attrname.startswith('e')
-                if attrname[1:] == 'nf':
-                    flag = PhotonKey.PRIMARY
-                elif attrname[1:] == 'cf':
-                    flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
-                elif attrname[1:] == 'bf':
-                    flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
-                elif attrname[1:] == 't':
-                    flag = PhotonKey.TOTAL
-                elif attrname[1:] == 'f':
-                    flag = PhotonKey.FLUORESCENCE
-
-                intensities[PhotonKey(transition, absorption, flag)] = intensity
+                key = self._create_key(transition, attrname)
+                intensities[key] = intensity
 
         return PhotonIntensityResult(intensities)
 
@@ -79,22 +106,10 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
         group = _HDF5Handler.convert(self, obj, group)
 
         for key, intensity in obj:
-            transition = key.transition
-            name = '%s %s' % (transition.symbol, transition.iupac)
+            name = self._create_group_name(key)
             dataset = group.require_dataset(name, shape=(), dtype=np.float)
 
-            attrname = 'g' if key.is_generated() else 'e'
-            if key.flag == PhotonKey.PRIMARY:
-                attrname += 'nf'
-            elif key.flag == PhotonKey.CHARACTERISTIC_FLUORESCENCE:
-                attrname += 'cf'
-            elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
-                attrname += 'bf'
-            elif key.flag == PhotonKey.TOTAL:
-                attrname += 't'
-            elif key.flag == PhotonKey.FLUORESCENCE:
-                attrname += 'f'
-
+            attrname = self._create_dataset_name(key)
             dataset.attrs[attrname] = intensity[0]
 
         return group
@@ -114,29 +129,16 @@ class PhotonSpectrumResultHDF5Handler(_HDF5Handler):
         group.create_dataset('background', data=obj.get_background())
         return group
 
-class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
+class _PhotonDistributionResultHDF5Handler(_PhotonKeyResultHDF5Handler):
 
     CLASS = _PhotonDistributionResult
 
     def parse(self, group):
         distributions = {}
         for transition, group in group.items():
-            transition = xraytransition.from_string(transition)
-
             for dataset_name, dataset in group.items():
-                absorption = dataset_name.startswith('e')
-                if dataset_name[1:] == 'nf':
-                    flag = PhotonKey.PRIMARY
-                elif dataset_name[1:] == 'cf':
-                    flag = PhotonKey.CHARACTERISTIC_FLUORESCENCE
-                elif dataset_name[1:] == 'bf':
-                    flag = PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE
-                elif dataset_name[1:] == 't':
-                    flag = PhotonKey.TOTAL
-                elif dataset_name[1:] == 'f':
-                    flag = PhotonKey.FLUORESCENCE
-
-                distributions[PhotonKey(transition, absorption, flag)] = np.copy(dataset)
+                key = self._create_key(transition, dataset_name)
+                distributions[key] = np.copy(dataset)
 
         return _PhotonDistributionResult(distributions)
 
@@ -144,22 +146,10 @@ class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
         group = _HDF5Handler.convert(self, obj, group)
 
         for key, distribution in obj:
-            transition = key.transition
-            name = '%s %s' % (transition.symbol, transition.iupac)
+            name = self._create_group_name(key)
             subgroup = group.require_group(name)
 
-            dataset_name = 'g' if key.is_generated() else 'e'
-            if key.flag == PhotonKey.PRIMARY:
-                dataset_name += 'nf'
-            elif key.flag == PhotonKey.CHARACTERISTIC_FLUORESCENCE:
-                dataset_name += 'cf'
-            elif key.flag == PhotonKey.BREMSSTRAHLUNG_FLUORESCENCE:
-                dataset_name += 'bf'
-            elif key.flag == PhotonKey.TOTAL:
-                dataset_name += 't'
-            elif key.flag == PhotonKey.FLUORESCENCE:
-                dataset_name += 'f'
-
+            dataset_name = self._create_dataset_name(key)
             subgroup.create_dataset(dataset_name, data=distribution)
 
         return group
