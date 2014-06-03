@@ -171,7 +171,7 @@ class PhotonRadialResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
         dist = _PhotonDistributionResultHDF5Handler.parse(self, group)
         return PhotonRadialResult(dict(iter(dist)))
 
-class PhotonEmissionMapHDF5Handler(_PhotonDistributionResultHDF5Handler):
+class PhotonEmissionMapResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
 
     CLASS = PhotonEmissionMapResult
 
