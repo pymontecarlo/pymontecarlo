@@ -103,7 +103,7 @@ class check(_check):
     def check_gui_entrypoints(self):
         base_fileformat = 'pymontecarlo.fileformat.options.'
         base_gui = 'pymontecarlo.ui.gui.options.'
-        modules = ['material', 'beam', 'geometry', 'detector', 'limit']
+        modules = ['material', 'beam', 'geometry', 'detector', 'limit', 'result']
         for module in modules:
             eps = pkg_resources.iter_entry_points(base_fileformat + module)
             expecteds = set(map(attrgetter('name'), eps))
@@ -125,7 +125,7 @@ class check(_check):
 
         missings = expecteds - actuals
         if len(missings) > 0:
-            self.warn("Missing result handler: %s" % (', '.join(missings),))
+            self.warn("Missing result handler: %s" % (', '.join(sorted(missings)),))
 
 if has_cx_freeze:
     class build_exe(_build_exe):
