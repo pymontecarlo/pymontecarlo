@@ -21,7 +21,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import re
 from distutils.command.check import check as _check
-from operator import attrgetter
 
 # Third party modules.
 from pkg_resources import iter_entry_points
@@ -41,29 +40,40 @@ class check(_check):
         self.check_gui_entrypoints()
         self.check_result_entrypoints()
 
+    def _get_entrypoints(self, group):
+        entrypoints = set()
+        for ep in iter_entry_points(group):
+            try:
+                ep.load()
+            except:
+                self.warn("Cannot open %s from %s" % (ep.name, group))
+            else:
+                entrypoints.add(ep.name)
+        return entrypoints
+
+    def _check_gui_entrypoints(self, group1, group2):
+        expecteds = self._get_entrypoints(group1)
+        actuals = self._get_entrypoints(group2)
+
+        missings = expecteds - actuals
+        if len(missings) > 0:
+            self.warn("Missing GUI: %s" % (', '.join(missings),))
+
     def check_gui_entrypoints(self):
         base_fileformat = 'pymontecarlo.fileformat.options.'
         base_gui = 'pymontecarlo.ui.gui.options.'
         modules = ['material', 'beam', 'geometry', 'detector', 'limit', 'result']
         for module in modules:
-            eps = iter_entry_points(base_fileformat + module)
-            expecteds = set(map(attrgetter('name'), eps))
+            self._check_gui_entrypoints(base_fileformat + module,
+                                        base_gui + module)
 
-            eps = iter_entry_points(base_gui + module)
-            actuals = set(map(attrgetter('name'), eps))
-
-            missings = expecteds - actuals
-            if len(missings) > 0:
-                self.warn("Missing %s GUI: %s" % (module, ', '.join(missings)))
+        self._check_gui_entrypoints('pymontecarlo.fileformat.results.result',
+                                    'pymontecarlo.ui.gui.results.result')
 
     def check_result_entrypoints(self):
-        eps = iter_entry_points('pymontecarlo.fileformat.options.detector')
-        detectors = set(map(attrgetter('name'), eps))
-        expecteds = {re.sub(r'Detector$', 'Result', d) for d in detectors}
-
-        eps = iter_entry_points('pymontecarlo.fileformat.results.result')
-        actuals = set(map(attrgetter('name'), eps))
-
+        expecteds = {re.sub(r'Detector$', 'Result', d)
+                     for d in self._get_entrypoints('pymontecarlo.fileformat.options.detector')}
+        actuals = self._get_entrypoints('pymontecarlo.fileformat.results.result')
         missings = expecteds - actuals
         if len(missings) > 0:
             self.warn("Missing result handler: %s" % (', '.join(sorted(missings)),))
