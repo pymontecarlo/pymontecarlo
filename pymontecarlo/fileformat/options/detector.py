@@ -33,7 +33,6 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonPolarAngularDetector, PhotonAzimuthalAngularDetector,
      EnergyDepositedSpatialDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector, PhotonIntensityDetector,
@@ -297,24 +296,6 @@ class BackscatteredElectronRadialDetectorXMLHandler(_ChannelsDetectorXMLHandler)
     def parse(self, element):
         det = _ChannelsDetectorXMLHandler.parse(self, element)
         return BackscatteredElectronRadialDetector(det.channels)
-
-class PhotonPolarAngularDetectorXMLHandler(_PolarAngularDetectorXMLHandler):
-
-    TAG = '{http://pymontecarlo.sf.net}photonPolarAngularDetector'
-    CLASS = PhotonPolarAngularDetector
-
-    def parse(self, element):
-        det = _PolarAngularDetectorXMLHandler.parse(self, element)
-        return PhotonPolarAngularDetector(det.channels, det.limits_rad)
-
-class PhotonAzimuthalAngularDetectorXMLHandler(_AzimuthalAngularDetectorXMLHandler):
-
-    TAG = '{http://pymontecarlo.sf.net}photonAzimuthalAngularDetector'
-    CLASS = PhotonAzimuthalAngularDetector
-
-    def parse(self, element):
-        det = _AzimuthalAngularDetectorXMLHandler.parse(self, element)
-        return PhotonAzimuthalAngularDetector(det.channels, det.limits_rad)
 
 class EnergyDepositedSpatialDetectorXMLHandler(_SpatialDetectorXMLHandler):
 

@@ -46,7 +46,6 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonPolarAngularDetector, PhotonAzimuthalAngularDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector, PhotonIntensityDetector, TimeDetector,
      ElectronFractionDetector, ShowersStatisticsDetector, TrajectoryDetector)
@@ -526,28 +525,6 @@ class BackscatteredElectronRadialDetectorWidget(_ChannelsDetectorWidget):
     def value(self):
         channels = self._txt_channels.values()
         return BackscatteredElectronRadialDetector(channels)
-
-class PhotonPolarAngularDetectorWidget(_PolarAngularDetectorWidget):
-
-    def __init__(self, parent=None):
-        _PolarAngularDetectorWidget.__init__(self, parent)
-        self.setAccessibleName("Photon polar angular")
-
-    def value(self):
-        channels = self._txt_channels.values()
-        limits_rad = self._txt_limits.values()
-        return PhotonPolarAngularDetector(channels, limits_rad)
-
-class PhotonAzimuthalAngularDetectorWidget(_AzimuthalAngularDetectorWidget):
-
-    def __init__(self, parent=None):
-        _AzimuthalAngularDetectorWidget.__init__(self, parent)
-        self.setAccessibleName("Photon azimuthal angular")
-
-    def value(self):
-        channels = self._txt_channels.values()
-        limits_rad = self._txt_limits.values()
-        return PhotonAzimuthalAngularDetector(channels, limits_rad)
 
 class PhotonSpectrumDetectorWidget(_PhotonDelimitedDetectorWidget,
                                    _EnergyDetectorWidget):

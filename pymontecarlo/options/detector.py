@@ -26,9 +26,7 @@ __all__ = ['BackscatteredElectronAzimuthalAngularDetector',
            'EnergyDepositedSpatialDetector',
            'PhotonDepthDetector',
            'PhotonRadialDetector',
-           'PhotonAzimuthalAngularDetector',
            'PhotonIntensityDetector',
-           'PhotonPolarAngularDetector',
            'PhotonSpectrumDetector',
            'PhotonEmissionMapDetector',
            'ShowersStatisticsDetector',
@@ -307,12 +305,6 @@ class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
 class BackscatteredElectronRadialDetector(_ChannelsDetector):
-    pass
-
-class PhotonPolarAngularDetector(_PolarAngularDetector):
-    pass
-
-class PhotonAzimuthalAngularDetector(_AzimuthalAngularDetector):
     pass
 
 class EnergyDepositedSpatialDetector(_SpatialDetector):

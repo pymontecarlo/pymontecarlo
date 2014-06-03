@@ -1116,9 +1116,51 @@ class TransmittedElectronEnergyResult(_ChannelsResult):
     def get_labels(self):
         return ['Energy (eV)', 'Probability density', 'Uncertainty']
 
+class BackscatteredElectronAzimuthalAngularResult(_ChannelsResult):
+    """
+    Azimuthal angular distribution of backscattered electrons.
+
+    Data columns:
+
+        1. Mid-angle of each bin (rad)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+
+    def get_labels(self):
+        return ['Angle (rad)', 'Probability density', 'Uncertainty']
+
+class TransmittedElectronAzimuthalAngularResult(_ChannelsResult):
+    """
+    Azimuthal angular distribution of transmitted electrons.
+
+    Data columns:
+
+        1. Mid-angle of each bin (rad)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+
+    def get_labels(self):
+        return ['Angle (rad)', 'Probability density', 'Uncertainty']
+
 class BackscatteredElectronPolarAngularResult(_ChannelsResult):
     """
-    Angular distribution of backscattered electrons.
+    Polar angular distribution of backscattered electrons.
+
+    Data columns:
+
+        1. Mid-angle of each bin (rad)
+        2. probability density (counts/(eV.electron))
+        3. uncertainty of the probability density (counts/(eV.electron))
+    """
+
+    def get_labels(self):
+        return ['Angle (rad)', 'Probability density', 'Uncertainty']
+
+class TransmittedElectronPolarAngularResult(_ChannelsResult):
+    """
+    Polar angular distribution of transmitted electrons.
 
     Data columns:
 
@@ -1142,5 +1184,4 @@ class BackscatteredElectronRadialResult(_ChannelsResult):
     """
 
     def get_labels(self):
-        return ['Angle (rad)', 'Probability density', 'Uncertainty']
-
+        return ['Radius (m)', 'Probability density', 'Uncertainty']

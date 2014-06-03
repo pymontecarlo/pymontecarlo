@@ -28,13 +28,22 @@ import numpy as np
 from pymontecarlo.fileformat.hdf5handler import _HDF5Handler
 
 from pymontecarlo.results.result import \
-    (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
-     _PhotonDistributionResult, PhotonDepthResult, PhotonRadialResult,
+    (PhotonKey,
+     PhotonIntensityResult,
+     PhotonSpectrumResult,
+     _PhotonDistributionResult,
+     PhotonDepthResult,
+     PhotonRadialResult,
+     PhotonPolarAngularResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      TrajectoryResult, Trajectory,
      _ChannelsResult, BackscatteredElectronEnergyResult,
-     TransmittedElectronEnergyResult, BackscatteredElectronPolarAngularResult,
-     BackscatteredElectronRadialResult)
+     TransmittedElectronEnergyResult,
+     TransmittedElectronAzimuthalAngularResult,
+     TransmittedElectronPolarAngularResult,
+     BackscatteredElectronAzimuthalAngularResult,
+     BackscatteredElectronPolarAngularResult,
+     BackscatteredElectronRadialResult,)
 
 # Globals and constants variables.
 from pymontecarlo.options.particle import PARTICLES
@@ -286,6 +295,22 @@ class TransmittedElectronEnergyResultHDF5Handler(_ChannelsResultHDF5Handler):
         result = _ChannelsResultHDF5Handler.parse(self, group)
         return TransmittedElectronEnergyResult(result.get_data())
 
+class BackscatteredElectronAzimuthalAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
+
+    CLASS = BackscatteredElectronAzimuthalAngularResult
+
+    def parse(self, group):
+        result = _ChannelsResultHDF5Handler.parse(self, group)
+        return BackscatteredElectronAzimuthalAngularResult(result.get_data())
+
+class TransmittedElectronAzimuthalAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
+
+    CLASS = TransmittedElectronAzimuthalAngularResult
+
+    def parse(self, group):
+        result = _ChannelsResultHDF5Handler.parse(self, group)
+        return TransmittedElectronAzimuthalAngularResult(result.get_data())
+
 class BackscatteredElectronPolarAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
 
     CLASS = BackscatteredElectronPolarAngularResult
@@ -294,6 +319,14 @@ class BackscatteredElectronPolarAngularResultHDF5Handler(_ChannelsResultHDF5Hand
         result = _ChannelsResultHDF5Handler.parse(self, group)
         return BackscatteredElectronPolarAngularResult(result.get_data())
 
+class TransmittedElectronPolarAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
+
+    CLASS = TransmittedElectronPolarAngularResult
+
+    def parse(self, group):
+        result = _ChannelsResultHDF5Handler.parse(self, group)
+        return TransmittedElectronPolarAngularResult(result.get_data())
+
 class BackscatteredElectronRadialResultHDF5Handler(_ChannelsResultHDF5Handler):
 
     CLASS = BackscatteredElectronRadialResult
@@ -301,3 +334,11 @@ class BackscatteredElectronRadialResultHDF5Handler(_ChannelsResultHDF5Handler):
     def parse(self, group):
         result = _ChannelsResultHDF5Handler.parse(self, group)
         return BackscatteredElectronRadialResult(result.get_data())
+
+class PhotonPolarAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
+
+    CLASS = PhotonPolarAngularResult
+
+    def parse(self, group):
+        result = _ChannelsResultHDF5Handler.parse(self, group)
+        return PhotonPolarAngularResult(result.get_data())
