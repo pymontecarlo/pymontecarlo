@@ -709,7 +709,7 @@ class _PhotonDistributionResultWidget(_FigureResultWidget):
                 return
             dist = result.get(transition, absorption, fluorescence)
 
-            self._ax.plot(dist[:, 0], dist[:, 1])
+#            self._ax.plot(dist[:, 0], dist[:, 1])
 
             dist_kwargs = kwargs.copy()
             dist_kwargs.update(color=colors[color_index], label=label)
@@ -757,6 +757,110 @@ class PhotonRadialResultWidget(_PhotonDistributionResultWidget):
     def _drawFigure(self):
         self._ax.set_xlabel('Radius (m)')
         _PhotonDistributionResultWidget._drawFigure(self)
+
+class _ChannelsResultOptionsToolItem(_ResultToolItem):
+
+    def _initUI(self):
+        # Widgets
+        self._chk_errorbar = QCheckBox("Show error bars")
+        self._chk_errorbar.setChecked(True)
+
+        # Layouts
+        layout = _ResultToolItem._initUI(self)
+        layout.addRow(self._chk_errorbar)
+
+        # Signals
+        self._chk_errorbar.stateChanged.connect(self.stateChanged)
+
+        return layout
+
+    def showErrorbar(self):
+        return self._chk_errorbar.isChecked()
+
+class _ChannelsResultWidget(_FigureResultWidget):
+
+    def _initToolbox(self):
+        toolbox = _FigureResultWidget._initToolbox(self)
+
+        itm_detector = DetectorToolItem(self)
+        toolbox.addItem(itm_detector, "Detector")
+
+        self._itm_options = _ChannelsResultOptionsToolItem(self)
+        self._itm_options.stateChanged.connect(self._onOptionsChanged)
+        toolbox.addItem(self._itm_options, 'Options')
+
+        return toolbox
+
+    def _createFigure(self):
+        fig = Figure()
+        self._ax = fig.add_subplot("111")
+        return fig
+
+    def _drawFigure(self):
+        data = self._getData()
+
+        colors = matplotlib.rcParams['axes.color_cycle']
+        kwargs = {'linestyle': '-', 'marker': None, 'color': colors[0]}
+        errorbar = self._itm_options.showErrorbar()
+
+        if errorbar:
+            self._ax.errorbar(data[:, 0], data[:, 1], data[:, 2],
+                              ecolor=colors[0], **kwargs)
+        else:
+            self._ax.plot(data[:, 0], data[:, 1], **kwargs)
+
+        _FigureResultWidget._drawFigure(self)
+
+    def _getData(self):
+        return self.result().get_data()
+
+    def _onOptionsChanged(self):
+        self._ax.clear()
+        self._drawFigure()
+
+class _EnergyResultWidget(_ChannelsResultWidget):
+
+    def _drawFigure(self):
+        self._ax.set_xlabel('Energy (eV)')
+        self._ax.set_ylabel('Probability density (counts/(eV.electron))')
+        _ChannelsResultWidget._drawFigure(self)
+
+class BackscatteredElectronEnergyResultWidget(_ChannelsResultWidget):
+    pass
+
+class TransmittedElectronEnergyResultWidget(_ChannelsResultWidget):
+    pass
+
+class _AngleResultWidget(_ChannelsResultWidget):
+
+    def _getData(self):
+        data = _ChannelsResultWidget._getData(self)
+        data[:, 0] = np.degrees(data[:, 0])
+        return data
+
+    def _drawFigure(self):
+        self._ax.set_xlabel('Angle (\u00b0)')
+        self._ax.set_ylabel('Probability density (counts/sr)')
+        _ChannelsResultWidget._drawFigure(self)
+
+class BackscatteredElectronAzimuthalAngularResultWidget(_ChannelsResultWidget):
+    pass
+
+class TransmittedElectronAzimuthalAngularResultWidget(_ChannelsResultWidget):
+    pass
+
+class BackscatteredElectronPolarAngularResultWidget(_ChannelsResultWidget):
+    pass
+
+class TransmittedElectronPolarAngularResultWidget(_ChannelsResultWidget):
+    pass
+
+class BackscatteredElectronRadialResultWidget(_ChannelsResultWidget):
+
+    def _drawFigure(self):
+        self._ax.set_xlabel('Radius (m)')
+        self._ax.set_ylabel('Probability density (counts/(eV.electron.m2))')
+        _ChannelsResultWidget._drawFigure(self)
 
 #--- Functions
 

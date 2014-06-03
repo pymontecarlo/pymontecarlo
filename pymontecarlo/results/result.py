@@ -1187,8 +1187,8 @@ class BackscatteredElectronAzimuthalAngularResult(_ChannelsResult):
     Data columns:
 
         1. Mid-angle of each bin (rad)
-        2. probability density (counts/(eV.electron))
-        3. uncertainty of the probability density (counts/(eV.electron))
+        2. probability density (counts/sr)
+        3. uncertainty of the probability density (counts/sr)
     """
 
     def get_labels(self):
@@ -1201,8 +1201,8 @@ class TransmittedElectronAzimuthalAngularResult(_ChannelsResult):
     Data columns:
 
         1. Mid-angle of each bin (rad)
-        2. probability density (counts/(eV.electron))
-        3. uncertainty of the probability density (counts/(eV.electron))
+        2. probability density (counts/sr)
+        3. uncertainty of the probability density (counts/sr)
     """
 
     def get_labels(self):
@@ -1215,8 +1215,8 @@ class BackscatteredElectronPolarAngularResult(_ChannelsResult):
     Data columns:
 
         1. Mid-angle of each bin (rad)
-        2. probability density (counts/(eV.electron))
-        3. uncertainty of the probability density (counts/(eV.electron))
+        2. probability density (counts/sr)
+        3. uncertainty of the probability density (counts/sr)
     """
 
     def get_labels(self):
@@ -1229,8 +1229,8 @@ class TransmittedElectronPolarAngularResult(_ChannelsResult):
     Data columns:
 
         1. Mid-angle of each bin (rad)
-        2. probability density (counts/(eV.electron))
-        3. uncertainty of the probability density (counts/(eV.electron))
+        2. probability density (counts/sr)
+        3. uncertainty of the probability density (counts/sr)
     """
 
     def get_labels(self):
