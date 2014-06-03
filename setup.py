@@ -12,30 +12,26 @@ import os
 import sys
 import codecs
 import re
-import platform
-from distutils.core import Command
-from distutils.dir_util import remove_tree, copy_tree
-from distutils.file_util import copy_file
-from distutils.archive_util import make_archive
-from distutils import log
-from distutils.command.check import check as _check
-from operator import attrgetter
 
 # Third party modules.
 from setuptools import setup, find_packages
-import pkg_resources
+
+# Local modules.
+from pymontecarlo.util.dist.command.clean import clean
+from pymontecarlo.util.dist.command.check import check
 
 try:
-    from cx_Freeze.dist import Distribution, build, build_exe as _build_exe
+    from cx_Freeze.dist import Distribution, build
     from cx_Freeze.freezer import Executable
-    from cx_Freeze.macdist import \
-        bdist_mac as _bdist_mac, bdist_dmg as _bdist_dmg
+
+    from pymontecarlo.util.dist.command.build_exe import build_exe
+    from pymontecarlo.util.dist.command.bdist_exe import bdist_exe
+    from pymontecarlo.util.dist.command.bdist_mac import bdist_mac
+    from pymontecarlo.util.dist.command.bdist_dmg import bdist_dmg
+
     has_cx_freeze = True
 except ImportError:
     has_cx_freeze = False
-
-# Local modules.
-from pymontecarlo.util.dist.command import clean as _clean
 
 # Globals and constants variables.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -61,169 +57,6 @@ def find_version(*file_paths):
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
-
-class clean(_clean):
-
-    user_options = _clean.user_options + \
-        [('build-exe=', 'b',
-         'directory for built executables'), ]
-
-    def initialize_options(self):
-        _clean.initialize_options(self)
-        self.build_exe = None
-
-    def finalize_options(self):
-        _clean.finalize_options(self)
-        self.set_undefined_options('build_exe',
-                                   ('build_exe', 'build_exe'))
-
-    def run(self):
-        if self.all:
-            # remove build directories
-            for directory in (self.build_exe,):
-                if os.path.exists(directory):
-                    remove_tree(directory, dry_run=self.dry_run)
-                else:
-                    log.warn("'%s' does not exist -- can't clean it",
-                             directory)
-
-        _clean.run(self)
-
-class check(_check):
-
-    def run(self):
-        self.check_entrypoints()
-        _check.run(self)
-
-    def check_entrypoints(self):
-        self.run_command('egg_info')
-        self.check_gui_entrypoints()
-        self.check_result_entrypoints()
-
-    def check_gui_entrypoints(self):
-        base_fileformat = 'pymontecarlo.fileformat.options.'
-        base_gui = 'pymontecarlo.ui.gui.options.'
-        modules = ['material', 'beam', 'geometry', 'detector', 'limit', 'result']
-        for module in modules:
-            eps = pkg_resources.iter_entry_points(base_fileformat + module)
-            expecteds = set(map(attrgetter('name'), eps))
-
-            eps = pkg_resources.iter_entry_points(base_gui + module)
-            actuals = set(map(attrgetter('name'), eps))
-
-            missings = expecteds - actuals
-            if len(missings) > 0:
-                self.warn("Missing %s GUI: %s" % (module, ', '.join(missings)))
-
-    def check_result_entrypoints(self):
-        eps = pkg_resources.iter_entry_points('pymontecarlo.fileformat.options.detector')
-        detectors = set(map(attrgetter('name'), eps))
-        expecteds = {re.sub(r'Detector$', 'Result', d) for d in detectors}
-
-        eps = pkg_resources.iter_entry_points('pymontecarlo.fileformat.results.result')
-        actuals = set(map(attrgetter('name'), eps))
-
-        missings = expecteds - actuals
-        if len(missings) > 0:
-            self.warn("Missing result handler: %s" % (', '.join(sorted(missings)),))
-
-if has_cx_freeze:
-    class build_exe(_build_exe):
-
-        def run(self):
-            _build_exe.run(self)
-
-            # Add egg info of dependencies
-            for dist in pkg_resources.require('pymontecarlo'):
-                egg_info_dirpath = dist._provider.egg_info or dist._provider.path
-                if egg_info_dirpath is None:
-                    log.warn('No egg-info found for project %s' % dist.project_name)
-                    continue
-
-                if os.path.isdir(egg_info_dirpath):
-                    if os.path.basename(egg_info_dirpath) == 'EGG-INFO':
-                        dst = os.path.join(self.build_exe, dist.egg_name() + '.egg-info')
-                    else:
-                        dst = os.path.join(self.build_exe,
-                                           os.path.basename(egg_info_dirpath))
-                    copy_tree(egg_info_dirpath, dst)
-                else:
-                    copy_file(egg_info_dirpath, self.build_exe)
-
-    class bdist_mac(_bdist_mac):
-
-        user_options = _bdist_mac.user_options + \
-            [('dist-dir=', 'd',
-              "directory to put final built distributions in "
-              "[default: dist]"), ]
-
-        def initialize_options(self):
-            _bdist_mac.initialize_options(self)
-            self.dist_dir = None
-
-        def finalize_options(self):
-            _bdist_mac.finalize_options(self)
-
-            if self.dist_dir is None:
-                self.dist_dir = "dist"
-
-        def run(self):
-            # Modify to run on all executables
-            for executable in list(self.distribution.executables):
-                self.distribution.executables.remove(executable)
-                self.distribution.executables.insert(0, executable)
-
-                _bdist_mac.run(self)
-
-                copy_tree(self.bundleDir,
-                          os.path.join(self.dist_dir, executable.shortcutName + '.app'))
-
-    class bdist_dmg(_bdist_dmg):
-
-        user_options = _bdist_dmg.user_options + \
-            [('dist-dir=', 'd',
-              "directory to put final built distributions in "
-              "[default: dist]"), ]
-
-        def initialize_options(self):
-            _bdist_dmg.initialize_options(self)
-            self.dist_dir = None
-
-        def finalize_options(self):
-            _bdist_dmg.finalize_options(self)
-
-            if self.dist_dir is None:
-                self.dist_dir = "dist"
-
-        def buildDMG(self):
-            for executable in list(self.distribution.executables):
-                self.volume_label = 'pymontecarlo-%s.dmg' % executable.shortcutName
-                self.dmgName = os.path.join(self.dist_dir, self.volume_label)
-                self.bundleDir = os.path.join(self.dist_dir,
-                                              executable.shortcutName + '.app')
-                _bdist_dmg.buildDMG(self)
-
-    class bdist_exe(Command):
-
-        user_options = _bdist_dmg.user_options + \
-            [('dist-dir=', 'd',
-              "directory to put final built distributions in "
-              "[default: dist]"), ]
-
-        def initialize_options(self):
-            self.dist_dir = None
-
-        def finalize_options(self):
-            if self.dist_dir is None:
-                self.dist_dir = "dist"
-
-        def run(self):
-            self.run_command('build_exe')
-
-            build_dir = self.get_finalized_command("build_exe").build_exe
-            base_name = os.path.join(self.dist_dir,
-                                     "pymontecarlo-%s" % platform.machine())
-            make_archive(base_name, 'zip', build_dir)
 
 packages = find_packages(exclude=('pymontecarlo.util.dist*',))
 namespace_packages = ['pymontecarlo',
@@ -369,6 +202,11 @@ entry_points['console_scripts'] = \
 entry_points['gui_scripts'] = \
     ['%s = %s' % item for item in gui_executables.items()]
 
+executables = []
+distclass = None
+cmdclass = {'clean': clean, "check": check}
+options = {}
+
 if has_cx_freeze:
     def _make_executable(target_name, script, gui=False):
         path = os.path.join(*script.split(":")[0].split('.')) + '.py'
@@ -384,13 +222,10 @@ if has_cx_freeze:
         executables.append(_make_executable(target_name, script, True))
 
     distclass = Distribution
-    cmdclass = {"build": build, "build_exe": build_exe, "bdist_exe": bdist_exe,
-                "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg,
-                'clean': clean, "check": check}
-else:
-    executables = []
-    distclass = None
-    cmdclass = {'clean': clean, "check": check}
+    cmdclass.update({"build": build,
+                     "build_exe": build_exe, "bdist_exe": bdist_exe,
+                     "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg})
+    options.update({"build_exe": build_exe_options})
 
 setup(name="pyMonteCarlo",
       version=find_version('pymontecarlo', '__init__.py'),
@@ -420,7 +255,7 @@ setup(name="pyMonteCarlo",
       entry_points=entry_points,
       executables=executables,
 
-      options={"build_exe": build_exe_options},
+      options=options,
 
       test_suite='nose.collector',
 )
