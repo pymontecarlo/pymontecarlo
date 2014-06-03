@@ -21,6 +21,7 @@ import os
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.program.exporter import XMLExporter
+from pymontecarlo.program.test_config import DummyConverter
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
@@ -34,7 +35,7 @@ class TestXMLExporter(TestCase):
 
         self.ops = Options("test1")
 
-        self.e = XMLExporter()
+        self.e = XMLExporter(DummyConverter)
 
     def tearDown(self):
         TestCase.tearDown(self)

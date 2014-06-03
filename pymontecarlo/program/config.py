@@ -19,10 +19,12 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+from operator import attrgetter, methodcaller
 
 # Third party modules.
 
 # Local modules.
+from pkg_resources import iter_entry_points
 
 # Globals and constants variables.
 
@@ -32,22 +34,22 @@ class Program(object):
                  exporter_class, importer_class):
         """
         Creates a new program.
-        
+
         :arg name: full name of the program
         :type name: :class:`str`
-        
-        :arg alias: name of the package containing the program. 
+
+        :arg alias: name of the package containing the program.
         :type alias: :class:`str`
-        
+
         :arg converter_class: class of the converter
         :type converter_class: :class:`Converter <pymontecarlo.input.converter.Converter>`
-        
+
         :arg worker_class: class of the worker
         :type worker_class: :class:`Worker <pymontecarlo.program.worker.Worker>`
-        
+
         :arg exporter_class: class of the exporter
         :type exporter_class: :class:`Exporter <pymontecarlo.io.exporter.Exporter>`
-        
+
         :arg importer_class: class of the importer
         :type importer_class: :class:`Importer <pymontecarlo.io.importer.Importer>`
         """
@@ -57,6 +59,48 @@ class Program(object):
         self._worker_class = worker_class
         self._exporter_class = exporter_class
         self._importer_class = importer_class
+
+        # Validate exporters
+        fields = [('BEAMS', '_beam_exporters'),
+                  ('GEOMETRIES', '_geometry_exporters'),
+                  ('DETECTORS', '_detector_exporters'),
+                  ('LIMITS', '_limit_exporters'),
+                  ('MODELS', '_model_exporters')]
+        for field1, field2 in fields:
+            exporter = exporter_class()
+            expecteds = set(getattr(converter_class, field1))
+            actuals = getattr(exporter, field2).keys()
+            missings = expecteds - actuals
+            if len(missings) > 0:
+                s = ', '.join(map(attrgetter('__name__'), missings))
+                raise ValueError("These %s cannot be exported: %s" % \
+                                 (field1.lower(), s))
+
+        # Validate importers
+        expecteds = set(self.converter_class.DETECTORS)
+        actuals = self.importer_class()._importers.keys()
+        missings = expecteds - actuals
+        if len(missings) > 0:
+            s = ', '.join(map(attrgetter('__name__'), missings))
+            raise ValueError("These %s cannot be imported: %s" % \
+                             (field1.lower(), s))
+
+        # Validate options handlers
+        fields = [('MATERIALS', 'pymontecarlo.fileformat.options.material'),
+                  ('BEAMS', 'pymontecarlo.fileformat.options.beam'),
+                  ('GEOMETRIES', 'pymontecarlo.fileformat.options.geometry'),
+                  ('DETECTORS', 'pymontecarlo.fileformat.options.detector'),
+                  ('LIMITS', 'pymontecarlo.fileformat.options.limit')]
+        for field1, field2 in fields:
+            expecteds = set(getattr(converter_class, field1))
+            actuals = set(map(attrgetter('CLASS'),
+                              map(methodcaller('load'),
+                                  iter_entry_points(field2))))
+            missings = expecteds - actuals
+            if len(missings) > 0:
+                s = ', '.join(map(attrgetter('__name__'), missings))
+                raise ValueError("These %s cannot be read/write: %s" % \
+                                 (field1.lower(), s))
 
     def __hash__(self):
         return hash(self.alias)
@@ -111,3 +155,4 @@ class Program(object):
 
     def validate(self):
         pass
+

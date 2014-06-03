@@ -89,7 +89,16 @@ class Importer(object, metaclass=ABCMeta):
 
         return ResultsContainer(options, results)
 
+    def _import_dummy(self, options, key, detector, *args, **kwargs):
+        pass
+
 class HDF5Importer(Importer):
+
+    def __init__(self, converter):
+        Importer.__init__(self)
+
+        for detector in converter.DETECTORS:
+            self._importers[detector] = self._import_dummy
 
     def _import(self, options, dirpath, *args, **kwargs):
         filepath = os.path.join(dirpath, options.name + '.h5')

@@ -177,10 +177,27 @@ class Exporter(object, metaclass=ABCMeta):
 
             method(options, model, *args, **kwargs)
 
+    def _export_dummy(self, options, *args, **kwargs):
+        pass
+
 class XMLExporter(Exporter):
     """
     Exports the options to a XML file.
     """
+
+    def __init__(self, converter):
+        Exporter.__init__(self)
+
+        for beam in converter.BEAMS:
+            self._beam_exporters[beam] = self._export_dummy
+        for geometry in converter.GEOMETRIES:
+            self._geometry_exporters[geometry] = self._export_dummy
+        for detector in converter.DETECTORS:
+            self._detector_exporters[detector] = self._export_dummy
+        for limit in converter.LIMITS:
+            self._limit_exporters[limit] = self._export_dummy
+        for model in converter.MODELS:
+            self._model_exporters[model] = self._export_dummy
 
     def _export(self, options, dirpath, *args, **kwargs):
         filepath = os.path.join(dirpath, options.name + '.xml')
