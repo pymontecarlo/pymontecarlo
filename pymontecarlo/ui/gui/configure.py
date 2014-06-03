@@ -92,7 +92,7 @@ class ConfigureDialog(QDialog):
         model = _ProgramListModel(available_programs)
         self._cb_available_programs.setModel(model)
 
-        btn_activate = QPushButton('Activate')
+        self._btn_activate = QPushButton('Activate')
 
         self._lst_selected_programs = QListView()
         model = _ProgramListModel()
@@ -104,7 +104,7 @@ class ConfigureDialog(QDialog):
         for program in available_programs:
             self._wdg_program.addWidget(self._widgets[program])
 
-        btn_deactivate = QPushButton('Deactivate')
+        self._btn_deactivate = QPushButton('Deactivate')
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
@@ -114,14 +114,14 @@ class ConfigureDialog(QDialog):
         sublayout = QHBoxLayout()
         sublayout.addWidget(QLabel('Available programs'))
         sublayout.addWidget(self._cb_available_programs, 1)
-        sublayout.addWidget(btn_activate)
+        sublayout.addWidget(self._btn_activate)
         layout.addLayout(sublayout)
 
         sublayout = QHBoxLayout()
 
         subsublayout = QVBoxLayout()
         subsublayout.addWidget(self._lst_selected_programs)
-        subsublayout.addWidget(btn_deactivate)
+        subsublayout.addWidget(self._btn_deactivate)
         sublayout.addLayout(subsublayout)
 
         sublayout.addWidget(self._wdg_program, 1)
@@ -135,8 +135,8 @@ class ConfigureDialog(QDialog):
         # Signals
         self._lst_selected_programs.activated.connect(self._onSelectProgram)
 
-        btn_activate.released.connect(self._onActivate)
-        btn_deactivate.released.connect(self._onDeactivate)
+        self._btn_activate.released.connect(self._onActivate)
+        self._btn_deactivate.released.connect(self._onDeactivate)
         buttons.accepted.connect(self._onOk)
         buttons.rejected.connect(self.reject)
 
@@ -151,12 +151,29 @@ class ConfigureDialog(QDialog):
         if self._cb_available_programs.currentIndex() < 0:
             self._cb_available_programs.setCurrentIndex(0)
 
+        enabled = self._cb_available_programs.model().rowCount() != 0
+        self._btn_activate.setEnabled(enabled)
+
+        enabled = self._lst_selected_programs.model().rowCount() != 0
+        self._btn_deactivate.setEnabled(enabled)
+
+        index = self._lst_selected_programs.model().rowCount() - 1
+        program = self._lst_selected_programs.model().program(index)
+        widget = self._widgets[program]
+        self._wdg_program.setCurrentWidget(widget)
+
     def deactivateProgram(self, program):
         self._lst_selected_programs.model().remove(program)
 
         self._cb_available_programs.model().add(program)
         if self._cb_available_programs.currentIndex() < 0:
             self._cb_available_programs.setCurrentIndex(0)
+
+        enabled = self._cb_available_programs.model().rowCount() != 0
+        self._btn_activate.setEnabled(enabled)
+
+        enabled = self._lst_selected_programs.model().rowCount() != 0
+        self._btn_deactivate.setEnabled(enabled)
 
         self._wdg_program.setCurrentIndex(0)
 
