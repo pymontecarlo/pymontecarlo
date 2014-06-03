@@ -18,6 +18,8 @@ from distutils.dir_util import remove_tree, copy_tree
 from distutils.file_util import copy_file
 from distutils.archive_util import make_archive
 from distutils import log
+from distutils.command.check import check as _check
+from operator import attrgetter
 
 # Third party modules.
 from setuptools import setup, find_packages
@@ -86,6 +88,44 @@ class clean(_clean):
                              directory)
 
         _clean.run(self)
+
+class check(_check):
+
+    def run(self):
+        self.check_entrypoints()
+        _check.run(self)
+
+    def check_entrypoints(self):
+        self.run_command('egg_info')
+        self.check_gui_entrypoints()
+        self.check_result_entrypoints()
+
+    def check_gui_entrypoints(self):
+        base_fileformat = 'pymontecarlo.fileformat.options.'
+        base_gui = 'pymontecarlo.ui.gui.options.'
+        modules = ['material', 'beam', 'geometry', 'detector', 'limit']
+        for module in modules:
+            eps = pkg_resources.iter_entry_points(base_fileformat + module)
+            expecteds = set(map(attrgetter('name'), eps))
+
+            eps = pkg_resources.iter_entry_points(base_gui + module)
+            actuals = set(map(attrgetter('name'), eps))
+
+            missings = expecteds - actuals
+            if len(missings) > 0:
+                self.warn("Missing %s GUI: %s" % (module, ', '.join(missings)))
+
+    def check_result_entrypoints(self):
+        eps = pkg_resources.iter_entry_points('pymontecarlo.fileformat.options.detector')
+        detectors = set(map(attrgetter('name'), eps))
+        expecteds = {re.sub(r'Detector$', 'Result', d) for d in detectors}
+
+        eps = pkg_resources.iter_entry_points('pymontecarlo.fileformat.results.result')
+        actuals = set(map(attrgetter('name'), eps))
+
+        missings = expecteds - actuals
+        if len(missings) > 0:
+            self.warn("Missing result handler: %s" % (', '.join(missings),))
 
 if has_cx_freeze:
     class build_exe(_build_exe):
@@ -264,11 +304,11 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'BackscatteredElectronPolarAngularResult = pymontecarlo.fileformat.results.result:BackscatteredElectronPolarAngularResultHDF5Handler',
                      'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
 
-                'pymontecarlo.ui.gui.options.beam':
-                    ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
-                     'GaussianBeam = pymontecarlo.ui.gui.options.beam:GaussianBeamWidget', ],
                 'pymontecarlo.ui.gui.options.material':
                     ['Material = pymontecarlo.ui.gui.options.material:MaterialDialog'],
+                'pymontecarlo.ui.gui.options.beam':
+                    ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
+                    'GaussianBeam = pymontecarlo.ui.gui.options.beam:GaussianBeamWidget', ],
                 'pymontecarlo.ui.gui.options.geometry':
                     ['Substrate = pymontecarlo.ui.gui.options.geometry:SubstrateWidget',
                      'Inclusion = pymontecarlo.ui.gui.options.geometry:InclusionWidget',
@@ -301,18 +341,27 @@ entry_points = {'pymontecarlo.fileformat.options.material':
 #                     'UncertaintyLimit = pymontecarlo.ui.gui.options.limit:UncertaintyLimitWidget '
                     ],
                 'pymontecarlo.ui.gui.results.result':
-                    ['PhotonIntensityResult = pymontecarlo.ui.gui.results.result:PhotonIntensityResultWidget',
-                     'PhotonSpectrumResult = pymontecarlo.ui.gui.results.result:PhotonSpectrumResultWidget',
-                     'PhotonDepthResult = pymontecarlo.ui.gui.results.result:PhotonDepthResultWidget',
-                     'PhotonRadialResult = pymontecarlo.ui.gui.results.result:PhotonRadialResultWidget',
-                     'TimeResult = pymontecarlo.ui.gui.results.result:TimeResultWidget',
-                     'ShowersStatisticsResult = pymontecarlo.ui.gui.results.result:ShowersStatisticsResultWidget',
-                     'ElectronFractionResult = pymontecarlo.ui.gui.results.result:ElectronFractionResultWidget',
-                     'TrajectoryResult = pymontecarlo.ui.gui.results.result:TrajectoryResultWidget',
+                    [
                      'BackscatteredElectronEnergyResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronEnergyResultWidget',
                      'TransmittedElectronEnergyResult = pymontecarlo.ui.gui.results.result:TransmittedElectronEnergyResultWidget',
                      'BackscatteredElectronPolarAngularResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronPolarAngularResultWidget',
-                     'BackscatteredElectronRadialResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronRadialResultWidget', ],
+
+                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronAzimuthalAngularDetectorWidget',
+                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronAzimuthalAngularDetectorWidget',
+                     'BackscatteredElectronRadialResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronRadialResultWidget',
+                     'PhotonPolarAngularDetector = pymontecarlo.ui.gui.options.detector:PhotonPolarAngularDetectorWidget',
+                     'PhotonAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:PhotonAzimuthalAngularDetectorWidget',
+#                     'EnergyDepositedSpatialDetector = pymontecarlo.ui.gui.options.detector:EnergyDepositedSpatialDetectorWidget',
+                     'PhotonSpectrumResult = pymontecarlo.ui.gui.results.result:PhotonSpectrumResultWidget',
+                     'PhotonDepthResult = pymontecarlo.ui.gui.results.result:PhotonDepthResultWidget',
+                     'PhotonRadialResult = pymontecarlo.ui.gui.results.result:PhotonRadialResultWidget',
+#                     'PhotonEmissionMapResult = pymontecarlo.ui.gui.results.result:PhotonEmissionMapResultWidget',
+                     'PhotonIntensityResult = pymontecarlo.ui.gui.results.result:PhotonIntensityResultWidget',
+                     'TimeResult = pymontecarlo.ui.gui.results.result:TimeResultWidget',
+                     'ElectronFractionResult = pymontecarlo.ui.gui.results.result:ElectronFractionResultWidget',
+                     'ShowersStatisticsResult = pymontecarlo.ui.gui.results.result:ShowersStatisticsResultWidget',
+                     'TrajectoryResult = pymontecarlo.ui.gui.results.result:TrajectoryResultWidget',
+                     ]
                 }
 
 
@@ -338,11 +387,11 @@ if has_cx_freeze:
     distclass = Distribution
     cmdclass = {"build": build, "build_exe": build_exe, "bdist_exe": bdist_exe,
                 "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg,
-                'clean': clean}
+                'clean': clean, "check": check}
 else:
     executables = []
     distclass = None
-    cmdclass = {'clean': clean}
+    cmdclass = {'clean': clean, "check": check}
 
 setup(name="pyMonteCarlo",
       version=find_version('pymontecarlo', '__init__.py'),
