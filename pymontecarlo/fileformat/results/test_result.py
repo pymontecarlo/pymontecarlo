@@ -21,6 +21,7 @@ import numpy as np
 from pymontecarlo.fileformat.results.result import \
     (PhotonIntensityResultHDF5Handler, PhotonSpectrumResultHDF5Handler,
      PhotonDepthResultHDF5Handler, PhotonRadialResultHDF5Handler,
+     PhotonEmissionMapHDF5Handler,
      TimeResultHDF5Handler, ShowersStatisticsResultHDF5Handler,
      ElectronFractionResultHDF5Handler, TrajectoryResultHDF5Handler,
      BackscatteredElectronEnergyResultHDF5Handler,
@@ -30,7 +31,7 @@ from pymontecarlo.fileformat.results.result import \
 
 from pymontecarlo.results.result import \
     (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
-     PhotonDepthResult, PhotonRadialResult,
+     PhotonDepthResult, PhotonRadialResult, PhotonEmissionMapResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      Trajectory, TrajectoryResult, BackscatteredElectronEnergyResult,
      TransmittedElectronEnergyResult, BackscatteredElectronPolarAngularResult,
@@ -391,6 +392,46 @@ class TestPhotonRadialResultHDF5Handler(unittest.TestCase):
         self.assertAlmostEqual(1.0, radial[0][0], 4)
         self.assertAlmostEqual(30.0, radial[0][1], 4)
         self.assertAlmostEqual(0.31, radial[0][2], 4)
+
+class TestPhotonEmissionMapResultHDF5Handler(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.hdf5file = h5py.File('test.h5', 'a', driver='core', backing_store=False)
+        self.h = PhotonEmissionMapHDF5Handler()
+
+        t1 = Transition(29, 9, 4)
+
+        distributions = {}
+        enf = np.ones((5, 5, 5))
+        distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
+
+        self.obj = PhotonEmissionMapResult(distributions)
+
+        self.group = self.h.convert(self.obj, self.hdf5file.create_group('det'))
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        self.hdf5file.close()
+
+    def testcan_parse(self):
+        self.assertTrue(self.h.can_parse(self.group))
+
+    def testparse(self):
+        obj = self.h.parse(self.group)
+
+        dist = obj.get(Transition(29, 9, 4), True, False)
+        self.assertEqual(3, dist.ndim)
+
+    def testcan_convert(self):
+        self.assertTrue(self.h.can_convert(self.obj))
+
+    def testconvert(self):
+        group = self.hdf5file['det']
+
+        dist = group['Cu L3-M5']['enf']
+        self.assertEqual(3, np.array(dist).ndim)
 
 class TestTimeResultHDF5Handler(unittest.TestCase):
 

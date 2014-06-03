@@ -125,6 +125,7 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'PhotonSpectrumResult = pymontecarlo.fileformat.results.result:PhotonSpectrumResultHDF5Handler',
                      'PhotonDepthResult = pymontecarlo.fileformat.results.result:PhotonDepthResultHDF5Handler',
                      'PhotonRadialResult = pymontecarlo.fileformat.results.result:PhotonRadialResultHDF5Handler',
+                     'PhotonEmissionMapResult = pymontecarlo.fileformat.results.result:PhotonEmissionMapResultHDF5Handler',
                      'TimeResult = pymontecarlo.fileformat.results.result:TimeResultHDF5Handler',
                      'ShowersStatisticsResult = pymontecarlo.fileformat.results.result:ShowersStatisticsResultHDF5Handler',
                      'ElectronFractionResult = pymontecarlo.fileformat.results.result:ElectronFractionResultHDF5Handler',

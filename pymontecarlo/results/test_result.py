@@ -405,8 +405,8 @@ class TestPhotonEmissionMapResult(TestCase):
         self.t1 = Transition(29, 9, 4)
 
         distributions = {}
-        gnf = np.ones((5, 5, 5))
-        distributions[PhotonKey(self.t1, True, PhotonKey.P)] = gnf
+        enf = np.ones((5, 5, 5))
+        distributions[PhotonKey(self.t1, True, PhotonKey.P)] = enf
 
         self.r = PhotonEmissionMapResult(distributions)
 
