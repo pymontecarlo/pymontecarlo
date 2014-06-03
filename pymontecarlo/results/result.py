@@ -813,8 +813,40 @@ class PhotonRadialResult(_PhotonDistributionResult):
     def get_labels(self):
         return ['Radius (m)', 'Intensity', 'Uncertainty']
 
-class PhotonEmissionMapResult(_PhotonDistributionResult):
-    pass
+class PhotonEmissionMapResult(_PhotonKeyResult):
+
+    def __init__(self, distributions=None):
+        """
+        Creates a new result to store photon emission map.
+
+        :arg maps: :class:`dict` containing the distributions.
+            The keys should be :class:`.PhotonKey` and the values a three
+            dimensional numpy array.
+        """
+        _PhotonKeyResult.__init__(self)
+
+        if distributions is None:
+            distributions = {}
+
+        for key, distribution in distributions.items():
+            if distribution.ndim != 3:
+                raise ValueError('The data must be three dimensional')
+            distribution.flags.writeable = False
+            self._results[key] = distribution
+
+    def _get(self, transition, primary, absorption,
+             characteristic_fluorescence, bremsstrahlung_fluorescence):
+        results = list(self.iter_results(transition, primary, absorption,
+                                         characteristic_fluorescence,
+                                         bremsstrahlung_fluorescence))
+
+        if len(results) != 1:
+            raise ValueError('Distribution not found')
+
+        return np.copy(results[0])
+
+    def get(self, transition, absorption=True, fluorescence=True):
+        return self._get(transition, True, absorption, fluorescence, fluorescence)
 
 class TimeResult(_SummarizableResult):
 

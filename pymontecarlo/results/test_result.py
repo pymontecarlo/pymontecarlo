@@ -25,6 +25,7 @@ from pymontecarlo.results.result import \
      PhotonIntensityResult,
      PhotonSpectrumResult,
      PhotonDepthResult,
+     PhotonEmissionMapResult,
      TimeResult,
      ElectronFractionResult,
      Trajectory,
@@ -395,6 +396,28 @@ class TestPhotonDepthResultResult(TestCase):
 
     def testiter_distributions(self):
         self.assertEqual(1, len(list(self.r.iter_distributions())))
+
+class TestPhotonEmissionMapResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.t1 = Transition(29, 9, 4)
+
+        distributions = {}
+        gnf = np.ones((5, 5, 5))
+        distributions[PhotonKey(self.t1, True, PhotonKey.P)] = gnf
+
+        self.r = PhotonEmissionMapResult(distributions)
+
+    def testexists(self):
+        self.assertTrue(self.r.exists(self.t1))
+        self.assertTrue(self.r.exists('Cu La1'))
+        self.assertFalse(self.r.exists('Cu Ka1'))
+
+    def testget(self):
+        m = self.r.get(self.t1, True, False)
+        self.assertEqual(3, m.ndim)
 
 class TestTimeResult(TestCase):
 
