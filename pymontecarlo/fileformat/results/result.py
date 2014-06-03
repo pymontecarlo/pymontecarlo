@@ -34,7 +34,6 @@ from pymontecarlo.results.result import \
      _PhotonDistributionResult,
      PhotonDepthResult,
      PhotonRadialResult,
-     PhotonPolarAngularResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      TrajectoryResult, Trajectory,
      _ChannelsResult, BackscatteredElectronEnergyResult,
@@ -334,11 +333,3 @@ class BackscatteredElectronRadialResultHDF5Handler(_ChannelsResultHDF5Handler):
     def parse(self, group):
         result = _ChannelsResultHDF5Handler.parse(self, group)
         return BackscatteredElectronRadialResult(result.get_data())
-
-class PhotonPolarAngularResultHDF5Handler(_ChannelsResultHDF5Handler):
-
-    CLASS = PhotonPolarAngularResult
-
-    def parse(self, group):
-        result = _ChannelsResultHDF5Handler.parse(self, group)
-        return PhotonPolarAngularResult(result.get_data())

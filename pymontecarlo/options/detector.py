@@ -307,9 +307,6 @@ class TransmittedElectronAzimuthalAngularDetector(_AzimuthalAngularDetector):
 class BackscatteredElectronRadialDetector(_ChannelsDetector):
     pass
 
-class EnergyDepositedSpatialDetector(_SpatialDetector):
-    pass
-
 class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
 
     def __init__(self, elevation_rad, azimuth_rad, channels, limits_eV):
