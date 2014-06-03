@@ -44,7 +44,7 @@ class _BrowseWidget(QWidget):
         QWidget.__init__(self, parent)
 
         # Variables
-        self._basedir = os.getcwd()
+        self._basedir = None
 
         # Widgets
         self._txt_path = QLineEdit()
@@ -97,7 +97,7 @@ class _BrowseWidget(QWidget):
         self._basedir = path
 
     def baseDir(self):
-        return self._basedir
+        return self._basedir or os.getcwd()
 
     def setPath(self, path, update_basedir=True):
         if not path:
@@ -114,6 +114,7 @@ class _BrowseWidget(QWidget):
 
         if update_basedir:
             self.setBaseDir(path)
+            os.chdir(self.baseDir())
 
         self.pathChanged.emit(path)
 
