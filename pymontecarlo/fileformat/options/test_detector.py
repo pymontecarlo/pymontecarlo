@@ -26,8 +26,6 @@ from pymontecarlo.fileformat.options.detector import \
      BackscatteredElectronPolarAngularDetectorXMLHandler, TransmittedElectronPolarAngularDetectorXMLHandler,
      BackscatteredElectronAzimuthalAngularDetectorXMLHandler, TransmittedElectronAzimuthalAngularDetectorXMLHandler,
      BackscatteredElectronRadialDetectorXMLHandler,
-     PhotonPolarAngularDetectorXMLHandler, PhotonAzimuthalAngularDetectorXMLHandler,
-     EnergyDepositedSpatialDetectorXMLHandler,
      PhotonSpectrumDetectorXMLHandler, PhotonDepthDetectorXMLHandler,
      PhotonRadialDetectorXMLHandler, PhotonEmissionMapDetectorXMLHandler,
      PhotonIntensityDetectorXMLHandler,
@@ -40,8 +38,6 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonPolarAngularDetector, PhotonAzimuthalAngularDetector,
-     EnergyDepositedSpatialDetector,
      PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
      PhotonEmissionMapDetector, PhotonIntensityDetector,
      TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
@@ -538,84 +534,6 @@ class TestTransmittedElectronAzimuthalAngularDetectorXMLHandler(unittest.TestCas
         subelement = element.find('channels')
         self.assertEqual(50, int(subelement.text))
 
-class TestPhotonPolarAngularDetectorXMLHandler(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.h = PhotonPolarAngularDetectorXMLHandler()
-
-        self.obj = PhotonPolarAngularDetector(50)
-
-        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:photonPolarAngularDetector xmlns:mc="http://pymontecarlo.sf.net"><channels>50</channels><limits lower="-1.5707963267948966" upper="1.5707963267948966" /></mc:photonPolarAngularDetector>')
-        self.element = etree.parse(source).getroot()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testcan_parse(self):
-        self.assertTrue(self.h.can_parse(self.element))
-
-    def testparse(self):
-        obj = self.h.parse(self.element)
-
-        self.assertAlmostEqual(radians(-90), obj.limits_rad[0], 4)
-        self.assertAlmostEqual(radians(90), obj.limits_rad[1], 4)
-        self.assertEqual(50, obj.channels)
-
-    def testcan_convert(self):
-        self.assertTrue(self.h.can_convert(self.obj))
-
-    def testconvert(self):
-        element = self.h.convert(self.obj)
-
-        subelement = element.find('limits')
-        self.assertAlmostEqual(radians(-90), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(90), float(subelement.get('upper')), 4)
-
-        subelement = element.find('channels')
-        self.assertEqual(50, int(subelement.text))
-
-class TestPhotonAzimuthalAngularDetectorXMLHandler(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.h = PhotonAzimuthalAngularDetectorXMLHandler()
-
-        self.obj = PhotonAzimuthalAngularDetector(50)
-
-        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:photonAzimuthalAngularDetector xmlns:mc="http://pymontecarlo.sf.net"><channels>50</channels><limits lower="0.0" upper="6.283185307179586" /></mc:photonAzimuthalAngularDetector>')
-        self.element = etree.parse(source).getroot()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testcan_parse(self):
-        self.assertTrue(self.h.can_parse(self.element))
-
-    def testparse(self):
-        obj = self.h.parse(self.element)
-
-        self.assertAlmostEqual(radians(0), obj.limits_rad[0], 4)
-        self.assertAlmostEqual(radians(360), obj.limits_rad[1], 4)
-        self.assertEqual(50, self.obj.channels)
-
-    def testcan_convert(self):
-        self.assertTrue(self.h.can_convert(self.obj))
-
-    def testconvert(self):
-        element = self.h.convert(self.obj)
-
-        subelement = element.find('limits')
-        self.assertAlmostEqual(radians(0), float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(radians(360), float(subelement.get('upper')), 4)
-
-        subelement = element.find('channels')
-        self.assertEqual(50, int(subelement.text))
-
 class TestBackscatteredElectronRadialDetectorXMLHandler(unittest.TestCase):
 
     def setUp(self):
@@ -648,69 +566,6 @@ class TestBackscatteredElectronRadialDetectorXMLHandler(unittest.TestCase):
 
         subelement = element.find('channels')
         self.assertEqual(10, int(subelement.text))
-
-class TestEnergyDepositedSpatialDetectorXMLHandler(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.h = EnergyDepositedSpatialDetectorXMLHandler()
-
-        self.obj = EnergyDepositedSpatialDetector((12.34, 56.78), 2,
-                                                  (21.43, 65.87), 3,
-                                                  (34.12, 78.56), 4)
-
-        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:energyDepositedSpatialDetector xmlns:mc="http://pymontecarlo.sf.net"><xlimits lower="12.34" upper="56.78" /><xbins>2</xbins><ylimits lower="21.43" upper="65.87" /><ybins>3</ybins><zlimits lower="34.12" upper="78.56" /><zbins>4</zbins></mc:energyDepositedSpatialDetector>')
-        self.element = etree.parse(source).getroot()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testcan_parse(self):
-        self.assertTrue(self.h.can_parse(self.element))
-
-    def testparse(self):
-        obj = self.h.parse(self.element)
-
-        self.assertAlmostEqual(12.34, obj.xlimits_m[0], 4)
-        self.assertAlmostEqual(56.78, obj.xlimits_m[1], 4)
-        self.assertEqual(2, obj.xbins)
-
-        self.assertAlmostEqual(21.43, obj.ylimits_m[0], 4)
-        self.assertAlmostEqual(65.87, obj.ylimits_m[1], 4)
-        self.assertEqual(3, obj.ybins)
-
-        self.assertAlmostEqual(34.12, obj.zlimits_m[0], 4)
-        self.assertAlmostEqual(78.56, obj.zlimits_m[1], 4)
-        self.assertEqual(4, obj.zbins)
-
-    def testcan_convert(self):
-        self.assertTrue(self.h.can_convert(self.obj))
-
-    def testconvert(self):
-        element = self.h.convert(self.obj)
-
-        subelement = element.find('xlimits')
-        self.assertAlmostEqual(12.34, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(56.78, float(subelement.get('upper')), 4)
-
-        subelement = element.find('xbins')
-        self.assertEqual(2, int(subelement.text))
-
-        subelement = element.find('ylimits')
-        self.assertAlmostEqual(21.43, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(65.87, float(subelement.get('upper')), 4)
-
-        subelement = element.find('ybins')
-        self.assertEqual(3, int(subelement.text))
-
-        subelement = element.find('zlimits')
-        self.assertAlmostEqual(34.12, float(subelement.get('lower')), 4)
-        self.assertAlmostEqual(78.56, float(subelement.get('upper')), 4)
-
-        subelement = element.find('zbins')
-        self.assertEqual(4, int(subelement.text))
 
 class TestPhotonSpectrumDetectorXMLHandler(unittest.TestCase):
 

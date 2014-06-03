@@ -78,7 +78,7 @@ class PhotonIntensityResultHDF5Handler(_HDF5Handler):
     def convert(self, obj, group):
         group = _HDF5Handler.convert(self, obj, group)
 
-        for key, intensity in obj._intensities.items():
+        for key, intensity in obj:
             transition = key.transition
             name = '%s %s' % (transition.symbol, transition.iupac)
             dataset = group.require_dataset(name, shape=(), dtype=np.float)
@@ -143,7 +143,7 @@ class _PhotonDistributionResultHDF5Handler(_HDF5Handler):
     def convert(self, obj, group):
         group = _HDF5Handler.convert(self, obj, group)
 
-        for key, distribution in obj._distributions.items():
+        for key, distribution in obj:
             transition = key.transition
             name = '%s %s' % (transition.symbol, transition.iupac)
             subgroup = group.require_group(name)
@@ -170,7 +170,7 @@ class PhotonDepthResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
 
     def parse(self, group):
         dist = _PhotonDistributionResultHDF5Handler.parse(self, group)
-        return PhotonDepthResult(dist._distributions)
+        return PhotonDepthResult(dict(iter(dist)))
 
 class PhotonRadialResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
 
@@ -178,7 +178,7 @@ class PhotonRadialResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
 
     def parse(self, group):
         dist = _PhotonDistributionResultHDF5Handler.parse(self, group)
-        return PhotonRadialResult(dist._distributions)
+        return PhotonRadialResult(dict(iter(dist)))
 
 class TimeResultHDF5Handler(_HDF5Handler):
 

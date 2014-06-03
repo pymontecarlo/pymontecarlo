@@ -105,6 +105,12 @@ class _PhotonKeyResult(_Result):
     def __init__(self):
         self._results = {}
 
+    def __iter__(self):
+        return iter(self._results.items())
+
+    def __len__(self):
+        return len(self._results)
+
     def _create_photon_keys(self, transition, primary, absorption,
                             characteristic_fluorescence, bremsstrahlung_fluorescence):
         # Check for total photon key

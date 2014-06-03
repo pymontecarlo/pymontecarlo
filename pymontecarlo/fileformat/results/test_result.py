@@ -95,7 +95,7 @@ class TestPhotonIntensityResultHDF5Handler(unittest.TestCase):
     def testparse(self):
         obj = self.h.parse(self.group)
 
-        self.assertEqual(24, len(obj._intensities))
+        self.assertEqual(24, len(obj))
 
         val, err = obj.intensity(Transition(29, 9, 4))
         self.assertAlmostEqual(18.0, val, 4)
