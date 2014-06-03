@@ -102,8 +102,10 @@ class PhotonKey(object):
 
 class _PhotonKeyResult(_Result):
 
-    def __init__(self):
-        self._results = {}
+    def __init__(self, results=None):
+        if results is None:
+            results = {}
+        self._results = results.copy()
 
     def __iter__(self):
         return iter(self._results.items())
@@ -111,18 +113,24 @@ class _PhotonKeyResult(_Result):
     def __len__(self):
         return len(self._results)
 
+    def __contains__(self, key):
+        return key in self._results
+
+    def __getitem__(self, key):
+        return self._results[key]
+
     def _create_photon_keys(self, transition, primary, absorption,
                             characteristic_fluorescence, bremsstrahlung_fluorescence):
         # Check for total photon key
         if primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
             key = PhotonKey(transition, absorption, PhotonKey.T)
-            if key in self._results:
+            if key in self:
                 return [key]
 
         # Check for fluorescence key
         elif not primary and characteristic_fluorescence and bremsstrahlung_fluorescence:
             key = PhotonKey(transition, absorption, PhotonKey.F)
-            if key in self._results:
+            if key in self:
                 return [key]
 
         # All other cases
@@ -130,15 +138,15 @@ class _PhotonKeyResult(_Result):
 
         if primary:
             key = PhotonKey(transition, absorption, PhotonKey.P)
-            if key in self._results:
+            if key in self:
                 keys.append(key)
         if characteristic_fluorescence:
             key = PhotonKey(transition, absorption, PhotonKey.C)
-            if key in self._results:
+            if key in self:
                 keys.append(key)
         if bremsstrahlung_fluorescence:
             key = PhotonKey(transition, absorption, PhotonKey.B)
-            if key in self._results:
+            if key in self:
                 keys.append(key)
 
         return keys
@@ -192,7 +200,7 @@ class _PhotonKeyResult(_Result):
                                         bremsstrahlung_fluorescence)
 
         for key in keys:
-            yield self._results[key]
+            yield self[key]
 
     def iter_transitions(self):
         transitions = set()
@@ -211,15 +219,17 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
             array of length 2 containing the intensity and its uncertainty
         """
         _SummarizableResult.__init__(self)
-        _PhotonKeyResult.__init__(self)
 
         if intensities is None:
             intensities = {}
 
+        results = {}
         for key, intensity in intensities.items():
             intensity = np.array([intensity], ndmin=2)
             intensity.flags.writeable = False
-            self._results[key] = intensity
+            results[key] = intensity
+
+        _PhotonKeyResult.__init__(self, results)
 
     def _get_intensity(self, transition, primary, absorption,
                        characteristic_fluorescence, bremsstrahlung_fluorescence):
@@ -236,7 +246,7 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
         if isinstance(transition, transitionset): # transitionset
             keys = _create_photon_keys2(transition)
             for key in keys:
-                if key in self._results:
+                if key in self:
                     list_keys.append(key)
             else:
                 for t in transition:
@@ -250,8 +260,9 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
         total_val = 0.0
         total_unc = 0.0
         for key in list_keys:
-            intensity = self._results.get(key)
-            if intensity is None:
+            try:
+                intensity = self[key]
+            except KeyError:
                 continue
             total_val += intensity[0][0]
             total_unc += intensity[0][1] ** 2
@@ -526,11 +537,11 @@ class _PhotonDistributionResult(_SummarizableResult, _PhotonKeyResult):
               * (optional) uncertainties on the intensities
         """
         _SummarizableResult.__init__(self)
-        _PhotonKeyResult.__init__(self)
 
         if distributions is None:
             distributions = {}
 
+        results = {}
         for key, distribution in distributions.items():
             if distribution.shape[1] < 2:
                 raise ValueError('The data must contains at least two columns')
@@ -538,7 +549,9 @@ class _PhotonDistributionResult(_SummarizableResult, _PhotonKeyResult):
                 distribution = np.append(distribution, np.zeros((distribution.shape[0], 1)), 1)
 
             distribution.flags.writeable = False
-            self._results[key] = distribution
+            results[key] = distribution
+
+        _PhotonKeyResult.__init__(self, results)
 
     def _get(self, transition, primary, absorption,
              characteristic_fluorescence, bremsstrahlung_fluorescence):
@@ -829,16 +842,17 @@ class PhotonEmissionMapResult(_PhotonKeyResult):
             The keys should be :class:`.PhotonKey` and the values a three
             dimensional numpy array.
         """
-        _PhotonKeyResult.__init__(self)
-
         if distributions is None:
             distributions = {}
 
+        results = {}
         for key, distribution in distributions.items():
             if distribution.ndim != 3:
                 raise ValueError('The data must be three dimensional')
             distribution.flags.writeable = False
-            self._results[key] = distribution
+            results[key] = distribution
+
+        _PhotonKeyResult.__init__(self, results)
 
     def _get(self, transition, primary, absorption,
              characteristic_fluorescence, bremsstrahlung_fluorescence):
