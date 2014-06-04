@@ -111,8 +111,6 @@ class _BaseResultWidget(QWidget):
             splitter.addWidget(toolbox)
             splitter.setCollapsible(0, False)
             splitter.setCollapsible(1, True)
-            splitter.setStretchFactor(0, 2)
-            splitter.setStretchFactor(1, 1)
             layout.addWidget(splitter)
 
         self.setLayout(layout)
