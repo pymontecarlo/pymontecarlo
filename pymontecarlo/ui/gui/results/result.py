@@ -22,7 +22,7 @@ __license__ = "GPL v3"
 
 # Third party modules.
 from PySide.QtGui import \
-    (QApplication, QLabel, QVBoxLayout, QCheckBox, QComboBox, QFormLayout,
+    (QLabel, QVBoxLayout, QCheckBox, QComboBox, QFormLayout,
      QGroupBox, QTableView, QHeaderView, QLineEdit)
 from PySide.QtCore import Qt, QAbstractTableModel, QAbstractListModel
 
@@ -870,117 +870,5 @@ class BackscatteredElectronRadialResultWidget(_ChannelsResultWidget):
 def get_widget_class(clasz):
     return _get_widget_class('pymontecarlo.ui.gui.results.result', clasz)
 
-
-def __run():
-    import sys
-    from PySide.QtGui import QMainWindow
-    from pymontecarlo.options.options import Options
-    from pymontecarlo.options.detector import \
-        (PhotonIntensityDetector, TimeDetector, ElectronFractionDetector,
-         ShowersStatisticsDetector, PhotonSpectrumDetector,
-         PhotonDepthDetector)
-    from pymontecarlo.results.result import \
-        (PhotonKey, PhotonSpectrumResult, PhotonIntensityResult,
-         TimeResult, ElectronFractionResult, ShowersStatisticsResult,
-         PhotonDepthResult)
-    from pyxray.transition import Transition, K_family
-
-    ops = Options()
-    ops.detectors['spectrum'] = \
-        PhotonSpectrumDetector.annular(np.radians(40.0), np.radians(5),
-                                       4, (1.0, 2.5))
-    ops.detectors['intensity'] = \
-        PhotonIntensityDetector.annular(np.radians(40.0), np.radians(5))
-    ops.detectors['time'] = TimeDetector()
-    ops.detectors['fraction'] = ElectronFractionDetector()
-    ops.detectors['showers'] = ShowersStatisticsDetector()
-    ops.detectors['photon-depth'] = \
-        PhotonDepthDetector.annular(np.radians(40.0), np.radians(5), 4)
-
-    app = QApplication(sys.argv)
-    window = QMainWindow()
-
-#    energies_eV = [1.0, 1.5, 2.0, 2.5]
-#    total_val = [6.0, 9.0, 1.0, 5.0]
-#    total_unc = [0.1, 0.5, 0.9, 0.05]
-#    background_val = [1.0, 2.0, 2.0, 0.5]
-#    background_unc = [0.05, 0.04, 0.03, 0.02]
-#    total = np.array([energies_eV, total_val, total_unc]).T
-#    background = np.array([energies_eV, background_val, background_unc]).T
-#    r = PhotonSpectrumResult(total, background)
-#    widget = PhotonSpectrumResultWidget("spectrum", r, ops)
-
-#    t1 = Transition(29, 9, 4)
-#    t2 = K_family(14)
-#    t3 = Transition(29, siegbahn='La2')
-#    intensities = {}
-#    intensities[PhotonKey(t1, False, PhotonKey.P)] = (3.0, 0.3)
-#    intensities[PhotonKey(t1, False, PhotonKey.C)] = (1.0, 0.1)
-#    intensities[PhotonKey(t1, False, PhotonKey.B)] = (2.0, 0.2)
-#    intensities[PhotonKey(t1, False, PhotonKey.T)] = (6.0, 0.4)
-#    intensities[PhotonKey(t1, True, PhotonKey.P)] = (7.0, 0.7)
-#    intensities[PhotonKey(t1, True, PhotonKey.C)] = (5.0, 0.5)
-#    intensities[PhotonKey(t1, True, PhotonKey.B)] = (6.0, 0.6)
-#    intensities[PhotonKey(t1, True, PhotonKey.T)] = (18.0, 0.8)
-#    intensities[PhotonKey(t2, False, PhotonKey.P)] = (13.0, 0.3)
-#    intensities[PhotonKey(t2, False, PhotonKey.C)] = (11.0, 0.1)
-#    intensities[PhotonKey(t2, False, PhotonKey.B)] = (12.0, 0.2)
-#    intensities[PhotonKey(t2, False, PhotonKey.T)] = (36.0, 0.4)
-#    intensities[PhotonKey(t2, True, PhotonKey.P)] = (17.0, 0.7)
-#    intensities[PhotonKey(t2, True, PhotonKey.C)] = (15.0, 0.5)
-#    intensities[PhotonKey(t2, True, PhotonKey.B)] = (16.0, 0.6)
-#    intensities[PhotonKey(t2, True, PhotonKey.T)] = (48.0, 0.8)
-#    intensities[PhotonKey(t3, False, PhotonKey.P)] = (23.0, 0.3)
-#    intensities[PhotonKey(t3, False, PhotonKey.C)] = (21.0, 0.1)
-#    intensities[PhotonKey(t3, False, PhotonKey.B)] = (22.0, 0.2)
-#    intensities[PhotonKey(t3, False, PhotonKey.T)] = (66.0, 0.4)
-#    intensities[PhotonKey(t3, True, PhotonKey.P)] = (27.0, 0.7)
-#    intensities[PhotonKey(t3, True, PhotonKey.C)] = (25.0, 0.5)
-#    intensities[PhotonKey(t3, True, PhotonKey.B)] = (26.0, 0.6)
-#    intensities[PhotonKey(t3, True, PhotonKey.T)] = (78.0, 0.8)
-#    r = PhotonIntensityResult(intensities)
-#    widget = PhotonIntensityResultWidget("intensity", r, ops)
-
-#    r = TimeResult(5.0, (1.0, 0.5))
-#    widget = TimeResultWidget("time", r, ops)
-
-#    r = ElectronFractionResult((1.0, 0.1), (2.0, 0.2), (3.0, 0.3))
-#    widget = ElectronFractionResultWidget('fraction', r, ops)
-
-#    r = ShowersStatisticsResult(6)
-#    widget = ShowersStatisticsResultWidget('showers', r, ops)
-
-    t1 = Transition(29, 9, 4)
-    distributions = {}
-    gnf_zs = [1.0, 2.0, 3.0, 4.0]
-    gnf_values = [0.0, 5.0, 4.0, 1.0]
-    gnf_uncs = [0.01, 0.02, 0.03, 0.04]
-    gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
-    distributions[PhotonKey(t1, False, PhotonKey.P)] = gnf
-    gt_zs = [1.0, 2.0, 3.0, 4.0]
-    gt_values = [10.0, 15.0, 14.0, 11.0]
-    gt_uncs = [0.11, 0.12, 0.13, 0.14]
-    gt = np.array([gt_zs, gt_values, gt_uncs]).T
-    distributions[PhotonKey(t1, False, PhotonKey.T)] = gt
-    enf_zs = [1.0, 2.0, 3.0, 4.0]
-    enf_values = [20.0, 25.0, 24.0, 21.0]
-    enf = np.array([enf_zs, enf_values]).T
-    distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
-    et_zs = [1.0, 2.0, 3.0, 4.0]
-    et_values = [30.0, 35.0, 34.0, 31.0]
-    et_uncs = [0.31, 0.32, 0.33, 0.34]
-    et = np.array([et_zs, et_values, et_uncs]).T
-    distributions[PhotonKey(t1, True, PhotonKey.T)] = et
-    r = PhotonDepthResult(distributions)
-    widget = PhotonDepthResultWidget("photon-depth", r, ops)
-
-    window.setCentralWidget(widget)
-
-    window.show()
-
-    app.exec_()
-
-if __name__ == '__main__':
-    __run()
 
 
