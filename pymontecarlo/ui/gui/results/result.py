@@ -704,7 +704,6 @@ class _PhotonDistributionResultWidget(_FigureResultWidget):
 
     def _drawFigure(self):
         result = self.result()
-        print(result._results.keys())
 
         def _plot(transition, absorption, fluorescence, label, color_index):
             if not result.exists(transition, True, absorption,
@@ -748,6 +747,25 @@ class _PhotonDistributionResultWidget(_FigureResultWidget):
     def _onOptionsChanged(self):
         self._ax.clear()
         self._drawFigure()
+
+    def dump(self):
+        result = self.result()
+        transition = self._itm_options.transition()
+
+        arr = np.zeros((0, 3))
+
+        pg, eg, pt, et = self._itm_options.showConditions()
+
+        if pg and result.exists(transition, True, False, False, False):
+            arr = np.vstack((arr, result.get(transition, False, False)))
+        if eg and result.exists(transition, True, True, False, False):
+            arr = np.vstack((arr, result.get(transition, True, False)))
+        if pt and result.exists(transition, True, False, True, True):
+            arr = np.vstack((arr, result.get(transition, False, True)))
+        if et and result.exists(transition, True, True, True):
+            arr = np.vstack((arr, result.get(transition, True, True)))
+
+        return arr
 
 class PhotonDepthResultWidget(_PhotonDistributionResultWidget):
 
@@ -820,6 +838,9 @@ class _ChannelsResultWidget(_FigureResultWidget):
     def _onOptionsChanged(self):
         self._ax.clear()
         self._drawFigure()
+
+    def dump(self):
+        return self._getData()
 
 class _EnergyResultWidget(_ChannelsResultWidget):
 
