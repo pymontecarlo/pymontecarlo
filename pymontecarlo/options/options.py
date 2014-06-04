@@ -171,7 +171,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
 
         self._programs = _Programs()
 
-        self.beam = GaussianBeam(1e3, 1e-8) # 1 keV, 10 nm
+        self.beam = GaussianBeam(1e3, 1e-8, origin_m=(0.0, 0.0, 0.01)) # 1 keV, 10 nm
         self.geometry = Substrate(Material.pure(79)) # Au substrate
 
         # Hack because numpy converts MutableMapping to empty array
