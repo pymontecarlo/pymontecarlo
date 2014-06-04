@@ -214,8 +214,9 @@ class PhotonSpectrumResultWidget(_FigureResultWidget):
         self._drawFigure()
 
     def dump(self):
-        data = np.array(self.result().get_total())
-        return np.transpose(data)
+        data = np.hstack((self.result().get_total(),
+                          self.result().get_background()))
+        return data
 
 class _PhotonIntensityResultOptionsToolItem(_ResultToolItem):
 
@@ -612,22 +613,22 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
         self._cb_transition.setCurrentIndex(0)
 
         self._chk_pg = QCheckBox('No absorption, no fluorescence')
-        state = result.exists(transition0, False, False)
+        state = result.exists(transition0, True, False, False, False)
         self._chk_pg.setEnabled(state)
         self._chk_pg.setChecked(state)
 
         self._chk_eg = QCheckBox('With absorption, no fluorescence')
-        state = result.exists(transition0, True, False)
+        state = result.exists(transition0, True, True, False, False)
         self._chk_eg.setEnabled(state)
         self._chk_eg.setChecked(state)
 
         self._chk_pt = QCheckBox('No absorption, with fluorescence')
-        state = result.exists(transition0, False, True)
+        state = result.exists(transition0, True, False, True, True)
         self._chk_pt.setEnabled(state)
         self._chk_pt.setChecked(state)
 
         self._chk_et = QCheckBox('With absorption, with fluorescence')
-        state = result.exists(transition0, True, True)
+        state = result.exists(transition0, True, True, True, True)
         self._chk_et.setEnabled(state)
         self._chk_et.setChecked(state)
 
@@ -662,10 +663,10 @@ class _PhotonDistributionResultOptionsToolItem(_ResultToolItem):
         index = self._cb_transition.currentIndex()
         transition = self._cb_transition.model().transition(index)
 
-        self._chk_pg.setEnabled(result.exists(transition, False, False))
-        self._chk_eg.setEnabled(result.exists(transition, True, False))
-        self._chk_pt.setEnabled(result.exists(transition, False, True))
-        self._chk_et.setEnabled(result.exists(transition, True, True))
+        self._chk_pg.setEnabled(result.exists(transition, True, False, False, False))
+        self._chk_eg.setEnabled(result.exists(transition, True, True, False, False))
+        self._chk_pt.setEnabled(result.exists(transition, True, False, True, True))
+        self._chk_et.setEnabled(result.exists(transition, True, True, True, True))
 
         self.stateChanged.emit()
 
@@ -703,9 +704,11 @@ class _PhotonDistributionResultWidget(_FigureResultWidget):
 
     def _drawFigure(self):
         result = self.result()
+        print(result._results.keys())
 
         def _plot(transition, absorption, fluorescence, label, color_index):
-            if not result.exists(transition, absorption, fluorescence):
+            if not result.exists(transition, True, absorption,
+                                 fluorescence, fluorescence):
                 return
             dist = result.get(transition, absorption, fluorescence)
 

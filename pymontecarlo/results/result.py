@@ -633,24 +633,9 @@ class _PhotonDistributionResult(_SummarizableResult, _PhotonKeyResult):
             yield transition, distribution
 
     def get_summary(self):
-        return {str(k): v for k, v in self._distributions.items()}
+        return {str(k): v for k, v in self}
 
 class PhotonDepthResult(_PhotonDistributionResult):
-
-    def exists(self, transition, absorption=True, fluorescence=True):
-        """
-        Returns whether the result contains a photon depth distribution for
-        the specified transition.
-
-        :arg transition: transition or set of transitions or name of the
-            transition or transitions set (see examples in :meth:`.get`)
-        :arg absorption: distribution with absorption. If ``True``, emitted
-            distribution is returned, if ``False`` generated distribution.
-        :arg fluorescence: distribution with fluorescence. If ``True``,
-            distribution with fluorescence is returned, if ``False``
-            distribution without fluorescence.
-        """
-        return _PhotonDistributionResult.exists(self, transition, absorption, fluorescence)
 
     def get(self, transition, absorption=True, fluorescence=True):
         """
@@ -743,21 +728,6 @@ class PhotonDepthResult(_PhotonDistributionResult):
         return ['Depth (m)', 'Intensity', 'Uncertainty']
 
 class PhotonRadialResult(_PhotonDistributionResult):
-
-    def exists(self, transition, absorption=True, fluorescence=True):
-        """
-        Returns whether the result contains a photon radial distribution for
-        the specified transition.
-
-        :arg transition: transition or set of transitions or name of the
-            transition or transitions set (see examples in :meth:`.get`)
-        :arg absorption: distribution with absorption. If ``True``, emitted
-            distribution is returned, if ``False`` generated distribution.
-        :arg fluorescence: distribution with fluorescence. If ``True``,
-            distribution with fluorescence is returned, if ``False``
-            distribution without fluorescence.
-        """
-        return _PhotonDistributionResult.exists(self, transition, absorption, fluorescence)
 
     def get(self, transition, absorption=True, fluorescence=True):
         """
