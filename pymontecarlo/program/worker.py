@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import sys
 import subprocess
+import logging
 
 # Third party modules.
 
@@ -121,6 +122,7 @@ class SubprocessWorker(Worker):
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         else:
             startupinfo = None
+        logging.debug('Args: %s' % subprocess.list2cmdline(args[0]))
         self._process = subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
         return self._process
 
@@ -128,6 +130,7 @@ class SubprocessWorker(Worker):
         self._process.wait()
         returncode = self._process.returncode
         self._process = None
+        logging.debug('returncode: %s' % returncode)
         return returncode
 
     def reset(self):
