@@ -26,7 +26,7 @@ from operator import attrgetter
 # Third party modules.
 from PySide.QtGui import \
     (QDialog, QDialogButtonBox, QHBoxLayout, QVBoxLayout, QLabel, QComboBox,
-     QPushButton, QListView, QStackedWidget, QWidget, QMessageBox)
+     QPushButton, QListView, QStackedWidget, QWidget, QMessageBox, QFileDialog)
 from PySide.QtCore import Qt, QAbstractListModel
 
 # Local modules.
@@ -251,11 +251,18 @@ class ConfigureDialog(QDialog):
 
     def _onAuto(self):
         settings = get_settings()
-
-        programs_path = os.path.join(os.path.dirname(sys.executable), 'programs')
-
         programs = set(settings.get_available_programs())
         programs -= set(self._lst_selected_programs.model().programs())
+        if not programs:
+            return
+
+        # Ask for program path
+        if sys.platform != 'linux':
+            basedir = os.path.join(os.path.dirname(sys.executable), 'programs')
+            programs_path = \
+                QFileDialog.getExistingDirectory(self, "Browse directory", basedir)
+        else:
+            programs_path = None
 
         for program in programs:
             if program.autoconfig(programs_path):
