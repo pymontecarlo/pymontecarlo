@@ -139,7 +139,7 @@ class FileBrowseWidget(_BrowseWidget):
         return QFileDialog.getOpenFileName(self, "Browse file", basedir, filter)[0]
 
     def _validatePath(self, path):
-        if not os.path.isfile(path):
+        if os.path.splitext(path)[1] != '.app' and not os.path.isfile(path):
             raise ValueError('%s is not a file' % path)
 
     def setNameFilter(self, filter):
