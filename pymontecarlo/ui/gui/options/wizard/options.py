@@ -66,7 +66,9 @@ class _OptionsWizardPage(QWizardPage):
         self.setLayout(layout)
 
     def _initUI(self):
-        return QFormLayout()
+        layout = QFormLayout()
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        return layout
 
     def options(self):
         return self._options

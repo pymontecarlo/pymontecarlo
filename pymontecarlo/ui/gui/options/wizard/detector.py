@@ -59,6 +59,7 @@ class _DetectorDialog(QDialog):
 
         # Layouts
         layout = QFormLayout()
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
         layout.addRow('Key', self._txt_key)
         layout.addRow(self._wdg_detector)
         layout.addRow(buttons)

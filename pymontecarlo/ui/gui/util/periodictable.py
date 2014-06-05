@@ -19,7 +19,7 @@ from PySide.QtGui import \
     (QWidget, QDialog, QPushButton, QPainter, QGridLayout, QColor, QFont,
      QLabel, QSizePolicy, QButtonGroup, QDialogButtonBox, QVBoxLayout,
      QMessageBox)
-from PySide.QtCore import Qt, QSize, Signal
+from PySide.QtCore import Qt, Signal
 
 import six
 
@@ -32,6 +32,7 @@ class ElementPushButton(QPushButton):
 
     def __init__(self, atomic_number, parent=None):
         QPushButton.__init__(self, parent)
+        self.setFixedSize(40, 40)
 
         self._atomic_number = atomic_number
         self._symbol = ep.symbol(atomic_number)
@@ -55,22 +56,13 @@ class ElementPushButton(QPushButton):
         qp.begin(self)
 
         font = qp.font()
-        font.setPixelSize(self.font().pixelSize() * 0.6)
+        font.setPixelSize(8)
         font.setWeight(QFont.Normal)
         qp.setFont(font)
 
-        qp.drawText(event.rect().translated(2, 2), str(self._atomic_number))
+        qp.drawText(event.rect().translated(1, 1), str(self._atomic_number))
 
         qp.end()
-
-    def resizeEvent(self, event):
-        font = self.font()
-        font.setPixelSize(event.size().height() * 0.4)
-        self.setFont(font)
-        return QPushButton.resizeEvent(self, event)
-
-    def sizeHint(self, *args, **kwargs):
-        return QSize(40, 40)
 
     @property
     def atomic_number(self):
@@ -178,6 +170,13 @@ class PeriodicTableWidget(QWidget):
         layout = QGridLayout()
         layout.setSpacing(0)
 
+        for i in range(18):
+            layout.setColumnMinimumWidth(i, 40)
+            layout.setColumnStretch(i, 0)
+        for i in list(range(7)) + [8, 9]:
+            layout.setRowMinimumHeight(i, 40)
+            layout.setRowStretch(i, 0)
+
         ## Element
         for z, position in _ELEMENT_POSITIONS.items():
             widget = ElementPushButton(z)
@@ -187,10 +186,10 @@ class PeriodicTableWidget(QWidget):
 
         ## Labels
         layout.addWidget(QLabel(''), 7, 0) # Dummy
-        layout.addWidget(QLabel('*'), 5, 2, Qt.AlignRight)
-        layout.addWidget(QLabel('*'), 8, 2, Qt.AlignRight)
-        layout.addWidget(QLabel('**'), 6, 2, Qt.AlignRight)
-        layout.addWidget(QLabel('**'), 9, 2, Qt.AlignRight)
+        layout.addWidget(QLabel('*'), 5, 2, Qt.AlignCenter)
+        layout.addWidget(QLabel('*'), 8, 2, Qt.AlignCenter)
+        layout.addWidget(QLabel('**'), 6, 2, Qt.AlignCenter)
+        layout.addWidget(QLabel('**'), 9, 2, Qt.AlignCenter)
 
         for row in [0, 1, 2, 3, 4, 5, 6, 8, 9]:
             layout.setRowStretch(row, 1)

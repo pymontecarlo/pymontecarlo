@@ -51,6 +51,7 @@ class _LimitDialog(QDialog):
 
         # Layouts
         layout = QFormLayout()
+        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
         layout.addRow(self._wdg_limit)
         layout.addRow(buttons)
         self.setLayout(layout)
