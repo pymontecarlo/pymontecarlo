@@ -35,7 +35,6 @@ class _ConfigurePanelWidget(QWidget):
 
         # Variables
         self._program = program
-        settings = get_settings()
 
         # Controls
         lbl_program = QLabel(program.name)
@@ -47,11 +46,11 @@ class _ConfigurePanelWidget(QWidget):
         # Sizer
         layout = QVBoxLayout()
         layout.addWidget(lbl_program)
-        layout.addLayout(self._initUI(settings))
+        layout.addLayout(self._initUI())
         layout.addStretch()
         self.setLayout(layout)
 
-    def _initUI(self, settings):
+    def _initUI(self):
         return QFormLayout()
 
     def program(self):
@@ -59,6 +58,9 @@ class _ConfigurePanelWidget(QWidget):
 
     def hasAcceptableInput(self):
         return True
+
+    def setSettings(self, settings):
+        pass
 
     def updateSettings(self, settings):
         """

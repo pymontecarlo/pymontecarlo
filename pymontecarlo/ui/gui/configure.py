@@ -19,6 +19,8 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
+import sys
 from operator import attrgetter
 
 # Third party modules.
@@ -108,6 +110,9 @@ class ConfigureDialog(QDialog):
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
+        btnauto = QPushButton('Auto')
+        buttons.addButton(btnauto, QDialogButtonBox.ActionRole)
+
         # Layouts
         layout = QVBoxLayout()
 
@@ -139,6 +144,7 @@ class ConfigureDialog(QDialog):
         self._btn_deactivate.released.connect(self._onDeactivate)
         buttons.accepted.connect(self._onOk)
         buttons.rejected.connect(self.reject)
+        btnauto.released.connect(self._onAuto)
 
         # Defaults
         for program in settings.get_programs():
@@ -160,6 +166,7 @@ class ConfigureDialog(QDialog):
         index = self._lst_selected_programs.model().rowCount() - 1
         program = self._lst_selected_programs.model().program(index)
         widget = self._widgets[program]
+        widget.setSettings(get_settings())
         self._wdg_program.setCurrentWidget(widget)
 
     def deactivateProgram(self, program):
@@ -242,8 +249,19 @@ class ConfigureDialog(QDialog):
 
         self.accept()
 
+    def _onAuto(self):
+        settings = get_settings()
+
+        programs_path = os.path.join(os.path.dirname(sys.executable), 'programs')
+
+        programs = set(settings.get_available_programs())
+        programs -= set(self._lst_selected_programs.model().programs())
+
+        for program in programs:
+            if program.autoconfig(programs_path):
+                self.activateProgram(program)
+
 def __run():
-    import sys
     from PySide.QtGui import QApplication
 
     app = QApplication(sys.argv)

@@ -156,3 +156,6 @@ class Program(object):
     def validate(self):
         pass
 
+    def autoconfig(self, programs_path):
+        return False
+
