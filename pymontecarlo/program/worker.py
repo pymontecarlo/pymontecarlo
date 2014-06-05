@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2012 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import os
 import sys
 import subprocess
 import logging
@@ -66,6 +67,9 @@ class Worker(object):
         :arg options: options of a simulation
         :arg outputdir: directory where to save the simulation file(s)
         """
+        filepath = os.path.join(outputdir, options.name + '.xml')
+        options.write(filepath)
+
         return self._exporter.export(options, outputdir)
 
     def run(self, options, outputdir, workdir, *args, **kwargs):
