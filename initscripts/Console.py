@@ -14,6 +14,12 @@ import glob
 sys.frozen = True
 sys.path = sys.path[:4]
 
+if sys.platform == 'darwin':
+    path = os.path.join(DIR_NAME, 'pypenelopelib') #@UndefinedVariable
+    if os.environ['DYLD_LIBRARY_PATH'] != path:
+        os.environ["DYLD_LIBRARY_PATH"] = path
+        os.execv(sys.executable, sys.argv)
+
 #------------------------------------------------------------------------------
 # Modification to automatically load programs
 sys.path.extend(glob.glob(os.path.join(DIR_NAME, '*.egg'))) #@UndefinedVariable

@@ -1516,6 +1516,9 @@ def _setup(argv):
     # Output sys.path
     logging.info("sys.path = %s", sys.path)
 
+    # Output environment variables
+    logging.info('ENVIRON = %s' % os.environ)
+
 def run():
     argv = sys.argv
     _setup(argv)
