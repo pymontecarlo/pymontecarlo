@@ -55,13 +55,14 @@ class TestUncertaintyLimit(TestCase):
         TestCase.setUp(self)
 
         transition = Transition(29, siegbahn='Ka1')
-        self.lim = UncertaintyLimit(transition, 0.05)
+        self.lim = UncertaintyLimit(transition, 'det1', 0.05)
 
     def tearDown(self):
         TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual('Cu K\u03b11', str(self.lim.transition))
+        self.assertEqual('det1', self.lim.detector_key)
         self.assertAlmostEqual(0.05, self.lim.uncertainty, 4)
 
     def testtransitions(self):

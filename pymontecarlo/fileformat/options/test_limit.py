@@ -19,47 +19,11 @@ from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.fileformat.options.limit import \
-    (_TransitionLimitXMLHandler, TimeLimitXMLHandler, ShowersLimitXMLHandler,
-     UncertaintyLimitXMLHandler)
+    TimeLimitXMLHandler, ShowersLimitXMLHandler, UncertaintyLimitXMLHandler
 from pymontecarlo.options.limit import \
-    _TransitionLimit, TimeLimit, ShowersLimit, UncertaintyLimit
+    TimeLimit, ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
-
-class Test_TransitionLimitXMLHandler(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-
-        self.h = _TransitionLimitXMLHandler()
-
-        self.obj = _TransitionLimit(Transition(29, siegbahn='Ka1'))
-
-        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:_transitionLimit xmlns:mc="http://pymontecarlo.sf.net"><transition dest="1" src="4" z="29" /></mc:_transitionLimit>')
-        self.element = etree.parse(source).getroot()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testcan_parse(self):
-        self.assertTrue(self.h.can_parse(self.element))
-
-    def testparse(self):
-        obj = self.h.parse(self.element)
-
-        self.assertEqual('Cu K\u03b11', str(obj.transition))
-
-    def testcan_convert(self):
-        self.assertTrue(self.h.can_convert(self.obj))
-
-    def testconvert(self):
-        element = self.h.convert(self.obj)
-
-        subelement = list(element.findall('transition'))[0]
-        self.assertEqual(29, int(subelement.get('z')))
-        self.assertEqual(4, int(subelement.get('src')))
-        self.assertEqual(1, int(subelement.get('dest')))
 
 class TestTimeLimitXMLHandler(unittest.TestCase):
 
@@ -132,10 +96,10 @@ class TestUncertaintyLimitXMLHandler(unittest.TestCase):
 
         self.h = UncertaintyLimitXMLHandler()
 
-        self.obj = UncertaintyLimit(Transition(29, siegbahn='Ka1'), 0.05)
+        self.obj = UncertaintyLimit(Transition(29, siegbahn='Ka1'), 'det1', 0.05)
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:uncertaintyLimit xmlns:mc="http://pymontecarlo.sf.net" uncertainty="0.05"><transition dest="1" src="4" z="29" /></mc:uncertaintyLimit>')
+        source = BytesIO(b'<mc:uncertaintyLimit xmlns:mc="http://pymontecarlo.sf.net" detector_key="det1" uncertainty="0.05"><transition dest="1" src="4" z="29" /></mc:uncertaintyLimit>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -148,6 +112,7 @@ class TestUncertaintyLimitXMLHandler(unittest.TestCase):
         obj = self.h.parse(self.element)
 
         self.assertEqual('Cu K\u03b11', str(obj.transition))
+        self.assertEqual('det1', obj.detector_key)
         self.assertAlmostEqual(0.05, obj.uncertainty, 4)
 
     def testcan_convert(self):
@@ -160,6 +125,8 @@ class TestUncertaintyLimitXMLHandler(unittest.TestCase):
         self.assertEqual(29, int(subelement.get('z')))
         self.assertEqual(4, int(subelement.get('src')))
         self.assertEqual(1, int(subelement.get('dest')))
+
+        self.assertEqual('det1', element.get('detector_key'))
 
         self.assertAlmostEqual(0.05, float(element.get('uncertainty')), 4)
 

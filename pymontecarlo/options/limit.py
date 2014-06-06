@@ -40,13 +40,6 @@ class _Limit(object, metaclass=ParameterizedMetaclass):
     def __str__(self):
         return '%s' % camelcase_to_words(self.__class__.__name__)
 
-class _TransitionLimit(_Limit):
-
-    transition = Parameter(Transition, doc="Transitions for the limit")
-
-    def __init__(self, transition):
-        self.transition = transition
-
 class TimeLimit(_Limit):
 
     time = TimeParameter(range_validator(0, inclusive=False),
@@ -77,21 +70,23 @@ class ShowersLimit(_Limit):
         return '%s (showers=%s)' % \
             (camelcase_to_words(self.__class__.__name__), self.showers)
 
-class UncertaintyLimit(_TransitionLimit):
+class UncertaintyLimit(_Limit):
 
+    transition = Parameter(Transition, doc="Transitions for the limit")
+    detector_key = Parameter(str, doc="Detector key")
     uncertainty = Parameter(np.float, range_validator(0.0, 1.0),
                             doc="Relative uncertainty")
 
-    def __init__(self, transition, uncertainty):
-        _TransitionLimit.__init__(self, transition)
-
+    def __init__(self, transition, detector_key, uncertainty):
+        self.transition = transition
+        self.detector_key = detector_key
         self.uncertainty = uncertainty
 
     def __repr__(self):
-        return '<UncertaintyLimit(%i transitions, uncertainty=%s %%)>' % \
-            (len(self.transitions), self.uncertainty * 100.0)
+        return '<UncertaintyLimit(%i transitions, on detector %s, uncertainty=%s %%)>' % \
+            (len(self.transition), self.detector_key, self.uncertainty * 100.0)
 
     def __str__(self):
-        return '%s (%i transitions, uncertainty=%s %%)' % \
+        return '%s (%i transitions, on detector %s, uncertainty=%s %%)' % \
             (camelcase_to_words(self.__class__.__name__),
-             len(self.transitions), self.uncertainty * 100.0)
+             len(self.transition), self.detector_key, self.uncertainty * 100.0)
