@@ -224,7 +224,8 @@ class _DelimitedDetectorWidget(_DetectorWidget):
 
         sublayout = QFormLayout()
         sublayout.setContentsMargins(10, 0, 0, 0)
-        sublayout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        if sys.platform == 'darwin': # Fix for Mac OS
+            sublayout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         sublayout.addRow(self._lbl_elevation, self._txt_elevation)
         sublayout.addRow(self._lbl_azimuth, self._txt_azimuth)
         layout.addRow(sublayout)
@@ -233,7 +234,8 @@ class _DelimitedDetectorWidget(_DetectorWidget):
 
         sublayout = QFormLayout()
         sublayout.setContentsMargins(10, 0, 0, 0)
-        sublayout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        if sys.platform == 'darwin': # Fix for Mac OS
+            sublayout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         sublayout.addRow(self._lbl_takeoffangle, self._txt_takeoffangle)
         sublayout.addRow(self._lbl_opening, self._txt_opening)
         layout.addRow(sublayout)

@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
 
 # Third party modules.
 from PySide.QtGui import \
@@ -102,7 +103,8 @@ class _ParameterizedClassWidget(QWidget):
 
     def _initUI(self):
         layout = QFormLayout()
-        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         return layout
 
     def _iter_parameter_widgets(self):

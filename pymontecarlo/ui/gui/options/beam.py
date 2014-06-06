@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
 from itertools import product
 from operator import itemgetter, methodcaller
 
@@ -132,7 +133,8 @@ class OriginWidget(_ParameterWidget):
         # Layouts
         layout = QFormLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         layout.addRow(self._lbl_x, self._txt_x)
         layout.addRow(self._lbl_y, self._txt_y)
         layout.addRow(self._lbl_z, self._txt_z)
@@ -223,7 +225,8 @@ class DirectionWidget(_ParameterWidget):
         # Layouts
         layout = QFormLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow) # Fix for Mac OS
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         layout.addRow(self._lbl_u, self._txt_u)
         layout.addRow(self._lbl_v, self._txt_v)
         layout.addRow(self._lbl_w, self._txt_w)
