@@ -27,7 +27,7 @@ from PySide.QtGui import \
     (QDialog, QLineEdit, QCheckBox, QRegExpValidator,
      QVBoxLayout, QLabel, QDialogButtonBox, QTableView, QItemDelegate,
      QHeaderView, QGridLayout, QToolBar, QAction, QMessageBox, QValidator,
-     QWidget, QSizePolicy, QListView, QGroupBox)
+     QWidget, QSizePolicy, QListView, QGroupBox, QPushButton, QHBoxLayout)
 from PySide.QtCore import Qt, QRegExp, QAbstractTableModel, QModelIndex
 
 import pyxray.element_properties as ep
@@ -43,7 +43,7 @@ from pymontecarlo.ui.gui.util.parameter import _ParameterWidget
 from pymontecarlo.ui.gui.util.tango import getIcon
 from pymontecarlo.ui.gui.util.registry import get_widget_class as _get_widget_class
 
-from pymontecarlo.options.material import Material
+from pymontecarlo.options.material import Material, VACUUM
 from pymontecarlo.options.geometry import _Body
 
 from pymontecarlo.util.multipleloop import combine
@@ -210,16 +210,27 @@ class MaterialDialog(QDialog):
         QDialog.__init__(self, parent)
         self.setWindowTitle('Material')
 
+        # Variables
+        self._is_vacuum = False
+
         # Widgets
+        btnvacuum = QPushButton("Vacuum")
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         # Layouts
         layout = QVBoxLayout()
         layout.addLayout(self._initUI())
-        layout.addWidget(buttons)
+
+        sublayout = QHBoxLayout()
+        sublayout.addWidget(btnvacuum)
+        sublayout.addStretch()
+        sublayout.addWidget(buttons)
+        layout.addLayout(sublayout)
+
         self.setLayout(layout)
 
         # Signals
+        btnvacuum.released.connect(self._onVacuum)
         buttons.accepted.connect(self._onOk)
         buttons.rejected.connect(self._onCancel)
 
@@ -449,10 +460,16 @@ class MaterialDialog(QDialog):
             QMessageBox.critical(self, 'Material', message)
             return
 
+        self._is_vacuum = False
+
         self.accept()
 
     def _onCancel(self):
         self.reject()
+
+    def _onVacuum(self):
+        self._is_vacuum = True
+        self.accept()
 
     def _getParametersDict(self):
         params = {}
@@ -505,6 +522,9 @@ class MaterialDialog(QDialog):
                         **parameters)
 
     def values(self):
+        if self._is_vacuum:
+            return [VACUUM]
+
         prm_values = [(key, value) for key, value in self._getParametersDict().items()]
         combinations, names, varied = combine(prm_values)
 
@@ -712,6 +732,9 @@ class MaterialListWidget(_ParameterWidget):
     def _onDoubleClicked(self, index):
         model = self._lst_materials.model()
         material = model.material(index)
+
+        if material is VACUUM:
+            return
 
         dialog = get_dialog_class(material.__class__)()
         dialog.setValue(material)

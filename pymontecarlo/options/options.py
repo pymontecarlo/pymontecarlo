@@ -29,7 +29,7 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.options.beam import _Beam, GaussianBeam
-from pymontecarlo.options.material import Material
+from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.geometry import _Geometry, Substrate
 from pymontecarlo.options.detector import _Detector
 from pymontecarlo.options.limit import _Limit
@@ -172,7 +172,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
         self._programs = _Programs()
 
         self.beam = GaussianBeam(1e3, 1e-8, origin_m=(0.0, 0.0, 0.01)) # 1 keV, 10 nm
-        self.geometry = Substrate(Material.pure(79)) # Au substrate
+        self.geometry = Substrate(VACUUM) # Au substrate
 
         # Hack because numpy converts MutableMapping to empty array
         detectors = np.ndarray((1,), np.dtype(_Detectors))
