@@ -21,7 +21,7 @@ import numpy as np
 from pymontecarlo.fileformat.results.result import \
     (PhotonIntensityResultHDF5Handler, PhotonSpectrumResultHDF5Handler,
      PhotonDepthResultHDF5Handler, PhotonRadialResultHDF5Handler,
-     PhotonEmissionMapHDF5Handler,
+     PhotonEmissionMapResultHDF5Handler,
      TimeResultHDF5Handler, ShowersStatisticsResultHDF5Handler,
      ElectronFractionResultHDF5Handler, TrajectoryResultHDF5Handler,
      BackscatteredElectronEnergyResultHDF5Handler,
@@ -399,7 +399,7 @@ class TestPhotonEmissionMapResultHDF5Handler(unittest.TestCase):
         unittest.TestCase.setUp(self)
 
         self.hdf5file = h5py.File('test.h5', 'a', driver='core', backing_store=False)
-        self.h = PhotonEmissionMapHDF5Handler()
+        self.h = PhotonEmissionMapResultHDF5Handler()
 
         t1 = Transition(29, 9, 4)
 
