@@ -24,7 +24,6 @@ __license__ = "GPL v3"
 from PySide.QtGui import QWidget, QLabel, QFormLayout, QVBoxLayout
 
 # Local modules.
-from pymontecarlo.settings import get_settings
 
 # Globals and constants variables.
 
