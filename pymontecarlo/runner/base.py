@@ -47,6 +47,7 @@ class _Runner(_Monitorable):
 
         if max_workers < 1:
             raise ValueError("Number of workers must be greater or equal to 1.")
+        self._max_workers = max_workers
 
         self._is_started = threading.Event()
 
@@ -268,6 +269,10 @@ class _Runner(_Monitorable):
             return 'running'
         else:
             return 'unknown'
+
+    @property
+    def max_workers(self):
+        return self._max_workers
 
 class _RunnerDispatcher(_MonitorableThread):
     pass

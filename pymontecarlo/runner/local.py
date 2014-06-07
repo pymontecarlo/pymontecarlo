@@ -20,12 +20,15 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
+import copy
 import logging
 import tempfile
 import shutil
 import queue
 import random
 import threading
+from operator import attrgetter
+from itertools import filterfalse
 
 # Third party modules.
 
@@ -127,6 +130,7 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
             # Retrieve results
             try:
                 results = self._queue_results.get(timeout=0.1)
+                print(results)
             except queue.Empty:
                 continue
 
@@ -220,6 +224,104 @@ class LocalRunner(_Runner):
     @property
     def workdir(self):
         return self._workdir
+
+class _LocalImporterOptionsDispatcher(_RunnerOptionsDispatcher):
+
+    def __init__(self, queue_options, queue_results, outputdir):
+        _RunnerOptionsDispatcher.__init__(self, queue_options, queue_results)
+
+        self._worker = None
+        self._options = None
+        self._outputdir = outputdir
+
+    def _run(self):
+        while not self.is_cancelled():
+            # Retrieve options
+            try:
+                base_options, options = self._queue_options.get(timeout=0.1)
+            except queue.Empty:
+                continue
+
+            try:
+                # Run
+                logging.debug('Running program specific worker')
+                self.options_running.fire(options)
+
+                self._options = options
+                program = next(iter(options.programs))
+                self._worker = program.worker_class(program)
+                self._worker.reset()
+                container = self._worker.import_(options, self._outputdir)
+                self._options = None
+
+                self.options_simulated.fire(options)
+                logging.debug('End program specific worker')
+
+                # Put results in queue
+                self._queue_results.put(Results(base_options, [container]))
+            except Exception as ex:
+                self.options_error.fire(options, ex)
+            finally:
+                self._worker = None
+                self._queue_options.task_done()
+
+    def cancel(self):
+        if self._worker:
+            self._worker.cancel()
+        _RunnerOptionsDispatcher.cancel(self)
+
+    @property
+    def current_options(self):
+        return self._options
+
+    @property
+    def progress(self):
+        if self._worker is None:
+            return 0.0
+        return self._worker.progress
+
+    @property
+    def status(self):
+        if self._worker is None:
+            return ''
+        return self._worker.status
+
+class LocalImporter(_Runner):
+
+    def __init__(self, outputdir, max_workers=1):
+        if not os.path.isdir(outputdir):
+            raise ValueError('Output directory (%s) is not a directory' % outputdir)
+        self._outputdir = outputdir
+
+        self._write_lock = threading.Lock()
+
+        _Runner.__init__(self, max_workers)
+
+    def _create_options_dispatcher(self):
+        return _LocalImporterOptionsDispatcher(self._queue_options,
+                                               self._queue_results,
+                                               self.outputdir)
+
+    def _create_results_dispatcher(self):
+        return _LocalRunnerResultsDispatcher(self._queue_results,
+                                             self.outputdir,
+                                             self._write_lock)
+
+    def put(self, options):
+        base_options = copy.deepcopy(options)
+
+        programs = set(filterfalse(attrgetter('autorun'), base_options.programs))
+        if not programs:
+            return
+
+        base_options.programs.clear()
+        base_options.programs.update(programs)
+
+        return _Runner.put(self, base_options)
+
+    @property
+    def outputdir(self):
+        return self._outputdir
 
 #class _LocalCreatorDispatcher(_CreatorDispatcher):
 #
