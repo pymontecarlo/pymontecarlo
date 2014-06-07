@@ -31,7 +31,7 @@ from pkg_resources import iter_entry_points
 class Program(object):
 
     def __init__(self, name, alias, converter_class, worker_class,
-                 exporter_class, importer_class):
+                 exporter_class, importer_class, autorun=True):
         """
         Creates a new program.
 
@@ -59,6 +59,7 @@ class Program(object):
         self._worker_class = worker_class
         self._exporter_class = exporter_class
         self._importer_class = importer_class
+        self._autorun = autorun
 
         # Validate exporters
         fields = [('BEAMS', '_beam_exporters'),
@@ -152,6 +153,10 @@ class Program(object):
         Importer class of program
         """
         return self._importer_class
+
+    @property
+    def autorun(self):
+        return self._autorun
 
     def validate(self):
         pass
