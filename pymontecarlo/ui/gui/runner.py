@@ -33,7 +33,7 @@ from PySide.QtGui import \
     (QDialog, QSpinBox, QPushButton, QListView, QFileDialog, QVBoxLayout,
      QLabel, QGridLayout, QSizePolicy, QToolBar, QWidget, QProgressDialog,
      QHBoxLayout, QCheckBox, QMessageBox, QTableView, QHeaderView,
-     QItemDelegate, QKeySequence)
+     QItemDelegate, QKeySequence, QComboBox, QDialogButtonBox, QApplication)
 from PySide.QtCore import \
     (Qt, QAbstractItemModel, QModelIndex, QAbstractListModel,
      QAbstractTableModel, QTimer, QRect, Signal)
@@ -49,7 +49,7 @@ from pymontecarlo.ui.gui.util.tango import getIcon
 import pymontecarlo.ui.gui.util.messagebox as messagebox
 from pymontecarlo.ui.gui.wrapper import _OptionsReaderWrapperThread
 
-from pymontecarlo.runner.local import LocalRunner
+from pymontecarlo.runner.local import LocalRunner, LocalImporter
 
 # Globals and constants variables.
 
@@ -137,6 +137,9 @@ class _OptionsModelMixin(object):
 
     def options(self, index):
         return self._list_options[index]
+
+    def listOptions(self):
+        return self._list_options[:]
 
 class _AvailableOptionsListModel(_OptionsModelMixin, QAbstractListModel):
 
@@ -257,6 +260,38 @@ class _StateOptionsItemDelegate(QItemDelegate):
 
         painter.restore()
 
+class _OptionsSelector(QDialog):
+
+    def __init__(self, list_options, parent=None):
+        QDialog.__init__(self, parent)
+
+        # Variables
+        model = _AvailableOptionsListModel()
+        for options in list_options:
+            model.addOptions(options)
+
+        # Widgets
+        lbltext = QLabel('Select the options to import')
+
+        self._combobox = QComboBox()
+        self._combobox.setModel(model)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # Layouts
+        layout = QVBoxLayout()
+        layout.addWidget(lbltext)
+        layout.addWidget(self._combobox)
+        layout.addWidget(buttons)
+        self.setLayout(layout)
+
+        # Signals
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+    def options(self):
+        return self._combobox.model().options(self._combobox.currentIndex())
+
 class RunnerDialog(QDialog):
 
     options_added = Signal(Options)
@@ -339,6 +374,9 @@ class RunnerDialog(QDialog):
 
         self._btn_close = QPushButton("Close")
 
+        self._btn_import = QPushButton("Import")
+        self._btn_import.setEnabled(False)
+
         # Layouts
         layout = QVBoxLayout()
 
@@ -375,6 +413,7 @@ class RunnerDialog(QDialog):
 
         sublayout = QHBoxLayout()
         sublayout.addStretch()
+        sublayout.addWidget(self._btn_import)
         sublayout.addWidget(self._btn_start)
         sublayout.addWidget(self._btn_cancel)
         sublayout.addWidget(self._btn_close)
@@ -394,6 +433,7 @@ class RunnerDialog(QDialog):
         self._btn_start.released.connect(self._onStart)
         self._btn_cancel.released.connect(self._onCancel)
         self._btn_close.released.connect(self._onClose)
+        self._btn_import.released.connect(self._onImport)
 
         self.options_added.connect(self._onOptionsAdded)
         self.options_running.connect(self._onOptionsRunning)
@@ -496,8 +536,6 @@ class RunnerDialog(QDialog):
             except Exception as ex:
                 messagebox.exception(self, ex)
                 return
-            else:
-                model.popOptions(row)
 
     def _onAddAllToQueue(self):
         model = self._lst_available.model()
@@ -508,8 +546,6 @@ class RunnerDialog(QDialog):
             except Exception as ex:
                 messagebox.exception(self, ex)
                 return
-            else:
-                model.popOptions(row)
 
     def _onStart(self):
         outputdir = self._txt_outputdir.path()
@@ -528,6 +564,36 @@ class RunnerDialog(QDialog):
             self._runner.close()
         self._running_timer.stop()
         self.close()
+
+    def _onImport(self):
+        list_options = self._lst_available.model().listOptions()
+        if not list_options:
+            return
+
+        # Select options
+        dialog = _OptionsSelector(list_options)
+        if not dialog.exec_():
+            return
+        options = dialog.options()
+
+        # Start importer
+        outputdir = self._runner.outputdir
+        max_workers = self._runner.max_workers
+        importer = LocalImporter(outputdir, max_workers)
+
+        importer.start()
+        importer.put(options)
+
+        self._dlg_progress.show()
+        try:
+            while importer.is_alive():
+                if self._dlg_progress.wasCanceled():
+                    importer.cancel()
+                    break
+                self._dlg_progress.setValue(importer.progress * 100)
+                QApplication.processEvents()
+        finally:
+            self._dlg_progress.hide()
 
     def _onOptionsAdded(self, options):
         logging.debug('runner: optionsAdded')
@@ -598,6 +664,7 @@ class RunnerDialog(QDialog):
         self._btn_start.setEnabled(False)
         self._btn_cancel.setEnabled(True)
         self._btn_close.setEnabled(False)
+        self._btn_import.setEnabled(True)
 
         self._runner.options_added.connect(self.options_added.emit)
         self._runner.options_running.connect(self.options_running.emit)
@@ -632,13 +699,13 @@ class RunnerDialog(QDialog):
         self._btn_start.setEnabled(True)
         self._btn_cancel.setEnabled(False)
         self._btn_close.setEnabled(True)
+        self._btn_import.setEnabled(False)
 
     def is_running(self):
         return self._runner is not None and self._runner.is_alive()
 
 def __run():
     import sys
-    from PySide.QtGui import QApplication
     app = QApplication(sys.argv)
     dialog = RunnerDialog()
     dialog.exec_()
@@ -646,6 +713,7 @@ def __run():
 
 if __name__ == '__main__':
     __run()
+
 
 
 
