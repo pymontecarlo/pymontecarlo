@@ -397,7 +397,7 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
             yield transition, self.intensity(transition, absorption, fluorescence)
 
     def get_summary(self):
-        return {str(k): v for k, v in self._intensities.items()}
+        return {str(k): v for k, v in self}
 
     def get_labels(self):
         return ['Intensity', 'Uncertainty']
