@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import copy
 
 # Third party modules.
 from PySide.QtGui import QWizard
@@ -52,6 +53,7 @@ class OptionsWizard(QWizard):
         # Variables
         if options is None:
             options = Options()
+        options = copy.deepcopy(options)
         self._options = options
 
         settings = get_settings()

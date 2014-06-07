@@ -20,15 +20,12 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import copy
 import logging
 import tempfile
 import shutil
 import queue
 import random
 import threading
-from operator import attrgetter
-from itertools import filterfalse
 
 # Third party modules.
 
@@ -249,16 +246,17 @@ class _LocalImporterOptionsDispatcher(_RunnerOptionsDispatcher):
 
                 self._options = options
                 program = next(iter(options.programs))
-                self._worker = program.worker_class(program)
-                self._worker.reset()
-                container = self._worker.import_(options, self._outputdir)
-                self._options = None
+                if not program.autorun:
+                    self._worker = program.worker_class(program)
+                    self._worker.reset()
+                    container = self._worker.import_(options, self._outputdir)
+                    self._options = None
 
-                self.options_simulated.fire(options)
-                logging.debug('End program specific worker')
+                    self.options_simulated.fire(options)
+                    logging.debug('End program specific worker')
 
-                # Put results in queue
-                self._queue_results.put(Results(base_options, [container]))
+                    # Put results in queue
+                    self._queue_results.put(Results(base_options, [container]))
             except Exception as ex:
                 self.options_error.fire(options, ex)
             finally:
@@ -306,18 +304,6 @@ class LocalImporter(_Runner):
         return _LocalRunnerResultsDispatcher(self._queue_results,
                                              self.outputdir,
                                              self._write_lock)
-
-    def put(self, options):
-        base_options = copy.deepcopy(options)
-
-        programs = set(filterfalse(attrgetter('autorun'), base_options.programs))
-        if not programs:
-            return
-
-        base_options.programs.clear()
-        base_options.programs.update(programs)
-
-        return _Runner.put(self, base_options)
 
     @property
     def outputdir(self):
