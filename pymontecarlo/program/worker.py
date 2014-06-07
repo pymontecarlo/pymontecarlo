@@ -102,6 +102,9 @@ class Worker(object):
         """
         return self._progress, self._status
 
+    def import_(self, options, outputdir):
+        return self._importer.import_(options, outputdir)
+
     @property
     def program(self):
         return self._program
