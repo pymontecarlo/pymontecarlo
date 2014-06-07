@@ -223,7 +223,7 @@ class VerticalLayersXMLHandler(_GeometryXMLHandler):
         indexes = self._parse_numerical_parameter(subelement, 'material')
         right_material = list(map(materials_lookup.get, indexes))
 
-        depth_m = self._parse_numerical_parameter(subelement, 'depth')
+        depth_m = self._parse_numerical_parameter(element, 'depth')
 
         obj = VerticalLayers(left_material, right_material, None, depth_m,
                              geo.tilt_rad, geo.rotation_rad)
