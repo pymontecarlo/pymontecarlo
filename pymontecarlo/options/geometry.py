@@ -407,7 +407,7 @@ class VerticalLayers(_Geometry):
                                doc="Body of left side")
     right_substrate = Parameter(_VerticalRightSubstrateBody,
                                 doc="Body of right side")
-    layers = Parameter(_Layers, doc="Layers from left to right")
+    layers = Parameter(_Layers, required=False, doc="Layers from left to right")
     depth = UnitParameter("m", range_validator(0.0, inclusive=False),
                           doc="Depth (z thickness)")
 
