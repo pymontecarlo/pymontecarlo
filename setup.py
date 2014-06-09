@@ -62,7 +62,7 @@ packages = find_packages(exclude=('pymontecarlo.util.dist*',))
 namespace_packages = ['pymontecarlo',
                       'pymontecarlo.program']
 requirements = ['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
-                'pyxray', 'Pillow']
+                'pyxray', 'Pillow', 'latexcodec']
 
 excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'pywin.debugger',
             'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',

@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import bisect
 from math import sqrt
 from collections import Iterable, Sized
+from abc import ABCMeta, abstractmethod
 
 # Third party modules.
 import numpy as np
@@ -40,12 +41,18 @@ class _Result(object):
     A result is a read-only class where results of a detector are stored.
     """
 
-class _SummarizableResult(_Result):
+class _SummarizableResult(_Result, metaclass=ABCMeta):
 
+    @abstractmethod
     def get_summary(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_labels(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_dimensions(self):
         raise NotImplementedError
 
 class PhotonKey(object):
@@ -402,6 +409,9 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
     def get_labels(self):
         return ['Intensity', 'Uncertainty']
 
+    def get_dimensions(self):
+        return 1
+
 class PhotonSpectrumResult(_SummarizableResult):
 
     def __init__(self, total, background):
@@ -522,6 +532,9 @@ class PhotonSpectrumResult(_SummarizableResult):
         return {'Total': self._total,
                 'Background': self._background}
 
+    def get_dimensions(self):
+        return 2
+
 class _PhotonDistributionResult(_SummarizableResult, _PhotonKeyResult):
 
     def __init__(self, distributions=None):
@@ -634,6 +647,12 @@ class _PhotonDistributionResult(_SummarizableResult, _PhotonKeyResult):
 
     def get_summary(self):
         return {str(k): v for k, v in self}
+
+    def get_dimensions(self):
+        return 2
+
+    def get_labels(self):
+        return ['x', 'Intensity', 'Uncertainty']
 
 class PhotonDepthResult(_PhotonDistributionResult):
 
@@ -863,6 +882,9 @@ class TimeResult(_SummarizableResult):
     def get_labels(self):
         return ['Value', 'Uncertainty']
 
+    def get_dimensions(self):
+        return 1
+
     @property
     def simulation_time_s(self):
         return self._simulation_time_s
@@ -888,6 +910,9 @@ class ShowersStatisticsResult(_SummarizableResult):
 
     def get_labels(self):
         return ['Value']
+
+    def get_dimensions(self):
+        return 1
 
     @property
     def showers(self):
@@ -919,6 +944,9 @@ class ElectronFractionResult(_SummarizableResult):
 
     def get_labels(self):
         return ['Fraction', 'Uncertainty']
+
+    def get_dimensions(self):
+        return 1
 
     @property
     def absorbed(self):
@@ -1121,6 +1149,12 @@ class _ChannelsResult(_SummarizableResult):
 
     def get_summary(self):
         return {'Data': self._data}
+
+    def get_labels(self):
+        return ['x', 'Probability density', 'Uncertainty']
+
+    def get_dimensions(self):
+        return 2
 
 class BackscatteredElectronEnergyResult(_ChannelsResult):
     """

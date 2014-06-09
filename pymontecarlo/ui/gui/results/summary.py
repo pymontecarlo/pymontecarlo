@@ -19,15 +19,23 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import logging
 import numbers
+from operator import methodcaller
+from collections import OrderedDict
 
 # Third party modules.
-from PySide.QtGui import QComboBox, QListWidget
+from PySide.QtGui import \
+    (QComboBox, QListView, QDialog, QFormLayout, QDialogButtonBox, QAction,
+     QToolBar, QWidget, QSizePolicy, QLineEdit, QMessageBox, QCheckBox)
+from PySide.QtCore import Qt, QAbstractListModel
 
 import numpy as np
 
 import matplotlib
 from matplotlib.figure import Figure
+
+import latexcodec #@UnusedImport
 
 # Local modules.
 from pymontecarlo.util.parameter import iter_getters
@@ -35,6 +43,7 @@ from pymontecarlo.util.parameter import iter_getters
 from pymontecarlo.results.result import _SummarizableResult
 
 from pymontecarlo.ui.gui.results.results import _FigureResultMixin, _BaseResultWidget, _BaseResultToolItem
+from pymontecarlo.ui.gui.util.tango import getIcon
 
 # Globals and constants variables.
 
@@ -47,31 +56,271 @@ class _ResultsToolItem(_BaseResultToolItem):
     def results(self):
         return self._results
 
+class _Series(object):
+
+    def __init__(self, name, conditions, summary_key):
+        self.name = name
+        self.conditions = conditions
+        self.summary_key = summary_key
+
+    def match(self, options):
+        for _name, getter, expected in self.conditions:
+            actual = getter(options)
+            if expected != actual:
+                return False
+        return True
+
+class _ValuesModel(QAbstractListModel):
+
+        def __init__(self, values):
+            QAbstractListModel.__init__(self)
+            try:
+                values = sorted(values)
+            except TypeError:
+                pass
+            self._values = list(values)
+
+        def rowCount(self, *args, **kwargs):
+            return len(self._values)
+
+        def data(self, index, role=Qt.DisplayRole):
+            if not index.isValid() or \
+                    not (0 <= index.row() < self.rowCount()):
+                return None
+
+            if role == Qt.TextAlignmentRole:
+                return Qt.AlignCenter
+
+            if role != Qt.DisplayRole:
+                return None
+
+            return str(self._values[index.row()])
+
+        def value(self, index):
+            return self._values[index]
+
+        def valueIndex(self, value):
+            return self._values.index(value)
+
+class _SeriesDialog(QDialog):
+
+    def __init__(self, results, result_key,
+                 parameter_getters, x_parameter_name,
+                 series=None, parent=None):
+        QDialog.__init__(self, parent)
+
+        # Variables
+        self._results = results
+        self._result_key = result_key
+        self._parameter_getters = parameter_getters
+        options = results.options
+
+        # Widgets
+        self._txt_name = QLineEdit()
+
+        self._cb_parameters = {}
+        for name, getter in parameter_getters.items():
+            if name == x_parameter_name:
+                continue
+
+            combobox = QComboBox()
+            values = np.array(getter(options), ndmin=1)
+            combobox.setModel(_ValuesModel(values))
+            self._cb_parameters[name] = combobox
+
+        self._cb_summary_key = QComboBox()
+        self._cb_summary_key.setModel(_ValuesModel([]))
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # Layouts
+        layout = QFormLayout()
+        layout.addRow('Name', self._txt_name)
+        for name, combobox in self._cb_parameters.items():
+            layout.addRow(name, combobox)
+        layout.addRow('Summary variable', self._cb_summary_key)
+
+        layout.addRow(buttons)
+
+        self.setLayout(layout)
+
+        # Signals
+        buttons.accepted.connect(self._onOk)
+        buttons.rejected.connect(self.reject)
+
+        for combobox in self._cb_parameters.values():
+            combobox.currentIndexChanged.connect(self._onParameterChanged)
+
+        # Defaults
+        if series is not None:
+            self._txt_name.setText(series.name)
+
+            for name, _, value in series.conditions:
+                combobox = self._cb_parameters[name]
+                index = combobox.model().valueIndex(value)
+                combobox.setCurrentIndex(index)
+            self._onParameterChanged()
+
+            index = self._cb_summary_key.model().valueIndex(series.summary_key)
+            self._cb_summary_key.setCurrentIndex(index)
+        else:
+            self._onParameterChanged()
+
+    def _onParameterChanged(self):
+        summary_keys = set()
+
+        for container in self._results:
+            match = True
+            for name, expected in self.parameterValue().items():
+                getter = self._parameter_getters[name]
+                actual = getter(container.options)
+                if actual != expected:
+                    match = False
+                    break
+
+            if not match:
+                continue
+
+            try:
+                result = container[self._result_key]
+            except KeyError:
+                continue
+
+            summary_keys.update(result.get_summary().keys())
+
+        self._cb_summary_key.setModel(_ValuesModel(summary_keys))
+
+    def _onOk(self):
+        if self._cb_summary_key.currentIndex() < 0:
+            return
+        self.accept()
+
+    def name(self):
+        name = self._txt_name.text().strip()
+
+        if not name:
+            parts = []
+            for param_name, value in self.parameterValue().items():
+                parts.append('%s=%s' % (param_name, value))
+            parts.append('summary=%s' % self.summaryKey())
+            name = '+'.join(parts)
+
+        return name
+
+    def parameterValue(self):
+        parameter_value = {}
+        for name, combobox in self._cb_parameters.items():
+            value = combobox.model().value(combobox.currentIndex())
+            parameter_value[name] = value
+        return parameter_value
+
+    def summaryKey(self):
+        return self._cb_summary_key.model().value(self._cb_summary_key.currentIndex())
+
+class _SeriesModel(QAbstractListModel):
+
+        def __init__(self):
+            QAbstractListModel.__init__(self)
+            self._list_series = []
+
+        def rowCount(self, *args, **kwargs):
+            return len(self._list_series)
+
+        def data(self, index, role=Qt.DisplayRole):
+            if not index.isValid() or \
+                    not (0 <= index.row() < self.rowCount()):
+                return None
+
+            if role == Qt.TextAlignmentRole:
+                return Qt.AlignCenter
+
+            if role != Qt.DisplayRole:
+                return None
+
+            return str(self._list_series[index.row()].name)
+
+        def addSeries(self, series):
+            self._list_series.append(series)
+            self.reset()
+
+        def removeSeries(self, index):
+            self._list_series.pop(index)
+            self.reset()
+
+        def clearSeries(self):
+            self._list_series.clear()
+            self.reset()
+
+        def updateSeries(self, index, series):
+            self._list_series[index] = series
+            self.reset()
+
+        def series(self, index):
+            return self._list_series[index]
+
+        def listSeries(self):
+            return self._list_series[:]
+
 class _SummaryOptionsToolItem(_ResultsToolItem):
 
     def _initUI(self):
         # Variables
-        self._parameter_getters = {'program': lambda ops: next(iter(ops.programs))}
+        self._parameter_getters = {}
+
+        def _program_getter(options):
+            programs = list(options.programs)
+            if len(programs) == 1:
+                return programs[0]
+            else:
+                return list(programs)
+        self._parameter_getters['program'] = _program_getter
+
+        options = self.options()
+        for name, getter in iter_getters(options):
+            values = np.array(getter(options), ndmin=1)
+            if len(values) < 2:
+                continue
+            self._parameter_getters[name] = getter
+
+        # Actions
+        act_add_series = QAction(getIcon("list-add"), "Add series", self)
+        act_remove_series = QAction(getIcon("list-remove"), "Remove series", self)
+        act_clear_series = QAction(getIcon("edit-clear"), "Clear", self)
 
         # Widgets
-        self._cb_key = QComboBox()
+        self._cb_result_key = QComboBox()
 
-        self._cb_parameter = QComboBox()
+        self._cb_x_parameter = QComboBox()
+        self._cb_x_parameter.addItems(list(self._parameter_getters.keys()))
 
-        self._lst_variable = QListWidget()
-        self._lst_variable.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
+        self._lst_series = QListView()
+        self._lst_series.setModel(_SeriesModel())
+
+        tlb_series = QToolBar()
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        tlb_series.addWidget(spacer)
+        tlb_series.addAction(act_add_series)
+        tlb_series.addAction(act_remove_series)
+        tlb_series.addAction(act_clear_series)
+
+        self._chk_normalize = QCheckBox('Normalize series')
 
         # Layouts
         layout = _ResultsToolItem._initUI(self)
-        layout.addRow("Result", self._cb_key)
-        layout.addRow("Parameter", self._cb_parameter)
-        layout.addRow("Variable(s)", self._lst_variable)
+        layout.addRow("Result", self._cb_result_key)
+        layout.addRow("X parameter", self._cb_x_parameter)
+        layout.addRow("Series", self._lst_series)
+        layout.addRow(tlb_series)
+        layout.addRow(self._chk_normalize)
 
         # Signals
-        self._cb_key.currentIndexChanged.connect(self.stateChanged)
-        self._cb_key.currentIndexChanged.connect(self._onKeyChanged)
-        self._cb_parameter.currentIndexChanged.connect(self.stateChanged)
-        self._lst_variable.itemSelectionChanged.connect(self.stateChanged)
+        act_add_series.triggered.connect(self._onAddSeries)
+        act_remove_series.triggered.connect(self._onRemoveSeries)
+        act_clear_series.triggered.connect(self._onClearSeries)
+        self._lst_series.doubleClicked.connect(self._onSeriesDoubleClicked)
+        self._cb_result_key.currentIndexChanged.connect(self._onResultKeyChanged)
+        self._chk_normalize.stateChanged.connect(self.stateChanged)
 
         # Defaults
         keys = set()
@@ -80,42 +329,134 @@ class _SummaryOptionsToolItem(_ResultsToolItem):
                 if not isinstance(result, _SummarizableResult):
                     continue
                 keys.add(key)
-        self._cb_key.addItems(sorted(keys))
-
-        options = self.options()
-        self._cb_parameter.addItem('program')
-        for name, getter in iter_getters(options):
-            values = np.array(getter(options), ndmin=1)
-            if len(values) < 2:
-                continue
-            self._parameter_getters[name] = getter
-            self._cb_parameter.addItem(name)
+        self._cb_result_key.addItems(sorted(keys))
 
         return layout
 
-    def _onKeyChanged(self):
-        self._lst_variable.clear()
+    def _onResultKeyChanged(self):
+        ndim = self._getResultDimensions()
+        self._cb_x_parameter.setEnabled(ndim == 1)
 
-        key = self._cb_key.currentText()
-        variables = set()
+    def _onAddSeries(self):
+        # Dialog
+        result_key = self._cb_result_key.currentText()
+
+        if self._getResultDimensions() > 1:
+            x_parameter_name = None
+        else:
+            x_parameter_name = self._cb_x_parameter.currentText()
+
+        dialog = _SeriesDialog(self.results(), result_key,
+                               self._parameter_getters, x_parameter_name)
+        if not dialog.exec_():
+            return
+
+        # Create series
+        series_name = dialog.name()
+        parameter_value = dialog.parameterValue()
+        summary_key = dialog.summaryKey()
+
+        conditions = []
+        for name, value in parameter_value.items():
+            conditions.append((name, self._parameter_getters[name], value))
+
+        model = self._lst_series.model()
+        model.addSeries(_Series(series_name, conditions, summary_key))
+
+        # Update widgets
+        self._cb_result_key.setEnabled(False)
+        self._cb_x_parameter.setEnabled(False)
+
+        self.stateChanged.emit()
+
+    def _onRemoveSeries(self):
+        selection = self._lst_series.selectionModel().selection().indexes()
+        if len(selection) == 0:
+            QMessageBox.warning(self, "Series", "Select a row")
+            return
+
+        model = self._lst_series.model()
+        for row in sorted(map(methodcaller('row'), selection), reverse=True):
+            model.removeSeries(row)
+
+        enabled = model.rowCount() == 0
+        self._cb_result_key.setEnabled(enabled)
+        self._cb_x_parameter.setEnabled(enabled)
+
+        self.stateChanged.emit()
+
+    def _onClearSeries(self):
+        model = self._lst_series.model()
+        model.clearSeries()
+
+        self._cb_result_key.setEnabled(True)
+        self._cb_x_parameter.setEnabled(True)
+
+        self.stateChanged.emit()
+
+    def _onSeriesDoubleClicked(self, index):
+        series = self._lst_series.model().series(index.row())
+
+        # Dialog
+        result_key = self._cb_result_key.currentText()
+
+        if self._getResultDimensions() > 1:
+            x_parameter_name = None
+        else:
+            x_parameter_name = self._cb_x_parameter.currentText()
+
+        dialog = _SeriesDialog(self.results(), result_key,
+                               self._parameter_getters, x_parameter_name,
+                               series)
+        if not dialog.exec_():
+            return
+
+        # Create series
+        series_name = dialog.name()
+        parameter_value = dialog.parameterValue()
+        summary_key = dialog.summaryKey()
+
+        conditions = []
+        for name, value in parameter_value.items():
+            conditions.append((name, self._parameter_getters[name], value))
+
+        model = self._lst_series.model()
+        model.updateSeries(index.row(),
+                           _Series(series_name, conditions, summary_key))
+
+        self.stateChanged.emit()
+
+    def _getResultDimensions(self):
+        result_key = self._cb_result_key.currentText()
+
         for container in self.results():
-            result = container[key]
-            variables.update(result.get_summary().keys())
+            try:
+                result = container[result_key]
+            except KeyError:
+                continue
+            ndim = result.get_dimensions()
 
-        self._lst_variable.addItems(sorted(variables))
+        return ndim
 
     def resultKey(self):
-        return self._cb_key.currentText() or None
+        return self._cb_result_key.currentText() or None
 
-    def parameterName(self):
-        return self._cb_parameter.currentText() or None
+    def xParameterName(self):
+        if self._getResultDimensions() > 1:
+            return None
+        return self._cb_x_parameter.currentText() or None
 
-    def parameterGetter(self):
-        text = self._cb_parameter.currentText()
+    def xParameterGetter(self):
+        if self._getResultDimensions() > 1:
+            return None
+        text = self._cb_x_parameter.currentText()
         return self._parameter_getters.get(text)
 
-    def variables(self):
-        return [item.text() for item in self._lst_variable.selectedItems()]
+    def listSeries(self):
+        return self._lst_series.model().listSeries()
+
+    def isNormalize(self):
+        return self._chk_normalize.isChecked()
 
 class SummaryWidget(_FigureResultMixin, _BaseResultWidget):
 
@@ -129,11 +470,57 @@ class SummaryWidget(_FigureResultMixin, _BaseResultWidget):
     def _initToolbox(self):
         toolbox = super(SummaryWidget, self)._initToolbox()
 
-        self._itm_parameter = _SummaryOptionsToolItem(self)
-        self._itm_parameter.stateChanged.connect(self._onOptionsChanged)
-        toolbox.addItem(self._itm_parameter, "Options")
+        self._itm_options = _SummaryOptionsToolItem(self)
+        self._itm_options.stateChanged.connect(self._onOptionsChanged)
+        toolbox.addItem(self._itm_options, "Options")
 
         return toolbox
+
+    def _generateData(self):
+        result_key = self._itm_options.resultKey()
+        x_parameter_getter = self._itm_options.xParameterGetter()
+        list_series = self._itm_options.listSeries()
+
+        if not result_key or not list_series:
+            return {}
+
+        logging.debug(list_series)
+
+        data = OrderedDict()
+        for container in self.results():
+            try:
+                result = container[result_key]
+            except KeyError:
+                continue
+
+            options = container.options
+            summary = result.get_summary()
+
+            for series in list_series:
+                if not series.match(options):
+                    continue
+
+                try:
+                    datum = summary[series.summary_key]
+                except KeyError:
+                    continue
+
+                data.setdefault(series.name, {})
+
+                if x_parameter_getter is not None:
+                    x = x_parameter_getter(options)
+                    data[series.name].setdefault('xs', []).append(x)
+
+                    y = datum[0][0]
+                    data[series.name].setdefault('ys', []).append(y)
+                else:
+                    xs = datum[:, 0]
+                    data[series.name]['xs'] = xs
+
+                    ys = datum[:, 1]
+                    data[series.name]['ys'] = ys
+
+        return data
 
     def _createFigure(self):
         fig = Figure()
@@ -141,98 +528,80 @@ class SummaryWidget(_FigureResultMixin, _BaseResultWidget):
         return fig
 
     def _drawFigure(self):
-        result_key = self._itm_parameter.resultKey()
-        parameter_name = self._itm_parameter.parameterName()
-        parameter_getter = self._itm_parameter.parameterGetter()
-        variables = self._itm_parameter.variables()
-        if not result_key or not parameter_name or not variables:
+        # Data
+        data = self._generateData()
+        logging.debug(data)
+
+        if not data:
             _FigureResultMixin._drawFigure(self)
             return
 
+        # Labels
+        result_key = self._itm_options.resultKey()
+        x_parameter_name = self._itm_options.xParameterName()
+
+        xlabel = None
+        ylabel = None
+        for container in self.results():
+            try:
+                result = container[result_key]
+            except KeyError:
+                continue
+
+            labels = result.get_labels()
+
+            if x_parameter_name is not None:
+                xlabel = x_parameter_name
+                ylabel = labels[0]
+            else:
+                xlabel = labels[0]
+                ylabel = labels[1]
+
+        # Plot
         colors = matplotlib.rcParams['axes.color_cycle']
         kwargs = {'linestyle': '-', 'marker': None}
-        errorbar = True #self._itm_options.isErrorbar()
+        is_normalize = self._itm_options.isNormalize()
 
-        data = {}
-        y = None
-        for container in self.results():
-            result = container[result_key]
-            summary = result.get_summary()
-            labels = result.get_labels()
-            x = parameter_getter(container.options)
-            for variable in variables:
-                try:
-                    y = summary[variable]
-                    data.setdefault(variable, {})[x] = y
-                except KeyError:
-                    continue
+        for i, name in enumerate(data.keys()):
+            try:
+                datum = data[name]
+            except KeyError:
+                continue
 
-        if y is None:
-            _FigureResultMixin._drawFigure(self)
-            return
+            xs = datum['xs']
+            ys = datum['ys']
 
-        def _draw(xs, ys, yes=None, **kwargs):
             if not all(map(lambda x: isinstance(x, numbers.Number), xs)):
-                labels = xs
+                ticklabels = list(map(str, xs))
                 xs = range(len(xs))
             else:
-                labels = None
+                ticklabels = None
 
-            if errorbar:
-                self._ax.errorbar(xs, ys, yes, ecolor=kwargs['color'], **kwargs)
-            else:
-                self._ax.plot(xs, ys, **kwargs)
+            if is_normalize:
+                ys = (ys - np.min(ys)) / np.ptp(ys)
 
-            if labels:
-                self._ax.set_xticklabels(labels)
+            self._ax.plot(xs, ys, label=name.encode('latex').decode('ascii'),
+                          color=colors[i % len(colors)], **kwargs)
 
-        if len(y) == 1:
-            for i, variable in enumerate(sorted(data.keys())):
-                xs = list(data[variable].keys())
-                try:
-                    xs = sorted(xs)
-                except TypeError:
-                    pass
+            if ticklabels:
+                self._ax.set_xticks(xs)
+                self._ax.set_xticklabels(ticklabels)
 
-                ys = []; yes = []
-                for x in xs:
-                    datum = data[variable][x]
-                    ys.append(datum[0][0])
-                    yes.append(datum[0][1])
-
-                color = colors[i % len(colors)]
-                kwargs.update(color=color, label=variable)
-
-                _draw(xs, ys, yes, **kwargs)
-
-            self._ax.set_xlabel(parameter_name)
-            if len(data) == 1:
-                self._ax.set_ylabel('%s - %s' % (next(iter(data.keys())), labels[0]))
-            else:
-                self._ax.legend(loc='best')
-                self._ax.set_ylabel(labels[0])
-        else:
-            i = 0
-            for variable in sorted(data.keys()):
-                for x in data[variable]:
-                    datum = data[variable][x]
-
-                    color = colors[i % len(colors)]
-                    if len(data) == 1:
-                        label = str(x)
-                    else:
-                        label = '%s - %s' % (variable, x)
-                    kwargs.update(color=color, label=label)
-
-                    _draw(datum[:, 0], datum[:, 1], datum[:, 2], **kwargs)
-
-                    i += 1
-
-            self._ax.legend(loc='best')
-            self._ax.set_xlabel(labels[0])
-            self._ax.set_ylabel(labels[1])
+        self._ax.legend(loc='best')
+        self._ax.set_xlabel(xlabel)
+        self._ax.set_ylabel(ylabel)
 
         _FigureResultMixin._drawFigure(self)
+
+    def dump(self):
+        data = self._generateData()
+
+        rows = []
+        for name, datum in data.items():
+            rows.append([name])
+            rows.extend(zip(datum['xs'], datum['ys']))
+
+        return rows
 
     def _onOptionsChanged(self):
         self._ax.clear()
