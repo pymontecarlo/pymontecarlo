@@ -19,6 +19,11 @@ if sys.platform == 'darwin':
     if os.environ['DYLD_LIBRARY_PATH'] != path:
         os.environ["DYLD_LIBRARY_PATH"] = path
         os.execv(sys.executable, sys.argv)
+elif sys.platform == 'win32':
+    path = os.path.join(DIR_NAME, 'pypenelopelib') #@UndefinedVariable
+    if not os.environ['PATH'].endswith(path):
+        os.environ["PATH"] += ';' + path
+        os.execv(sys.executable, sys.argv)
 
 #------------------------------------------------------------------------------
 # Modification to automatically load programs
