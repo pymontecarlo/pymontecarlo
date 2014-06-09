@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
 import logging
 import numbers
 from operator import methodcaller
@@ -135,6 +136,8 @@ class _SeriesDialog(QDialog):
 
         # Layouts
         layout = QFormLayout()
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         layout.addRow('Name', self._txt_name)
         for name, combobox in self._cb_parameters.items():
             layout.addRow(name, combobox)
@@ -611,7 +614,6 @@ class SummaryWidget(_FigureResultMixin, _BaseResultWidget):
         return self._results
 
 def __run():
-    import sys
     from PySide.QtGui import QMainWindow, QApplication
     from pymontecarlo.options.options import Options
     from pymontecarlo.results.results import Results

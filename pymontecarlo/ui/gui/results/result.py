@@ -19,6 +19,7 @@ __copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
 __license__ = "GPL v3"
 
 # Standard library modules.
+import sys
 
 # Third party modules.
 from PySide.QtGui import \
@@ -496,6 +497,8 @@ class TimeResultWidget(_SaveableResultWidget):
         layout = _SaveableResultWidget._initUI(self)
 
         sublayout = QFormLayout()
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         sublayout.addRow('Total time of the simulation', self._txt_time)
         sublayout.addRow('Average time of one trajectory', self._txt_speed)
         layout.addLayout(sublayout)
@@ -532,6 +535,8 @@ class ElectronFractionResultWidget(_SaveableResultWidget):
         layout = _SaveableResultWidget._initUI(self)
 
         sublayout = QFormLayout()
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         sublayout.addRow('Absorbed fraction', self._txt_absorbed)
         sublayout.addRow('Backscattered fraction', self._txt_backscattered)
         sublayout.addRow('Transmitted fraction', self._txt_transmitted)
@@ -558,6 +563,8 @@ class ShowersStatisticsResultWidget(_SaveableResultWidget):
         layout = _SaveableResultWidget._initUI(self)
 
         sublayout = QFormLayout()
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         sublayout.addRow('Number of showers', self._txt_showers)
         layout.addLayout(sublayout)
 

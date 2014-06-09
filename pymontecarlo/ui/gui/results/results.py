@@ -21,6 +21,7 @@ __license__ = "GPL v3"
 # Standard library modules.
 import os
 import csv
+import sys
 
 # Third party modules.
 from PySide.QtGui import \
@@ -59,7 +60,10 @@ class _BaseResultToolItem(QWidget):
         self.setLayout(layout)
 
     def _initUI(self):
-        return QFormLayout()
+        layout = QFormLayout()
+        if sys.platform == 'darwin': # Fix for Mac OS
+            layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+        return layout
 
     def options(self):
         return self._options

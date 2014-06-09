@@ -591,7 +591,6 @@ class RunnerDialog(QDialog):
                     importer.cancel()
                     break
                 self._dlg_progress.setValue(importer.progress * 100)
-                QApplication.processEvents()
         finally:
             self._dlg_progress.hide()
 
