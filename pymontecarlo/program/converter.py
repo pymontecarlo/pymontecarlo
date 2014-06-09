@@ -133,7 +133,7 @@ class Converter(object):
 
         # Check material
         for material in options.geometry.get_materials():
-            if material.__class__ not in self.MATERIALS:
+            if not isinstance(material, tuple(self.MATERIALS)):
                 self._warn("Invalid material (%s) in geometry (%s)" % \
                            (material.name, clasz.__name__),
                            "This options definition was removed.")
