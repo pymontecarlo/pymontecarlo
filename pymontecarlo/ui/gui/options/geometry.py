@@ -572,6 +572,7 @@ class VerticalLayersWidget(_GeometryWidget):
         self._lbl_depth = QLabel('Depth')
         self._lbl_depth.setStyleSheet('color: blue')
         self._txt_depth = UnitParameterWidget(VerticalLayers.depth_m)
+        self._txt_depth.setValues(['inf'])
 
         # Layouts
         layout = _GeometryWidget._initUI(self)
