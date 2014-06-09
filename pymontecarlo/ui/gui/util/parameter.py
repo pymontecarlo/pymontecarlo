@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import sys
+import logging
 
 # Third party modules.
 from PySide.QtGui import \
@@ -75,7 +76,8 @@ class _ParameterWidget(QWidget):
         try:
             values = self.values()
             self.parameter().validate(values)
-        except:
+        except Exception as ex:
+            logging.error(ex)
             return False
 
         if self.isRequired() and len(values) == 0:
