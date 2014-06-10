@@ -16,12 +16,12 @@ sys.path = sys.path[:4]
 
 if sys.platform == 'darwin':
     path = os.path.join(DIR_NAME, 'pypenelopelib') #@UndefinedVariable
-    if os.environ['DYLD_LIBRARY_PATH'] != path:
+    if os.environ.get('DYLD_LIBRARY_PATH') != path:
         os.environ["DYLD_LIBRARY_PATH"] = path
         os.execv(sys.executable, sys.argv)
 elif sys.platform == 'win32':
     path = os.path.join(DIR_NAME, 'pypenelopelib') #@UndefinedVariable
-    if not os.environ['PATH'].endswith(path):
+    if not os.environ.get('PATH').endswith(path):
         os.environ["PATH"] += ';' + path
         os.execv(sys.executable, sys.argv)
 
