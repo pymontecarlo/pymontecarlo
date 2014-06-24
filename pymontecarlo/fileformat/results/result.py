@@ -33,6 +33,7 @@ from pymontecarlo.results.result import \
      PhotonSpectrumResult,
      _PhotonDistributionResult,
      PhotonDepthResult,
+     PhiZResult,
      PhotonRadialResult,
      PhotonEmissionMapResult,
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
@@ -162,6 +163,14 @@ class PhotonDepthResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
     def parse(self, group):
         dist = _PhotonDistributionResultHDF5Handler.parse(self, group)
         return PhotonDepthResult(dict(iter(dist)))
+
+class PhiZResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
+
+    CLASS = PhiZResult
+
+    def parse(self, group):
+        dist = _PhotonDistributionResultHDF5Handler.parse(self, group)
+        return PhiZResult(dict(iter(dist)))
 
 class PhotonRadialResultHDF5Handler(_PhotonDistributionResultHDF5Handler):
 

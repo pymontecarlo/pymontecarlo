@@ -47,9 +47,10 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
-     PhotonEmissionMapDetector, PhotonIntensityDetector, TimeDetector,
-     ElectronFractionDetector, ShowersStatisticsDetector, TrajectoryDetector)
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonRadialDetector, PhotonEmissionMapDetector, PhotonIntensityDetector, 
+     TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector, 
+     TrajectoryDetector)
 
 from pymontecarlo.util.parameter import AngleParameter, range_validator
 
@@ -576,6 +577,32 @@ class PhotonDepthDetectorWidget(_PhotonDelimitedDetectorWidget,
         azimuth_rad = self._getAzimuthValues()
         channels = self._txt_channels.values()
         return PhotonDepthDetector(elevation_rad, azimuth_rad, channels)
+
+    def setValue(self, value):
+        _PhotonDelimitedDetectorWidget.setValue(self, value)
+        _ChannelsDetectorWidget.setValue(self, value)
+
+    def setReadOnly(self, state):
+        _PhotonDelimitedDetectorWidget.setReadOnly(self, state)
+        _ChannelsDetectorWidget.setReadOnly(self, state)
+
+class PhiZDetectorWidget(_PhotonDelimitedDetectorWidget,
+                            _ChannelsDetectorWidget):
+
+    def __init__(self, parent=None):
+        _DetectorWidget.__init__(self, parent)
+        self.setAccessibleName("Phi-z")
+
+    def _initUI(self):
+        layout1 = _PhotonDelimitedDetectorWidget._initUI(self)
+        layout2 = _ChannelsDetectorWidget._initUI(self)
+        return merge_formlayout(layout1, layout2)
+
+    def value(self):
+        elevation_rad = self._getElevationValues()
+        azimuth_rad = self._getAzimuthValues()
+        channels = self._txt_channels.values()
+        return PhiZDetector(elevation_rad, azimuth_rad, channels)
 
     def setValue(self, value):
         _PhotonDelimitedDetectorWidget.setValue(self, value)

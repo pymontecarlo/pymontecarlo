@@ -29,8 +29,7 @@ from optparse import OptionParser, OptionGroup
 # Local modules.
 from pymontecarlo.settings import get_settings
 
-from pymontecarlo.fileformat.options.options import load as load_options
-from pymontecarlo.fileformat.results.results import save as save_results
+from pymontecarlo.options.options import Options
 
 from pymontecarlo.runner.local import LocalRunner #, LocalCreator
 
@@ -60,14 +59,12 @@ def _create_parser(programs):
                       action='store_true', help='Quite mode (no progress bar is shown)')
     parser.add_option("-n", dest="nbprocesses", default=1, type="int",
                       help="Number of processes/threads to use (not applicable for all Monte Carlo programs) [default: %default]")
-    parser.add_option('-c', '--create', dest='create', default=False,
-                      action='store_true', help='Create mode where only simulation files are created but not run')
     parser.add_option('-s', '--skip', dest='skip', default=False,
                       action='store_true', help='Skip simulation if results already exist')
 
     # Program group
     group = OptionGroup(parser, "Monte Carlo programs",
-                        "Note: Specify only one of these flags. Only supported programs are shown.")
+                        "Note: Only supported programs are shown.")
 
     for alias in sorted(map(attrgetter('alias'), programs)):
         group.add_option('--%s' % alias, dest=alias, action="store_true")
@@ -76,14 +73,14 @@ def _create_parser(programs):
 
     return parser
 
-def _load(filepaths, list_options=[]):
+def _load(filepaths, list_options=None):
     for filepath in filepaths:
         if os.path.isdir(filepath):
-            load_options(glob.glob(os.path.join(filepath, '*.xml')), list_options)
+            _load(glob.glob(os.path.join(filepath, '*.xml')), list_options)
             list_options.sort()
             return
-#
-        list_options.append(load_options(filepath))
+
+        list_options.append(Options.read(filepath))
 
 def run(argv=None):
     # Initialize
@@ -121,9 +118,7 @@ def run(argv=None):
     selected_aliases = [alias for alias in aliases if getattr(values, alias)]
     if not selected_aliases:
         console.print_error("Please select one Monte Carlo program")
-    if len(selected_aliases) > 1:
-        console.print_error("Please select only one Monte Carlo program")
-    selected_program = aliases[selected_aliases[0]]
+    selected_programs = list(map(aliases.get, selected_aliases))
 
     list_options = []
     try:
@@ -135,24 +130,20 @@ def run(argv=None):
         console.print_error("Please specify at least one options file")
 
     # Setup
-    if values.create:
-        runner = None
-#        runner = LocalCreator(selected_program, outputdir, overwrite, nbprocesses)
-    else:
-        runner = LocalRunner(selected_program, outputdir, workdir, overwrite, nbprocesses)
+    runner = LocalRunner(outputdir, workdir, overwrite, nbprocesses)
 
-    progressbar = ProgressBar(console, len(list_options))
+    progressbar = ProgressBar(console)
     if not quiet: progressbar.start()
 
     # Start simulation
     with runner:
         for options in list_options:
+            options.programs.update(selected_programs)
             runner.put(options)
 
         try:
             while runner.is_alive():
-                counter, progress, status = runner.report()
-                if not quiet: progressbar.update(counter, progress, status)
+                if not quiet: progressbar.update(runner.progress, runner.status)
                 time.sleep(1)
 
         except Exception as ex:

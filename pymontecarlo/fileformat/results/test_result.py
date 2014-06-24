@@ -20,8 +20,8 @@ import numpy as np
 # Local modules.
 from pymontecarlo.fileformat.results.result import \
     (PhotonIntensityResultHDF5Handler, PhotonSpectrumResultHDF5Handler,
-     PhotonDepthResultHDF5Handler, PhotonRadialResultHDF5Handler,
-     PhotonEmissionMapResultHDF5Handler,
+     PhotonDepthResultHDF5Handler, PhiZResultHDF5Handler, 
+     PhotonRadialResultHDF5Handler, PhotonEmissionMapResultHDF5Handler,
      TimeResultHDF5Handler, ShowersStatisticsResultHDF5Handler,
      ElectronFractionResultHDF5Handler, TrajectoryResultHDF5Handler,
      BackscatteredElectronEnergyResultHDF5Handler,
@@ -31,7 +31,8 @@ from pymontecarlo.fileformat.results.result import \
 
 from pymontecarlo.results.result import \
     (PhotonKey, PhotonIntensityResult, PhotonSpectrumResult,
-     PhotonDepthResult, PhotonRadialResult, PhotonEmissionMapResult,
+     PhotonDepthResult, PhotonRadialResult, PhiZResult, 
+     PhotonEmissionMapResult, 
      TimeResult, ShowersStatisticsResult, ElectronFractionResult,
      Trajectory, TrajectoryResult, BackscatteredElectronEnergyResult,
      TransmittedElectronEnergyResult, BackscatteredElectronPolarAngularResult,
@@ -224,6 +225,108 @@ class TestPhotonDepthResultHDF5Handler(unittest.TestCase):
         distributions[PhotonKey(t1, True, PhotonKey.T)] = et
 
         self.obj = PhotonDepthResult(distributions)
+
+        self.group = self.h.convert(self.obj, self.hdf5file.create_group('det'))
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+        self.hdf5file.close()
+
+    def testcan_parse(self):
+        self.assertTrue(self.h.can_parse(self.group))
+
+    def testparse(self):
+        obj = self.h.parse(self.group)
+
+        phirhoz = obj.get(Transition(29, 9, 4), absorption=False, fluorescence=False)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
+
+        phirhoz = obj.get(Transition(29, 9, 4), absorption=False, fluorescence=True)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
+
+        phirhoz = obj.get(Transition(29, 9, 4), absorption=True, fluorescence=False)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][2], 4)
+
+        phirhoz = obj.get(Transition(29, 9, 4), absorption=True, fluorescence=True)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
+
+    def testcan_convert(self):
+        self.assertTrue(self.h.can_convert(self.obj))
+
+    def testconvert(self):
+        group = self.hdf5file['det']
+
+        phirhoz = group['Cu L3-M5']['gnf']
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
+
+        phirhoz = group['Cu L3-M5']['gt']
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
+
+        phirhoz = group['Cu L3-M5']['enf']
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][2], 4)
+
+        phirhoz = group['Cu L3-M5']['et']
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
+
+class TestPhiZResultHDF5Handler(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.hdf5file = h5py.File('test.h5', 'a', driver='core', backing_store=False)
+        self.h = PhiZResultHDF5Handler()
+
+        t1 = Transition(29, 9, 4)
+
+        distributions = {}
+        gnf_zs = [1.0, 2.0, 3.0, 4.0]
+        gnf_values = [0.0, 5.0, 4.0, 1.0]
+        gnf_uncs = [0.01, 0.02, 0.03, 0.04]
+        gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
+        distributions[PhotonKey(t1, False, PhotonKey.P)] = gnf
+
+        gt_zs = [1.0, 2.0, 3.0, 4.0]
+        gt_values = [10.0, 15.0, 14.0, 11.0]
+        gt_uncs = [0.11, 0.12, 0.13, 0.14]
+        gt = np.array([gt_zs, gt_values, gt_uncs]).T
+        distributions[PhotonKey(t1, False, PhotonKey.T)] = gt
+
+        enf_zs = [1.0, 2.0, 3.0, 4.0]
+        enf_values = [20.0, 25.0, 24.0, 21.0]
+        enf = np.array([enf_zs, enf_values]).T
+        distributions[PhotonKey(t1, True, PhotonKey.P)] = enf
+
+        et_zs = [1.0, 2.0, 3.0, 4.0]
+        et_values = [30.0, 35.0, 34.0, 31.0]
+        et_uncs = [0.31, 0.32, 0.33, 0.34]
+        et = np.array([et_zs, et_values, et_uncs]).T
+        distributions[PhotonKey(t1, True, PhotonKey.T)] = et
+
+        self.obj = PhiZResult(distributions)
 
         self.group = self.h.convert(self.obj, self.hdf5file.create_group('det'))
 

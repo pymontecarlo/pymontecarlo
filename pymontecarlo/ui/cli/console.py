@@ -41,9 +41,9 @@ COLOR_YELLOW = 'yellow'
 COLOR_PURPLE = 'purple'
 
 class ProgressBar(object):
-    _BAR_TEMPLATE = 'Completed %i/%i | [%s%s] %i%% - %s'
+    _BAR_TEMPLATE = '[%s%s] %i%% - %s'
 
-    def __init__(self, console, total, fill_char='#', empty_char=' ', width=25):
+    def __init__(self, console, fill_char='#', empty_char=' ', width=25):
         """
         Creates a progress bar to show the progress of task(s) in the command
         line.
@@ -57,13 +57,11 @@ class ProgressBar(object):
         to redraws the progress bar in the command line.
 
         :arg console: console where the progress bar will be written
-        :arg total: total number of tasks
         :arg fill_char: character used in the bar of the progress bar
         :arg empty_char: character used to fill the progress bar
         :arg width: width the progress bar
         """
         self._console = console
-        self._total = total
 
         self._fill_char = fill_char
         self._empty_char = empty_char
@@ -75,13 +73,12 @@ class ProgressBar(object):
         This method must be called before calling :meth:`update`
         """
         self._console.print_message('=' * self._console.width)
-        self.update(0, 0, 'Start')
+        self.update(0, 'Start')
 
-    def _create_bar_text(self, counter, progress, status):
+    def _create_bar_text(self, progress, status):
         """
         Constructs the text for this progress bar.
 
-        :arg counter: number of completed tasks
         :arg progress: progress of the running task (0.0 to 1.0)
         :arg status: status of the running task
         """
@@ -92,13 +89,12 @@ class ProgressBar(object):
         fill = self._fill_char * x
         empty = self._empty_char * (self._width - x)
 
-        text = self._BAR_TEMPLATE % (counter, self._total, fill, empty,
-                                     progress * 100, status)
+        text = self._BAR_TEMPLATE % (fill, empty, progress * 100, status)
         text = text[:self._console.width - 1].ljust(self._console.width - 1)
 
         return text
 
-    def update(self, counter, progress, status):
+    def update(self, progress, status):
         """
         Updates the progress and status of this progress bar.
 
@@ -106,7 +102,7 @@ class ProgressBar(object):
         :arg progress: progress of the running task (0.0 to 1.0)
         :arg status: status of the running task
         """
-        text = self._create_bar_text(counter, progress, status)
+        text = self._create_bar_text(progress, status)
         stream = self._console._stdout
         stream.write(text + "\r")
         stream.flush()
