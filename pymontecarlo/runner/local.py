@@ -127,7 +127,6 @@ class _LocalRunnerResultsDispatcher(_RunnerResultsDispatcher):
             # Retrieve results
             try:
                 results = self._queue_results.get(timeout=0.1)
-                print(results)
             except queue.Empty:
                 continue
 
