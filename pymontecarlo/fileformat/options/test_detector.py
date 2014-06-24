@@ -27,8 +27,8 @@ from pymontecarlo.fileformat.options.detector import \
      BackscatteredElectronAzimuthalAngularDetectorXMLHandler, TransmittedElectronAzimuthalAngularDetectorXMLHandler,
      BackscatteredElectronRadialDetectorXMLHandler,
      PhotonSpectrumDetectorXMLHandler, PhotonDepthDetectorXMLHandler,
-     PhotonRadialDetectorXMLHandler, PhotonEmissionMapDetectorXMLHandler,
-     PhotonIntensityDetectorXMLHandler,
+     PhiZDetectorXMLHandler, PhotonRadialDetectorXMLHandler, 
+     PhotonEmissionMapDetectorXMLHandler, PhotonIntensityDetectorXMLHandler,
      TimeDetectorXMLHandler, ElectronFractionDetectorXMLHandler,
      ShowersStatisticsDetectorXMLHandler, TrajectoryDetectorXMLHandler)
 from pymontecarlo.options.detector import \
@@ -38,8 +38,8 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
-     PhotonEmissionMapDetector, PhotonIntensityDetector,
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonRadialDetector, PhotonEmissionMapDetector, PhotonIntensityDetector,
      TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
      TrajectoryDetector)
 
@@ -632,6 +632,52 @@ class TestPhotonDepthDetectorXMLHandler(unittest.TestCase):
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
         source = BytesIO(b'<mc:photonDepthDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels></mc:photonDepthDetector>')
+        self.element = etree.parse(source).getroot()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testcan_parse(self):
+        self.assertTrue(self.h.can_parse(self.element))
+
+    def testparse(self):
+        obj = self.h.parse(self.element)
+
+        self.assertAlmostEqual(radians(35), obj.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), obj.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, obj.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), obj.azimuth_rad[1], 4)
+        self.assertEqual(1000, obj.channels)
+
+    def testcan_convert(self):
+        self.assertTrue(self.h.can_convert(self.obj))
+
+    def testconvert(self):
+        element = self.h.convert(self.obj)
+
+        subelement = element.find('elevation')
+        self.assertAlmostEqual(radians(35), float(subelement.get('lower')), 4)
+        self.assertAlmostEqual(radians(45), float(subelement.get('upper')), 4)
+
+        subelement = element.find('azimuth')
+        self.assertAlmostEqual(0, float(subelement.get('lower')), 4)
+        self.assertAlmostEqual(radians(360.0), float(subelement.get('upper')), 4)
+
+        subelement = element.find('channels')
+        self.assertEqual(1000, int(subelement.text))
+
+class TestPhiZDetectorXMLHandler(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.h = PhiZDetectorXMLHandler()
+
+        self.obj = PhiZDetector((radians(35), radians(45)),
+                                   (0, radians(360.0)), 1000)
+
+        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
+        source = BytesIO(b'<mc:phiZDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels></mc:phiZDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):

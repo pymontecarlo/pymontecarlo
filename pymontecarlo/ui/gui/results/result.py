@@ -780,6 +780,12 @@ class PhotonDepthResultWidget(_PhotonDistributionResultWidget):
         self._ax.set_xlabel('Depth (m)')
         _PhotonDistributionResultWidget._drawFigure(self)
 
+class PhiZResultWidget(_PhotonDistributionResultWidget):
+
+    def _drawFigure(self):
+        self._ax.set_xlabel('Depth (m)')
+        _PhotonDistributionResultWidget._drawFigure(self)
+
 class PhotonRadialResultWidget(_PhotonDistributionResultWidget):
 
     def _drawFigure(self):

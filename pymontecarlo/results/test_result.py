@@ -25,6 +25,7 @@ from pymontecarlo.results.result import \
      PhotonIntensityResult,
      PhotonSpectrumResult,
      PhotonDepthResult,
+     PhiZResult,
      PhotonEmissionMapResult,
      TimeResult,
      ElectronFractionResult,
@@ -305,7 +306,7 @@ class TestPhotonSpectrumResult(TestCase):
         self.assertAlmostEqual(0.0, val, 4)
         self.assertAlmostEqual(0.0, unc, 4)
 #
-class TestPhotonDepthResultResult(TestCase):
+class TestPhotonDepthResult(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
@@ -337,6 +338,98 @@ class TestPhotonDepthResultResult(TestCase):
         distributions[PhotonKey(self.t1, True, PhotonKey.T)] = et
 
         self.r = PhotonDepthResult(distributions)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testexists(self):
+        self.assertTrue(self.r.exists(self.t1))
+        self.assertTrue(self.r.exists('Cu La1'))
+        self.assertFalse(self.r.exists('Cu Ka1'))
+
+    def testget(self):
+        phirhoz = self.r.get(self.t1, absorption=False, fluorescence=False)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.01, phirhoz[0][2], 4)
+
+        phirhoz = self.r.get(self.t1, absorption=False, fluorescence=True)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(10.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.11, phirhoz[0][2], 4)
+
+        phirhoz = self.r.get(self.t1, absorption=True, fluorescence=False)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(20.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.0, phirhoz[0][2], 4)
+
+        phirhoz = self.r.get(self.t1, absorption=True, fluorescence=True)
+        self.assertEqual((4, 3), phirhoz.shape)
+        self.assertAlmostEqual(1.0, phirhoz[0][0], 4)
+        self.assertAlmostEqual(30.0, phirhoz[0][1], 4)
+        self.assertAlmostEqual(0.31, phirhoz[0][2], 4)
+
+    def testintegral(self):
+        val = self.r.integral(self.t1, absorption=False, fluorescence=False)
+        self.assertAlmostEqual(10.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=False, fluorescence=True)
+        self.assertAlmostEqual(50.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=True, fluorescence=False)
+        self.assertAlmostEqual(90.0, val, 4)
+
+        val = self.r.integral(self.t1, absorption=True, fluorescence=True)
+        self.assertAlmostEqual(130.0, val, 4)
+
+    def testfchi(self):
+        val = self.r.fchi(self.t1, fluorescence=False)
+        self.assertAlmostEqual(9.0, val, 4)
+
+        val = self.r.fchi(self.t1, fluorescence=True)
+        self.assertAlmostEqual(2.6, val, 4)
+
+    def testiter_transitions(self):
+        self.assertEqual(1, len(list(self.r.iter_transitions())))
+
+    def testiter_distributions(self):
+        self.assertEqual(1, len(list(self.r.iter_distributions())))
+
+class TestPhiZResult(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.t1 = Transition(29, 9, 4)
+
+        distributions = {}
+        gnf_zs = [1.0, 2.0, 3.0, 4.0]
+        gnf_values = [0.0, 5.0, 4.0, 1.0]
+        gnf_uncs = [0.01, 0.02, 0.03, 0.04]
+        gnf = np.array([gnf_zs, gnf_values, gnf_uncs]).T
+        distributions[PhotonKey(self.t1, False, PhotonKey.P)] = gnf
+
+        gt_zs = [1.0, 2.0, 3.0, 4.0]
+        gt_values = [10.0, 15.0, 14.0, 11.0]
+        gt_uncs = [0.11, 0.12, 0.13, 0.14]
+        gt = np.array([gt_zs, gt_values, gt_uncs]).T
+        distributions[PhotonKey(self.t1, False, PhotonKey.T)] = gt
+
+        enf_zs = [1.0, 2.0, 3.0, 4.0]
+        enf_values = [20.0, 25.0, 24.0, 21.0]
+        enf = np.array([enf_zs, enf_values]).T
+        distributions[PhotonKey(self.t1, True, PhotonKey.P)] = enf
+
+        et_zs = [1.0, 2.0, 3.0, 4.0]
+        et_values = [30.0, 35.0, 34.0, 31.0]
+        et_uncs = [0.31, 0.32, 0.33, 0.34]
+        et = np.array([et_zs, et_values, et_uncs]).T
+        distributions[PhotonKey(self.t1, True, PhotonKey.T)] = et
+
+        self.r = PhiZResult(distributions)
 
     def tearDown(self):
         TestCase.tearDown(self)

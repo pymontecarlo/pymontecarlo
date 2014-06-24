@@ -358,6 +358,31 @@ class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
              self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.channels)
 
+class PhiZDetector(_PhotonDelimitedDetector, _ChannelsDetector):
+
+    def __init__(self, elevation_rad, azimuth_rad, channels):
+        _ChannelsDetector.__init__(self, channels)
+        _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, channels):
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
+
+    def __repr__(self):
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
+            (self.__class__.__name__,
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             self.channels)
+
+    def __str__(self):
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             self.channels)
+
 class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
 
     def __init__(self, elevation_rad, azimuth_rad, channels):

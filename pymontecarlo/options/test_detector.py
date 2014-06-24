@@ -21,8 +21,8 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _EnergyDetector, _SpatialDetector,
      _PolarAngularDetector, _AzimuthalAngularDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
-     PhotonEmissionMapDetector,
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonRadialDetector, PhotonEmissionMapDetector,
     TimeDetector, ElectronFractionDetector, TrajectoryDetector,
     ShowersStatisticsDetector)
 
@@ -282,6 +282,28 @@ class TestPhotonDepthDetector(TestCase):
 
     def test__repr__(self):
         expected = '<PhotonDepthDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
+        self.assertEqual(expected, repr(self.d))
+
+class TestPhiZDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.d = PhiZDetector((radians(35), radians(45)),
+                                     (0, radians(360.0)), 1000)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(radians(35), self.d.elevation_rad[0], 4)
+        self.assertAlmostEqual(radians(45), self.d.elevation_rad[1], 4)
+        self.assertAlmostEqual(0, self.d.azimuth_rad[0], 4)
+        self.assertAlmostEqual(radians(360.0), self.d.azimuth_rad[1], 4)
+        self.assertEqual(1000, self.d.channels)
+
+    def test__repr__(self):
+        expected = '<PhiZDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
         self.assertEqual(expected, repr(self.d))
 
 class TestPhotonRadialDetector(TestCase):

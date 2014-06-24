@@ -371,8 +371,6 @@ class LimitWizardPage(_ExpandableOptionsWizardPage):
 
     def validatePage(self):
         tbl_model = self._tbl_limit.model()
-        if tbl_model.rowCount() == 0:
-            return False
 
         self.options().limits.clear()
         for limit in tbl_model.limits():

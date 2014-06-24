@@ -33,8 +33,8 @@ from pymontecarlo.options.detector import \
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhotonRadialDetector,
-     PhotonEmissionMapDetector, PhotonIntensityDetector,
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonRadialDetector, PhotonEmissionMapDetector, PhotonIntensityDetector,
      TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
      TrajectoryDetector)
 
@@ -325,6 +325,23 @@ class PhotonDepthDetectorXMLHandler(_DelimitedDetectorXMLHandler,
         det2 = _ChannelsDetectorXMLHandler.parse(self, element)
         return PhotonDepthDetector(det1.elevation_rad, det1.azimuth_rad,
                                    det2.channels)
+
+    def convert(self, obj):
+        element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
+        element2 = _ChannelsDetectorXMLHandler.convert(self, obj)
+        element1.extend(element2)
+        return element1
+
+class PhiZDetectorXMLHandler(_DelimitedDetectorXMLHandler,
+                                _ChannelsDetectorXMLHandler):
+
+    TAG = '{http://pymontecarlo.sf.net}phiZDetector'
+    CLASS = PhiZDetector
+
+    def parse(self, element):
+        det1 = _DelimitedDetectorXMLHandler.parse(self, element)
+        det2 = _ChannelsDetectorXMLHandler.parse(self, element)
+        return PhiZDetector(det1.elevation_rad, det1.azimuth_rad, det2.channels)
 
     def convert(self, obj):
         element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
