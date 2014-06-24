@@ -83,6 +83,7 @@ class Importer(object, metaclass=ABCMeta):
                 message = "Could not import results from '%s' detector (%s)" % \
                     (key, clasz.__name__)
                 warnings.warn(message, ImporterWarning)
+                continue
 
             result = method(options, key, detector, *args, **kwargs)
             results[key] = result
