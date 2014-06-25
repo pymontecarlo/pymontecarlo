@@ -260,3 +260,8 @@ def setup(app):
     app.connect('builder-inited', parse_bibtex)
     app.connect('builder-inited', load_style_dir)
     app.connect('build-finished', finish_latex)
+
+def setup_module():
+    # Hack for nosetests
+    # From: http://stackoverflow.com/questions/23749154/disable-nose-running-setup
+    pass

@@ -68,7 +68,8 @@ class Updater(_Updater):
 
         if not root.tag.startswith("{") and \
                 root.tag.startswith('pymontecarlo.'):
-            content = open(filepath, 'r').read()
+            with open(filepath, 'r') as fp:
+                content = fp.read()
 
             lookup = {'<pymontecarlo.input.base.options.Options': '<mc:options xmlns:mc="http://pymontecarlo.sf.net" xmlns:mc-pen="http://pymontecarlo.sf.net/penelope" version="2"',
                       'pymontecarlo.input.base.options.Options>': 'mc:options>',

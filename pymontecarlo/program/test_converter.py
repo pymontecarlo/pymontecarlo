@@ -124,7 +124,6 @@ class TestConverter(unittest.TestCase):
         with warnings.catch_warnings(record=True) as ws:
             opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
         self.assertEqual(3, len(opss))
         self.assertEqual(3, len(self.ops.models))
         self.assertEqual(1, len(opss[0].models))
