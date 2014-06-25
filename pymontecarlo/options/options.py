@@ -117,6 +117,57 @@ class _Limits(ParameterizedMutableSet):
         return (limit for limit in self if isinstance(limit, clasz))
 
 class _Models(ParameterizedMutableSet):
+    
+    def __len__(self):
+        length = 0
+        for parameter in self.__parameters__.values():
+            length += len(np.array(parameter.__get__(self), ndmin=1))
+        return length
+
+    def __iter__(self):
+        for parameter in self.__parameters__.values():
+            yield from np.array(parameter.__get__(self), ndmin=1)
+
+    def __contains__(self, item):
+        key = self._get_key(item)
+        if key not in self.__parameters__:
+            return False
+        
+        parameter = self.__parameters__[key]
+        return item in parameter.__get__(self)
+
+    def _get_key(self, item):
+        return item.type.name
+
+    def add(self, item):
+        key = self._get_key(item)
+
+        try:
+            parameter = self.__parameters__[key]
+        except KeyError:
+            parameter = Parameter(*self._parameter_args, **self._parameter_kwargs)
+            parameter._name = key
+            self.__parameters__[key] = parameter
+            parameter.__set__(self, item)
+        else:
+            items = set(np.array(parameter.__get__(self), ndmin=1))
+            items.add(item)
+            parameter.__set__(self, list(items))
+
+    def discard(self, item):
+        key = self._get_key(item)
+        if key not in self.__parameters__:
+            raise KeyError(key)
+        
+        parameter = self.__parameters__[key]
+        items = set(np.array(parameter.__get__(self), ndmin=1))
+        items.discard(item)
+        
+        if not items:
+            del self.__parameters__[key]
+            del self.__dict__[key]
+        else:
+            parameter.__set__(self, list(items))
 
     def iterclass(self, type_):
         """

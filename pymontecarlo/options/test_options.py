@@ -134,6 +134,9 @@ class TestOptions(TestCase):
         self.assertEqual(2, len(self.ops.models))
         models = list(self.ops.models.iterclass(ELASTIC_CROSS_SECTION))
         self.assertEqual(2, len(models))
+        
+        self.ops.models.add(ELASTIC_CROSS_SECTION.mott_drouin1993)
+        self.assertEqual(2, len(self.ops.models))
 
     def testto_from_element(self):
         element = self.ops.toelement()

@@ -115,8 +115,18 @@ class TestConverter(unittest.TestCase):
             opss = self.converter.convert(self.ops)
 
         self.assertEqual(1, len(ws))
-        self.assertEqual(1, len(opss))
+        self.assertEqual(2, len(opss))
         self.assertEqual(2, len(self.ops.models))
+        self.assertEqual(1, len(opss[0].models))
+        
+        self.ops.models.add(ELASTIC_CROSS_SECTION.elsepa2005)
+        
+        with warnings.catch_warnings(record=True) as ws:
+            opss = self.converter.convert(self.ops)
+
+        self.assertEqual(1, len(ws))
+        self.assertEqual(3, len(opss))
+        self.assertEqual(3, len(self.ops.models))
         self.assertEqual(1, len(opss[0].models))
 
 if __name__ == '__main__': # pragma: no cover
