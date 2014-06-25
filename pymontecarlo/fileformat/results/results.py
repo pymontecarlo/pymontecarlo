@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 from io import BytesIO
 import xml.etree.ElementTree as etree
 import logging
+from collections import Sequence
 
 # Third party modules.
 import h5py
@@ -32,7 +33,7 @@ from pymontecarlo.fileformat.handler import \
     find_convert_handler, find_parse_handler
 from pymontecarlo.fileformat.options.options import OptionsReader, OptionsWriter
 
-from pymontecarlo.results.results import Results
+from pymontecarlo.results.results import Results, ResultsContainer
 
 from pymontecarlo.util.monitorable import _MonitorableThread, _Monitorable
 from pymontecarlo.util.filelock import FileLock
@@ -78,7 +79,30 @@ def append(results, filepath):
         hdf5file.attrs.create('identifiers', identifiers,
                               dtype=h5py.special_dtype(vlen=str))
 
-class _ResultsGroupReaderThread(_MonitorableThread):
+class _BaseResultsReader():
+    
+    def _check_version(self, group):
+        version = self._read_version(group)
+        if version != VERSION:
+            raise ValueError('Incompatible version: %s != %s' % \
+                             (version, VERSION))
+    
+    def _read_version(self, group):
+        return group.attrs['version']
+    
+    def _read_options(self, group):
+        source = BytesIO(group.attrs['options'])
+        element = etree.parse(source).getroot()
+
+        reader = OptionsReader()
+        reader.parse(element)
+        return reader.get()
+
+    def _read_result(self, group):
+        handler = find_parse_handler('pymontecarlo.fileformat.results.result', group)
+        return handler.parse(group)
+    
+class _ResultsGroupReaderThread(_MonitorableThread, _BaseResultsReader):
 
     def __init__(self, group):
         _MonitorableThread.__init__(self, args=(group,))
@@ -86,10 +110,7 @@ class _ResultsGroupReaderThread(_MonitorableThread):
     def _run(self, group):
         self._update_status(0.1, "Check version")
         if self.is_cancelled(): return
-        version = self._read_version(group)
-        if version != VERSION:
-            raise ValueError('Incompatible version: %s != %s' % \
-                             (version, VERSION))
+        self._check_version(group)
 
         # Read results
         group_size = len(group)
@@ -140,21 +161,6 @@ class _ResultsGroupReaderThread(_MonitorableThread):
 
         return Results(options, list_results)
 
-    def _read_version(self, group):
-        return group.attrs['version']
-
-    def _read_options(self, group):
-        source = BytesIO(group.attrs['options'])
-        element = etree.parse(source).getroot()
-
-        reader = OptionsReader()
-        reader.parse(element)
-        return reader.get()
-
-    def _read_result(self, group):
-        handler = find_parse_handler('pymontecarlo.fileformat.results.result', group)
-        return handler.parse(group)
-
 class _ResultsFilepathReaderThread(_ResultsGroupReaderThread):
 
     def __init__(self, filepath):
@@ -185,6 +191,59 @@ class ResultsReader(_Monitorable):
 
     def parse(self, group):
         self._start(group=group)
+
+class ResultsIterableReader(Sequence, _BaseResultsReader):
+    
+    def __init__(self, filepath):
+        self._filepath = filepath
+        self._lock = FileLock(filepath)
+        self._group = None
+    
+    def __enter__(self):
+        self._lock.acquire()
+        
+        self._group = h5py.File(self._filepath, 'r')
+        self._check_version(self._group)
+        self._identifiers = self._group.attrs['identifiers']
+        
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._group.close()
+        self._lock.release()
+    
+    def __getitem__(self, index):
+        if self._group is None:
+            raise RuntimeError("Use reader in context manager (with statement)")
+        
+        identifier = self._identifiers[index]
+        if isinstance(identifier, bytes):
+            identifier = identifier.decode('ascii')
+        subgroup = self._group['result-' + identifier]
+        
+        # Options
+        options = self._read_options(subgroup)
+        assert identifier == options.uuid
+
+        # Load each result
+        results = {}
+        for key, subsubgroup in subgroup.items():
+            logging.debug('Parsing %s (%s) result of %s',
+                          key, subsubgroup.attrs['_class'], identifier)
+            results[key] = self._read_result(subsubgroup)
+
+        return ResultsContainer(options, results)
+    
+    def __len__(self):
+        if self._group is None:
+            raise RuntimeError("Use reader in context manager (with statement)")
+        return len(self._group)
+    
+    @property
+    def options(self):
+        if self._group is None:
+            raise RuntimeError("Use reader in context manager (with statement)")
+        return self._read_options(self._group)
 
 class _ResultsGroupWriterThread(_MonitorableThread):
 
