@@ -1475,7 +1475,7 @@ def _setup(argv):
         os.makedirs(dirpath)
     
     # Redirect stdout and stderr when frozen
-    if getattr(sys, 'frozen', False): #@UndefinedVariable
+    if getattr(sys, 'frozen', False):
         ## Note: Important since warnings required sys.stderr not be None
         filepath = os.path.join(dirpath, 'pymontecarlo.stdout')
         sys.stdout = open(filepath, 'w')
@@ -1494,9 +1494,10 @@ def _setup(argv):
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    if not getattr(sys, 'frozen', False):
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     logging.info('Started pyMonteCarlo')
     logging.info('version = %s', __version__)
