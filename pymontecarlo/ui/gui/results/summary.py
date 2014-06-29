@@ -213,8 +213,11 @@ class _SeriesDialog(QDialog):
     def parameterValue(self):
         parameter_value = {}
         for name, combobox in self._cb_parameters.items():
-            value = combobox.model().value(combobox.currentIndex())
-            parameter_value[name] = value
+            try:
+                value = combobox.model().value(combobox.currentIndex())
+                parameter_value[name] = value
+            except IndexError:
+                continue
         return parameter_value
 
     def summaryKey(self):

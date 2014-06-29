@@ -27,6 +27,7 @@ from itertools import combinations
 from collections import defaultdict
 import string
 import numbers
+from operator import itemgetter
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
@@ -289,6 +290,22 @@ class Material(object):
 
     def __str__(self):
         return self.name
+    
+    def __eq__(self, other):
+        return self.name == other.name and \
+            self.composition == other.composition and \
+            self.density_kg_m3 == other.density_kg_m3 and \
+            self.absorption_energy_eV == other.absorption_energy_eV
+    
+    def __ne__(self, other):
+        return not self == other
+    
+    def __hash__(self):
+        return hash((self.__class__, 
+                     self.name, 
+                     frozenset(sorted(self.composition.items(), key=itemgetter(0))),
+                     self.density_kg_m3,
+                     frozenset(sorted(self.absorption_energy_eV.items(), key=itemgetter(0)))))
 
     @property
     def name(self):
