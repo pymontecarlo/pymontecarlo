@@ -1473,6 +1473,15 @@ def _setup(argv):
     dirpath = os.path.join(os.path.expanduser('~'), '.pymontecarlo')
     if not os.path.exists(dirpath):
         os.makedirs(dirpath)
+    
+    # Redirect stdout and stderr when frozen
+    if getattr(sys, 'frozen', False): #@UndefinedVariable
+        ## Note: Important since warnings required sys.stderr not be None
+        filepath = os.path.join(dirpath, 'pymontecarlo.stdout')
+        sys.stdout = open(filepath, 'w')
+
+        filepath = os.path.join(dirpath, 'pymontecarlo.stderr')
+        sys.stderr = open(filepath, 'w')
 
     # Logging
     logger = logging.getLogger()
@@ -1501,17 +1510,6 @@ def _setup(argv):
         messagebox.exception(None, exc_obj)
         sys.__excepthook__(exc_type, exc_obj, exc_tb)
     sys.excepthook = _excepthook
-
-    # Redirect stdout and stderr when frozen
-    if getattr(sys, 'frozen', False): #@UndefinedVariable
-        ## Note: Important since warnings required sys.stderr not be None
-        filepath = os.path.join(dirpath, 'pymontecarlo.stdout')
-        sys.stdout = open(filepath, 'w')
-        logging.info('Redirected stdout to %s' % filepath)
-
-        filepath = os.path.join(dirpath, 'pymontecarlo.stderr')
-        sys.stderr = open(filepath, 'w')
-        logging.info('Redirected stderr to %s' % filepath)
 
     # Output sys.path
     logging.info("sys.path = %s", sys.path)
