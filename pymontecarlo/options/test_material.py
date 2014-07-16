@@ -163,6 +163,17 @@ class TestMaterial(TestCase):
         self.assertIn(30, composition)
         self.assertAlmostEqual(0.5, composition[30], 4)
 
+    def testabsorption_energy_eV(self):
+        m = Material({'Cu': '?'}, 'Pure Cu', None, 52)
+        self.assertAlmostEqual(52, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(52, m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(52, m.absorption_energy_eV[POSITRON], 4)
+
+        m = Material({'Cu': '?'}, 'Pure Cu', None, {PHOTON: 51.0})
+        self.assertAlmostEqual(Material.DEFAULT_ABSORPTION_ENERGY_eV, m.absorption_energy_eV[ELECTRON], 4)
+        self.assertAlmostEqual(51, m.absorption_energy_eV[PHOTON], 4)
+        self.assertAlmostEqual(Material.DEFAULT_ABSORPTION_ENERGY_eV, m.absorption_energy_eV[POSITRON], 4)
+
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

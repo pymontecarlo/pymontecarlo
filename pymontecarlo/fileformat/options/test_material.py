@@ -71,10 +71,13 @@ class TestMaterialXMLHandler(unittest.TestCase):
         self.assertEqual('8960.0', element.get('density'))
 
         children = list(element.findall('absorptionEnergy'))
-        self.assertEqual(1, len(children))
+        self.assertEqual(3, len(children))
 
-        self.assertEqual("positron", children[0].get('particle'))
-        self.assertEqual('52.0', children[0].text)
+        for child in children:
+            if child.get('particle') == 'positron':
+                self.assertAlmostEqual(52.0, float(child.text), 4)
+            else:
+                self.assertAlmostEqual(Material.DEFAULT_ABSORPTION_ENERGY_eV, float(child.text), 4)
 
 class TestVACUUMXMLHandler(unittest.TestCase):
 

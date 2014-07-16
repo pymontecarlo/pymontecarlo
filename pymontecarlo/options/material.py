@@ -34,6 +34,7 @@ from pyparsing import Word, Group, Optional, OneOrMore
 import pyxray.element_properties as ep
 
 # Local modules.
+from pymontecarlo.options.particle import PARTICLES
 
 # Globals and constants variables.
 
@@ -41,17 +42,6 @@ _symbol = Word(string.ascii_uppercase, string.ascii_lowercase)
 _digit = Word(string.digits + ".")
 _elementRef = Group(_symbol + Optional(_digit, default="1"))
 CHEMICAL_FORMULA_PARSER = OneOrMore(_elementRef)
-
-class _constant_factory(object):
-
-    def __init__(self, value):
-        self._value = value
-
-    def __repr__(self):
-        return str(self._value)
-
-    def __call__(self, *args, **kwargs):
-        return self._value
 
 class Material(object):
 
@@ -93,14 +83,15 @@ class Material(object):
             density_kg_m3 = self.calculate_density(composition)
         self._density_kg_m3 = density_kg_m3
 
+        self._absorption_energy_eV = {}
         if isinstance(absorption_energy_eV, numbers.Number):
-            self._absorption_energy_eV = \
-                defaultdict(_constant_factory(absorption_energy_eV))
+            for particle in PARTICLES:
+                self._absorption_energy_eV[particle] = absorption_energy_eV
         else:
-            self._absorption_energy_eV = \
-                defaultdict(_constant_factory(self.DEFAULT_ABSORPTION_ENERGY_eV))
-        if absorption_energy_eV is not None:
-            self._absorption_energy_eV.update(absorption_energy_eV)
+            for particle in PARTICLES:
+                self._absorption_energy_eV[particle] = self.DEFAULT_ABSORPTION_ENERGY_eV
+            if absorption_energy_eV is not None:
+                self._absorption_energy_eV.update(absorption_energy_eV)
 
     @staticmethod
     def calculate_composition(composition):
@@ -290,19 +281,19 @@ class Material(object):
 
     def __str__(self):
         return self.name
-    
+
     def __eq__(self, other):
         return self.name == other.name and \
             self.composition == other.composition and \
             self.density_kg_m3 == other.density_kg_m3 and \
             self.absorption_energy_eV == other.absorption_energy_eV
-    
+
     def __ne__(self, other):
         return not self == other
-    
+
     def __hash__(self):
-        return hash((self.__class__, 
-                     self.name, 
+        return hash((self.__class__,
+                     self.name,
                      frozenset(sorted(self.composition.items(), key=itemgetter(0))),
                      self.density_kg_m3,
                      frozenset(sorted(self.absorption_energy_eV.items(), key=itemgetter(0)))))
@@ -363,7 +354,9 @@ class _Vacuum(Material):
             inst._composition = {}
             inst._composition_atomic = {}
             inst._density_kg_m3 = 0.0
-            inst._absorption_energy_eV = defaultdict(lambda: 0.0)
+            inst._absorption_energy_eV = {}
+            for particle in PARTICLES:
+                inst._absorption_energy_eV[particle] = 0.0
             cls._instance = inst
         return cls._instance
 
