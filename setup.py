@@ -9,7 +9,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import sys
 import codecs
 import re
 
@@ -19,19 +18,6 @@ from setuptools import setup, find_packages
 # Local modules.
 from pymontecarlo.util.dist.command.clean import clean
 from pymontecarlo.util.dist.command.check import check
-
-try:
-    from cx_Freeze.dist import Distribution, build
-    from cx_Freeze.freezer import Executable
-
-    from pymontecarlo.util.dist.command.build_exe import build_exe
-    from pymontecarlo.util.dist.command.bdist_exe import bdist_exe
-    from pymontecarlo.util.dist.command.bdist_mac import bdist_mac
-    from pymontecarlo.util.dist.command.bdist_dmg import bdist_dmg
-
-    has_cx_freeze = True
-except ImportError:
-    has_cx_freeze = False
 
 # Globals and constants variables.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -60,30 +46,9 @@ def find_version(*file_paths):
 
 packages = find_packages(exclude=('pymontecarlo.util.dist*',))
 namespace_packages = ['pymontecarlo',
-                      'pymontecarlo.program']
-requirements = ['pyparsing', 'numpy', 'h5py', 'matplotlib', 'PySide',
-                'pyxray', 'Pillow', 'latexcodec']
-
-excludes = ['_gtkagg', '_tkagg', 'bsddb', 'curses', 'pywin.debugger',
-            'pywin.debugger.dbgcon', 'pywin.dialogs', 'tcl',
-            'Tkconstants', 'tkinter', "wx", "scipy", "PyQt4",
-            'ConfigParser', 'IPython', 'pygments', 'sphinx',
-            'pyxray' # Because data files from pyxray are not copied in zip
-            ]
-includes = ['PIL' # Requires by some programs
-            ]
-
-build_exe_options = {"packages": packages,
-                     "namespace_packages": namespace_packages,
-                     "excludes": excludes,
-                     "includes": includes,
-                     "init_script": os.path.abspath('initscripts/Console.py'),
-                     'include_msvcr': True}
-
-cli_executables = {'pymontecarlo-configure': 'pymontecarlo.ui.cli.configure:run',
-                   'pymontecarlo-cli': 'pymontecarlo.ui.cli.main:run',
-                   'pymontecarlo-updater': 'pymontecarlo.ui.cli.updater:run'}
-gui_executables = {'pymontecarlo': 'pymontecarlo.ui.gui.main:run'}
+                      'pymontecarlo.program',
+                      'pymontecarlo.ui']
+requirements = ['pyparsing', 'numpy', 'h5py', 'pyxray']
 
 entry_points = {'pymontecarlo.fileformat.options.material':
                     ['Material = pymontecarlo.fileformat.options.material:MaterialXMLHandler'],
@@ -139,93 +104,7 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'BackscatteredElectronPolarAngularResult = pymontecarlo.fileformat.results.result:BackscatteredElectronPolarAngularResultHDF5Handler',
                      'TransmittedElectronPolarAngularResult = pymontecarlo.fileformat.results.result:TransmittedElectronPolarAngularResultHDF5Handler',
                      'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
-
-                'pymontecarlo.ui.gui.options.material':
-                    ['Material = pymontecarlo.ui.gui.options.material:MaterialDialog'],
-                'pymontecarlo.ui.gui.options.beam':
-                    ['PencilBeam = pymontecarlo.ui.gui.options.beam:PencilBeamWidget',
-                    'GaussianBeam = pymontecarlo.ui.gui.options.beam:GaussianBeamWidget', ],
-                'pymontecarlo.ui.gui.options.geometry':
-                    ['Substrate = pymontecarlo.ui.gui.options.geometry:SubstrateWidget',
-                     'Inclusion = pymontecarlo.ui.gui.options.geometry:InclusionWidget',
-                     'HorizontalLayers = pymontecarlo.ui.gui.options.geometry:HorizontalLayersWidget',
-                     'VerticalLayers = pymontecarlo.ui.gui.options.geometry:VerticalLayersWidget',
-                     'Sphere = pymontecarlo.ui.gui.options.geometry:SphereWidget'],
-                'pymontecarlo.ui.gui.options.detector':
-                    ['BackscatteredElectronEnergyDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronEnergyDetectorWidget',
-                     'TransmittedElectronEnergyDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronEnergyDetectorWidget',
-                     'BackscatteredElectronPolarAngularDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronPolarAngularDetectorWidget',
-                     'TransmittedElectronPolarAngularDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronPolarAngularDetectorWidget',
-                     'BackscatteredElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronAzimuthalAngularDetectorWidget',
-                     'TransmittedElectronAzimuthalAngularDetector = pymontecarlo.ui.gui.options.detector:TransmittedElectronAzimuthalAngularDetectorWidget',
-                     'BackscatteredElectronRadialDetector = pymontecarlo.ui.gui.options.detector:BackscatteredElectronRadialDetectorWidget',
-                     'PhotonSpectrumDetector = pymontecarlo.ui.gui.options.detector:PhotonSpectrumDetectorWidget',
-                     'PhotonDepthDetector = pymontecarlo.ui.gui.options.detector:PhotonDepthDetectorWidget',
-                     'PhiZDetector = pymontecarlo.ui.gui.options.detector:PhiZDetectorWidget',
-                     'PhotonRadialDetector = pymontecarlo.ui.gui.options.detector:PhotonRadialDetectorWidget',
-                     'PhotonEmissionMapDetector = pymontecarlo.ui.gui.options.detector:PhotonEmissionMapDetectorWidget',
-                     'PhotonIntensityDetector = pymontecarlo.ui.gui.options.detector:PhotonIntensityDetectorWidget',
-                     'TimeDetector = pymontecarlo.ui.gui.options.detector:TimeDetectorWidget',
-                     'ElectronFractionDetector = pymontecarlo.ui.gui.options.detector:ElectronFractionDetectorWidget',
-                     'ShowersStatisticsDetector = pymontecarlo.ui.gui.options.detector:ShowersStatisticsDetectorWidget',
-                     'TrajectoryDetector = pymontecarlo.ui.gui.options.detector:TrajectoryDetectorWidget', ],
-                'pymontecarlo.ui.gui.options.limit':
-                    ['TimeLimit = pymontecarlo.ui.gui.options.limit:TimeLimitWidget',
-                     'ShowersLimit = pymontecarlo.ui.gui.options.limit:ShowersLimitWidget',
-#                     'UncertaintyLimit = pymontecarlo.ui.gui.options.limit:UncertaintyLimitWidget '
-                    ],
-                'pymontecarlo.ui.gui.results.result':
-                    [
-                     'BackscatteredElectronEnergyResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronEnergyResultWidget',
-                     'TransmittedElectronEnergyResult = pymontecarlo.ui.gui.results.result:TransmittedElectronEnergyResultWidget',
-                     'BackscatteredElectronPolarAngularResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronPolarAngularResultWidget',
-                     'TransmittedElectronPolarAngularResult = pymontecarlo.ui.gui.results.result:TransmittedElectronPolarAngularResultWidget',
-                     'BackscatteredElectronAzimuthalAngularResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronAzimuthalAngularResultWidget',
-                     'TransmittedElectronAzimuthalAngularResult = pymontecarlo.ui.gui.results.result:TransmittedElectronAzimuthalAngularResultWidget',
-                     'BackscatteredElectronRadialResult = pymontecarlo.ui.gui.results.result:BackscatteredElectronRadialResultWidget',
-                     'PhotonSpectrumResult = pymontecarlo.ui.gui.results.result:PhotonSpectrumResultWidget',
-                     'PhotonDepthResult = pymontecarlo.ui.gui.results.result:PhotonDepthResultWidget',
-                     'PhiZResult = pymontecarlo.ui.gui.results.result:PhiZResultWidget',
-                     'PhotonRadialResult = pymontecarlo.ui.gui.results.result:PhotonRadialResultWidget',
-#                     'PhotonEmissionMapResult = pymontecarlo.ui.gui.results.result:PhotonEmissionMapResultWidget',
-                     'PhotonIntensityResult = pymontecarlo.ui.gui.results.result:PhotonIntensityResultWidget',
-                     'TimeResult = pymontecarlo.ui.gui.results.result:TimeResultWidget',
-                     'ElectronFractionResult = pymontecarlo.ui.gui.results.result:ElectronFractionResultWidget',
-                     'ShowersStatisticsResult = pymontecarlo.ui.gui.results.result:ShowersStatisticsResultWidget',
-                     'TrajectoryResult = pymontecarlo.ui.gui.results.result:TrajectoryResultWidget',
-                     ]
                 }
-
-
-entry_points['console_scripts'] = \
-    ['%s = %s' % item for item in cli_executables.items()]
-entry_points['gui_scripts'] = \
-    ['%s = %s' % item for item in gui_executables.items()]
-
-executables = []
-distclass = None
-cmdclass = {'clean': clean, "check": check}
-options = {}
-
-if has_cx_freeze:
-    def _make_executable(target_name, script, gui=False):
-        path = os.path.join(*script.split(":")[0].split('.')) + '.py'
-        if sys.platform == "win32": target_name += '.exe'
-        base = "Win32GUI" if sys.platform == "win32" and gui else None
-        return Executable(path, targetName=target_name, base=base,
-                          shortcutName=target_name)
-
-    executables = []
-    for target_name, script in cli_executables.items():
-        executables.append(_make_executable(target_name, script, False))
-    for target_name, script in gui_executables.items():
-        executables.append(_make_executable(target_name, script, True))
-
-    distclass = Distribution
-    cmdclass.update({"build": build,
-                     "build_exe": build_exe, "bdist_exe": bdist_exe,
-                     "bdist_mac": bdist_mac, "bdist_dmg": bdist_dmg})
-    options.update({"build_exe": build_exe_options})
 
 setup(name="pyMonteCarlo",
       version=find_version('pymontecarlo', '__init__.py'),
@@ -246,16 +125,12 @@ setup(name="pyMonteCarlo",
       packages=packages,
       namespace_packages=namespace_packages,
 
-      distclass=distclass,
-      cmdclass=cmdclass,
+      cmdclass={'clean': clean, "check": check},
 
       setup_requires=['nose'],
       install_requires=requirements,
 
       entry_points=entry_points,
-      executables=executables,
-
-      options=options,
 
       test_suite='nose.collector',
 )
