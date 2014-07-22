@@ -313,7 +313,7 @@ class Test_TransitionsDetectorXMLHandler(unittest.TestCase):
         self.obj = _TransitionsDetector([self.t1])
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:_transitionsDetector xmlns:mc="http://pymontecarlo.sf.net"><transitions><transition z="24" src="4" dest="1" /></transitions></mc:_transitionsDetector>')
+        source = BytesIO(b'<mc:_transitionsDetector xmlns:mc="http://pymontecarlo.sf.net"><transition z="24" src="4" dest="1" /></mc:_transitionsDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -334,13 +334,12 @@ class Test_TransitionsDetectorXMLHandler(unittest.TestCase):
     def testconvert(self):
         element = self.h.convert(self.obj)
 
-        subelement = element.find('transitions')
-        self.assertEqual(1, len(subelement))
+        subelements = list(element.iter('transition'))
+        self.assertEqual(1, len(subelements))
 
-        subsubelement = list(subelement)[0]
-        self.assertEqual(24, int(subsubelement.get('z')))
-        self.assertEqual(4, int(subsubelement.get('src')))
-        self.assertEqual(1, int(subsubelement.get('dest')))
+        self.assertEqual(24, int(subelements[0].get('z')))
+        self.assertEqual(4, int(subelements[0].get('src')))
+        self.assertEqual(1, int(subelements[0].get('dest')))
 
 class TestBackscatteredElectronEnergyDetectorXMLHandler(unittest.TestCase):
 

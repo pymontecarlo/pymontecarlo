@@ -243,25 +243,22 @@ class _TransitionsDetectorXMLHandler(_XMLHandler):
     def parse(self, element):
         transitions = []
 
-        subelement = element.find('transitions')
-        if subelement is not None:
-            for subsubelement in subelement:
-                z = int(self._parse_numerical_parameter(subsubelement, 'z'))
-                src = int(self._parse_numerical_parameter(subsubelement, 'src'))
-                dest = int(self._parse_numerical_parameter(subsubelement, 'dest'))
-                transitions.append(Transition(z, src, dest))
+        for subelement in element.iter('transition'):
+            z = int(self._parse_numerical_parameter(subelement, 'z'))
+            src = int(self._parse_numerical_parameter(subelement, 'src'))
+            dest = int(self._parse_numerical_parameter(subelement, 'dest'))
+            transitions.append(Transition(z, src, dest))
 
         return _TransitionsDetector(transitions)
 
     def convert(self, obj):
         element = _XMLHandler.convert(self, obj)
 
-        subelement = etree.SubElement(element, 'transitions')
         for transition in obj.transitions:
-            subsubelement = etree.SubElement(subelement, 'transition')
-            subsubelement.set('z', str(transition.z))
-            subsubelement.set('src', str(transition.src.index))
-            subsubelement.set('dest', str(transition.dest.index))
+            subelement = etree.SubElement(element, 'transition')
+            subelement.set('z', str(transition.z))
+            subelement.set('src', str(transition.src.index))
+            subelement.set('dest', str(transition.dest.index))
 
         return element
 
