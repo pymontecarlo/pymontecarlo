@@ -84,7 +84,8 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'ShowersLimit = pymontecarlo.fileformat.options.limit:ShowersLimitXMLHandler',
                      'UncertaintyLimit = pymontecarlo.fileformat.options.limit:UncertaintyLimitXMLHandler'],
                 'pymontecarlo.fileformat.options.model':
-                    ['Model = pymontecarlo.fileformat.options.model:ModelXMLHandler'],
+                    ['RegisteredModel = pymontecarlo.fileformat.options.model:RegisteredModelXMLHandler',
+                     'UserDefinedMassAbsorptionCoefficientModel = pymontecarlo.fileformat.options.model:UserDefinedMassAbsorptionCoefficientModelXMLHandler'],
 
                 'pymontecarlo.fileformat.results.result':
                     ['PhotonIntensityResult = pymontecarlo.fileformat.results.result:PhotonIntensityResultHDF5Handler',

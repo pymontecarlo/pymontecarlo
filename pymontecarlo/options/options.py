@@ -33,7 +33,7 @@ from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.geometry import _Geometry, Substrate
 from pymontecarlo.options.detector import _Detector
 from pymontecarlo.options.limit import _Limit
-from pymontecarlo.options.model import Model
+from pymontecarlo.options.model import _Model
 
 from pymontecarlo.program.config import Program
 
@@ -117,7 +117,7 @@ class _Limits(ParameterizedMutableSet):
         return (limit for limit in self if isinstance(limit, clasz))
 
 class _Models(ParameterizedMutableSet):
-    
+
     def __len__(self):
         length = 0
         for parameter in self.__parameters__.values():
@@ -132,7 +132,7 @@ class _Models(ParameterizedMutableSet):
         key = self._get_key(item)
         if key not in self.__parameters__:
             return False
-        
+
         parameter = self.__parameters__[key]
         return item in parameter.__get__(self)
 
@@ -158,11 +158,11 @@ class _Models(ParameterizedMutableSet):
         key = self._get_key(item)
         if key not in self.__parameters__:
             raise KeyError(key)
-        
+
         parameter = self.__parameters__[key]
         items = set(np.array(parameter.__get__(self), ndmin=1))
         items.discard(item)
-        
+
         if not items:
             del self.__parameters__[key]
             del self.__dict__[key]
@@ -231,7 +231,7 @@ class Options(object, metaclass=ParameterizedMetaclass):
         self.__dict__['detectors'] = detectors
 
         self.limits = _Limits(_Limit)
-        self.models = _Models(Model)
+        self.models = _Models(_Model)
 
     def __repr__(self):
         return '<%s(name=%s)>' % (self.__class__.__name__, str(self.name))

@@ -20,6 +20,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import warnings
+import inspect
 
 # Third party modules.
 
@@ -188,8 +189,12 @@ class Converter(object):
 
             # Check if model is allowable
             else:
+                availables = set(self.MODELS[model_type])
+                classes = set(filter(inspect.isclass, availables))
+
                 for model in models:
-                    if model not in self.MODELS[model_type]:
+                    if model not in availables and \
+                            not isinstance(model, tuple(classes)):
                         options.models.discard(model) # not required
                         options.models.add(default_model)
 

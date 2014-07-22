@@ -17,7 +17,9 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.model import ModelType
+from pymontecarlo.options.model import \
+    (ModelType, UserDefinedMassAbsorptionCoefficientModel,
+     MASS_ABSORPTION_COEFFICIENT)
 
 # Globals and constants variables.
 
@@ -88,6 +90,21 @@ class TestModel(TestCase):
     def test__repr__(self):
         self.assertEqual('<Model(name1)>', repr(MTYPE.m1))
         self.assertEqual('<Model(name2)>', repr(MTYPE.m2))
+
+class TestUserDefinedMassAbsorptionCoefficientModel(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.m = UserDefinedMassAbsorptionCoefficientModel(MASS_ABSORPTION_COEFFICIENT.henke1993)
+        self.m.add(29, 8.904e3, 200)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertIs(MASS_ABSORPTION_COEFFICIENT.henke1993, self.m.base_model)
+        self.assertAlmostEqual(200.0, self.m.defined_macs[(29, 8.904e3)], 4)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

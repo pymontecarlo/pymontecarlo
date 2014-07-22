@@ -62,13 +62,13 @@ class ModelType(collections.Set):
         return iter(self._models)
 
     def __contains__(self, model):
-        if isinstance(model, Model):
+        if isinstance(model, _Model):
             return model in self._models
         else:
             return model in self._modelnames
 
     def __setattr__(self, name, value):
-        model = Model(self, *value)
+        model = RegisteredModel(self, *value)
 
         if name in self.__dict__:
             raise ValueError("Model '%s' is already registered" % name)
@@ -104,17 +104,12 @@ class ModelType(collections.Set):
     def name(self):
         return self._name
 
-class Model(object):
+class _Model(object):
 
-    def __new__(cls, type, name, reference=''): # @ReservedAssignment
-        if name in type:
-            return type._modelnames[name]
-
-        model = super(Model, cls).__new__(cls)
-        model._type = type
-        model._name = name
-        model._reference = reference
-        return model
+    def __init__(self, type_, name, reference=''):
+        self._type = type_
+        self._name = name
+        self._reference = reference
 
     def __repr__(self):
         return '<Model(%s)>' % self._name
@@ -131,12 +126,6 @@ class Model(object):
     def __ne__(self, other):
         return not self == other
 
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self, memo=None):
-        return self
-
     @property
     def name(self):
         return self._name
@@ -148,6 +137,26 @@ class Model(object):
     @property
     def type(self):
         return self._type
+
+class RegisteredModel(_Model):
+
+    def __new__(cls, type_, name, reference=''):
+        if name in type_:
+            return type_._modelnames[name]
+        model = super(RegisteredModel, cls).__new__(cls)
+        model._type = type_
+        model._name = name
+        model._reference = reference
+        return model
+
+    def __init__(self, type_, name, reference=''):
+        pass # No need to do anything
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo=None):
+        return self
 
 #-------------------------------------------------------------------------------
 
@@ -307,6 +316,39 @@ MASS_ABSORPTION_COEFFICIENT.thinh_leroux1979 = \
     ('Thinh and Leroux' , 'Thinh and Leroux (1979)',)
 MASS_ABSORPTION_COEFFICIENT.llnl1989 = \
     ('LLNL Evaluated Photon Data Library', 'Lawrence Livermore National Laboratory. (1989). Tables and graphs of photon-interaction cross sections from 10 eV to 100 GeV derived from the LLNL evaluated photon data library EPDL. Livermore, CA: Cullen, D., Chen, M., Hubbell, J., Perkins, S., Plechaty, E., Rathkopf, J., & Scofield, J..')
+
+class UserDefinedMassAbsorptionCoefficientModel(_Model):
+
+    def __init__(self, base_model, reference=''):
+        _Model.__init__(self, MASS_ABSORPTION_COEFFICIENT,
+                        'user defined mass absorption coefficient',
+                        reference)
+
+        if base_model.type is not MASS_ABSORPTION_COEFFICIENT:
+            raise ValueError("Base model must be a MASS_ABSORPTION_COEFFICIENT model")
+        self._base_model = base_model
+        self._macs = {}
+
+    def add(self, absorber, energy_or_transition, mac_m2_kg):
+        """
+        Add a specified MAC value.
+        
+        :arg absorber: atomic number of absorber
+        :arg energy_or_transition: energy of x-ray (in eV) or x-ray transition
+        :arg mac_m2_kg: value of the mass absorption coefficient (m2/kg)
+        """
+        self._macs[(absorber, energy_or_transition)] = mac_m2_kg
+
+    @property
+    def base_model(self):
+        return self._base_model
+
+    @property
+    def defined_macs(self):
+        """
+        A copy of the defined MACs.
+        """
+        return self._macs.copy()
 
 #-------------------------------------------------------------------------------
 

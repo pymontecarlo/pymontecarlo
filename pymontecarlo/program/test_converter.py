@@ -11,7 +11,6 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import warnings
 
 # Third party modules.
 
@@ -25,11 +24,11 @@ from pymontecarlo.options.geometry import Substrate, Inclusion
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.detector import TimeDetector, ElectronFractionDetector
 from pymontecarlo.options.limit import ShowersLimit, TimeLimit
-from pymontecarlo.options.model import ELASTIC_CROSS_SECTION
+from pymontecarlo.options.model import \
+    (ELASTIC_CROSS_SECTION, MASS_ABSORPTION_COEFFICIENT,
+     UserDefinedMassAbsorptionCoefficientModel)
 
 # Globals and constants variables.
-
-warnings.simplefilter("always")
 
 class MockConverter(Converter):
 
@@ -39,8 +38,11 @@ class MockConverter(Converter):
     GEOMETRIES = [Substrate]
     DETECTORS = [TimeDetector]
     LIMITS = [ShowersLimit]
-    MODELS = {ELASTIC_CROSS_SECTION: [ELASTIC_CROSS_SECTION.rutherford]}
-    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION: ELASTIC_CROSS_SECTION.rutherford}
+    MODELS = {ELASTIC_CROSS_SECTION: [ELASTIC_CROSS_SECTION.rutherford],
+              MASS_ABSORPTION_COEFFICIENT: [MASS_ABSORPTION_COEFFICIENT.henke1993,
+                                            UserDefinedMassAbsorptionCoefficientModel]}
+    DEFAULT_MODELS = {ELASTIC_CROSS_SECTION: ELASTIC_CROSS_SECTION.rutherford,
+                      MASS_ABSORPTION_COEFFICIENT: MASS_ABSORPTION_COEFFICIENT.henke1993}
 
 class TestConverter(unittest.TestCase):
 
@@ -53,6 +55,7 @@ class TestConverter(unittest.TestCase):
         self.ops.detectors['det1'] = TimeDetector()
         self.ops.limits.add(ShowersLimit(5678))
         self.ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
+        self.ops.models.add(MASS_ABSORPTION_COEFFICIENT.henke1993)
 
         self.converter = MockConverter()
 
@@ -70,29 +73,23 @@ class TestConverter(unittest.TestCase):
 
         self.ops.beam = [PencilBeam(15e3), GaussianBeam(10e3, 100e-9)]
 
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
+        opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
         self.assertEqual(1, len(opss))
 
     def test_convert_geometry(self):
         self.ops.geometry = [Substrate(Material.pure(29)),
                              Inclusion(Material.pure(29), Material.pure(30), 10e-6)]
 
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
+        opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
         self.assertEqual(1, len(opss))
 
     def test_convert_detector(self):
         self.ops.detectors['det2'] = ElectronFractionDetector()
 
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
+        opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
         self.assertEqual(1, len(opss))
         self.assertEqual(2, len(self.ops.detectors))
         self.assertEqual(1, len(opss[0].detectors))
@@ -100,33 +97,29 @@ class TestConverter(unittest.TestCase):
     def test_convert_limit(self):
         self.ops.limits.add(TimeLimit(123))
 
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
+        opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
         self.assertEqual(1, len(opss))
         self.assertEqual(2, len(self.ops.limits))
         self.assertEqual(1, len(opss[0].limits))
 
     def test_convert_models(self):
         self.ops.models.add(ELASTIC_CROSS_SECTION.rutherford_relativistic)
+        self.ops.models.add(UserDefinedMassAbsorptionCoefficientModel(MASS_ABSORPTION_COEFFICIENT.henke1993))
 
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
+        opss = self.converter.convert(self.ops)
 
-        self.assertEqual(1, len(ws))
-        self.assertEqual(2, len(opss))
-        self.assertEqual(2, len(self.ops.models))
-        self.assertEqual(1, len(opss[0].models))
-        
+        self.assertEqual(4, len(opss))
+        self.assertEqual(4, len(self.ops.models))
+        self.assertEqual(2, len(opss[0].models))
+
         self.ops.models.add(ELASTIC_CROSS_SECTION.elsepa2005)
-        
-        with warnings.catch_warnings(record=True) as ws:
-            opss = self.converter.convert(self.ops)
 
-        self.assertEqual(3, len(opss))
-        self.assertEqual(3, len(self.ops.models))
-        self.assertEqual(1, len(opss[0].models))
+        opss = self.converter.convert(self.ops)
+
+        self.assertEqual(6, len(opss))
+        self.assertEqual(5, len(self.ops.models))
+        self.assertEqual(2, len(opss[0].models))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
