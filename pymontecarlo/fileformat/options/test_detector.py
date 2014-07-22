@@ -16,29 +16,31 @@ import xml.etree.ElementTree as etree
 from math import radians
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.fileformat.options.detector import \
     (_DelimitedDetectorXMLHandler, _ChannelsDetectorXMLHandler,
      _SpatialDetectorXMLHandler, _EnergyDetectorXMLHandler,
      _PolarAngularDetectorXMLHandler, _AzimuthalAngularDetectorXMLHandler,
+     _TransitionsDetectorXMLHandler,
      BackscatteredElectronEnergyDetectorXMLHandler, TransmittedElectronEnergyDetectorXMLHandler,
      BackscatteredElectronPolarAngularDetectorXMLHandler, TransmittedElectronPolarAngularDetectorXMLHandler,
      BackscatteredElectronAzimuthalAngularDetectorXMLHandler, TransmittedElectronAzimuthalAngularDetectorXMLHandler,
      BackscatteredElectronRadialDetectorXMLHandler,
      PhotonSpectrumDetectorXMLHandler, PhotonDepthDetectorXMLHandler,
-     PhiZDetectorXMLHandler, PhotonRadialDetectorXMLHandler, 
+     PhiZDetectorXMLHandler, PhotonRadialDetectorXMLHandler,
      PhotonEmissionMapDetectorXMLHandler, PhotonIntensityDetectorXMLHandler,
      TimeDetectorXMLHandler, ElectronFractionDetectorXMLHandler,
      ShowersStatisticsDetectorXMLHandler, TrajectoryDetectorXMLHandler)
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector, _EnergyDetector,
-     _PolarAngularDetector, _AzimuthalAngularDetector,
+     _PolarAngularDetector, _AzimuthalAngularDetector, _TransitionsDetector,
      BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector,
      PhotonRadialDetector, PhotonEmissionMapDetector, PhotonIntensityDetector,
      TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
      TrajectoryDetector)
@@ -299,6 +301,46 @@ class Test_AzimuthalAngularDetectorXMLHandler(unittest.TestCase):
 
         subelement = element.find('channels')
         self.assertEqual(50, int(subelement.text))
+
+class Test_TransitionsDetectorXMLHandler(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.h = _TransitionsDetectorXMLHandler()
+
+        self.t1 = Transition(24, siegbahn='Ka1')
+        self.obj = _TransitionsDetector([self.t1])
+
+        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
+        source = BytesIO(b'<mc:_transitionsDetector xmlns:mc="http://pymontecarlo.sf.net"><transitions><transition z="24" src="4" dest="1" /></transitions></mc:_transitionsDetector>')
+        self.element = etree.parse(source).getroot()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testcan_parse(self):
+        self.assertTrue(self.h.can_parse(self.element))
+
+    def testparse(self):
+        obj = self.h.parse(self.element)
+
+        self.assertEqual(1, len(obj.transitions))
+        self.assertEqual(self.t1, obj.transitions[0])
+
+    def testcan_convert(self):
+        self.assertTrue(self.h.can_convert(self.obj))
+
+    def testconvert(self):
+        element = self.h.convert(self.obj)
+
+        subelement = element.find('transitions')
+        self.assertEqual(1, len(subelement))
+
+        subsubelement = list(subelement)[0]
+        self.assertEqual(24, int(subsubelement.get('z')))
+        self.assertEqual(4, int(subsubelement.get('src')))
+        self.assertEqual(1, int(subsubelement.get('dest')))
 
 class TestBackscatteredElectronEnergyDetectorXMLHandler(unittest.TestCase):
 
@@ -631,7 +673,7 @@ class TestPhotonDepthDetectorXMLHandler(unittest.TestCase):
                                        (0, radians(360.0)), 1000)
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:photonDepthDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels></mc:photonDepthDetector>')
+        source = BytesIO(b'<mc:photonDepthDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels><transitions/></mc:photonDepthDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -677,7 +719,7 @@ class TestPhiZDetectorXMLHandler(unittest.TestCase):
                                    (0, radians(360.0)), 1000)
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:phiZDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels></mc:phiZDetector>')
+        source = BytesIO(b'<mc:phiZDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels><transitions/></mc:phiZDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -723,7 +765,7 @@ class TestPhotonRadialDetectorXMLHandler(unittest.TestCase):
                                         (0, radians(360.0)), 1000)
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:photonRadialDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels></mc:photonRadialDetector>')
+        source = BytesIO(b'<mc:photonRadialDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><channels>1000</channels><transitions/></mc:photonRadialDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):
@@ -823,7 +865,7 @@ class TestPhotonIntensityDetectorXMLHandler(unittest.TestCase):
                                            (0, radians(360.0)))
 
         etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
-        source = BytesIO(b'<mc:photonIntensityDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /></mc:photonIntensityDetector>')
+        source = BytesIO(b'<mc:photonIntensityDetector xmlns:mc="http://pymontecarlo.sf.net"><elevation lower="0.6108652381980153" upper="0.7853981633974483" /><azimuth lower="0.0" upper="6.283185307179586" /><transitions/></mc:photonIntensityDetector>')
         self.element = etree.parse(source).getroot()
 
     def tearDown(self):

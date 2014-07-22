@@ -14,14 +14,15 @@ import logging
 from math import radians
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _EnergyDetector, _SpatialDetector,
-     _PolarAngularDetector, _AzimuthalAngularDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     _PolarAngularDetector, _AzimuthalAngularDetector, _TransitionsDetector,
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector,
      PhotonRadialDetector, PhotonEmissionMapDetector,
     TimeDetector, ElectronFractionDetector, TrajectoryDetector,
     ShowersStatisticsDetector)
@@ -237,6 +238,30 @@ class Test_AzimuthalAngularDetector(TestCase):
     def test__repr__(self):
         self.assertTrue(repr(self.d).startswith('<_AzimuthalAngularDetector('))
 
+class Test_TransitionsDetector(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.t1 = Transition(24, siegbahn='Ka1')
+        self.t2 = Transition(24, siegbahn='La1')
+        self.d = _TransitionsDetector([self.t1, self.t2])
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertEqual(2, len(self.d.transitions))
+        self.assertIs(self.t1, self.d.transitions[0])
+        self.assertIs(self.t2, self.d.transitions[1])
+
+    def test__init__(self):
+        d = _TransitionsDetector()
+        self.assertEqual(0, len(d.transitions))
+
+    def test__repr__(self):
+        self.assertTrue(repr(self.d).startswith('<_TransitionsDetector('))
+
 class TestPhotonSpectrumDetector(TestCase):
 
     def setUp(self):
@@ -281,7 +306,7 @@ class TestPhotonDepthDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhotonDepthDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
+        expected = '<PhotonDepthDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000, transitions=all)>'
         self.assertEqual(expected, repr(self.d))
 
 class TestPhiZDetector(TestCase):
@@ -303,7 +328,7 @@ class TestPhiZDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhiZDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
+        expected = '<PhiZDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000, transitions=all)>'
         self.assertEqual(expected, repr(self.d))
 
 class TestPhotonRadialDetector(TestCase):
@@ -325,7 +350,7 @@ class TestPhotonRadialDetector(TestCase):
         self.assertEqual(1000, self.d.channels)
 
     def test__repr__(self):
-        expected = '<PhotonRadialDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000)>'
+        expected = '<PhotonRadialDetector(elevation=35.0 to 45.0 deg, azimuth=0.0 to 360.0 deg, channels=1000, transitions=all)>'
         self.assertEqual(expected, repr(self.d))
 
 class TestPhotonEmissionMapDetector(TestCase):

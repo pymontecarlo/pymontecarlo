@@ -42,11 +42,13 @@ import itertools
 # Third party modules.
 import numpy as np
 
+from pyxray.transition import Transition
+
 # Local modules.
 from pymontecarlo.util.human import camelcase_to_words
 from pymontecarlo.util.parameter import \
-    (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
-     range_validator)
+    (ParameterizedMetaclass, ParameterizedMutableSequence,
+     Parameter, AngleParameter, UnitParameter, range_validator)
 
 # Globals and constants variables.
 HALFPI = math.pi / 2.0
@@ -285,6 +287,23 @@ class _AzimuthalAngularDetector(_AngularDetector):
 class _PhotonDelimitedDetector(_DelimitedDetector):
     pass
 
+class _TransitionSequence(ParameterizedMutableSequence):
+    pass
+
+class _TransitionsDetector(_Detector):
+
+    transitions = Parameter(_TransitionSequence, required=False,
+                            doc="Transitions")
+
+    def __init__(self, transitions=None):
+        # Hack because numpy converts MutableSequence to empty array
+        detectors = np.ndarray((1,), np.dtype(_TransitionSequence))
+        detectors[0] = _TransitionSequence(Transition)
+        self.__dict__['transitions'] = detectors
+        if transitions is None:
+            transitions = []
+        self.transitions.extend(transitions)
+
 class BackscatteredElectronEnergyDetector(_EnergyDetector):
     pass
 
@@ -333,80 +352,95 @@ class PhotonSpectrumDetector(_PhotonDelimitedDetector, _EnergyDetector):
              self.limits_eV.lower, self.limits_eV.upper,
              self.channels)
 
-class PhotonDepthDetector(_PhotonDelimitedDetector, _ChannelsDetector):
+class PhotonDepthDetector(_PhotonDelimitedDetector,
+                          _ChannelsDetector,
+                          _TransitionsDetector):
 
-    def __init__(self, elevation_rad, azimuth_rad, channels):
+    def __init__(self, elevation_rad, azimuth_rad, channels, transitions=None):
         _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+        _TransitionsDetector.__init__(self, transitions)
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad, channels):
+    def annular(cls, takeoffangle_rad, opening_rad, channels, transitions=None):
         tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
-        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels, transitions)
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s, transitions=%s)>' % \
             (self.__class__.__name__,
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
     def __str__(self):
-        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s, transitions=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
-class PhiZDetector(_PhotonDelimitedDetector, _ChannelsDetector):
+class PhiZDetector(_PhotonDelimitedDetector,
+                   _ChannelsDetector,
+                   _TransitionsDetector):
 
-    def __init__(self, elevation_rad, azimuth_rad, channels):
+    def __init__(self, elevation_rad, azimuth_rad, channels, transitions=None):
         _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+        _TransitionsDetector.__init__(self, transitions)
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad, channels):
+    def annular(cls, takeoffangle_rad, opening_rad, channels, transitions=None):
         tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
-        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels, transitions)
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s, transitions=%s)>' % \
             (self.__class__.__name__,
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
     def __str__(self):
-        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s, transitions=%s)' % \
             (camelcase_to_words(self.__class__.__name__),
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
-class PhotonRadialDetector(_PhotonDelimitedDetector, _ChannelsDetector):
+class PhotonRadialDetector(_PhotonDelimitedDetector,
+                           _ChannelsDetector,
+                           _TransitionsDetector):
 
-    def __init__(self, elevation_rad, azimuth_rad, channels):
+    def __init__(self, elevation_rad, azimuth_rad, channels, transitions=None):
         _ChannelsDetector.__init__(self, channels)
         _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+        _TransitionsDetector.__init__(self, transitions)
 
     @classmethod
-    def annular(cls, takeoffangle_rad, opening_rad, channels):
+    def annular(cls, takeoffangle_rad, opening_rad, channels, transitions=None):
         tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
-        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, channels, transitions)
 
     def __repr__(self):
-        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s)>' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, channels=%s, transitions=%s)>' % \
             (self.__class__.__name__,
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
     def __str__(self):
-        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s)' % \
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, channels=%s, transitions=%s)' % \
             (self.__class__.__name__,
              self.elevation_deg.lower, self.elevation_deg.upper,
              self.azimuth_deg.lower, self.azimuth_deg.upper,
-             self.channels)
+             self.channels, transitions)
 
 class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
 
@@ -440,8 +474,32 @@ class PhotonEmissionMapDetector(_PhotonDelimitedDetector):
              self.azimuth_deg.lower, self.azimuth_deg.upper,
              self.xbins, self.ybins, self.zbins)
 
-class PhotonIntensityDetector(_PhotonDelimitedDetector):
-    pass
+class PhotonIntensityDetector(_PhotonDelimitedDetector, _TransitionsDetector):
+
+    def __init__(self, elevation_rad, azimuth_rad, transitions=None):
+        _PhotonDelimitedDetector.__init__(self, elevation_rad, azimuth_rad)
+        _TransitionsDetector.__init__(self, transitions)
+
+    @classmethod
+    def annular(cls, takeoffangle_rad, opening_rad, transitions=None):
+        tmpdet = _PhotonDelimitedDetector.annular(takeoffangle_rad, opening_rad)
+        return cls(tmpdet.elevation_rad, tmpdet.azimuth_rad, transitions)
+
+    def __repr__(self):
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return '<%s(elevation=%s to %s deg, azimuth=%s to %s deg, transitions=%s)>' % \
+            (self.__class__.__name__,
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             transitions)
+
+    def __str__(self):
+        transitions = 'all' if not self.transitions else str(self.transitions)
+        return u'%s (elevation=%s to %s \u00b0, azimuth=%s to %s \u00b0, transitions=%s)' % \
+            (camelcase_to_words(self.__class__.__name__),
+             self.elevation_deg.lower, self.elevation_deg.upper,
+             self.azimuth_deg.lower, self.azimuth_deg.upper,
+             transitions)
 
 class TimeDetector(_Detector):
     """

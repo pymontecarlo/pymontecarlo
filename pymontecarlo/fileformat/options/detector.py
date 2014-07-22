@@ -22,6 +22,7 @@ __license__ = "GPL v3"
 import xml.etree.ElementTree as etree
 
 # Third party modules.
+from pyxray.transition import Transition
 
 # Local modules.
 from pymontecarlo.fileformat.xmlhandler import _XMLHandler
@@ -29,11 +30,12 @@ from pymontecarlo.fileformat.xmlhandler import _XMLHandler
 from pymontecarlo.options.detector import \
     (_DelimitedDetector, _ChannelsDetector, _SpatialDetector, _EnergyDetector,
      _AngularDetector, _PolarAngularDetector, _AzimuthalAngularDetector,
+     _TransitionsDetector,
      BackscatteredElectronEnergyDetector, TransmittedElectronEnergyDetector,
      BackscatteredElectronPolarAngularDetector, TransmittedElectronPolarAngularDetector,
      BackscatteredElectronAzimuthalAngularDetector, TransmittedElectronAzimuthalAngularDetector,
      BackscatteredElectronRadialDetector,
-     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector, 
+     PhotonSpectrumDetector, PhotonDepthDetector, PhiZDetector,
      PhotonRadialDetector, PhotonEmissionMapDetector, PhotonIntensityDetector,
      TimeDetector, ElectronFractionDetector, ShowersStatisticsDetector,
      TrajectoryDetector)
@@ -233,6 +235,36 @@ class _AzimuthalAngularDetectorXMLHandler(_AngularDetectorXMLHandler):
         det = _AngularDetectorXMLHandler.parse(self, element)
         return _AzimuthalAngularDetector(det.channels, det.limits_rad)
 
+class _TransitionsDetectorXMLHandler(_XMLHandler):
+
+    TAG = '{http://pymontecarlo.sf.net}_transitionsDetector'
+    CLASS = _TransitionsDetector
+
+    def parse(self, element):
+        transitions = []
+
+        subelement = element.find('transitions')
+        if subelement is not None:
+            for subsubelement in subelement:
+                z = int(self._parse_numerical_parameter(subsubelement, 'z'))
+                src = int(self._parse_numerical_parameter(subsubelement, 'src'))
+                dest = int(self._parse_numerical_parameter(subsubelement, 'dest'))
+                transitions.append(Transition(z, src, dest))
+
+        return _TransitionsDetector(transitions)
+
+    def convert(self, obj):
+        element = _XMLHandler.convert(self, obj)
+
+        subelement = etree.SubElement(element, 'transitions')
+        for transition in obj.transitions:
+            subsubelement = etree.SubElement(subelement, 'transition')
+            subsubelement.set('z', str(transition.z))
+            subsubelement.set('src', str(transition.src.index))
+            subsubelement.set('dest', str(transition.dest.index))
+
+        return element
+
 class BackscatteredElectronEnergyDetectorXMLHandler(_EnergyDetectorXMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}backscatteredElectronEnergyDetector'
@@ -315,7 +347,8 @@ class PhotonSpectrumDetectorXMLHandler(_DelimitedDetectorXMLHandler,
         return element1
 
 class PhotonDepthDetectorXMLHandler(_DelimitedDetectorXMLHandler,
-                                    _ChannelsDetectorXMLHandler):
+                                    _ChannelsDetectorXMLHandler,
+                                    _TransitionsDetectorXMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}photonDepthDetector'
     CLASS = PhotonDepthDetector
@@ -323,17 +356,21 @@ class PhotonDepthDetectorXMLHandler(_DelimitedDetectorXMLHandler,
     def parse(self, element):
         det1 = _DelimitedDetectorXMLHandler.parse(self, element)
         det2 = _ChannelsDetectorXMLHandler.parse(self, element)
+        det3 = _TransitionsDetectorXMLHandler.parse(self, element)
         return PhotonDepthDetector(det1.elevation_rad, det1.azimuth_rad,
-                                   det2.channels)
+                                   det2.channels, det3.transitions)
 
     def convert(self, obj):
         element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
         element2 = _ChannelsDetectorXMLHandler.convert(self, obj)
         element1.extend(element2)
+        element3 = _TransitionsDetectorXMLHandler.convert(self, obj)
+        element1.extend(element3)
         return element1
 
 class PhiZDetectorXMLHandler(_DelimitedDetectorXMLHandler,
-                                _ChannelsDetectorXMLHandler):
+                             _ChannelsDetectorXMLHandler,
+                             _TransitionsDetectorXMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}phiZDetector'
     CLASS = PhiZDetector
@@ -341,16 +378,21 @@ class PhiZDetectorXMLHandler(_DelimitedDetectorXMLHandler,
     def parse(self, element):
         det1 = _DelimitedDetectorXMLHandler.parse(self, element)
         det2 = _ChannelsDetectorXMLHandler.parse(self, element)
-        return PhiZDetector(det1.elevation_rad, det1.azimuth_rad, det2.channels)
+        det3 = _TransitionsDetectorXMLHandler.parse(self, element)
+        return PhiZDetector(det1.elevation_rad, det1.azimuth_rad,
+                            det2.channels, det3.transitions)
 
     def convert(self, obj):
         element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
         element2 = _ChannelsDetectorXMLHandler.convert(self, obj)
         element1.extend(element2)
+        element3 = _TransitionsDetectorXMLHandler.convert(self, obj)
+        element1.extend(element3)
         return element1
 
 class PhotonRadialDetectorXMLHandler(_DelimitedDetectorXMLHandler,
-                                    _ChannelsDetectorXMLHandler):
+                                     _ChannelsDetectorXMLHandler,
+                                     _TransitionsDetectorXMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}photonRadialDetector'
     CLASS = PhotonRadialDetector
@@ -358,13 +400,16 @@ class PhotonRadialDetectorXMLHandler(_DelimitedDetectorXMLHandler,
     def parse(self, element):
         det1 = _DelimitedDetectorXMLHandler.parse(self, element)
         det2 = _ChannelsDetectorXMLHandler.parse(self, element)
+        det3 = _TransitionsDetectorXMLHandler.parse(self, element)
         return PhotonRadialDetector(det1.elevation_rad, det1.azimuth_rad,
-                                    det2.channels)
+                                    det2.channels, det3.transitions)
 
     def convert(self, obj):
         element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
         element2 = _ChannelsDetectorXMLHandler.convert(self, obj)
         element1.extend(element2)
+        element3 = _TransitionsDetectorXMLHandler.convert(self, obj)
+        element1.extend(element3)
         return element1
 
 class PhotonEmissionMapDetectorXMLHandler(_DelimitedDetectorXMLHandler):
@@ -407,14 +452,23 @@ class PhotonEmissionMapDetectorXMLHandler(_DelimitedDetectorXMLHandler):
 
         return element
 
-class PhotonIntensityDetectorXMLHandler(_DelimitedDetectorXMLHandler):
+class PhotonIntensityDetectorXMLHandler(_DelimitedDetectorXMLHandler,
+                                        _TransitionsDetectorXMLHandler):
 
     TAG = '{http://pymontecarlo.sf.net}photonIntensityDetector'
     CLASS = PhotonIntensityDetector
 
     def parse(self, element):
-        det = _DelimitedDetectorXMLHandler.parse(self, element)
-        return PhotonIntensityDetector(det.elevation_rad, det.azimuth_rad)
+        det1 = _DelimitedDetectorXMLHandler.parse(self, element)
+        det2 = _TransitionsDetectorXMLHandler.parse(self, element)
+        return PhotonIntensityDetector(det1.elevation_rad, det1.azimuth_rad,
+                                       det2.transitions)
+
+    def convert(self, obj):
+        element1 = _DelimitedDetectorXMLHandler.convert(self, obj)
+        element2 = _TransitionsDetectorXMLHandler.convert(self, obj)
+        element1.extend(element2)
+        return element1
 
 class TimeDetectorXMLHandler(_XMLHandler):
 
