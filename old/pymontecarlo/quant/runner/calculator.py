@@ -26,14 +26,14 @@ import math
 import pyxray.element_properties as ep
 
 # Local modules.
-from QuantitativeAnalysisTools.FluorescenceFactor import FluorescenceFactor
+from pyQuantitativeAnalysisTools.FluorescenceFactor import FluorescenceFactor
 
-from SpecimenTools.Element import Element
-from SpecimenTools.SampleRegion import SampleRegion
+from pySpecimenTools.Element import Element
+from pySpecimenTools.SampleRegion import SampleRegion
 
 # Globals and constants variables.
-from QuantitativeAnalysisTools.FluorescenceModelName import MODEL_CHARACTERISTIC_DEMERS2007
-from QuantitativeAnalysisTools.FluorescenceModelName import MODEL_BREMSSTRAHLUNG_REED1997
+from pyQuantitativeAnalysisTools.FluorescenceModelName import MODEL_CHARACTERISTIC_DEMERS2007
+from pyQuantitativeAnalysisTools.FluorescenceModelName import MODEL_BREMSSTRAHLUNG_REED1997
 
 class _Calculator(object):
     def __init__(self, measurement, stdintensities, **kwargs):
