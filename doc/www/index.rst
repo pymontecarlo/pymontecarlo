@@ -45,8 +45,10 @@ It is licensed under the GNU GPL v3.
 Authors
 #######
 
-* Philippe T. Pinard
-* Hendrix Demers
+* Philippe T. Pinard (RWTH Aachen University, Aachen, Germany)
+* Hendrix Demers (McGill University, Montreal, Canada)
+* Raynald Gauvin (McGill University, Montreal, Canada)
+* Silvia Richter (RWTH Aachen University, Aachen, Germany)
 
 
 .. bibliography::
