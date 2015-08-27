@@ -6,6 +6,8 @@ syntax: glob
 
 pymontecarlo/testdata/settings.cfg
 
+doc/build/
+doc/www/code/
 syntax: regexp
 ^lib
 ^dist
