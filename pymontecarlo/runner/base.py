@@ -136,6 +136,14 @@ class _Runner(_Monitorable):
                 return False
         return True
 
+    def is_finished(self):
+        unfinished = 0
+        with self._queue_options.all_tasks_done:
+            unfinished += self._queue_options.unfinished_tasks
+        with self._queue_results.all_tasks_done:
+            unfinished += self._queue_results.unfinished_tasks
+        return unfinished == 0
+
     def join(self):
         """
         Blocks until all options have been simulated.
