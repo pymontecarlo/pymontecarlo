@@ -157,6 +157,48 @@ class GaussianBeam(PencilBeam):
         return '<GaussianBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
             (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
 
+class GaussianExpTailBeam(GaussianBeam):
+
+    skirt_threshold = Parameter(np.float, range_validator(0.0, 1.0),
+                                doc='switching point between Gaussian and exponential beam')
+    skirt_factor = Parameter(np.float, range_validator(0.0),
+                                doc='a multiplier of the beam diameter 1sigma')
+
+    def __init__(self, energy_eV, diameter_m,
+                 skirt_threshold, skirt_factor,
+                 particle=ELECTRON,
+                 origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
+        """
+        Creates a new Gaussian beam with an exponential tail.
+        A Gaussian beam is a two dimensional beam where the particles are
+        distributed following a 2D-Gaussian distribution.
+
+        :arg energy_eV: initial energy of the particle(s)
+        :arg diameter_m: diameter of the beam.
+            The diameter corresponds to the full width at half maximum (FWHM) of
+            a two dimensional Gaussian distribution.
+        :arg particle: type of particles (see :mod:`particle`). [default: ``ELECTRON``]
+        :type particle: :class:`_Particle`:
+        :arg origin_m: initial location of the particle(s).
+            Location saved as a tuple of length 3 for the x, y and z
+            spatial coordinates. [default: ``(0, 0, 1)``]
+        :arg direction: direction of the particle(s).
+            Direction is represented by a tuple of length 3 for the x, y and
+            z coordinates. [default: ``(0, 0, -1)``]
+        :arg aperture_rad: angular aperture of the electron beam
+            [default: ``0.0``]
+        """
+        GaussianBeam.__init__(self, energy_eV, diameter_m,
+                              particle, origin_m, direction, aperture_rad)
+
+        self.skirt_threshold = skirt_threshold
+        self.skirt_factor = skirt_factor
+
+    def __repr__(self):
+        #FIXME: __repr__ of GaussianExpTailBeam
+        return '<GaussianExpTailBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
+            (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
+
 def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
     """
     Returns the direction of the beam after being tilted by an *angle* along

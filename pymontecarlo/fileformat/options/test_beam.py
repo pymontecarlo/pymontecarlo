@@ -19,8 +19,8 @@ import xml.etree.ElementTree as etree
 
 # Local modules.
 from pymontecarlo.fileformat.options.beam import \
-    PencilBeamXMLHandler, GaussianBeamXMLHandler
-from pymontecarlo.options.beam import PencilBeam, GaussianBeam
+    PencilBeamXMLHandler, GaussianBeamXMLHandler, GaussianExpTailBeamXMLHandler
+from pymontecarlo.options.beam import PencilBeam, GaussianBeam, GaussianExpTailBeam
 from pymontecarlo.options.particle import POSITRON
 
 # Globals and constants variables.
@@ -114,6 +114,42 @@ class TestGaussianBeamXMLHandler(unittest.TestCase):
         element = self.h.convert(self.obj)
 
         self.assertEqual('123.456', element.get('diameter'))
+
+class TestGaussianExpTailBeamXMLHandler(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+
+        self.h = GaussianExpTailBeamXMLHandler()
+
+        self.obj = GaussianExpTailBeam(15e3, 123.456, 0.1, 1.0,
+                                       POSITRON, (1.0, 2.0, 3.0),
+                                       (4.0, 5.0, 6.0), math.radians(3.5))
+
+        etree.register_namespace('mc', 'http://pymontecarlo.sf.net')
+        source = BytesIO(b'<mc:gaussianExpTailBeam xmlns:mc="http://pymontecarlo.sf.net" aperture="0.061086523819801536" diameter="123.456" energy="15000.0" particle="positron" skirtThreshold="0.1" skirtFactor="1.0"><origin x="1.0" y="2" z="3" /><direction u="4" v="5" w="6" /></mc:gaussianExpTailBeam>')
+        self.element = etree.parse(source).getroot()
+
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+
+    def testcan_parse(self):
+        self.assertTrue(self.h.can_parse(self.element))
+
+    def testparse(self):
+        obj = self.h.parse(self.element)
+
+        self.assertAlmostEqual(0.1, obj.skirt_threshold, 4)
+        self.assertAlmostEqual(1.0, obj.skirt_factor, 4)
+
+    def testcan_convert(self):
+        self.assertTrue(self.h.can_convert(self.obj))
+
+    def testconvert(self):
+        element = self.h.convert(self.obj)
+
+        self.assertEqual('0.1', element.get('skirtThreshold'))
+        self.assertEqual('1.0', element.get('skirtFactor'))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

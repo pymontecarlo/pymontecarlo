@@ -19,7 +19,7 @@ import math
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.beam import \
-    (PencilBeam, GaussianBeam, tilt_beam,
+    (PencilBeam, GaussianBeam, GaussianExpTailBeam, tilt_beam,
      convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm)
 from pymontecarlo.options.particle import POSITRON
 
@@ -128,6 +128,24 @@ class TestGaussianBeam(TestCase):
 
     def testskeleton(self):
         self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)
+
+class TestGaussianExpTailBeam(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.beam = GaussianExpTailBeam(15e3, 123.456,
+                                        0.1, 1.0,
+                                        POSITRON,
+                                        (1.0, 2.0, 3.0), (4.0, 5.0, 6.0),
+                                        math.radians(3.5))
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def testskeleton(self):
+        self.assertAlmostEqual(0.1, self.beam.skirt_threshold, 4)
+        self.assertAlmostEqual(1.0, self.beam.skirt_factor, 4)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

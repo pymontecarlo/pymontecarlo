@@ -54,7 +54,8 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                     ['Material = pymontecarlo.fileformat.options.material:MaterialXMLHandler'],
                 'pymontecarlo.fileformat.options.beam':
                     ['PencilBeam = pymontecarlo.fileformat.options.beam:PencilBeamXMLHandler',
-                     'GaussianBeam = pymontecarlo.fileformat.options.beam:GaussianBeamXMLHandler', ],
+                     'GaussianBeam = pymontecarlo.fileformat.options.beam:GaussianBeamXMLHandler',
+                     'GaussianExpTailBeam = pymontecarlo.fileformat.options.beam:GaussianExpTailBeamXMLHandler', ],
                 'pymontecarlo.fileformat.options.geometry':
                     ['Substrate = pymontecarlo.fileformat.options.geometry:SubstrateXMLHandler',
                      'Inclusion = pymontecarlo.fileformat.options.geometry:InclusionXMLHandler',

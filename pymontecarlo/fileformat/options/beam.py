@@ -26,7 +26,7 @@ import xml.etree.ElementTree as etree
 # Local modules.
 from pymontecarlo.fileformat.xmlhandler import _XMLHandler
 
-from pymontecarlo.options.beam import PencilBeam, GaussianBeam
+from pymontecarlo.options.beam import PencilBeam, GaussianBeam, GaussianExpTailBeam
 from pymontecarlo.options.particle import PARTICLES
 
 # Globals and constants variables.
@@ -99,5 +99,29 @@ class GaussianBeamXMLHandler(PencilBeamXMLHandler):
         element = PencilBeamXMLHandler.convert(self, obj)
 
         self._convert_numerical_parameter(element, obj.diameter_m, 'diameter')
+
+        return element
+
+class GaussianExpTailBeamXMLHandler(PencilBeamXMLHandler):
+
+    TAG = '{http://pymontecarlo.sf.net}gaussianExpTailBeam'
+    CLASS = GaussianExpTailBeam
+
+    def parse(self, element):
+        beam = GaussianBeamXMLHandler.parse(self, element)
+
+        skirt_threshold = self._parse_numerical_parameter(element, 'skirtThreshold')
+        skirt_factor = self._parse_numerical_parameter(element, 'skirtFactor')
+
+        return GaussianExpTailBeam(beam.energy_eV, beam.diameter_m,
+                                   skirt_threshold, skirt_factor,
+                                   beam.particle,
+                                   beam.origin_m, beam.direction, beam.aperture_rad)
+
+    def convert(self, obj):
+        element = GaussianBeamXMLHandler.convert(self, obj)
+
+        self._convert_numerical_parameter(element, obj.skirt_threshold, 'skirtThreshold')
+        self._convert_numerical_parameter(element, obj.skirt_factor, 'skirtFactor')
 
         return element
