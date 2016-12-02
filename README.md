@@ -1,4 +1,4 @@
-#pymontecarlo
+#pyMonteCarlo
 
 [![PyPI](https://img.shields.io/pypi/v/pymontecarlo.svg)]()
 [![TravisCI](https://travis-ci.org/pymontecarlo/pymontecarlo.svg?branch=master)]()
