@@ -1,0 +1,10 @@
+setuptools
+nose
+docutils
+jinja2
+sphinx
+pybtex
+pyparsing
+numpy
+h5py
+pyxray==0.1

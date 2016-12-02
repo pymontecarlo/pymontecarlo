@@ -306,10 +306,10 @@ class TestParameter(unittest.TestCase):
         d['b'] = 6.0
         self.obj.param1 = d
 
-        self.assertEqual(len(self.obj.__parameters__) + 2,
+        self.assertEqual(len(self.obj.__parameters__),
                          len(list(iter_parameters(self.obj))))
-        self.assertEqual(4, len(list(iter_values(self.obj))))
-        self.assertEqual(3, len(expand(self.obj)))
+        self.assertEqual(2, len(list(iter_values(self.obj))))
+        self.assertEqual(2, len(expand(self.obj)))
 
     def testparametrized_mutable_set(self):
         s = ParameterizedMutableSet()
