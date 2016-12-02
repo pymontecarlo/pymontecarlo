@@ -1,8 +1,8 @@
 #pymontecarlo
 
-[![PyPI](https://badge.fury.io/py/pymontecarlo.svg)](http://badge.fury.io/py/pymontecarlo)
-[![TravisCI](https://travis-ci.org/pymontecarlo/pymontecarlo.svg?branch=master)](https://travis-ci.org/pymontecarlo/pymontecarlo)
-[![Codecov](https://codecov.io/github/pymontecarlo/pymontecarlo/coverage.svg?branch=master)](https://codecov.io/github/pymontecarlo/pymontecarlo?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/pymontecarlo.svg)]()
+[![TravisCI](https://travis-ci.org/pymontecarlo/pymontecarlo.svg?branch=master)
+[![Codecov](https://codecov.io/github/pymontecarlo/pymontecarlo/coverage.svg?branch=master)
 
 **pyMonteCarlo** is a programming interface to run identical simulations using 
 different Monte Carlo programs. The interface was designed to have common input 
@@ -16,7 +16,7 @@ common output format where results are expressed in the same units.
 
 ##Authors
 
-- [Philippe T. Pinard](@ppinard) (High Wycombe, United Kingdom)
-- [Hendrix Demers](@drix00) (McGill University, Montreal, Canada)
+- [Philippe T. Pinard](https://github.com/ppinard) (High Wycombe, United Kingdom)
+- [Hendrix Demers](https://github.com/drix00) (McGill University, Montreal, Canada)
 - Raynald Gauvin (McGill University, Montreal, Canada)
-- [Silvia Richter](@silrichter) (RWTH Aachen University, Aachen, Germany)
+- [Silvia Richter](https://github.com/silrichter) (RWTH Aachen University, Aachen, Germany)
