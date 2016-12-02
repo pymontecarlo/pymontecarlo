@@ -18,7 +18,7 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 from pyparsing import \
-    Word, nestedExpr, keepOriginalText, removeQuotes, alphas, nums
+    Word, nestedExpr, originalTextFor, removeQuotes, alphas, nums
 
 # Third party modules.
 
@@ -64,8 +64,7 @@ CLOSED_WORD = set(PREPOSITIONS) | set(CONJUNTIONS) | set(PRONONS) | \
               set(ARTICLES) | set(NUMBERS) | set(COPULA)
 
 bibtexChars = alphas + nums + "\\\\.-':,"
-bracedWord = nestedExpr("{", "}")
-bracedWord.setParseAction(keepOriginalText)
+bracedWord = originalTextFor(nestedExpr("{", "}"))
 bracedWord.addParseAction(removeQuotes)
 WORDS = Word(bibtexChars) | bracedWord('braced')
 
