@@ -18,5 +18,5 @@ common output format where results are expressed in the same units.
 
 - [Philippe T. Pinard](https://github.com/ppinard) (High Wycombe, United Kingdom)
 - [Hendrix Demers](https://github.com/drix00) (McGill University, Montreal, Canada)
-- Raynald Gauvin (McGill University, Montreal, Canada)
-- [Silvia Richter](https://github.com/silrichter) (RWTH Aachen University, Aachen, Germany)
+- [Raynald Gauvin](http://www.memrg.com) (McGill University, Montreal, Canada)
+- [Silvia Richter](https://github.com/silrichter) ([RWTH Aachen University](http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm), Aachen, Germany)
