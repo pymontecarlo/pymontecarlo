@@ -8,7 +8,6 @@
 
 __author__ = "Philippe T. Pinard"
 __email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
 __copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
 __license__ = "GPL v3"
 
@@ -18,3 +17,6 @@ __license__ = "GPL v3"
 
 __import__('pkg_resources').declare_namespace(__name__)
 
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

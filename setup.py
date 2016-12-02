@@ -9,8 +9,6 @@ __license__ = "GPL v3"
 
 # Standard library modules.
 import os
-import codecs
-import re
 
 # Third party modules.
 from setuptools import setup, find_packages
@@ -19,30 +17,10 @@ from setuptools import setup, find_packages
 from pymontecarlo.util.dist.command.clean import clean
 from pymontecarlo.util.dist.command.check import check
 
+import versioneer
+
 # Globals and constants variables.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-
-def find_version(*file_paths):
-    """
-    Read the version number from a source file.
-
-    .. note::
-
-       Why read it, and not import?
-       see https://groups.google.com/d/topic/pypa-dev/0PkjVpcxTzQ/discussion
-    """
-    # Open in Latin-1 so that we avoid encoding errors.
-    # Use codecs.open for Python 2 compatibility
-    with codecs.open(os.path.join(BASEDIR, *file_paths), 'r', 'latin1') as f:
-        version_file = f.read()
-
-    # The version line must have the form
-    # __version__ = 'ver'
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
 
 packages = find_packages(exclude=('pymontecarlo.util.dist*',))
 namespace_packages = ['pymontecarlo',
@@ -108,8 +86,12 @@ entry_points = {'pymontecarlo.fileformat.options.material':
                      'BackscatteredElectronRadialResult = pymontecarlo.fileformat.results.result:BackscatteredElectronRadialResultHDF5Handler', ],
                 }
 
+CMDCLASS = versioneer.get_cmdclass()
+CMDCLASS['clean'] = clean
+CMDCLASS["check"] = check
+
 setup(name="pyMonteCarlo",
-      version=find_version('pymontecarlo', '__init__.py'),
+      version=versioneer.get_version(),
       url='http://pymontecarlo.bitbucket.org',
       description="Python interface for Monte Carlo simulation programs",
       author="Hendrix Demers and Philippe T. Pinard",
@@ -127,7 +109,7 @@ setup(name="pyMonteCarlo",
       packages=packages,
       namespace_packages=namespace_packages,
 
-      cmdclass={'clean': clean, "check": check},
+      cmdclass=CMDCLASS,
 
       setup_requires=['nose'],
       install_requires=requirements,
