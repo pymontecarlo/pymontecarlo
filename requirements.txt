@@ -1,0 +1,6 @@
+setuptools
+nose
+pyparsing
+numpy
+h5py
+pyxray==0.1
