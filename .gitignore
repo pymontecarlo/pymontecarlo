@@ -1,5 +1,6 @@
 pymontecarlo/testdata/settings.cfg
 *.bak
+sketch/*.png
 
 #### joe made this: https://goel.io/joe
 
