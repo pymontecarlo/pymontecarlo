@@ -19,15 +19,15 @@ __license__ = "GPL v3"
 
 # Local modules.
 
-from pymontecarlo.options.beam import *
-from pymontecarlo.options.collision import *
-from pymontecarlo.options.detector import *
-from pymontecarlo.options.geometry import *
-from pymontecarlo.options.limit import *
-from pymontecarlo.options.material import *
-from pymontecarlo.options.model import *
-from pymontecarlo.options.options import *
-from pymontecarlo.options.particle import *
+#from pymontecarlo.options.beam import *
+#from pymontecarlo.options.collision import *
+#from pymontecarlo.options.detector import *
+#from pymontecarlo.options.geometry import *
+#from pymontecarlo.options.limit import *
+#from pymontecarlo.options.material import *
+#from pymontecarlo.options.model import *
+#from pymontecarlo.options.options import *
+#from pymontecarlo.options.particle import *
 
 # Globals and constants variables.
 
