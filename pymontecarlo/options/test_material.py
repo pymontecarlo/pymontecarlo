@@ -100,6 +100,11 @@ class TestMaterialBuilder(TestCase):
         compositions = self.b.build()
         self.assertEqual(5 * 3 * 5, len(compositions))
 
+    def testno_element(self):
+        b = MaterialBuilder(26)
+        self.assertEqual(1, len(b))
+        self.assertEqual(1, len(b.build()))
+
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
