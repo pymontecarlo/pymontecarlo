@@ -11,12 +11,15 @@ __all__ = ['VerticalLayers',
 # Standard library modules.
 import abc
 import math
+import itertools
+import functools
+import operator
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.util.cbook import MultiplierAttribute, Builder
 
 # Globals and constants variables.
 
@@ -48,6 +51,39 @@ class _Sample(metaclass=abc.ABCMeta):
     tilt_deg = MultiplierAttribute('tilt_rad', 180.0 / math.pi)
     rotation_deg = MultiplierAttribute('rotation_rad', 180.0 / math.pi)
 
+class _SampleBuilder(Builder):
+
+    def __init__(self):
+        self.tilts_rad = set()
+        self.rotations_rad = set()
+
+    def __len__(self):
+        tilts_rad, rotations_rad = self._get_combinations()
+        return len(tilts_rad) * len(rotations_rad)
+
+    def _get_combinations(self):
+        tilts_rad = self.tilts_rad
+        rotations_rad = self.rotations_rad
+
+        if not tilts_rad:
+            tilts_rad = [0.0]
+        if not rotations_rad:
+            rotations_rad = [0.0]
+
+        return tilts_rad, rotations_rad
+
+    def add_tilt_rad(self, tilt_rad):
+        self.tilts_rad.add(tilt_rad)
+
+    def add_tilt_deg(self, tilt_deg):
+        self.add_tilt_deg(math.radians(tilt_deg))
+
+    def add_rotation_rad(self, rotation_rad):
+        self.rotations_rad.add(rotation_rad)
+
+    def add_rotation_deg(self, rotation_deg):
+        self.add_rotation_rad(math.radians(rotation_deg))
+
 class Substrate(_Sample):
 
     def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
@@ -65,6 +101,24 @@ class Substrate(_Sample):
 
     def get_materials(self):
         return (self.material,)
+
+class SubstrateBuilder(_SampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.materials = []
+
+    def __len__(self):
+        it = [super().__len__(), len(self.materials)]
+        return functools.reduce(operator.mul, it)
+
+    def add_material(self, material):
+        if material not in self.materials:
+            self.materials.append(material)
+
+    def build(self):
+        product = itertools.product(self.materials, *self._get_combinations())
+        return [Substrate(*args) for args in product]
 
 class Inclusion(_Sample):
 
@@ -88,6 +142,38 @@ class Inclusion(_Sample):
 
     def get_materials(self):
         return (self.substrate_material, self.inclusion_material)
+
+class InclusionBuilder(_SampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.substrate_materials = []
+        self.inclusion_materials = []
+        self.inclusion_diameters_m = set()
+
+    def __len__(self):
+        it = [super().__len__(),
+              len(self.substrate_materials), len(self.inclusion_materials),
+              len(self.inclusion_diameters_m)]
+        return functools.reduce(operator.mul, it)
+
+    def add_substrate_material(self, material):
+        if material not in self.substrate_materials:
+            self.substrate_materials.append(material)
+
+    def add_inclusion_material(self, material):
+        if material not in self.inclusion_materials:
+            self.inclusion_materials.append(material)
+
+    def add_inclusion_diameter_m(self, diameter_m):
+        self.inclusion_diameters_m.add(diameter_m)
+
+    def build(self):
+        product = itertools.product(self.substrate_materials,
+                                    self.inclusion_materials,
+                                    self.inclusion_diameters_m,
+                                    *self._get_combinations())
+        return [Inclusion(*args) for args in product]
 
 class Layer(object):
 
@@ -237,3 +323,26 @@ class Sphere(_Sample):
     def get_materials(self):
         return (self.material,)
 
+class SphereBuilder(_SampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.materials = []
+        self.diameters_m = set()
+
+    def __len__(self):
+        it = [super().__len__(), len(self.materials), len(self.diameters_m)]
+        return functools.reduce(operator.mul, it)
+
+    def add_material(self, material):
+        if material not in self.materials:
+            self.materials.append(material)
+
+    def add_diameter_m(self, diameter_m):
+        self.diameters_m.add(diameter_m)
+
+    def build(self):
+        product = itertools.product(self.materials,
+                                    self.diameters_m,
+                                    *self._get_combinations())
+        return [Sphere(*args) for args in product]

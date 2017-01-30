@@ -12,6 +12,7 @@ __license__ = "GPL v3"
 import unittest
 import logging
 import math
+import itertools
 
 # Third party modules.
 
@@ -19,8 +20,12 @@ import math
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.sample import \
-    (_Sample, Substrate, Inclusion, HorizontalLayers, VerticalLayers,
-     Sphere)
+    (_Sample, _SampleBuilder,
+     Substrate, SubstrateBuilder,
+     Inclusion, InclusionBuilder,
+     HorizontalLayers,
+     VerticalLayers,
+     Sphere, SphereBuilder)
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -37,15 +42,20 @@ class SampleMock(_Sample):
     def get_materials(self):
         return []
 
+class SampleBuilderMock(_SampleBuilder):
+
+    def build(self):
+        samples = []
+        for tilt_rad, rotation_rad in itertools.product(*self._get_combinations()):
+            samples.append(SampleMock(tilt_rad, rotation_rad))
+        return samples
+
 class Test_Sample(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s = SampleMock(1.1, 2.2)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertAlmostEqual(1.1, self.s.tilt_rad, 4)
@@ -57,15 +67,46 @@ class Test_Sample(TestCase):
         materials = self.s.get_materials()
         self.assertEqual(0, len(materials))
 
+class Test_SampleBuilder(TestCase):
+
+    def testbuild(self):
+        b = SampleBuilderMock()
+        samples = b.build()
+        self.assertEqual(1, len(samples))
+        self.assertEqual(1, len(b))
+
+        sample = samples[0]
+        self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
+        self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+
+    def testbuild2(self):
+        b = SampleBuilderMock()
+        b.add_tilt_rad(1.1)
+        b.add_rotation_rad(2.2)
+
+        samples = b.build()
+        self.assertEqual(1, len(samples))
+
+        sample = samples[0]
+        self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
+        self.assertAlmostEqual(2.2, sample.rotation_rad, 4)
+
+    def testbuild3(self):
+        b = SampleBuilderMock()
+        b.add_tilt_rad(1.1)
+        b.add_tilt_rad(1.1)
+        b.add_rotation_rad(2.2)
+        b.add_rotation_rad(2.3)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+
 class TestSubstrate(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s = Substrate(COPPER)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.material)
@@ -74,15 +115,78 @@ class TestSubstrate(TestCase):
         materials = self.s.get_materials()
         self.assertEqual(1, len(materials))
 
+class TestSubstrateBuilder(TestCase):
+
+    def testbuild(self):
+        b = SubstrateBuilder()
+        b.add_material(COPPER)
+        b.add_material(ZINC)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+        self.assertEqual(2, len(b))
+
+        for sample in samples:
+            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
+            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+
+    def testbuild2(self):
+        b = SubstrateBuilder()
+        b.add_material(COPPER)
+        b.add_material(ZINC)
+        b.add_tilt_rad(0.0)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+        self.assertEqual(2, len(b))
+
+        for sample in samples:
+            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
+            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+
+    def testbuild3(self):
+        b = SubstrateBuilder()
+        b.add_material(COPPER)
+        b.add_material(ZINC)
+        b.add_tilt_rad(1.1)
+        b.add_rotation_rad(2.2)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+        self.assertEqual(2, len(b))
+
+        for sample in samples:
+            self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
+            self.assertAlmostEqual(2.2, sample.rotation_rad, 4)
+
+    def testbuild4(self):
+        b = SubstrateBuilder()
+        b.add_material(COPPER)
+        b.add_material(ZINC)
+        b.add_tilt_rad(1.1)
+        b.add_rotation_rad(2.2)
+        b.add_rotation_rad(2.3)
+
+        samples = b.build()
+        self.assertEqual(4, len(samples))
+        self.assertEqual(4, len(b))
+
+    def testbuild5(self):
+        b = SubstrateBuilder()
+        b.add_tilt_rad(1.1)
+        b.add_rotation_rad(2.2)
+        b.add_rotation_rad(2.3)
+
+        samples = b.build()
+        self.assertEqual(0, len(samples))
+        self.assertEqual(0, len(b))
+
 class TestInclusion(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s = Inclusion(COPPER, ZINC, 123.456)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.substrate_material)
@@ -93,10 +197,28 @@ class TestInclusion(TestCase):
         materials = self.s.get_materials()
         self.assertEqual(2, len(materials))
 
+class TestInclusionBuilder(TestCase):
+
+    def testbuild(self):
+        b = InclusionBuilder()
+        b.add_substrate_material(COPPER)
+        b.add_substrate_material(ZINC)
+        b.add_inclusion_material(GALLIUM)
+        b.add_inclusion_diameter_m(1.0)
+        b.add_inclusion_diameter_m(2.0)
+
+        samples = b.build()
+        self.assertEqual(4, len(samples))
+        self.assertEqual(4, len(b))
+
+        for sample in samples:
+            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
+            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+
 class TestHorizontalLayers(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s1 = HorizontalLayers(COPPER)
         self.s2 = HorizontalLayers(None) # No substrate
@@ -111,9 +233,6 @@ class TestHorizontalLayers(TestCase):
         self.s3.add_layer(ZINC, 123.456)
         self.s3.add_layer(GALLIUM, 456.789)
         self.s3.add_layer(VACUUM, 456.123)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         # Horizontal layers 1
@@ -159,7 +278,7 @@ class TestHorizontalLayers(TestCase):
 class TestVerticalLayers(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s1 = VerticalLayers(COPPER, ZINC)
         self.s1.add_layer(GALLIUM, 500.0)
@@ -171,9 +290,6 @@ class TestVerticalLayers(TestCase):
         self.s3 = VerticalLayers(COPPER, ZINC)
         self.s3.add_layer(GALLIUM, 500.0)
         self.s3.depth_m = 400.0
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         # Vertical layers 1
@@ -208,12 +324,9 @@ class TestVerticalLayers(TestCase):
 class TestSphere(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.s = Sphere(COPPER, 123.456)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.material)
@@ -221,6 +334,22 @@ class TestSphere(TestCase):
 
     def testget_materials(self):
         self.assertEqual(1, len(self.s.get_materials()))
+
+class TestSphereBuilder(TestCase):
+
+    def testbuild(self):
+        b = SphereBuilder()
+        b.add_material(COPPER)
+        b.add_material(ZINC)
+        b.add_diameter_m(1.0)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+        self.assertEqual(2, len(b))
+
+        for sample in samples:
+            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
+            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
