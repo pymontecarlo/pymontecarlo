@@ -33,5 +33,5 @@ class MultiplierAttribute(object):
     def __set__(self, instance, value):
         setattr(instance, self.attrname, value / self.multiplier)
 
-    def __del__(self, instance):
+    def __delete__(self, instance):
         delattr(instance, self.attrname)
