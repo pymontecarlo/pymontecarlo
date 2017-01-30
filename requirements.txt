@@ -4,7 +4,7 @@ docutils
 jinja2
 sphinx
 pybtex
-pyparsing
+pyparsing>=2.0.0
 numpy
 h5py
-pyxray==0.1
+pyxray>=1.0.1
