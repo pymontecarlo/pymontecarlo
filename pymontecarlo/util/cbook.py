@@ -11,8 +11,9 @@ import abc
 
 class Builder(metaclass=abc.ABCMeta):
 
+    @abc.abstractmethod
     def __len__(self):
-        return len(self.build())
+        raise NotImplementedError
 
     @abc.abstractmethod
     def build(self):

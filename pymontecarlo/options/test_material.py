@@ -58,6 +58,17 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(8960.0, self.m.density_kg_per_m3, 4)
         self.assertAlmostEqual(8.960, self.m.density_g_per_cm3, 4)
 
+    def testpure(self):
+        m = Material.pure(29)
+
+        self.assertEqual('Copper', str(m))
+
+        self.assertIn(29, m.composition)
+        self.assertAlmostEqual(1.0, m.composition[29], 4)
+
+        self.assertAlmostEqual(8.96, m.density_kg_per_m3 / 1000.0, 4)
+        self.assertAlmostEqual(8.96, m.density_g_per_cm3, 4)
+
 class TestMaterialBuilder(TestCase):
 
     def setUp(self):
@@ -72,20 +83,12 @@ class TestMaterialBuilder(TestCase):
     def tearDown(self):
         TestCase.tearDown(self)
 
+    def test__len__(self):
+        self.assertEqual(5 * 3 * 5, len(self.b))
+
     def testbuild(self):
         compositions = self.b.build()
         self.assertEqual(5 * 3 * 5, len(compositions))
-
-#    def testpure(self):
-#        m = Material.pure(29)
-#
-#        self.assertEqual('Copper', str(m))
-#
-#        self.assertIn(29, m.composition)
-#        self.assertAlmostEqual(1.0, m.composition[29], 4)
-#
-#        self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
-#        self.assertAlmostEqual(8.96, m.density_g_cm3, 4)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

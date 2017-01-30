@@ -130,6 +130,12 @@ class MaterialBuilder(Builder):
         self.balance_z = balance_z
         self.elements = {}
 
+    def __len__(self):
+        count = 1
+        for wfs in self.elements.values():
+            count *= len(wfs)
+        return count
+
     def add_element(self, z, *wf):
         self.elements[z] = np.ravel(wf)
         return self
