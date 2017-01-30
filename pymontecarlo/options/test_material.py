@@ -69,6 +69,16 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(8.96, m.density_kg_per_m3 / 1000.0, 4)
         self.assertAlmostEqual(8.96, m.density_g_per_cm3, 4)
 
+    def test__eq__(self):
+        m2 = Material('Pure Cu', {29: 1.0}, 8960.0)
+        self.assertEqual(m2, self.m)
+
+        m2 = Material('Pure Cu', {29: 1.0}, 8961.0)
+        self.assertNotEqual(m2, self.m)
+
+        m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
+        self.assertNotEqual(m2, self.m)
+
 class TestMaterialBuilder(TestCase):
 
     def setUp(self):

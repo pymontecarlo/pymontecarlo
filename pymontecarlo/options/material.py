@@ -80,15 +80,6 @@ class Material(object):
             self.composition == other.composition and \
             self.density_kg_per_m3 == other.density_kg_per_m3
 
-    def __ne__(self, other):
-        return not self == other
-
-    def __hash__(self):
-        return hash((self.__class__,
-                     self.name,
-                     tuple(sorted(self.composition.items(), key=itemgetter(0))),
-                     self.density_kg_per_m3))
-
     density_g_per_cm3 = MultiplierAttribute('density_kg_per_m3', 1e-3)
 
 class _Vacuum(Material):
