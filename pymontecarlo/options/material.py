@@ -2,10 +2,6 @@
 Material definition
 """
 
-__all__ = ['Material',
-           'VACUUM',
-           'MaterialBuilder']
-
 # Standard library modules.
 from operator import itemgetter
 import itertools
