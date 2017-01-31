@@ -2,12 +2,6 @@
 Sample geometries.
 """
 
-__all__ = ['VerticalLayers',
-           'Inclusion',
-           'HorizontalLayers',
-           'Sphere',
-           'Substrate']
-
 # Standard library modules.
 import abc
 import math
@@ -16,6 +10,7 @@ import functools
 import operator
 
 # Third party modules.
+import more_itertools
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
@@ -41,10 +36,19 @@ class _Sample(metaclass=abc.ABCMeta):
         self.tilt_rad = tilt_rad
         self.rotation_rad = rotation_rad
 
-    @abc.abstractmethod
-    def get_materials(self):
+    def _cleanup_materials(self, *materials):
+        materials = list(materials)
+
+        if VACUUM in materials:
+            materials.remove(VACUUM)
+
+        return tuple(more_itertools.unique_everseen(materials))
+
+    @abc.abstractproperty
+    def materials(self):
         """
         Returns a :class:`tuple` of all materials inside this geometry.
+        :obj:`VACUUM` should not be included in the materials.
         """
         raise NotImplementedError
 
@@ -99,8 +103,9 @@ class Substrate(_Sample):
         return '<{0:s}(material={1:s})>' \
             .format(self.__class__.__name__, self.material)
 
-    def get_materials(self):
-        return (self.material,)
+    @property
+    def materials(self):
+        return self._cleanup_materials(self.material)
 
 class SubstrateBuilder(_SampleBuilder):
 
@@ -140,8 +145,10 @@ class Inclusion(_Sample):
             .format(self.__class__.__name__, self.substrate.material,
                     self.inclusion.material, self.inclusion.diameter_m)
 
-    def get_materials(self):
-        return (self.substrate_material, self.inclusion_material)
+    @property
+    def materials(self):
+        return self._cleanup_materials(self.substrate_material,
+                                       self.inclusion_material)
 
 class InclusionBuilder(_SampleBuilder):
 
@@ -247,10 +254,10 @@ class HorizontalLayers(_Sample):
         self.layers.append(layer)
         return layer
 
-    def get_materials(self):
-        materials = [self.substrate_material]
-        materials += [layer.material for layer in self.layers]
-        return tuple(materials)
+    @property
+    def materials(self):
+        layer_materials = [layer.material for layer in self.layers]
+        return self._cleanup_materials(self.substrate_material, *layer_materials)
 
 class VerticalLayers(_Sample):
 
@@ -296,10 +303,12 @@ class VerticalLayers(_Sample):
         self.layers.append(layer)
         return layer
 
-    def get_materials(self):
-        materials = [self.left_material, self.right_material]
-        materials += [layer.material for layer in self.layers]
-        return tuple(materials)
+    @property
+    def materials(self):
+        layer_materials = [layer.material for layer in self.layers]
+        return self._cleanup_materials(self.left_material,
+                                       self.right_material,
+                                       *layer_materials)
 
 class Sphere(_Sample):
 
@@ -320,8 +329,9 @@ class Sphere(_Sample):
                     .format(self.__class__.__name, self.body.material,
                             self.diameter_m)
 
-    def get_materials(self):
-        return (self.material,)
+    @property
+    def materials(self):
+        return self._cleanup_materials(self.material)
 
 class SphereBuilder(_SampleBuilder):
 

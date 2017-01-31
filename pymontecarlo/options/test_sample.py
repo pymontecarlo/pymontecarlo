@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 """ """
 
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
-
 # Standard library modules.
 import unittest
 import logging
@@ -39,7 +32,8 @@ class SampleMock(_Sample):
     def __init__(self, tilt_rad, rotation_rad):
         super().__init__(tilt_rad, rotation_rad)
 
-    def get_materials(self):
+    @property
+    def materials(self):
         return []
 
 class SampleBuilderMock(_SampleBuilder):
@@ -64,7 +58,7 @@ class Test_Sample(TestCase):
         self.assertAlmostEqual(math.degrees(2.2), self.s.rotation_deg, 4)
 
     def testget_materials(self):
-        materials = self.s.get_materials()
+        materials = self.s.materials
         self.assertEqual(0, len(materials))
 
 class Test_SampleBuilder(TestCase):
@@ -112,7 +106,7 @@ class TestSubstrate(TestCase):
         self.assertEqual(COPPER, self.s.material)
 
     def testget_materials(self):
-        materials = self.s.get_materials()
+        materials = self.s.materials
         self.assertEqual(1, len(materials))
 
 class TestSubstrateBuilder(TestCase):
@@ -194,7 +188,7 @@ class TestInclusion(TestCase):
         self.assertAlmostEqual(123.456, self.s.inclusion_diameter_m, 4)
 
     def testget_materials(self):
-        materials = self.s.get_materials()
+        materials = self.s.materials
         self.assertEqual(2, len(materials))
 
 class TestInclusionBuilder(TestCase):
@@ -271,9 +265,9 @@ class TestHorizontalLayers(TestCase):
         self.assertFalse(self.s1.has_substrate())
 
     def testget_materials(self):
-        self.assertEqual(3, len(self.s1.get_materials()))
-        self.assertEqual(3, len(self.s2.get_materials()))
-        self.assertEqual(4, len(self.s3.get_materials()))
+        self.assertEqual(3, len(self.s1.materials))
+        self.assertEqual(2, len(self.s2.materials))
+        self.assertEqual(3, len(self.s3.materials))
 
 class TestVerticalLayers(TestCase):
 
@@ -317,9 +311,9 @@ class TestVerticalLayers(TestCase):
         self.assertAlmostEqual(500.0, self.s3.layers[0].thickness_m, 4)
 
     def testget_materials(self):
-        self.assertEqual(3, len(self.s1.get_materials()))
-        self.assertEqual(4, len(self.s2.get_materials()))
-        self.assertEqual(3, len(self.s3.get_materials()))
+        self.assertEqual(3, len(self.s1.materials))
+        self.assertEqual(3, len(self.s2.materials))
+        self.assertEqual(3, len(self.s3.materials))
 
 class TestSphere(TestCase):
 
@@ -333,7 +327,7 @@ class TestSphere(TestCase):
         self.assertAlmostEqual(123.456, self.s.diameter_m, 4)
 
     def testget_materials(self):
-        self.assertEqual(1, len(self.s.get_materials()))
+        self.assertEqual(1, len(self.s.materials))
 
 class TestSphereBuilder(TestCase):
 
