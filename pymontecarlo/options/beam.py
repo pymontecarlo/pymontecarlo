@@ -1,228 +1,133 @@
-#!/usr/bin/env python
 """
-================================================================================
-:mod:`beam` -- Parameters of the electron beam
-================================================================================
-
-.. module:: beam
-   :synopsis: Parameters of the electron beam
-
-.. inheritance-diagram:: pymontecarlo.input.beam
-
+Incident beam.
 """
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
-
-__all__ = ['PencilBeam',
-            'GaussianBeam',
-            'tilt_beam',
-            'convert_diameter_fwhm_to_sigma',
-            'convert_diameter_sigma_to_fwhm']
 
 # Standard library modules.
 import math
 
 # Third party modules.
-import numpy as np
 
 # Local modules.
-from pymontecarlo.util.parameter import \
-    (ParameterizedMetaclass, Parameter, AngleParameter, UnitParameter,
-     range_validator, enum_validator)
-from pymontecarlo.options.particle import _Particle
+from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.options.particle import ELECTRON
 
 # Globals and constants variables.
-from pymontecarlo.options.particle import ELECTRON, PARTICLES
 
-def _direction_validator(value):
-    if value[0] ** 2 + value[1] ** 2 + value[2] ** 2 == 0:
-        raise ValueError('Direction cannot be a null vector')
+class _Beam(object):
+    """
+    Base beam.
+    """
 
-class _Beam(object, metaclass=ParameterizedMetaclass):
-    pass
+    def __init__(self, energy_eV, particle=ELECTRON):
+        """
+        :arg energy_eV: initial energy of the particle(s)
+        :type energy_eV: :class:`float`
+        
+        :arg particle: type of particles [default: :data:`.ELECTRON`]
+        :type particle: :mod:`.particle`
+        """
+        self.energy_eV = energy_eV
+        self.particle = particle
+
+    def __eq__(self, other):
+        return self.energy_eV == other.energy_eV and \
+            self.particle == other.particle
+
+    energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
 class PencilBeam(_Beam):
 
-    energy = UnitParameter('eV', range_validator(0.0),
-                           doc="Initial energy of the particle(s)")
-    particle = Parameter(_Particle, enum_validator(PARTICLES),
-                         doc="Type of particles (see :mod:`.particle`)")
-    origin = UnitParameter('m', fields=('x', 'y', 'z'),
-                           doc="Initial location of the particle(s)")
-    direction = Parameter(np.float, _direction_validator, ('u', 'v', 'w'),
-                          doc="Direction of the particle(s).")
-    aperture = AngleParameter(range_validator(0.0, math.pi / 2),
-                              doc="Angular aperture of the electron beam")
-
     def __init__(self, energy_eV, particle=ELECTRON,
-                 origin_m=(0, 0, 1), direction=(0, 0, -1),
-                 aperture_rad=0.0):
+                 x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
         """
         Creates a new pencil beam.
         A pencil beam is a one dimensional beam (no width).
 
         :arg energy_eV: initial energy of the particle(s)
-        :arg particle: type of particles (see :mod:`.particle`).
-            [default: :data:`.ELECTRON`]
-        :type particle: :class:`_Particle`:
-        :arg origin_m: initial location of the particle(s).
-            Location saved as a tuple of length 3 for the x, y and z
-            spatial coordinates. [default: ``(0, 0, 1)``]
-        :arg direction: direction of the particle(s).
-            Direction is represented by a tuple of length 3 for the x, y and
-            z coordinates. [default: ``(0, 0, -1)``]
-        :arg aperture_rad: angular aperture of the electron beam
-            [default: ``0.0``]
+        :type energy_eV: :class:`float`
+        
+        :arg particle: type of particles [default: :data:`.ELECTRON`]
+        :type particle: :mod:`.particle`
+        
+        :arg x0_m: initial x position
+        :type x0_m: :class:`float`
+        
+        :arg y0_m: initial y position
+        :type y0_m: :class:`float`
+        
+        :arg polar_rad: angle of the beam with respect to the positive z-axis.
+            By default, the beam points downwards, along the negative z-axis.
+        :type polar_rad: :class:`float`
+        
+        :arg azimuth_rad: angle of the beam with respect to the positive x-axis 
+            in the x-y plane. 
+        :type azimuth_rad: :class:`float`
         """
-        self.energy_eV = energy_eV
-        self.particle = particle
-        self.origin_m = origin_m
-        self.direction = direction
-        self.aperture_rad = aperture_rad
+        super().__init__(energy_eV, particle)
+
+        self.x0_m = x0_m
+        self.y0_m = y0_m
+        self.polar_rad = polar_rad
+        self.azimuth_rad = azimuth_rad
 
     def __repr__(self):
-        return '<PencilBeam(particle=%s, energy=%s eV, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.particle, self.energy_eV, self.origin_m, self.direction, self.aperture_rad)
+        return '<{classname}({particle}, {energy_eV:g} eV, ({x0_m:g}, {y0_m:g}) m, {polar_rad:g} rad, {azimuth_rad:g} rad)>' \
+            .format(classname=self.__class__.__name__, **self.__dict__)
 
-    @property
-    def direction_polar_rad(self):
-        """
-        Angle of the beam with respect to the positive z-axis. (read-only)
-        """
-        directions = np.array(self.direction, ndmin=1)
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.x0_m == other.x0_m and \
+            self.y0_m == other.y0_m and \
+            self.polar_rad == other.polar_rad and \
+            self.azimuth_rad == other.azimuth_rad
 
-        angles = []
-        for direction in directions:
-            norm = np.linalg.norm((direction.u, direction.v, direction.w))
-            angles.append(math.acos(direction.w / norm))
-
-        if len(angles) == 1:
-            return angles[0]
-        else:
-            return angles
-
-    @property
-    def direction_azimuth_rad(self):
-        """
-        Angle of the beam with respect to the positive x-axis in the x-y plane.  (read-only)
-        """
-        directions = np.array(self.direction, ndmin=1)
-
-        angles = []
-        for direction in directions:
-            angles.append(math.atan2(direction.v, direction.u))
-
-        if len(angles) == 1:
-            return angles[0]
-        else:
-            return angles
+    polar_deg = MultiplierAttribute('polar_rad', 180.0 / math.pi)
+    azimuth_deg = MultiplierAttribute('azimuth_rad', 180.0 / math.pi)
 
 class GaussianBeam(PencilBeam):
 
-    diameter = UnitParameter("m", range_validator(0.0),
-                             doc="Diameter of this electron beam equal to the full width at half maximum of a 2D-Gaussian distribution")
-
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
-                 origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
+                 x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
         """
         Creates a new Gaussian beam.
         A Gaussian beam is a two dimensional beam where the particles are
         distributed following a 2D-Gaussian distribution.
 
         :arg energy_eV: initial energy of the particle(s)
+        :type energy_eV: :class:`float`
+        
         :arg diameter_m: diameter of the beam.
             The diameter corresponds to the full width at half maximum (FWHM) of
             a two dimensional Gaussian distribution.
-        :arg particle: type of particles (see :mod:`particle`). [default: ``ELECTRON``]
-        :type particle: :class:`_Particle`:
-        :arg origin_m: initial location of the particle(s).
-            Location saved as a tuple of length 3 for the x, y and z
-            spatial coordinates. [default: ``(0, 0, 1)``]
-        :arg direction: direction of the particle(s).
-            Direction is represented by a tuple of length 3 for the x, y and
-            z coordinates. [default: ``(0, 0, -1)``]
-        :arg aperture_rad: angular aperture of the electron beam
-            [default: ``0.0``]
+        :type diameter_m: :class:`float`
+        
+        :arg particle: type of particles [default: :data:`.ELECTRON`]
+        :type particle: :mod:`.particle`
+        
+        :arg x0_m: initial x position
+        :type x0_m: :class:`float`
+        
+        :arg y0_m: initial y position
+        :type y0_m: :class:`float`
+        
+        :arg polar_rad: angle of the beam with respect to the positive z-axis.
+            By default, the beam points downwards, along the negative z-axis.
+        :type polar_rad: :class:`float`
+        
+        :arg azimuth_rad: angle of the beam with respect to the positive x-axis 
+            in the x-y plane. 
+        :type azimuth_rad: :class:`float`
         """
-        PencilBeam.__init__(self, energy_eV, particle, origin_m, direction, aperture_rad)
+        super().__init__(energy_eV, particle, x0_m, y0_m, polar_rad, azimuth_rad)
 
         self.diameter_m = diameter_m
 
     def __repr__(self):
-        return '<GaussianBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
+        return '<{classname}({particle}, {energy_eV:g} eV, {diameter_m:g} m, ({x0_m:g}, {y0_m:g}) m, {polar_rad:g} rad, {azimuth_rad:g} rad)>' \
+            .format(classname=self.__class__.__name__, **self.__dict__)
 
-class GaussianExpTailBeam(GaussianBeam):
-
-    skirt_threshold = Parameter(np.float, range_validator(0.0, 1.0),
-                                doc='switching point between Gaussian and exponential beam')
-    skirt_factor = Parameter(np.float, range_validator(0.0),
-                                doc='a multiplier of the beam diameter 1sigma')
-
-    def __init__(self, energy_eV, diameter_m,
-                 skirt_threshold, skirt_factor,
-                 particle=ELECTRON,
-                 origin_m=(0, 0, 1), direction=(0, 0, -1), aperture_rad=0.0):
-        """
-        Creates a new Gaussian beam with an exponential tail.
-        A Gaussian beam is a two dimensional beam where the particles are
-        distributed following a 2D-Gaussian distribution.
-
-        :arg energy_eV: initial energy of the particle(s)
-        :arg diameter_m: diameter of the beam.
-            The diameter corresponds to the full width at half maximum (FWHM) of
-            a two dimensional Gaussian distribution.
-        :arg particle: type of particles (see :mod:`particle`). [default: ``ELECTRON``]
-        :type particle: :class:`_Particle`:
-        :arg origin_m: initial location of the particle(s).
-            Location saved as a tuple of length 3 for the x, y and z
-            spatial coordinates. [default: ``(0, 0, 1)``]
-        :arg direction: direction of the particle(s).
-            Direction is represented by a tuple of length 3 for the x, y and
-            z coordinates. [default: ``(0, 0, -1)``]
-        :arg aperture_rad: angular aperture of the electron beam
-            [default: ``0.0``]
-        """
-        GaussianBeam.__init__(self, energy_eV, diameter_m,
-                              particle, origin_m, direction, aperture_rad)
-
-        self.skirt_threshold = skirt_threshold
-        self.skirt_factor = skirt_factor
-
-    def __repr__(self):
-        #FIXME: __repr__ of GaussianExpTailBeam
-        return '<GaussianExpTailBeam(particle=%s, energy=%s eV, diameter=%s m, origin=%s m, direction=%s, aperture=%s rad)>' % \
-            (self.particle, self.energy_eV, self.diameter_m, self.origin_m, self.direction, self.aperture_rad)
-
-def tilt_beam(angle_rad, axis='y', direction=(0, 0, -1)):
-    """
-    Returns the direction of the beam after being tilted by an *angle* along
-    the specified *axis* of rotation from its original *direction*.
-
-    :arg angle_rad: angle of rotation in radians
-    :arg axis: axis of rotation, either ``x``, ``y``, ``z``
-    :arg direction: original direction of the beam
-
-    :return: a 3-length :class:`tuple`
-    """
-    c = math.cos(angle_rad)
-    s = math.sin(angle_rad)
-
-    if axis.lower() == 'x':
-        r = np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
-    elif axis.lower() == 'y':
-        r = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
-    elif axis.lower() == 'z':
-        r = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-    else:
-        raise ValueError("Unknown axis: %s" % axis)
-
-    return np.dot(r, direction)
+    def __eq__(self, other):
+        return super().__eq__(other) and self.diameter_m == other.diameter_m
 
 def convert_diameter_fwhm_to_sigma(diameter):
     """

@@ -19,38 +19,13 @@ import math
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.beam import \
-    (PencilBeam, GaussianBeam, GaussianExpTailBeam, tilt_beam,
+    (PencilBeam, GaussianBeam,
      convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm)
-from pymontecarlo.options.particle import POSITRON
+from pymontecarlo.options.particle import POSITRON, ELECTRON
 
 # Globals and constants variables.
 
-class TestModule(TestCase):
-
-    def setUp(self):
-        TestCase.setUp(self)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertTrue(True)
-
-    def testtilt_beam(self):
-        expecteds = [0.0, 1.0, 0.0]
-        actuals = tilt_beam(math.pi / 2, axis='x', direction=(0, 0, -1))
-        for expected, actual in zip(expecteds, actuals):
-            self.assertAlmostEqual(expected, actual, 4)
-
-        expecteds = [-1.0, 0.0, 0.0]
-        actuals = tilt_beam(math.pi / 2, axis='y', direction=(0, 0, -1))
-        for expected, actual in zip(expecteds, actuals):
-            self.assertAlmostEqual(expected, actual, 4)
-
-        expecteds = [0.0, 0.0, -1.0]
-        actuals = tilt_beam(math.pi / 2, axis='z', direction=(0, 0, -1))
-        for expected, actual in zip(expecteds, actuals):
-            self.assertAlmostEqual(expected, actual, 4)
+class Testbeam(TestCase):
 
     def testconvert_diameter_fwhm_to_sigma(self):
         self.assertAlmostEqual(0.849321, convert_diameter_fwhm_to_sigma(1.0), 4)
@@ -61,14 +36,9 @@ class TestModule(TestCase):
 class TestPencilBeam(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
-        self.beam = PencilBeam(15e3, POSITRON,
-                               (1.0, 2.0, 3.0), (4.0, 5.0, 6.0),
-                               math.radians(3.5))
-
-    def tearDown(self):
-        TestCase.tearDown(self)
+        self.beam = PencilBeam(15e3, POSITRON, 1.0, 2.0, 0.1, 0.2)
 
     def testskeleton(self):
         self.assertEqual(POSITRON, self.beam.particle)
@@ -76,76 +46,77 @@ class TestPencilBeam(TestCase):
         self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
         self.assertAlmostEqual(15.0, self.beam.energy_keV, 4)
 
-        self.assertAlmostEqual(1.0, self.beam.origin_m.x, 4)
-        self.assertAlmostEqual(2.0, self.beam.origin_m.y, 4)
-        self.assertAlmostEqual(3.0, self.beam.origin_m.z, 4)
-        self.assertAlmostEqual(100.0, self.beam.origin_cm.x, 4)
-        self.assertAlmostEqual(200.0, self.beam.origin_cm.y, 4)
-        self.assertAlmostEqual(300.0, self.beam.origin_cm.z, 4)
+        self.assertAlmostEqual(1.0, self.beam.x0_m, 4)
+        self.assertAlmostEqual(2.0, self.beam.y0_m, 4)
 
-        self.assertAlmostEqual(4.0, self.beam.direction.u, 4)
-        self.assertAlmostEqual(5.0, self.beam.direction.v, 4)
-        self.assertAlmostEqual(6.0, self.beam.direction.w, 4)
+        self.assertAlmostEqual(0.1, self.beam.polar_rad, 4)
+        self.assertAlmostEqual(math.degrees(0.1), self.beam.polar_deg, 4)
 
-        self.assertAlmostEqual(0.81789, self.beam.direction_polar_rad, 4)
-        self.assertAlmostEqual(0.89606, self.beam.direction_azimuth_rad, 4)
+        self.assertAlmostEqual(0.2, self.beam.azimuth_rad, 4)
+        self.assertAlmostEqual(math.degrees(0.2), self.beam.azimuth_deg, 4)
 
-        self.assertAlmostEqual(math.radians(3.5), self.beam.aperture_rad, 4)
+    def test__repr__(self):
+        expected = '<PencilBeam(positron, 15000 eV, (1, 2) m, 0.1 rad, 0.2 rad)>'
+        self.assertEqual(expected, repr(self.beam))
 
-    def testdirection_polar_rad(self):
-        beam = PencilBeam(15e3, direction=(0, 0, -1))
-        self.assertAlmostEqual(3.14159, beam.direction_polar_rad, 4)
+    def test__eq__(self):
+        beam = PencilBeam(15e3, POSITRON, 1.0, 2.0, 0.1, 0.2)
+        self.assertEqual(beam, self.beam)
 
-        beam = PencilBeam(15e3, direction=(0, 0, 1))
-        self.assertAlmostEqual(0.0, beam.direction_polar_rad, 4)
+    def test__ne__(self):
+        beam = PencilBeam(14e3, POSITRON, 1.0, 2.0, 0.1, 0.2)
+        self.assertNotEqual(beam, self.beam)
 
-        beam = PencilBeam(15e3, direction=[(0, 0, -1), (0, 0, 1)])
-        self.assertAlmostEqual(3.14159, beam.direction_polar_rad[0], 4)
-        self.assertAlmostEqual(0.0, beam.direction_polar_rad[1], 4)
+        beam = PencilBeam(15e3, ELECTRON, 1.0, 2.0, 0.1, 0.2)
+        self.assertNotEqual(beam, self.beam)
 
-    def testdirection_azimuth_rad(self):
-        beam = PencilBeam(15e3, direction=(0, 0, -1))
-        self.assertAlmostEqual(0.0, beam.direction_azimuth_rad, 4)
+        beam = PencilBeam(15e3, POSITRON, 1.1, 2.0, 0.1, 0.2)
+        self.assertNotEqual(beam, self.beam)
 
-        beam = PencilBeam(15e3, direction=(1, 1, -1))
-        self.assertAlmostEqual(0.78540, beam.direction_azimuth_rad, 4)
+        beam = PencilBeam(15e3, POSITRON, 1.0, 2.1, 0.1, 0.2)
+        self.assertNotEqual(beam, self.beam)
 
-        beam = PencilBeam(15e3, direction=[(0, 0, -1), (1, 1, -1)])
-        self.assertAlmostEqual(0.0, beam.direction_azimuth_rad[0], 4)
-        self.assertAlmostEqual(0.78540, beam.direction_azimuth_rad[1], 4)
+        beam = PencilBeam(15e3, POSITRON, 1.0, 2.0, 0.11, 0.2)
+        self.assertNotEqual(beam, self.beam)
+
+        beam = PencilBeam(15e3, POSITRON, 1.0, 2.0, 0.1, 0.21)
+        self.assertNotEqual(beam, self.beam)
 
 class TestGaussianBeam(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
-        self.beam = GaussianBeam(15e3, 123.456, POSITRON,
-                                 (1.0, 2.0, 3.0), (4.0, 5.0, 6.0),
-                                 math.radians(3.5))
-
-    def tearDown(self):
-        TestCase.tearDown(self)
+        self.beam = GaussianBeam(15e3, 123.456, POSITRON, 1.0, 2.0, 0.1, 0.2)
 
     def testskeleton(self):
+        self.assertEqual(POSITRON, self.beam.particle)
+
+        self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
+        self.assertAlmostEqual(15.0, self.beam.energy_keV, 4)
+
+        self.assertAlmostEqual(1.0, self.beam.x0_m, 4)
+        self.assertAlmostEqual(2.0, self.beam.y0_m, 4)
+
+        self.assertAlmostEqual(0.1, self.beam.polar_rad, 4)
+        self.assertAlmostEqual(math.degrees(0.1), self.beam.polar_deg, 4)
+
+        self.assertAlmostEqual(0.2, self.beam.azimuth_rad, 4)
+        self.assertAlmostEqual(math.degrees(0.2), self.beam.azimuth_deg, 4)
+
         self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)
 
-class TestGaussianExpTailBeam(TestCase):
+    def test__repr__(self):
+        expected = '<GaussianBeam(positron, 15000 eV, 123.456 m, (1, 2) m, 0.1 rad, 0.2 rad)>'
+        self.assertEqual(expected, repr(self.beam))
 
-    def setUp(self):
-        TestCase.setUp(self)
+    def test__eq__(self):
+        beam = GaussianBeam(15e3, 123.456, POSITRON, 1.0, 2.0, 0.1, 0.2)
+        self.assertEqual(beam, self.beam)
 
-        self.beam = GaussianExpTailBeam(15e3, 123.456,
-                                        0.1, 1.0,
-                                        POSITRON,
-                                        (1.0, 2.0, 3.0), (4.0, 5.0, 6.0),
-                                        math.radians(3.5))
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
-    def testskeleton(self):
-        self.assertAlmostEqual(0.1, self.beam.skirt_threshold, 4)
-        self.assertAlmostEqual(1.0, self.beam.skirt_factor, 4)
+    def test__ne__(self):
+        beam = GaussianBeam(15e3, 124.456, POSITRON, 1.0, 2.0, 0.1, 0.2)
+        self.assertNotEqual(beam, self.beam)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
