@@ -57,9 +57,20 @@ class Test_Sample(TestCase):
         self.assertAlmostEqual(math.degrees(1.1), self.s.tilt_deg, 4)
         self.assertAlmostEqual(math.degrees(2.2), self.s.rotation_deg, 4)
 
-    def testget_materials(self):
+    def testmaterials(self):
         materials = self.s.materials
         self.assertEqual(0, len(materials))
+
+    def test__eq__(self):
+        s = SampleMock(1.1, 2.2)
+        self.assertEqual(s, self.s)
+
+    def test__ne__(self):
+        s = SampleMock(1.2, 2.2)
+        self.assertNotEqual(s, self.s)
+
+        s = SampleMock(1.1, 2.3)
+        self.assertNotEqual(s, self.s)
 
 class Test_SampleBuilder(TestCase):
 
@@ -105,9 +116,20 @@ class TestSubstrate(TestCase):
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.material)
 
-    def testget_materials(self):
+    def testmaterials(self):
         materials = self.s.materials
         self.assertEqual(1, len(materials))
+
+    def test__eq__(self):
+        s = Substrate(COPPER)
+        self.assertEqual(s, self.s)
+
+    def test__ne__(self):
+        s = Substrate(ZINC)
+        self.assertNotEqual(s, self.s)
+
+        s = Substrate(COPPER, 1.1)
+        self.assertNotEqual(s, self.s)
 
 class TestSubstrateBuilder(TestCase):
 
@@ -187,9 +209,23 @@ class TestInclusion(TestCase):
         self.assertEqual(ZINC, self.s.inclusion_material)
         self.assertAlmostEqual(123.456, self.s.inclusion_diameter_m, 4)
 
-    def testget_materials(self):
+    def testmaterials(self):
         materials = self.s.materials
         self.assertEqual(2, len(materials))
+
+    def test__eq__(self):
+        s = Inclusion(COPPER, ZINC, 123.456)
+        self.assertEqual(s, self.s)
+
+    def test__ne__(self):
+        s = Inclusion(COPPER, GALLIUM, 123.456)
+        self.assertNotEqual(s, self.s)
+
+        s = Inclusion(GALLIUM, ZINC, 123.456)
+        self.assertNotEqual(s, self.s)
+
+        s = Inclusion(COPPER, ZINC, 124.456)
+        self.assertNotEqual(s, self.s)
 
 class TestInclusionBuilder(TestCase):
 
@@ -226,7 +262,7 @@ class TestHorizontalLayers(TestCase):
 
         self.s3.add_layer(ZINC, 123.456)
         self.s3.add_layer(GALLIUM, 456.789)
-        self.s3.add_layer(VACUUM, 456.123)
+        self.s3.add_layer(COPPER, 456.123)
 
     def testskeleton(self):
         # Horizontal layers 1
@@ -257,17 +293,38 @@ class TestHorizontalLayers(TestCase):
         self.assertAlmostEqual(123.456, self.s3.layers[0].thickness_m, 4)
         self.assertEqual(GALLIUM, self.s3.layers[1].material)
         self.assertAlmostEqual(456.789, self.s3.layers[1].thickness_m, 4)
-        self.assertEqual(VACUUM, self.s3.layers[2].material)
+        self.assertEqual(COPPER, self.s3.layers[2].material)
         self.assertAlmostEqual(456.123, self.s3.layers[2].thickness_m, 4)
 
     def testsubstrate(self):
         self.s1.substrate_material = VACUUM
         self.assertFalse(self.s1.has_substrate())
 
-    def testget_materials(self):
+    def testmaterials(self):
         self.assertEqual(3, len(self.s1.materials))
         self.assertEqual(2, len(self.s2.materials))
         self.assertEqual(3, len(self.s3.materials))
+
+    def test__eq__(self):
+        s1 = HorizontalLayers(COPPER)
+        s1.add_layer(ZINC, 123.456)
+        s1.add_layer(GALLIUM, 456.789)
+        self.assertEqual(s1, self.s1)
+
+    def test__ne__(self):
+        s1 = HorizontalLayers(ZINC)
+        s1.add_layer(ZINC, 123.456)
+        s1.add_layer(GALLIUM, 456.789)
+        self.assertNotEqual(s1, self.s1)
+
+        s1 = HorizontalLayers(COPPER)
+        s1.add_layer(GALLIUM, 456.789)
+        self.assertNotEqual(s1, self.s1)
+
+        s1 = HorizontalLayers(COPPER)
+        s1.add_layer(ZINC, 124.456)
+        s1.add_layer(GALLIUM, 456.789)
+        self.assertNotEqual(s1, self.s1)
 
 class TestVerticalLayers(TestCase):
 
@@ -310,10 +367,27 @@ class TestVerticalLayers(TestCase):
         self.assertEqual(GALLIUM, self.s3.layers[0].material)
         self.assertAlmostEqual(500.0, self.s3.layers[0].thickness_m, 4)
 
-    def testget_materials(self):
+    def testmaterials(self):
         self.assertEqual(3, len(self.s1.materials))
         self.assertEqual(3, len(self.s2.materials))
         self.assertEqual(3, len(self.s3.materials))
+
+    def test__eq__(self):
+        s1 = VerticalLayers(COPPER, ZINC)
+        s1.add_layer(GALLIUM, 500.0)
+        self.assertEqual(s1, self.s1)
+
+    def test__ne__(self):
+        s1 = VerticalLayers(GERMANIUM, ZINC)
+        s1.add_layer(GALLIUM, 500.0)
+        self.assertNotEqual(s1, self.s1)
+
+        s1 = VerticalLayers(COPPER, ZINC)
+        self.assertNotEqual(s1, self.s1)
+
+        s1 = VerticalLayers(COPPER, ZINC)
+        s1.add_layer(GALLIUM, 501.0)
+        self.assertNotEqual(s1, self.s1)
 
 class TestSphere(TestCase):
 
@@ -326,8 +400,19 @@ class TestSphere(TestCase):
         self.assertEqual(COPPER, self.s.material)
         self.assertAlmostEqual(123.456, self.s.diameter_m, 4)
 
-    def testget_materials(self):
+    def testmaterials(self):
         self.assertEqual(1, len(self.s.materials))
+
+    def test__eq__(self):
+        s = Sphere(COPPER, 123.456)
+        self.assertEqual(s, self.s)
+
+    def test__ne__(self):
+        s = Sphere(ZINC, 123.456)
+        self.assertNotEqual(s, self.s)
+
+        s = Sphere(COPPER, 124.456)
+        self.assertNotEqual(s, self.s)
 
 class TestSphereBuilder(TestCase):
 

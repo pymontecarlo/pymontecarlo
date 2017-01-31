@@ -36,6 +36,10 @@ class _Sample(metaclass=abc.ABCMeta):
         self.tilt_rad = tilt_rad
         self.rotation_rad = rotation_rad
 
+    def __eq__(self, other):
+        return self.tilt_rad == other.tilt_rad and \
+            self.rotation_rad == other.rotation_rad
+
     def _cleanup_materials(self, *materials):
         materials = list(materials)
 
@@ -103,6 +107,9 @@ class Substrate(_Sample):
         return '<{0:s}(material={1:s})>' \
             .format(self.__class__.__name__, self.material)
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.material == other.material
+
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
@@ -144,6 +151,12 @@ class Inclusion(_Sample):
         return '<{0:s}(substrate_material={1:s}, inclusion_material={2:s}, inclusion_diameter={3:g} m)>' \
             .format(self.__class__.__name__, self.substrate.material,
                     self.inclusion.material, self.inclusion.diameter_m)
+
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.substrate_material == other.substrate_material and \
+            self.inclusion_material == other.inclusion_material and \
+            self.inclusion_diameter_m == other.inclusion_diameter_m
 
     @property
     def materials(self):
@@ -200,45 +213,31 @@ class Layer(object):
         return '<{0:s}(material={1:s}, thickness={2:g} m)>' \
             .format(self.__class__.__name__, self.material, self.thickness_m)
 
-class HorizontalLayers(_Sample):
+    def __eq__(self, other):
+        return self.material == other.material and \
+            self.thickness_m == other.thickness_m
 
-    def __init__(self, substrate_material=None, layers=None,
-                 tilt_rad=0.0, rotation_rad=0.0):
-        """
-        Creates a multi-layers geometry.
-        The layers are assumed to be in the x-y plane (normal parallel to z) at
-        tilt of 0.0\u00b0.
-        The first layer starts at ``z = 0`` and extends towards the negative z
-        axis.
+class _LayeredSample(_Sample):
 
-        :arg substrate_material: material of the substrate.
-            If ``None``, the geometry does not have a substrate, only layers
-        :arg layers: :class:`list` of :class:`.Layer`
-        """
+    def __init__(self, layers=None, tilt_rad=0.0, rotation_rad=0.0):
         super().__init__(tilt_rad, rotation_rad)
-
-        if substrate_material is None:
-            substrate_material = VACUUM
-        self.substrate_material = substrate_material
 
         if layers is None:
             layers = []
         self.layers = list(layers)
 
-    def __repr__(self):
-        if self.has_substrate():
-            return '<{0:s}(substrate_material={1:s}, {2:d} layers)>' \
-                .format(self.__class__.__name, self.substrate.material,
-                        len(self.layers))
-        else:
-            return '<{0:s}(No substrate, {1:d} layers)>' \
-                .format(self.__class__.__name, len(self.layers))
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
 
-    def has_substrate(self):
-        """
-        Returns ``True`` if a substrate material has been defined.
-        """
-        return self.substrate_material is not VACUUM
+        if len(self.layers) != len(other.layers):
+            return False
+
+        for layer0, layer1 in zip(self.layers, other.layers):
+            if layer0 != layer1:
+                return False
+
+        return True
 
     def add_layer(self, material, thickness_m):
         """
@@ -256,10 +255,55 @@ class HorizontalLayers(_Sample):
 
     @property
     def materials(self):
-        layer_materials = [layer.material for layer in self.layers]
-        return self._cleanup_materials(self.substrate_material, *layer_materials)
+        materials = [layer.material for layer in self.layers]
+        return self._cleanup_materials(*materials)
 
-class VerticalLayers(_Sample):
+class HorizontalLayers(_LayeredSample):
+
+    def __init__(self, substrate_material=None, layers=None,
+                 tilt_rad=0.0, rotation_rad=0.0):
+        """
+        Creates a multi-layers geometry.
+        The layers are assumed to be in the x-y plane (normal parallel to z) at
+        tilt of 0.0\u00b0.
+        The first layer starts at ``z = 0`` and extends towards the negative z
+        axis.
+
+        :arg substrate_material: material of the substrate.
+            If ``None``, the geometry does not have a substrate, only layers
+        :arg layers: :class:`list` of :class:`.Layer`
+        """
+        super().__init__(layers, tilt_rad, rotation_rad)
+
+        if substrate_material is None:
+            substrate_material = VACUUM
+        self.substrate_material = substrate_material
+
+    def __repr__(self):
+        if self.has_substrate():
+            return '<{0:s}(substrate_material={1:s}, {2:d} layers)>' \
+                .format(self.__class__.__name, self.substrate.material,
+                        len(self.layers))
+        else:
+            return '<{0:s}(No substrate, {1:d} layers)>' \
+                .format(self.__class__.__name, len(self.layers))
+
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.substrate_material == other.substrate_material
+
+    def has_substrate(self):
+        """
+        Returns ``True`` if a substrate material has been defined.
+        """
+        return self.substrate_material is not VACUUM
+
+    @property
+    def materials(self):
+        return self._cleanup_materials(self.substrate_material,
+                                       *super().materials)
+
+class VerticalLayers(_LayeredSample):
 
     def __init__(self, left_material, right_material, layers=None,
                  depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):
@@ -273,14 +317,10 @@ class VerticalLayers(_Sample):
         :arg right_material: material on the right side
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        super().__init__(tilt_rad, rotation_rad)
+        super().__init__(layers, tilt_rad, rotation_rad)
 
         self.left_material = left_material
         self.right_material = right_material
-
-        if layers is None:
-            layers = []
-        self.layers = list(layers)
 
         self.depth_m = depth_m
 
@@ -289,26 +329,17 @@ class VerticalLayers(_Sample):
             .format(self.__class__.__name, self.left_substrate.material,
                     self.right_substrate.material, len(self.layers))
 
-    def add_layer(self, material, thickness):
-        """
-        Adds a layer to the geometry.
-        The layer is added after the previous layers.
-
-        :arg material: material of the layer
-        :type material: :class:`Material`
-
-        :arg thickness: thickness of the layer in meters
-        """
-        layer = Layer(material, thickness)
-        self.layers.append(layer)
-        return layer
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.left_material == other.left_material and \
+            self.right_material == other.right_material and \
+            self.depth_m == other.depth_m
 
     @property
     def materials(self):
-        layer_materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(self.left_material,
                                        self.right_material,
-                                       *layer_materials)
+                                       *super().materials)
 
 class Sphere(_Sample):
 
@@ -328,6 +359,11 @@ class Sphere(_Sample):
         return '<{0:s}(material={1:s}, diameter={2:g} m)>' \
                     .format(self.__class__.__name, self.body.material,
                             self.diameter_m)
+
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.material == other.material and \
+            self.diameter_m == other.diameter_m
 
     @property
     def materials(self):
