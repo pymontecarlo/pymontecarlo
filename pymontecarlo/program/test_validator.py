@@ -8,6 +8,7 @@ import logging
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
 from pymontecarlo.options.sample import \
@@ -20,15 +21,12 @@ ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 GERMANIUM = Material.pure(32)
 
-class TestValidator(unittest.TestCase):
+class TestValidator(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        super().setUp()
 
         self.v = Validator()
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
 
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
