@@ -12,7 +12,8 @@ from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import PARTICLES
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
-    Substrate, Inclusion, HorizontalLayers, VerticalLayers, Sphere
+    (SubstrateSample, InclusionSample, HorizontalLayerSample,
+     VerticalLayerSample, SphereSample)
 
 # Globals and constants variables.
 
@@ -23,11 +24,11 @@ class Validator(object):
         self.beam_validate_methods[GaussianBeam] = self._validate_beam_gaussian
 
         self.sample_validate_methods = {}
-        self.sample_validate_methods[Substrate] = self._validate_sample_substrate
-        self.sample_validate_methods[Inclusion] = self._validate_sample_inclusion
-        self.sample_validate_methods[HorizontalLayers] = self._validate_sample_horizontallayers
-        self.sample_validate_methods[VerticalLayers] = self._validate_sample_verticallayers
-        self.sample_validate_methods[Sphere] = self._validate_sample_sphere
+        self.sample_validate_methods[SubstrateSample] = self._validate_sample_substrate
+        self.sample_validate_methods[InclusionSample] = self._validate_sample_inclusion
+        self.sample_validate_methods[HorizontalLayerSample] = self._validate_sample_horizontallayers
+        self.sample_validate_methods[VerticalLayerSample] = self._validate_sample_verticallayers
+        self.sample_validate_methods[SphereSample] = self._validate_sample_sphere
 
     def validate_material(self, material):
         errors = set()

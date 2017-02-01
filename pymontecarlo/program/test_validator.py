@@ -13,7 +13,8 @@ from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
-    Substrate, Inclusion, HorizontalLayers, VerticalLayers, Sphere
+    (SubstrateSample, InclusionSample, HorizontalLayerSample,
+     VerticalLayerSample, SphereSample)
 from pymontecarlo.exceptions import ValidationError
 
 # Globals and constants variables.
@@ -56,11 +57,11 @@ class TestValidator(TestCase):
         self.assertEqual(7, len(errors))
 
     def testvalidate_sample_substrate(self):
-        sample = Substrate(COPPER)
+        sample = SubstrateSample(COPPER)
         self.v.validate_sample(sample)
 
     def testvalidate_sample_substrate_exception(self):
-        sample = Substrate(VACUUM, float('inf'), float('nan'))
+        sample = SubstrateSample(VACUUM, float('inf'), float('nan'))
         self.assertRaises(ValidationError, self.v.validate_sample, sample)
 
         errors = set()
@@ -68,11 +69,11 @@ class TestValidator(TestCase):
         self.assertEqual(3, len(errors))
 
     def testvalidate_sample_inclusion(self):
-        sample = Inclusion(COPPER, ZINC, 1.0)
+        sample = InclusionSample(COPPER, ZINC, 1.0)
         self.v.validate_sample(sample)
 
     def testvalidate_sample_inclusion_exception(self):
-        sample = Inclusion(COPPER, ZINC, 0.0)
+        sample = InclusionSample(COPPER, ZINC, 0.0)
         self.assertRaises(ValidationError, self.v.validate_sample, sample)
 
         errors = set()
@@ -80,19 +81,19 @@ class TestValidator(TestCase):
         self.assertEqual(1, len(errors))
 
     def testvalidate_sample_horizontallayers(self):
-        sample = HorizontalLayers(COPPER)
+        sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, 1.0)
         self.v.validate_sample(sample)
 
     def testvalidate_sample_horizontallayers_empty_layer(self):
-        sample = HorizontalLayers(COPPER)
+        sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, 1.0)
         sample.add_layer(VACUUM, 2.0)
         self.v.validate_sample(sample)
         self.assertEqual(1, len(sample.layers))
 
     def testvalidate_sample_horizontallayers_exception(self):
-        sample = HorizontalLayers(COPPER)
+        sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, -1.0)
         self.assertRaises(ValidationError, self.v.validate_sample, sample)
 
@@ -101,12 +102,12 @@ class TestValidator(TestCase):
         self.assertEqual(1, len(errors))
 
     def testvalidate_sample_verticallayers(self):
-        sample = VerticalLayers(COPPER, ZINC)
+        sample = VerticalLayerSample(COPPER, ZINC)
         sample.add_layer(GALLIUM, 1.0)
         self.v.validate_sample(sample)
 
     def testvalidate_sample_verticallayers_exception(self):
-        sample = VerticalLayers(VACUUM, VACUUM)
+        sample = VerticalLayerSample(VACUUM, VACUUM)
         sample.add_layer(GALLIUM, -1.0)
         self.assertRaises(ValidationError, self.v.validate_sample, sample)
 
@@ -115,11 +116,11 @@ class TestValidator(TestCase):
         self.assertEqual(3, len(errors))
 
     def testvalidate_sample_sphere(self):
-        sample = Sphere(COPPER, 1.0)
+        sample = SphereSample(COPPER, 1.0)
         self.v.validate_sample(sample)
 
     def testvalidate_sample_sphere_exception(self):
-        sample = Sphere(VACUUM, -1.0)
+        sample = SphereSample(VACUUM, -1.0)
         self.assertRaises(ValidationError, self.v.validate_sample, sample)
 
         errors = set()
