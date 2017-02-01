@@ -12,7 +12,7 @@ from ..particle import ELECTRON
 
 # Globals and constants variables.
 
-class _Beam(object):
+class Beam(object):
     """
     Base beam.
     """

@@ -10,11 +10,11 @@ import operator
 # Third party modules.
 
 # Local modules.
-from .base import _Sample, _SampleBuilder
+from .base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class Inclusion(_Sample):
+class Inclusion(Sample):
 
     def __init__(self, substrate_material,
                  inclusion_material, inclusion_diameter_m,
@@ -45,7 +45,7 @@ class Inclusion(_Sample):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
-class InclusionBuilder(_SampleBuilder):
+class InclusionBuilder(SampleBuilder):
 
     def __init__(self):
         super().__init__()

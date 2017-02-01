@@ -10,11 +10,11 @@ import operator
 # Third party modules.
 
 # Local modules.
-from .base import _Sample, _SampleBuilder
+from .base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class Sphere(_Sample):
+class Sphere(Sample):
 
     def __init__(self, material, diameter_m, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -42,7 +42,7 @@ class Sphere(_Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
-class SphereBuilder(_SampleBuilder):
+class SphereBuilder(SampleBuilder):
 
     def __init__(self):
         super().__init__()

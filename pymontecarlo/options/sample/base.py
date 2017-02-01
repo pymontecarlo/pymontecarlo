@@ -15,7 +15,7 @@ from pymontecarlo.util.cbook import MultiplierAttribute, Builder
 
 # Globals and constants variables.
 
-class _Sample(metaclass=abc.ABCMeta):
+class Sample(metaclass=abc.ABCMeta):
     """
     Base class for all sample representations.
     """
@@ -56,7 +56,7 @@ class _Sample(metaclass=abc.ABCMeta):
     tilt_deg = MultiplierAttribute('tilt_rad', 180.0 / math.pi)
     rotation_deg = MultiplierAttribute('rotation_rad', 180.0 / math.pi)
 
-class _SampleBuilder(Builder):
+class SampleBuilder(Builder):
 
     def __init__(self):
         self.tilts_rad = set()
@@ -111,7 +111,7 @@ class Layer(object):
         return self.material == other.material and \
             self.thickness_m == other.thickness_m
 
-class _LayeredSample(_Sample):
+class LayeredSample(Sample):
 
     def __init__(self, layers=None, tilt_rad=0.0, rotation_rad=0.0):
         super().__init__(tilt_rad, rotation_rad)

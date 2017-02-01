@@ -7,12 +7,12 @@ Horizontal layers sample.
 # Third party modules.
 
 # Local modules.
-from .base import _LayeredSample
+from .base import LayeredSample
 from ..material import VACUUM
 
 # Globals and constants variables.
 
-class HorizontalLayers(_LayeredSample):
+class HorizontalLayers(LayeredSample):
 
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, rotation_rad=0.0):

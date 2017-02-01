@@ -7,11 +7,11 @@ Vertical layers sample
 # Third party modules.
 
 # Local modules.
-from .base import _LayeredSample
+from .base import LayeredSample
 
 # Globals and constants variables.
 
-class VerticalLayers(_LayeredSample):
+class VerticalLayers(LayeredSample):
 
     def __init__(self, left_material, right_material, layers=None,
                  depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):

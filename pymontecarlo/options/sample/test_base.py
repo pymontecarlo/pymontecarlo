@@ -11,11 +11,11 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.base import _Sample, _SampleBuilder
+from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class SampleMock(_Sample):
+class SampleMock(Sample):
 
     def __init__(self, tilt_rad, rotation_rad):
         super().__init__(tilt_rad, rotation_rad)
@@ -24,7 +24,7 @@ class SampleMock(_Sample):
     def materials(self):
         return []
 
-class SampleBuilderMock(_SampleBuilder):
+class SampleBuilderMock(SampleBuilder):
 
     def build(self):
         samples = []

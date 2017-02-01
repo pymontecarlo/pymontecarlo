@@ -10,11 +10,11 @@ import operator
 # Third party modules.
 
 # Local modules.
-from .base import _Sample, _SampleBuilder
+from .base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class Substrate(_Sample):
+class Substrate(Sample):
 
     def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -36,7 +36,7 @@ class Substrate(_Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
-class SubstrateBuilder(_SampleBuilder):
+class SubstrateBuilder(SampleBuilder):
 
     def __init__(self):
         super().__init__()

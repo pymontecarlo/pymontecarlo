@@ -8,13 +8,13 @@ import math
 # Third party modules.
 
 # Local modules.
-from .base import _Beam
+from .base import Beam
 from ..particle import ELECTRON
 from pymontecarlo.util.cbook import MultiplierAttribute
 
 # Globals and constants variables.
 
-class GaussianBeam(_Beam):
+class GaussianBeam(Beam):
 
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
