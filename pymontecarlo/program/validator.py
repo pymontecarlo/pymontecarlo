@@ -14,6 +14,7 @@ from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
+from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
 
@@ -29,6 +30,10 @@ class Validator(object):
         self.sample_validate_methods[HorizontalLayerSample] = self._validate_sample_horizontallayers
         self.sample_validate_methods[VerticalLayerSample] = self._validate_sample_verticallayers
         self.sample_validate_methods[SphereSample] = self._validate_sample_sphere
+
+        self.limit_validate_methods = {}
+        self.limit_validate_methods[ShowersLimit] = self._validate_limit_showers
+        self.limit_validate_methods[UncertaintyLimit] = self._validate_limit_uncertainty
 
     def validate_material(self, material):
         errors = set()
@@ -203,3 +208,43 @@ class Validator(object):
             exc = ValueError('Diameter ({0:g} m) must be greater than 0'
                              .format(sample.diameter_m))
             errors.add(exc)
+
+    def validate_limit(self, limit):
+        errors = set()
+        self._validate_limit(limit, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+    def _validate_limit(self, limit, errors):
+        # Specific
+        limit_class = limit.__class__
+        if limit_class in self.limit_validate_methods:
+            method = self.limit_validate_methods[limit_class]
+            method(limit, errors)
+
+    def _validate_limit_showers(self, limit, errors):
+        if limit.showers <= 0:
+            exc = ValueError('Number of showers ({0:d}) must be greater than 0'
+                             .format(limit.showers))
+            errors.add(exc)
+
+    def _validate_limit_uncertainty(self, limit, errors):
+        # Atomic number
+        try:
+            pyxray.descriptor.Element.validate(limit.atomic_number)
+        except ValueError as exc:
+            errors.add(exc)
+
+        # Transition
+        #TODO: Validate transition
+
+        # Detector
+        #TODO: Validate detector
+
+        # Uncertainty
+        if limit.uncertainty <= 0:
+            exc = ValueError('Uncertainty ({0:g}) must be greater than 0'
+                             .format(limit.uncertainty))
+            errors.add(exc)
+

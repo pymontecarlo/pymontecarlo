@@ -9,13 +9,14 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
-from pymontecarlo.exceptions import ValidationError
+from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
@@ -126,6 +127,31 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_sample(sample, errors)
         self.assertEqual(2, len(errors))
+
+    def testvalidate_limit_showers(self):
+        limit = ShowersLimit(1000)
+        self.v.validate_limit(limit)
+
+    def testvalidate_limit_showers_exception(self):
+        limit = ShowersLimit(0)
+        self.assertRaises(ValidationError, self.v.validate_limit, limit)
+
+        errors = set()
+        self.v._validate_limit(limit, errors)
+        self.assertEqual(1, len(errors))
+
+    def testvalidate_limit_uncertainty(self):
+        limit = UncertaintyLimit(13, 'Ka1', None, 0.02)
+        self.v.validate_limit(limit)
+
+    def testvalidate_limit_uncertainty_exception(self):
+        limit = UncertaintyLimit(-1, 'Ka1', None, 0.0)
+        self.assertRaises(ValidationError, self.v.validate_limit, limit)
+
+        errors = set()
+        self.v._validate_limit(limit, errors)
+        self.assertEqual(2, len(errors))
+
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
