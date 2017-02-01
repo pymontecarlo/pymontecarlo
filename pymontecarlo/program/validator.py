@@ -36,8 +36,7 @@ class Validator(object):
             return material
 
         # Name
-        material.name = material.name.strip()
-        if not material.name:
+        if not material.name.strip():
             exc = ValueError('Name ({0:s}) must be at least one character'
                              .format(material.name))
             errors.add(exc)
