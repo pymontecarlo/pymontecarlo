@@ -4,11 +4,15 @@ Gaussian beam.
 
 # Standard library modules.
 import math
+import itertools
+import functools
+import operator
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
-from .base import Beam
+from .base import Beam, BeamBuilder
 from ..particle import ELECTRON
 from pymontecarlo.util.cbook import MultiplierAttribute
 
@@ -34,10 +38,10 @@ class GaussianBeam(Beam):
         :arg particle: type of particles [default: :data:`.ELECTRON`]
         :type particle: :mod:`.particle`
         
-        :arg x0_m: initial x position
+        :arg x0_m: initial x position where the beam first intersects the sample
         :type x0_m: :class:`float`
         
-        :arg y0_m: initial y position
+        :arg y0_m: initial y position where the beam first intersects the sample
         :type y0_m: :class:`float`
         
         :arg polar_rad: angle of the beam with respect to the positive z-axis.
@@ -70,4 +74,47 @@ class GaussianBeam(Beam):
 
     polar_deg = MultiplierAttribute('polar_rad', 180.0 / math.pi)
     azimuth_deg = MultiplierAttribute('azimuth_rad', 180.0 / math.pi)
+
+class GaussianBeamBuilder(BeamBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.diameters_m = set()
+        self.positions = set()
+
+    def __len__(self):
+        it = [super().__len__(),
+              len(self.diameters_m),
+              len(self.positions) or 1]
+        return functools.reduce(operator.mul, it)
+
+    def add_diameter_m(self, diameter_m):
+        self.diameters_m.add(diameter_m)
+
+    def add_position(self, x0_m, y0_m):
+        self.positions.add((x0_m, y0_m))
+
+    def add_linescan_x(self, x0_m, x1_m, xstep_m, y0_m=0.0):
+        for x_m in np.arange(x0_m, x1_m, xstep_m):
+            self.positions.add((x_m, y0_m))
+
+    def build(self):
+        particles = self.particles
+        if not particles:
+            particles = [ELECTRON]
+
+        positions = self.positions
+        if not positions:
+            positions = [(0.0, 0.0)]
+
+        product = itertools.product(self.energies_eV,
+                                    self.diameters_m,
+                                    particles,
+                                    positions)
+
+        beams = []
+        for energy_eV, diameter_m, particle, (x0_m, y0_m) in product:
+            beams.append(GaussianBeam(energy_eV, diameter_m, particle, x0_m, y0_m))
+
+        return beams
 

@@ -10,12 +10,12 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.beam.gaussian import GaussianBeam
+from pymontecarlo.options.beam.gaussian import GaussianBeam, GaussianBeamBuilder
 from pymontecarlo.options.particle import POSITRON, ELECTRON
 
 # Globals and constants variables.
 
-class TestPencilBeam(TestCase):
+class TestGaussianBeam(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -68,6 +68,49 @@ class TestPencilBeam(TestCase):
 
         beam = GaussianBeam(15e3, 123.456, POSITRON, 1.0, 2.0, 0.1, 0.21)
         self.assertNotEqual(beam, self.beam)
+
+class TestGaussianBeamBuilder(TestCase):
+
+    def testbuild(self):
+        b = GaussianBeamBuilder()
+        b.add_energy_eV(10e3)
+        b.add_diameter_m(0.0)
+        b.add_diameter_m(0.1)
+        b.add_position(0.0, 0.0)
+        b.add_position(0.0, 0.1)
+
+        beams = b.build()
+        self.assertEqual(4, len(beams))
+        self.assertEqual(4, len(b))
+
+        for beam in beams:
+            self.assertEqual(ELECTRON, beam.particle)
+
+    def testbuild2(self):
+        b = GaussianBeamBuilder()
+        b.add_energy_eV(10e3)
+        b.add_position(0.0, 0.0)
+        b.add_position(0.0, 0.1)
+
+        beams = b.build()
+        self.assertEqual(0, len(beams))
+        self.assertEqual(0, len(b))
+
+    def testbuild3(self):
+        b = GaussianBeamBuilder()
+        b.add_energy_eV(10e3)
+        b.add_diameter_m(0.123)
+        b.add_linescan_x(0.0, 5.0, 1.0, y0_m=0.456)
+
+        beams = b.build()
+        self.assertEqual(5, len(beams))
+        self.assertEqual(5, len(b))
+
+        for beam in beams:
+            self.assertEqual(ELECTRON, beam.particle)
+            self.assertAlmostEqual(0.123, beam.diameter_m, 4)
+            self.assertAlmostEqual(0.456, beam.y0_m, 4)
+
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

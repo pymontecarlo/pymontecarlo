@@ -3,11 +3,13 @@ Base classes for beams.
 """
 
 # Standard library modules.
+import functools
+import operator
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.util.cbook import MultiplierAttribute, Builder
 from ..particle import ELECTRON
 
 # Globals and constants variables.
@@ -33,6 +35,26 @@ class Beam(object):
             self.particle == other.particle
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
+
+class BeamBuilder(Builder):
+
+    def __init__(self):
+        self.energies_eV = set()
+        self.particles = set()
+
+    def __len__(self):
+        it = [len(self.energies_eV),
+              len(self.particles) or 1]
+        return functools.reduce(operator.mul, it)
+
+    def add_energy_eV(self, energy_eV):
+        self.energies_eV.add(energy_eV)
+
+    def add_energy_keV(self, energy_keV):
+        self.energies_eV.add(energy_keV * 1e3)
+
+    def add_particle(self, particle):
+        self.particles.add(particle)
 
 def convert_diameter_fwhm_to_sigma(diameter):
     """
