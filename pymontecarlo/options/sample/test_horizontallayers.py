@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.horizontallayers import HorizontalLayers
+from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -17,14 +17,14 @@ COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 
-class TestHorizontalLayers(TestCase):
+class TestHorizontalLayerSample(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.s1 = HorizontalLayers(COPPER)
-        self.s2 = HorizontalLayers(None) # No substrate
-        self.s3 = HorizontalLayers(COPPER) # Empty layer
+        self.s1 = HorizontalLayerSample(COPPER)
+        self.s2 = HorizontalLayerSample(None) # No substrate
+        self.s3 = HorizontalLayerSample(COPPER) # Empty layer
 
         self.s1.add_layer(ZINC, 123.456)
         self.s1.add_layer(GALLIUM, 456.789)
@@ -78,22 +78,22 @@ class TestHorizontalLayers(TestCase):
         self.assertEqual(3, len(self.s3.materials))
 
     def test__eq__(self):
-        s1 = HorizontalLayers(COPPER)
+        s1 = HorizontalLayerSample(COPPER)
         s1.add_layer(ZINC, 123.456)
         s1.add_layer(GALLIUM, 456.789)
         self.assertEqual(s1, self.s1)
 
     def test__ne__(self):
-        s1 = HorizontalLayers(ZINC)
+        s1 = HorizontalLayerSample(ZINC)
         s1.add_layer(ZINC, 123.456)
         s1.add_layer(GALLIUM, 456.789)
         self.assertNotEqual(s1, self.s1)
 
-        s1 = HorizontalLayers(COPPER)
+        s1 = HorizontalLayerSample(COPPER)
         s1.add_layer(GALLIUM, 456.789)
         self.assertNotEqual(s1, self.s1)
 
-        s1 = HorizontalLayers(COPPER)
+        s1 = HorizontalLayerSample(COPPER)
         s1.add_layer(ZINC, 124.456)
         s1.add_layer(GALLIUM, 456.789)
         self.assertNotEqual(s1, self.s1)

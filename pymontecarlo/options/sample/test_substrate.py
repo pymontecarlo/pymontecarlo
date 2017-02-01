@@ -9,19 +9,19 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.substrate import Substrate, SubstrateBuilder
+from pymontecarlo.options.sample.substrate import SubstrateSample, SubstrateSampleBuilder
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 
-class TestSubstrate(TestCase):
+class TestSubstrateSample(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.s = Substrate(COPPER)
+        self.s = SubstrateSample(COPPER)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.material)
@@ -31,20 +31,20 @@ class TestSubstrate(TestCase):
         self.assertEqual(1, len(materials))
 
     def test__eq__(self):
-        s = Substrate(COPPER)
+        s = SubstrateSample(COPPER)
         self.assertEqual(s, self.s)
 
     def test__ne__(self):
-        s = Substrate(ZINC)
+        s = SubstrateSample(ZINC)
         self.assertNotEqual(s, self.s)
 
-        s = Substrate(COPPER, 1.1)
+        s = SubstrateSample(COPPER, 1.1)
         self.assertNotEqual(s, self.s)
 
-class TestSubstrateBuilder(TestCase):
+class TestSubstrateSampleBuilder(TestCase):
 
     def testbuild(self):
-        b = SubstrateBuilder()
+        b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
 
@@ -57,7 +57,7 @@ class TestSubstrateBuilder(TestCase):
             self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
 
     def testbuild2(self):
-        b = SubstrateBuilder()
+        b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_tilt_rad(0.0)
@@ -71,7 +71,7 @@ class TestSubstrateBuilder(TestCase):
             self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
 
     def testbuild3(self):
-        b = SubstrateBuilder()
+        b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_tilt_rad(1.1)
@@ -86,7 +86,7 @@ class TestSubstrateBuilder(TestCase):
             self.assertAlmostEqual(2.2, sample.rotation_rad, 4)
 
     def testbuild4(self):
-        b = SubstrateBuilder()
+        b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_tilt_rad(1.1)
@@ -98,7 +98,7 @@ class TestSubstrateBuilder(TestCase):
         self.assertEqual(4, len(b))
 
     def testbuild5(self):
-        b = SubstrateBuilder()
+        b = SubstrateSampleBuilder()
         b.add_tilt_rad(1.1)
         b.add_rotation_rad(2.2)
         b.add_rotation_rad(2.3)

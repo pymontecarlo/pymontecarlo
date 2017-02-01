@@ -14,7 +14,7 @@ from .base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class Inclusion(Sample):
+class InclusionSample(Sample):
 
     def __init__(self, substrate_material,
                  inclusion_material, inclusion_diameter_m,
@@ -45,7 +45,7 @@ class Inclusion(Sample):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
-class InclusionBuilder(SampleBuilder):
+class InclusionSampleBuilder(SampleBuilder):
 
     def __init__(self):
         super().__init__()
@@ -75,4 +75,4 @@ class InclusionBuilder(SampleBuilder):
                                     self.inclusion_materials,
                                     self.inclusion_diameters_m,
                                     *self._get_combinations())
-        return [Inclusion(*args) for args in product]
+        return [InclusionSample(*args) for args in product]

@@ -14,7 +14,7 @@ from .base import Sample, SampleBuilder
 
 # Globals and constants variables.
 
-class Substrate(Sample):
+class SubstrateSample(Sample):
 
     def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -36,7 +36,7 @@ class Substrate(Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
-class SubstrateBuilder(SampleBuilder):
+class SubstrateSampleBuilder(SampleBuilder):
 
     def __init__(self):
         super().__init__()
@@ -52,4 +52,4 @@ class SubstrateBuilder(SampleBuilder):
 
     def build(self):
         product = itertools.product(self.materials, *self._get_combinations())
-        return [Substrate(*args) for args in product]
+        return [SubstrateSample(*args) for args in product]

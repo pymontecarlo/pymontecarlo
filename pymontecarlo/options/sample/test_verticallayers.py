@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.verticallayers import VerticalLayers
+from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
@@ -18,19 +18,19 @@ ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 GERMANIUM = Material.pure(32)
 
-class TestVerticalLayers(TestCase):
+class TestVerticalLayerSample(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.s1 = VerticalLayers(COPPER, ZINC)
+        self.s1 = VerticalLayerSample(COPPER, ZINC)
         self.s1.add_layer(GALLIUM, 500.0)
 
-        self.s2 = VerticalLayers(COPPER, ZINC)
+        self.s2 = VerticalLayerSample(COPPER, ZINC)
         self.s2.add_layer(COPPER, 100.0)
         self.s2.add_layer(GERMANIUM, 200.0)
 
-        self.s3 = VerticalLayers(COPPER, ZINC)
+        self.s3 = VerticalLayerSample(COPPER, ZINC)
         self.s3.add_layer(GALLIUM, 500.0)
         self.s3.depth_m = 400.0
 
@@ -65,19 +65,19 @@ class TestVerticalLayers(TestCase):
         self.assertEqual(3, len(self.s3.materials))
 
     def test__eq__(self):
-        s1 = VerticalLayers(COPPER, ZINC)
+        s1 = VerticalLayerSample(COPPER, ZINC)
         s1.add_layer(GALLIUM, 500.0)
         self.assertEqual(s1, self.s1)
 
     def test__ne__(self):
-        s1 = VerticalLayers(GERMANIUM, ZINC)
+        s1 = VerticalLayerSample(GERMANIUM, ZINC)
         s1.add_layer(GALLIUM, 500.0)
         self.assertNotEqual(s1, self.s1)
 
-        s1 = VerticalLayers(COPPER, ZINC)
+        s1 = VerticalLayerSample(COPPER, ZINC)
         self.assertNotEqual(s1, self.s1)
 
-        s1 = VerticalLayers(COPPER, ZINC)
+        s1 = VerticalLayerSample(COPPER, ZINC)
         s1.add_layer(GALLIUM, 501.0)
         self.assertNotEqual(s1, self.s1)
 

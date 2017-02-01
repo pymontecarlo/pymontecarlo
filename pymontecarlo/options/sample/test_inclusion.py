@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.inclusion import Inclusion, InclusionBuilder
+from pymontecarlo.options.sample.inclusion import InclusionSample, InclusionSampleBuilder
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
@@ -17,12 +17,12 @@ COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 
-class TestInclusion(TestCase):
+class TestInclusionSample(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.s = Inclusion(COPPER, ZINC, 123.456)
+        self.s = InclusionSample(COPPER, ZINC, 123.456)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.substrate_material)
@@ -34,23 +34,23 @@ class TestInclusion(TestCase):
         self.assertEqual(2, len(materials))
 
     def test__eq__(self):
-        s = Inclusion(COPPER, ZINC, 123.456)
+        s = InclusionSample(COPPER, ZINC, 123.456)
         self.assertEqual(s, self.s)
 
     def test__ne__(self):
-        s = Inclusion(COPPER, GALLIUM, 123.456)
+        s = InclusionSample(COPPER, GALLIUM, 123.456)
         self.assertNotEqual(s, self.s)
 
-        s = Inclusion(GALLIUM, ZINC, 123.456)
+        s = InclusionSample(GALLIUM, ZINC, 123.456)
         self.assertNotEqual(s, self.s)
 
-        s = Inclusion(COPPER, ZINC, 124.456)
+        s = InclusionSample(COPPER, ZINC, 124.456)
         self.assertNotEqual(s, self.s)
 
-class TestInclusionBuilder(TestCase):
+class TestInclusionSampleBuilder(TestCase):
 
     def testbuild(self):
-        b = InclusionBuilder()
+        b = InclusionSampleBuilder()
         b.add_substrate_material(COPPER)
         b.add_substrate_material(ZINC)
         b.add_inclusion_material(GALLIUM)

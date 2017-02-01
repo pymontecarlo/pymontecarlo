@@ -9,19 +9,19 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.sphere import Sphere, SphereBuilder
+from pymontecarlo.options.sample.sphere import SphereSample, SphereSampleBuilder
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 
-class TestSphere(TestCase):
+class TestSphereSample(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.s = Sphere(COPPER, 123.456)
+        self.s = SphereSample(COPPER, 123.456)
 
     def testskeleton(self):
         self.assertEqual(COPPER, self.s.material)
@@ -31,20 +31,20 @@ class TestSphere(TestCase):
         self.assertEqual(1, len(self.s.materials))
 
     def test__eq__(self):
-        s = Sphere(COPPER, 123.456)
+        s = SphereSample(COPPER, 123.456)
         self.assertEqual(s, self.s)
 
     def test__ne__(self):
-        s = Sphere(ZINC, 123.456)
+        s = SphereSample(ZINC, 123.456)
         self.assertNotEqual(s, self.s)
 
-        s = Sphere(COPPER, 124.456)
+        s = SphereSample(COPPER, 124.456)
         self.assertNotEqual(s, self.s)
 
-class TestSphereBuilder(TestCase):
+class TestSphereSampleBuilder(TestCase):
 
     def testbuild(self):
-        b = SphereBuilder()
+        b = SphereSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_diameter_m(1.0)

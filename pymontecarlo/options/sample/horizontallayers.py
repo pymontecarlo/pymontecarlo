@@ -12,7 +12,7 @@ from ..material import VACUUM
 
 # Globals and constants variables.
 
-class HorizontalLayers(LayeredSample):
+class HorizontalLayerSample(LayeredSample):
 
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, rotation_rad=0.0):
