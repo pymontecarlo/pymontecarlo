@@ -9,6 +9,8 @@ import pyxray.descriptor
 # Local modules.
 from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.options.material import VACUUM
+from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
     Substrate, Inclusion, HorizontalLayers, VerticalLayers, Sphere
 
@@ -17,6 +19,9 @@ from pymontecarlo.options.sample import \
 class Validator(object):
 
     def __init__(self):
+        self.beam_validate_methods = {}
+        self.beam_validate_methods[GaussianBeam] = self._validate_beam_gaussian
+
         self.sample_validate_methods = {}
         self.sample_validate_methods[Substrate] = self._validate_sample_substrate
         self.sample_validate_methods[Inclusion] = self._validate_sample_inclusion
@@ -58,6 +63,58 @@ class Validator(object):
         if material.density_kg_per_m3 < 0:
             exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0'
                              .format(material.density_kg_per_m3))
+            errors.add(exc)
+
+    def validate_beam(self, beam):
+        errors = set()
+        self._validate_beam(beam, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+    def _validate_beam(self, beam, errors):
+        # Energy
+        if beam.energy_eV <= 0.0:
+            exc = ValueError('Energy ({0:g} eV) must be greater than 0.0'
+                             .format(beam.energy_eV))
+            errors.add(exc)
+
+        # Particle
+        if beam.particle not in PARTICLES:
+            exc = ValueError('Unknown particle: {0}'.format(beam.particle))
+            errors.add(exc)
+
+        # Specific
+        beam_class = beam.__class__
+        if beam_class in self.beam_validate_methods:
+            method = self.beam_validate_methods[beam_class]
+            method(beam, errors)
+
+    def _validate_beam_gaussian(self, beam, errors):
+        # Diameter
+        if beam.diameter_m < 0.0:
+            exc = ValueError('Diameter ({0:g} m) must be greater or equal to 0.0'
+                             .format(beam.diameter_m))
+            errors.add(exc)
+
+        # x0
+        if not math.isfinite(beam.x0_m):
+            exc = ValueError('Initial x position must be a finite number')
+            errors.add(exc)
+
+        # y0
+        if not math.isfinite(beam.y0_m):
+            exc = ValueError('Initial y position must be a finite number')
+            errors.add(exc)
+
+        # Polar angle
+        if not math.isfinite(beam.polar_rad):
+            exc = ValueError('Polar angle must be a finite number')
+            errors.add(exc)
+
+        # Azimuth angle
+        if not math.isfinite(beam.azimuth_rad):
+            exc = ValueError('Azimuth angle must be a finite number')
             errors.add(exc)
 
     def validate_sample(self, sample):

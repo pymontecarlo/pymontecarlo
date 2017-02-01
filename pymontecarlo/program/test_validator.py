@@ -11,6 +11,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
+from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
     Substrate, Inclusion, HorizontalLayers, VerticalLayers, Sphere
 from pymontecarlo.exceptions import ValidationError
@@ -39,6 +40,20 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_material(material, errors)
         self.assertEqual(4, len(errors))
+
+    def testvalidate_beam_gaussian(self):
+        beam = GaussianBeam(10e3, 0.123)
+        self.v.validate_beam(beam)
+
+    def testvalidate_beam_gaussian_exception(self):
+        beam = GaussianBeam(0.0, -1.0, 'particle',
+                            float('inf'), float('nan'),
+                            float('inf'), float('nan'))
+        self.assertRaises(ValidationError, self.v.validate_beam, beam)
+
+        errors = set()
+        self.v._validate_beam(beam, errors)
+        self.assertEqual(7, len(errors))
 
     def testvalidate_sample_substrate(self):
         sample = Substrate(COPPER)
