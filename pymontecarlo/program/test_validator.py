@@ -31,6 +31,17 @@ class TestValidator(TestCase):
 
         self.v = Validator()
 
+        self.v.beam_validate_methods[GaussianBeam] = self.v._validate_beam_gaussian
+
+        self.v.sample_validate_methods[SubstrateSample] = self.v._validate_sample_substrate
+        self.v.sample_validate_methods[InclusionSample] = self.v._validate_sample_inclusion
+        self.v.sample_validate_methods[HorizontalLayerSample] = self.v._validate_sample_horizontallayers
+        self.v.sample_validate_methods[VerticalLayerSample] = self.v._validate_sample_verticallayers
+        self.v.sample_validate_methods[SphereSample] = self.v._validate_sample_sphere
+
+        self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
+        self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
+
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
         material2 = self.v.validate_material(material)
