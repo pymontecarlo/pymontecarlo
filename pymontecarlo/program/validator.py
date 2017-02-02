@@ -20,46 +20,27 @@ class Validator(object):
         self.sample_validate_methods = {}
         self.limit_validate_methods = {}
 
-    def validate_material(self, material):
+    def validate_options(self, options):
         errors = set()
-        material = self._validate_material(material, errors)
+        options = self._validate_options(options, errors)
 
         if errors:
             raise ValidationError(*errors)
 
-        return material
+        return options
 
-    def _validate_material(self, material, errors):
-        if material is VACUUM:
-            return material
+    def _validate_options(self, options, errors):
+        options.beam = self._validate_beam(options.beam, errors)
 
-        # Name
-        material.name = material.name.strip()
-        if not material.name:
-            exc = ValueError('Name ({0:s}) must be at least one character.'
-                             .format(material.name))
-            errors.add(exc)
+        options.sample = self._validate_sample(options.sample, errors)
 
-        # Composition
-        for z in material.composition:
-            try:
-                pyxray.descriptor.Element.validate(z)
-            except ValueError as exc:
-                errors.add(exc)
+        for i, detector in enumerate(options.detectors):
+            options.detectors[i] = self._validate_detector(detector, errors)
 
-        total = sum(material.composition.values())
-        if total != 1.0:
-            exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
-                             .format(total))
-            errors.add(exc)
+        for i, limit in enumerate(options.limits):
+            options.limits[i] = self._validate_limit(limit, errors)
 
-        # Density
-        if material.density_kg_per_m3 < 0:
-            exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0.'
-                             .format(material.density_kg_per_m3))
-            errors.add(exc)
-
-        return material
+        return options
 
     def validate_beam(self, beam):
         errors = set()
@@ -122,6 +103,47 @@ class Validator(object):
             errors.add(exc)
 
         return beam
+
+    def validate_material(self, material):
+        errors = set()
+        material = self._validate_material(material, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return material
+
+    def _validate_material(self, material, errors):
+        if material is VACUUM:
+            return material
+
+        # Name
+        material.name = material.name.strip()
+        if not material.name:
+            exc = ValueError('Name ({0:s}) must be at least one character.'
+                             .format(material.name))
+            errors.add(exc)
+
+        # Composition
+        for z in material.composition:
+            try:
+                pyxray.descriptor.Element.validate(z)
+            except ValueError as exc:
+                errors.add(exc)
+
+        total = sum(material.composition.values())
+        if total != 1.0:
+            exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
+                             .format(total))
+            errors.add(exc)
+
+        # Density
+        if material.density_kg_per_m3 < 0:
+            exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0.'
+                             .format(material.density_kg_per_m3))
+            errors.add(exc)
+
+        return material
 
     def validate_sample(self, sample):
         errors = set()
@@ -246,6 +268,18 @@ class Validator(object):
             errors.add(exc)
 
         return sample
+
+    def validate_detector(self, detector):
+        errors = set()
+        detector = self._validate_detector(detector, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return detector
+
+    def _validate_detector(self, detector, errors):
+        return detector
 
     def validate_limit(self, limit):
         errors = set()

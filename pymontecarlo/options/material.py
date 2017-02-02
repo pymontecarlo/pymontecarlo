@@ -13,7 +13,8 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute, Builder
-from pymontecarlo.util.composition import calculate_density_kg_per_m3, generate_name
+from pymontecarlo.util.composition import \
+    calculate_density_kg_per_m3, generate_name, composition_from_formula
 
 # Globals and constants variables.
 
@@ -61,12 +62,16 @@ class Material(object):
         :arg formula: formula of a molecule (e.g. ``Al2O3``)
         :type formula: :class:`str`
         """
-        composition = cls._composition_from_formula(formula)
-        return cls(composition, formula, density_kg_per_m3)
+        composition = composition_from_formula(formula)
+        return cls(formula, composition, density_kg_per_m3)
 
     def __repr__(self):
-        return '<Material(name=%s, composition=%s, density=%s kg/m3)>' % \
-            (self.name, self.composition, self.density_kg_per_m3)
+        return '<{classname}({name}, {composition}, {density} kg/m3)>' \
+            .format(classname=self.__class__.__name__,
+                    name=self.name,
+                    composition=' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
+                                         for z, wf in self.composition.items()),
+                    density=self.density_kg_per_m3)
 
     def __str__(self):
         return self.name

@@ -47,7 +47,7 @@ class Sample(metaclass=abc.ABCMeta):
         return tuple(more_itertools.unique_everseen(materials))
 
     @abc.abstractproperty
-    def materials(self):
+    def materials(self): #pragma: no cover
         """
         Returns a :class:`tuple` of all materials inside this geometry.
         :obj:`VACUUM` should not be included in the materials.

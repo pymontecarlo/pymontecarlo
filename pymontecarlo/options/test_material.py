@@ -18,12 +18,6 @@ from pymontecarlo.options.material import Material, VACUUM, MaterialBuilder
 
 class TestVACUUM(TestCase):
 
-    def setUp(self):
-        TestCase.setUp(self)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
     def testskeleton(self):
         self.assertEqual('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
@@ -36,15 +30,16 @@ class TestVACUUM(TestCase):
     def testpickle(self):
         self.assertIs(VACUUM, pickle.loads(pickle.dumps(VACUUM)))
 
+    def test__repr__(self):
+        expected = '<Vacuum()>'
+        self.assertEqual(expected, repr(VACUUM))
+
 class TestMaterial(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
         self.m = Material('Pure Cu', {29: 1.0}, 8960.0)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -68,6 +63,24 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(8.96, m.density_kg_per_m3 / 1000.0, 4)
         self.assertAlmostEqual(8.96, m.density_g_per_cm3, 4)
+
+    def testfrom_formula(self):
+        m = Material.from_formula('SiO2', 1250.0)
+
+        self.assertEqual('SiO2', str(m))
+
+        self.assertIn(14, m.composition)
+        self.assertAlmostEqual(0.4674, m.composition[14], 4)
+
+        self.assertIn(8, m.composition)
+        self.assertAlmostEqual(0.5326, m.composition[8], 4)
+
+        self.assertAlmostEqual(1.25, m.density_kg_per_m3 / 1000.0, 4)
+        self.assertAlmostEqual(1.25, m.density_g_per_cm3, 4)
+
+    def test__repr__(self):
+        expected = '<Material(Pure Cu, 100%Cu, 8960.0 kg/m3)>'
+        self.assertEqual(expected, repr(self.m))
 
     def test__eq__(self):
         m2 = Material('Pure Cu', {29: 1.0}, 8960.0)

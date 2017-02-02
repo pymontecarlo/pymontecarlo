@@ -74,6 +74,7 @@ class TestGaussianBeamBuilder(TestCase):
     def testbuild(self):
         b = GaussianBeamBuilder()
         b.add_energy_eV(10e3)
+        b.add_energy_keV(10) # Not added
         b.add_diameter_m(0.0)
         b.add_diameter_m(0.1)
         b.add_position(0.0, 0.0)
@@ -86,17 +87,18 @@ class TestGaussianBeamBuilder(TestCase):
         for beam in beams:
             self.assertEqual(ELECTRON, beam.particle)
 
-    def testbuild2(self):
+    def testbuild_nodiameter(self):
         b = GaussianBeamBuilder()
         b.add_energy_eV(10e3)
         b.add_position(0.0, 0.0)
         b.add_position(0.0, 0.1)
+        b.add_particle(ELECTRON)
 
         beams = b.build()
         self.assertEqual(0, len(beams))
         self.assertEqual(0, len(b))
 
-    def testbuild3(self):
+    def testbuild_linescan(self):
         b = GaussianBeamBuilder()
         b.add_energy_eV(10e3)
         b.add_diameter_m(0.123)
@@ -110,6 +112,20 @@ class TestGaussianBeamBuilder(TestCase):
             self.assertEqual(ELECTRON, beam.particle)
             self.assertAlmostEqual(0.123, beam.diameter_m, 4)
             self.assertAlmostEqual(0.456, beam.y0_m, 4)
+
+    def testbuild_noposition(self):
+        b = GaussianBeamBuilder()
+        b.add_energy_eV(10e3)
+        b.add_diameter_m(0.1)
+        b.add_particle(ELECTRON)
+
+        beams = b.build()
+        self.assertEqual(1, len(beams))
+        self.assertEqual(1, len(b))
+
+        for beam in beams:
+            self.assertAlmostEqual(0.0, beam.x0_m, 4)
+            self.assertAlmostEqual(0.0, beam.y0_m, 4)
 
 
 if __name__ == '__main__': #pragma: no cover
