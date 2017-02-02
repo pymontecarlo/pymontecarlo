@@ -2,12 +2,23 @@
 
 # Standard library modules.
 import abc
+import math
 
 # Third party modules.
 
 # Local modules.
 
 # Globals and constants variables.
+
+def are_sequence_equal(list0, list1):
+    if len(list0) != len(list1):
+        return False
+
+    for item0, item1 in zip(list0, list1):
+        if item0 != item1:
+            return False
+
+    return True
 
 class Builder(metaclass=abc.ABCMeta):
 
@@ -35,3 +46,8 @@ class MultiplierAttribute(object):
 
     def __delete__(self, instance):
         delattr(instance, self.attrname)
+
+class DegreesAttribute(MultiplierAttribute):
+
+    def __init__(self, attrname_rad):
+        super().__init__(attrname_rad, 180.0 / math.pi)

@@ -11,7 +11,8 @@ import more_itertools
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.util.cbook import MultiplierAttribute, Builder
+from pymontecarlo.util.cbook import \
+    DegreesAttribute, Builder, are_sequence_equal
 
 # Globals and constants variables.
 
@@ -53,8 +54,8 @@ class Sample(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    tilt_deg = MultiplierAttribute('tilt_rad', 180.0 / math.pi)
-    rotation_deg = MultiplierAttribute('rotation_rad', 180.0 / math.pi)
+    tilt_deg = DegreesAttribute('tilt_rad')
+    rotation_deg = DegreesAttribute('rotation_rad')
 
 class SampleBuilder(Builder):
 
@@ -121,17 +122,8 @@ class LayeredSample(Sample):
         self.layers = list(layers)
 
     def __eq__(self, other):
-        if not super().__eq__(other):
-            return False
-
-        if len(self.layers) != len(other.layers):
-            return False
-
-        for layer0, layer1 in zip(self.layers, other.layers):
-            if layer0 != layer1:
-                return False
-
-        return True
+        return super().__eq__(other) and \
+            are_sequence_equal(self.layers, other.layers)
 
     def add_layer(self, material, thickness_m):
         """

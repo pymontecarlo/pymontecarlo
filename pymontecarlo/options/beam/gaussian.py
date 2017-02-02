@@ -14,7 +14,7 @@ import numpy as np
 # Local modules.
 from .base import Beam, BeamBuilder
 from ..particle import ELECTRON
-from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.util.cbook import DegreesAttribute
 
 # Globals and constants variables.
 
@@ -72,8 +72,8 @@ class GaussianBeam(Beam):
             self.polar_rad == other.polar_rad and \
             self.azimuth_rad == other.azimuth_rad
 
-    polar_deg = MultiplierAttribute('polar_rad', 180.0 / math.pi)
-    azimuth_deg = MultiplierAttribute('azimuth_rad', 180.0 / math.pi)
+    polar_deg = DegreesAttribute('polar_rad')
+    azimuth_deg = DegreesAttribute('azimuth_rad')
 
 class GaussianBeamBuilder(BeamBuilder):
 
