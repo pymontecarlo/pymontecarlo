@@ -37,17 +37,20 @@ class Validator(object):
 
     def validate_material(self, material):
         errors = set()
-        self._validate_material(material, errors)
+        material = self._validate_material(material, errors)
 
         if errors:
             raise ValidationError(*errors)
+
+        return material
 
     def _validate_material(self, material, errors):
         if material is VACUUM:
             return material
 
         # Name
-        if not material.name.strip():
+        material.name = material.name.strip()
+        if not material.name:
             exc = ValueError('Name ({0:s}) must be at least one character'
                              .format(material.name))
             errors.add(exc)
@@ -71,12 +74,16 @@ class Validator(object):
                              .format(material.density_kg_per_m3))
             errors.add(exc)
 
+        return material
+
     def validate_beam(self, beam):
         errors = set()
-        self._validate_beam(beam, errors)
+        beam = self._validate_beam(beam, errors)
 
         if errors:
             raise ValidationError(*errors)
+
+        return beam
 
     def _validate_beam(self, beam, errors):
         # Energy
@@ -92,9 +99,14 @@ class Validator(object):
 
         # Specific
         beam_class = beam.__class__
-        if beam_class in self.beam_validate_methods:
-            method = self.beam_validate_methods[beam_class]
-            method(beam, errors)
+        if beam_class not in self.beam_validate_methods:
+            exc = ValueError('Beam ({0}) is not supported'
+                             .format(beam_class.__name__))
+
+        method = self.beam_validate_methods[beam_class]
+        beam = method(beam, errors)
+
+        return beam
 
     def _validate_beam_gaussian(self, beam, errors):
         # Diameter
@@ -123,12 +135,16 @@ class Validator(object):
             exc = ValueError('Azimuth angle must be a finite number')
             errors.add(exc)
 
+        return beam
+
     def validate_sample(self, sample):
         errors = set()
         self._validate_sample(sample, errors)
 
         if errors:
             raise ValidationError(*errors)
+
+        return sample
 
     def _validate_sample(self, sample, errors):
         # Tilt
@@ -143,91 +159,127 @@ class Validator(object):
 
         # Sample specific
         sample_class = sample.__class__
-        if sample_class in self.sample_validate_methods:
-            method = self.sample_validate_methods[sample_class]
-            method(sample, errors)
+        if sample_class not in self.sample_validate_methods:
+            exc = ValueError('Sample ({0}) is not supported'
+                             .format(sample_class.__name__))
+
+        method = self.sample_validate_methods[sample_class]
+        sample = method(sample, errors)
+
+        return sample
 
     def _validate_sample_substrate(self, sample, errors):
         if sample.material is VACUUM:
             exc = ValueError('Material cannot be VACUUM')
             errors.add(exc)
 
-        self._validate_material(sample.material, errors)
+        sample.material = self._validate_material(sample.material, errors)
+
+        return sample
 
     def _validate_sample_inclusion(self, sample, errors):
-        self._validate_material(sample.substrate_material, errors)
+        sample.substrate_material = \
+            self._validate_material(sample.substrate_material, errors)
 
-        self._validate_material(sample.inclusion_material, errors)
+        sample.inclusion_material = \
+            self._validate_material(sample.inclusion_material, errors)
 
         if sample.inclusion_diameter_m <= 0:
             exc = ValueError('Diameter ({0:g} m) must be greater than 0'
                              .format(sample.inclusion_diameter_m))
             errors.add(exc)
 
+        return sample
+
     def _validate_sample_layer(self, layer, errors):
-        self._validate_material(layer.material, errors)
+        layer.material = self._validate_material(layer.material, errors)
 
         if layer.thickness_m <= 0:
             exc = ValueError('Thickness ({0:g} m) must be greater than 0'
                              .format(layer.thickness_m))
             errors.add(exc)
 
-    def _validate_sample_horizontallayers(self, sample, errors):
-        self._validate_material(sample.substrate_material, errors)
+        return layer
 
-        for layer in sample.layers:
-            self._validate_sample_layer(layer, errors)
+    def _validate_sample_layered(self, sample, errors):
+        for i, layer in enumerate(sample.layers):
+            sample.layers[i] = self._validate_sample_layer(layer, errors)
+
+        return sample
+
+    def _validate_sample_horizontallayers(self, sample, errors):
+        sample.substrate_material = \
+            self._validate_material(sample.substrate_material, errors)
+
+        sample = self._validate_sample_layered(sample, errors)
 
         if sample.layers and sample.layers[-1].material is VACUUM:
             sample.layers.pop(-1)
+
+        return sample
 
     def _validate_sample_verticallayers(self, sample, errors):
         if sample.left_material is VACUUM:
             exc = ValueError('Left material cannot be VACUUM')
             errors.add(exc)
 
-        self._validate_material(sample.left_material, errors)
+        sample.left_material = \
+            self._validate_material(sample.left_material, errors)
 
         if sample.right_material is VACUUM:
             exc = ValueError('Right material cannot be VACUUM')
             errors.add(exc)
 
-        self._validate_material(sample.right_material, errors)
+        sample.right_material = \
+            self._validate_material(sample.right_material, errors)
 
-        for layer in sample.layers:
-            self._validate_sample_layer(layer, errors)
+        sample = self._validate_sample_layered(sample, errors)
+
+        return sample
 
     def _validate_sample_sphere(self, sample, errors):
         if sample.material is VACUUM:
             exc = ValueError('Material cannot be VACUUM')
             errors.add(exc)
 
-        self._validate_material(sample.material, errors)
+        sample.material = self._validate_material(sample.material, errors)
 
         if sample.diameter_m <= 0:
             exc = ValueError('Diameter ({0:g} m) must be greater than 0'
                              .format(sample.diameter_m))
             errors.add(exc)
 
+        return sample
+
     def validate_limit(self, limit):
         errors = set()
-        self._validate_limit(limit, errors)
+        limit = self._validate_limit(limit, errors)
 
         if errors:
             raise ValidationError(*errors)
 
+        return limit
+
     def _validate_limit(self, limit, errors):
         # Specific
         limit_class = limit.__class__
-        if limit_class in self.limit_validate_methods:
-            method = self.limit_validate_methods[limit_class]
-            method(limit, errors)
+        if limit_class not in self.limit_validate_methods:
+            exc = ValueError('Limit ({0}) is not supported'
+                             .format(limit_class.__name__))
+            errors.add(exc)
+
+        method = self.limit_validate_methods[limit_class]
+        limit = method(limit, errors)
+
+        return limit
 
     def _validate_limit_showers(self, limit, errors):
         if limit.showers <= 0:
             exc = ValueError('Number of showers ({0:d}) must be greater than 0'
                              .format(limit.showers))
             errors.add(exc)
+
+        return limit
 
     def _validate_limit_uncertainty(self, limit, errors):
         # Atomic number
@@ -247,4 +299,6 @@ class Validator(object):
             exc = ValueError('Uncertainty ({0:g}) must be greater than 0'
                              .format(limit.uncertainty))
             errors.add(exc)
+
+        return limit
 
