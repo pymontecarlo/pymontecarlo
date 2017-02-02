@@ -10,7 +10,7 @@ import operator
 # Third party modules.
 
 # Local modules.
-from .base import Sample, SampleBuilder
+from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 # Globals and constants variables.
 

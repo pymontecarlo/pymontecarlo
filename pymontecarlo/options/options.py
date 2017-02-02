@@ -3,14 +3,12 @@ Main class containing all options of a simulation
 """
 
 # Standard library modules.
-import uuid
 import itertools
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder
-from pymontecarlo.exceptions import ValidationError
+from pymontecarlo.util.cbook import Builder, are_sequence_equal
 
 # Globals and constants variables.
 
@@ -21,7 +19,6 @@ class Options(object):
         """
         Options for a simulation.
         """
-        self.uuid = uuid.uuid4().hex
         self.program = program
         self.beam = beam
         self.sample = sample
@@ -39,16 +36,26 @@ class Options(object):
         self.models = list(models)
 
     def __repr__(self):
-        return '<{classname}({uuid})>' \
+        return '<{classname}()>' \
             .format(classname=self.__class__.__name__, **self.__dict__)
+
+    def __eq__(self, other):
+        return self.program == other.program and \
+            self.beam == other.beam and \
+            self.sample == other.sample and \
+            are_sequence_equal(self.detectors, other.detectors) and \
+            are_sequence_equal(self.limits, other.limits) and \
+            are_sequence_equal(self.models, other.models)
+
+    def find_detectors(self, detector_class):
+        pass
+
+    def find_limits(self, limit_class):
+        pass
 
 class OptionsBuilder(Builder):
 
-    MODE_IGNORE = 'ignore' # Remove incompatible or invalid options
-    MODE_STRICT = 'strict' # Raise exceptions for incompatible and invalid options
-
-    def __init__(self, mode=MODE_IGNORE):
-        self.mode = mode
+    def __init__(self):
         self.programs = set()
         self.beams = []
         self.samples = []
@@ -69,6 +76,10 @@ class OptionsBuilder(Builder):
         if sample not in self.samples:
             self.samples.append(sample)
 
+    def add_detector(self, detector):
+        if detector not in self.detectors:
+            self.detectors.append(detector)
+
     def add_limit(self, program, limit):
         self.limits.setdefault(program, []).append(limit)
 
@@ -77,8 +88,6 @@ class OptionsBuilder(Builder):
 
         for program in self.programs:
             expander = program.expander
-            converter = program.converter
-            validator = program.validator
 
             detectors = self.detectors
             detector_combinations = expander.expand_detectors(detectors)
@@ -92,16 +101,7 @@ class OptionsBuilder(Builder):
                                         limit_combinations)
             for beam, sample, detectors, limits in product:
                 options = Options(program, beam, sample, detectors, limits)
-
-                options = converter.convert_options(options)
-
-                try:
-                    validator.validate_options(options)
-                except ValidationError:
-                    if self.mode == self.MODE_STRICT:
-                        raise
-                else:
-                    list_options.append(options)
+                list_options.append(options)
 
         return list_options
 

@@ -7,7 +7,7 @@ Vertical layers sample
 # Third party modules.
 
 # Local modules.
-from .base import LayeredSample
+from pymontecarlo.options.sample.base import LayeredSample
 
 # Globals and constants variables.
 

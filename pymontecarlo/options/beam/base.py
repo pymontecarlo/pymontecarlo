@@ -10,7 +10,7 @@ import operator
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute, Builder
-from ..particle import ELECTRON
+from pymontecarlo.options.particle import ELECTRON
 
 # Globals and constants variables.
 

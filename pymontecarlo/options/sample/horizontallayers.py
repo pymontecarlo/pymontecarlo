@@ -7,8 +7,8 @@ Horizontal layers sample.
 # Third party modules.
 
 # Local modules.
-from .base import LayeredSample
-from ..material import VACUUM
+from pymontecarlo.options.sample.base import LayeredSample
+from pymontecarlo.options.material import VACUUM
 
 # Globals and constants variables.
 

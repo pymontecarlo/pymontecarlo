@@ -12,8 +12,8 @@ import operator
 import numpy as np
 
 # Local modules.
-from .base import Beam, BeamBuilder
-from ..particle import ELECTRON
+from pymontecarlo.options.beam.base import Beam, BeamBuilder
+from pymontecarlo.options.particle import ELECTRON
 from pymontecarlo.util.cbook import DegreesAttribute
 
 # Globals and constants variables.

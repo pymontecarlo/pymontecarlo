@@ -8,7 +8,7 @@ Limit based on reaching uncertainty.
 import pyxray
 
 # Local modules.
-from .base import Limit
+from pymontecarlo.options.limit.base import Limit
 
 # Globals and constants variables.
 

@@ -7,7 +7,7 @@ Limit based on the number of simulated particles.
 # Third party modules.
 
 # Local modules.
-from .base import Limit
+from pymontecarlo.options.limit.base import Limit
 
 # Globals and constants variables.
 
