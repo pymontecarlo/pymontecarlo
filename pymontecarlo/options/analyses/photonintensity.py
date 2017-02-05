@@ -1,25 +1,21 @@
-"""
-Base analysis.
-"""
+""""""
 
 # Standard library modules.
-import abc
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.options.analyses.base import Analysis
 
 # Globals and constants variables.
 
-class Analysis(metaclass=abc.ABCMeta):
+class PhotonIntensityAnalysis(Analysis):
 
     def __eq__(self, other):
-        return True
+        return super().__eq__(other)
 
-    @abc.abstractmethod
     def apply(self, options):
         return []
 
-    @abc.abstractmethod
     def calculate(self, simulations):
         pass

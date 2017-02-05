@@ -44,3 +44,21 @@ class Expander(metaclass=abc.ABCMeta):
         single :class:`Options`.
         """
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def expand_models(self, models):
+        """
+        Takes a :class:`list` of models and returns a :class:`list` of 
+        :class:`tuple` where each tuple corresponds to the models for a
+        single :class:`Options`.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def expand_analyses(self, analyses):
+        """
+        Takes a :class:`list` of analyses and returns a :class:`list` of 
+        :class:`tuple` where each tuple corresponds to the analyses for a
+        single :class:`Options`.
+        """
+        raise NotImplementedError

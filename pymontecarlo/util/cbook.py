@@ -20,6 +20,19 @@ def are_sequence_equal(list0, list1):
 
     return True
 
+def are_mapping_equal(map0, map1):
+    if len(map0) != len(map1):
+        return False
+
+    for key in map0:
+        if key not in map1:
+            return False
+
+        if map0[key] != map1[key]:
+            return False
+
+    return True
+
 class Builder(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod

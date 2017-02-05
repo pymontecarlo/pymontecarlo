@@ -17,6 +17,7 @@ from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
 from pymontecarlo.options.detector.photon import PhotonDetector
+from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
@@ -44,6 +45,9 @@ class TestValidator(TestCase):
 
         self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
         self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
+
+        self.v.analysis_validate_methods[PhotonIntensityAnalysis] = self.v._validate_analysis_photonintensity
+        self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
 
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
@@ -187,6 +191,26 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_limit(limit, errors)
         self.assertEqual(2, len(errors))
+
+    def testvalidate_analysis_photonintensity(self):
+        analysis = PhotonIntensityAnalysis()
+        analysis2 = self.v.validate_analysis(analysis)
+        self.assertEqual(analysis2, analysis)
+
+    def testvalidate_analysis_kratio(self):
+        analysis = KRatioAnalysis()
+        analysis.add_standard_material(13, Material.pure(13))
+        analysis2 = self.v.validate_analysis(analysis)
+        self.assertEqual(analysis2, analysis)
+
+    def testvalidate_analysis_kratio_exception(self):
+        analysis = KRatioAnalysis()
+        analysis.add_standard_material(14, Material.pure(13))
+        self.assertRaises(ValidationError, self.v.validate_analysis, analysis)
+
+        errors = set()
+        self.v._validate_analysis(analysis, errors)
+        self.assertEqual(1, len(errors))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

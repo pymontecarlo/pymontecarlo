@@ -101,22 +101,26 @@ class OptionsBuilder(Builder):
         list_options = []
 
         for program in self.programs:
-            expander = program.expander
+            expander = program.create_expander()
 
             detectors = self.detectors
-            detector_combinations = expander.expand_detectors(detectors)
+            detector_combinations = expander.expand_detectors(detectors) or [(None,)]
 
             limits = self.limits.get(program, [])
-            limit_combinations = expander.expand_limits(limits)
+            limit_combinations = expander.expand_limits(limits) or [(None,)]
 
             models = self.models.get(program, [])
+            model_combinations = expander.expand_models(models) or [(None,)]
+
+            analyses = self.analyses
+            analysis_combinations = expander.expand_analyses(analyses) or [(None,)]
 
             product = itertools.product(self.beams,
                                         self.samples,
                                         detector_combinations,
                                         limit_combinations,
-                                        models,
-                                        self.analyses)
+                                        model_combinations,
+                                        analysis_combinations)
             for beam, sample, detectors, limits, models, analyses in product:
                 options = Options(program, beam, sample,
                                   detectors, limits, models, analyses)

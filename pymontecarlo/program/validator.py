@@ -618,4 +618,23 @@ class Validator(object):
 
         return analysis
 
+    def _validate_analysis_photonintensity(self, analysis, errors):
+        return analysis
+
+    def _validate_analysis_kratio(self, analysis, errors):
+        analysis.standard_materials = \
+            self._validate_analysis_kratio_standard_materials(analysis.standard_materials, errors)
+
+        return analysis
+
+    def _validate_analysis_kratio_standard_materials(self, materials, errors):
+        for z, material in materials.items():
+            materials[z] = self._validate_material(material, errors)
+
+            if z not in material.composition:
+                exc = ValueError('Standard for element {0} does not have this element in its composition'
+                                 .format(pyxray.element_symbol(z)))
+                errors.add(exc)
+
+        return materials
 
