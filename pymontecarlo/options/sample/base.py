@@ -13,10 +13,11 @@ import more_itertools
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
     DegreesAttribute, Builder, are_sequence_equal
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Sample(metaclass=abc.ABCMeta):
+class Sample(Option):
     """
     Base class for all sample representations.
     """
@@ -31,11 +32,14 @@ class Sample(metaclass=abc.ABCMeta):
         :arg rotation_rad: rotation around the z-axis of the tilted sample
         :type rotation_rad: :class:`float`
         """
+        super().__init__()
+
         self.tilt_rad = tilt_rad
         self.rotation_rad = rotation_rad
 
     def __eq__(self, other):
-        return self.tilt_rad == other.tilt_rad and \
+        return super().__eq__(other) and \
+            self.tilt_rad == other.tilt_rad and \
             self.rotation_rad == other.rotation_rad
 
     def _cleanup_materials(self, *materials):

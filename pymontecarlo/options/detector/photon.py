@@ -15,6 +15,8 @@ from pymontecarlo.util.cbook import DegreesAttribute
 class PhotonDetector(Detector):
 
     def __init__(self, elevation_rad, azimuth_rad=0.0):
+        super().__init__()
+
         self.elevation_rad = elevation_rad
         self.azimuth_rad = azimuth_rad
 

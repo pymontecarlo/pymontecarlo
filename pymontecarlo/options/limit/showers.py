@@ -14,6 +14,7 @@ from pymontecarlo.options.limit.base import Limit
 class ShowersLimit(Limit):
 
     def __init__(self, showers):
+        super().__init__()
         self.showers = showers
 
     def __repr__(self):

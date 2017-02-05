@@ -15,10 +15,11 @@ import numpy as np
 from pymontecarlo.util.cbook import MultiplierAttribute, Builder
 from pymontecarlo.util.composition import \
     calculate_density_kg_per_m3, generate_name, composition_from_formula
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Material(object):
+class Material(Option):
 
     def __init__(self, name, composition, density_kg_per_m3):
         """
@@ -36,6 +37,8 @@ class Material(object):
         :arg density_kg_per_m3: material's density in kg/m3.
         :type density_kg_per_m3: :class:`float`
         """
+        super().__init__()
+
         self.name = name
         self.composition = composition.copy()
         self.density_kg_per_m3 = density_kg_per_m3
@@ -77,7 +80,8 @@ class Material(object):
         return self.name
 
     def __eq__(self, other):
-        return self.name == other.name and \
+        return super().__eq__(other) and \
+            self.name == other.name and \
             self.composition == other.composition and \
             self.density_kg_per_m3 == other.density_kg_per_m3
 

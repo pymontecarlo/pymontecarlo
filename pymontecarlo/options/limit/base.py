@@ -8,13 +8,12 @@ Base classes for limits
 
 # Local modules.
 from pymontecarlo.util.cbook import Builder
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Limit(object):
-
-    def __eq__(self, other):
-        return True
+class Limit(Option):
+    pass
 
 class LimitBuilder(Builder):
     pass

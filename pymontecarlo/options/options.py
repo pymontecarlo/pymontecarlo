@@ -9,16 +9,19 @@ import itertools
 
 # Local modules.
 from pymontecarlo.util.cbook import Builder, are_sequence_equal
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Options(object):
+class Options(Option):
 
     def __init__(self, program, beam, sample,
                  detectors=None, limits=None, models=None, analyses=None):
         """
         Options for a simulation.
         """
+        super().__init__()
+
         self.program = program
         self.beam = beam
         self.sample = sample
@@ -44,7 +47,8 @@ class Options(object):
             .format(classname=self.__class__.__name__, **self.__dict__)
 
     def __eq__(self, other):
-        return self.program == other.program and \
+        return super().__eq__(other) and \
+            self.program == other.program and \
             self.beam == other.beam and \
             self.sample == other.sample and \
             are_sequence_equal(self.detectors, other.detectors) and \

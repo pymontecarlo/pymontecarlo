@@ -8,13 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Analysis(metaclass=abc.ABCMeta):
-
-    def __eq__(self, other):
-        return True
+class Analysis(Option):
 
     @abc.abstractmethod
     def apply(self, options):

@@ -11,10 +11,11 @@ import operator
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute, Builder
 from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Beam(object):
+class Beam(Option):
     """
     Base beam.
     """
@@ -27,11 +28,14 @@ class Beam(object):
         :arg particle: type of particles [default: :data:`.ELECTRON`]
         :type particle: :mod:`.particle`
         """
+        super().__init__()
+
         self.energy_eV = energy_eV
         self.particle = particle
 
     def __eq__(self, other):
-        return self.energy_eV == other.energy_eV and \
+        return super().__eq__(other) and \
+            self.energy_eV == other.energy_eV and \
             self.particle == other.particle
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)

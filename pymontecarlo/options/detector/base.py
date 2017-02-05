@@ -8,13 +8,12 @@ Base detector.
 
 # Local modules.
 from pymontecarlo.util.cbook import Builder
+from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
 
-class Detector(object):
-
-    def __eq__(self, other):
-        return True
+class Detector(Option):
+    pass
 
 class DetectorBuilder(Builder):
     pass

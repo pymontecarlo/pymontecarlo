@@ -15,6 +15,7 @@ from pymontecarlo.options.limit.base import Limit
 class UncertaintyLimit(Limit):
 
     def __init__(self, atomic_number, transition, detector, uncertainty):
+        super().__init__()
         self.atomic_number = atomic_number
         self.transition = transition
         self.detector = detector
