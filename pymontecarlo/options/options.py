@@ -56,11 +56,21 @@ class Options(Option):
             are_sequence_equal(self.models, other.models) and \
             are_sequence_equal(self.analyses, other.analyses)
 
+    def _find(self, objects, clasz):
+        found_objects = []
+        for obj in objects:
+            if obj.__class__ == clasz:
+                found_objects.append(obj)
+        return found_objects
+
     def find_detectors(self, detector_class):
-        pass
+        return self._find(self.detectors, detector_class)
 
     def find_limits(self, limit_class):
-        pass
+        return self._find(self.limits, limit_class)
+
+    def find_models(self, model_class):
+        return self._find(self.models, model_class)
 
 class OptionsBuilder(Builder):
 

@@ -9,6 +9,9 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.options.detector import PhotonDetector
+from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
+from pymontecarlo.options.model import ElasticCrossSectionModel, EnergyLossModel
 
 # Globals and constants variables.
 
@@ -21,6 +24,27 @@ class TestOptions(TestCase):
 
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)
+
+    def testfind_detectors(self):
+        detectors = self.options.find_detectors(PhotonDetector)
+        self.assertEqual(1, len(detectors))
+
+        detectors = self.options.find_detectors(object)
+        self.assertEqual(0, len(detectors))
+
+    def testfind_limits(self):
+        limits = self.options.find_limits(ShowersLimit)
+        self.assertEqual(1, len(limits))
+
+        limits = self.options.find_limits(UncertaintyLimit)
+        self.assertEqual(0, len(limits))
+
+    def testfind_models(self):
+        models = self.options.find_models(ElasticCrossSectionModel)
+        self.assertEqual(1, len(models))
+
+        models = self.options.find_models(EnergyLossModel)
+        self.assertEqual(0, len(models))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
