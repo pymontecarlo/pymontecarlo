@@ -61,6 +61,9 @@ class ProgramMock(Program):
     def create_expander(self):
         return ExpanderMock()
 
+    def create_default_limits(self, options):
+        return [ShowersLimit(100)]
+
     @property
     def name(self):
         return 'mock'

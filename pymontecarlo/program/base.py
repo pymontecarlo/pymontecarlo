@@ -21,6 +21,10 @@ class Program(metaclass=abc.ABCMeta):
     def create_expander(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def create_default_limits(self, options):
+        raise NotImplementedError
+
     @abc.abstractproperty
     def name(self):
         raise NotImplementedError
