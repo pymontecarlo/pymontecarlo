@@ -48,3 +48,30 @@ class VerticalLayerSample(LayeredSample):
         return self._cleanup_materials(self.left_material,
                                        self.right_material,
                                        *super().materials)
+
+    @property
+    def layers_xpositions_m(self):
+        xpositions_m = []
+
+        xmax_m = -sum(layer.thickness_m for layer in self.layers) / 2
+        for layer in self.layers:
+            xmin_m = xmax_m
+            xmax_m = xmin_m + layer.thickness_m
+            xpositions_m.append((xmin_m, xmax_m))
+
+        return xpositions_m
+
+#def _calculate_positions(self):
+#        layers = np.array(self.geometry.layers, ndmin=1)
+#        thicknesses = list(map(_THICKNESS_GETTER, layers))
+#
+#        positions = []
+#        if thicknesses: # simple couple
+#            middle = sum(thicknesses) / 2.0
+#            for i in range(len(thicknesses)):
+#                positions.append(sum(thicknesses[:i]) - middle)
+#            positions.append(positions[-1] + thicknesses[-1])
+#        else:
+#            positions.append(0.0)
+#
+#        return positions

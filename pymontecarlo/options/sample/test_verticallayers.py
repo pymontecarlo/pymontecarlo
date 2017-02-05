@@ -64,6 +64,35 @@ class TestVerticalLayerSample(TestCase):
         self.assertEqual(3, len(self.s2.materials))
         self.assertEqual(3, len(self.s3.materials))
 
+    def testlayers_xpositions_m(self):
+        # Vertical layers 1
+        xpositions_m = self.s1.layers_xpositions_m
+        self.assertEqual(len(self.s1.layers), len(xpositions_m))
+
+        xmin_m, xmax_m = xpositions_m[0]
+        self.assertAlmostEqual(-250.0, xmin_m, 4)
+        self.assertAlmostEqual(250.0, xmax_m, 4)
+
+        # Vertical layers 2
+        xpositions_m = self.s2.layers_xpositions_m
+        self.assertEqual(len(self.s2.layers), len(xpositions_m))
+
+        xmin_m, xmax_m = xpositions_m[0]
+        self.assertAlmostEqual(-150.0, xmin_m, 4)
+        self.assertAlmostEqual(-50.0, xmax_m, 4)
+
+        xmin_m, xmax_m = xpositions_m[1]
+        self.assertAlmostEqual(-50.0, xmin_m, 4)
+        self.assertAlmostEqual(150.0, xmax_m, 4)
+
+        # Vertical layers 3
+        xpositions_m = self.s3.layers_xpositions_m
+        self.assertEqual(len(self.s3.layers), len(xpositions_m))
+
+        xmin_m, xmax_m = xpositions_m[0]
+        self.assertAlmostEqual(-250.0, xmin_m, 4)
+        self.assertAlmostEqual(250.0, xmax_m, 4)
+
     def test__eq__(self):
         s1 = VerticalLayerSample(COPPER, ZINC)
         s1.add_layer(GALLIUM, 500.0)

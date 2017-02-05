@@ -56,3 +56,15 @@ class HorizontalLayerSample(LayeredSample):
     def materials(self):
         return self._cleanup_materials(self.substrate_material,
                                        *super().materials)
+
+    @property
+    def layers_zpositions_m(self):
+        zpositions = []
+
+        zmax_m = 0.0
+        for layer in self.layers:
+            zmin_m = zmax_m
+            zmax_m = zmin_m - layer.thickness_m
+            zpositions.append((zmin_m, zmax_m))
+
+        return zpositions

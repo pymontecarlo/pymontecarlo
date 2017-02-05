@@ -77,6 +77,47 @@ class TestHorizontalLayerSample(TestCase):
         self.assertEqual(2, len(self.s2.materials))
         self.assertEqual(3, len(self.s3.materials))
 
+    def testlayers_zpositions_m(self):
+        # Horizontal layers 1
+        zpositions_m = self.s1.layers_zpositions_m
+        self.assertEqual(len(self.s1.layers), len(zpositions_m))
+
+        zmin_m, zmax_m = zpositions_m[0]
+        self.assertAlmostEqual(0.0, zmin_m, 4)
+        self.assertAlmostEqual(-123.456, zmax_m, 4)
+
+        zmin_m, zmax_m = zpositions_m[1]
+        self.assertAlmostEqual(-123.456, zmin_m, 4)
+        self.assertAlmostEqual(-123.456 - 456.789, zmax_m, 4)
+
+        # Horizontal layers 2
+        zpositions_m = self.s2.layers_zpositions_m
+        self.assertEqual(len(self.s2.layers), len(zpositions_m))
+
+        zmin_m, zmax_m = zpositions_m[0]
+        self.assertAlmostEqual(0.0, zmin_m, 4)
+        self.assertAlmostEqual(-123.456, zmax_m, 4)
+
+        zmin_m, zmax_m = zpositions_m[1]
+        self.assertAlmostEqual(-123.456, zmin_m, 4)
+        self.assertAlmostEqual(-123.456 - 456.789, zmax_m, 4)
+
+        # Horizontal layers 3
+        zpositions_m = self.s3.layers_zpositions_m
+        self.assertEqual(len(self.s3.layers), len(zpositions_m))
+
+        zmin_m, zmax_m = zpositions_m[0]
+        self.assertAlmostEqual(0.0, zmin_m, 4)
+        self.assertAlmostEqual(-123.456, zmax_m, 4)
+
+        zmin_m, zmax_m = zpositions_m[1]
+        self.assertAlmostEqual(-123.456, zmin_m, 4)
+        self.assertAlmostEqual(-123.456 - 456.789, zmax_m, 4)
+
+        zmin_m, zmax_m = zpositions_m[2]
+        self.assertAlmostEqual(-123.456 - 456.789, zmin_m, 4)
+        self.assertAlmostEqual(-123.456 - 456.789 - 456.123, zmax_m, 4)
+
     def test__eq__(self):
         s1 = HorizontalLayerSample(COPPER)
         s1.add_layer(ZINC, 123.456)
