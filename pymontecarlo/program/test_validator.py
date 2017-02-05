@@ -56,206 +56,208 @@ class TestValidator(TestCase):
         self.v.valid_models[ElasticCrossSectionModel] = [ELSEPA2005]
         self.v.default_models[ElasticCrossSectionModel] = ELSEPA2005
 
+        self.options = self.create_basic_options()
+
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
-        material2 = self.v.validate_material(material)
+        material2 = self.v.validate_material(material, self.options)
         self.assertEqual(material2, material)
 
     def testvalidate_material_exception(self):
         material = Material(' ', {120: 0.5}, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_material, material)
+        self.assertRaises(ValidationError, self.v.validate_material, material, self.options)
 
         errors = set()
-        self.v._validate_material(material, errors)
+        self.v._validate_material(material, self.options, errors)
         self.assertEqual(4, len(errors))
 
     def testvalidate_beam_gaussian(self):
         beam = GaussianBeam(10e3, 0.123)
-        beam2 = self.v.validate_beam(beam)
+        beam2 = self.v.validate_beam(beam, self.options)
         self.assertEqual(beam2, beam)
 
     def testvalidate_beam_gaussian_exception(self):
         beam = GaussianBeam(0.0, -1.0, 'particle',
                             float('inf'), float('nan'),
                             float('inf'), float('nan'))
-        self.assertRaises(ValidationError, self.v.validate_beam, beam)
+        self.assertRaises(ValidationError, self.v.validate_beam, beam, self.options)
 
         errors = set()
-        self.v._validate_beam(beam, errors)
+        self.v._validate_beam(beam, self.options, errors)
         self.assertEqual(7, len(errors))
 
     def testvalidate_sample_substrate(self):
         sample = SubstrateSample(COPPER)
-        sample2 = self.v.validate_sample(sample)
+        sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
 
     def testvalidate_sample_substrate_exception(self):
         sample = SubstrateSample(VACUUM, float('inf'), float('nan'))
-        self.assertRaises(ValidationError, self.v.validate_sample, sample)
+        self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, errors)
+        self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(3, len(errors))
 
     def testvalidate_sample_inclusion(self):
         sample = InclusionSample(COPPER, ZINC, 1.0)
-        sample2 = self.v.validate_sample(sample)
+        sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
 
     def testvalidate_sample_inclusion_exception(self):
         sample = InclusionSample(COPPER, ZINC, 0.0)
-        self.assertRaises(ValidationError, self.v.validate_sample, sample)
+        self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, errors)
+        self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_sample_horizontallayers(self):
         sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, 1.0)
-        sample2 = self.v.validate_sample(sample)
+        sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
 
     def testvalidate_sample_horizontallayers_empty_layer(self):
         sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, 1.0)
         sample.add_layer(VACUUM, 2.0)
-        self.v.validate_sample(sample)
+        self.v.validate_sample(sample, self.options)
         self.assertEqual(1, len(sample.layers))
 
     def testvalidate_sample_horizontallayers_exception(self):
         sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_sample, sample)
+        self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, errors)
+        self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_sample_verticallayers(self):
         sample = VerticalLayerSample(COPPER, ZINC)
         sample.add_layer(GALLIUM, 1.0)
-        sample2 = self.v.validate_sample(sample)
+        sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
 
     def testvalidate_sample_verticallayers_exception(self):
         sample = VerticalLayerSample(VACUUM, VACUUM)
         sample.add_layer(GALLIUM, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_sample, sample)
+        self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, errors)
+        self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(3, len(errors))
 
     def testvalidate_sample_sphere(self):
         sample = SphereSample(COPPER, 1.0)
-        sample2 = self.v.validate_sample(sample)
+        sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
 
     def testvalidate_sample_sphere_exception(self):
         sample = SphereSample(VACUUM, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_sample, sample)
+        self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, errors)
+        self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(2, len(errors))
 
     def testvalidate_detector_photon(self):
         detector = PhotonDetector(1.1, 2.2)
-        detector2 = self.v.validate_detector(detector)
+        detector2 = self.v.validate_detector(detector, self.options)
         self.assertEqual(detector2, detector)
 
     def testvalidate_detector_photon_exception(self):
         detector = PhotonDetector(2.0, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_detector, detector)
+        self.assertRaises(ValidationError, self.v.validate_detector, detector, self.options)
 
         errors = set()
-        self.v._validate_detector(detector, errors)
+        self.v._validate_detector(detector, self.options, errors)
         self.assertEqual(2, len(errors))
 
     def testvalidate_limit_showers(self):
         limit = ShowersLimit(1000)
-        limit2 = self.v.validate_limit(limit)
+        limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
 
     def testvalidate_limit_showers_exception(self):
         limit = ShowersLimit(0)
-        self.assertRaises(ValidationError, self.v.validate_limit, limit)
+        self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
 
         errors = set()
-        self.v._validate_limit(limit, errors)
+        self.v._validate_limit(limit, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_limit_uncertainty(self):
-        limit = UncertaintyLimit(13, 'Ka1', None, 0.02)
-        limit2 = self.v.validate_limit(limit)
+        limit = UncertaintyLimit(13, 'Ka1', self.options, 0.02)
+        limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
 
     def testvalidate_limit_uncertainty_exception(self):
-        limit = UncertaintyLimit(-1, 'Ka1', None, 0.0)
-        self.assertRaises(ValidationError, self.v.validate_limit, limit)
+        limit = UncertaintyLimit(-1, 'Ka1', self.options, 0.0)
+        self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
 
         errors = set()
-        self.v._validate_limit(limit, errors)
+        self.v._validate_limit(limit, self.options, errors)
         self.assertEqual(2, len(errors))
 
     def testvalidate_models(self):
         models = [ELSEPA2005]
-        models2 = self.v.validate_models(models)
+        models2 = self.v.validate_models(models, self.options)
         self.assertSequenceEqual(models2, models)
 
     def testvalidate_models_exception(self):
         models = [RUTHERFORD]
-        self.assertRaises(ValidationError, self.v.validate_models, models)
+        self.assertRaises(ValidationError, self.v.validate_models, models, self.options)
 
         errors = set()
-        self.v._validate_models(models, errors)
+        self.v._validate_models(models, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_models_default(self):
         models = []
-        models2 = self.v.validate_models(models)
+        models2 = self.v.validate_models(models, self.options)
         self.assertSequenceEqual(models2, [ELSEPA2005])
 
     def testvalidate_model(self):
         model = ELSEPA2005
-        model2 = self.v.validate_model(model)
+        model2 = self.v.validate_model(model, self.options)
         self.assertEqual(model2, model)
 
     def testvalidate_model_exception(self):
         model = RUTHERFORD
-        self.assertRaises(ValidationError, self.v.validate_model, model)
+        self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
 
         errors = set()
-        self.v._validate_model(model, errors)
+        self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_model_exception2(self):
         model = POUCHOU_PICHOIR1991
-        self.assertRaises(ValidationError, self.v.validate_model, model)
+        self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
 
         errors = set()
-        self.v._validate_model(model, errors)
+        self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))
 
     def testvalidate_analysis_photonintensity(self):
         analysis = PhotonIntensityAnalysis()
-        analysis2 = self.v.validate_analysis(analysis)
+        analysis2 = self.v.validate_analysis(analysis, self.options)
         self.assertEqual(analysis2, analysis)
 
     def testvalidate_analysis_kratio(self):
         analysis = KRatioAnalysis()
         analysis.add_standard_material(13, Material.pure(13))
-        analysis2 = self.v.validate_analysis(analysis)
+        analysis2 = self.v.validate_analysis(analysis, self.options)
         self.assertEqual(analysis2, analysis)
 
     def testvalidate_analysis_kratio_exception(self):
         analysis = KRatioAnalysis()
         analysis.add_standard_material(14, Material.pure(13))
-        self.assertRaises(ValidationError, self.v.validate_analysis, analysis)
+        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
-        self.v._validate_analysis(analysis, errors)
+        self.v._validate_analysis(analysis, self.options, errors)
         self.assertEqual(1, len(errors))
 
 if __name__ == '__main__': #pragma: no cover
