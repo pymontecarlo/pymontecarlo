@@ -54,6 +54,7 @@ class TestValidator(TestCase):
         self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
 
         self.v.valid_models[ElasticCrossSectionModel] = [ELSEPA2005]
+        self.v.default_models[ElasticCrossSectionModel] = ELSEPA2005
 
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
@@ -197,6 +198,24 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_limit(limit, errors)
         self.assertEqual(2, len(errors))
+
+    def testvalidate_models(self):
+        models = [ELSEPA2005]
+        models2 = self.v.validate_models(models)
+        self.assertSequenceEqual(models2, models)
+
+    def testvalidate_models_exception(self):
+        models = [RUTHERFORD]
+        self.assertRaises(ValidationError, self.v.validate_models, models)
+
+        errors = set()
+        self.v._validate_models(models, errors)
+        self.assertEqual(1, len(errors))
+
+    def testvalidate_models_default(self):
+        models = []
+        models2 = self.v.validate_models(models)
+        self.assertSequenceEqual(models2, [ELSEPA2005])
 
     def testvalidate_model(self):
         model = ELSEPA2005

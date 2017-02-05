@@ -33,6 +33,7 @@ class Validator(object):
         self.analysis_validate_methods = {}
 
         self.valid_models = {}
+        self.default_models = {}
 
     def validate_options(self, options):
         errors = set()
@@ -554,6 +555,15 @@ class Validator(object):
     def _validate_models(self, models, errors):
         for i, model in enumerate(models):
             models[i] = self._validate_model(model, errors)
+
+        # Add default model if missing
+        model_classes = set()
+        for model in models:
+            model_classes.add(model.__class__)
+
+        for model_class, default_model in self.default_models.items():
+            if model_class not in model_classes:
+                models.append(default_model)
 
         return models
 
