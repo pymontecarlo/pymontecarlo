@@ -1,4 +1,6 @@
-""""""
+"""
+Base validation.
+"""
 
 # Standard library modules.
 import math
@@ -14,11 +16,21 @@ from pymontecarlo.options.particle import PARTICLES
 # Globals and constants variables.
 
 class Validator(object):
+    """
+    Base validator of options and its components.
+    
+    Each validate method always takes two arguments:
+        - object to be validated
+        - :class:`set` to accumulate encountered errors
+    """
 
     def __init__(self):
         self.beam_validate_methods = {}
         self.sample_validate_methods = {}
+        self.detector_validate_methods = {}
         self.limit_validate_methods = {}
+        self.model_validate_methods = {}
+        self.analysis_validate_methods = {}
 
     def validate_options(self, options):
         errors = set()
@@ -30,15 +42,18 @@ class Validator(object):
         return options
 
     def _validate_options(self, options, errors):
-        options.beam = self._validate_beam(options.beam, errors)
-
-        options.sample = self._validate_sample(options.sample, errors)
-
-        for i, detector in enumerate(options.detectors):
-            options.detectors[i] = self._validate_detector(detector, errors)
-
-        for i, limit in enumerate(options.limits):
-            options.limits[i] = self._validate_limit(limit, errors)
+        options.beam = \
+            self._validate_beam(options.beam, errors)
+        options.sample = \
+            self._validate_sample(options.sample, errors)
+        options.detectors = \
+            self._validate_detectors(options.detectors, errors)
+        options.limits = \
+            self._validate_limits(options.limits, errors)
+        options.models = \
+            self._validate_models(options.models, errors)
+        options.analyses = \
+            self._validate_analyses(options.analyses, errors)
 
         return options
 
@@ -373,6 +388,25 @@ class Validator(object):
 
         return diameter_m
 
+    def validate_detectors(self, detectors):
+        errors = set()
+        detectors = self._validate_detectors(detectors, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return detectors
+
+    def _validate_detectors(self, detectors, errors):
+        if not detectors:
+            exc = ValueError('At least one detector must be defined')
+            errors.add(exc)
+
+        for i, detector in enumerate(detectors):
+            detectors[i] = self._validate_detector(detector, errors)
+
+        return detectors
+
     def validate_detector(self, detector):
         errors = set()
         detector = self._validate_detector(detector, errors)
@@ -383,7 +417,36 @@ class Validator(object):
         return detector
 
     def _validate_detector(self, detector, errors):
+        detector_class = detector.__class__
+        if detector_class not in self.detector_validate_methods:
+            exc = ValueError('Detector ({0}) is not supported.'
+                             .format(detector_class.__name__))
+            errors.add(exc)
+            return
+
+        method = self.detector_validate_methods[detector_class]
+        detector = method(detector, errors)
+
         return detector
+
+    def validate_limits(self, limits):
+        errors = set()
+        limits = self._validate_limits(limits, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return limits
+
+    def _validate_limits(self, limits, errors):
+        if not limits:
+            exc = ValueError('At least one limit must be defined')
+            errors.add(exc)
+
+        for i, limit in enumerate(limits):
+            limits[i] = self._validate_limit(limit, errors)
+
+        return limits
 
     def validate_limit(self, limit):
         errors = set()
@@ -395,7 +458,6 @@ class Validator(object):
         return limit
 
     def _validate_limit(self, limit, errors):
-        # Specific
         limit_class = limit.__class__
         if limit_class not in self.limit_validate_methods:
             exc = ValueError('Limit ({0}) is not supported.'
@@ -457,3 +519,79 @@ class Validator(object):
             errors.add(exc)
 
         return uncertainty
+
+    def validate_models(self, models):
+        errors = set()
+        models = self._validate_models(models, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return models
+
+    def _validate_models(self, models, errors):
+        for i, model in enumerate(models):
+            models[i] = self._validate_model(model, errors)
+
+        return models
+
+    def validate_model(self, model):
+        errors = set()
+        model = self._validate_model(model, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return model
+
+    def _validate_model(self, model, errors):
+        model_class = model.__class__
+        if model_class not in self.model_validate_methods:
+            exc = ValueError('Model ({0}) is not supported.'
+                             .format(model_class.__name__))
+            errors.add(exc)
+            return
+
+        method = self.model_validate_methods[model_class]
+        model = method(model, errors)
+
+        return model
+
+    def validate_analyses(self, analyses):
+        errors = set()
+        analyses = self._validate_analyses(analyses, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return analyses
+
+    def _validate_analyses(self, analyses, errors):
+        for i, analysis in enumerate(analyses):
+            analyses[i] = self._validate_model(analysis, errors)
+
+        return analyses
+
+    def validate_analysis(self, analysis):
+        errors = set()
+        analysis = self._validate_analysis(analysis, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return analysis
+
+    def _validate_analysis(self, analysis, errors):
+        analysis_class = analysis.__class__
+        if analysis_class not in self.analysis_validate_methods:
+            exc = ValueError('Analysis ({0}) is not supported.'
+                             .format(analysis_class.__name__))
+            errors.add(exc)
+            return
+
+        method = self.analysis_validate_methods[analysis_class]
+        analysis = method(analysis, errors)
+
+        return analysis
+
+
