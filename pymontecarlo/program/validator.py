@@ -32,6 +32,8 @@ class Validator(object):
         self.model_validate_methods = {}
         self.analysis_validate_methods = {}
 
+        self.valid_models = {}
+
     def validate_options(self, options):
         errors = set()
         options = self._validate_options(options, errors)
@@ -398,10 +400,6 @@ class Validator(object):
         return detectors
 
     def _validate_detectors(self, detectors, errors):
-        if not detectors:
-            exc = ValueError('At least one detector must be defined')
-            errors.add(exc)
-
         for i, detector in enumerate(detectors):
             detectors[i] = self._validate_detector(detector, errors)
 
@@ -422,7 +420,7 @@ class Validator(object):
             exc = ValueError('Detector ({0}) is not supported.'
                              .format(detector_class.__name__))
             errors.add(exc)
-            return
+            return detector
 
         method = self.detector_validate_methods[detector_class]
         detector = method(detector, errors)
@@ -487,7 +485,7 @@ class Validator(object):
             exc = ValueError('Limit ({0}) is not supported.'
                              .format(limit_class.__name__))
             errors.add(exc)
-            return
+            return limit
 
         method = self.limit_validate_methods[limit_class]
         limit = method(limit, errors)
@@ -574,10 +572,18 @@ class Validator(object):
             exc = ValueError('Model ({0}) is not supported.'
                              .format(model_class.__name__))
             errors.add(exc)
-            return
+            return model
 
         method = self.model_validate_methods[model_class]
         model = method(model, errors)
+
+        return model
+
+    def _validate_model_valid_models(self, model, errors):
+        model_class = model.__class__
+        if model not in self.valid_models.get(model_class, []):
+            exc = ValueError('Model ({0}) is not supported.'.format(model))
+            errors.add(exc)
 
         return model
 
@@ -611,7 +617,7 @@ class Validator(object):
             exc = ValueError('Analysis ({0}) is not supported.'
                              .format(analysis_class.__name__))
             errors.add(exc)
-            return
+            return analysis
 
         method = self.analysis_validate_methods[analysis_class]
         analysis = method(analysis, errors)

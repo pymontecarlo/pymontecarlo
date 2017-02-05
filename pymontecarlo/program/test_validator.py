@@ -17,8 +17,10 @@ from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
 from pymontecarlo.options.detector.photon import PhotonDetector
-from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
+from pymontecarlo.options.model import \
+    ElasticCrossSectionModel, RUTHERFORD, ELSEPA2005, POUCHOU_PICHOIR1991
+from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
@@ -46,8 +48,12 @@ class TestValidator(TestCase):
         self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
         self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
 
+        self.v.model_validate_methods[ElasticCrossSectionModel] = self.v._validate_model_valid_models
+
         self.v.analysis_validate_methods[PhotonIntensityAnalysis] = self.v._validate_analysis_photonintensity
         self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
+
+        self.v.valid_models[ElasticCrossSectionModel] = [ELSEPA2005]
 
     def testvalidate_material(self):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
@@ -191,6 +197,27 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_limit(limit, errors)
         self.assertEqual(2, len(errors))
+
+    def testvalidate_model(self):
+        model = ELSEPA2005
+        model2 = self.v.validate_model(model)
+        self.assertEqual(model2, model)
+
+    def testvalidate_model_exception(self):
+        model = RUTHERFORD
+        self.assertRaises(ValidationError, self.v.validate_model, model)
+
+        errors = set()
+        self.v._validate_model(model, errors)
+        self.assertEqual(1, len(errors))
+
+    def testvalidate_model_exception2(self):
+        model = POUCHOU_PICHOIR1991
+        self.assertRaises(ValidationError, self.v.validate_model, model)
+
+        errors = set()
+        self.v._validate_model(model, errors)
+        self.assertEqual(1, len(errors))
 
     def testvalidate_analysis_photonintensity(self):
         analysis = PhotonIntensityAnalysis()

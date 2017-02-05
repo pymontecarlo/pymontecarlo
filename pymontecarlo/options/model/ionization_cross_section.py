@@ -17,7 +17,7 @@ class IonizationCrossSectionModel(Model):
     def category(self):
         return 'ionization cross section'
 
-GAUVIN = IonizationCrossSectionModel = ('Gauvin')
+GAUVIN = IonizationCrossSectionModel('Gauvin')
 POUCHOU1996 = IonizationCrossSectionModel('Pouchou 1986', "Pochou & Pichoir in the proceedings from IXCOM 11 (1986)")
 BROWN_POWELL = IonizationCrossSectionModel('Brown Powell')
 CASNATI1982 = IonizationCrossSectionModel('Casnati 1982', "Casnati82 - E. Casnati, A. Tartari & C. Baraldi, J Phys B15 (1982) 155 as quoted by C. Powell in Ultramicroscopy 28 (1989) 24-31")
