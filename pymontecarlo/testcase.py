@@ -76,7 +76,7 @@ class TestCase(unittest.TestCase):
 
         self.program = ProgramMock()
 
-    def _create_basic_options(self):
+    def create_basic_options(self):
         beam = GaussianBeam(15e3, 10e-9)
         sample = SubstrateSample(Material.pure(29))
         detectors = [PhotonDetector(math.radians(40.0))]

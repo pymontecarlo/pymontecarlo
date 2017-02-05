@@ -17,7 +17,7 @@ class TestOptions(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.options = self._create_basic_options()
+        self.options = self.create_basic_options()
 
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)

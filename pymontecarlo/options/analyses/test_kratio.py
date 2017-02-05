@@ -23,7 +23,7 @@ class TestKRatioAnalysis(TestCase):
 
         self.a = KRatioAnalysis()
 
-        self.options = self._create_basic_options()
+        self.options = self.create_basic_options()
 
     def testapply(self):
         list_options = self.a.apply(self.options)
