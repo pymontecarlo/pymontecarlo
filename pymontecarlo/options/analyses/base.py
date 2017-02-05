@@ -16,8 +16,27 @@ class Analysis(Option):
 
     @abc.abstractmethod
     def apply(self, options):
+        """
+        Returns other options necessary for this analysis.
+        
+        :arg options: options subjected to this analysis
+        :type options: :class:`Options`
+        
+        :return: :class:`list` of other necessary options
+        """
         return []
 
     @abc.abstractmethod
-    def calculate(self, simulations):
-        pass
+    def calculate(self, simulation, simulations):
+        """
+        Returns :class:`Result` for this analysis.
+        
+        :arg simulation: simulation subjected to this analysis
+        :type simulation :class:`Simulation`
+        
+        :arg simulations: other simulations in the project
+        :type simulations: :class`:list` of :class:`Simulation`
+        
+        :return: :class:`Result` of this analysis
+        """
+        return None

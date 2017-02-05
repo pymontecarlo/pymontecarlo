@@ -1,14 +1,5 @@
-#!/usr/bin/env python
 """
-================================================================================
-:mod:`testcase` -- Common test case for all unit tests
-================================================================================
-
-.. module:: testcase
-   :synopsis: Common test case for all unit tests
-
-.. inheritance-diagram:: pymontecarlo.testcsse
-
+Common test case for all unit tests
 """
 
 # Script information for the file.

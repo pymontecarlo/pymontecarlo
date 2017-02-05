@@ -9,13 +9,12 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
-from pymontecarlo.options.analyses.base import Analysis
 from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.util.cbook import are_mapping_equal
 
 # Globals and constants variables.
 
-class KRatioAnalysis(Analysis):
+class KRatioAnalysis(PhotonIntensityAnalysis):
 
     DEFAULT_NONPURE_STANDARD_MATERIALS = \
         {7: Material.from_formula('BN', 2.1e3),
@@ -26,6 +25,7 @@ class KRatioAnalysis(Analysis):
          80: Material.from_formula('HgTe', 8.1e3)}
 
     def __init__(self):
+        super().__init__()
         self.standard_materials = {}
 
     def __eq__(self, other):
@@ -74,6 +74,6 @@ class KRatioAnalysis(Analysis):
 
         return super().apply(options) + builder.build()
 
-    def calculate(self, simulations):
+    def calculate(self, simulation, simulations):
         pass
 

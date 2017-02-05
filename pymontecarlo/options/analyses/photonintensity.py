@@ -17,5 +17,5 @@ class PhotonIntensityAnalysis(Analysis):
     def apply(self, options):
         return []
 
-    def calculate(self, simulations):
+    def calculate(self, simulation, simulations):
         pass
