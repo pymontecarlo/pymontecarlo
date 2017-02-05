@@ -2,8 +2,8 @@
 Sample definitions.
 """
 
-from .substrate import SubstrateSample, SubstrateSampleBuilder
-from .inclusion import InclusionSample, InclusionSampleBuilder
-from .horizontallayers import HorizontalLayerSample
-from .verticallayers import VerticalLayerSample
-from .sphere import SphereSample, SphereSampleBuilder
+from pymontecarlo.options.sample.substrate import SubstrateSample, SubstrateSampleBuilder
+from pymontecarlo.options.sample.inclusion import InclusionSample, InclusionSampleBuilder
+from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
+from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
+from pymontecarlo.options.sample.sphere import SphereSample, SphereSampleBuilder

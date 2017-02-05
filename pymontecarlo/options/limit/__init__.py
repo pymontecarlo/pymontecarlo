@@ -2,5 +2,5 @@
 Limits.
 """
 
-from .showers import ShowersLimit
-from .uncertainty import UncertaintyLimit
+from pymontecarlo.options.limit.showers import ShowersLimit
+from pymontecarlo.options.limit.uncertainty import UncertaintyLimit
