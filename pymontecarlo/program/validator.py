@@ -12,6 +12,7 @@ import pyxray.descriptor
 from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.options.detector import PhotonDetector
 
 # Globals and constants variables.
 
@@ -635,6 +636,11 @@ class Validator(object):
         return analysis
 
     def _validate_analysis_photonintensity(self, analysis, options, errors):
+        if not options.find_detectors(PhotonDetector):
+            exc = ValueError('Analysis ({0}) requires a photon detector'
+                             .format(analysis))
+            errors.add(exc)
+
         return analysis
 
     def _validate_analysis_kratio(self, analysis, options, errors):

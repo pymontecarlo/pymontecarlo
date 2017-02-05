@@ -245,6 +245,15 @@ class TestValidator(TestCase):
         analysis2 = self.v.validate_analysis(analysis, self.options)
         self.assertEqual(analysis2, analysis)
 
+    def testvalidate_analysis_photonintensity_exception(self):
+        self.options.detectors.clear()
+        analysis = PhotonIntensityAnalysis()
+        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
+
+        errors = set()
+        self.v._validate_analysis(analysis, self.options, errors)
+        self.assertEqual(1, len(errors))
+
     def testvalidate_analysis_kratio(self):
         analysis = KRatioAnalysis()
         analysis.add_standard_material(13, Material.pure(13))
@@ -252,13 +261,14 @@ class TestValidator(TestCase):
         self.assertEqual(analysis2, analysis)
 
     def testvalidate_analysis_kratio_exception(self):
+        self.options.detectors.clear()
         analysis = KRatioAnalysis()
         analysis.add_standard_material(14, Material.pure(13))
         self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
         self.v._validate_analysis(analysis, self.options, errors)
-        self.assertEqual(1, len(errors))
+        self.assertEqual(2, len(errors))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
