@@ -2,6 +2,10 @@
 Exceptions of pymontecarlo.
 """
 
+# Note:
+# As suggested by https://julien.danjou.info/blog/2016/python-exceptions-guide,
+# it is recommended to group all exceptions of a library inside a single module.
+
 # Standard library modules.
 import textwrap
 
@@ -14,8 +18,7 @@ import textwrap
 class PymontecarloError(Exception):
     """Base exception of pymontecarlo."""
 
-class ValidationError(PymontecarloError):
-    """Exception raised by validators"""
+class AccumulatedErrorMixin(object):
 
     _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
                                         subsequent_indent=' ' * 4)
@@ -26,3 +29,9 @@ class ValidationError(PymontecarloError):
                              for cause in causes)
         super().__init__(message)
         self.causes = tuple(causes)
+
+class ValidationError(PymontecarloError, AccumulatedErrorMixin):
+    """Exception raised by validators"""
+
+class ExportError(PymontecarloError, AccumulatedErrorMixin):
+    pass
