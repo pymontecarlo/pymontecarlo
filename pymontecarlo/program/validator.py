@@ -429,6 +429,30 @@ class Validator(object):
 
         return detector
 
+    def _validate_detector_photon(self, detector, errors):
+        detector.elevation_rad = \
+            self._validate_detector_photon_elevation_rad(detector.elevation_rad, errors)
+        detector.azimuth_rad = \
+            self._validate_detector_photon_azimuth_rad(detector.azimuth_rad, errors)
+
+        return detector
+
+    def _validate_detector_photon_elevation_rad(self, elevation_rad, errors):
+        if elevation_rad < -math.pi / 2 or elevation_rad > math.pi / 2:
+            exc = ValueError('Elevation ({0:g} rad) must be between [-pi/2,pi/2].'
+                             .format(elevation_rad))
+            errors.add(exc)
+
+        return elevation_rad
+
+    def _validate_detector_photon_azimuth_rad(self, azimuth_rad, errors):
+        if azimuth_rad < 0 or azimuth_rad >= 2 * math.pi:
+            exc = ValueError('Azimuth ({0:g} rad) must be between [0, 2pi[.'
+                             .format(azimuth_rad))
+            errors.add(exc)
+
+        return azimuth_rad
+
     def validate_limits(self, limits):
         errors = set()
         limits = self._validate_limits(limits, errors)

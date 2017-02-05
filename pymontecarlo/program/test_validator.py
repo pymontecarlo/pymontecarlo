@@ -16,6 +16,7 @@ from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
+from pymontecarlo.options.detector.photon import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 
 # Globals and constants variables.
@@ -38,6 +39,8 @@ class TestValidator(TestCase):
         self.v.sample_validate_methods[HorizontalLayerSample] = self.v._validate_sample_horizontallayers
         self.v.sample_validate_methods[VerticalLayerSample] = self.v._validate_sample_verticallayers
         self.v.sample_validate_methods[SphereSample] = self.v._validate_sample_sphere
+
+        self.v.detector_validate_methods[PhotonDetector] = self.v._validate_detector_photon
 
         self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
         self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
@@ -144,6 +147,19 @@ class TestValidator(TestCase):
 
         errors = set()
         self.v._validate_sample(sample, errors)
+        self.assertEqual(2, len(errors))
+
+    def testvalidate_detector_photon(self):
+        detector = PhotonDetector(1.1, 2.2)
+        detector2 = self.v.validate_detector(detector)
+        self.assertEqual(detector2, detector)
+
+    def testvalidate_detector_photon_exception(self):
+        detector = PhotonDetector(2.0, -1.0)
+        self.assertRaises(ValidationError, self.v.validate_detector, detector)
+
+        errors = set()
+        self.v._validate_detector(detector, errors)
         self.assertEqual(2, len(errors))
 
     def testvalidate_limit_showers(self):

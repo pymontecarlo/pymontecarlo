@@ -10,7 +10,7 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.detector.photon.intensity import PhotonIntensityDetector
+from pymontecarlo.options.detector.photon import PhotonDetector
 
 # Globals and constants variables.
 
@@ -19,22 +19,28 @@ class TestPhotonIntensityDetector(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.d = PhotonIntensityDetector(math.radians(35))
+        self.d = PhotonDetector(math.radians(35), math.radians(90))
 
     def testskeleton(self):
         self.assertAlmostEqual(math.radians(35), self.d.elevation_rad, 4)
         self.assertAlmostEqual(35.0, self.d.elevation_deg, 4)
 
+        self.assertAlmostEqual(math.radians(90), self.d.azimuth_rad, 4)
+        self.assertAlmostEqual(90.0, self.d.azimuth_deg, 4)
+
     def test__repr__(self):
-        expected = '<PhotonIntensityDetector(35.0°)>'
+        expected = '<PhotonDetector(elevation=35.0°, azimuth=90.0°)>'
         self.assertEqual(expected, repr(self.d))
 
     def test__eq__(self):
-        d = PhotonIntensityDetector(math.radians(35))
+        d = PhotonDetector(math.radians(35), math.radians(90))
         self.assertEqual(d, self.d)
 
     def test__ne__(self):
-        d = PhotonIntensityDetector(math.radians(36))
+        d = PhotonDetector(math.radians(36), math.radians(90))
+        self.assertNotEqual(d, self.d)
+
+        d = PhotonDetector(math.radians(35), math.radians(91))
         self.assertNotEqual(d, self.d)
 
 if __name__ == '__main__': #pragma: no cover
