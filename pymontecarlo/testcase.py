@@ -35,6 +35,8 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.model import RUTHERFORD
+from pymontecarlo.options.analyses import PhotonIntensityAnalysis
 
 # Globals and constants variables.
 
@@ -81,7 +83,7 @@ class TestCase(unittest.TestCase):
         sample = SubstrateSample(Material.pure(29))
         detectors = [PhotonDetector(math.radians(40.0))]
         limits = [ShowersLimit(100)]
-        models = []
-        analyses = []
+        models = [RUTHERFORD]
+        analyses = [PhotonIntensityAnalysis()]
         return Options(self.program, beam, sample, detectors, limits, models, analyses)
 

@@ -67,7 +67,7 @@ class KRatioAnalysis(Analysis):
             builder.add_limit(options.program, limit)
 
         for model in options.models:
-            builder.add_model(model)
+            builder.add_model(options.program, model)
 
         analysis = PhotonIntensityAnalysis()
         builder.add_analysis(analysis)
