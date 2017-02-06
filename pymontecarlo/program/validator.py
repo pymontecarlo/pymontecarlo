@@ -10,9 +10,18 @@ import pyxray.descriptor
 
 # Local modules.
 from pymontecarlo.exceptions import ValidationError
+from pymontecarlo.options.options import Options
+from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.sample import \
+    (SubstrateSample, InclusionSample, HorizontalLayerSample,
+     VerticalLayerSample, SphereSample)
+from pymontecarlo.options.sample.base import Layer
+from pymontecarlo.options.detector import PhotonDetector
+from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import PARTICLES
-from pymontecarlo.options.detector import PhotonDetector
 
 # Globals and constants variables.
 
@@ -46,20 +55,21 @@ class Validator(object):
         return options
 
     def _validate_options(self, options, errors):
-        options.beam = \
+        program = options.program
+        beam = \
             self._validate_beam(options.beam, options, errors)
-        options.sample = \
+        sample = \
             self._validate_sample(options.sample, options, errors)
-        options.detectors = \
+        detectors = \
             self._validate_detectors(options.detectors, options, errors)
-        options.limits = \
+        limits = \
             self._validate_limits(options.limits, options, errors)
-        options.models = \
+        models = \
             self._validate_models(options.models, options, errors)
-        options.analyses = \
+        analyses = \
             self._validate_analyses(options.analyses, options, errors)
 
-        return options
+        return Options(program, beam, sample, detectors, limits, models, analyses)
 
     def validate_beam(self, beam, options):
         errors = set()
@@ -71,12 +81,6 @@ class Validator(object):
         return beam
 
     def _validate_beam(self, beam, options, errors):
-        beam.energy_eV = \
-            self._validate_beam_base_energy_eV(beam.energy_eV, options, errors)
-        beam.particle = \
-            self._validate_beam_base_particle(beam.particle, options, errors)
-
-        # Specific
         beam_class = beam.__class__
         if beam_class not in self.beam_validate_methods:
             exc = ValueError('Beam ({0}) is not supported.'
@@ -85,9 +89,7 @@ class Validator(object):
             return beam
 
         method = self.beam_validate_methods[beam_class]
-        beam = method(beam, options, errors)
-
-        return beam
+        return method(beam, options, errors)
 
     def _validate_beam_base_energy_eV(self, energy_eV, options, errors):
         if energy_eV <= 0.0:
@@ -105,18 +107,22 @@ class Validator(object):
         return particle
 
     def _validate_beam_gaussian(self, beam, options, errors):
-        beam.diameter_m = \
+        energy_eV = \
+            self._validate_beam_base_energy_eV(beam.energy_eV, options, errors)
+        particle = \
+            self._validate_beam_base_particle(beam.particle, options, errors)
+        diameter_m = \
             self._validate_beam_gaussian_diameter_m(beam.diameter_m, options, errors)
-        beam.x0_m = \
+        x0_m = \
             self._validate_beam_gaussian_x0_m(beam.x0_m, options, errors)
-        beam.y0_m = \
+        y0_m = \
             self._validate_beam_gaussian_y0_m(beam.y0_m, options, errors)
-        beam.polar_rad = \
+        polar_rad = \
             self._validate_beam_gaussian_polar_rad(beam.polar_rad, options, errors)
-        beam.azimuth_rad = \
+        azimuth_rad = \
             self._validate_beam_gaussian_azimuth_rad(beam.azimuth_rad, options, errors)
 
-        return beam
+        return GaussianBeam(energy_eV, diameter_m, particle, x0_m, y0_m, polar_rad, azimuth_rad)
 
     def _validate_beam_gaussian_diameter_m(self, diameter_m, options, errors):
         if diameter_m < 0.0:
@@ -167,14 +173,14 @@ class Validator(object):
         if material is VACUUM:
             return material
 
-        material.name = \
+        name = \
             self._validate_material_base_name(material.name, options, errors)
-        material.composition = \
+        composition = \
             self._validate_material_base_composition(material.composition, options, errors)
-        material.density_kg_per_m3 = \
+        density_kg_per_m3 = \
             self._validate_material_base_density_kg_per_m3(material.density_kg_per_m3, options, errors)
 
-        return material
+        return Material(name, composition, density_kg_per_m3)
 
     def _validate_material_base_name(self, name, options, errors):
         name = name.strip()
@@ -186,19 +192,28 @@ class Validator(object):
         return name
 
     def _validate_material_base_composition(self, composition, options, errors):
-        for z in composition:
+        outcomposition = {}
+
+        for z, wf in composition.items():
             try:
                 pyxray.descriptor.Element.validate(z)
             except ValueError as exc:
                 errors.add(exc)
+                continue
 
-        total = sum(composition.values())
+            if wf <= 0.0 or wf > 1.0:
+                exc = ValueError('Weight fraction ({0:g}) must be between ]0.0, 1.0]')
+                errors.add(exc)
+
+            outcomposition[z] = wf
+
+        total = sum(outcomposition.values())
         if total != 1.0:
             exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
                              .format(total))
             errors.add(exc)
 
-        return composition
+        return outcomposition
 
     def _validate_material_base_density_kg_per_m3(self, density_kg_per_m3, options, errors):
         if density_kg_per_m3 < 0:
@@ -210,7 +225,7 @@ class Validator(object):
 
     def validate_sample(self, sample, options):
         errors = set()
-        self._validate_sample(sample, options, errors)
+        sample = self._validate_sample(sample, options, errors)
 
         if errors:
             raise ValidationError(*errors)
@@ -218,12 +233,6 @@ class Validator(object):
         return sample
 
     def _validate_sample(self, sample, options, errors):
-        sample.tilt_rad = \
-            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        sample.rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
-
-        # Sample specific
         sample_class = sample.__class__
         if sample_class not in self.sample_validate_methods:
             exc = ValueError('Sample ({0}) is not supported.'
@@ -232,9 +241,7 @@ class Validator(object):
             return sample
 
         method = self.sample_validate_methods[sample_class]
-        sample = method(sample, options, errors)
-
-        return sample
+        return method(sample, options, errors)
 
     def _validate_sample_base_tilt_rad(self, tilt_rad, options, errors):
         if not math.isfinite(tilt_rad):
@@ -251,10 +258,14 @@ class Validator(object):
         return rotation_rad
 
     def _validate_sample_substrate(self, sample, options, errors):
-        sample.material = \
+        material = \
             self._validate_sample_substrate_material(sample.material, options, errors)
+        tilt_rad = \
+            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
+        rotation_rad = \
+            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
 
-        return sample
+        return SubstrateSample(material, tilt_rad, rotation_rad)
 
     def _validate_sample_substrate_material(self, material, options, errors):
         if material is VACUUM:
@@ -264,14 +275,18 @@ class Validator(object):
         return self._validate_material(material, options, errors)
 
     def _validate_sample_inclusion(self, sample, options, errors):
-        sample.substrate_material = \
+        substrate_material = \
             self._validate_sample_inclusion_substrate_material(sample.substrate_material, options, errors)
-        sample.inclusion_material = \
+        inclusion_material = \
             self._validate_sample_inclusion_inclusion_material(sample.inclusion_material, options, errors)
-        sample.inclusion_diameter_m = \
+        inclusion_diameter_m = \
             self._validate_sample_inclusion_inclusion_diameter_m(sample.inclusion_diameter_m, options, errors)
+        tilt_rad = \
+            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
+        rotation_rad = \
+            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
 
-        return sample
+        return InclusionSample(substrate_material, inclusion_material, inclusion_diameter_m, tilt_rad, rotation_rad)
 
     def _validate_sample_inclusion_substrate_material(self, material, options, errors):
         return self._validate_material(material, options, errors)
@@ -288,28 +303,35 @@ class Validator(object):
         return diameter_m
 
     def _validate_sample_layered_layer(self, layer, options, errors):
-        layer.material = self._validate_material(layer.material, options, errors)
+        material = self._validate_material(layer.material, options, errors)
 
         if layer.thickness_m <= 0:
             exc = ValueError('Thickness ({0:g} m) must be greater than 0.'
                              .format(layer.thickness_m))
             errors.add(exc)
 
-        return layer
+        return Layer(material, layer.thickness_m)
 
     def _validate_sample_layered_layers(self, layers, options, errors):
-        for i, layer in enumerate(layers):
-            layers[i] = self._validate_sample_layered_layer(layer, options, errors)
+        outlayers = []
 
-        return layers
+        for layer in layers:
+            outlayer = self._validate_sample_layered_layer(layer, options, errors)
+            outlayers.append(outlayer)
+
+        return outlayers
 
     def _validate_sample_horizontallayers(self, sample, options, errors):
-        sample.substrate_material = \
+        substrate_material = \
             self._validate_sample_horizontallayers_substrate_material(sample.substrate_material, options, errors)
-        sample.layers = \
+        layers = \
             self._validate_sample_horizontallayers_layers(sample.layers, options, errors)
+        tilt_rad = \
+            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
+        rotation_rad = \
+            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
 
-        return sample
+        return HorizontalLayerSample(substrate_material, layers, tilt_rad, rotation_rad)
 
     def _validate_sample_horizontallayers_substrate_material(self, material, options, errors):
         return self._validate_material(material, options, errors)
@@ -327,34 +349,34 @@ class Validator(object):
         return layers
 
     def _validate_sample_verticallayers(self, sample, options, errors):
-        sample.left_material = \
+        left_material = \
             self._validate_sample_verticallayers_left_material(sample.left_material, options, errors)
-        sample.right_material = \
+        right_material = \
             self._validate_sample_verticallayers_left_material(sample.right_material, options, errors)
-        sample.layers = \
+        layers = \
             self._validate_sample_verticallayers_layers(sample.layers, options, errors)
-        sample.depth_m = \
+        depth_m = \
             self._validate_sample_verticallayers_depth_m(sample.depth_m, options, errors)
+        tilt_rad = \
+            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
+        rotation_rad = \
+            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
 
-        return sample
+        return VerticalLayerSample(left_material, right_material, layers, depth_m, tilt_rad, rotation_rad)
 
     def _validate_sample_verticallayers_left_material(self, material, options, errors):
         if material is VACUUM:
             exc = ValueError('Left material cannot be VACUUM.')
             errors.add(exc)
 
-        material = self._validate_material(material, options, errors)
-
-        return material
+        return self._validate_material(material, options, errors)
 
     def _validate_sample_verticallayers_right_material(self, material, options, errors):
         if material is VACUUM:
             exc = ValueError('Right material cannot be VACUUM.')
             errors.add(exc)
 
-        material = self._validate_material(material, options, errors)
-
-        return material
+        return self._validate_material(material, options, errors)
 
     def _validate_sample_verticallayers_layers(self, layers, options, errors):
         return self._validate_sample_layered_layers(layers, options, errors)
@@ -368,21 +390,23 @@ class Validator(object):
         return depth_m
 
     def _validate_sample_sphere(self, sample, options, errors):
-        sample.material = \
+        material = \
             self._validate_sample_sphere_material(sample.material, options, errors)
-        sample.diameter_m = \
+        diameter_m = \
             self._validate_sample_sphere_diameter_m(sample.diameter_m, options, errors)
+        tilt_rad = \
+            self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
+        rotation_rad = \
+            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
 
-        return sample
+        return SphereSample(material, diameter_m, tilt_rad, rotation_rad)
 
     def _validate_sample_sphere_material(self, material, options, errors):
         if material is VACUUM:
             exc = ValueError('Material cannot be VACUUM.')
             errors.add(exc)
 
-        material = self._validate_material(material, options, errors)
-
-        return material
+        return self._validate_material(material, options, errors)
 
     def _validate_sample_sphere_diameter_m(self, diameter_m, options, errors):
         if diameter_m <= 0:
@@ -402,10 +426,13 @@ class Validator(object):
         return detectors
 
     def _validate_detectors(self, detectors, options, errors):
-        for i, detector in enumerate(detectors):
-            detectors[i] = self._validate_detector(detector, options, errors)
+        outdetectors = []
 
-        return detectors
+        for detector in detectors:
+            outdetector = self._validate_detector(detector, options, errors)
+            outdetectors.append(outdetector)
+
+        return outdetectors
 
     def validate_detector(self, detector, options):
         errors = set()
@@ -425,17 +452,15 @@ class Validator(object):
             return detector
 
         method = self.detector_validate_methods[detector_class]
-        detector = method(detector, options, errors)
-
-        return detector
+        return method(detector, options, errors)
 
     def _validate_detector_photon(self, detector, options, errors):
-        detector.elevation_rad = \
+        elevation_rad = \
             self._validate_detector_photon_elevation_rad(detector.elevation_rad, options, errors)
-        detector.azimuth_rad = \
+        azimuth_rad = \
             self._validate_detector_photon_azimuth_rad(detector.azimuth_rad, options, errors)
 
-        return detector
+        return PhotonDetector(elevation_rad, azimuth_rad)
 
     def _validate_detector_photon_elevation_rad(self, elevation_rad, options, errors):
         if elevation_rad < -math.pi / 2 or elevation_rad > math.pi / 2:
@@ -467,10 +492,13 @@ class Validator(object):
             exc = ValueError('At least one limit must be defined')
             errors.add(exc)
 
-        for i, limit in enumerate(limits):
-            limits[i] = self._validate_limit(limit, options, errors)
+        outlimits = []
 
-        return limits
+        for limit in limits:
+            outlimit = self._validate_limit(limit, options, errors)
+            outlimits.append(outlimit)
+
+        return outlimits
 
     def validate_limit(self, limit, options):
         errors = set()
@@ -490,15 +518,13 @@ class Validator(object):
             return limit
 
         method = self.limit_validate_methods[limit_class]
-        limit = method(limit, options, errors)
-
-        return limit
+        return method(limit, options, errors)
 
     def _validate_limit_showers(self, limit, options, errors):
-        limit.showers = \
+        showers = \
             self._validate_limit_showers_showers(limit.showers, options, errors)
 
-        return limit
+        return ShowersLimit(showers)
 
     def _validate_limit_showers_showers(self, showers, options, errors):
         if showers <= 0:
@@ -509,16 +535,16 @@ class Validator(object):
         return showers
 
     def _validate_limit_uncertainty(self, limit, options, errors):
-        limit.atomic_number = \
+        atomic_number = \
             self._validate_limit_uncertainty_atomic_number(limit.atomic_number, options, errors)
-        limit.transition = \
+        transition = \
             self._validate_limit_uncertainty_transition(limit.transition, options, errors)
-        limit.detector = \
+        detector = \
             self._validate_limit_uncertainty_detector(limit.detector, options, errors)
-        limit.uncertainty = \
+        uncertainty = \
             self._validate_limit_uncertainty_uncertainty(limit.uncertainty, options, errors)
 
-        return limit
+        return UncertaintyLimit(atomic_number, transition, detector, uncertainty)
 
     def _validate_limit_uncertainty_atomic_number(self, atomic_number, options, errors):
         try:
@@ -554,19 +580,22 @@ class Validator(object):
         return models
 
     def _validate_models(self, models, options, errors):
-        for i, model in enumerate(models):
-            models[i] = self._validate_model(model, options, errors)
+        outmodels = []
+
+        for model in models:
+            outmodel = self._validate_model(model, options, errors)
+            outmodels.append(outmodel)
 
         # Add default model if missing
         model_classes = set()
-        for model in models:
+        for model in outmodels:
             model_classes.add(model.__class__)
 
         for model_class, default_model in self.default_models.items():
             if model_class not in model_classes:
-                models.append(default_model)
+                outmodels.append(default_model)
 
-        return models
+        return outmodels
 
     def validate_model(self, model, options):
         errors = set()
@@ -586,9 +615,7 @@ class Validator(object):
             return model
 
         method = self.model_validate_methods[model_class]
-        model = method(model, options, errors)
-
-        return model
+        return method(model, options, errors)
 
     def _validate_model_valid_models(self, model, options, errors):
         model_class = model.__class__
@@ -596,7 +623,7 @@ class Validator(object):
             exc = ValueError('Model ({0}) is not supported.'.format(model))
             errors.add(exc)
 
-        return model
+        return model_class(model.name, model.reference)
 
     def validate_analyses(self, analyses, options):
         errors = set()
@@ -608,10 +635,13 @@ class Validator(object):
         return analyses
 
     def _validate_analyses(self, analyses, options, errors):
-        for i, analysis in enumerate(analyses):
-            analyses[i] = self._validate_analysis(analysis, options, errors)
+        outanalyses = []
 
-        return analyses
+        for analysis in analyses:
+            outanalysis = self._validate_analysis(analysis, options, errors)
+            outanalyses.append(outanalysis)
+
+        return outanalyses
 
     def validate_analysis(self, analysis, options):
         errors = set()
@@ -631,9 +661,7 @@ class Validator(object):
             return analysis
 
         method = self.analysis_validate_methods[analysis_class]
-        analysis = method(analysis, options, errors)
-
-        return analysis
+        return method(analysis, options, errors)
 
     def _validate_analysis_photonintensity(self, analysis, options, errors):
         if not options.find_detectors(PhotonDetector):
@@ -641,24 +669,29 @@ class Validator(object):
                              .format(analysis))
             errors.add(exc)
 
-        return analysis
+        return PhotonIntensityAnalysis()
 
     def _validate_analysis_kratio(self, analysis, options, errors):
         self._validate_analysis_photonintensity(analysis, options, errors)
 
-        analysis.standard_materials = \
+        standard_materials = \
             self._validate_analysis_kratio_standard_materials(analysis.standard_materials, options, errors)
 
-        return analysis
+        return KRatioAnalysis(standard_materials)
 
     def _validate_analysis_kratio_standard_materials(self, materials, options, errors):
-        for z, material in materials.items():
-            materials[z] = self._validate_material(material, options, errors)
+        outmaterials = {}
 
-            if z not in material.composition:
+        for z, material in materials.items():
+            outmaterial = self._validate_material(material, options, errors)
+
+            if z not in outmaterial.composition:
                 exc = ValueError('Standard for element {0} does not have this element in its composition'
                                  .format(pyxray.element_symbol(z)))
                 errors.add(exc)
+                continue
 
-        return materials
+            outmaterials[z] = outmaterial
+
+        return outmaterials
 

@@ -109,7 +109,7 @@ class Layer(object):
         self.thickness_m = thickness_m
 
     def __repr__(self):
-        return '<{0:s}(material={1:s}, thickness={2:g} m)>' \
+        return '<{0}(material={1}, thickness={2:g} m)>' \
             .format(self.__class__.__name__, self.material, self.thickness_m)
 
     def __eq__(self, other):

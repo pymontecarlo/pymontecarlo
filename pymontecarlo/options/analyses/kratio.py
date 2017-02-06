@@ -24,9 +24,12 @@ class KRatioAnalysis(PhotonIntensityAnalysis):
          36: Material.from_formula('KBr', 2.75e3),
          80: Material.from_formula('HgTe', 8.1e3)}
 
-    def __init__(self):
+    def __init__(self, standard_materials=None):
         super().__init__()
-        self.standard_materials = {}
+
+        if standard_materials is None:
+            standard_materials = {}
+        self.standard_materials = standard_materials
 
     def __eq__(self, other):
         return super().__eq__(other) and \
