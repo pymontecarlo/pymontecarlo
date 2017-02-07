@@ -38,8 +38,6 @@ class Exporter(object, metaclass=abc.ABCMeta):
         if errors:
             raise ExportError(*errors)
 
-        return options
-
     @abc.abstractmethod
     def _export(self, options, dirpath, errors):
         """
@@ -69,7 +67,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
             exc = ValueError('Beam ({0}) is not supported.'
                              .format(beam_class.__name__))
             errors.add(exc)
-            return beam
+            return
 
         method = self.beam_export_methods[beam_class]
         method(beam, errors, *args, **kwargs)
@@ -80,7 +78,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
             exc = ValueError('Sample ({0}) is not supported.'
                              .format(sample_class.__name__))
             errors.add(exc)
-            return sample
+            return
 
         method = self.sample_export_methods[sample_class]
         method(sample, errors, *args, **kwargs)
@@ -89,15 +87,13 @@ class Exporter(object, metaclass=abc.ABCMeta):
         for analysis in analyses:
             self._export_analysis(analysis, errors, *args, **kwargs)
 
-        return analyses
-
     def _export_analysis(self, analysis, errors, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.analysis_export_methods:
             exc = ValueError('Analysis ({0}) is not supported.'
                              .format(analysis_class.__name__))
             errors.add(exc)
-            return analysis
+            return
 
         method = self.analysis_export_methods[analysis_class]
         method(analysis, errors, *args, **kwargs)
@@ -106,15 +102,13 @@ class Exporter(object, metaclass=abc.ABCMeta):
         for limit in limits:
             self._export_limit(limit, errors, *args, **kwargs)
 
-        return limits
-
     def _export_limit(self, limit, errors, *args, **kwargs):
         limit_class = limit.__class__
         if limit_class not in self.limit_export_methods:
             exc = ValueError('Limit ({0}) is not supported.'
                              .format(limit_class.__name__))
             errors.add(exc)
-            return limit
+            return
 
         method = self.limit_export_methods[limit_class]
         method(limit, errors, *args, **kwargs)
@@ -123,15 +117,13 @@ class Exporter(object, metaclass=abc.ABCMeta):
         for model in models:
             self._export_model(model, errors, *args, **kwargs)
 
-        return models
-
     def _export_model(self, model, errors, *args, **kwargs):
         model_class = model.__class__
         if model_class not in self.model_export_methods:
             exc = ValueError('Model ({0}) is not supported.'
                              .format(model_class.__name__))
             errors.add(exc)
-            return model
+            return
 
         method = self.model_export_methods[model_class]
         method(model, errors, *args, **kwargs)
