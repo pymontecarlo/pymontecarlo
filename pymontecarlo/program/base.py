@@ -22,6 +22,18 @@ class Program(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def create_validator(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create_exporter(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create_worker(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def create_default_limits(self, options):
         raise NotImplementedError
 

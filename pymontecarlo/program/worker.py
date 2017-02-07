@@ -12,6 +12,7 @@ import abc
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
 
 # Globals and constants variables.
 
@@ -89,9 +90,11 @@ class SubprocessWorker(Worker):
         returncode = self._process.returncode
         self._process = None
         logging.debug('returncode: %s' % returncode)
-        return returncode
+        if returncode != 0:
+            raise WorkerError
 
     def cancel(self):
         if self._process is not None:
             self._process.kill()
+            raise WorkerCancelledError
 

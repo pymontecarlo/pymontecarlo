@@ -15,6 +15,7 @@ import time
 
 # Local modules.
 from pymontecarlo.settings import load_settings, _set_settings
+from pymontecarlo.exceptions import WorkerCancelledError
 from pymontecarlo.program.base import Program
 from pymontecarlo.program.expander import Expander, expand_to_single
 from pymontecarlo.program.validator import Validator
@@ -110,6 +111,7 @@ class WorkerMock(Worker):
 
         self._progress = 0.0
         self._status = ''
+        self._cancelled = False
 
     def run(self, options):
         self._progress = 0.0
@@ -122,7 +124,10 @@ class WorkerMock(Worker):
             dirpath = tempfile.mkdtemp()
             exporter.export(options, dirpath)
 
-            time.sleep(0.1)
+            for _ in range(10):
+                if self._cancelled:
+                    raise WorkerCancelledError
+                time.sleep(0.01)
 
         finally:
             shutil.rmtree(dirpath, ignore_errors=True)
@@ -133,6 +138,7 @@ class WorkerMock(Worker):
         return Simulation(options)
 
     def cancel(self):
+        self._cancelled = True
         self._progress = 0.0
         self._status = 'Cancelled'
 
