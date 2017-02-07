@@ -24,8 +24,8 @@ class KRatioAnalysis(PhotonIntensityAnalysis):
          36: Material.from_formula('KBr', 2.75e3),
          80: Material.from_formula('HgTe', 8.1e3)}
 
-    def __init__(self, standard_materials=None):
-        super().__init__()
+    def __init__(self, photon_detector, standard_materials=None):
+        super().__init__(photon_detector)
 
         if standard_materials is None:
             standard_materials = {}
@@ -63,16 +63,13 @@ class KRatioAnalysis(PhotonIntensityAnalysis):
                 standard = self.get_standard_material(z)
                 builder.add_sample(SubstrateSample(standard))
 
-        for detector in options.detectors:
-            builder.add_detector(detector)
-
         for limit in options.limits:
             builder.add_limit(options.program, limit)
 
         for model in options.models:
             builder.add_model(options.program, model)
 
-        analysis = PhotonIntensityAnalysis()
+        analysis = PhotonIntensityAnalysis(self.photon_detector)
         builder.add_analysis(analysis)
 
         return super().apply(options) + builder.build()

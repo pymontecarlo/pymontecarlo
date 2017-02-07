@@ -37,17 +37,14 @@ settings = load_settings([filepath])
 
 class ExpanderMock(Expander):
 
-    def expand_detectors(self, detectors):
-        return expand_to_single(detectors)
+    def expand_analyses(self, analyses):
+        return expand_to_single(analyses)
 
     def expand_limits(self, limits):
         return expand_to_single(limits)
 
     def expand_models(self, models):
         return expand_to_single(models)
-
-    def expand_analyses(self, analyses):
-        return expand_to_single(analyses)
 
 class ProgramMock(Program):
 
@@ -72,9 +69,8 @@ class TestCase(unittest.TestCase):
     def create_basic_options(self):
         beam = GaussianBeam(15e3, 10e-9)
         sample = SubstrateSample(Material.pure(29))
-        detectors = [PhotonDetector(math.radians(40.0))]
+        analyses = [PhotonIntensityAnalysis(PhotonDetector(math.radians(40.0)))]
         limits = [ShowersLimit(100)]
         models = [RUTHERFORD]
-        analyses = [PhotonIntensityAnalysis()]
-        return Options(self.program, beam, sample, detectors, limits, models, analyses)
+        return Options(self.program, beam, sample, analyses, limits, models)
 

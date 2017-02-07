@@ -37,10 +37,9 @@ class Validator(object):
     def __init__(self):
         self.beam_validate_methods = {}
         self.sample_validate_methods = {}
-        self.detector_validate_methods = {}
+        self.analysis_validate_methods = {}
         self.limit_validate_methods = {}
         self.model_validate_methods = {}
-        self.analysis_validate_methods = {}
 
         self.valid_models = {}
         self.default_models = {}
@@ -60,16 +59,14 @@ class Validator(object):
             self._validate_beam(options.beam, options, errors)
         sample = \
             self._validate_sample(options.sample, options, errors)
-        detectors = \
-            self._validate_detectors(options.detectors, options, errors)
+        analyses = \
+            self._validate_analyses(options.analyses, options, errors)
         limits = \
             self._validate_limits(options.limits, options, errors)
         models = \
             self._validate_models(options.models, options, errors)
-        analyses = \
-            self._validate_analyses(options.analyses, options, errors)
 
-        return Options(program, beam, sample, detectors, limits, models, analyses)
+        return Options(program, beam, sample, analyses, limits, models)
 
     def validate_beam(self, beam, options):
         errors = set()
@@ -416,44 +413,6 @@ class Validator(object):
 
         return diameter_m
 
-    def validate_detectors(self, detectors, options):
-        errors = set()
-        detectors = self._validate_detectors(detectors, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return detectors
-
-    def _validate_detectors(self, detectors, options, errors):
-        outdetectors = []
-
-        for detector in detectors:
-            outdetector = self._validate_detector(detector, options, errors)
-            outdetectors.append(outdetector)
-
-        return outdetectors
-
-    def validate_detector(self, detector, options):
-        errors = set()
-        detector = self._validate_detector(detector, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return detector
-
-    def _validate_detector(self, detector, options, errors):
-        detector_class = detector.__class__
-        if detector_class not in self.detector_validate_methods:
-            exc = ValueError('Detector ({0}) is not supported.'
-                             .format(detector_class.__name__))
-            errors.add(exc)
-            return detector
-
-        method = self.detector_validate_methods[detector_class]
-        return method(detector, options, errors)
-
     def _validate_detector_photon(self, detector, options, errors):
         elevation_rad = \
             self._validate_detector_photon_elevation_rad(detector.elevation_rad, options, errors)
@@ -664,20 +623,18 @@ class Validator(object):
         return method(analysis, options, errors)
 
     def _validate_analysis_photonintensity(self, analysis, options, errors):
-        if not options.find_detectors(PhotonDetector):
-            exc = ValueError('Analysis ({0}) requires a photon detector'
-                             .format(analysis))
-            errors.add(exc)
+        photon_detector = \
+            self._validate_detector_photon(analysis.photon_detector, options, errors)
 
-        return PhotonIntensityAnalysis()
+        return PhotonIntensityAnalysis(photon_detector)
 
     def _validate_analysis_kratio(self, analysis, options, errors):
-        self._validate_analysis_photonintensity(analysis, options, errors)
-
+        photon_detector = \
+            self._validate_detector_photon(analysis.photon_detector, options, errors)
         standard_materials = \
             self._validate_analysis_kratio_standard_materials(analysis.standard_materials, options, errors)
 
-        return KRatioAnalysis(standard_materials)
+        return KRatioAnalysis(photon_detector, standard_materials)
 
     def _validate_analysis_kratio_standard_materials(self, materials, options, errors):
         outmaterials = {}

@@ -4,11 +4,13 @@
 # Standard library modules.
 import unittest
 import logging
+import math
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 
 # Globals and constants variables.
@@ -18,7 +20,8 @@ class TestPhotonIntensityAnalysis(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.a = PhotonIntensityAnalysis()
+        det = PhotonDetector(math.radians(40.0))
+        self.a = PhotonIntensityAnalysis(det)
 
         self.options = self.create_basic_options()
 
