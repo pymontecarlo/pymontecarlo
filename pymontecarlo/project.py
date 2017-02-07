@@ -20,6 +20,11 @@ class Project(object):
         if simulation not in self.simulations:
             self.simulations.append(simulation)
 
+    def recalculate(self):
+        for simulation in self.simulations:
+            for analysis in simulation.options.analyses:
+                analysis.calculate(simulation, tuple(self.simulations))
+
     def save(self, filepath=None):
         if filepath is not None:
             self.filepath = filepath
