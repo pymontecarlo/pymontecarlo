@@ -41,3 +41,6 @@ class WorkerError(PymontecarloError):
 
 class WorkerCancelledError(PymontecarloError):
     pass
+
+class ImportError_(PymontecarloError):
+    pass

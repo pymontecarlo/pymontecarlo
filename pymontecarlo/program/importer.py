@@ -1,106 +1,63 @@
-#!/usr/bin/env python
 """
-================================================================================
-:mod:`importer` -- Base class for all importers
-================================================================================
-
-.. module:: importer
-   :synopsis: Base class for all importers
-
-.. inheritance-diagram:: pymontecarlo.output.importer
-
+Base importer.
 """
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
 
 # Standard library modules.
-import os
-import warnings
-from abc import ABCMeta, abstractmethod
+import abc
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.results.results import ResultsContainer, Results
+from pymontecarlo.exceptions import ImportError_
 
 # Globals and constants variables.
 
-class ImporterWarning(Warning):
-    pass
-
-class ImporterException(Exception):
-    pass
-
-class Importer(object, metaclass=ABCMeta):
+class Importer(metaclass=abc.ABCMeta):
 
     def __init__(self):
-        self._importers = {}
+        self.import_analysis_methods = {}
 
-    def import_(self, options, dirpath, *args, **kwargs):
+    def import_(self, options, dirpath):
         """
-        Imports the results.
+        Imports the results and returns a :class:`Simulation`
 
-        :arg options: options to export
-            The options must only contained a single value for each parameter.
-        :arg outputdir: full path to output directory
+        :arg options: options used for the simulation
+        :arg dirpath: path containing the simulation files
         """
-        if not os.path.isdir(dirpath):
-            raise ValueError("Specified path (%s) is not a directory" % dirpath)
-        return self._import(options, dirpath, *args, **kwargs)
+        errors = set()
+        simulation = self._import(options, dirpath, errors)
 
-    @abstractmethod
-    def _import(self, options, dirpath, *args, **kwargs):
+        if errors:
+            raise ImportError_(*errors)
+
+        return simulation
+
+    @abc.abstractmethod
+    def _import(self, options, dirpath, errors):
         """
         Performs the actual import.
         """
         raise NotImplementedError
 
-    def _run_importers(self, options, *args, **kwargs):
+    def _run_importers(self, options, dirpath, errors, *args, **kwargs):
         """
-        Internal command to call the correct import function for each
-        detector in the options.
-        The following arguments are passed to the import function:
-
-            * options object
-            * name/key of detector/result
-            * detector object
-            * optional arguments and keyword-arguments
-
-        The import function must return the result for this detector.
+        Internal command to call the register import functions. 
+        All optional arguments passed to this method are transferred to the
+        import methods.
         """
-        results = {}
+        self._import_analyses(options.analyses, dirpath, errors, *args, **kwargs)
 
-        for key, detector in options.detectors.items():
-            clasz = detector.__class__
-            method = self._importers.get(clasz)
+    def _import_analyses(self, analyses, dirpath, errors, *args, **kwargs):
+        for analysis in analyses:
+            self._import_analysis(analysis, errors, *args, **kwargs)
 
-            if not method:
-                message = "Could not import results from '%s' detector (%s)" % \
-                    (key, clasz.__name__)
-                warnings.warn(message, ImporterWarning)
-                continue
+    def _import_analysis(self, analysis, dirpath, errors, *args, **kwargs):
+        analysis_class = analysis.__class__
+        if analysis_class not in self.import_analysis_methods:
+            exc = ValueError('Analysis ({0}) is not supported.'
+                             .format(analysis_class.__name__))
+            errors.add(exc)
+            return
 
-            result = method(options, key, detector, *args, **kwargs)
-            results[key] = result
-
-        return ResultsContainer(options, results)
-
-    def _import_dummy(self, options, key, detector, *args, **kwargs):
-        pass
-
-class HDF5Importer(Importer):
-
-    def __init__(self, converter):
-        Importer.__init__(self)
-
-        for detector in converter.DETECTORS:
-            self._importers[detector] = self._import_dummy
-
-    def _import(self, options, dirpath, *args, **kwargs):
-        filepath = os.path.join(dirpath, options.name + '.h5')
-        return Results.read(filepath)[0]
+        method = self.import_analysis_methods[analysis_class]
+        method(analysis, dirpath, errors, *args, **kwargs)
