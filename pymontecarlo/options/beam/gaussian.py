@@ -75,6 +75,16 @@ class GaussianBeam(Beam):
     polar_deg = DegreesAttribute('polar_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.add(('beam diameter (m)', self.diameter_m))
+        params.add(('beam initial x position (m)', self.x0_m))
+        params.add(('beam initial y position (m)', self.x0_m))
+        params.add(('beam polar angle (rad)', self.polar_rad))
+        params.add(('beam azimuth angle (rad)', self.azimuth_rad))
+        return params
+
 class GaussianBeamBuilder(BeamBuilder):
 
     def __init__(self):

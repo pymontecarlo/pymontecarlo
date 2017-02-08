@@ -60,6 +60,13 @@ class Sample(Option):
     tilt_deg = DegreesAttribute('tilt_rad')
     rotation_deg = DegreesAttribute('rotation_rad')
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.add(('sample tilt (rad)', self.tilt_rad))
+        params.add(('sample rotation (rad)', self.rotation_rad))
+        return params
+
 class SampleBuilder(Builder):
 
     def __init__(self):
@@ -146,3 +153,12 @@ class LayeredSample(Sample):
     def materials(self):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
+
+    @property
+    def parameters(self):
+        params = super().parameters
+        for i, layer in enumerate(self.layers):
+            for name, value in layer.material.parameters:
+                params.add(("layer {0:d}'s ".format(i) + name, value))
+            params.add(("layer {0:d}'s thickness (m)".format(i), layer.thickness_m))
+        return params

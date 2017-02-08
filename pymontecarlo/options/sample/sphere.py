@@ -42,6 +42,14 @@ class SphereSample(Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        for name, value in self.material.parameters:
+            params.add(("sphere's " + name, value))
+        params.add(("sphere's diameter (m)", self.diameter_m))
+        return params
+
 class SphereSampleBuilder(SampleBuilder):
 
     def __init__(self):

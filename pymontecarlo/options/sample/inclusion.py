@@ -45,6 +45,16 @@ class InclusionSample(Sample):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        for name, value in self.substrate_material.parameters:
+            params.add(("substrate's " + name, value))
+        for name, value in self.inclusion_material.parameters:
+            params.add(("inclusion's " + name, value))
+        params.update(("inclusion's diameter (m)", self.inclusion_diameter_m))
+        return params
+
 class InclusionSampleBuilder(SampleBuilder):
 
     def __init__(self):

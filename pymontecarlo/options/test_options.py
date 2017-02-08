@@ -25,6 +25,15 @@ class TestOptions(TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)
 
+    def testparameters(self):
+        params = self.options.parameters
+        self.assertEqual(14, len(params))
+
+        options = self.create_basic_options()
+        options.beam.energy_eV = 14e3
+        diff = options.parameters ^ self.options.parameters
+        self.assertEqual(2, len(diff))
+
     def testfind_detectors(self):
         detectors = self.options.find_detectors(PhotonDetector)
         self.assertEqual(1, len(detectors))

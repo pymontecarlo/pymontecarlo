@@ -36,6 +36,13 @@ class SubstrateSample(Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        for name, value in self.material.parameters:
+            params.add(("substrate's " + name, value))
+        return params
+
 class SubstrateSampleBuilder(SampleBuilder):
 
     def __init__(self):

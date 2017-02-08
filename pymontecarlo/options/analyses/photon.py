@@ -23,3 +23,9 @@ class PhotonAnalysis(Analysis):
     @property
     def detectors(self):
         return super().detectors + (self.photon_detector,)
+
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.update(self.photon_detector.parameters)
+        return params

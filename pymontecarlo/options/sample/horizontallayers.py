@@ -68,3 +68,10 @@ class HorizontalLayerSample(LayeredSample):
             zpositions.append((zmin_m, zmax_m))
 
         return zpositions
+
+    @property
+    def parameters(self):
+        params = super().parameters
+        for name, value in self.substrate_material.parameters:
+            params.add(("substrate's " + name, value))
+        return params

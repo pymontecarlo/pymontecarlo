@@ -34,3 +34,7 @@ class Model(Option):
     @abc.abstractproperty
     def category(self):
         raise NotImplementedError
+
+    @property
+    def parameters(self):
+        return super().parameters

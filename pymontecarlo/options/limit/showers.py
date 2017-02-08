@@ -23,3 +23,9 @@ class ShowersLimit(Limit):
 
     def __eq__(self, other):
         return super().__eq__(other) and self.showers == other.showers
+
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.add(('number of showers', self.showers))
+        return params

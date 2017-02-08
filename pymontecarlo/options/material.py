@@ -87,6 +87,14 @@ class Material(Option):
 
     density_g_per_cm3 = MultiplierAttribute('density_kg_per_m3', 1e-3)
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        for z, wf in self.composition.items():
+            params.add(('{0} weight fraction'.format(pyxray.element_symbol(z)), wf))
+        params.add(('density (kg/m3)', self.density_kg_per_m3))
+        return params
+
 class _Vacuum(Material):
 
     _instance = None
@@ -117,6 +125,10 @@ class _Vacuum(Material):
 
     def __reduce__(self):
         return (self.__class__, ())
+
+    @property
+    def parameters(self):
+        return set()
 
 VACUUM = _Vacuum()
 

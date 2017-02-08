@@ -6,10 +6,9 @@ Main class containing all options of a simulation
 import itertools
 
 # Third party modules.
-import more_itertools
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder, are_sequence_equal
+from pymontecarlo.util.cbook import Builder, are_sequence_equal, unique
 from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
@@ -59,6 +58,9 @@ class Options(Option):
                 found_objects.append(obj)
         return found_objects
 
+    def find_analyses(self, analysis_class):
+        return self._find(self.analyses, analysis_class)
+
     def find_limits(self, limit_class):
         return self._find(self.limits, limit_class)
 
@@ -76,7 +78,25 @@ class Options(Option):
         detectors = []
         for analysis in self.analyses:
             detectors.extend(analysis.detectors)
-        return tuple(more_itertools.unique_everseen(detectors))
+        return tuple(unique(detectors))
+
+    @property
+    def parameters(self):
+        params = super().parameters
+
+        params.update(self.beam.parameters)
+        params.update(self.sample.parameters)
+
+        for analysis in self.analyses:
+            params.update(analysis.parameters)
+
+        for limit in self.limits:
+            params.update(limit.parameters)
+
+        for model in self.models:
+            params.update(model.parameters)
+
+        return params
 
 class OptionsBuilder(Builder):
 

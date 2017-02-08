@@ -40,6 +40,13 @@ class Beam(Option):
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.add(('beam energy (eV)', self.energy_eV))
+        params.add(('beam particle', self.particle))
+        return params
+
 class BeamBuilder(Builder):
 
     def __init__(self):

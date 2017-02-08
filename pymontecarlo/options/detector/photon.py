@@ -33,3 +33,10 @@ class PhotonDetector(Detector):
 
     elevation_deg = DegreesAttribute('elevation_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
+
+    @property
+    def parameters(self):
+        params = super().parameters
+        params.add(('photon detector elevation angle (rad)', self.elevation_rad))
+        params.add(('photon detector azimuth angle (rad)', self.azimuth_rad))
+        return params

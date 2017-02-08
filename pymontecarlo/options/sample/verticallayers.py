@@ -61,6 +61,16 @@ class VerticalLayerSample(LayeredSample):
 
         return xpositions_m
 
+    @property
+    def parameters(self):
+        params = super().parameters
+        for name, value in self.left_material.parameters:
+            params.add(("left substrate's " + name, value))
+        for name, value in self.right_material.parameters:
+            params.add(("right substrate's " + name, value))
+        params.add(("vertical layers' depth (m)", self.depth_m))
+        return params
+
 #def _calculate_positions(self):
 #        layers = np.array(self.geometry.layers, ndmin=1)
 #        thicknesses = list(map(_THICKNESS_GETTER, layers))
