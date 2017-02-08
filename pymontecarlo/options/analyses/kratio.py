@@ -9,12 +9,13 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
+from pymontecarlo.options.analyses.photon import PhotonAnalysis
 from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.util.cbook import are_mapping_equal
 
 # Globals and constants variables.
 
-class KRatioAnalysis(PhotonIntensityAnalysis):
+class KRatioAnalysis(PhotonAnalysis):
 
     DEFAULT_NONPURE_STANDARD_MATERIALS = \
         {7: Material.from_formula('BN', 2.1e3),

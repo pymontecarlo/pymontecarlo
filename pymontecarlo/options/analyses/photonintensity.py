@@ -7,25 +7,17 @@ Analysis to record photon intensity emitted towards a detector.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.analyses.base import Analysis
+from pymontecarlo.options.analyses.photon import PhotonAnalysis
 
 # Globals and constants variables.
 
-class PhotonIntensityAnalysis(Analysis):
+class PhotonIntensityAnalysis(PhotonAnalysis):
 
     def __init__(self, photon_detector):
-        self.photon_detector = photon_detector
-
-    def __eq__(self, other):
-        return super().__eq__(other) and \
-            self.photon_detector == other.photon_detector
+        super().__init__(photon_detector)
 
     def apply(self, options):
         return []
 
     def calculate(self, simulation, simulations):
         pass
-
-    @property
-    def detectors(self):
-        return super().detectors + (self.photon_detector,)
