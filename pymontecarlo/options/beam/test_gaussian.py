@@ -12,6 +12,7 @@ import math
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.gaussian import GaussianBeam, GaussianBeamBuilder
 from pymontecarlo.options.particle import POSITRON, ELECTRON
+from pymontecarlo.options.beam.base import Beam
 
 # Globals and constants variables.
 
@@ -67,6 +68,9 @@ class TestGaussianBeam(TestCase):
         self.assertNotEqual(beam, self.beam)
 
         beam = GaussianBeam(15e3, 123.456, POSITRON, 1.0, 2.0, 0.1, 0.21)
+        self.assertNotEqual(beam, self.beam)
+
+        beam = Beam(15e3, POSITRON)
         self.assertNotEqual(beam, self.beam)
 
 class TestGaussianBeamBuilder(TestCase):

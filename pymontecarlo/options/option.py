@@ -15,4 +15,4 @@ class Option(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __eq__(self, other):
-        return True
+        return type(other) == type(self)
