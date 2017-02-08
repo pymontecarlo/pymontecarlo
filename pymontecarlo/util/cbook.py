@@ -5,6 +5,7 @@ import abc
 import math
 
 # Third party modules.
+import more_itertools
 
 # Local modules.
 
@@ -32,6 +33,9 @@ def are_mapping_equal(map0, map1):
             return False
 
     return True
+
+def unique(seq):
+    return list(more_itertools.unique_everseen(seq))
 
 class Builder(metaclass=abc.ABCMeta):
 

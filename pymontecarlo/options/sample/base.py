@@ -7,12 +7,11 @@ import abc
 import math
 
 # Third party modules.
-import more_itertools
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
-    DegreesAttribute, Builder, are_sequence_equal
+    DegreesAttribute, Builder, are_sequence_equal, unique
 from pymontecarlo.options.option import Option
 
 # Globals and constants variables.
@@ -48,7 +47,7 @@ class Sample(Option):
         if VACUUM in materials:
             materials.remove(VACUUM)
 
-        return tuple(more_itertools.unique_everseen(materials))
+        return tuple(unique(materials))
 
     @abc.abstractproperty
     def materials(self): #pragma: no cover
