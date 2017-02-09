@@ -11,7 +11,8 @@ import math
 # Local modules.
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
-    DegreesAttribute, Builder, are_sequence_equal, unique
+    DegreesAttribute, are_sequence_equal, unique
+from pymontecarlo.util.interface import Builder
 from pymontecarlo.options.option import Option
 
 # Globals and constants variables.

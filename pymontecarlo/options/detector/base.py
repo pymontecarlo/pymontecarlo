@@ -7,7 +7,7 @@ Base detector.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder
+from pymontecarlo.util.interface import Builder
 from pymontecarlo.options.option import Option
 
 # Globals and constants variables.

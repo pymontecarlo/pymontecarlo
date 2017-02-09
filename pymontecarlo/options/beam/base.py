@@ -9,7 +9,8 @@ import operator
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute, Builder
+from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.util.interface import Builder
 from pymontecarlo.options.particle import ELECTRON
 from pymontecarlo.options.option import Option
 

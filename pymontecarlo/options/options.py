@@ -8,7 +8,8 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder, are_sequence_equal, unique
+from pymontecarlo.util.cbook import are_sequence_equal, unique
+from pymontecarlo.util.interface import Builder
 from pymontecarlo.options.option import Option
 
 # Globals and constants variables.

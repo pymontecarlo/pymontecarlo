@@ -1,7 +1,8 @@
-""""""
+"""
+Cookbook solutions.
+"""
 
 # Standard library modules.
-import abc
 import math
 
 # Third party modules.
@@ -36,16 +37,6 @@ def are_mapping_equal(map0, map1):
 
 def unique(seq):
     return list(more_itertools.unique_everseen(seq))
-
-class Builder(metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def __len__(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def build(self):
-        raise NotImplementedError
 
 class MultiplierAttribute(object):
 
