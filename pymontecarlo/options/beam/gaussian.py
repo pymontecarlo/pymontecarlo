@@ -20,6 +20,9 @@ from pymontecarlo.util.cbook import DegreesAttribute
 
 class GaussianBeam(Beam):
 
+    NAME = 'gaussian beam'
+    DESCRIPTION = 'Defines a two dimensional beam where incident particles are distributed following a 2D Gaussian distribution.'
+
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
         """

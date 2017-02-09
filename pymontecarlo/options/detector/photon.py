@@ -14,6 +14,9 @@ from pymontecarlo.util.cbook import DegreesAttribute
 
 class PhotonDetector(Detector):
 
+    NAME = 'photon detector'
+    DESCRIPTION = 'Defines a detector to collect emitted X-rays.'
+
     def __init__(self, elevation_rad, azimuth_rad=0.0):
         super().__init__()
 

@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class IonizationPotentialModel(Model):
 
+    NAME = 'ionization potential model'
+    DESCRIPTION = 'Models inner-shell ionization of atoms.'
+
     @property
     def category(self):
         return 'ionization potential'

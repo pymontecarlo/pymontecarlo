@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class PhotonScatteringCrossSectionModel(Model):
 
+    NAME = 'photon scattering cross section model'
+    DESCRIPTION = 'Models photon scattering.'
+
     @property
     def category(self):
         return 'photon scattering cross section'

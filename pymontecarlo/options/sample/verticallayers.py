@@ -13,6 +13,9 @@ from pymontecarlo.options.sample.base import LayeredSample
 
 class VerticalLayerSample(LayeredSample):
 
+    NAME = 'vertical layer sample'
+    DESCRIPTION = 'Describes a sample consisting of vertical y-z planes sandwiched between two infinite substrates.'
+
     def __init__(self, left_material, right_material, layers=None,
                  depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):
         """

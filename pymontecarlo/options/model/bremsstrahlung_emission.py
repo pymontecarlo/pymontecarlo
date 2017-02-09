@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class BremsstrahlungEmissionModel(Model):
 
+    NAME = 'Bremsstrahlung emission model'
+    DESCRIPTION = 'Models Bremsstrahlung emission'
+
     @property
     def category(self):
         return 'bremsstrahlung emission'

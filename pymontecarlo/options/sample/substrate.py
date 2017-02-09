@@ -16,6 +16,9 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 class SubstrateSample(Sample):
 
+    NAME = 'substrate sample'
+    DESCRIPTION = 'Describes an infinitely thick sample.'
+
     def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a substrate sample. 

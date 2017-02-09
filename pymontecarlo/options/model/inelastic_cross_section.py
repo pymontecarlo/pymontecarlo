@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class InelasticCrossSectionModel(Model):
 
+    NAME = 'inelastic cross section model'
+    DESCRIPTION = 'Models inelastic scattering.'
+
     @property
     def category(self):
         return 'inelastic cross section'

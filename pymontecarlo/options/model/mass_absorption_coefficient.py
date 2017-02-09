@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class MassAbsorptionCoefficientModel(Model):
 
+    NAME = 'mass absorption coefficient model'
+    DESCRIPTION = 'Models photo electric absorption of X-rays.'
+
     @property
     def category(self):
         return 'mass absorption coefficient'

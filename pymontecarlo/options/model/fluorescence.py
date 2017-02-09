@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class FluorescenceModel(Model):
 
+    NAME = 'fluorescence model'
+    DESCRIPTION = 'Models X-ray fluorescence and/or Compton scattering.'
+
     @property
     def category(self):
         return 'fluorescence'

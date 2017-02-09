@@ -13,6 +13,9 @@ from pymontecarlo.options.analyses.photon import PhotonAnalysis
 
 class PhotonIntensityAnalysis(PhotonAnalysis):
 
+    NAME = 'photon intensity analysis'
+    DESCRIPTION = 'Simulates X-rays and records their emitted intensity.'
+
     def __init__(self, photon_detector):
         super().__init__(photon_detector)
 

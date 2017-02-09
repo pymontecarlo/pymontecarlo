@@ -21,6 +21,9 @@ from pymontecarlo.options.option import Option
 
 class Material(Option):
 
+    NAME = 'material'
+    DESCRIPTION = 'Defines a material by its composition and density.'
+
     def __init__(self, name, composition, density_kg_per_m3):
         """
         Creates a new material.

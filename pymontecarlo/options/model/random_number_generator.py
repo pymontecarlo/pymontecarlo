@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class RandomNumberGeneratorModel(Model):
 
+    NAME = 'random number generator model'
+    DESCRIPTION = 'Models calculation of random number.'
+
     @property
     def category(self):
         return 'random number generator'

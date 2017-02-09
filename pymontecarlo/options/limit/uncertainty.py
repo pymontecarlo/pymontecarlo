@@ -14,6 +14,9 @@ from pymontecarlo.options.limit.base import Limit
 
 class UncertaintyLimit(Limit):
 
+    NAME = 'uncertainty limit'
+    DESCRIPTION = 'Limits simulation to a certain uncertainty on the intensity of a certain X-ray transition.'
+
     def __init__(self, atomic_number, transition, detector, uncertainty):
         super().__init__()
         self.atomic_number = atomic_number

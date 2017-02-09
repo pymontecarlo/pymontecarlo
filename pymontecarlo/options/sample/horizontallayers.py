@@ -14,6 +14,9 @@ from pymontecarlo.options.material import VACUUM
 
 class HorizontalLayerSample(LayeredSample):
 
+    NAME = 'horizontal layer sample'
+    DESCRIPTION = 'Describes a multi-layer sample.'
+
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, rotation_rad=0.0):
         """

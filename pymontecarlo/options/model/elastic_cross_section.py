@@ -13,6 +13,9 @@ from pymontecarlo.options.model.base import Model
 
 class ElasticCrossSectionModel(Model):
 
+    NAME = 'elastic cross section model'
+    DESCRIPTION = 'Models elastic scattering.'
+
     @property
     def category(self):
         return 'elastic cross section'
