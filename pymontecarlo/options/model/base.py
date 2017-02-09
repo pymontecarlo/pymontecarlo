@@ -31,10 +31,9 @@ class Model(Option):
             self.name == other.name and \
             self.reference == other.reference
 
+    def create_datarow(self):
+        return super().create_datarow()
+
     @abc.abstractproperty
     def category(self):
         raise NotImplementedError
-
-    @property
-    def parameters(self):
-        return super().parameters

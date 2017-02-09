@@ -34,7 +34,9 @@ class TestBase(TestCase):
         self.assertAlmostEqual(15e3, self.b.energy_eV, 4)
         self.assertAlmostEqual(15.0, self.b.energy_keV, 4)
         self.assertEqual(POSITRON, self.b.particle)
-        self.assertEqual(2, len(self.b.parameters))
+
+    def testcreate_datarow(self):
+        self.assertEqual(2, len(self.b.create_datarow()))
 
     def test__eq__(self):
         b = Beam(15e3, POSITRON)

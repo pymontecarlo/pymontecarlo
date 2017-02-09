@@ -20,12 +20,11 @@ class PhotonAnalysis(Analysis):
         return super().__eq__(other) and \
             self.photon_detector == other.photon_detector
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        datarow.update(self.photon_detector.create_datarow())
+        return datarow
+
     @property
     def detectors(self):
         return super().detectors + (self.photon_detector,)
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        params.update(self.photon_detector.parameters)
-        return params

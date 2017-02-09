@@ -8,10 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.interface import DataRowCreator
 
 # Globals and constants variables.
 
-class Option(metaclass=abc.ABCMeta):
+class Option(DataRowCreator, metaclass=abc.ABCMeta):
     """
     Base class of all the options.
     All derived classes should implement
@@ -28,7 +29,3 @@ class Option(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __eq__(self, other):
         return type(other) == type(self)
-
-    @abc.abstractproperty
-    def parameters(self):
-        return set()

@@ -46,6 +46,15 @@ class VerticalLayerSample(LayeredSample):
             self.right_material == other.right_material and \
             self.depth_m == other.depth_m
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for name, value in self.left_material.create_datarow().items():
+            datarow["left substrate's " + name] = value
+        for name, value in self.right_material.create_datarow().items():
+            datarow["right substrate's " + name] = value
+        datarow["vertical layers' depth (m)"] = self.depth_m
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.left_material,
@@ -63,16 +72,6 @@ class VerticalLayerSample(LayeredSample):
             xpositions_m.append((xmin_m, xmax_m))
 
         return xpositions_m
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for name, value in self.left_material.parameters:
-            params.add(("left substrate's " + name, value))
-        for name, value in self.right_material.parameters:
-            params.add(("right substrate's " + name, value))
-        params.add(("vertical layers' depth (m)", self.depth_m))
-        return params
 
 #def _calculate_positions(self):
 #        layers = np.array(self.geometry.layers, ndmin=1)

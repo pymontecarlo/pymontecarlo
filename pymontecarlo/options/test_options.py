@@ -25,13 +25,14 @@ class TestOptions(TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)
 
-    def testparameters(self):
-        params = self.options.parameters
-        self.assertEqual(14, len(params))
+    def testcreate_datarow(self):
+        datarow = set(self.options.create_datarow().items())
+        self.assertEqual(14, len(datarow))
 
         options = self.create_basic_options()
         options.beam.energy_eV = 14e3
-        diff = options.parameters ^ self.options.parameters
+        other_datarow = set(options.create_datarow().items())
+        diff = datarow ^ other_datarow
         self.assertEqual(2, len(diff))
 
     def testfind_detectors(self):

@@ -39,14 +39,13 @@ class Beam(Option):
             self.energy_eV == other.energy_eV and \
             self.particle == other.particle
 
-    energy_keV = MultiplierAttribute('energy_eV', 1e-3)
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        datarow['beam energy (eV)'] = self.energy_eV
+        datarow['beam particle'] = self.particle
+        return datarow
 
-    @property
-    def parameters(self):
-        params = super().parameters
-        params.add(('beam energy (eV)', self.energy_eV))
-        params.add(('beam particle', self.particle))
-        return params
+    energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
 class BeamBuilder(Builder):
 

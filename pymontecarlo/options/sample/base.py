@@ -50,6 +50,12 @@ class Sample(Option):
 
         return tuple(unique(materials))
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        datarow['sample tilt (rad)'] = self.tilt_rad
+        datarow['sample rotation (rad)'] = self.rotation_rad
+        return datarow
+
     @abc.abstractproperty
     def materials(self): #pragma: no cover
         """
@@ -60,13 +66,6 @@ class Sample(Option):
 
     tilt_deg = DegreesAttribute('tilt_rad')
     rotation_deg = DegreesAttribute('rotation_rad')
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        params.add(('sample tilt (rad)', self.tilt_rad))
-        params.add(('sample rotation (rad)', self.rotation_rad))
-        return params
 
 class SampleBuilder(Builder):
 
@@ -150,16 +149,15 @@ class LayeredSample(Sample):
         self.layers.append(layer)
         return layer
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for i, layer in enumerate(self.layers):
+            for name, value in layer.material.parameters:
+                datarow["layer {0:d}'s ".format(i) + name] = value
+            datarow["layer {0:d}'s thickness (m)".format(i)] = layer.thickness_m
+        return datarow
+
     @property
     def materials(self):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for i, layer in enumerate(self.layers):
-            for name, value in layer.material.parameters:
-                params.add(("layer {0:d}'s ".format(i) + name, value))
-            params.add(("layer {0:d}'s thickness (m)".format(i), layer.thickness_m))
-        return params

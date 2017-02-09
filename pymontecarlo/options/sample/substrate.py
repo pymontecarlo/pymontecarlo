@@ -35,16 +35,15 @@ class SubstrateSample(Sample):
     def __eq__(self, other):
         return super().__eq__(other) and self.material == other.material
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for name, value in self.material.create_datarow().items():
+            datarow["substrate's " + name] = value
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for name, value in self.material.parameters:
-            params.add(("substrate's " + name, value))
-        return params
 
 class SubstrateSampleBuilder(SampleBuilder):
 

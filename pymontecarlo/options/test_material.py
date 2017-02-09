@@ -92,6 +92,9 @@ class TestMaterial(TestCase):
         m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
         self.assertNotEqual(m2, self.m)
 
+    def testcreate_datarow(self):
+        self.assertEqual(2, len(self.m.create_datarow()))
+
 class TestMaterialBuilder(TestCase):
 
     def setUp(self):

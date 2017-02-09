@@ -55,6 +55,12 @@ class HorizontalLayerSample(LayeredSample):
         """
         return self.substrate_material is not VACUUM
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for name, value in self.substrate_material.create_datarow().items():
+            datarow["substrate's " + name] = value
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.substrate_material,
@@ -71,10 +77,3 @@ class HorizontalLayerSample(LayeredSample):
             zpositions.append((zmin_m, zmax_m))
 
         return zpositions
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for name, value in self.substrate_material.parameters:
-            params.add(("substrate's " + name, value))
-        return params

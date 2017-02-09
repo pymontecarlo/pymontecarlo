@@ -41,17 +41,16 @@ class SphereSample(Sample):
             self.material == other.material and \
             self.diameter_m == other.diameter_m
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for name, value in self.material.create_datarow().items():
+            datarow["sphere's " + name] = value
+        datarow["sphere's diameter (m)"] = self.diameter_m
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for name, value in self.material.parameters:
-            params.add(("sphere's " + name, value))
-        params.add(("sphere's diameter (m)", self.diameter_m))
-        return params
 
 class SphereSampleBuilder(SampleBuilder):
 

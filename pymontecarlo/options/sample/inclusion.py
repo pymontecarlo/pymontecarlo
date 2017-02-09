@@ -43,20 +43,19 @@ class InclusionSample(Sample):
             self.inclusion_material == other.inclusion_material and \
             self.inclusion_diameter_m == other.inclusion_diameter_m
 
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        for name, value in self.substrate_material.create_datarow().items():
+            datarow["substrate's " + name] = value
+        for name, value in self.inclusion_material.create_datarow().items():
+            datarow["inclusion's " + name] = value
+        datarow["inclusion's diameter (m)"] = self.inclusion_diameter_m
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
-
-    @property
-    def parameters(self):
-        params = super().parameters
-        for name, value in self.substrate_material.parameters:
-            params.add(("substrate's " + name, value))
-        for name, value in self.inclusion_material.parameters:
-            params.add(("inclusion's " + name, value))
-        params.update(("inclusion's diameter (m)", self.inclusion_diameter_m))
-        return params
 
 class InclusionSampleBuilder(SampleBuilder):
 

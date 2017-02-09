@@ -38,11 +38,10 @@ class UncertaintyLimit(Limit):
             self.detector == other.detector and \
             self.uncertainty == other.uncertainty
 
-    @property
-    def parameters(self):
-        params = super().parameters
-        params.add(('uncertainty X-ray transition', (self.atomic_number, self.transition)))
-        params.update(self.detector.parameters)
-        params.add(('uncertainty value', self.uncertainty))
-        return params
+    def create_datarow(self):
+        datarow = super().create_datarow()
+        datarow['uncertainty X-ray transition'] = self.atomic_number, self.transition
+        datarow.update(self.detector.parameters)
+        datarow['uncertainty value'] = self.uncertainty
+        return datarow
 
