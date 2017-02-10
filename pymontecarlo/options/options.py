@@ -16,9 +16,6 @@ from pymontecarlo.options.option import Option
 
 class Options(Option):
 
-    NAME = 'options'
-    DESCRIPTION = 'Defines how a simulation was or will be simulated.'
-
     def __init__(self, program, beam, sample,
                  analyses=None, limits=None, models=None):
         """

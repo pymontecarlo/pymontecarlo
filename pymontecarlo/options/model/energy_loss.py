@@ -13,9 +13,6 @@ from pymontecarlo.options.model.base import Model
 
 class EnergyLossModel(Model):
 
-    NAME = 'energy loss model'
-    DESCRIPTION = 'Models continuous energy loss by inelastic scattering.'
-
     @property
     def category(self):
         return 'energy loss'

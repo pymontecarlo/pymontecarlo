@@ -246,7 +246,7 @@ class PhotonIntensityResult(_SummarizableResult, _PhotonKeyResult):
                                             bremsstrahlung_fluorescence)
 
         if isinstance(transition, str):
-            transition = from_string(transition)
+            transition =self from_string(transition)
 
         # Collect photon keys
         list_keys = []

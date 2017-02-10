@@ -13,9 +13,6 @@ from pymontecarlo.options.limit.base import Limit
 
 class ShowersLimit(Limit):
 
-    NAME = 'showers limit'
-    DESCRIPTION = 'Limits simulation to a number of incident particles.'
-
     def __init__(self, showers):
         super().__init__()
         self.showers = showers

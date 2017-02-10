@@ -16,9 +16,6 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 class SphereSample(Sample):
 
-    NAME = 'sphere sample'
-    DESCRIPTION = 'Describes a sphere sample.'
-
     def __init__(self, material, diameter_m, tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a geometry consisting of a sphere.

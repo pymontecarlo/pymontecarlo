@@ -13,9 +13,6 @@ from pymontecarlo.options.model.base import Model
 
 class IonizationCrossSectionModel(Model):
 
-    NAME = 'ionization cross section model'
-    DESCRIPTION = 'Models inner-shell ionization of atoms.'
-
     @property
     def category(self):
         return 'ionization cross section'

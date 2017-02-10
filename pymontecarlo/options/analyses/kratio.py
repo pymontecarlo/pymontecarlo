@@ -17,9 +17,6 @@ from pymontecarlo.util.cbook import are_mapping_equal
 
 class KRatioAnalysis(PhotonAnalysis):
 
-    NAME = 'k-ratio analysis'
-    DESCRIPTION = 'Calculates k-ratios from X-ray intensities emitted from "unknown" and reference materials.'
-
     DEFAULT_NONPURE_STANDARD_MATERIALS = \
         {7: Material.from_formula('BN', 2.1e3),
          8: Material.from_formula('Al2O3', 3.95e3),

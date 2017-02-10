@@ -13,9 +13,6 @@ from pymontecarlo.options.model.base import Model
 
 class DirectionCosineModel(Model):
 
-    NAME = 'direction cosine model'
-    DESCRIPTION = 'Models calculation of direction cosines'
-
     @property
     def category(self):
         return 'direction cosine'

@@ -16,9 +16,6 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 class InclusionSample(Sample):
 
-    NAME = 'inclusion sample'
-    DESCRIPTION = 'Describes an half-sphere inclusion in a substrate.'
-
     def __init__(self, substrate_material,
                  inclusion_material, inclusion_diameter_m,
                  tilt_rad=0.0, rotation_rad=0.0):
