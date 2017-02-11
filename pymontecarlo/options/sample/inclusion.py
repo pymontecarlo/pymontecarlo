@@ -40,13 +40,12 @@ class InclusionSample(Sample):
             self.inclusion_material == other.inclusion_material and \
             self.inclusion_diameter_m == other.inclusion_diameter_m
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        for name, value in self.substrate_material.create_datarow().items():
-            datarow["substrate's " + name] = value
-        for name, value in self.inclusion_material.create_datarow().items():
-            datarow["inclusion's " + name] = value
-        datarow["inclusion's diameter (m)"] = self.inclusion_diameter_m
+    def create_datarow(self, kwargs):
+        datarow = super().create_datarow(kwargs)
+        prefix = "substrate's "
+        datarow.update_with_prefix(prefix, self.substrate_material.create_datarow(**kwargs))
+        datarow.update_with_prefix(prefix, self.inclusion_material.create_datarow(**kwargs))
+        datarow.add("inclusion's diameter", self.inclusion_diameter_m, 0.0, 'm')
         return datarow
 
     @property

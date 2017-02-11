@@ -43,13 +43,13 @@ class VerticalLayerSample(LayeredSample):
             self.right_material == other.right_material and \
             self.depth_m == other.depth_m
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        for name, value in self.left_material.create_datarow().items():
-            datarow["left substrate's " + name] = value
-        for name, value in self.right_material.create_datarow().items():
-            datarow["right substrate's " + name] = value
-        datarow["vertical layers' depth (m)"] = self.depth_m
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        prefix = "left substrate's "
+        datarow.update_with_prefix(prefix, self.left_material.create_datarow(**kwargs))
+        prefix = "right substrate's "
+        datarow.update_with_prefix(prefix, self.right_material.create_datarow(**kwargs))
+        datarow.add("vertical layers' depth", self.depth_m, 0.0, 'm')
         return datarow
 
     @property

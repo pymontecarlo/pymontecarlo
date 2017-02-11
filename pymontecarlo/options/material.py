@@ -86,11 +86,12 @@ class Material(Option):
             self.composition == other.composition and \
             self.density_kg_per_m3 == other.density_kg_per_m3
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
         for z, wf in self.composition.items():
-            datarow['{0} weight fraction'.format(pyxray.element_symbol(z))] = wf
-        datarow['density (kg/m3)'] = self.density_kg_per_m3
+            column = '{0} weight fraction'.format(pyxray.element_symbol(z))
+            datarow.add(column, wf)
+        datarow.add('density', self.density_kg_per_m3, 0.0, 'kg/m^3')
         return datarow
 
     density_g_per_cm3 = MultiplierAttribute('density_kg_per_m3', 1e-3)
@@ -126,9 +127,8 @@ class _Vacuum(Material):
     def __reduce__(self):
         return (self.__class__, ())
 
-    @property
-    def parameters(self):
-        return set()
+    def create_datarow(self, **kwargs):
+        return Option.create_datarow(**kwargs)
 
 VACUUM = _Vacuum()
 

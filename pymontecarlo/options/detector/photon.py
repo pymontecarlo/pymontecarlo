@@ -31,10 +31,10 @@ class PhotonDetector(Detector):
             self.elevation_rad == other.elevation_rad and \
             self.azimuth_rad == other.azimuth_rad
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        datarow['photon detector elevation angle (rad)'] = self.elevation_rad
-        datarow['photon detector azimuth angle (rad)'] = self.azimuth_rad
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.add('photon detector elevation angle', self.elevation_rad, 0.0, 'rad')
+        datarow.add('photon detector azimuth angle', self.azimuth_rad, 0.0, 'rad')
         return datarow
 
     elevation_deg = DegreesAttribute('elevation_rad')

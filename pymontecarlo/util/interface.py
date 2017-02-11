@@ -4,11 +4,11 @@ Interfaces.
 
 # Standard library modules.
 import abc
-from collections import OrderedDict
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.datarow import DataRow
 
 # Globals and constants variables.
 
@@ -24,6 +24,6 @@ class Builder(metaclass=abc.ABCMeta):
 
 class DataRowCreator(metaclass=abc.ABCMeta):
 
-    #@abc.abstractmethod
-    def create_datarow(self):
-        return OrderedDict()
+    @abc.abstractmethod
+    def create_datarow(self, **kwargs):
+        return DataRow()

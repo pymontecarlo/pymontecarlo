@@ -50,10 +50,10 @@ class Sample(Option):
 
         return tuple(unique(materials))
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        datarow['sample tilt (rad)'] = self.tilt_rad
-        datarow['sample rotation (rad)'] = self.rotation_rad
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.add('sample tilt', self.tilt_rad, 0.0, 'rad')
+        datarow.add('sample rotation', self.rotation_rad, 0.0, 'rad')
         return datarow
 
     @abc.abstractproperty
@@ -149,12 +149,12 @@ class LayeredSample(Sample):
         self.layers.append(layer)
         return layer
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
         for i, layer in enumerate(self.layers):
-            for name, value in layer.material.parameters:
-                datarow["layer {0:d}'s ".format(i) + name] = value
-            datarow["layer {0:d}'s thickness (m)".format(i)] = layer.thickness_m
+            prefix = "layer {0:d}'s ".format(i)
+            datarow.update_with_prefix(prefix, layer.material.create_datarow(**kwargs))
+            datarow.add(prefix + 'thickness', layer.thickness_m, 0.0, 'm')
         return datarow
 
     @property

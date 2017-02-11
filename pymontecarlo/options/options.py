@@ -59,20 +59,20 @@ class Options(Option):
                 found_objects.append(obj)
         return found_objects
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
 
-        datarow.update(self.beam.create_datarow())
-        datarow.update(self.sample.create_datarow())
+        datarow.update(self.beam.create_datarow(**kwargs))
+        datarow.update(self.sample.create_datarow(**kwargs))
 
         for analysis in self.analyses:
-            datarow.update(analysis.create_datarow())
+            datarow.update(analysis.create_datarow(**kwargs))
 
         for limit in self.limits:
-            datarow.update(limit.create_datarow())
+            datarow.update(limit.create_datarow(**kwargs))
 
         for model in self.models:
-            datarow.update(model.create_datarow())
+            datarow.update(model.create_datarow(**kwargs))
 
         return datarow
 

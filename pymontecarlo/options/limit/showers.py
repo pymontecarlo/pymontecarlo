@@ -26,5 +26,5 @@ class ShowersLimit(Limit):
 
     def create_datarow(self):
         datarow = super().create_datarow()
-        datarow['number of showers'] = self.showers
+        datarow.add('number of showers', self.showers)
         return datarow

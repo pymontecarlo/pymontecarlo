@@ -31,8 +31,8 @@ class Model(Option):
             self.name == other.name and \
             self.reference == other.reference
 
-    def create_datarow(self):
-        return super().create_datarow()
+    def create_datarow(self, **kwargs):
+        return super().create_datarow(**kwargs)
 
     @abc.abstractproperty
     def category(self):

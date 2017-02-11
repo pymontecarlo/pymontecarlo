@@ -38,11 +38,11 @@ class SphereSample(Sample):
             self.material == other.material and \
             self.diameter_m == other.diameter_m
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        for name, value in self.material.create_datarow().items():
-            datarow["sphere's " + name] = value
-        datarow["sphere's diameter (m)"] = self.diameter_m
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        prefix = "sphere's "
+        datarow.update_with_prefix(prefix, self.material.create_datarow(**kwargs))
+        datarow.add("sphere's diameter", self.diameter_m, 0.0, 'm')
         return datarow
 
     @property
