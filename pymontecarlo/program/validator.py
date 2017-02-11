@@ -22,6 +22,7 @@ from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysi
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -494,32 +495,21 @@ class Validator(object):
         return showers
 
     def _validate_limit_uncertainty(self, limit, options, errors):
-        atomic_number = \
-            self._validate_limit_uncertainty_atomic_number(limit.atomic_number, options, errors)
-        transition = \
-            self._validate_limit_uncertainty_transition(limit.transition, options, errors)
+        xrayline = \
+            self._validate_limit_uncertainty_xrayline(limit.xrayline, options, errors)
         detector = \
             self._validate_limit_uncertainty_detector(limit.detector, options, errors)
         uncertainty = \
             self._validate_limit_uncertainty_uncertainty(limit.uncertainty, options, errors)
 
-        return UncertaintyLimit(atomic_number, transition, detector, uncertainty)
+        return UncertaintyLimit(xrayline, detector, uncertainty)
 
-    def _validate_limit_uncertainty_atomic_number(self, atomic_number, options, errors):
-        try:
-            pyxray.descriptor.Element.validate(atomic_number)
-        except ValueError as exc:
-            errors.add(exc)
-
-        return atomic_number
-
-    def _validate_limit_uncertainty_transition(self, transition, options, errors):
-        #TODO: Validate uncertainty limit transition
-        return transition
+    def _validate_limit_uncertainty_xrayline(self, xrayline, options, errors):
+        # Notes: No validate is required. Arguments are internally validated.
+        return XrayLine(xrayline.element, xrayline.transition)
 
     def _validate_limit_uncertainty_detector(self, detector, options, errors):
-        #TODO: Validate uncertainty limit detector
-        return detector
+        return self._validate_detector_photon(detector, options, errors)
 
     def _validate_limit_uncertainty_uncertainty(self, uncertainty, options, errors):
         if uncertainty <= 0:

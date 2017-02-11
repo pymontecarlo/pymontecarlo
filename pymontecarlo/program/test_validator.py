@@ -21,6 +21,7 @@ from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import \
     ElasticCrossSectionModel, RUTHERFORD, ELSEPA2005, POUCHOU_PICHOIR1991
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
@@ -216,13 +217,17 @@ class TestValidator(TestCase):
         self.assertEqual(1, len(errors))
 
     def testvalidate_limit_uncertainty(self):
-        limit = UncertaintyLimit(13, 'Ka1', self.options, 0.02)
+        xrayline = XrayLine(13, 'Ka1')
+        detector = PhotonDetector(1.1, 2.2)
+        limit = UncertaintyLimit(xrayline, detector, 0.02)
         limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
         self.assertIsNot(limit2, limit)
 
     def testvalidate_limit_uncertainty_exception(self):
-        limit = UncertaintyLimit(-1, 'Ka1', self.options, 0.0)
+        xrayline = XrayLine(13, 'Ka1')
+        detector = PhotonDetector(float('nan'), -1)
+        limit = UncertaintyLimit(xrayline, detector, 0.0)
         self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
 
         errors = set()
