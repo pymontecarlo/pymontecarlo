@@ -10,6 +10,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.limit.uncertainty import UncertaintyLimit
+from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -18,11 +19,10 @@ class TestUncertaintyLimit(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.l = UncertaintyLimit(13, 'Ka1', None, 0.02)
+        self.l = UncertaintyLimit(XrayLine(13, 'Ka1'), None, 0.02)
 
     def testskeleton(self):
-        self.assertEqual(13, self.l.atomic_number)
-        self.assertEqual('Ka1', self.l.transition)
+        self.assertEqual(XrayLine(13, 'Ka1'), self.l.xrayline)
         self.assertIsNone(self.l.detector)
         self.assertAlmostEqual(0.02, self.l.uncertainty, 4)
 
@@ -31,20 +31,20 @@ class TestUncertaintyLimit(TestCase):
         self.assertEqual(expected, repr(self.l))
 
     def test__eq__(self):
-        l = UncertaintyLimit(13, 'Ka1', None, 0.02)
+        l = UncertaintyLimit(XrayLine(13, 'Ka1'), None, 0.02)
         self.assertEqual(l, self.l)
 
     def test__ne__(self):
-        l = UncertaintyLimit(14, 'Ka1', None, 0.02)
+        l = UncertaintyLimit(XrayLine(14, 'Ka1'), None, 0.02)
         self.assertNotEqual(l, self.l)
 
-        l = UncertaintyLimit(13, 'La1', None, 0.02)
+        l = UncertaintyLimit(XrayLine(13, 'La1'), None, 0.02)
         self.assertNotEqual(l, self.l)
 
-        l = UncertaintyLimit(13, 'Ka1', 'detector', 0.02)
+        l = UncertaintyLimit(XrayLine(13, 'Ka1'), 'detector', 0.02)
         self.assertNotEqual(l, self.l)
 
-        l = UncertaintyLimit(13, 'Ka1', None, 0.03)
+        l = UncertaintyLimit(XrayLine(13, 'Ka1'), None, 0.03)
         self.assertNotEqual(l, self.l)
 
 if __name__ == '__main__': #pragma: no cover
