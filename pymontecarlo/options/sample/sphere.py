@@ -30,7 +30,7 @@ class SphereSample(Sample):
 
     def __repr__(self):
         return '<{0:s}(material={1:s}, diameter={2:g} m)>' \
-                    .format(self.__class__.__name, self.body.material,
+                    .format(self.__class__.__name__, str(self.material),
                             self.diameter_m)
 
     def __eq__(self, other):
