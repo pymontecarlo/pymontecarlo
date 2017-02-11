@@ -9,3 +9,4 @@ numpy
 h5py
 pyxray>=1.0.1
 more_itertools>=2.5.0
+pint
