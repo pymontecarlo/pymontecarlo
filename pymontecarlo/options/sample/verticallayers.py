@@ -34,8 +34,8 @@ class VerticalLayerSample(LayeredSample):
 
     def __repr__(self):
         return '<{0:s}(left_material={1:s}, right_materials={2:s}, {3:d} layers)>' \
-            .format(self.__class__.__name, self.left_substrate.material,
-                    self.right_substrate.material, len(self.layers))
+            .format(self.__class__.__name__, str(self.left_material),
+                    str(self.right_material), len(self.layers))
 
     def __eq__(self, other):
         return super().__eq__(other) and \

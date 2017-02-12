@@ -36,11 +36,11 @@ class HorizontalLayerSample(LayeredSample):
     def __repr__(self):
         if self.has_substrate():
             return '<{0:s}(substrate_material={1:s}, {2:d} layers)>' \
-                .format(self.__class__.__name, self.substrate.material,
+                .format(self.__class__.__name__, str(self.substrate_material),
                         len(self.layers))
         else:
             return '<{0:s}(No substrate, {1:d} layers)>' \
-                .format(self.__class__.__name, len(self.layers))
+                .format(self.__class__.__name__, len(self.layers))
 
     def __eq__(self, other):
         return super().__eq__(other) and \

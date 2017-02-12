@@ -31,8 +31,8 @@ class InclusionSample(Sample):
 
     def __repr__(self):
         return '<{0:s}(substrate_material={1:s}, inclusion_material={2:s}, inclusion_diameter={3:g} m)>' \
-            .format(self.__class__.__name__, self.substrate.material,
-                    self.inclusion.material, self.inclusion.diameter_m)
+            .format(self.__class__.__name__, str(self.substrate_material),
+                    str(self.inclusion_material), self.inclusion_diameter_m)
 
     def __eq__(self, other):
         return super().__eq__(other) and \

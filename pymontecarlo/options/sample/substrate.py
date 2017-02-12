@@ -27,7 +27,7 @@ class SubstrateSample(Sample):
 
     def __repr__(self):
         return '<{0:s}(material={1:s})>' \
-            .format(self.__class__.__name__, self.material)
+            .format(self.__class__.__name__, str(self.material))
 
     def __eq__(self, other):
         return super().__eq__(other) and self.material == other.material
