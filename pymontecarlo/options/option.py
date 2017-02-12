@@ -23,3 +23,26 @@ class Option(DataRowCreator, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __eq__(self, other):
         return type(other) == type(self)
+
+class OptionBuilder(metaclass=abc.ABCMeta):
+    """
+    Base class of all option builders.
+    All derived classes should implement
+    
+        - method :meth:`__len__`
+        - method :meth:`build()`
+    """
+
+    @abc.abstractmethod
+    def __len__(self):
+        """
+        Returns the number of options that would be returned by :meth:`build()`.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def build(self):
+        """
+        Returns a list of options.
+        """
+        raise NotImplementedError

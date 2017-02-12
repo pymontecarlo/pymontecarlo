@@ -7,13 +7,12 @@ Base detector.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.interface import Builder
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
 class Detector(Option):
     pass
 
-class DetectorBuilder(Builder):
+class DetectorBuilder(OptionBuilder):
     pass

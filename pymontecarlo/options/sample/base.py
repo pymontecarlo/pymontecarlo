@@ -12,8 +12,7 @@ import math
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
     DegreesAttribute, are_sequence_equal, unique
-from pymontecarlo.util.interface import Builder
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -67,7 +66,7 @@ class Sample(Option):
     tilt_deg = DegreesAttribute('tilt_rad')
     rotation_deg = DegreesAttribute('rotation_rad')
 
-class SampleBuilder(Builder):
+class SampleBuilder(OptionBuilder):
 
     def __init__(self):
         self.tilts_rad = set()

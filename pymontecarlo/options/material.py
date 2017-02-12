@@ -13,10 +13,9 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
-from pymontecarlo.util.interface import Builder
 from pymontecarlo.util.composition import \
     calculate_density_kg_per_m3, generate_name, composition_from_formula
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -132,7 +131,7 @@ class _Vacuum(Material):
 
 VACUUM = _Vacuum()
 
-class MaterialBuilder(Builder):
+class MaterialBuilder(OptionBuilder):
 
     def __init__(self, balance_z):
         self.balance_z = balance_z

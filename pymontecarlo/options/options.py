@@ -9,8 +9,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.util.cbook import are_sequence_equal, unique
-from pymontecarlo.util.interface import Builder
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -98,7 +97,7 @@ class Options(Option):
             detectors.extend(analysis.detectors)
         return tuple(unique(detectors))
 
-class OptionsBuilder(Builder):
+class OptionsBuilder(OptionBuilder):
 
     def __init__(self):
         self.programs = set()
