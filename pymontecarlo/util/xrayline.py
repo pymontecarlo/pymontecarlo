@@ -32,6 +32,9 @@ class XrayLine(collections.namedtuple('XrayLine', ('element', 'transition'))):
             transition = pyxray.transitionset(transition)
         return super().__new__(cls, element, transition)
 
+    def __repr__(self):
+        return '<{0}({1})>'.format(self.__class__.__name__, str(self))
+
     def __str__(self):
         symbol = pyxray.element_symbol(self.element)
 
