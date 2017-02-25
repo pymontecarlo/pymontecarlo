@@ -45,7 +45,7 @@ def composition_from_formula(formula):
 
     return composition
 
-def calculate_composition_atomic(composition):
+def composition_atomic(composition):
     """
     Returns a composition :class:`dict` where the values are atomic fractions.
 
@@ -63,9 +63,36 @@ def calculate_composition_atomic(composition):
     totalfraction = sum(composition2.values())
 
     for z, fraction in composition2.items():
-        composition2[z] = fraction / totalfraction
+        try:
+            composition2[z] = fraction / totalfraction
+        except ZeroDivisionError:
+            composition2[z] = 0.0
 
     return defaultdict(float, composition2)
+
+def process_wildcard(composition):
+    """
+    Processes element with a wildcard ``?`` weight fraction and returns
+    composition balanced to 1.0. 
+    """
+    composition2 = composition.copy()
+
+    wildcard_zs = set()
+    total_wf = 0.0
+    for z, wf in composition.items():
+        if wf == '?':
+            wildcard_zs.add(z)
+        else:
+            total_wf += wf
+
+    if not wildcard_zs:
+        return composition2
+
+    balance_wf = (1.0 - total_wf) / len(wildcard_zs)
+    for z in wildcard_zs:
+        composition2[z] = balance_wf
+
+    return composition2
 
 def calculate_density_kg_per_m3(composition):
     """
@@ -100,7 +127,7 @@ def generate_name(composition):
         No wildcard are accepted.
     :type composition: :class:`dict`
     """
-    composition_atomic = calculate_composition_atomic(composition)
+    composition_atomic = composition_atomic(composition)
 
     symbols = []
     fractions = []

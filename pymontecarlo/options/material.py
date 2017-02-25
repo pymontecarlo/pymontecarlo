@@ -13,7 +13,7 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
-from pymontecarlo.util.composition import \
+from pymontecarlo.options.composition import \
     calculate_density_kg_per_m3, generate_name, composition_from_formula
 from pymontecarlo.options.option import Option, OptionBuilder
 

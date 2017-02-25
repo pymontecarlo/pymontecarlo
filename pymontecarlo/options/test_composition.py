@@ -8,7 +8,7 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.composition import composition_from_formula
+from pymontecarlo.options.composition import composition_from_formula
 
 # Globals and constants variables.
 
