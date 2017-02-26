@@ -14,12 +14,15 @@ import numpy as np
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
 from pymontecarlo.options.composition import \
-    calculate_density_kg_per_m3, generate_name, composition_from_formula
+    calculate_density_kg_per_m3, generate_name, from_formula
 from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
 class Material(Option):
+
+    WEIGHT_FRACTION_SIGNIFICANT_DIGITS = 7 # 0.1 ppm
+    DENSITY_SIGNIFICANT_DIGITS = 5
 
     def __init__(self, name, composition, density_kg_per_m3):
         """
@@ -65,11 +68,11 @@ class Material(Option):
         :arg formula: formula of a molecule (e.g. ``Al2O3``)
         :type formula: :class:`str`
         """
-        composition = composition_from_formula(formula)
+        composition = from_formula(formula)
         return cls(formula, composition, density_kg_per_m3)
 
     def __repr__(self):
-        return '<{classname}({name}, {composition}, {density} kg/m3)>' \
+        return '<{classname}({name}, {composition}, {density:g} kg/m3)>' \
             .format(classname=self.__class__.__name__,
                     name=self.name,
                     composition=' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
