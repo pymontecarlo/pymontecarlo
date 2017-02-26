@@ -19,7 +19,7 @@ _digit = Word(string.digits + ".")
 _elementRef = Group(_symbol + Optional(_digit, default="1"))
 CHEMICAL_FORMULA_PARSER = OneOrMore(_elementRef)
 
-def composition_from_formula(formula):
+def from_formula(formula):
     # Parse chemical formula
     formulaData = CHEMICAL_FORMULA_PARSER.parseString(formula)
 
@@ -45,7 +45,7 @@ def composition_from_formula(formula):
 
     return composition
 
-def composition_atomic(composition):
+def to_atomic(composition):
     """
     Returns a composition :class:`dict` where the values are atomic fractions.
 
@@ -127,7 +127,7 @@ def generate_name(composition):
         No wildcard are accepted.
     :type composition: :class:`dict`
     """
-    composition_atomic = composition_atomic(composition)
+    composition_atomic = to_atomic(composition)
 
     symbols = []
     fractions = []
@@ -156,5 +156,8 @@ def generate_name(composition):
             name += "%s" % symbol
         else:
             name += '%s%i' % (symbol, fraction)
+
+    if not name:
+        name = 'Untitled'
 
     return name
