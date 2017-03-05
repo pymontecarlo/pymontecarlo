@@ -8,7 +8,7 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.interface import DataRowCreator
+from pymontecarlo.util.datarow import DataRowCreator
 
 # Globals and constants variables.
 

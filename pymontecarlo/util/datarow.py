@@ -1,6 +1,7 @@
 """"""
 
 # Standard library modules.
+import abc
 import collections
 from collections import OrderedDict
 import numbers
@@ -11,6 +12,12 @@ import numbers
 import pymontecarlo.util.units as units
 
 # Globals and constants variables.
+
+class DataRowCreator(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def create_datarow(self, **kwargs):
+        return DataRow()
 
 class DataRow(collections.Mapping):
 
