@@ -206,7 +206,7 @@ class Validator(object):
             outcomposition[z] = wf
 
         total = sum(outcomposition.values())
-        if round(total, Material.WEIGHT_FRACTION_SIGNIFICANT_DIGITS) != 1.0:
+        if not math.isclose(total, 1.0, abs_tol=Material.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE):
             exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
                              .format(total))
             errors.add(exc)
@@ -214,7 +214,7 @@ class Validator(object):
         return outcomposition
 
     def _validate_material_base_density_kg_per_m3(self, density_kg_per_m3, options, errors):
-        if round(density_kg_per_m3, Material.DENSITY_SIGNIFICANT_DIGITS) < 0:
+        if density_kg_per_m3 <= 0:
             exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0.'
                              .format(density_kg_per_m3))
             errors.add(exc)

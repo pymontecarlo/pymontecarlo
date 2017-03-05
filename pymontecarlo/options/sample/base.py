@@ -21,6 +21,9 @@ class Sample(Option):
     Base class for all sample representations.
     """
 
+    TILT_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
+    ROTATION_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
+
     def __init__(self, tilt_rad=0.0, rotation_rad=0.0):
         """
         Creates a new sample.
@@ -38,8 +41,8 @@ class Sample(Option):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.tilt_rad == other.tilt_rad and \
-            self.rotation_rad == other.rotation_rad
+            math.isclose(self.tilt_deg, other.tilt_deg, abs_tol=self.TILT_TOLERANCE_deg) and \
+            math.isclose(self.rotation_deg, other.rotation_deg, abs_tol=self.ROTATION_TOLERANCE_deg)
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -101,6 +104,8 @@ class SampleBuilder(OptionBuilder):
 
 class Layer(object):
 
+    THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
+
     def __init__(self, material, thickness_m):
         """
         Layer of a sample.
@@ -119,7 +124,7 @@ class Layer(object):
 
     def __eq__(self, other):
         return self.material == other.material and \
-            self.thickness_m == other.thickness_m
+            math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
 
 class LayeredSample(Sample):
 

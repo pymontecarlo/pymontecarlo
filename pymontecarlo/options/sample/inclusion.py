@@ -6,6 +6,7 @@ Inclusion sample.
 import functools
 import itertools
 import operator
+import math
 
 # Third party modules.
 
@@ -15,6 +16,8 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 # Globals and constants variables.
 
 class InclusionSample(Sample):
+
+    INCLUSION_DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
 
     def __init__(self, substrate_material,
                  inclusion_material, inclusion_diameter_m,
@@ -38,7 +41,7 @@ class InclusionSample(Sample):
         return super().__eq__(other) and \
             self.substrate_material == other.substrate_material and \
             self.inclusion_material == other.inclusion_material and \
-            self.inclusion_diameter_m == other.inclusion_diameter_m
+            math.isclose(self.inclusion_diameter_m, other.inclusion_diameter_m, abs_tol=self.INCLUSION_DIAMETER_TOLERANCE_m)
 
     def create_datarow(self, kwargs):
         datarow = super().create_datarow(kwargs)

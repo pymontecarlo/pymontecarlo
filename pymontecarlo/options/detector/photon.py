@@ -3,6 +3,7 @@ Photon (X-ray) detector.
 """
 
 # Standard library modules.
+import math
 
 # Third party modules.
 
@@ -13,6 +14,9 @@ from pymontecarlo.util.cbook import DegreesAttribute
 # Globals and constants variables.
 
 class PhotonDetector(Detector):
+
+    ELEVATION_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
+    AZIMUTH_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
 
     def __init__(self, elevation_rad, azimuth_rad=0.0):
         super().__init__()
@@ -28,8 +32,8 @@ class PhotonDetector(Detector):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.elevation_rad == other.elevation_rad and \
-            self.azimuth_rad == other.azimuth_rad
+            math.isclose(self.elevation_deg, other.elevation_deg, abs_tol=self.ELEVATION_TOLERANCE_deg) and \
+            math.isclose(self.azimuth_deg, other.azimuth_deg, abs_tol=self.AZIMUTH_TOLERANCE_deg)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)

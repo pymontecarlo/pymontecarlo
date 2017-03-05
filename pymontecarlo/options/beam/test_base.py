@@ -42,6 +42,9 @@ class TestBase(TestCase):
         b = Beam(15e3, POSITRON)
         self.assertEqual(b, self.b)
 
+        b = Beam(15000.009, POSITRON)
+        self.assertEqual(b, self.b)
+
     def test__ne__(self):
         b = Beam(14e3, POSITRON)
         self.assertNotEqual(b, self.b)

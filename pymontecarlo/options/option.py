@@ -22,6 +22,11 @@ class Option(DataRowCreator, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def __eq__(self, other):
+        """
+        Returns whether two options are equal. 
+        Each option should implement some tolerance for the comparison of
+        float values.
+        """
         return type(other) == type(self)
 
 class OptionBuilder(metaclass=abc.ABCMeta):

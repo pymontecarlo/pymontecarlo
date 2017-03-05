@@ -3,6 +3,7 @@ Limit based on reaching uncertainty.
 """
 
 # Standard library modules.
+import math
 
 # Third party modules.
 
@@ -12,6 +13,8 @@ from pymontecarlo.options.limit.base import Limit
 # Globals and constants variables.
 
 class UncertaintyLimit(Limit):
+
+    UNCERTAINTY_TOLERANCE = 1e-5 # 0.001%
 
     def __init__(self, xrayline, detector, uncertainty):
         super().__init__()
@@ -29,7 +32,7 @@ class UncertaintyLimit(Limit):
         return super().__eq__(other) and \
             self.xrayline == other.xrayline and \
             self.detector == other.detector and \
-            self.uncertainty == other.uncertainty
+            math.isclose(self.uncertainty, other.uncertainty, abs_tol=self.UNCERTAINTY_TOLERANCE)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)

@@ -3,6 +3,7 @@ Vertical layers sample
 """
 
 # Standard library modules.
+import math
 
 # Third party modules.
 
@@ -12,6 +13,8 @@ from pymontecarlo.options.sample.base import LayeredSample
 # Globals and constants variables.
 
 class VerticalLayerSample(LayeredSample):
+
+    DEPTH_TOLERANCE_m = 1e-12 # 1 fm
 
     def __init__(self, left_material, right_material, layers=None,
                  depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):
@@ -41,7 +44,7 @@ class VerticalLayerSample(LayeredSample):
         return super().__eq__(other) and \
             self.left_material == other.left_material and \
             self.right_material == other.right_material and \
-            self.depth_m == other.depth_m
+            math.isclose(self.depth_m, other.depth_m, abs_tol=self.DEPTH_TOLERANCE_m)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)

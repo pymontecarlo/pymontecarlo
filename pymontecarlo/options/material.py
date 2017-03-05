@@ -3,6 +3,7 @@ Material definition
 """
 
 # Standard library modules.
+import math
 from operator import itemgetter
 import itertools
 
@@ -12,7 +13,7 @@ import pyxray
 import numpy as np
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute
+import pymontecarlo.util.cbook as cbook
 from pymontecarlo.options.composition import \
     calculate_density_kg_per_m3, generate_name, from_formula
 from pymontecarlo.options.option import Option, OptionBuilder
@@ -21,8 +22,8 @@ from pymontecarlo.options.option import Option, OptionBuilder
 
 class Material(Option):
 
-    WEIGHT_FRACTION_SIGNIFICANT_DIGITS = 7 # 0.1 ppm
-    DENSITY_SIGNIFICANT_DIGITS = 5
+    WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE = 1e-7 # 0.1 ppm
+    DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3 = 1e-5
 
     def __init__(self, name, composition, density_kg_per_m3):
         """
@@ -85,8 +86,8 @@ class Material(Option):
     def __eq__(self, other):
         return super().__eq__(other) and \
             self.name == other.name and \
-            self.composition == other.composition and \
-            self.density_kg_per_m3 == other.density_kg_per_m3
+            cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE) and \
+            math.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
@@ -96,7 +97,7 @@ class Material(Option):
         datarow.add('density', self.density_kg_per_m3, 0.0, 'kg/m^3')
         return datarow
 
-    density_g_per_cm3 = MultiplierAttribute('density_kg_per_m3', 1e-3)
+    density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
 class _Vacuum(Material):
 

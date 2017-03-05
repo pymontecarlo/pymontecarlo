@@ -6,6 +6,7 @@ Sphere sample.
 import functools
 import itertools
 import operator
+import math
 
 # Third party modules.
 
@@ -15,6 +16,8 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 # Globals and constants variables.
 
 class SphereSample(Sample):
+
+    DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
 
     def __init__(self, material, diameter_m, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -36,7 +39,7 @@ class SphereSample(Sample):
     def __eq__(self, other):
         return super().__eq__(other) and \
             self.material == other.material and \
-            self.diameter_m == other.diameter_m
+            math.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)

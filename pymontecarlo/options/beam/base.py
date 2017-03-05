@@ -5,6 +5,7 @@ Base classes for beams.
 # Standard library modules.
 import functools
 import operator
+import math
 
 # Third party modules.
 
@@ -19,6 +20,8 @@ class Beam(Option):
     """
     Base beam.
     """
+
+    BEAM_ENERGY_TOLERANCE_eV = 1e-2 # 0.01 eV
 
     def __init__(self, energy_eV, particle=ELECTRON):
         """
@@ -35,7 +38,7 @@ class Beam(Option):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.energy_eV == other.energy_eV and \
+            math.isclose(self.energy_eV, other.energy_eV, abs_tol=self.BEAM_ENERGY_TOLERANCE_eV) and \
             self.particle == other.particle
 
     def create_datarow(self, **kwargs):

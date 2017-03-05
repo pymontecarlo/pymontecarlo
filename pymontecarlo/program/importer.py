@@ -9,6 +9,7 @@ import abc
 
 # Local modules.
 from pymontecarlo.exceptions import ImportError_
+from pymontecarlo.simulation import Simulation
 
 # Globals and constants variables.
 
@@ -39,19 +40,26 @@ class Importer(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    def _run_importers(self, options, dirpath, errors, *args, **kwargs):
+    def _create_simulation(self, options):
+        """
+        Creates the simulation object.
+        """
+        return Simulation(options)
+
+    def _run_importers(self, simulation, dirpath, errors, *args, **kwargs):
         """
         Internal command to call the register import functions. 
         All optional arguments passed to this method are transferred to the
         import methods.
         """
-        self._import_analyses(options.analyses, dirpath, errors, *args, **kwargs)
+        analyses = simulation.options.analyses
+        self._import_analyses(analyses, simulation, dirpath, errors, *args, **kwargs)
 
-    def _import_analyses(self, analyses, dirpath, errors, *args, **kwargs):
+    def _import_analyses(self, analyses, simulation, dirpath, errors, *args, **kwargs):
         for analysis in analyses:
-            self._import_analysis(analysis, errors, *args, **kwargs)
+            self._import_analysis(analysis, simulation, dirpath, errors, *args, **kwargs)
 
-    def _import_analysis(self, analysis, dirpath, errors, *args, **kwargs):
+    def _import_analysis(self, analysis, simulation, dirpath, errors, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.import_analysis_methods:
             exc = ValueError('Analysis ({0}) is not supported.'
@@ -60,4 +68,4 @@ class Importer(metaclass=abc.ABCMeta):
             return
 
         method = self.import_analysis_methods[analysis_class]
-        method(analysis, dirpath, errors, *args, **kwargs)
+        method(analysis, simulation, dirpath, errors, *args, **kwargs)

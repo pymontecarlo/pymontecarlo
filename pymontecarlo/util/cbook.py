@@ -22,6 +22,16 @@ def are_sequence_equal(list0, list1):
 
     return True
 
+def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
+    if len(list0) != len(list1):
+        return False
+
+    for item0, item1 in zip(list0, list1):
+        if not math.isclose(item0, item1, rel_tol=rel_tol, abs_tol=abs_tol):
+            return False
+
+    return True
+
 def are_mapping_equal(map0, map1):
     if len(map0) != len(map1):
         return False
@@ -31,6 +41,19 @@ def are_mapping_equal(map0, map1):
             return False
 
         if map0[key] != map1[key]:
+            return False
+
+    return True
+
+def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
+    if len(map0) != len(map1):
+        return False
+
+    for key in map0:
+        if key not in map1:
+            return False
+
+        if not math.isclose(map0[key], map1[key], rel_tol=rel_tol, abs_tol=abs_tol):
             return False
 
     return True

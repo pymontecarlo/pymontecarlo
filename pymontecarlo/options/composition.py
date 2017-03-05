@@ -3,8 +3,8 @@
 # Standard library modules.
 import string
 from collections import defaultdict
-from fractions import gcd
 import itertools
+import math
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
@@ -140,7 +140,7 @@ def generate_name(composition):
     if len(fractions) >= 2:
         gcds = []
         for a, b in itertools.combinations(fractions, 2):
-            gcds.append(gcd(a, b))
+            gcds.append(math.gcd(a, b))
         smallest_gcd = min(gcds)
 
     if smallest_gcd == 0.0:
