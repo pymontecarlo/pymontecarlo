@@ -49,3 +49,7 @@ class XrayLine(collections.namedtuple('XrayLine', ('element', 'line'))):
     def is_xray_transitionset(self):
         return isinstance(self.line, pyxray.XrayTransitionSet)
 
+    @property
+    def atomic_number(self):
+        return self.element.atomic_number
+
