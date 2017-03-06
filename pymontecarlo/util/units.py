@@ -11,6 +11,9 @@ import pint
 
 ureg = pint.UnitRegistry()
 
+# Register "electron"
+ureg.define('electron = mol')
+
 _preferred_units = {}
 
 def set_preferred_unit(unit):
