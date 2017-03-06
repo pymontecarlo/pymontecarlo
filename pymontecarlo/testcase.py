@@ -30,6 +30,7 @@ from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import RUTHERFORD, ElasticCrossSectionModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis
+from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
 
 # Globals and constants variables.
 
@@ -190,13 +191,34 @@ class TestCase(unittest.TestCase):
         for tmpdir in self.tmpdirs:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
+    def create_basic_photondetector(self):
+        return PhotonDetector(math.radians(40.0))
+
     def create_basic_options(self):
         beam = GaussianBeam(15e3, 10e-9)
         sample = SubstrateSample(Material.pure(29))
-        analyses = [PhotonIntensityAnalysis(PhotonDetector(math.radians(40.0)))]
+        analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
         limits = [ShowersLimit(100)]
         models = [RUTHERFORD]
         return Options(self.program, beam, sample, analyses, limits, models)
+
+    def create_basic_photonintensityresult(self):
+        analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
+        b = EmittedPhotonIntensityResultBuilder(analysis)
+        b.add_intensity((13, 'Ka1'), 1.0, 0.1)
+        b.add_intensity((13, 'Ka2'), 2.0, 0.2)
+        b.add_intensity((13, 'Kb1'), 4.0, 0.5)
+        b.add_intensity((13, 'Kb3'), 5.0, 0.7)
+        b.add_intensity((13, 'Ll'), 3.0, 0.1)
+        return b.build()
+
+    def create_basic_simulation(self):
+        options = self.create_basic_options()
+
+        results = []
+        results.append(self.create_basic_photonintensityresult())
+
+        return Simulation(options, results)
 
     def create_temp_dir(self):
         tmpdir = tempfile.mkdtemp()
