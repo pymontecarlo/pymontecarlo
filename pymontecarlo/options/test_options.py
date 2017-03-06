@@ -10,6 +10,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
+from pymontecarlo.options.detector.base import Detector
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel, EnergyLossModel
 
@@ -41,8 +42,8 @@ class TestOptions(TestCase):
         detectors = self.options.find_detectors(PhotonDetector)
         self.assertEqual(1, len(detectors))
 
-        detectors = self.options.find_detectors(object)
-        self.assertEqual(0, len(detectors))
+        detectors = self.options.find_detectors(Detector)
+        self.assertEqual(1, len(detectors))
 
     def testfind_limits(self):
         limits = self.options.find_limits(ShowersLimit)

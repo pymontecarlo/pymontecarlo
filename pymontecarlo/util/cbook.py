@@ -64,7 +64,7 @@ def unique(seq):
 def find_by_type(objects, clasz):
     found_objects = []
     for obj in objects:
-        if obj.__class__ == clasz:
+        if isinstance(obj, clasz):
             found_objects.append(obj)
     return found_objects
 
