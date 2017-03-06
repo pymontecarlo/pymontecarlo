@@ -61,6 +61,13 @@ def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
 def unique(seq):
     return list(more_itertools.unique_everseen(seq))
 
+def find_by_type(objects, clasz):
+    found_objects = []
+    for obj in objects:
+        if obj.__class__ == clasz:
+            found_objects.append(obj)
+    return found_objects
+
 class MultiplierAttribute(object):
 
     def __init__(self, attrname, multiplier):

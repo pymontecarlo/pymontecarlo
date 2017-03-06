@@ -8,7 +8,7 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import are_sequence_equal, unique
+from pymontecarlo.util.cbook import are_sequence_equal, unique, find_by_type
 from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
@@ -51,13 +51,6 @@ class Options(Option):
             are_sequence_equal(self.limits, other.limits) and \
             are_sequence_equal(self.models, other.models)
 
-    def _find(self, objects, clasz):
-        found_objects = []
-        for obj in objects:
-            if obj.__class__ == clasz:
-                found_objects.append(obj)
-        return found_objects
-
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
 
@@ -76,16 +69,16 @@ class Options(Option):
         return datarow
 
     def find_analyses(self, analysis_class):
-        return self._find(self.analyses, analysis_class)
+        return find_by_type(self.analyses, analysis_class)
 
     def find_limits(self, limit_class):
-        return self._find(self.limits, limit_class)
+        return find_by_type(self.limits, limit_class)
 
     def find_models(self, model_class):
-        return self._find(self.models, model_class)
+        return find_by_type(self.models, model_class)
 
     def find_detectors(self, detector_class):
-        return self._find(self.detectors, detector_class)
+        return find_by_type(self.detectors, detector_class)
 
     @property
     def detectors(self):
