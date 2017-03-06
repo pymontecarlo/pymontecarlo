@@ -70,6 +70,10 @@ class Material(Option):
         :type formula: :class:`str`
         """
         composition = from_formula(formula)
+
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
+
         return cls(formula, composition, density_kg_per_m3)
 
     def __repr__(self):
