@@ -25,14 +25,14 @@ class TestXrayLine(TestCase):
     def testskeleton(self):
         self.assertEqual(13, self.x.element.atomic_number)
 
-        self.assertEqual(2, self.x.transition.source_subshell.n)
-        self.assertEqual(1, self.x.transition.destination_subshell.n)
+        self.assertEqual(2, self.x.line.source_subshell.n)
+        self.assertEqual(1, self.x.line.destination_subshell.n)
 
     def test__hash__(self):
         K = pyxray.AtomicSubshell(1, 0, 1)
         L3 = pyxray.AtomicSubshell(2, 1, 3)
-        transition = pyxray.Transition(L3, K)
-        x = XrayLine(pyxray.Element(13), transition)
+        line = pyxray.XrayTransition(L3, K)
+        x = XrayLine(pyxray.Element(13), line)
         self.assertEqual(hash(x), hash(self.x))
 
     def test__str__(self):
@@ -43,6 +43,26 @@ class TestXrayLine(TestCase):
         set_preferred_notation('siegbahn')
         set_preferred_encoding('latex')
         self.assertEqual('Al \\ensuremath{\\mathrm{K}\\alpha_1}', str(self.x))
+
+    def test__eq__(self):
+        K = pyxray.AtomicSubshell(1, 0, 1)
+        L3 = pyxray.AtomicSubshell(2, 1, 3)
+        line = pyxray.XrayTransition(L3, K)
+        x = XrayLine(pyxray.Element(13), line)
+        self.assertEqual(x, self.x)
+
+    def test__ne__(self):
+        K = pyxray.AtomicSubshell(1, 0, 1)
+        L3 = pyxray.AtomicSubshell(2, 1, 3)
+        line = pyxray.XrayTransition(L3, K)
+        x = XrayLine(pyxray.Element(14), line)
+        self.assertNotEqual(x, self.x)
+
+        K = pyxray.AtomicSubshell(1, 0, 1)
+        L3 = pyxray.AtomicSubshell(3, 1, 3)
+        line = pyxray.XrayTransition(L3, K)
+        x = XrayLine(pyxray.Element(13), line)
+        self.assertNotEqual(x, self.x)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -22,15 +22,15 @@ def set_preferred_encoding(encoding):
     global _preferred_encoding
     _preferred_encoding = encoding
 
-class XrayLine(collections.namedtuple('XrayLine', ('element', 'transition'))):
+class XrayLine(collections.namedtuple('XrayLine', ('element', 'line'))):
 
-    def __new__(cls, element, transition):
+    def __new__(cls, element, line):
         element = pyxray.element(element)
         try:
-            transition = pyxray.xray_transition(transition)
+            line = pyxray.xray_transition(line)
         except pyxray.NotFound:
-            transition = pyxray.xray_transitionset(transition)
-        return super().__new__(cls, element, transition)
+            line = pyxray.xray_transitionset(line)
+        return super().__new__(cls, element, line)
 
     def __repr__(self):
         return '<{0}({1})>'.format(self.__class__.__name__, str(self))
@@ -38,11 +38,14 @@ class XrayLine(collections.namedtuple('XrayLine', ('element', 'transition'))):
     def __str__(self):
         symbol = pyxray.element_symbol(self.element)
 
-        if isinstance(self.transition, pyxray.XrayTransition):
-            method = pyxray.xray_transition_notation
-        else:
+        if self.is_xray_transitionset():
             method = pyxray.xray_transitionset_notation
-        notation = method(self.transition, _preferred_notation, _preferred_encoding)
+        else:
+            method = pyxray.xray_transition_notation
+        notation = method(self.line, _preferred_notation, _preferred_encoding)
 
         return '{0} {1}'.format(symbol, notation)
+
+    def is_xray_transitionset(self):
+        return isinstance(self.line, pyxray.XrayTransitionSet)
 

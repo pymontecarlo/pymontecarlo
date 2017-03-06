@@ -506,7 +506,7 @@ class Validator(object):
 
     def _validate_limit_uncertainty_xrayline(self, xrayline, options, errors):
         # Notes: No validate is required. Arguments are internally validated.
-        return XrayLine(xrayline.element, xrayline.transition)
+        return XrayLine(xrayline.element, xrayline.line)
 
     def _validate_limit_uncertainty_detector(self, detector, options, errors):
         return self._validate_detector_photon(detector, options, errors)
