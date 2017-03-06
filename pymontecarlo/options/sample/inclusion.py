@@ -48,7 +48,7 @@ class InclusionSample(Sample):
         prefix = "substrate's "
         datarow.update_with_prefix(prefix, self.substrate_material.create_datarow(**kwargs))
         datarow.update_with_prefix(prefix, self.inclusion_material.create_datarow(**kwargs))
-        datarow.add("inclusion's diameter", self.inclusion_diameter_m, 0.0, 'm')
+        datarow.add("inclusion's diameter", self.inclusion_diameter_m, 0.0, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
         return datarow
 
     @property

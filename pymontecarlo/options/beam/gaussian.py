@@ -79,11 +79,11 @@ class GaussianBeam(Beam):
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
-        datarow.add('beam diameter', self.diameter_m, 0.0, 'm')
-        datarow.add('beam initial x position', self.x0_m, 0.0, 'm')
-        datarow.add('beam initial y position', self.x0_m, 0.0, 'm')
-        datarow.add('beam polar angle', self.polar_rad, 0.0, 'rad')
-        datarow.add('beam azimuth angle', self.azimuth_rad, 0.0, 'rad')
+        datarow.add('beam diameter', self.diameter_m, 0.0, 'm', self.DIAMETER_TOLERANCE_m)
+        datarow.add('beam initial x position', self.x0_m, 0.0, 'm', self.POSITION_TOLERANCE_m)
+        datarow.add('beam initial y position', self.x0_m, 0.0, 'm', self.POSITION_TOLERANCE_m)
+        datarow.add('beam polar angle', self.polar_rad, 0.0, 'rad', self.POLAR_TOLERANCE_rad)
+        datarow.add('beam azimuth angle', self.azimuth_rad, 0.0, 'rad', self.AZIMUTH_TOLERANCE_rad)
         return datarow
 
     polar_deg = DegreesAttribute('polar_rad')

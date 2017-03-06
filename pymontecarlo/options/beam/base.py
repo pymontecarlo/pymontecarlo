@@ -43,8 +43,7 @@ class Beam(Option):
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
-        datarow.add('beam energy', self.energy_eV, 0.0, 'eV')
-        datarow.add('beam particle', self.particle)
+        datarow.add('beam energy', self.energy_eV, 0.0, 'eV', self.BEAM_ENERGY_TOLERANCE_eV)
         return datarow
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)

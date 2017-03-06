@@ -4,7 +4,7 @@
 import abc
 import collections
 from collections import OrderedDict
-import numbers
+import math
 
 # Third party modules.
 
@@ -25,7 +25,7 @@ class DataRow(collections.Mapping):
     _UNITS_NONE = units.ureg.parse_units('')
 
     def __init__(self):
-        self._items = OrderedDict()
+        self._values = OrderedDict()
 
     def __repr__(self):
         items = ', '.join('{0}: {1}'.format(column, self[column])
@@ -34,13 +34,13 @@ class DataRow(collections.Mapping):
                                                items=items)
 
     def __len__(self):
-        return len(self._items)
+        return len(self._values)
 
     def __iter__(self):
-        return iter(self._items)
+        return iter(self._values)
 
     def __getitem__(self, column):
-        return self._items[column]
+        return self._values[column][0]
 
     def __or__(self, other):
         outdatarow = self.__class__()
@@ -53,36 +53,69 @@ class DataRow(collections.Mapping):
         return self
 
     def __xor__(self, other):
-        items_diff = set()
-        items_diff ^= set(self.items())
-        items_diff ^= set(other.items())
-        items_diff = dict(items_diff)
+        columns_all = set()
+        columns_all.update(self.keys())
+        columns_all.update(other.keys())
+
+        columns_diff = set()
+        for column in columns_all:
+            q_self = self.get(column)
+            if q_self is None:
+                columns_diff.add(column)
+                continue
+
+            q_other = other.get(column)
+            if q_other is None:
+                columns_diff.add(column)
+                continue
+
+            q_self = q_self.to_base_units()
+            q_other = q_other.to_base_units()
+            q_tol = self._values[column][1]
+            tolerance = q_tol.to_base_units().magnitude
+
+            if not math.isclose(q_self.n, q_other.n, abs_tol=tolerance):
+                columns_diff.add(column)
+                continue
+
+            if not math.isclose(q_self.s, q_other.s, abs_tol=tolerance):
+                columns_diff.add(column)
+                continue
 
         outdatarow = self.__class__()
 
         for datarow in [self, other]:
-            for column, (value, error, unit) in datarow.items():
-                if column not in items_diff:
+            for column, (q, q_tol) in datarow._values.items():
+                if column not in columns_diff:
                     continue
                 if column in outdatarow:
                     continue
-                outdatarow.add(column, value, error, unit)
+                tolerance = q_tol.to(q.units).magnitude
+                outdatarow.add(column, q.n, q.s, q.units, tolerance)
 
         return outdatarow
 
-    def add(self, column, value, error=0.0, unit=None):
+    def add(self, column, value, error=0.0, unit=None, tolerance=1e-13):
         if unit is None:
             unit = self._UNITS_NONE
+
         if isinstance(unit, str):
             unit = units.ureg.parse_units(unit)
-        self._items[column] = (value, error, unit)
+
+        q = units.ureg.Quantity(value, unit)
+        q = q.plus_minus(error)
+
+        q_tol = units.ureg.Quantity(tolerance, unit)
+
+        self._values[column] = (q, q_tol)
 
     def update(self, other):
         self.update_with_prefix('', other)
 
     def update_with_prefix(self, prefix, other):
-        for column, (value, error, unit) in other.items():
-            self.add(prefix + column, value, error, unit)
+        for column, (q, q_tol) in other._values.items():
+            tolerance = q_tol.to(q.units).magnitude
+            self.add(prefix + column, q.n, q.s, q.units, tolerance)
 
     def to_list(self, columns=None):
         if columns is None:
@@ -94,15 +127,9 @@ class DataRow(collections.Mapping):
             columnname_e = '\u03C3(' + str(column) + ')'
 
             # Get value
-            value, error, unit = self.get(column, (float('nan'), 0.0, None))
+            q = self.get(column, self._QUANTITY_NAN)
 
-            if not isinstance(value, numbers.Number):
-                outlist.append((columnname, value))
-                continue
-
-            # Convert to quantity and preferred unit
-            q = units.ureg.Quantity(value, unit)
-            q = q.plus_minus(error)
+            # Convert to preferred unit
             q = units.to_preferred_unit(q)
 
             # Unit string
@@ -114,7 +141,10 @@ class DataRow(collections.Mapping):
                 columnname += ' (' + unitname + ')'
                 columnname_e += ' (' + unitname + ')'
 
+            # Add to list
             outlist.append((columnname, q.value.magnitude))
+
+            # Add error to list if not equal to 0.0
             if q.error.magnitude:
                 outlist.append((columnname_e, q.error.magnitude))
 
@@ -122,4 +152,4 @@ class DataRow(collections.Mapping):
 
     @property
     def columns(self):
-        return tuple(self._items.keys())
+        return tuple(self._values.keys())

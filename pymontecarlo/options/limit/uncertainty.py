@@ -36,8 +36,7 @@ class UncertaintyLimit(Limit):
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
-        datarow.add('uncertainty X-ray line', self.xrayline)
         datarow |= self.detector.create_datarow(**kwargs)
-        datarow.add('uncertainty value', self.uncertainty)
+        datarow.add('uncertainty value', self.uncertainty, tolerance=self.UNCERTAINTY_TOLERANCE)
         return datarow
 

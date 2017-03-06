@@ -36,7 +36,7 @@ class TestBase(TestCase):
         self.assertEqual(POSITRON, self.b.particle)
 
     def testcreate_datarow(self):
-        self.assertEqual(2, len(self.b.create_datarow()))
+        self.assertEqual(1, len(self.b.create_datarow()))
 
     def test__eq__(self):
         b = Beam(15e3, POSITRON)

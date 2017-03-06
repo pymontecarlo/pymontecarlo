@@ -21,8 +21,8 @@ class Sample(Option):
     Base class for all sample representations.
     """
 
-    TILT_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
-    ROTATION_TOLERANCE_deg = math.radians(1e-3) # 0.001 deg
+    TILT_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+    ROTATION_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
 
     def __init__(self, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -41,8 +41,8 @@ class Sample(Option):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.tilt_deg, other.tilt_deg, abs_tol=self.TILT_TOLERANCE_deg) and \
-            math.isclose(self.rotation_deg, other.rotation_deg, abs_tol=self.ROTATION_TOLERANCE_deg)
+            math.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
+            math.isclose(self.rotation_rad, other.rotation_rad, abs_tol=self.ROTATION_TOLERANCE_rad)
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -54,8 +54,8 @@ class Sample(Option):
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
-        datarow.add('sample tilt', self.tilt_rad, 0.0, 'rad')
-        datarow.add('sample rotation', self.rotation_rad, 0.0, 'rad')
+        datarow.add('sample tilt', self.tilt_rad, 0.0, 'rad', self.TILT_TOLERANCE_rad)
+        datarow.add('sample rotation', self.rotation_rad, 0.0, 'rad', self.ROTATION_TOLERANCE_rad)
         return datarow
 
     @abc.abstractproperty
@@ -102,7 +102,7 @@ class SampleBuilder(OptionBuilder):
     def add_rotation_deg(self, rotation_deg):
         self.add_rotation_rad(math.radians(rotation_deg))
 
-class Layer(object):
+class Layer(Option):
 
     THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -115,6 +115,8 @@ class Layer(object):
 
         :arg thickness_m: thickness of the layer in meters
         """
+        super().__init__()
+
         self.material = material
         self.thickness_m = thickness_m
 
@@ -125,6 +127,12 @@ class Layer(object):
     def __eq__(self, other):
         return self.material == other.material and \
             math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
+
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.update(self.material.create_datarow(**kwargs))
+        datarow.add('thickness', self.thickness_m, 0.0, 'm', self.THICKNESS_TOLERANCE_m)
+        return datarow
 
 class LayeredSample(Sample):
 
@@ -157,8 +165,7 @@ class LayeredSample(Sample):
         datarow = super().create_datarow(**kwargs)
         for i, layer in enumerate(self.layers):
             prefix = "layer {0:d}'s ".format(i)
-            datarow.update_with_prefix(prefix, layer.material.create_datarow(**kwargs))
-            datarow.add(prefix + 'thickness', layer.thickness_m, 0.0, 'm')
+            datarow.update_with_prefix(prefix, layer.create_datarow(**kwargs))
         return datarow
 
     @property

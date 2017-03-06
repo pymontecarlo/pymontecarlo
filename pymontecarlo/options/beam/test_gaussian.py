@@ -41,7 +41,7 @@ class TestGaussianBeam(TestCase):
         self.assertAlmostEqual(math.degrees(0.2), self.beam.azimuth_deg, 4)
 
     def testcreate_datarow(self):
-        self.assertEqual(7, len(self.beam.create_datarow()))
+        self.assertEqual(6, len(self.beam.create_datarow()))
 
     def test__repr__(self):
         expected = '<GaussianBeam(positron, 15000 eV, 123.456 m, (1, 2) m, 0.1 rad, 0.2 rad)>'

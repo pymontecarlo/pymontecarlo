@@ -52,7 +52,7 @@ class VerticalLayerSample(LayeredSample):
         datarow.update_with_prefix(prefix, self.left_material.create_datarow(**kwargs))
         prefix = "right substrate's "
         datarow.update_with_prefix(prefix, self.right_material.create_datarow(**kwargs))
-        datarow.add("vertical layers' depth", self.depth_m, 0.0, 'm')
+        datarow.add("vertical layers' depth", self.depth_m, 0.0, 'm', self.DEPTH_TOLERANCE_m)
         return datarow
 
     @property
