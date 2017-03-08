@@ -20,10 +20,9 @@ class Exporter(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.beam_export_methods = {}
         self.sample_export_methods = {}
-        self.detector_export_methods = {}
+        self.analysis_export_methods = {}
         self.limit_export_methods = {}
         self.model_export_methods = {}
-        self.analysis_export_methods = {}
 
     def export(self, options, dirpath):
         """
@@ -38,8 +37,6 @@ class Exporter(object, metaclass=abc.ABCMeta):
 
         if errors:
             raise ExportError(*errors)
-
-        return options
 
     @abc.abstractmethod
     def _export(self, options, dirpath, errors):
@@ -60,10 +57,9 @@ class Exporter(object, metaclass=abc.ABCMeta):
         """
         self._export_beam(options.beam, errors, *args, **kwargs)
         self._export_sample(options.sample, errors, *args, **kwargs)
-        self._export_detectors(options.detectors, errors, *args, **kwargs)
+        self._export_analyses(options.analyses, errors, *args, **kwargs)
         self._export_limits(options.limits, errors, *args, **kwargs)
         self._export_models(options.models, errors, *args, **kwargs)
-        self._export_analyses(options.analyses, errors, *args, **kwargs)
 
     def _export_beam(self, beam, errors, *args, **kwargs):
         beam_class = beam.__class__
@@ -71,7 +67,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
             exc = ValueError('Beam ({0}) is not supported.'
                              .format(beam_class.__name__))
             errors.add(exc)
-            return beam
+            return
 
         method = self.beam_export_methods[beam_class]
         method(beam, errors, *args, **kwargs)
@@ -82,33 +78,29 @@ class Exporter(object, metaclass=abc.ABCMeta):
             exc = ValueError('Sample ({0}) is not supported.'
                              .format(sample_class.__name__))
             errors.add(exc)
-            return sample
+            return
 
         method = self.sample_export_methods[sample_class]
         method(sample, errors, *args, **kwargs)
 
-    def _export_detectors(self, detectors, errors, *args, **kwargs):
-        for detector in detectors:
-            self._export_detector(detector, errors, *args, **kwargs)
+    def _export_analyses(self, analyses, errors, *args, **kwargs):
+        for analysis in analyses:
+            self._export_analysis(analysis, errors, *args, **kwargs)
 
-        return detectors
-
-    def _export_detector(self, detector, errors, *args, **kwargs):
-        detector_class = detector.__class__
-        if detector_class not in self.detector_export_methods:
-            exc = ValueError('Detector ({0}) is not supported.'
-                             .format(detector_class.__name__))
+    def _export_analysis(self, analysis, errors, *args, **kwargs):
+        analysis_class = analysis.__class__
+        if analysis_class not in self.analysis_export_methods:
+            exc = ValueError('Analysis ({0}) is not supported.'
+                             .format(analysis_class.__name__))
             errors.add(exc)
-            return detector
+            return
 
-        method = self.detector_export_methods[detector_class]
-        method(detector, errors, *args, **kwargs)
+        method = self.analysis_export_methods[analysis_class]
+        method(analysis, errors, *args, **kwargs)
 
     def _export_limits(self, limits, errors, *args, **kwargs):
         for limit in limits:
             self._export_limit(limit, errors, *args, **kwargs)
-
-        return limits
 
     def _export_limit(self, limit, errors, *args, **kwargs):
         limit_class = limit.__class__
@@ -116,7 +108,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
             exc = ValueError('Limit ({0}) is not supported.'
                              .format(limit_class.__name__))
             errors.add(exc)
-            return limit
+            return
 
         method = self.limit_export_methods[limit_class]
         method(limit, errors, *args, **kwargs)
@@ -125,32 +117,14 @@ class Exporter(object, metaclass=abc.ABCMeta):
         for model in models:
             self._export_model(model, errors, *args, **kwargs)
 
-        return models
-
     def _export_model(self, model, errors, *args, **kwargs):
         model_class = model.__class__
         if model_class not in self.model_export_methods:
             exc = ValueError('Model ({0}) is not supported.'
                              .format(model_class.__name__))
             errors.add(exc)
-            return model
+            return
 
         method = self.model_export_methods[model_class]
         method(model, errors, *args, **kwargs)
 
-    def _export_analyses(self, analyses, errors, *args, **kwargs):
-        for analysis in analyses:
-            self._export_analysis(analysis, errors, *args, **kwargs)
-
-        return analyses
-
-    def _export_analysis(self, analysis, errors, *args, **kwargs):
-        analysis_class = analysis.__class__
-        if analysis_class not in self.analysis_export_methods:
-            exc = ValueError('Analysis ({0}) is not supported.'
-                             .format(analysis_class.__name__))
-            errors.add(exc)
-            return analysis
-
-        method = self.analysis_export_methods[analysis_class]
-        method(analysis, errors, *args, **kwargs)

@@ -3,6 +3,7 @@ Material definition
 """
 
 # Standard library modules.
+import math
 from operator import itemgetter
 import itertools
 
@@ -12,14 +13,17 @@ import pyxray
 import numpy as np
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute, Builder
-from pymontecarlo.util.composition import \
-    calculate_density_kg_per_m3, generate_name, composition_from_formula
-from pymontecarlo.options.option import Option
+import pymontecarlo.util.cbook as cbook
+from pymontecarlo.options.composition import \
+    calculate_density_kg_per_m3, generate_name, from_formula
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
 class Material(Option):
+
+    WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE = 1e-7 # 0.1 ppm
+    DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3 = 1e-5
 
     def __init__(self, name, composition, density_kg_per_m3):
         """
@@ -65,11 +69,15 @@ class Material(Option):
         :arg formula: formula of a molecule (e.g. ``Al2O3``)
         :type formula: :class:`str`
         """
-        composition = composition_from_formula(formula)
+        composition = from_formula(formula)
+
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
+
         return cls(formula, composition, density_kg_per_m3)
 
     def __repr__(self):
-        return '<{classname}({name}, {composition}, {density} kg/m3)>' \
+        return '<{classname}({name}, {composition}, {density:g} kg/m3)>' \
             .format(classname=self.__class__.__name__,
                     name=self.name,
                     composition=' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
@@ -82,10 +90,18 @@ class Material(Option):
     def __eq__(self, other):
         return super().__eq__(other) and \
             self.name == other.name and \
-            self.composition == other.composition and \
-            self.density_kg_per_m3 == other.density_kg_per_m3
+            cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE) and \
+            math.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3)
 
-    density_g_per_cm3 = MultiplierAttribute('density_kg_per_m3', 1e-3)
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        for z, wf in self.composition.items():
+            column = '{0} weight fraction'.format(pyxray.element_symbol(z))
+            datarow.add(column, wf)
+        datarow.add('density', self.density_kg_per_m3, 0.0, 'kg/m^3')
+        return datarow
+
+    density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
 class _Vacuum(Material):
 
@@ -118,9 +134,12 @@ class _Vacuum(Material):
     def __reduce__(self):
         return (self.__class__, ())
 
+    def create_datarow(self, **kwargs):
+        return Option.create_datarow(**kwargs)
+
 VACUUM = _Vacuum()
 
-class MaterialBuilder(Builder):
+class MaterialBuilder(OptionBuilder):
 
     def __init__(self, balance_z):
         self.balance_z = balance_z

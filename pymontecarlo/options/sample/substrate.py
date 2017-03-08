@@ -32,6 +32,12 @@ class SubstrateSample(Sample):
     def __eq__(self, other):
         return super().__eq__(other) and self.material == other.material
 
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        prefix = "substrate's "
+        datarow.update_with_prefix(prefix, self.material.create_datarow(**kwargs))
+        return datarow
+
     @property
     def materials(self):
         return self._cleanup_materials(self.material)

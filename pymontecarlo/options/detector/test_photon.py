@@ -43,6 +43,9 @@ class TestPhotonIntensityDetector(TestCase):
         d = PhotonDetector(math.radians(35), math.radians(91))
         self.assertNotEqual(d, self.d)
 
+    def testcreate_datarow(self):
+        self.assertEqual(2, len(self.d.create_datarow()))
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

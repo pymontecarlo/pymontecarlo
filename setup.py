@@ -23,9 +23,7 @@ import versioneer
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 packages = find_packages(exclude=('pymontecarlo.util.dist*',))
-namespace_packages = ['pymontecarlo',
-                      'pymontecarlo.program',
-                      'pymontecarlo.ui']
+namespace_packages = []
 with open(os.path.join(BASEDIR, 'requirements.txt')) as fp:
     requirements = [line.strip() for line in fp]
 

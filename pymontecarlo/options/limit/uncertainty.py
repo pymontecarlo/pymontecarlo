@@ -3,9 +3,9 @@ Limit based on reaching uncertainty.
 """
 
 # Standard library modules.
+import math
 
 # Third party modules.
-import pyxray
 
 # Local modules.
 from pymontecarlo.options.limit.base import Limit
@@ -14,24 +14,29 @@ from pymontecarlo.options.limit.base import Limit
 
 class UncertaintyLimit(Limit):
 
-    def __init__(self, atomic_number, transition, detector, uncertainty):
+    UNCERTAINTY_TOLERANCE = 1e-5 # 0.001%
+
+    def __init__(self, xrayline, detector, uncertainty):
         super().__init__()
-        self.atomic_number = atomic_number
-        self.transition = transition
+        self.xrayline = xrayline
         self.detector = detector
         self.uncertainty = uncertainty
 
     def __repr__(self):
-        return '<{classname}({symbol} {iupac} <= {uncertainty}%)>' \
+        return '<{classname}({xrayline} <= {uncertainty}%)>' \
             .format(classname=self.__class__.__name__,
-                    symbol=pyxray.element_symbol(self.atomic_number),
-                    iupac=pyxray.transition_notation(self.transition, 'iupac'),
+                    xrayline=self.xrayline,
                     uncertainty=self.uncertainty * 100.0)
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.atomic_number == other.atomic_number and \
-            self.transition == other.transition and \
+            self.xrayline == other.xrayline and \
             self.detector == other.detector and \
-            self.uncertainty == other.uncertainty
+            math.isclose(self.uncertainty, other.uncertainty, abs_tol=self.UNCERTAINTY_TOLERANCE)
+
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow |= self.detector.create_datarow(**kwargs)
+        datarow.add('uncertainty value', self.uncertainty, tolerance=self.UNCERTAINTY_TOLERANCE)
+        return datarow
 

@@ -28,10 +28,10 @@ class Expander(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def expand_detectors(self, detectors):
+    def expand_analyses(self, analyses):
         """
-        Takes a :class:`list` of detectors and returns a :class:`list` of 
-        :class:`tuple` where each tuple corresponds to the detectors for a
+        Takes a :class:`list` of analyses and returns a :class:`list` of 
+        :class:`tuple` where each tuple corresponds to the analyses for a
         single :class:`Options`.
         """
         raise NotImplementedError
@@ -54,11 +54,4 @@ class Expander(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def expand_analyses(self, analyses):
-        """
-        Takes a :class:`list` of analyses and returns a :class:`list` of 
-        :class:`tuple` where each tuple corresponds to the analyses for a
-        single :class:`Options`.
-        """
-        raise NotImplementedError
+

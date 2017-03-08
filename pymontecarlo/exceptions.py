@@ -35,3 +35,12 @@ class ValidationError(PymontecarloError, AccumulatedErrorMixin):
 
 class ExportError(PymontecarloError, AccumulatedErrorMixin):
     pass
+
+class WorkerError(PymontecarloError):
+    pass
+
+class WorkerCancelledError(PymontecarloError):
+    pass
+
+class ImportError_(PymontecarloError):
+    pass

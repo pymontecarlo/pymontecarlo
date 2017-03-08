@@ -20,6 +20,11 @@ from pymontecarlo.util.cbook import DegreesAttribute
 
 class GaussianBeam(Beam):
 
+    DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
+    POSITION_TOLERANCE_m = 1e-12 # 1 pm
+    POLAR_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+    AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+
     def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
                  x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
         """
@@ -66,11 +71,20 @@ class GaussianBeam(Beam):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.diameter_m == other.diameter_m and \
-            self.x0_m == other.x0_m and \
-            self.y0_m == other.y0_m and \
-            self.polar_rad == other.polar_rad and \
-            self.azimuth_rad == other.azimuth_rad
+            math.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m) and \
+            math.isclose(self.x0_m, other.x0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
+            math.isclose(self.y0_m, other.y0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
+            math.isclose(self.polar_rad, other.polar_rad, abs_tol=self.POLAR_TOLERANCE_rad) and \
+            math.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
+
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.add('beam diameter', self.diameter_m, 0.0, 'm', self.DIAMETER_TOLERANCE_m)
+        datarow.add('beam initial x position', self.x0_m, 0.0, 'm', self.POSITION_TOLERANCE_m)
+        datarow.add('beam initial y position', self.x0_m, 0.0, 'm', self.POSITION_TOLERANCE_m)
+        datarow.add('beam polar angle', self.polar_rad, 0.0, 'rad', self.POLAR_TOLERANCE_rad)
+        datarow.add('beam azimuth angle', self.azimuth_rad, 0.0, 'rad', self.AZIMUTH_TOLERANCE_rad)
+        return datarow
 
     polar_deg = DegreesAttribute('polar_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')

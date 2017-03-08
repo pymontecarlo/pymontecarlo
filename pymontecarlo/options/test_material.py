@@ -79,7 +79,7 @@ class TestMaterial(TestCase):
         self.assertAlmostEqual(1.25, m.density_g_per_cm3, 4)
 
     def test__repr__(self):
-        expected = '<Material(Pure Cu, 100%Cu, 8960.0 kg/m3)>'
+        expected = '<Material(Pure Cu, 100%Cu, 8960 kg/m3)>'
         self.assertEqual(expected, repr(self.m))
 
     def test__eq__(self):
@@ -91,6 +91,9 @@ class TestMaterial(TestCase):
 
         m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
         self.assertNotEqual(m2, self.m)
+
+    def testcreate_datarow(self):
+        self.assertEqual(2, len(self.m.create_datarow()))
 
 class TestMaterialBuilder(TestCase):
 

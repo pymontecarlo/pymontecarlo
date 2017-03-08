@@ -4,28 +4,28 @@
 # Standard library modules.
 import unittest
 import logging
-import os
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase, ExporterMock
+from pymontecarlo.testcase import TestCase, WorkerMock
 
 # Globals and constants variables.
 
-class TestExporter(TestCase):
+class TestWorker(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.e = ExporterMock()
+        self.w = WorkerMock()
 
-    def testexport(self):
+    def testrun(self):
         options = self.create_basic_options()
-        dirpath = self.create_temp_dir()
-        self.e.export(options, dirpath)
+        simulation = self.w.run(options)
 
-        self.assertTrue(os.path.exists(os.path.join(dirpath, 'sim.json')))
+        self.assertAlmostEqual(1.0, self.w.progress)
+        self.assertEqual('Done', self.w.status)
+        self.assertEqual(simulation.options, options)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

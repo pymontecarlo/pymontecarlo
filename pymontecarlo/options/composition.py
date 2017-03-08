@@ -3,8 +3,8 @@
 # Standard library modules.
 import string
 from collections import defaultdict
-from fractions import gcd
 import itertools
+import math
 
 # Third party modules.
 from pyparsing import Word, Group, Optional, OneOrMore
@@ -19,7 +19,7 @@ _digit = Word(string.digits + ".")
 _elementRef = Group(_symbol + Optional(_digit, default="1"))
 CHEMICAL_FORMULA_PARSER = OneOrMore(_elementRef)
 
-def composition_from_formula(formula):
+def from_formula(formula):
     # Parse chemical formula
     formulaData = CHEMICAL_FORMULA_PARSER.parseString(formula)
 
@@ -45,7 +45,7 @@ def composition_from_formula(formula):
 
     return composition
 
-def calculate_composition_atomic(composition):
+def to_atomic(composition):
     """
     Returns a composition :class:`dict` where the values are atomic fractions.
 
@@ -63,9 +63,36 @@ def calculate_composition_atomic(composition):
     totalfraction = sum(composition2.values())
 
     for z, fraction in composition2.items():
-        composition2[z] = fraction / totalfraction
+        try:
+            composition2[z] = fraction / totalfraction
+        except ZeroDivisionError:
+            composition2[z] = 0.0
 
     return defaultdict(float, composition2)
+
+def process_wildcard(composition):
+    """
+    Processes element with a wildcard ``?`` weight fraction and returns
+    composition balanced to 1.0. 
+    """
+    composition2 = composition.copy()
+
+    wildcard_zs = set()
+    total_wf = 0.0
+    for z, wf in composition.items():
+        if wf == '?':
+            wildcard_zs.add(z)
+        else:
+            total_wf += wf
+
+    if not wildcard_zs:
+        return composition2
+
+    balance_wf = (1.0 - total_wf) / len(wildcard_zs)
+    for z in wildcard_zs:
+        composition2[z] = balance_wf
+
+    return composition2
 
 def calculate_density_kg_per_m3(composition):
     """
@@ -100,7 +127,7 @@ def generate_name(composition):
         No wildcard are accepted.
     :type composition: :class:`dict`
     """
-    composition_atomic = calculate_composition_atomic(composition)
+    composition_atomic = to_atomic(composition)
 
     symbols = []
     fractions = []
@@ -113,7 +140,7 @@ def generate_name(composition):
     if len(fractions) >= 2:
         gcds = []
         for a, b in itertools.combinations(fractions, 2):
-            gcds.append(gcd(a, b))
+            gcds.append(math.gcd(a, b))
         smallest_gcd = min(gcds)
 
     if smallest_gcd == 0.0:
@@ -129,5 +156,8 @@ def generate_name(composition):
             name += "%s" % symbol
         else:
             name += '%s%i' % (symbol, fraction)
+
+    if not name:
+        name = 'Untitled'
 
     return name

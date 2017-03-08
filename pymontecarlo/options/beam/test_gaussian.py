@@ -12,6 +12,7 @@ import math
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.gaussian import GaussianBeam, GaussianBeamBuilder
 from pymontecarlo.options.particle import POSITRON, ELECTRON
+from pymontecarlo.options.beam.base import Beam
 
 # Globals and constants variables.
 
@@ -38,6 +39,9 @@ class TestGaussianBeam(TestCase):
 
         self.assertAlmostEqual(0.2, self.beam.azimuth_rad, 4)
         self.assertAlmostEqual(math.degrees(0.2), self.beam.azimuth_deg, 4)
+
+    def testcreate_datarow(self):
+        self.assertEqual(6, len(self.beam.create_datarow()))
 
     def test__repr__(self):
         expected = '<GaussianBeam(positron, 15000 eV, 123.456 m, (1, 2) m, 0.1 rad, 0.2 rad)>'
@@ -67,6 +71,9 @@ class TestGaussianBeam(TestCase):
         self.assertNotEqual(beam, self.beam)
 
         beam = GaussianBeam(15e3, 123.456, POSITRON, 1.0, 2.0, 0.1, 0.21)
+        self.assertNotEqual(beam, self.beam)
+
+        beam = Beam(15e3, POSITRON)
         self.assertNotEqual(beam, self.beam)
 
 class TestGaussianBeamBuilder(TestCase):

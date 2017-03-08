@@ -7,13 +7,12 @@ import abc
 import math
 
 # Third party modules.
-import more_itertools
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
-    DegreesAttribute, Builder, are_sequence_equal
-from pymontecarlo.options.option import Option
+    DegreesAttribute, are_sequence_equal, unique
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -21,6 +20,9 @@ class Sample(Option):
     """
     Base class for all sample representations.
     """
+
+    TILT_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+    ROTATION_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
 
     def __init__(self, tilt_rad=0.0, rotation_rad=0.0):
         """
@@ -39,8 +41,8 @@ class Sample(Option):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.tilt_rad == other.tilt_rad and \
-            self.rotation_rad == other.rotation_rad
+            math.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
+            math.isclose(self.rotation_rad, other.rotation_rad, abs_tol=self.ROTATION_TOLERANCE_rad)
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -48,11 +50,13 @@ class Sample(Option):
         if VACUUM in materials:
             materials.remove(VACUUM)
 
-        # FIXME this won't work unless we make 'Material' hashable
-        # set(materials) doesn't work for same reason
-        # return tuple(more_itertools.unique_everseen(materials))
+        return tuple(unique(materials))
 
-        return tuple(materials)
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.add('sample tilt', self.tilt_rad, 0.0, 'rad', self.TILT_TOLERANCE_rad)
+        datarow.add('sample rotation', self.rotation_rad, 0.0, 'rad', self.ROTATION_TOLERANCE_rad)
+        return datarow
 
     @abc.abstractproperty
     def materials(self): #pragma: no cover
@@ -65,7 +69,7 @@ class Sample(Option):
     tilt_deg = DegreesAttribute('tilt_rad')
     rotation_deg = DegreesAttribute('rotation_rad')
 
-class SampleBuilder(Builder):
+class SampleBuilder(OptionBuilder):
 
     def __init__(self):
         self.tilts_rad = set()
@@ -98,7 +102,9 @@ class SampleBuilder(Builder):
     def add_rotation_deg(self, rotation_deg):
         self.add_rotation_rad(math.radians(rotation_deg))
 
-class Layer(object):
+class Layer(Option):
+
+    THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
 
     def __init__(self, material, thickness_m):
         """
@@ -109,16 +115,24 @@ class Layer(object):
 
         :arg thickness_m: thickness of the layer in meters
         """
+        super().__init__()
+
         self.material = material
         self.thickness_m = thickness_m
 
     def __repr__(self):
-        return '<{0:s}(material={1:s}, thickness={2:g} m)>' \
+        return '<{0}(material={1}, thickness={2:g} m)>' \
             .format(self.__class__.__name__, self.material, self.thickness_m)
 
     def __eq__(self, other):
         return self.material == other.material and \
-            self.thickness_m == other.thickness_m
+            math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
+
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        datarow.update(self.material.create_datarow(**kwargs))
+        datarow.add('thickness', self.thickness_m, 0.0, 'm', self.THICKNESS_TOLERANCE_m)
+        return datarow
 
 class LayeredSample(Sample):
 
@@ -146,6 +160,13 @@ class LayeredSample(Sample):
         layer = Layer(material, thickness_m)
         self.layers.append(layer)
         return layer
+
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
+        for i, layer in enumerate(self.layers):
+            prefix = "layer {0:d}'s ".format(i)
+            datarow.update_with_prefix(prefix, layer.create_datarow(**kwargs))
+        return datarow
 
     @property
     def materials(self):

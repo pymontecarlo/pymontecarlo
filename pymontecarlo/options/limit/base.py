@@ -7,13 +7,12 @@ Base classes for limits
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
 class Limit(Option):
     pass
 
-class LimitBuilder(Builder):
+class LimitBuilder(OptionBuilder):
     pass

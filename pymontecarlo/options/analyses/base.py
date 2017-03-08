@@ -40,3 +40,10 @@ class Analysis(Option):
         :return: :class:`Result` of this analysis
         """
         return None
+
+    @abc.abstractproperty
+    def detectors(self):
+        """
+        Returns a :class:`tuple` of detectors used by this analysis.
+        """
+        return ()

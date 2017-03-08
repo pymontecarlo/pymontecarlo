@@ -1,10 +1,12 @@
-""""""
+"""
+Cookbook solutions.
+"""
 
 # Standard library modules.
-import abc
 import math
 
 # Third party modules.
+import more_itertools
 
 # Local modules.
 
@@ -16,6 +18,16 @@ def are_sequence_equal(list0, list1):
 
     for item0, item1 in zip(list0, list1):
         if item0 != item1:
+            return False
+
+    return True
+
+def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
+    if len(list0) != len(list1):
+        return False
+
+    for item0, item1 in zip(list0, list1):
+        if not math.isclose(item0, item1, rel_tol=rel_tol, abs_tol=abs_tol):
             return False
 
     return True
@@ -33,15 +45,28 @@ def are_mapping_equal(map0, map1):
 
     return True
 
-class Builder(metaclass=abc.ABCMeta):
+def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
+    if len(map0) != len(map1):
+        return False
 
-    @abc.abstractmethod
-    def __len__(self):
-        raise NotImplementedError
+    for key in map0:
+        if key not in map1:
+            return False
 
-    @abc.abstractmethod
-    def build(self):
-        raise NotImplementedError
+        if not math.isclose(map0[key], map1[key], rel_tol=rel_tol, abs_tol=abs_tol):
+            return False
+
+    return True
+
+def unique(seq):
+    return list(more_itertools.unique_everseen(seq))
+
+def find_by_type(objects, clasz):
+    found_objects = []
+    for obj in objects:
+        if isinstance(obj, clasz):
+            found_objects.append(obj)
+    return found_objects
 
 class MultiplierAttribute(object):
 

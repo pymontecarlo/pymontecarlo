@@ -21,6 +21,7 @@ from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import \
     ElasticCrossSectionModel, RUTHERFORD, ELSEPA2005, POUCHOU_PICHOIR1991
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
@@ -43,15 +44,13 @@ class TestValidator(TestCase):
         self.v.sample_validate_methods[VerticalLayerSample] = self.v._validate_sample_verticallayers
         self.v.sample_validate_methods[SphereSample] = self.v._validate_sample_sphere
 
-        self.v.detector_validate_methods[PhotonDetector] = self.v._validate_detector_photon
+        self.v.analysis_validate_methods[PhotonIntensityAnalysis] = self.v._validate_analysis_photonintensity
+        self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
 
         self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
         self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
 
         self.v.model_validate_methods[ElasticCrossSectionModel] = self.v._validate_model_valid_models
-
-        self.v.analysis_validate_methods[PhotonIntensityAnalysis] = self.v._validate_analysis_photonintensity
-        self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
 
         self.v.valid_models[ElasticCrossSectionModel] = [ELSEPA2005]
         self.v.default_models[ElasticCrossSectionModel] = ELSEPA2005
@@ -62,6 +61,7 @@ class TestValidator(TestCase):
         material = Material('Pure Cu', {29: 1.0}, 8960.0)
         material2 = self.v.validate_material(material, self.options)
         self.assertEqual(material2, material)
+        self.assertIsNot(material2, material)
 
     def testvalidate_material_exception(self):
         material = Material(' ', {120: 0.5}, -1.0)
@@ -75,6 +75,7 @@ class TestValidator(TestCase):
         beam = GaussianBeam(10e3, 0.123)
         beam2 = self.v.validate_beam(beam, self.options)
         self.assertEqual(beam2, beam)
+        self.assertIsNot(beam2, beam)
 
     def testvalidate_beam_gaussian_exception(self):
         beam = GaussianBeam(0.0, -1.0, 'particle',
@@ -90,6 +91,7 @@ class TestValidator(TestCase):
         sample = SubstrateSample(COPPER)
         sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
+        self.assertIsNot(sample2, sample)
 
     def testvalidate_sample_substrate_exception(self):
         sample = SubstrateSample(VACUUM, float('inf'), float('nan'))
@@ -103,6 +105,7 @@ class TestValidator(TestCase):
         sample = InclusionSample(COPPER, ZINC, 1.0)
         sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
+        self.assertIsNot(sample2, sample)
 
     def testvalidate_sample_inclusion_exception(self):
         sample = InclusionSample(COPPER, ZINC, 0.0)
@@ -117,13 +120,14 @@ class TestValidator(TestCase):
         sample.add_layer(ZINC, 1.0)
         sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
+        self.assertIsNot(sample2, sample)
 
     def testvalidate_sample_horizontallayers_empty_layer(self):
         sample = HorizontalLayerSample(COPPER)
         sample.add_layer(ZINC, 1.0)
         sample.add_layer(VACUUM, 2.0)
-        self.v.validate_sample(sample, self.options)
-        self.assertEqual(1, len(sample.layers))
+        sample2 = self.v.validate_sample(sample, self.options)
+        self.assertEqual(1, len(sample2.layers))
 
     def testvalidate_sample_horizontallayers_exception(self):
         sample = HorizontalLayerSample(COPPER)
@@ -139,6 +143,7 @@ class TestValidator(TestCase):
         sample.add_layer(GALLIUM, 1.0)
         sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
+        self.assertIsNot(sample2, sample)
 
     def testvalidate_sample_verticallayers_exception(self):
         sample = VerticalLayerSample(VACUUM, VACUUM)
@@ -153,6 +158,7 @@ class TestValidator(TestCase):
         sample = SphereSample(COPPER, 1.0)
         sample2 = self.v.validate_sample(sample, self.options)
         self.assertEqual(sample2, sample)
+        self.assertIsNot(sample2, sample)
 
     def testvalidate_sample_sphere_exception(self):
         sample = SphereSample(VACUUM, -1.0)
@@ -162,23 +168,45 @@ class TestValidator(TestCase):
         self.v._validate_sample(sample, self.options, errors)
         self.assertEqual(2, len(errors))
 
-    def testvalidate_detector_photon(self):
+    def testvalidate_analysis_photonintensity(self):
         detector = PhotonDetector(1.1, 2.2)
-        detector2 = self.v.validate_detector(detector, self.options)
-        self.assertEqual(detector2, detector)
+        analysis = PhotonIntensityAnalysis(detector)
+        analysis2 = self.v.validate_analysis(analysis, self.options)
+        self.assertEqual(analysis2, analysis)
+        self.assertIsNot(analysis2, analysis)
 
-    def testvalidate_detector_photon_exception(self):
+    def testvalidate_analysis_photonintensity_exception(self):
         detector = PhotonDetector(2.0, -1.0)
-        self.assertRaises(ValidationError, self.v.validate_detector, detector, self.options)
+        analysis = PhotonIntensityAnalysis(detector)
+        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
-        self.v._validate_detector(detector, self.options, errors)
+        self.v._validate_analysis(analysis, self.options, errors)
         self.assertEqual(2, len(errors))
+
+    def testvalidate_analysis_kratio(self):
+        detector = PhotonDetector(1.1, 2.2)
+        analysis = KRatioAnalysis(detector)
+        analysis.add_standard_material(13, Material.pure(13))
+        analysis2 = self.v.validate_analysis(analysis, self.options)
+        self.assertEqual(analysis2, analysis)
+        self.assertIsNot(analysis2, analysis)
+
+    def testvalidate_analysis_kratio_exception(self):
+        detector = PhotonDetector(2.0, -1.0)
+        analysis = KRatioAnalysis(detector)
+        analysis.add_standard_material(14, Material.pure(13))
+        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
+
+        errors = set()
+        self.v._validate_analysis(analysis, self.options, errors)
+        self.assertEqual(3, len(errors))
 
     def testvalidate_limit_showers(self):
         limit = ShowersLimit(1000)
         limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
+        self.assertIsNot(limit2, limit)
 
     def testvalidate_limit_showers_exception(self):
         limit = ShowersLimit(0)
@@ -189,12 +217,17 @@ class TestValidator(TestCase):
         self.assertEqual(1, len(errors))
 
     def testvalidate_limit_uncertainty(self):
-        limit = UncertaintyLimit(13, 'Ka1', self.options, 0.02)
+        xrayline = XrayLine(13, 'Ka1')
+        detector = PhotonDetector(1.1, 2.2)
+        limit = UncertaintyLimit(xrayline, detector, 0.02)
         limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
+        self.assertIsNot(limit2, limit)
 
     def testvalidate_limit_uncertainty_exception(self):
-        limit = UncertaintyLimit(-1, 'Ka1', self.options, 0.0)
+        xrayline = XrayLine(13, 'Ka1')
+        detector = PhotonDetector(float('nan'), -1)
+        limit = UncertaintyLimit(xrayline, detector, 0.0)
         self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
 
         errors = set()
@@ -223,6 +256,7 @@ class TestValidator(TestCase):
         model = ELSEPA2005
         model2 = self.v.validate_model(model, self.options)
         self.assertEqual(model2, model)
+        self.assertIsNot(model2, model)
 
     def testvalidate_model_exception(self):
         model = RUTHERFORD
@@ -239,36 +273,6 @@ class TestValidator(TestCase):
         errors = set()
         self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))
-
-    def testvalidate_analysis_photonintensity(self):
-        analysis = PhotonIntensityAnalysis()
-        analysis2 = self.v.validate_analysis(analysis, self.options)
-        self.assertEqual(analysis2, analysis)
-
-    def testvalidate_analysis_photonintensity_exception(self):
-        self.options.detectors.clear()
-        analysis = PhotonIntensityAnalysis()
-        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
-
-        errors = set()
-        self.v._validate_analysis(analysis, self.options, errors)
-        self.assertEqual(1, len(errors))
-
-    def testvalidate_analysis_kratio(self):
-        analysis = KRatioAnalysis()
-        analysis.add_standard_material(13, Material.pure(13))
-        analysis2 = self.v.validate_analysis(analysis, self.options)
-        self.assertEqual(analysis2, analysis)
-
-    def testvalidate_analysis_kratio_exception(self):
-        self.options.detectors.clear()
-        analysis = KRatioAnalysis()
-        analysis.add_standard_material(14, Material.pure(13))
-        self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
-
-        errors = set()
-        self.v._validate_analysis(analysis, self.options, errors)
-        self.assertEqual(2, len(errors))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

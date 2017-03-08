@@ -4,6 +4,7 @@
 # Standard library modules.
 import unittest
 import logging
+import math
 
 # Third party modules.
 
@@ -12,6 +13,7 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.analyses.kratio import KRatioAnalysis
 from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.sample import SubstrateSample
+from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
@@ -21,7 +23,8 @@ class TestKRatioAnalysis(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.a = KRatioAnalysis()
+        det = PhotonDetector(math.radians(40.0))
+        self.a = KRatioAnalysis(det)
 
         self.options = self.create_basic_options()
 

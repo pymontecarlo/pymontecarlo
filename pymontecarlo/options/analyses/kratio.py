@@ -9,12 +9,13 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
+from pymontecarlo.options.analyses.photon import PhotonAnalysis
 from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.util.cbook import are_mapping_equal
 
 # Globals and constants variables.
 
-class KRatioAnalysis(PhotonIntensityAnalysis):
+class KRatioAnalysis(PhotonAnalysis):
 
     DEFAULT_NONPURE_STANDARD_MATERIALS = \
         {7: Material.from_formula('BN', 2.1e3),
@@ -24,9 +25,12 @@ class KRatioAnalysis(PhotonIntensityAnalysis):
          36: Material.from_formula('KBr', 2.75e3),
          80: Material.from_formula('HgTe', 8.1e3)}
 
-    def __init__(self):
-        super().__init__()
-        self.standard_materials = {}
+    def __init__(self, photon_detector, standard_materials=None):
+        super().__init__(photon_detector)
+
+        if standard_materials is None:
+            standard_materials = {}
+        self.standard_materials = standard_materials
 
     def __eq__(self, other):
         return super().__eq__(other) and \
@@ -60,16 +64,13 @@ class KRatioAnalysis(PhotonIntensityAnalysis):
                 standard = self.get_standard_material(z)
                 builder.add_sample(SubstrateSample(standard))
 
-        for detector in options.detectors:
-            builder.add_detector(detector)
-
         for limit in options.limits:
             builder.add_limit(options.program, limit)
 
         for model in options.models:
             builder.add_model(options.program, model)
 
-        analysis = PhotonIntensityAnalysis()
+        analysis = PhotonIntensityAnalysis(self.photon_detector)
         builder.add_analysis(analysis)
 
         return super().apply(options) + builder.build()

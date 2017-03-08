@@ -8,15 +8,15 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import Builder, are_sequence_equal
-from pymontecarlo.options.option import Option
+from pymontecarlo.util.cbook import are_sequence_equal, unique, find_by_type
+from pymontecarlo.options.option import Option, OptionBuilder
 
 # Globals and constants variables.
 
 class Options(Option):
 
     def __init__(self, program, beam, sample,
-                 detectors=None, limits=None, models=None, analyses=None):
+                 analyses=None, limits=None, models=None):
         """
         Options for a simulation.
         """
@@ -26,9 +26,9 @@ class Options(Option):
         self.beam = beam
         self.sample = sample
 
-        if detectors is None:
-            detectors = []
-        self.detectors = list(detectors)
+        if analyses is None:
+            analyses = []
+        self.analyses = list(analyses)
 
         if limits is None:
             limits = []
@@ -37,10 +37,6 @@ class Options(Option):
         if models is None:
             models = []
         self.models = list(models)
-
-        if analyses is None:
-            analyses = []
-        self.analyses = list(analyses)
 
     def __repr__(self):
         return '<{classname}()>' \
@@ -51,37 +47,58 @@ class Options(Option):
             self.program == other.program and \
             self.beam == other.beam and \
             self.sample == other.sample and \
-            are_sequence_equal(self.detectors, other.detectors) and \
+            are_sequence_equal(self.analyses, other.analyses) and \
             are_sequence_equal(self.limits, other.limits) and \
-            are_sequence_equal(self.models, other.models) and \
-            are_sequence_equal(self.analyses, other.analyses)
+            are_sequence_equal(self.models, other.models)
 
-    def _find(self, objects, clasz):
-        found_objects = []
-        for obj in objects:
-            if obj.__class__ == clasz:
-                found_objects.append(obj)
-        return found_objects
+    def create_datarow(self, **kwargs):
+        datarow = super().create_datarow(**kwargs)
 
-    def find_detectors(self, detector_class):
-        return self._find(self.detectors, detector_class)
+        datarow.update(self.beam.create_datarow(**kwargs))
+        datarow.update(self.sample.create_datarow(**kwargs))
+
+        for analysis in self.analyses:
+            datarow.update(analysis.create_datarow(**kwargs))
+
+        for limit in self.limits:
+            datarow.update(limit.create_datarow(**kwargs))
+
+        for model in self.models:
+            datarow.update(model.create_datarow(**kwargs))
+
+        return datarow
+
+    def find_analyses(self, analysis_class):
+        return find_by_type(self.analyses, analysis_class)
 
     def find_limits(self, limit_class):
-        return self._find(self.limits, limit_class)
+        return find_by_type(self.limits, limit_class)
 
     def find_models(self, model_class):
-        return self._find(self.models, model_class)
+        return find_by_type(self.models, model_class)
 
-class OptionsBuilder(Builder):
+    def find_detectors(self, detector_class):
+        return find_by_type(self.detectors, detector_class)
+
+    @property
+    def detectors(self):
+        """
+        Returns a :class:`tuple` of all detectors defined in the analyses.
+        """
+        detectors = []
+        for analysis in self.analyses:
+            detectors.extend(analysis.detectors)
+        return tuple(unique(detectors))
+
+class OptionsBuilder(OptionBuilder):
 
     def __init__(self):
         self.programs = set()
         self.beams = []
         self.samples = []
-        self.detectors = []
+        self.analyses = []
         self.models = {}
         self.limits = {}
-        self.analyses = []
 
     def __len__(self):
         return len(self.build())
@@ -97,9 +114,9 @@ class OptionsBuilder(Builder):
         if sample not in self.samples:
             self.samples.append(sample)
 
-    def add_detector(self, detector):
-        if detector not in self.detectors:
-            self.detectors.append(detector)
+    def add_analysis(self, analysis):
+        if analysis not in self.analyses:
+            self.analyses.append(analysis)
 
     def add_limit(self, program, limit):
         self.limits.setdefault(program, []).append(limit)
@@ -107,18 +124,14 @@ class OptionsBuilder(Builder):
     def add_model(self, program, model):
         self.models.setdefault(program, []).append(model)
 
-    def add_analysis(self, analysis):
-        if analysis not in self.analyses:
-            self.analyses.append(analysis)
-
     def build(self):
         list_options = []
 
         for program in self.programs:
             expander = program.create_expander()
 
-            detectors = self.detectors
-            detector_combinations = expander.expand_detectors(detectors) or [(None,)]
+            analyses = self.analyses
+            analysis_combinations = expander.expand_analyses(analyses) or [(None,)]
 
             limits = self.limits.get(program, [])
             limit_combinations = expander.expand_limits(limits) or [(None,)]
@@ -126,18 +139,13 @@ class OptionsBuilder(Builder):
             models = self.models.get(program, [])
             model_combinations = expander.expand_models(models) or [(None,)]
 
-            analyses = self.analyses
-            analysis_combinations = expander.expand_analyses(analyses) or [(None,)]
-
             product = itertools.product(self.beams,
                                         self.samples,
-                                        detector_combinations,
+                                        analysis_combinations,
                                         limit_combinations,
-                                        model_combinations,
-                                        analysis_combinations)
-            for beam, sample, detectors, limits, models, analyses in product:
-                options = Options(program, beam, sample,
-                                  detectors, limits, models, analyses)
+                                        model_combinations)
+            for beam, sample, analyses, limits, models in product:
+                options = Options(program, beam, sample, analyses, limits, models)
                 list_options.append(options)
 
                 for analysis in analyses:
