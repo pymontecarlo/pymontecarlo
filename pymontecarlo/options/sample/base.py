@@ -48,7 +48,11 @@ class Sample(Option):
         if VACUUM in materials:
             materials.remove(VACUUM)
 
-        return tuple(more_itertools.unique_everseen(materials))
+        # FIXME this won't work unless we make 'Material' hashable
+        # set(materials) doesn't work for same reason
+        # return tuple(more_itertools.unique_everseen(materials))
+
+        return tuple(materials)
 
     @abc.abstractproperty
     def materials(self): #pragma: no cover

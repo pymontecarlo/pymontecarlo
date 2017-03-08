@@ -3,8 +3,8 @@ Figure to draw a sample.
 """
 
 # Standard library modules.
-from math import sin
-from random import choice as randchoice
+from math import sin, cos, tan
+from random import choice as randchoice, randint
 
 # Third party modules.
 from matplotlib.collections import PatchCollection
@@ -18,81 +18,16 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
 from pymontecarlo.options.sample.base import Layer
+from pymontecarlo.util.color import COLOR_SET_GREY as CS_GREY, COLOR_SET_BROWN as CS_BROWN,\
+    COLOR_SET_COLORFUL as CS_CLRFL
 
 # Globals and constant variables.
-_ASSIGNED_COLORS = {}
-_USED_COLORS = []
 
-COLOR_SET_GREY = ('#282828',
-                  '#323232',
-                  '#3C3C3C',
-                  '#464646',
-                  '#505050',
-                  '#5A5A5A',
-                  '#646464')
-COLOR_SET_BROWN = ('#CD853F',
-                   '#6B4423',
-                   '#EDC9AF',
-                   '#C3B091',
-                   '#826644',
-                   '#80461B',
-                   '#832A0D',
-                   '#D2B48C',
-                   '#C19A6B')
-COLOR_SET_COLORFUL = ('#FFB300',  # Vivid Yellow
-                      '#803E75',  # Strong Purple
-                      '#FF6800',  # Vivid Orange
-                      '#A6BDD7',  # Very Light Blue
-                      '#C10020',  # Vivid Red
-                      '#CEA262',  # Grayish Yellow
-                      '#817066',  # Medium Gray
-
-                      # The following don't work well for people with defective color vision
-                      '#007D34',  # Vivid Green
-                      '#F6768E',  # Strong Purplish Pink
-                      '#00538A',  # Strong Blue
-                      '#FF7A5C',  # Strong Yellowish Pink
-                      '#53377A',  # Strong Violet
-                      '#FF8E00',  # Vivid Orange Yellow
-                      '#B32851',  # Strong Purplish Red
-                      '#F4C800',  # Vivid Greenish Yellow
-                      '#93AA00',  # Vivid Yellowish Green
-                      '#F13A13',  # Vivid Reddish Orange
-                      '#232C16')
-
-def _get_color(color_set):
-    """
-    :param color_set: list like object that contains colors of a type matplotlib accepts
-    :return: a unused color from selection or random color from selection if all are used already
-    """
-    for i in range(len(color_set)):
-        color = color_set[i]
-        if color not in _USED_COLORS:
-            _USED_COLORS.append(color)
-            return color
-    return randchoice(color_set)
-
-def _get_material_color(material, color_set):
-    """
-    This method ensures that:
-    * colors of different materials differ (at least if enough colors are available in set)
-    * materials with same properties have same color
-
-    :param material: Object of type Material
-    :param color_set: list like object that contains colors of a type matplotlib accepts
-    :return: color of a type matplotlib accepts
-    """
-    material_str = material.__repr__()
-
-    if material_str in _ASSIGNED_COLORS:
-        return _ASSIGNED_COLORS[material_str]
-
-    color = _get_color(color_set)
-    _ASSIGNED_COLORS[material_str] = color
-
-    return color
 
 class SampleFigure(Figure):
+
+    _COLORS_ASSIGNED = {}
+    _COLORS_USED = []
 
     def __init__(self, sample=None, beams=None, trajectories=None):
         super().__init__()
@@ -119,39 +54,45 @@ class SampleFigure(Figure):
         self.beam_draw_methods = dict()
         self.beam_draw_methods[GaussianBeam] = self._compose_beam_gaussian
 
-        self._assigned_colors = {}
-        self._used_colors = []
-
-    def _get_color(self, color_set):
+    def _get_color(self, color_set, color_used=None):
         """
         :param color_set: list like object that contains colors of a type matplotlib accepts
         :return: a unused color from selection or random color from selection if all are in use
         already
         """
-        for i in range(len(color_set)):
-            color = color_set[i]
-            if color not in _USED_COLORS:
-                _USED_COLORS.append(color)
-                return color
+
+        if color_used:
+            for i in range(len(color_set)):
+                color = color_set[i]
+                if color not in color_used:
+                    color_used.append(color)
+                    return color
+
         return randchoice(color_set)
 
-    def _get_material_color(self, material, color_set):
+    def _get_material_color(self, key, color_set):
         """
         This method ensures that:
         * colors of different materials differ (at least if enough colors are available in set)
         * materials with same properties have same color
 
-        :param material: Object of type Material
+        :param key: Object of type Material
         :param color_set: list like object that contains colors of a type matplotlib accepts
         :return: color of a type matplotlib accepts
         """
-        material_str = material.__repr__()
 
-        if material_str in _ASSIGNED_COLORS:
-            return _ASSIGNED_COLORS[material_str]
+        # TODO use Material as key once it's hashable
+        key = key.__repr__()
 
-        color = _get_color(color_set)
-        _ASSIGNED_COLORS[material_str] = color
+        if key in SampleFigure._COLORS_ASSIGNED:
+            return SampleFigure._COLORS_ASSIGNED[key]
+
+        if color_set:
+            color = self._get_color(color_set, color_used=SampleFigure._COLORS_USED)
+        else:
+            color = '#{:02x}{:02x}{:02x}'.format(randint(0, 255), randint(0, 255), randint(0, 255))
+
+        SampleFigure._COLORS_ASSIGNED[key] = color
 
         return color
 
@@ -189,13 +130,13 @@ class SampleFigure(Figure):
 
         # TODO rotate
         if perspective == 'XZ':
-            trans = Affine2D().scale(sx=1, sy=1 + sin(sample.tilt_rad)) + ax.transData
+            trans = Affine2D().scale(sx=1, sy=1 + tan(abs(sample.tilt_rad))) + ax.transData
             col.set_transform(trans)
         elif perspective == 'YZ':
             trans = Affine2D().rotate_around(0, 0, sample.tilt_rad) + ax.transData
             col.set_transform(trans)
         elif perspective == 'XY':
-            trans = Affine2D().scale(sx=1, sy=1 + sin(sample.tilt_rad)) + ax.transData
+            trans = Affine2D().scale(sx=1, sy=1 + tan(abs(sample.tilt_rad))) + ax.transData
             col.set_transform(trans)
 
         ax.add_collection(col)
@@ -204,11 +145,11 @@ class SampleFigure(Figure):
         perspective = perspective.upper()
 
         if perspective == 'XZ' or perspective == 'YZ':
-            patches = [Rectangle((-1, 0), 2, -1, color=_get_material_color(sample.material,
-                                                                           COLOR_SET_GREY))]
+            patches = [Rectangle((-1, 0), 2, -1, color=self._get_material_color(sample.material,
+                                                                                CS_GREY))]
         else:
-            patches = [Rectangle((-1, 1), 2, -2, color=_get_material_color(sample.material,
-                                                                           COLOR_SET_GREY))]
+            patches = [Rectangle((-1, 1), 2, -2, color=self._get_material_color(sample.material,
+                                                                                CS_GREY))]
 
         return patches
 
@@ -218,18 +159,18 @@ class SampleFigure(Figure):
 
         if perspective == 'XZ' or perspective == 'YZ':
             patches.append(Rectangle((-1, 0), 2, -1,
-                                     color=_get_material_color(sample.substrate_material,
-                                                               COLOR_SET_GREY)))
+                                     color=self._get_material_color(sample.substrate_material,
+                                                                    CS_GREY)))
             patches.append(Wedge((0, 0), sample.inclusion_diameter_m, 180, 0,
-                                 color=_get_material_color(sample.inclusion_material,
-                                                           COLOR_SET_BROWN)))
+                                 color=self._get_material_color(sample.inclusion_material,
+                                                                CS_BROWN)))
         else:
             patches.append(Rectangle((-1, 1), 2, -2,
-                                     color=_get_material_color(sample.substrate_material,
-                                                               COLOR_SET_GREY)))
+                                     color=self._get_material_color(sample.substrate_material,
+                                                                    CS_GREY)))
             patches.append(Circle((0, 0), sample.inclusion_diameter_m,
-                                  color=_get_material_color(sample.inclusion_material,
-                                                            COLOR_SET_BROWN)))
+                                  color=self._get_material_color(sample.inclusion_material,
+                                                                 CS_BROWN)))
 
         return patches
 
@@ -241,23 +182,23 @@ class SampleFigure(Figure):
             depth_m = 0
 
             patches.append(Rectangle((-1, 0), 2, -1,
-                                     color=_get_material_color(sample.substrate_material,
-                                                               COLOR_SET_GREY)))
+                                     color=self._get_material_color(sample.substrate_material,
+                                                                    CS_GREY)))
 
             for layer in sample.layers:
                 patches.append(Rectangle((-1, depth_m), 2, -layer.thickness_m,
-                                         color=_get_material_color(layer.material,
-                                                                   COLOR_SET_BROWN)))
+                                         color=self._get_material_color(layer.material,
+                                                                        CS_BROWN)))
                 depth_m -= layer.thickness_m
         else:
             if len(sample.layers) == 0:
                 patches.append(Rectangle((-1, 1), 2, -2,
-                                         color=_get_material_color(sample.substrate_material,
-                                                                   COLOR_SET_GREY)))
+                                         color=self._get_material_color(sample.substrate_material,
+                                                                        CS_GREY)))
             else:
                 patches.append(Rectangle((-1, 1), 2, -2,
-                                         color=_get_material_color(sample.layers[0].material,
-                                                                   COLOR_SET_GREY)))
+                                         color=self._get_material_color(sample.layers[0].material,
+                                                                        CS_GREY)))
 
         return patches
 
@@ -266,36 +207,40 @@ class SampleFigure(Figure):
         perspective = perspective.upper()
 
         if perspective == 'XZ':
-            patches.append(Rectangle((0, 0), -1, -1, color=_get_material_color(sample.left_material,
-                                                                               COLOR_SET_GREY)))
-            patches.append(Rectangle((0, 0), 1, -1, color=_get_material_color(sample.right_material,
-                                                                              COLOR_SET_GREY)))
+            patches.append(Rectangle((0, 0), -1, -1,
+                                     color=self._get_material_color(sample.left_material,
+                                                                    CS_GREY)))
+            patches.append(Rectangle((0, 0), 1, -1,
+                                     color=self._get_material_color(sample.right_material,
+                                                                    CS_GREY)))
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 patches.append(Rectangle((pos[0], 0), layer.thickness_m, -1,
-                                         color=_get_material_color(layer.material,
-                                                                   COLOR_SET_BROWN)))
+                                         color=self._get_material_color(layer.material,
+                                                                        CS_BROWN)))
         elif perspective == 'YZ':
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 if pos[1] >= 0.0:
                     patches.append(Rectangle((-1, 0), 2, -1,
-                                             color=_get_material_color(layer.material,
-                                                                       COLOR_SET_BROWN)))
+                                             color=self._get_material_color(layer.material,
+                                                                            CS_BROWN)))
                     break
             if len(patches) == 0:
                 patches.append(Rectangle((1, 0), 2, -1,
-                                         color=_get_material_color(sample.left_material,
-                                                                   COLOR_SET_GREY)))
+                                         color=self._get_material_color(sample.left_material,
+                                                                        CS_GREY)))
         elif perspective == 'XY':
-            patches.append(Rectangle((0, 1), -1, -2, color=_get_material_color(sample.left_material,
-                                                                               COLOR_SET_GREY)))
-            patches.append(Rectangle((0, 1), 1, -2, color=_get_material_color(sample.right_material,
-                                                                              COLOR_SET_GREY)))
+            patches.append(Rectangle((0, 1), -1, -2,
+                                     color=self._get_material_color(sample.left_material,
+                                                                    CS_GREY)))
+            patches.append(Rectangle((0, 1), 1, -2,
+                                     color=self._get_material_color(sample.right_material,
+                                                                    CS_GREY)))
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 patches.append(Rectangle((pos[0], 1), layer.thickness_m, -2,
-                                         color=_get_material_color(layer.material,
-                                                                   COLOR_SET_BROWN)))
+                                         color=self._get_material_color(layer.material,
+                                                                        CS_BROWN)))
 
         return patches
 
@@ -305,10 +250,10 @@ class SampleFigure(Figure):
 
         if perspective == 'XZ' or perspective == 'YZ':
             patches.append(Circle((0, sample.diameter_m / -2.), sample.diameter_m / 2.,
-                                  color=_get_material_color(sample.material, COLOR_SET_BROWN)))
+                                  color=self._get_material_color(sample.material, CS_BROWN)))
         else:
             patches.append(Circle((0, 0), sample.diameter_m / 2.,
-                                  color=_get_material_color(sample.material, COLOR_SET_BROWN)))
+                                  color=self._get_material_color(sample.material, CS_BROWN)))
 
         return patches
 
