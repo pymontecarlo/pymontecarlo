@@ -30,3 +30,4 @@ BLOCH1933 = IonizationPotentialModel("Bloch 1933", "Bloch F, F. Z. Phys. 81, 363
 STERNHEIMER1964 = IonizationPotentialModel("Sternheimer 1964", "Sternheimer quoted in Berger MJ, Seltzer S. NASA Technical Publication SP-4012 (1964)")
 HOVINGTON = IonizationPotentialModel('Hovington',)
 GRYZINSKI = IonizationPotentialModel('Gryzinski',)
+#TODO: Check GRYZINSKI or GRYZINSKY
