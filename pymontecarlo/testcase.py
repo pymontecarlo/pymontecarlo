@@ -12,6 +12,7 @@ import shutil
 import time
 
 # Third party modules.
+import pkg_resources
 
 # Local modules.
 from pymontecarlo.exceptions import WorkerCancelledError
@@ -31,6 +32,7 @@ from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import RUTHERFORD, ElasticCrossSectionModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
+from pymontecarlo.fileformat.base import HDF5Handler
 
 # Globals and constants variables.
 
@@ -161,6 +163,16 @@ class ProgramMock(Program):
     def name(self):
         return 'mock'
 
+class ProgramHDF5HandlerMock(HDF5Handler):
+
+    CLASS = ProgramMock
+
+    def parse(self, group):
+        return super().parse(group)
+
+    def convert(self, obj, group):
+        super().convert(obj, group)
+
 class TestCase(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
@@ -172,6 +184,14 @@ class TestCase(unittest.TestCase):
         self.tmpdirs = []
 
         self.program = ProgramMock()
+
+        # Add program HDF5 handler
+        requirement = pkg_resources.Requirement('pymontecarlo')
+        distribution = pkg_resources.working_set.find(requirement)
+        entry_map = distribution.get_entry_map('pymontecarlo.fileformat')
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
+                                                     attrs=('ProgramHDF5HandlerMock',),
+                                                     dist=distribution)
 
     def tearDown(self):
         super().tearDown()
@@ -212,4 +232,3 @@ class TestCase(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         self.tmpdirs.append(tmpdir)
         return tmpdir
-

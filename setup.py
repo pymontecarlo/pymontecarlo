@@ -28,7 +28,8 @@ EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex']}
 CMDCLASS = versioneer.get_cmdclass()
 
 ENTRY_POINTS = {'pymontecarlo.program': [],
-                'pymontecarlo.fileformat': []}
+                'pymontecarlo.fileformat':
+                ['SettingsHDF5Handler = pymontecarlo.fileformat.settings:SettingsHDF5Handler']}
 
 setup(name="pyMonteCarlo",
       version=versioneer.get_version(),
