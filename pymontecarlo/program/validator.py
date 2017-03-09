@@ -55,7 +55,8 @@ class Validator(object):
         return options
 
     def _validate_options(self, options, errors):
-        program = options.program
+        program = \
+            self._validate_program(options.program, options, errors)
         beam = \
             self._validate_beam(options.beam, options, errors)
         sample = \
@@ -68,6 +69,18 @@ class Validator(object):
             self._validate_models(options.models, options, errors)
 
         return Options(program, beam, sample, analyses, limits, models)
+
+    def validate_program(self, program, options):
+        errors = set()
+        program = self._validate_program(program, options, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return program
+
+    def _validate_program(self, program, options, errors):
+        return program
 
     def validate_beam(self, beam, options):
         errors = set()

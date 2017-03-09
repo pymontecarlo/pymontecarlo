@@ -4,10 +4,13 @@ Base worker
 """
 
 # Standard library modules.
+import os
 import sys
 import subprocess
 import logging
 import abc
+import tempfile
+import shutil
 
 # Third party modules.
 
@@ -28,6 +31,10 @@ class Worker(metaclass=abc.ABCMeta):
     One should rather use a runner.
     """
 
+    def __init__(self):
+        self._progress = 0.0
+        self._status = ''
+
 #    def create(self, options, outputdir, *args, **kwargs):
 #        """
 #        Creates the simulation file(s) from the options and saves it inside the
@@ -43,12 +50,36 @@ class Worker(metaclass=abc.ABCMeta):
 #
 #        return self._exporter.export(options, outputdir)
 
+    def _setup_outputdir(self, simulation, outputdir=None):
+        """
+        Creates a temporary directory if *outputdir* is ``None``, otherwise
+        create a directory with the simulation *identifier* in the output directory.
+        """
+        if outputdir is None:
+            outputdir = tempfile.mkdtemp()
+            return outputdir, True
+
+        else:
+            outputdir = os.path.join(outputdir, simulation.identifier)
+            os.makedirs(outputdir, exist_ok=True)
+            return outputdir, False
+
+    def _cleanup_outputdir(self, outputdir, temporary):
+        if temporary:
+            shutil.rmtree(outputdir, ignore_errors=True)
+
+    def _update_state(self, progress, status):
+        self._progress = progress
+        self._status = status
+
     @abc.abstractmethod
-    def run(self, options):
+    def run(self, options, outputdir=None):
         """
         Creates and runs a simulation from the specified options.
 
         :arg options: options of simulation
+        :arg outputdir: directory where to save simulation results.
+            If ``None``, no results should be saved.
 
         :return: simulation
         """
@@ -61,13 +92,13 @@ class Worker(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    @abc.abstractproperty
+    @property
     def progress(self):
-        return 0.0
+        return self._progress
 
-    @abc.abstractproperty
+    @property
     def status(self):
-        return ''
+        return self._status
 
 class SubprocessWorker(Worker):
 
@@ -96,5 +127,6 @@ class SubprocessWorker(Worker):
     def cancel(self):
         if self._process is not None:
             self._process.kill()
+            self._update_state(0.0, 'Cancelled')
             raise WorkerCancelledError
 

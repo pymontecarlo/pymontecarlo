@@ -21,6 +21,7 @@ from pymontecarlo.program.expander import Expander, expand_to_single
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
+from pymontecarlo.program.importer import Importer
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import GaussianBeam
@@ -109,49 +110,45 @@ class WorkerMock(Worker):
 
     def __init__(self):
         super().__init__()
-
-        self._progress = 0.0
-        self._status = ''
         self._cancelled = False
 
-    def run(self, options):
-        self._progress = 0.0
-        self._status = 'Started'
-
-        program = options.program
-        exporter = program.create_exporter()
+    def run(self, options, outputdir=None):
+        simulation = Simulation(options)
+        outputdir, temporary = self._setup_outputdir(simulation, outputdir)
 
         try:
-            dirpath = tempfile.mkdtemp()
-            exporter.export(options, dirpath)
+            program = options.program
+            exporter = program.create_exporter()
 
+            exporter.export(options, outputdir)
+
+            self._update_state(0.0, 'Started')
             for _ in range(10):
                 if self._cancelled:
                     raise WorkerCancelledError
                 time.sleep(0.01)
 
         finally:
-            shutil.rmtree(dirpath, ignore_errors=True)
+            self._cleanup_outputdir(outputdir, temporary)
 
-        self._progress = 1.0
-        self._status = 'Done'
-
+        self._update_state(1.0, 'Done')
         return Simulation(options)
 
     def cancel(self):
         self._cancelled = True
-        self._progress = 0.0
-        self._status = 'Cancelled'
 
-    @property
-    def progress(self):
-        return self._progress
+class ImporterMock(Importer):
 
-    @property
-    def status(self):
-        return self._status
+    def _import(self, options, dirpath, errors):
+        return []
 
 class ProgramMock(Program):
+
+    def load(self, config):
+        super().load(config)
+
+    def save(self, config):
+        super().save(config)
 
     def create_expander(self):
         return ExpanderMock()
@@ -161,6 +158,9 @@ class ProgramMock(Program):
 
     def create_exporter(self):
         return ExporterMock()
+
+    def create_importer(self):
+        return ImporterMock()
 
     def create_worker(self):
         return WorkerMock()

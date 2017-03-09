@@ -19,9 +19,11 @@ class TestWorker(TestCase):
 
         self.w = WorkerMock()
 
+        self.outputdir = self.create_temp_dir()
+
     def testrun(self):
         options = self.create_basic_options()
-        simulation = self.w.run(options)
+        simulation = self.w.run(options, self.outputdir)
 
         self.assertAlmostEqual(1.0, self.w.progress)
         self.assertEqual('Done', self.w.status)

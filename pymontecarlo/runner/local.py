@@ -3,6 +3,7 @@ Local runner.
 """
 
 # Standard library modules.
+import os
 import concurrent.futures
 
 # Third party modules.
@@ -34,8 +35,9 @@ class LocalTracker(Tracker):
 
 class LocalRunner(Runner):
 
-    def __init__(self, project=None, max_workers=1):
+    def __init__(self, project=None, keep_simulation_results=True, max_workers=1):
         super().__init__(project, max_workers)
+        self.keep_simulation_results = keep_simulation_results
         self.executor = None
         self.futures = set()
 
@@ -56,6 +58,29 @@ class LocalRunner(Runner):
             self.project.add_simulation(simulation)
             self.options_simulated_count += 1
 
+    def _create_output_dir(self):
+        outputdir = None
+        if self.project.filepath is not None and self.keep_simulation_results:
+            head, tail = os.path.split(self.project.filepath)
+            dirname = os.path.splitext(tail)[0] + '_simulations'
+            outputdir = os.path.join(head, dirname)
+            os.makedirs(outputdir, exist_ok=True)
+
+        return outputdir
+
+    def _submit(self, options):
+        program = options.program
+        worker = program.create_worker()
+        outputdir = self._create_output_dir()
+
+        future = self.executor.submit(worker.run, options, outputdir)
+        future.add_done_callback(self._on_worker_done)
+
+        self.futures.add(future)
+        self.options_submitted_count += 1
+
+        return LocalTracker(options, worker, future)
+
     def start(self):
         if self.executor is not None:
             raise RuntimeError('Already started')
@@ -66,18 +91,6 @@ class LocalRunner(Runner):
             return
         self.executor.shutdown(wait)
         self.executor = None
-
-    def _submit(self, options):
-        program = options.program
-        worker = program.create_worker()
-
-        future = self.executor.submit(worker.run, options)
-        future.add_done_callback(self._on_worker_done)
-
-        self.futures.add(future)
-        self.options_submitted_count += 1
-
-        return LocalTracker(options, worker, future)
 
     def wait(self, timeout=None):
         concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)

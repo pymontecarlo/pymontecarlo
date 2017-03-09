@@ -34,6 +34,10 @@ class Program(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def create_importer(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def create_default_limits(self, options):
         raise NotImplementedError
 

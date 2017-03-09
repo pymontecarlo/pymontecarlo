@@ -3,6 +3,7 @@ Simulation.
 """
 
 # Standard library modules.
+import uuid
 
 # Third party modules.
 
@@ -14,6 +15,7 @@ from pymontecarlo.util.cbook import find_by_type
 class Simulation(object):
 
     def __init__(self, options, results=None):
+        self._identifier = str(uuid.uuid4())
         self.options = options
 
         if results is None:
@@ -22,3 +24,7 @@ class Simulation(object):
 
     def find_result(self, result_class):
         return find_by_type(self.results, result_class)
+
+    @property
+    def identifier(self):
+        return self._identifier
