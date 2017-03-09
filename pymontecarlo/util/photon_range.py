@@ -1,32 +1,17 @@
-#!/usr/bin/env python
 """
-================================================================================
-:mod:`photon_range` -- Estimate of electron range
-================================================================================
-
-.. module:: photon_range
-   :synopsis: Estimate of electron range
-
-.. inheritance-diagram:: pymontecarlo.util.photon_range
-
+Estimate of electron range
 """
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
-__license__ = "GPL v3"
 
 # Standard library modules.
 
 # Third party modules.
+import pyxray
 
 # Local modules.
 
 # Globals and constants variables.
 
-def photon_range(e0, material, transition):
+def photon_range(e0, material, xrayline):
     """
     This function returns the generated photon range in *material* at
     incident electron energy *e0* for a characteristic x ray line *transition*.
@@ -39,21 +24,26 @@ def photon_range(e0, material, transition):
     
     :arg e0: incident electron energy (in eV)
     :arg material: material
-    :arg transition: x-ray line transition
+    :arg xrayline: x-ray line
     
     :return: photon range (in meters)
     """
-    if transition.z not in material.composition:
-        raise ValueError('%s is not in material' % transition.symbol)
-    if transition.energy_eV > e0:
+    z = xrayline.atomic_number
+    if z not in material.composition:
+        raise ValueError('{} is not in material'.format(xrayline))
+
+    if xrayline.is_xray_transitionset():
+        energy_eV = pyxray.xray_transitionset_energy_eV(*xrayline)
+    else:
+        energy_eV = pyxray.xray_transition_energy_eV(*xrayline)
+    if energy_eV > e0:
         return 0.0
 
-    z = transition.z
     ck = 43.04 + 1.5 * z + 5.4e-3 * z ** 2
     cn = 1.755 - 7.4e-3 * z + 3.0e-5 * z ** 2
-    density = material.density_g_cm3
+    density = material.density_g_per_cm3
 
     e0 = e0 / 1e3
-    ec = transition.energy_eV / 1e3
+    ec = energy_eV / 1e3
 
     return ck / density * (e0 ** cn - ec ** cn) * 1e-9

@@ -1,18 +1,9 @@
 #!/usr/bin/env python
 """ """
 
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2013 Philippe T. Pinard"
-__license__ = "GPL v3"
-
 # Standard library modules.
 import unittest
 import logging
-import tempfile
-import shutil
 import os
 
 # Third party modules.
@@ -20,16 +11,17 @@ import h5py
 import numpy as np
 
 # Local modules.
+from pymontecarlo.testcase import TestCase
 import pymontecarlo.util.hdf5util as hdf5util
 
 # Globals and constants variables.
 
-class TestModule(unittest.TestCase):
+class TestModule(TestCase):
 
     def setUp(self):
-        unittest.TestCase.setUp(self)
+        super().setUp()
 
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = self.create_temp_dir()
 
         # Create test HDF5
         self.original = h5py.File(os.path.join(self.tmpdir, 'original.h5'), 'w')
@@ -37,10 +29,6 @@ class TestModule(unittest.TestCase):
         g1 = self.original.create_group('group1')
         g1.attrs['b'] = 2
         g1.create_dataset('data1', data=np.ones((2, 2)))
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def testhdf5util(self):
         copy = h5py.File(os.path.join(self.tmpdir, 'copy.h5'), 'w')
