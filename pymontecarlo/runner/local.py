@@ -5,6 +5,8 @@ Local runner.
 # Standard library modules.
 import os
 import concurrent.futures
+import tempfile
+import shutil
 
 # Third party modules.
 
@@ -16,8 +18,8 @@ from pymontecarlo.exceptions import WorkerCancelledError
 
 class LocalTracker(Tracker):
 
-    def __init__(self, options, worker, future):
-        super().__init__(options)
+    def __init__(self, simulation, worker, future):
+        super().__init__(simulation)
         self.worker = worker
         self.future = future
 
@@ -35,9 +37,8 @@ class LocalTracker(Tracker):
 
 class LocalRunner(Runner):
 
-    def __init__(self, project=None, keep_simulation_results=True, max_workers=1):
+    def __init__(self, project=None, max_workers=1):
         super().__init__(project, max_workers)
-        self.keep_simulation_results = keep_simulation_results
         self.executor = None
         self.futures = set()
 
@@ -58,28 +59,38 @@ class LocalRunner(Runner):
             self.project.add_simulation(simulation)
             self.options_simulated_count += 1
 
-    def _create_output_dir(self):
-        outputdir = None
-        if self.project.filepath is not None and self.keep_simulation_results:
+    def _create_output_dir(self, simulation):
+        if self.project.filepath is not None:
             head, tail = os.path.split(self.project.filepath)
-            dirname = os.path.splitext(tail)[0] + '_simulations'
-            outputdir = os.path.join(head, dirname)
+            simsdirname = os.path.splitext(tail)[0] + '_simulations'
+            simdirname = simulation.identifier
+            outputdir = os.path.join(head, simsdirname, simdirname)
             os.makedirs(outputdir, exist_ok=True)
+            return outputdir, False
 
-        return outputdir
+        else:
+            return tempfile.mkdtemp(), True
 
-    def _submit(self, options):
-        program = options.program
+    def _run(self, worker, simulation, outputdir, temporary):
+        try:
+            worker.run(simulation, outputdir)
+
+        finally:
+            if temporary:
+                shutil.rmtree(outputdir, ignore_errors=True)
+
+        return simulation
+
+    def _submit(self, simulation):
+        program = simulation.options.program
         worker = program.create_worker()
-        outputdir = self._create_output_dir()
+        outputdir, temporary = self._create_output_dir(simulation)
 
-        future = self.executor.submit(worker.run, options, outputdir)
+        future = self.executor.submit(self._run, worker, simulation, outputdir, temporary)
         future.add_done_callback(self._on_worker_done)
-
         self.futures.add(future)
-        self.options_submitted_count += 1
 
-        return LocalTracker(options, worker, future)
+        return LocalTracker(simulation, worker, future)
 
     def start(self):
         if self.executor is not None:

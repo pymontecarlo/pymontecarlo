@@ -30,7 +30,7 @@ class TestLocalRunner(TestCase):
         with self.r:
             tracker = self.r.submit(options)
 
-        self.assertEqual(tracker.options, options)
+        self.assertEqual(tracker.simulation.options, options)
         self.assertAlmostEqual(1.0, tracker.progress, 4)
         self.assertEqual('Done', tracker.status)
         self.assertAlmostEqual(1.0, self.r.progress, 4)

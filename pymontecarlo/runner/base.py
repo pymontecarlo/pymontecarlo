@@ -9,13 +9,14 @@ import abc
 
 # Local modules.
 from pymontecarlo.project import Project
+from pymontecarlo.simulation import Simulation
 
 # Globals and constants variables.
 
 class Tracker(metaclass=abc.ABCMeta):
 
-    def __init__(self, options):
-        self.options = options
+    def __init__(self, simulation):
+        self.simulation = simulation
 
     @abc.abstractmethod
     def cancel(self):
@@ -74,16 +75,19 @@ class Runner(metaclass=abc.ABCMeta):
         program = options.program
         validator = program.create_validator()
         options = validator.validate_options(options)
-        return self._submit(options)
+        simulation = Simulation(options)
+
+        tracker = self._submit(simulation)
+        self.options_submitted_count += 1
+
+        return tracker
 
     @abc.abstractmethod
-    def _submit(self, options):
+    def _submit(self, simulation):
         """
         Actual implementation of :meth:`submit`.
         
-        It should increment :var:`options_submitted_count` by one.
-        
-        :arg options: valid options
+        :arg simulation: simulation containing valid options
         """
         raise NotImplementedError
 

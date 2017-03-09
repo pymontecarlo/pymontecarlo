@@ -73,15 +73,12 @@ class Worker(metaclass=abc.ABCMeta):
         self._status = status
 
     @abc.abstractmethod
-    def run(self, options, outputdir=None):
+    def run(self, simulation, outputdir):
         """
         Creates and runs a simulation from the specified options.
 
-        :arg options: options of simulation
+        :arg simulation: simulation containing options to simulate
         :arg outputdir: directory where to save simulation results.
-            If ``None``, no results should be saved.
-
-        :return: simulation
         """
         raise NotImplementedError
 

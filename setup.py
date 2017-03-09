@@ -27,7 +27,8 @@ EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex']}
 
 CMDCLASS = versioneer.get_cmdclass()
 
-ENTRY_POINTS = {'pymontecarlo.program': []}
+ENTRY_POINTS = {'pymontecarlo.program': [],
+                'pymontecarlo.fileformat': []}
 
 setup(name="pyMonteCarlo",
       version=versioneer.get_version(),

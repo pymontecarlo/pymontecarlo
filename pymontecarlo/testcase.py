@@ -14,7 +14,6 @@ import time
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.settings import load_settings, _set_settings
 from pymontecarlo.exceptions import WorkerCancelledError
 from pymontecarlo.program.base import Program
 from pymontecarlo.program.expander import Expander, expand_to_single
@@ -34,10 +33,6 @@ from pymontecarlo.options.analyses import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
 
 # Globals and constants variables.
-
-basepath = os.path.dirname(__file__)
-filepath = os.path.join(basepath, 'testdata', 'settings.cfg')
-settings = load_settings([filepath])
 
 class ExpanderMock(Expander):
 
@@ -112,24 +107,18 @@ class WorkerMock(Worker):
         super().__init__()
         self._cancelled = False
 
-    def run(self, options, outputdir=None):
-        simulation = Simulation(options)
-        outputdir, temporary = self._setup_outputdir(simulation, outputdir)
+    def run(self, simulation, outputdir=None):
+        options = simulation.options
+        program = options.program
+        exporter = program.create_exporter()
 
-        try:
-            program = options.program
-            exporter = program.create_exporter()
+        exporter.export(options, outputdir)
 
-            exporter.export(options, outputdir)
-
-            self._update_state(0.0, 'Started')
-            for _ in range(10):
-                if self._cancelled:
-                    raise WorkerCancelledError
-                time.sleep(0.01)
-
-        finally:
-            self._cleanup_outputdir(outputdir, temporary)
+        self._update_state(0.0, 'Started')
+        for _ in range(10):
+            if self._cancelled:
+                raise WorkerCancelledError
+            time.sleep(0.01)
 
         self._update_state(1.0, 'Done')
         return Simulation(options)
@@ -176,7 +165,6 @@ class TestCase(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        _set_settings(settings)
 
     def setUp(self):
         super().setUp()

@@ -9,6 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase, WorkerMock
+from pymontecarlo.simulation import Simulation
 
 # Globals and constants variables.
 
@@ -23,11 +24,11 @@ class TestWorker(TestCase):
 
     def testrun(self):
         options = self.create_basic_options()
-        simulation = self.w.run(options, self.outputdir)
+        simulation = Simulation(options)
+        self.w.run(simulation, self.outputdir)
 
         self.assertAlmostEqual(1.0, self.w.progress)
         self.assertEqual('Done', self.w.status)
-        self.assertEqual(simulation.options, options)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
