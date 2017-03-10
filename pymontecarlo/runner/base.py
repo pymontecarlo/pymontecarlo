@@ -10,80 +10,39 @@ import abc
 # Local modules.
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
-from pymontecarlo.util.cbook import Monitorable
+from pymontecarlo.util.future import FutureExecutor
 
 # Globals and constants variables.
 
-class SimulationTracker(Monitorable):
-
-    def __init__(self, simulation):
-        self.simulation = simulation
-
-class SimulationRunner(metaclass=abc.ABCMeta):
+class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
     def __init__(self, project=None, max_workers=1):
+        super().__init__(max_workers)
+
         if project is None:
             project = Project()
         self.project = project
 
-        self.max_workers = max_workers
-        self.options_failed_count = 0
-        self.options_cancelled_count = 0
-        self.options_submitted_count = 0
-        self.options_simulated_count = 0
+    def _on_done(self, future):
+        simulation = super()._on_done(future)
+        if simulation:
+            self.project.add_simulation(simulation)
 
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, exctype, value, tb):
-        self.shutdown(wait=True)
-        return False
+    def _prepare_simulation(self, options):
+        program = options.program
+        validator = program.create_validator()
+        options = validator.validate_options(options)
+        return Simulation(options)
 
     @abc.abstractmethod
-    def start(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def shutdown(self, wait=True):
+    def _prepare_target(self):
         raise NotImplementedError
 
     def submit(self, options):
         """
-        Submits the options in the queue and returns a :class:`Tracker` object.
+        Submits the options in the queue and returns a :class:`Future` object.
         """
-        program = options.program
-        validator = program.create_validator()
-        options = validator.validate_options(options)
-        simulation = Simulation(options)
+        simulation = self._prepare_simulation(options)
+        target = self._prepare_target()
+        return super().submit(target, simulation)
 
-        tracker = self._submit(simulation)
-        self.options_submitted_count += 1
-
-        return tracker
-
-    @abc.abstractmethod
-    def _submit(self, simulation):
-        """
-        Actual implementation of :meth:`submit`.
-        
-        :arg simulation: simulation containing valid options
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def wait(self, timeout=None):
-        """
-        Returns ``True`` if all submitted simulations were simulated,
-        ``False`` otherwise.
-        """
-        raise NotImplementedError
-
-    @property
-    def progress(self):
-        """
-        Returns progress of runner as a :class:`float` from 0.0 to 1.0
-        """
-        return (self.options_simulated_count + \
-                self.options_failed_count + \
-                self.options_cancelled_count) / self.options_submitted_count

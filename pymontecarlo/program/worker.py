@@ -12,12 +12,11 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
-from pymontecarlo.util.cbook import MonitorableMixin
+from pymontecarlo.exceptions import WorkerError
 
 # Globals and constants variables.
 
-class Worker(MonitorableMixin, metaclass=abc.ABCMeta):
+class Worker:
     """
     Base class for all workers.
     A worker is used to run one simulation with a given program and
@@ -30,7 +29,7 @@ class Worker(MonitorableMixin, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def run(self, simulation, outputdir):
+    def run(self, token, simulation, outputdir):
         """
         Creates and runs a simulation from the specified options.
 
@@ -39,11 +38,7 @@ class Worker(MonitorableMixin, metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-class SubprocessWorker(Worker):
-
-    def __init__(self):
-        super().__init__()
-        self._process = None
+class SubprocessWorkerMixin:
 
     def _create_process(self, *args, **kwargs):
         if sys.platform == "win32":
@@ -52,24 +47,19 @@ class SubprocessWorker(Worker):
         else:
             startupinfo = None
         logging.debug('Args: %s' % subprocess.list2cmdline(args[0]))
-        self._process = subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
-        return self._process
+        return subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
 
-    def _join_process(self):
-        self._process.wait()
-        returncode = self._process.returncode
-        self._process = None
+    def _wait_process(self, process, token, timeout=1):
+        while process.wait(timeout) is None:
+            if token.cancelled():
+                process.kill()
+                break
+
+        returncode = process.poll()
         logging.debug('returncode: %s' % returncode)
         if returncode != 0:
             raise WorkerError
 
-    def running(self):
-        self._process.poll()
-        return self._process.returncode is None
+        return returncode
 
-    def cancel(self):
-        if self._process is not None:
-            self._process.kill()
-            self._update_state(0.0, 'Cancelled')
-            raise WorkerCancelledError
 

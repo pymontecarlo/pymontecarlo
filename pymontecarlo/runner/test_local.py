@@ -13,7 +13,7 @@ from pymontecarlo.runner.local import LocalSimulationRunner
 
 # Globals and constants variables.
 
-class TestLocalRunner(TestCase):
+class TestLocalSimulationRunner(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -28,16 +28,16 @@ class TestLocalRunner(TestCase):
         options = self.create_basic_options()
 
         with self.r:
-            tracker = self.r.submit(options)
+            future = self.r.submit(options)
 
-        self.assertEqual(tracker.simulation.options, options)
-        self.assertAlmostEqual(1.0, tracker.progress, 4)
-        self.assertEqual('Done', tracker.status)
+        self.assertEqual(future.result().options, options)
+        self.assertAlmostEqual(1.0, future.progress, 4)
+        self.assertEqual('Done', future.status)
+        self.assertEqual(1, self.r.submitted_count)
+        self.assertEqual(0, self.r.failed_count)
+        self.assertEqual(0, self.r.cancelled_count)
+        self.assertEqual(1, self.r.done_count)
         self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(1, self.r.options_submitted_count)
-        self.assertEqual(0, self.r.options_failed_count)
-        self.assertEqual(0, self.r.options_cancelled_count)
-        self.assertEqual(1, self.r.options_simulated_count)
 
         project = self.r.project
         self.assertEqual(1, len(project.simulations))
@@ -51,10 +51,10 @@ class TestLocalRunner(TestCase):
             self.r.submit(options2)
 
         self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(2, self.r.options_submitted_count)
-        self.assertEqual(0, self.r.options_failed_count)
-        self.assertEqual(0, self.r.options_cancelled_count)
-        self.assertEqual(2, self.r.options_simulated_count)
+        self.assertEqual(2, self.r.submitted_count)
+        self.assertEqual(0, self.r.failed_count)
+        self.assertEqual(0, self.r.cancelled_count)
+        self.assertEqual(2, self.r.done_count)
 
         project = self.r.project
         self.assertEqual(2, len(project.simulations))
@@ -63,14 +63,14 @@ class TestLocalRunner(TestCase):
         options = self.create_basic_options()
 
         with self.r:
-            tracker = self.r.submit(options)
-            tracker.cancel()
+            future = self.r.submit(options)
+            future.cancel()
 
         self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(1, self.r.options_submitted_count)
-        self.assertEqual(0, self.r.options_failed_count)
-        self.assertEqual(1, self.r.options_cancelled_count)
-        self.assertEqual(0, self.r.options_simulated_count)
+        self.assertEqual(1, self.r.submitted_count)
+        self.assertEqual(0, self.r.failed_count)
+        self.assertEqual(1, self.r.cancelled_count)
+        self.assertEqual(0, self.r.done_count)
 
         project = self.r.project
         self.assertEqual(0, len(project.simulations))

@@ -101,10 +101,7 @@ class Monitorable(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def cancel(self):
-        """
-        Cancels process.
-        """
+    def cancelled(self):
         raise NotImplementedError
 
     @abc.abstractproperty
@@ -120,17 +117,3 @@ class Monitorable(metaclass=abc.ABCMeta):
         Returns status.
         """
         return ''
-
-class MonitorableMixin(Monitorable):
-
-    def _update_state(self, progress, status):
-        self._progress = progress
-        self._status = status
-
-    @property
-    def progress(self):
-        return getattr(self, '_progress', 0.0)
-
-    @property
-    def status(self):
-        return getattr(self, '_status', '')
