@@ -4,6 +4,7 @@ Cookbook solutions.
 
 # Standard library modules.
 import math
+import abc
 
 # Third party modules.
 import more_itertools
@@ -89,3 +90,47 @@ class DegreesAttribute(MultiplierAttribute):
 
     def __init__(self, attrname_rad):
         super().__init__(attrname_rad, 180.0 / math.pi)
+
+class Monitorable(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def running(self):
+        """
+        Returns whether process is running
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def cancel(self):
+        """
+        Cancels process.
+        """
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def progress(self):
+        """
+        Returns progress as a :class:`float` from 0.0 to 1.0.
+        """
+        return 0.0
+
+    @abc.abstractproperty
+    def status(self):
+        """
+        Returns status.
+        """
+        return ''
+
+class MonitorableMixin(Monitorable):
+
+    def _update_state(self, progress, status):
+        self._progress = progress
+        self._status = status
+
+    @property
+    def progress(self):
+        return getattr(self, '_progress', 0.0)
+
+    @property
+    def status(self):
+        return getattr(self, '_status', '')

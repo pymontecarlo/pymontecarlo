@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.runner.local import LocalRunner
+from pymontecarlo.runner.local import LocalSimulationRunner
 
 # Globals and constants variables.
 
@@ -18,7 +18,7 @@ class TestLocalRunner(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.r = LocalRunner(max_workers=1)
+        self.r = LocalSimulationRunner(max_workers=1)
 
     def tearDown(self):
         super().tearDown()

@@ -29,6 +29,7 @@ class TestWorker(TestCase):
 
         self.assertAlmostEqual(1.0, self.w.progress)
         self.assertEqual('Done', self.w.status)
+        self.assertFalse(self.w.running())
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

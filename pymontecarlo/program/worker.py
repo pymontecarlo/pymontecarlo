@@ -4,22 +4,20 @@ Base worker
 """
 
 # Standard library modules.
-import os
 import sys
 import subprocess
 import logging
 import abc
-import tempfile
-import shutil
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
+from pymontecarlo.util.cbook import MonitorableMixin
 
 # Globals and constants variables.
 
-class Worker(metaclass=abc.ABCMeta):
+class Worker(MonitorableMixin, metaclass=abc.ABCMeta):
     """
     Base class for all workers.
     A worker is used to run one simulation with a given program and
@@ -31,47 +29,6 @@ class Worker(metaclass=abc.ABCMeta):
     One should rather use a runner.
     """
 
-    def __init__(self):
-        self._progress = 0.0
-        self._status = ''
-
-#    def create(self, options, outputdir, *args, **kwargs):
-#        """
-#        Creates the simulation file(s) from the options and saves it inside the
-#        output directory.
-#        This method should be implemented by derived class as it is specific
-#        to the different Monte Carlo programs.
-#
-#        :arg options: options of a simulation
-#        :arg outputdir: directory where to save the simulation file(s)
-#        """
-#        filepath = os.path.join(outputdir, options.name + '.xml')
-#        options.write(filepath)
-#
-#        return self._exporter.export(options, outputdir)
-
-    def _setup_outputdir(self, simulation, outputdir=None):
-        """
-        Creates a temporary directory if *outputdir* is ``None``, otherwise
-        create a directory with the simulation *identifier* in the output directory.
-        """
-        if outputdir is None:
-            outputdir = tempfile.mkdtemp()
-            return outputdir, True
-
-        else:
-            outputdir = os.path.join(outputdir, simulation.identifier)
-            os.makedirs(outputdir, exist_ok=True)
-            return outputdir, False
-
-    def _cleanup_outputdir(self, outputdir, temporary):
-        if temporary:
-            shutil.rmtree(outputdir, ignore_errors=True)
-
-    def _update_state(self, progress, status):
-        self._progress = progress
-        self._status = status
-
     @abc.abstractmethod
     def run(self, simulation, outputdir):
         """
@@ -81,21 +38,6 @@ class Worker(metaclass=abc.ABCMeta):
         :arg outputdir: directory where to save simulation results.
         """
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def cancel(self):
-        """
-        Cancels worker.
-        """
-        raise NotImplementedError
-
-    @property
-    def progress(self):
-        return self._progress
-
-    @property
-    def status(self):
-        return self._status
 
 class SubprocessWorker(Worker):
 
@@ -120,6 +62,10 @@ class SubprocessWorker(Worker):
         logging.debug('returncode: %s' % returncode)
         if returncode != 0:
             raise WorkerError
+
+    def running(self):
+        self._process.poll()
+        return self._process.returncode is None
 
     def cancel(self):
         if self._process is not None:

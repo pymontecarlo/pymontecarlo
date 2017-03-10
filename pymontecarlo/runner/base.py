@@ -10,36 +10,16 @@ import abc
 # Local modules.
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
+from pymontecarlo.util.cbook import Monitorable
 
 # Globals and constants variables.
 
-class Tracker(metaclass=abc.ABCMeta):
+class SimulationTracker(Monitorable):
 
     def __init__(self, simulation):
         self.simulation = simulation
 
-    @abc.abstractmethod
-    def cancel(self):
-        """
-        Cancels the simulation
-        """
-        raise NotImplementedError
-
-    @abc.abstractproperty
-    def progress(self):
-        """
-        Returns progress of simulation as a :class:`float` from 0.0 to 1.0
-        """
-        return 0.0
-
-    @abc.abstractproperty
-    def status(self):
-        """
-        Returns status of simulation.
-        """
-        return ''
-
-class Runner(metaclass=abc.ABCMeta):
+class SimulationRunner(metaclass=abc.ABCMeta):
 
     def __init__(self, project=None, max_workers=1):
         if project is None:

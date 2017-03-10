@@ -108,6 +108,7 @@ class WorkerMock(Worker):
     def __init__(self):
         super().__init__()
         self._cancelled = False
+        self._running = False
 
     def run(self, simulation, outputdir=None):
         options = simulation.options
@@ -117,16 +118,22 @@ class WorkerMock(Worker):
         exporter.export(options, outputdir)
 
         self._update_state(0.0, 'Started')
+        self._running = True
         for _ in range(10):
             if self._cancelled:
                 raise WorkerCancelledError
             time.sleep(0.01)
 
+        self._running = False
         self._update_state(1.0, 'Done')
         return Simulation(options)
 
     def cancel(self):
         self._cancelled = True
+        self._running = False
+
+    def running(self):
+        return self._running
 
 class ImporterMock(Importer):
 

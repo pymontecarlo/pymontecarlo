@@ -11,17 +11,22 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.base import Runner, Tracker
+from pymontecarlo.runner.base import SimulationRunner, SimulationTracker
 from pymontecarlo.exceptions import WorkerCancelledError
 
 # Globals and constants variables.
 
-class LocalTracker(Tracker):
+class LocalSimulationTracker(SimulationTracker):
 
     def __init__(self, simulation, worker, future):
         super().__init__(simulation)
         self.worker = worker
         self.future = future
+
+    def running(self):
+        # NOTE: No need to check whether worker is running,
+        # since the future controls the worker
+        return self.future.running()
 
     def cancel(self):
         self.future.cancel()
@@ -35,7 +40,7 @@ class LocalTracker(Tracker):
     def status(self):
         return self.worker.status
 
-class LocalRunner(Runner):
+class LocalSimulationRunner(SimulationRunner):
 
     def __init__(self, project=None, max_workers=1):
         super().__init__(project, max_workers)
@@ -90,7 +95,7 @@ class LocalRunner(Runner):
         future.add_done_callback(self._on_worker_done)
         self.futures.add(future)
 
-        return LocalTracker(simulation, worker, future)
+        return LocalSimulationTracker(simulation, worker, future)
 
     def start(self):
         if self.executor is not None:
