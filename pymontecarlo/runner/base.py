@@ -93,6 +93,10 @@ class Runner(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def wait(self, timeout=None):
+        """
+        Returns ``True`` if all submitted simulations were simulated,
+        ``False`` otherwise.
+        """
         raise NotImplementedError
 
     @property

@@ -104,4 +104,6 @@ class LocalRunner(Runner):
         self.executor = None
 
     def wait(self, timeout=None):
-        concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)
+        _done, notdone = \
+            concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)
+        return not notdone
