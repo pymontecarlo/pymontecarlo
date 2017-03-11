@@ -80,6 +80,7 @@ class FutureExecutor(Monitorable):
     def __init__(self, max_workers=1):
         self.max_workers = max_workers
         self.executor = None
+        self.futures = set()
 
         self.failed_count = 0
         self.cancelled_count = 0
@@ -91,7 +92,7 @@ class FutureExecutor(Monitorable):
         return self
 
     def __exit__(self, exctype, value, tb):
-        self.shutdown(wait=True)
+        self.shutdown()
         return False
 
     def _on_done(self, future):
@@ -111,11 +112,12 @@ class FutureExecutor(Monitorable):
             raise RuntimeError('Already started')
         self.executor = concurrent.futures.ThreadPoolExecutor(self.max_workers)
 
-    def shutdown(self, wait=True):
+    def shutdown(self):
         if self.executor is None:
             return
-        self.executor.shutdown(wait)
+        self.executor.shutdown()
         self.executor = None
+        self.futures.clear()
 
     def wait(self, timeout=None):
         """
@@ -131,6 +133,9 @@ class FutureExecutor(Monitorable):
         """
         Submits target function with specified arguments.
         
+        .. note:: The derived class should ideally create a :meth:`submit` 
+            method that calls this method.
+        
         :arg target: function to execute. The first argument of the function
             should be a token, where the progress, status of the function
             can be updated::
@@ -143,11 +148,15 @@ class FutureExecutor(Monitorable):
         
         :return: a :class:`Future` object
         """
+        if self.executor is None:
+            raise RuntimeError('Executor is not started')
+
         token = Token()
         future = self.executor.submit(target, token, *args, **kwargs)
 
         future = FutureAdapter(future, token)
         future.add_done_callback(self._on_done)
+        self.futures.add(future)
         self.submitted_count += 1
 
         return future

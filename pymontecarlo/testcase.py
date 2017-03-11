@@ -15,6 +15,7 @@ import time
 import pkg_resources
 
 # Local modules.
+import pymontecarlo
 from pymontecarlo.program.base import Program
 from pymontecarlo.program.expander import Expander, expand_to_single
 from pymontecarlo.program.validator import Validator
@@ -183,6 +184,7 @@ class TestCase(unittest.TestCase):
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
+        pymontecarlo.reload_hdf5handlers()
 
     def tearDown(self):
         super().tearDown()

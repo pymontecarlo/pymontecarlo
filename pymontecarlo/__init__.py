@@ -9,11 +9,14 @@ del get_versions
 # Standard library modules.
 import os
 import sys
+import logging
+logger = logging.getLogger(__name__)
+import threading
 
 # Third party modules.
+from pkg_resources import iter_entry_points
 
 # Local modules.
-from pymontecarlo.settings import Settings
 
 # Globals and constants variables.
 
@@ -77,13 +80,61 @@ def _get_config_dir():
     os.makedirs(configdir, exist_ok=True)
     return configdir
 
+#--- HDF5 handlers
+
+_HDF5HANDLER_ENTRYPOINT = 'pymontecarlo.fileformat'
+_hdf5handlers = None
+
+def _load_hdf5handlers():
+    global _hdf5handlers
+
+    # NOTE: This is an important check. If the entry points are resolved in
+    # another thread than the main one, the import hangs
+    if threading.current_thread() != threading.main_thread():
+        raise RuntimeError('Handler must be initialized in main thread')
+
+    _hdf5handlers = tuple(ep.resolve()() for ep in iter_entry_points(_HDF5HANDLER_ENTRYPOINT))
+    logging.debug('Initialized handlers: ' + str(_hdf5handlers))
+
+def iter_hdf5handlers():
+    global _hdf5handlers
+    if _hdf5handlers is None:
+        _load_hdf5handlers()
+    return iter(_hdf5handlers)
+
+def reload_hdf5handlers():
+    global _hdf5handlers
+    _hdf5handlers = None
+    return _load_hdf5handlers()
+
+#--- Settings
+
+_settings = None
+
 def _load_settings(filepath=None):
+    global _settings
+
+    # Late import is required to allow loading of HDF5 handlers first
+    from pymontecarlo.settings import Settings
+
     if filepath is None:
         filepath = os.path.join(_get_config_dir(), 'settings.h5')
 
     try:
-        return Settings.read(filepath)
+        _settings = Settings.read(filepath)
     except:
-        return Settings()
+        logger.exception('load settings')
+        _settings = Settings()
 
-settings = _load_settings()
+def get_settings():
+    global _settings
+    return _settings
+
+def reload_settings():
+    _load_settings()
+
+def _init():
+    _load_hdf5handlers()
+    _load_settings()
+
+_init()

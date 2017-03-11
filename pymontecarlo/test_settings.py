@@ -29,5 +29,6 @@ class TestSettings(TestCase):
         self.assertEqual(1, len(settings.programs))
 
 if __name__ == '__main__': #pragma: no cover
+    logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

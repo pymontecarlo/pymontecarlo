@@ -7,26 +7,22 @@ Base class for HDF5 handlers
 import abc
 
 # Third party modules.
-from pkg_resources import iter_entry_points
 
 import numpy as np
 
 # Local modules.
+from pymontecarlo import iter_hdf5handlers
 
 # Globals and constants variables.
 
-HANDLER_ENTRYPOINT = 'pymontecarlo.fileformat'
-
-def find_parse_handler(group):
-    for entry_point in iter_entry_points(HANDLER_ENTRYPOINT):
-        handler = entry_point.load()()
+def find_parse_hdf5handler(group):
+    for handler in iter_hdf5handlers():
         if handler.can_parse(group):
             return handler
     raise ValueError("No handler found")
 
-def find_convert_handler(obj, group):
-    for entry_point in iter_entry_points(HANDLER_ENTRYPOINT):
-        handler = entry_point.load()()
+def find_convert_hdf5handler(obj, group):
+    for handler in iter_hdf5handlers():
         if handler.can_convert(obj, group):
             return handler
     raise ValueError("No handler found")
@@ -39,11 +35,11 @@ class HDF5Handler(object):
     ATTR_CLASS = '_class'
     ATTR_VERSION = '_version'
 
-    def _parse_handlers(self, group):
-        return find_parse_handler(group).parse(group)
+    def _parse_hdf5handlers(self, group):
+        return find_parse_hdf5handler(group).parse(group)
 
-    def _convert_handlers(self, obj, group):
-        return find_convert_handler(obj, group).convert(obj, group)
+    def _convert_hdf5handlers(self, obj, group):
+        return find_convert_hdf5handler(obj, group).convert(obj, group)
 
     def can_parse(self, group):
         return group.attrs.get(self.ATTR_CLASS) == np.string_(self.CLASS.__name__) and \

@@ -18,7 +18,7 @@ class SettingsHDF5Handler(HDF5Handler):
         programs = []
 
         for subgroup in group.values():
-            programs.append(self._parse_handlers(subgroup))
+            programs.append(self._parse_hdf5handlers(subgroup))
 
         return Settings(programs)
 
@@ -27,4 +27,4 @@ class SettingsHDF5Handler(HDF5Handler):
 
         for program in obj.programs:
             subgroup = group.create_group(program.name)
-            self._convert_handlers(program, subgroup)
+            self._convert_hdf5handlers(program, subgroup)
