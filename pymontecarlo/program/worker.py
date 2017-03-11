@@ -49,8 +49,8 @@ class SubprocessWorkerMixin:
         logging.debug('Args: %s' % subprocess.list2cmdline(args[0]))
         return subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
 
-    def _wait_process(self, process, token, timeout=1):
-        while process.wait(timeout) is None:
+    def _wait_process(self, process, token, interval=1):
+        while process.wait(interval) is None:
             if token.cancelled():
                 process.kill()
                 break
