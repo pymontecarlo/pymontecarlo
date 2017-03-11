@@ -8,9 +8,9 @@ import logging
 # Third party modules.
 
 # Local modules.
+import pymontecarlo
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.util.datarow import DataRow
-import pymontecarlo.util.units as units
 
 # Globals and constants variables.
 
@@ -35,7 +35,7 @@ class TestDataRow(TestCase):
         q = self.dr['d']
         self.assertAlmostEqual(5.6, q.n, 4)
         self.assertAlmostEqual(0.5, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('counts/s'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('counts/s'), q.units)
 
     def test__or__(self):
         dr2 = DataRow()
@@ -48,7 +48,7 @@ class TestDataRow(TestCase):
         q = dr3['a']
         self.assertAlmostEqual(6.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def test__ior__(self):
         dr2 = DataRow()
@@ -61,7 +61,7 @@ class TestDataRow(TestCase):
         q = self.dr['a']
         self.assertAlmostEqual(6.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def test__xor__(self):
         dr2 = DataRow()
@@ -77,7 +77,7 @@ class TestDataRow(TestCase):
         q = dr3['a']
         self.assertAlmostEqual(5.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def test__xor__reversed(self):
         dr2 = DataRow()
@@ -93,7 +93,7 @@ class TestDataRow(TestCase):
         q = dr3['a']
         self.assertAlmostEqual(6.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def test__xor__tolerance(self):
         # Difference above tolerance
@@ -127,7 +127,7 @@ class TestDataRow(TestCase):
         q = self.dr['a']
         self.assertAlmostEqual(6.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def testupdate_with_prefix(self):
         dr2 = DataRow()
@@ -140,12 +140,12 @@ class TestDataRow(TestCase):
         q = self.dr['a']
         self.assertAlmostEqual(5.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
         q = self.dr['foo-a']
         self.assertAlmostEqual(6.0, q.n, 4)
         self.assertAlmostEqual(0.0, q.s, 4)
-        self.assertEqual(units.ureg.parse_units('m'), q.units)
+        self.assertEqual(pymontecarlo.unit_registry.parse_units('m'), q.units)
 
     def testcolumns(self):
         columns = self.dr.columns

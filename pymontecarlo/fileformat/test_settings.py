@@ -10,9 +10,9 @@ import os
 import h5py
 
 # Local modules.
+from pymontecarlo import Settings
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.fileformat.settings import SettingsHDF5Handler
-from pymontecarlo.settings import Settings
 
 # Globals and constants variables.
 

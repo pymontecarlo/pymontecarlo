@@ -9,7 +9,7 @@ import math
 # Third party modules.
 
 # Local modules.
-import pymontecarlo.util.units as units
+import pymontecarlo
 
 # Globals and constants variables.
 
@@ -21,8 +21,8 @@ class DataRowCreator(metaclass=abc.ABCMeta):
 
 class DataRow(collections.Mapping):
 
-    _QUANTITY_NAN = units.ureg.Quantity(float('nan')).plus_minus(0.0)
-    _UNITS_NONE = units.ureg.parse_units('')
+    _QUANTITY_NAN = pymontecarlo.unit_registry.Quantity(float('nan')).plus_minus(0.0)
+    _UNITS_NONE = pymontecarlo.unit_registry.parse_units('')
 
     def __init__(self):
         self._values = OrderedDict()
@@ -100,12 +100,12 @@ class DataRow(collections.Mapping):
             unit = self._UNITS_NONE
 
         if isinstance(unit, str):
-            unit = units.ureg.parse_units(unit)
+            unit = pymontecarlo.unit_registry.parse_units(unit)
 
-        q = units.ureg.Quantity(value, unit)
+        q = pymontecarlo.unit_registry.Quantity(value, unit)
         q = q.plus_minus(error)
 
-        q_tol = units.ureg.Quantity(tolerance, unit)
+        q_tol = pymontecarlo.unit_registry.Quantity(tolerance, unit)
 
         self._values[column] = (q, q_tol)
 
@@ -130,7 +130,7 @@ class DataRow(collections.Mapping):
             q = self.get(column, self._QUANTITY_NAN)
 
             # Convert to preferred unit
-            q = units.to_preferred_unit(q)
+            q = pymontecarlo.settings.to_preferred_unit(q)
 
             # Unit string
             if q.units != self._UNITS_NONE:

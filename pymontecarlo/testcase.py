@@ -170,12 +170,9 @@ class TestCase(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
 
-    def setUp(self):
-        super().setUp()
-
-        self.tmpdirs = []
-
-        self.program = ProgramMock()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
         # Add program HDF5 handler
         requirement = pkg_resources.Requirement('pymontecarlo')
@@ -185,6 +182,13 @@ class TestCase(unittest.TestCase):
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
         pymontecarlo.reload_hdf5handlers()
+
+    def setUp(self):
+        super().setUp()
+
+        self.tmpdirs = []
+
+        self.program = ProgramMock()
 
     def tearDown(self):
         super().tearDown()

@@ -5,9 +5,9 @@
 # Third party modules.
 
 # Local modules.
+from pymontecarlo import unit_registry
 from pymontecarlo.results.photon import PhotonResult, PhotonResultBuilder
 from pymontecarlo.util.datarow import DataRowCreator
-import pymontecarlo.util.units as units
 
 # Globals and constants variables.
 
@@ -21,7 +21,7 @@ class PhotonIntensityResult(PhotonResult, DataRowCreator):
 
     def get(self, key, default=_DEFAULT):
         if default is self._DEFAULT:
-            default = units.ureg.Quantity(0.0, '1/(sr.electron)').plus_minus(0.0)
+            default = unit_registry.Quantity(0.0, '1/(sr.electron)').plus_minus(0.0)
         return super().get(key, default)
 
     def create_datarow(self, **kwargs):
@@ -41,7 +41,7 @@ class GeneratedPhotonIntensityResult(PhotonIntensityResult):
 class PhotonIntensityResultBuilder(PhotonResultBuilder):
 
     def add_intensity(self, xrayline, value, error, unit='1/(sr.electron)'):
-        self._add(xrayline, units.ureg.Quantity(value, unit).plus_minus(error))
+        self._add(xrayline, unit_registry.Quantity(value, unit).plus_minus(error))
 
 class EmittedPhotonIntensityResultBuilder(PhotonIntensityResultBuilder):
 

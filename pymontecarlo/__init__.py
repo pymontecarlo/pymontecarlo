@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 import threading
 
 # Third party modules.
-from pkg_resources import iter_entry_points
 
 # Local modules.
 
@@ -80,7 +79,16 @@ def _get_config_dir():
     os.makedirs(configdir, exist_ok=True)
     return configdir
 
+#--- Units
+
+import pint
+
+unit_registry = pint.UnitRegistry()
+unit_registry.define('electron = mol')
+
 #--- HDF5 handlers
+
+from pkg_resources import iter_entry_points
 
 _HDF5HANDLER_ENTRYPOINT = 'pymontecarlo.fileformat'
 _hdf5handlers = None
@@ -96,39 +104,68 @@ def _load_hdf5handlers():
     _hdf5handlers = tuple(ep.resolve()() for ep in iter_entry_points(_HDF5HANDLER_ENTRYPOINT))
     logging.debug('Initialized handlers: ' + str(_hdf5handlers))
 
+def reload_hdf5handlers():
+    global _hdf5handlers
+    _hdf5handlers = None
+    return _load_hdf5handlers()
+
 def iter_hdf5handlers():
     global _hdf5handlers
     if _hdf5handlers is None:
         _load_hdf5handlers()
     return iter(_hdf5handlers)
 
-def reload_hdf5handlers():
-    global _hdf5handlers
-    _hdf5handlers = None
-    return _load_hdf5handlers()
-
 #--- Settings
 
-_settings = None
+from pymontecarlo.fileformat.reader import HDF5ReaderMixin
+from pymontecarlo.fileformat.writer import HDF5WriterMixin
+
+class Settings(HDF5ReaderMixin, HDF5WriterMixin):
+
+    def __init__(self, programs=None):
+        if programs is None:
+            programs = []
+        self.programs = tuple(programs)
+
+        # Units
+        self.preferred_units = {}
+
+        # X-ray line
+        self.preferred_xrayline_notation = 'iupac'
+        self.preferred_xrayline_encoding = 'utf16'
+
+    def set_preferred_unit(self, unit):
+        if isinstance(unit, str):
+            unit = unit_registry.parse_units(unit)
+
+        _, base_unit = unit_registry._get_base_units(unit)
+        self.preferred_units[base_unit] = unit
+
+    def clear_preferred_units(self):
+        self.preferred_units.clear()
+
+    def to_preferred_unit(self, q):
+        _, base_unit = unit_registry._get_base_units(q.units)
+
+        try:
+            preferred_unit = self.preferred_units[base_unit]
+            return q.to(preferred_unit)
+        except KeyError:
+            return q.to(base_unit)
+
+settings = None
 
 def _load_settings(filepath=None):
-    global _settings
-
-    # Late import is required to allow loading of HDF5 handlers first
-    from pymontecarlo.settings import Settings
+    global settings
 
     if filepath is None:
         filepath = os.path.join(_get_config_dir(), 'settings.h5')
 
     try:
-        _settings = Settings.read(filepath)
+        settings = Settings.read(filepath)
     except:
         logger.exception('load settings')
-        _settings = Settings()
-
-def get_settings():
-    global _settings
-    return _settings
+        settings = Settings()
 
 def reload_settings():
     _load_settings()

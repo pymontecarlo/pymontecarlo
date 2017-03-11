@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.fileformat.base import HDF5Handler
-from pymontecarlo.settings import Settings
+from pymontecarlo import Settings
 
 # Globals and constants variables.
 
