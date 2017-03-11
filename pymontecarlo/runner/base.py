@@ -44,5 +44,4 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         """
         simulation = self._prepare_simulation(options)
         target = self._prepare_target()
-        return super().submit(target, simulation)
-
+        return self._submit(target, simulation)

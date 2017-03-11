@@ -27,8 +27,8 @@ class LocalSimulationRunner(SimulationRunner):
             simdir = tempfile.mkdtemp()
             temporary = True
 
-        # Run
-        def run(token, simulation):
+        # Run function
+        def target(token, simulation):
             program = simulation.options.program
             worker = program.create_worker()
 
@@ -44,5 +44,5 @@ class LocalSimulationRunner(SimulationRunner):
 
             return simulation
 
-        return run
+        return target
 

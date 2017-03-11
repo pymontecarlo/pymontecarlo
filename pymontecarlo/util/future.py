@@ -118,11 +118,31 @@ class FutureExecutor(Monitorable):
         self.executor = None
 
     def wait(self, timeout=None):
+        """
+        Waits forever if *timeout* is ``None``. 
+        Otherwise waits for *timeout* and returns ``True`` if all submissions
+        were executed, ``False`` otherwise.
+        """
         _done, notdone = \
             concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)
         return not notdone
 
-    def submit(self, target, *args, **kwargs):
+    def _submit(self, target, *args, **kwargs):
+        """
+        Submits target function with specified arguments.
+        
+        :arg target: function to execute. The first argument of the function
+            should be a token, where the progress, status of the function
+            can be updated::
+            
+            def target(token):
+                token.update(0.0, 'start')
+                if token.cancelled():
+                    return
+                token.update(1.0, 'done')
+        
+        :return: a :class:`Future` object
+        """
         token = Token()
         future = self.executor.submit(target, token, *args, **kwargs)
 
@@ -133,6 +153,9 @@ class FutureExecutor(Monitorable):
         return future
 
     def running(self):
+        """
+        Returns whether the executor is running and can accept submission.
+        """
         return self.executor is not None
 
     def cancelled(self):
