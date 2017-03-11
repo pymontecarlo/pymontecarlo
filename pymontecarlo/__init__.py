@@ -125,7 +125,7 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
     def __init__(self, programs=None):
         if programs is None:
             programs = []
-        self.programs = tuple(programs)
+        self.programs = list(programs)
 
         # Units
         self.preferred_units = {}
@@ -169,6 +169,8 @@ def _load_settings(filepath=None):
 
 def reload_settings():
     _load_settings()
+
+#--- Initialize
 
 def _init():
     _load_hdf5handlers()
