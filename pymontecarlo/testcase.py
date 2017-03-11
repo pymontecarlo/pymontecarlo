@@ -127,6 +127,25 @@ class ImporterMock(Importer):
 
 class ProgramMock(Program):
 
+    @staticmethod
+    def getname():
+        return 'mock'
+
+    @staticmethod
+    def getfullname():
+        return 'Mock program'
+
+    @classmethod
+    def prepare_parser(cls, parser):
+        parser.add_argument('--foo', help='Store value internally')
+
+    @classmethod
+    def from_namespace(cls, ns): #@NoSelf
+        return cls(ns.foo)
+
+    def __init__(self, foo=None):
+        self.foo = foo
+
     def load(self, config):
         super().load(config)
 
@@ -151,9 +170,10 @@ class ProgramMock(Program):
     def create_default_limits(self, options):
         return [ShowersLimit(100)]
 
-    @property
-    def name(self):
-        return 'mock'
+    def namespace(self):
+        ns = super().namespace
+        ns['foo'] = self.foo
+        return ns
 
 class ProgramHDF5HandlerMock(HDF5Handler):
 
@@ -182,6 +202,13 @@ class TestCase(unittest.TestCase):
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
         pymontecarlo.reload_hdf5handlers()
+
+        # Add program to available programs
+        entry_map = distribution.get_entry_map('pymontecarlo.program')
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
+                                                     attrs=('ProgramMock',),
+                                                     dist=distribution)
+        pymontecarlo.reload_available_programs()
 
     def setUp(self):
         super().setUp()

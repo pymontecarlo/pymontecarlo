@@ -59,7 +59,7 @@ class SettingsHDF5Handler(HDF5Handler):
         group_programs = group.create_group('programs')
 
         for program in programs:
-            group_program = group_programs.create_group(program.name)
+            group_program = group_programs.create_group(program.getname())
             self._convert_hdf5handlers(program, group_program)
 
     def _convert_units(self, obj, group):

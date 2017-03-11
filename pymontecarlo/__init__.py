@@ -86,23 +86,31 @@ import pint
 unit_registry = pint.UnitRegistry()
 unit_registry.define('electron = mol')
 
-#--- HDF5 handlers
+#--- Entry points
 
 from pkg_resources import iter_entry_points
+
+def _load_entrypoints(group):
+    """
+    Returns a dictionary where the keys are the entry point's name and
+    the values are the entry point's class.
+    """
+    # NOTE: This is an important check. If the entry points are resolved in
+    # another thread than the main one, the import hangs
+    if threading.current_thread() != threading.main_thread():
+        raise RuntimeError('Handler must be initialized in main thread')
+
+    return tuple(ep.resolve() for ep in iter_entry_points(group))
+
+#--- HDF5 handlers
 
 _HDF5HANDLER_ENTRYPOINT = 'pymontecarlo.fileformat'
 _hdf5handlers = None
 
 def _load_hdf5handlers():
     global _hdf5handlers
-
-    # NOTE: This is an important check. If the entry points are resolved in
-    # another thread than the main one, the import hangs
-    if threading.current_thread() != threading.main_thread():
-        raise RuntimeError('Handler must be initialized in main thread')
-
-    _hdf5handlers = tuple(ep.resolve()() for ep in iter_entry_points(_HDF5HANDLER_ENTRYPOINT))
-    logging.debug('Initialized handlers: ' + str(_hdf5handlers))
+    _hdf5handlers = tuple(clasz() for clasz in _load_entrypoints(_HDF5HANDLER_ENTRYPOINT))
+    logging.debug('Initialized HDF5 handlers: ' + str(_hdf5handlers))
 
 def reload_hdf5handlers():
     global _hdf5handlers
@@ -114,6 +122,27 @@ def iter_hdf5handlers():
     if _hdf5handlers is None:
         _load_hdf5handlers()
     return iter(_hdf5handlers)
+
+#--- Available programs
+
+_AVAILABLE_PROGRAMS_ENTRYPOINT = 'pymontecarlo.program'
+_available_programs = None
+
+def _load_available_programs():
+    global _available_programs
+    _available_programs = _load_entrypoints(_AVAILABLE_PROGRAMS_ENTRYPOINT)
+    logging.debug('Initialized available programs: ' + str(_available_programs))
+
+def reload_available_programs():
+    global _available_programs
+    _available_programs = None
+    return _load_available_programs()
+
+def iter_available_programs():
+    global _available_programs
+    if _available_programs is None:
+        _load_available_programs()
+    return iter(_available_programs)
 
 #--- Settings
 
@@ -133,6 +162,17 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         # X-ray line
         self.preferred_xrayline_notation = 'iupac'
         self.preferred_xrayline_encoding = 'utf16'
+
+    @classmethod
+    def read(cls, filepath=None):
+        if filepath is None:
+            filepath = os.path.join(_get_config_dir(), 'settings.h5')
+        return super().read(filepath)
+
+    def write(self, filepath=None):
+        if filepath is None:
+            filepath = os.path.join(_get_config_dir(), 'settings.h5')
+        return super().write(filepath)
 
     def set_preferred_unit(self, unit):
         if isinstance(unit, str):
@@ -158,9 +198,6 @@ settings = None
 def _load_settings(filepath=None):
     global settings
 
-    if filepath is None:
-        filepath = os.path.join(_get_config_dir(), 'settings.h5')
-
     try:
         settings = Settings.read(filepath)
     except:
@@ -174,6 +211,7 @@ def reload_settings():
 
 def _init():
     _load_hdf5handlers()
+    _load_available_programs()
     _load_settings()
 
 _init()

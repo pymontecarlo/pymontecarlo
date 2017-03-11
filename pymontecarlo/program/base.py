@@ -4,6 +4,7 @@ Base program
 
 # Standard library modules.
 import abc
+import argparse
 
 # Third party modules.
 
@@ -13,9 +14,25 @@ import abc
 
 class Program(metaclass=abc.ABCMeta):
 
+    @abc.abstractstaticmethod
+    def getfullname(): #@NoSelf
+        raise NotImplementedError
+
+    @abc.abstractstaticmethod
+    def getname(): #@NoSelf
+        raise NotImplementedError
+
+    @abc.abstractclassmethod
+    def prepare_parser(cls, parser): #@NoSelf
+        raise NotImplementedError
+
+    @abc.abstractclassmethod
+    def from_namespace(cls, ns): #@NoSelf
+        raise NotImplementedError
+
     def __repr__(self):
         return '<{classname}({name})>' \
-            .format(classname=self.__class__.__name__, name=self.name)
+            .format(classname=self.__class__.__name__, name=self.getfullname())
 
     @abc.abstractmethod
     def create_expander(self):
@@ -42,5 +59,5 @@ class Program(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractproperty
-    def name(self):
-        raise NotImplementedError
+    def namespace(self):
+        return argparse.Namespace()
