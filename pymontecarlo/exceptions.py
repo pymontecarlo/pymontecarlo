@@ -18,7 +18,7 @@ import textwrap
 class PymontecarloError(Exception):
     """Base exception of pymontecarlo."""
 
-class AccumulatedErrorMixin(object):
+class AccumulatedError(PymontecarloError):
 
     _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
                                         subsequent_indent=' ' * 4)
@@ -27,13 +27,13 @@ class AccumulatedErrorMixin(object):
         message = 'Validation failed for the following reasons:\n'
         message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
                              for cause in causes)
-        super().__init__(message)
+        self.message = message
         self.causes = tuple(causes)
 
-class ValidationError(PymontecarloError, AccumulatedErrorMixin):
+class ValidationError(AccumulatedError):
     """Exception raised by validators"""
 
-class ExportError(PymontecarloError, AccumulatedErrorMixin):
+class ExportError(AccumulatedError):
     pass
 
 class WorkerError(PymontecarloError):
@@ -42,5 +42,5 @@ class WorkerError(PymontecarloError):
 class WorkerCancelledError(PymontecarloError):
     pass
 
-class ImportError_(PymontecarloError):
+class ImportError_(AccumulatedError):
     pass
