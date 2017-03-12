@@ -1,6 +1,7 @@
 """"""
 
 # Standard library modules.
+import os
 import argparse
 import multiprocessing
 import logging
@@ -16,9 +17,9 @@ from pymontecarlo.util.cbook import find_by_type
 # Globals and constants variables.
 
 def _create_parser():
-    usage = 'pymontecarlo'
+    prog = 'pymontecarlo'
     description = 'Run, configure pymontecarlo'
-    parser = argparse.ArgumentParser(usage=usage, description=description)
+    parser = argparse.ArgumentParser(prog=prog, description=description)
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Run in debug mode')
@@ -48,83 +49,100 @@ def _create_config_command(parser):
     parser.description = 'Configure pymontecarlo and Monte Carlo programs.'
 
     # Programs
-    available_programs = dict((clasz.getname(), clasz)
-                              for clasz in pymontecarlo.iter_available_programs())
-
     subparsers_programs = parser.add_subparsers(title='Programs', dest='program')
-    for name, clasz in sorted(available_programs.items()):
-        parser_program = subparsers_programs.add_parser(name)
+
+    for clasz, program in pymontecarlo.iter_programs():
+        configurator = clasz.create_configurator()
+        identifier = clasz.getidentifier()
+
+        parser_program = subparsers_programs.add_parser(identifier)
 
         try:
-            clasz.prepare_parser(parser_program)
+            configurator.prepare_parser(parser_program, program)
         except:
             logger.exception('Prepare parser failed')
-            subparsers_programs._name_parser_map.pop(name)
+            subparsers_programs._name_parser_map.pop(identifier)
 
-def _parse(ns):
+def _parse(parser, ns):
     if ns.verbose:
         logger.setLevel(logging.DEBUG)
 
     if ns.programs:
-        available_programs = \
-            set(clasz.getname() for clasz in pymontecarlo.iter_available_programs())
-        configured_programs = \
-            dict((p.getname(), p) for p in pymontecarlo.settings.programs)
-
         header = ['Program', 'Available', 'Configured', 'Details']
         rows = []
-        for name in sorted(available_programs):
-            configured = name in configured_programs
+        for clasz, program in pymontecarlo.iter_programs():
+            configurator = clasz.create_configurator()
+            identifier = clasz.getidentifier()
+            configured = program is not None
+
+            details = []
             if configured:
-                program_namespace = configured_programs[name].namespace
-                details = ['{}: {}'.format(k, v)
-                           for k, v in program_namespace.__dict__.items()]
-            else:
-                details = []
-            rows.append([name, True, configured, ', '.join(details)])
+                dummy = argparse.ArgumentParser()
+                configurator.prepare_parser(dummy, program)
+                for action in dummy._actions:
+                    if action.default == argparse.SUPPRESS:
+                        continue
+                    details.append('{}: {}'.format(action.dest, action.default))
 
-        print(tabulate.tabulate(rows, header))
-        return
+            rows.append([identifier, True, configured, ', '.join(details)])
 
-def _parse_commands(ns):
+        parser.exit(message=tabulate.tabulate(rows, header) + os.linesep)
+
+def _parse_commands(parser, ns):
     if ns.command == 'run':
-        _parse_run_command(ns)
+        _parse_run_command(parser, ns)
+        parser.parse_args(['run', '--help'])
 
     if ns.command == 'config':
-        _parse_config_command(ns)
+        _parse_config_command(parser, ns)
+        parser.parse_args(['config', '--help'])
 
-def _parse_run_command(ns):
+def _parse_run_command(parser, ns):
     pass
 
-def _parse_config_command(ns):
+def _parse_config_command(parser, ns):
     if ns.program:
-        available_programs = dict(pymontecarlo.iter_available_programs())
+        program_class = None
+        for clasz in pymontecarlo.iter_available_programs():
+            if ns.program == clasz.getidentifier():
+                program_class = clasz
+                break
+
+        if program_class is None:
+            parser.exit('Cannot find type of program')
 
         # Create program
-        name = ns.program
-        clasz = available_programs[name]
-        program = clasz.from_namespace(ns)
+        configurator = program_class.create_configurator()
+        program = configurator.create_program(ns, program_class)
+
+        # Validate
+        try:
+            validator = program.create_validator()
+            validator.validate_program(program, None)
+        except Exception as ex:
+            parser.error(ex.message)
 
         # Remove existing program
         configured_programs = pymontecarlo.settings.programs
-        for configured_program in find_by_type(configured_programs, clasz):
+        for configured_program in find_by_type(configured_programs, type(program)):
             pymontecarlo.settings.programs.remove(configured_program)
 
         # Add new program
         pymontecarlo.settings.programs.append(program)
 
-    # Save settings
-    pymontecarlo.settings.write()
-    print('Settings updated and saved')
+        # Save settings
+        pymontecarlo.settings.write()
+        parser.exit(message='Settings updated and saved' + os.linesep)
 
 def main():
     parser = _create_parser()
     _create_commands(parser)
 
     ns = parser.parse_args()
-    print(ns)
-    _parse(ns)
-    _parse_commands(ns)
+
+    _parse(parser, ns)
+    _parse_commands(parser, ns)
+    parser.print_help()
 
 if __name__ == '__main__':
     main()

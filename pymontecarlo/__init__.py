@@ -144,6 +144,16 @@ def iter_available_programs():
         _load_available_programs()
     return iter(_available_programs)
 
+def iter_programs():
+    """
+    Each iteration returns a tuple, where the first item is the class of 
+    available programs, and the second item is an instance of this program if
+    configured, otherwise ``None``.
+    """
+    configured_programs = dict((type(p), p) for p in settings.programs)
+    for clasz in iter_available_programs():
+        yield clasz, configured_programs.get(clasz)
+
 #--- Settings
 
 from pymontecarlo.fileformat.reader import HDF5ReaderMixin

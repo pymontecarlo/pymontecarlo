@@ -4,7 +4,6 @@ Base program
 
 # Standard library modules.
 import abc
-import argparse
 
 # Third party modules.
 
@@ -14,25 +13,23 @@ import argparse
 
 class Program(metaclass=abc.ABCMeta):
 
-    @abc.abstractstaticmethod
-    def getfullname(): #@NoSelf
-        raise NotImplementedError
-
-    @abc.abstractstaticmethod
-    def getname(): #@NoSelf
-        raise NotImplementedError
-
-    @abc.abstractclassmethod
-    def prepare_parser(cls, parser): #@NoSelf
-        raise NotImplementedError
-
-    @abc.abstractclassmethod
-    def from_namespace(cls, ns): #@NoSelf
-        raise NotImplementedError
-
     def __repr__(self):
         return '<{classname}({name})>' \
-            .format(classname=self.__class__.__name__, name=self.getfullname())
+            .format(classname=self.__class__.__name__, name=self.getidentifier())
+
+    @abc.abstractclassmethod
+    def getidentifier(cls): #@NoSelf
+        """
+        Returns key to identify program. Should not contain any white space.
+        """
+        raise NotImplementedError
+
+    @abc.abstractclassmethod
+    def create_configurator(cls): #@NoSelf
+        """
+        .. note:: This is a class method
+        """
+        raise NotImplementedError
 
     @abc.abstractmethod
     def create_expander(self):
@@ -57,7 +54,3 @@ class Program(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_default_limits(self, options):
         raise NotImplementedError
-
-    @abc.abstractproperty
-    def namespace(self):
-        return argparse.Namespace()

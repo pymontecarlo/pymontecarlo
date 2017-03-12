@@ -17,6 +17,7 @@ import pkg_resources
 # Local modules.
 import pymontecarlo
 from pymontecarlo.program.base import Program
+from pymontecarlo.program.configurator import Configurator
 from pymontecarlo.program.expander import Expander, expand_to_single
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
@@ -35,6 +36,26 @@ from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBui
 from pymontecarlo.fileformat.base import HDF5Handler
 
 # Globals and constants variables.
+
+class ConfiguratorMock(Configurator):
+
+    def prepare_parser(self, parser, program=None):
+        parser.description = 'Configure Mock.'
+
+        kwargs = {}
+        kwargs['help'] = 'tore value internally'
+        if program is not None:
+            kwargs['default'] = program.foo
+            kwargs['help'] += ' (current: {})'.format(program.foo)
+        else:
+            kwargs['required'] = True
+        parser.add_argument('--foo', **kwargs)
+
+    def create_program(self, namespace, clasz):
+        return clasz(namespace.foo)
+
+    def fullname(self):
+        return 'Mock'
 
 class ExpanderMock(Expander):
 
@@ -127,30 +148,16 @@ class ImporterMock(Importer):
 
 class ProgramMock(Program):
 
-    @staticmethod
-    def getname():
-        return 'mock'
-
-    @staticmethod
-    def getfullname():
-        return 'Mock program'
-
-    @classmethod
-    def prepare_parser(cls, parser):
-        parser.add_argument('--foo', help='Store value internally')
-
-    @classmethod
-    def from_namespace(cls, ns): #@NoSelf
-        return cls(ns.foo)
-
     def __init__(self, foo=None):
         self.foo = foo
 
-    def load(self, config):
-        super().load(config)
+    @classmethod
+    def getidentifier(cls):
+        return 'mock'
 
-    def save(self, config):
-        super().save(config)
+    @classmethod
+    def create_configurator(cls):
+        return ConfiguratorMock()
 
     def create_expander(self):
         return ExpanderMock()
@@ -169,11 +176,6 @@ class ProgramMock(Program):
 
     def create_default_limits(self, options):
         return [ShowersLimit(100)]
-
-    def namespace(self):
-        ns = super().namespace
-        ns['foo'] = self.foo
-        return ns
 
 class ProgramHDF5HandlerMock(HDF5Handler):
 
