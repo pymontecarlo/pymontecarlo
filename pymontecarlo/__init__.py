@@ -144,13 +144,20 @@ def iter_available_programs():
         _load_available_programs()
     return iter(_available_programs)
 
-def iter_programs():
+def iter_programs(programs=None):
     """
     Each iteration returns a tuple, where the first item is the class of 
     available programs, and the second item is an instance of this program if
     configured, otherwise ``None``.
+    
+    :arg programs: configured programs
     """
-    configured_programs = dict((type(p), p) for p in settings.programs)
+    if programs is None:
+        global settings
+        programs = settings.programs
+
+    configured_programs = dict((type(p), p) for p in programs)
+
     for clasz in iter_available_programs():
         yield clasz, configured_programs.get(clasz)
 

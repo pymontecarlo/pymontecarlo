@@ -27,7 +27,7 @@ class AccumulatedError(PymontecarloError):
         message = 'Validation failed for the following reasons:\n'
         message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
                              for cause in causes)
-        self.message = message
+        super().__init__(message)
         self.causes = tuple(causes)
 
 class ValidationError(AccumulatedError):
