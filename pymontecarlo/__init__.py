@@ -16,6 +16,7 @@ import threading
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.exceptions import ProgramNotFound
 
 # Globals and constants variables.
 
@@ -191,6 +192,12 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             filepath = os.path.join(_get_config_dir(), 'settings.h5')
         return super().write(filepath)
 
+    def get_program(self, identifier):
+        for program in self.programs:
+            if program.getidentifier() == identifier:
+                return program
+        raise ProgramNotFound('{} is not configured'.format(identifier))
+
     def set_preferred_unit(self, unit):
         if isinstance(unit, str):
             unit = unit_registry.parse_units(unit)
@@ -218,7 +225,6 @@ def _load_settings(filepath=None):
     try:
         settings = Settings.read(filepath)
     except:
-        logger.exception('load settings')
         settings = Settings()
 
 def reload_settings():

@@ -44,3 +44,6 @@ class WorkerCancelledError(PymontecarloError):
 
 class ImportError_(AccumulatedError):
     pass
+
+class ProgramNotFound(PymontecarloError):
+    pass

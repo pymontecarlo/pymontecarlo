@@ -13,6 +13,7 @@ import math
 from pymontecarlo import unit_registry, Settings
 from pymontecarlo.testcase import TestCase
 import pymontecarlo.util.physics as physics
+from pymontecarlo.exceptions import ProgramNotFound
 
 # Globals and constants variables.
 
@@ -29,6 +30,10 @@ class TestSettings(TestCase):
 
         settings = Settings.read(filepath)
         self.assertEqual(1, len(settings.programs))
+
+    def testget_program(self):
+        self.assertEqual(self.program, self.settings.get_program('mock'))
+        self.assertRaises(ProgramNotFound, self.settings.get_program, 'foo')
 
     def testset_preferred_unit(self):
         self.settings.set_preferred_unit(unit_registry.lb)
