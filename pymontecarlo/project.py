@@ -30,7 +30,7 @@ class RecalculateProjectExecutor(FutureExecutor):
                 for analysis in simulation.options.analyses:
                     analysis.calculate(simulation, tuple(simulations))
 
-        self._submit(target, project)
+        return self._submit(target, project)
 
 class Project(object):
 
