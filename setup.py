@@ -18,9 +18,8 @@ with open(os.path.join(BASEDIR, 'README.rst'), 'r') as fp:
 
 PACKAGES = find_packages()
 
-SETUP_REQUIRES = ['setuptools']
-INSTALL_REQUIRES = ['pyparsing>=2.0.0', 'numpy', 'h5py', 'pyxray>=1.0.1',
-                    'more_itertools>=2.5.0', 'pint', 'uncertainties',
+INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
+                    'more_itertools', 'pint', 'uncertainties',
                     'matplotlib']
 TESTS_REQUIRE = ['nose', 'coverage']
 EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex']}
@@ -49,7 +48,6 @@ setup(name="pyMonteCarlo",
 
       packages=PACKAGES,
 
-      setup_requires=SETUP_REQUIRES,
       install_requires=INSTALL_REQUIRES,
       tests_require=TESTS_REQUIRE,
       extras_require=EXTRAS_REQUIRE,
