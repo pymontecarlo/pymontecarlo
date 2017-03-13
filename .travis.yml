@@ -10,7 +10,7 @@ matrix:
     os: linux
 install:
 - pip install --cache-dir $HOME/.pip-cache --upgrade pip codecov
-- pip install --cache-dir $HOME/.pip-cache --upgrade -e .
+- pip install --cache-dir $HOME/.pip-cache --upgrade -e .[develop,doc]
 script:
 - nosetests
 after_success:

@@ -36,16 +36,10 @@ class Token:
         return self._status
 
 class FutureAdapter(Monitorable):
-    # NOTE: Adapter pattern taken from
-    # https://github.com/faif/python-patterns/blob/master/structural/adapter.py
 
     def __init__(self, future, token):
         self.future = future
         self.token = token
-
-    def __getattr__(self, attr):
-        """All non-adapted calls are passed to the object"""
-        return getattr(self.future, attr)
 
     def running(self):
         return self.future.running()
@@ -57,6 +51,18 @@ class FutureAdapter(Monitorable):
     def cancel(self):
         # NOTE: future cancel always returns False
         self.token.cancel()
+
+    def done(self):
+        return self.future.done()
+
+    def result(self, timeout=None):
+        return self.future.result(timeout)
+
+    def exception(self, timeout=None):
+        return self.future.exception(timeout)
+
+    def add_done_callback(self, fn):
+        return self.future.add_done_callback(lambda f: fn(self))
 
     def wait(self, timeout=None):
         self.result(timeout)
@@ -147,13 +153,14 @@ class FutureExecutor(Monitorable):
 
         token = Token()
         future = self.executor.submit(target, token, *args, **kwargs)
-
-        future = FutureAdapter(future, token)
-        future.add_done_callback(self._on_done)
         self.futures.add(future)
+
+        future2 = FutureAdapter(future, token)
+        future2.add_done_callback(self._on_done)
+
         self.submitted_count += 1
 
-        return future
+        return future2
 
     def running(self):
         """
@@ -171,4 +178,3 @@ class FutureExecutor(Monitorable):
     @property
     def status(self):
         return ''
-

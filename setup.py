@@ -21,8 +21,8 @@ PACKAGES = find_packages()
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
                     'matplotlib']
-TESTS_REQUIRE = ['nose', 'coverage']
-EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex']}
+EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex'],
+                  'develop': ['nose', 'coverage']}
 
 CMDCLASS = versioneer.get_cmdclass()
 
@@ -49,7 +49,6 @@ setup(name="pyMonteCarlo",
       packages=PACKAGES,
 
       install_requires=INSTALL_REQUIRES,
-      tests_require=TESTS_REQUIRE,
       extras_require=EXTRAS_REQUIRE,
 
       cmdclass=CMDCLASS,
