@@ -53,6 +53,8 @@ class Importer(metaclass=abc.ABCMeta):
         for analysis in options.analyses:
             results += self._import_analysis(analysis, dirpath, errors, *args, **kwargs)
 
+        return results
+
     def _import_analysis(self, analysis, dirpath, errors, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.import_analysis_methods:
