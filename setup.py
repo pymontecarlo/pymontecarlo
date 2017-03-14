@@ -20,7 +20,7 @@ PACKAGES = find_packages()
 
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
-                    'matplotlib']
+                    'matplotlib', 'tabulate']
 EXTRAS_REQUIRE = {'doc': ['docutils', 'jinja2', 'sphinx', 'pybtex'],
                   'develop': ['nose', 'coverage']}
 
