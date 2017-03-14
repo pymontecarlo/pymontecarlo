@@ -51,7 +51,7 @@ def _create_config_command(parser):
     # Programs
     subparsers_programs = parser.add_subparsers(title='Programs', dest='program')
 
-    for clasz, program in pymontecarlo.iter_programs():
+    for clasz, program in pymontecarlo.settings.iter_programs():
         configurator = clasz.create_configurator()
         identifier = clasz.getidentifier()
 
@@ -70,7 +70,7 @@ def _parse(parser, ns):
     if ns.programs:
         header = ['Program', 'Available', 'Configured', 'Details']
         rows = []
-        for clasz, program in pymontecarlo.iter_programs():
+        for clasz, program in pymontecarlo.settings.iter_programs():
             configurator = clasz.create_configurator()
             identifier = clasz.getidentifier()
             configured = program is not None
@@ -102,8 +102,10 @@ def _parse_run_command(parser, ns):
 
 def _parse_config_command(parser, ns):
     if ns.program:
+        settings = pymontecarlo.settings
+
         program_class = None
-        for clasz in pymontecarlo.iter_available_programs():
+        for clasz in settings.iter_available_programs():
             if ns.program == clasz.getidentifier():
                 program_class = clasz
                 break
@@ -120,18 +122,18 @@ def _parse_config_command(parser, ns):
             validator = program.create_validator()
             validator.validate_program(program, None)
         except Exception as ex:
-            parser.error(ex.message)
+            parser.error(str(ex))
 
         # Remove existing program
-        configured_programs = pymontecarlo.settings.programs
+        configured_programs = settings.programs
         for configured_program in find_by_type(configured_programs, type(program)):
-            pymontecarlo.settings.programs.remove(configured_program)
+            settings.programs.remove(configured_program)
 
         # Add new program
-        pymontecarlo.settings.programs.append(program)
+        settings.programs.append(program)
 
         # Save settings
-        pymontecarlo.settings.write()
+        settings.write()
         parser.exit(message='Settings updated and saved' + os.linesep)
 
 def main():

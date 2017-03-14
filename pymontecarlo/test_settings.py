@@ -10,7 +10,8 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo import unit_registry, Settings
+from pymontecarlo import unit_registry
+from pymontecarlo._settings import Settings
 from pymontecarlo.testcase import TestCase
 import pymontecarlo.util.physics as physics
 from pymontecarlo.exceptions import ProgramNotFound

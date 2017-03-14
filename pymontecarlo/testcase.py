@@ -203,14 +203,14 @@ class TestCase(unittest.TestCase):
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
-        pymontecarlo.reload_hdf5handlers()
 
         # Add program to available programs
         entry_map = distribution.get_entry_map('pymontecarlo.program')
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
                                                      attrs=('ProgramMock',),
                                                      dist=distribution)
-        pymontecarlo.reload_available_programs()
+
+        pymontecarlo.settings.reload()
 
     def setUp(self):
         super().setUp()

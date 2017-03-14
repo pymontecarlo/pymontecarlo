@@ -7,22 +7,24 @@ Base class for HDF5 handlers
 import abc
 
 # Third party modules.
-
 import numpy as np
 
 # Local modules.
-from pymontecarlo import iter_hdf5handlers
+from pymontecarlo.util.entrypoint import resolve_entrypoints
 
 # Globals and constants variables.
+ENTRYPOINT_HDF5HANDLER = 'pymontecarlo.fileformat'
 
 def find_parse_hdf5handler(group):
-    for handler in iter_hdf5handlers():
+    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER):
+        handler = clasz()
         if handler.can_parse(group):
             return handler
     raise ValueError("No handler found")
 
 def find_convert_hdf5handler(obj, group):
-    for handler in iter_hdf5handlers():
+    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER):
+        handler = clasz()
         if handler.can_convert(obj, group):
             return handler
     raise ValueError("No handler found")
