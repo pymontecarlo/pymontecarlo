@@ -1,46 +1,49 @@
-import os
-import time
-from math import radians
+import math
 
-# Options
-from pymontecarlo.input import *
+# Create options
+import pymontecarlo
+from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.sample import HorizontalLayerSample
+from pymontecarlo.options.detector import PhotonDetector
+from pymontecarlo.options.analyses import KRatioAnalysis
+from pymontecarlo.options.limit import ShowersLimit
+from pymontecarlo.options.options import Options
 
-ops = Options('simulation1')
-ops.beam.energy_eV = 5e3
+program = pymontecarlo.settings.get_program('casino2')
 
-ops.geometry = MultiLayers(Material('Brass', {30: 0.37, 29: '?'}))
-ops.geometry.add_layer(pure(28), 500e-9) # 500 nm thick
+beam = GaussianBeam(15e3, 10e-9)
 
-elevation=(radians(35), radians(45)) # Take-off angle: 40 deg
-azimuth=(0.0, radians(360)) # Annular detector
-ops.detectors['intensity'] = PhotonIntensityDetector(elevation, azimuth)
-ops.detectors['spectrum'] = \
-    PhotonSpectrumDetector(elevation, azimuth, (0.0, ops.beam.energy_eV), 1000)
+mat1 = Material.pure(29)
+mat2 = Material.from_formula('Al2O3')
+mat3 = Material('Stuff', {27: 0.5, 25: 0.2, 8: 0.3}, 4500.0)
 
-ops.limits.add(ShowersLimit(10000))
-ops.models.add(ELASTIC_CROSS_SECTION.rutherford)
+sample = HorizontalLayerSample(mat1)
+sample.add_layer(mat2, 10e-9)
+sample.add_layer(mat3, 25e-9)
 
-# Converter, Exporter, Importer -> Worker
-from pymontecarlo.runner.runner import Runner
-from pymontecarlo.program.nistmonte.runner.worker import Worker # Program specific
+photon_detector = PhotonDetector(math.radians(35.0))
+analysis = KRatioAnalysis(photon_detector)
 
-outputdir = '/tmp' # TO BE CHANGED
-runner = Runner(Worker, outputdir, nbprocesses=1)
-runner.put(ops)
+limit = ShowersLimit(1000)
 
-runner.start()
+options = Options(program, beam, sample, [analysis], [limit])
 
-while runner.is_alive():
-    counter, progress, status = runner.report()
-    print counter, progress, status
-    time.sleep(1)
+# Run simulation
+from pymontecarlo.runner.local import LocalSimulationRunner
+from pymontecarlo.project import Project
 
-runner.stop() # Not really required, but to be saved
+project = Project()
+
+with LocalSimulationRunner(project) as runner:
+    future = runner.submit(options)
+
+    while not runner.wait(1):
+        print(runner.progress, future.progress)
+
+    print(future.result())
 
 # Results
-from pymontecarlo.output.results import Results
-
-results = Results.load(os.path.join(outputdir, ops.name + '.h5'))
-
-print results['intensity'].intensity('Ni La')
+project.recalculate()
+print('{} were simulated'.format(len(project.simulations)))
 
