@@ -8,17 +8,26 @@ import unittest
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.figures.sample import *
+from pymontecarlo.figures.sample import SampleFigure
+from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.material import Material
+from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
+    VerticalLayerSample, SphereSample
+from pymontecarlo.options.sample.base import Layer
+
 # from pymontecarlo.testcase import TestCase
 # from pymontecarlo.options.detector import PhotonDetector
 # from pymontecarlo.options.detector.base import Detector
 # from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 # from pymontecarlo.options.model import ElasticCrossSectionModel, EnergyLossModel
 
+from matplotlib import figure
+
 class TestSampleFigure(unittest.TestCase):
 
     def setUp(self):
 
+        # test data
         self.perspectives = ('XZ', 'YZ', 'XY')
 
         self.mat_ds = Material('Ds', {110: 1.}, 1.)
@@ -30,15 +39,9 @@ class TestSampleFigure(unittest.TestCase):
                       Layer(Material('Ir', {77: 1.}, 1.), .2),
                       Layer(Material('Pt', {78: 1.}, 1.), .05)]
 
-        sample = None
-
-        beams = [GaussianBeam(42., 0.05)]
-        beams = []
-
-        # TODO handle trajectories
-        trajectories = []
-
-        sf = SampleFigure(sample, beams, trajectories)
+        # matplotlib
+        self.figure = figure.Figure()
+        self.ax = self.figure.add_subplot(111)
 
     def tearDown(self):
         del self.perspectives
@@ -46,6 +49,9 @@ class TestSampleFigure(unittest.TestCase):
         del self.mat_rg
         del self.mat_au
         del self.layer
+
+        del self.figure
+        del self.ax
 
 
     def test_get_color(self):
