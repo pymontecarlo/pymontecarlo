@@ -216,8 +216,7 @@ class SampleFigure(Figure):
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 patches.append(Rectangle((pos[0], 0), layer.thickness_m, -1,
-                                         color=self._get_material_color(layer.material,
-                                                                        CS_BROWN)))
+                                         color=self._get_material_color(layer.material, CS_BROWN)))
         elif perspective == 'YZ':
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 if pos[1] >= 0.0:
@@ -239,8 +238,7 @@ class SampleFigure(Figure):
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 patches.append(Rectangle((pos[0], 1), layer.thickness_m, -2,
-                                         color=self._get_material_color(layer.material,
-                                                                        CS_BROWN)))
+                                         color=self._get_material_color(layer.material, CS_BROWN)))
 
         return patches
 
@@ -280,10 +278,15 @@ class SampleFigure(Figure):
 
         ax.add_collection(col)
 
-    def _compose_beam_gaussian(self, ax, beam, perspective='XZ'):
+    def _compose_beam_gaussian(self, beam, perspective='XZ'):
         patches = list()
 
-        patches.append(Rectangle((0 - beam.diameter_m / 2, 0), beam.diameter_m, 1, color='#00549F'))
+        if perspective == 'XZ' or perspective == 'YZ':
+            patches.append(Rectangle((0 - beam.diameter_m / 2, 0), beam.diameter_m, 1,
+                                     color='#00549F'))
+        else:
+            # FIXME for some reason radius behaves like diameter
+            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#FF0000'))
 
         return patches
 
