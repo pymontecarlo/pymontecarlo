@@ -49,6 +49,12 @@ class KRatioAnalysis(PhotonAnalysis):
         return Material.pure(z)
 
     def apply(self, options):
+        analysis = PhotonIntensityAnalysis(self.photon_detector)
+
+        # Add photon analysis to options if missing
+        if analysis not in options.analyses:
+            options.analyses.append(analysis)
+
         # Construct standard options
         builder = OptionsBuilder()
 
@@ -70,7 +76,6 @@ class KRatioAnalysis(PhotonAnalysis):
         for model in options.models:
             builder.add_model(options.program, model)
 
-        analysis = PhotonIntensityAnalysis(self.photon_detector)
         builder.add_analysis(analysis)
 
         return super().apply(options) + builder.build()
