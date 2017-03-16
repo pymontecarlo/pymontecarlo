@@ -28,8 +28,11 @@ class TestLocalSimulationRunner(TestCase):
         options = self.create_basic_options()
 
         with self.r:
-            future = self.r.submit(options)
+            futures = self.r.submit(options)
 
+        self.assertEqual(1, len(futures))
+
+        future = futures[0]
         self.assertEqual(future.result().options, options)
         self.assertAlmostEqual(1.0, future.progress, 4)
         self.assertEqual('Done', future.status)
@@ -57,14 +60,15 @@ class TestLocalSimulationRunner(TestCase):
         self.assertEqual(2, self.r.done_count)
 
         project = self.r.project
-        self.assertEqual(2, len(project.simulations))
+        self.assertEqual(1, len(project.simulations)) # Because options1 == options2
 
     def testrun3(self):
         options = self.create_basic_options()
 
         with self.r:
-            future = self.r.submit(options)
-            future.cancel()
+            futures = self.r.submit(options)
+            for future in futures:
+                future.cancel()
 
         self.assertAlmostEqual(1.0, self.r.progress, 4)
         self.assertEqual(1, self.r.submitted_count)
