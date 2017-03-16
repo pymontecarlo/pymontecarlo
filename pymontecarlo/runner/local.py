@@ -24,7 +24,6 @@ class LocalSimulationRunner(SimulationRunner):
             simdir = os.path.join(head, simsdirname)
             temporary = False
         else:
-            simdir = tempfile.mkdtemp()
             temporary = True
 
         # Run function
@@ -32,7 +31,10 @@ class LocalSimulationRunner(SimulationRunner):
             program = simulation.options.program
             worker = program.create_worker()
 
-            outputdir = os.path.join(simdir, simulation.identifier)
+            if temporary:
+                outputdir = tempfile.mkdtemp()
+            else:
+                outputdir = os.path.join(simdir, simulation.identifier)
             os.makedirs(outputdir, exist_ok=True)
 
             try:
@@ -40,7 +42,7 @@ class LocalSimulationRunner(SimulationRunner):
 
             finally:
                 if temporary:
-                    shutil.rmtree(simdir, ignore_errors=True)
+                    shutil.rmtree(outputdir, ignore_errors=True)
 
             return simulation
 
