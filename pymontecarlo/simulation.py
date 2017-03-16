@@ -22,6 +22,9 @@ class Simulation(object):
             results = []
         self.results = results.copy()
 
+    def __eq__(self, other):
+        return self.options == other.options
+
     def find_result(self, result_class):
         return find_by_type(self.results, result_class)
 

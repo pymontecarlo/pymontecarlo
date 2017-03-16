@@ -28,11 +28,22 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         if simulation:
             self.project.add_simulation(simulation)
 
-    def _prepare_simulation(self, options):
+    def _prepare_simulations(self, options, simulations=None):
+        if simulations is None:
+            simulations = []
+
+        for analysis in options.analyses:
+            for other_options in analysis.apply(options):
+                self._prepare_simulations(other_options, simulations)
+
         program = options.program
         validator = program.create_validator()
         options = validator.validate_options(options)
-        return Simulation(options)
+        simulation = Simulation(options)
+        if simulation not in self.project.simulations:
+            simulations.append(simulation)
+
+        return simulations
 
     @abc.abstractmethod
     def _prepare_target(self):
@@ -40,8 +51,21 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
     def submit(self, options):
         """
-        Submits the options in the queue and returns a :class:`Future` object.
+        Submits the options in the queue.
+        If a simulation with the same options already exists in the project,
+        the simulation is skipped.
+        If additional simulations are required based on the analyses of the
+        submitted options, they will also be submitted.
+        
+        :return: a list of :class:`Future` object, one for each launched 
+            simulation
         """
-        simulation = self._prepare_simulation(options)
+        simulations = self._prepare_simulations(options)
         target = self._prepare_target()
-        return self._submit(target, simulation)
+
+        futures = []
+        for simulation in simulations:
+            future = self._submit(target, simulation)
+            futures.append(future)
+
+        return futures
