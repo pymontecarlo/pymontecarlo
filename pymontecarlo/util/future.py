@@ -81,6 +81,7 @@ class FutureExecutor(Monitorable):
         self.max_workers = max_workers
         self.executor = None
         self.futures = set()
+        self.failed_futures = set()
 
         self.failed_count = 0
         self.cancelled_count = 0
@@ -101,6 +102,7 @@ class FutureExecutor(Monitorable):
             return
 
         if future.exception():
+            self.failed_futures.add(future)
             self.failed_count += 1
             return
 
