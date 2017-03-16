@@ -50,10 +50,16 @@ class SubprocessWorkerMixin:
         return subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
 
     def _wait_process(self, process, token, interval=1):
-        while process.wait(interval) is None:
+        while True:
             if token.cancelled():
                 process.kill()
                 break
+
+            try:
+                if process.wait(interval) is not None:
+                    break
+            except subprocess.TimeoutExpired:
+                continue
 
         returncode = process.poll()
         logging.debug('returncode: %s' % returncode)
