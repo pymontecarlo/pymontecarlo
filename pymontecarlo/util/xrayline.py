@@ -36,7 +36,10 @@ class XrayLine(collections.namedtuple('XrayLine', ('element', 'line'))):
         preferred_notation = settings.preferred_xrayline_notation
         preferred_encoding = settings.preferred_xrayline_encoding
 
-        notation = method(self.line, preferred_notation, preferred_encoding)
+        try:
+            notation = method(self.line, preferred_notation, preferred_encoding)
+        except pyxray.NotFound:
+            notation = method(self.line, 'iupac', preferred_encoding)
 
         return '{0} {1}'.format(symbol, notation)
 
