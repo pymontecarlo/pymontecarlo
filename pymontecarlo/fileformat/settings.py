@@ -3,6 +3,7 @@
 # Standard library modules.
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.fileformat.base import HDF5Handler
@@ -65,8 +66,10 @@ class SettingsHDF5Handler(HDF5Handler):
     def _convert_units(self, obj, group):
         group_units = group.create_group('units')
 
-        data = list(obj.preferred_units.values())
-        group_units.create_dataset("preferred", data=data)
+        dt = h5py.special_dtype(vlen=str)
+        data = list(map(str, obj.preferred_units.values()))
+        ds = group_units.create_dataset("preferred", (len(data),), dtype=dt)
+        ds[:] = data
 
     def _convert_xrayline(self, obj, group):
         group_xrayline = group.create_group('xrayline')
