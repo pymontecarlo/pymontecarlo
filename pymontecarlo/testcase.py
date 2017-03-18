@@ -23,6 +23,7 @@ from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
 from pymontecarlo.program.importer import Importer
+from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import GaussianBeam
@@ -32,7 +33,8 @@ from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import RUTHERFORD, ElasticCrossSectionModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis
-from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
+from pymontecarlo.results.photonintensity import \
+    EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
 from pymontecarlo.fileformat.base import HDF5Handler
 
 # Globals and constants variables.
@@ -257,6 +259,29 @@ class TestCase(unittest.TestCase):
         results.append(self.create_basic_photonintensityresult())
 
         return Simulation(options, results)
+
+    def create_basic_project(self):
+        project = Project()
+
+        sim1 = self.create_basic_simulation()
+        project.add_simulation(sim1)
+
+        sim2 = self.create_basic_simulation()
+        sim2.options.beam.energy_eV = 20e3
+        project.add_simulation(sim2)
+
+        analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
+        b = GeneratedPhotonIntensityResultBuilder(analysis)
+        b.add_intensity((13, 'Ka1'), 10.0, 0.1)
+        b.add_intensity((13, 'Ka2'), 20.0, 0.2)
+        b.add_intensity((13, 'Kb1'), 40.0, 0.5)
+
+        sim3 = self.create_basic_simulation()
+        sim3.options.beam.diameter_m = 20e-9
+        sim3.results.append(b.build())
+        project.add_simulation(sim3)
+
+        return project
 
     def create_temp_dir(self):
         tmpdir = tempfile.mkdtemp()
