@@ -96,6 +96,8 @@ class DataRow(collections.Mapping):
         return outdatarow
 
     def add(self, column, value, error=0.0, unit=None, tolerance=1e-13):
+        column = str(column)
+
         if unit is None:
             unit = self._UNITS_NONE
 
@@ -123,8 +125,7 @@ class DataRow(collections.Mapping):
 
         outlist = []
         for column in columns:
-            columnname = str(column)
-            columnname_e = '\u03C3(' + str(column) + ')'
+            column_e = '\u03C3({})'.format(column)
 
             # Get value
             q = self.get(column, self._QUANTITY_NAN)
@@ -138,15 +139,15 @@ class DataRow(collections.Mapping):
                 if not unitname: # required for radian and degree
                     unitname = '{0:P}'.format(q.units)
 
-                columnname += ' (' + unitname + ')'
-                columnname_e += ' (' + unitname + ')'
+                column += ' (' + unitname + ')'
+                column_e += ' (' + unitname + ')'
 
             # Add to list
-            outlist.append((columnname, q.value.magnitude))
+            outlist.append((column, q.value.magnitude))
 
             # Add error to list if not equal to 0.0
             if q.error.magnitude:
-                outlist.append((columnname_e, q.error.magnitude))
+                outlist.append((column_e, q.error.magnitude))
 
         return outlist
 
