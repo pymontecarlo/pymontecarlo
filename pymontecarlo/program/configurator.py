@@ -11,11 +11,15 @@ import os
 # Globals and constants variables.
 
 def FileType(path):
+    if path is None:
+        return path
     if not os.path.isfile(path):
         raise ValueError('Not a file')
     return os.path.abspath(path)
 
 def DirectoryType(path):
+    if path is None:
+        return path
     if not os.path.isdir(path):
         raise ValueError('Not a directory')
     return os.path.abspath(path)
