@@ -7,7 +7,7 @@ import os
 
 # Local modules.
 import pymontecarlo
-from pymontecarlo.exceptions import ProgramNotFound
+from pymontecarlo.exceptions import ProgramNotFound, ValidationError
 from pymontecarlo.util.entrypoint import resolve_entrypoints
 from pymontecarlo.util.path import get_config_dir
 from pymontecarlo.fileformat.reader import HDF5ReaderMixin
@@ -46,17 +46,27 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             filepath = os.path.join(get_config_dir(), self.DEFAULT_FILENAME)
         return super().write(filepath)
 
+    def _validate(self, errors):
+        # Programs
+        for program in self.programs:
+            validator = program.create_validator()
+            validator._validate_program(program, None, errors)
+
+    def validate(self):
+        errors = set()
+        self._validate(errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
     def reload(self):
         self._available_programs = None
-
-    def _load_available_programs(self):
-        return resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS)
 
     def iter_available_programs(self):
         # NOTE: The late initialization is required for settings to be loaded
         # correctly in __init__
         if self._available_programs is None:
-            self._available_programs = self._load_available_programs()
+            self._available_programs = resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS)
         return iter(self._available_programs)
 
     def iter_programs(self):
