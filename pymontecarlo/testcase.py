@@ -212,6 +212,10 @@ class TestCase(unittest.TestCase):
 
         pymontecarlo.settings.reload()
 
+        pymontecarlo.settings.preferred_xrayline_encoding = 'utf16'
+        pymontecarlo.settings.preferred_xrayline_notation = 'iupac'
+        pymontecarlo.settings.clear_preferred_units()
+
     def setUp(self):
         super().setUp()
 
