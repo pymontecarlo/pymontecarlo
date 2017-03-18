@@ -73,10 +73,19 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             yield clasz, configured_programs.get(clasz)
 
     def get_program(self, identifier):
+        """
+        Returns the :class:`Program` matching the specified identifier.
+        """
         for program in self.programs:
             if program.getidentifier() == identifier:
                 return program
         raise ProgramNotFound('{} is not configured'.format(identifier))
+
+    def has_program(self, identifier):
+        for program in self.programs:
+            if program.getidentifier() == identifier:
+                return True
+        return False
 
     def set_preferred_unit(self, unit):
         if isinstance(unit, str):
