@@ -2,12 +2,23 @@
 
 # Standard library modules.
 import abc
+import os
 
 # Third party modules.
 
 # Local modules.
 
 # Globals and constants variables.
+
+def FileType(path):
+    if not os.path.isfile(path):
+        raise ValueError('Not a file')
+    return os.path.abspath(path)
+
+def DirectoryType(path):
+    if not os.path.isdir(path):
+        raise ValueError('Not a directory')
+    return os.path.abspath(path)
 
 class Configurator:
 
