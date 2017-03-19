@@ -11,6 +11,36 @@ from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 
+class MaterialHDF5HandlerMixin:
+
+    GROUP_MATERIALS = 'materials'
+
+    def _parse_material_internal(self, group, ref_material):
+        group_material = group.file[ref_material]
+        return self._parse_hdf5handlers(group_material)
+
+    def _find_materials_group(self, group):
+        if self.GROUP_MATERIALS in group:
+            return group[self.GROUP_MATERIALS]
+        if group.parent == group:
+            return None
+        return self._find_materials_group(group.parent)
+
+    def _convert_material_internal(self, material, group):
+        group_materials = self._find_materials_group(group)
+        if group_materials is None:
+            group_materials = group.create_group(self.GROUP_MATERIALS)
+
+        name = str(id(material))
+        if name in group_materials:
+            return group_materials[name]
+
+        group_material = group_materials.create_group(name)
+
+        self._convert_hdf5handlers(material, group_material)
+
+        return group_material
+
 class MaterialHDF5Handler(HDF5Handler):
 
     ATTR_NAME = 'name'
