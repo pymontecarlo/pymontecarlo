@@ -13,7 +13,7 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.options.beam.base import Beam, BeamBuilder
-from pymontecarlo.options.particle import ELECTRON
+from pymontecarlo.options.particle import Particle
 from pymontecarlo.util.cbook import DegreesAttribute
 
 # Globals and constants variables.
@@ -25,7 +25,7 @@ class GaussianBeam(Beam):
     POLAR_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
     AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
 
-    def __init__(self, energy_eV, diameter_m, particle=ELECTRON,
+    def __init__(self, energy_eV, diameter_m, particle=Particle.ELECTRON,
                  x0_m=0.0, y0_m=0.0, polar_rad=math.pi, azimuth_rad=0.0):
         """
         Creates a new Gaussian beam.
@@ -115,7 +115,7 @@ class GaussianBeamBuilder(BeamBuilder):
     def build(self):
         particles = self.particles
         if not particles:
-            particles = [ELECTRON]
+            particles = [Particle.ELECTRON]
 
         positions = self.positions
         if not positions:

@@ -21,7 +21,7 @@ from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.options.particle import Particle
 from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
@@ -111,7 +111,7 @@ class Validator(object):
         return energy_eV
 
     def _validate_beam_base_particle(self, particle, options, errors):
-        if particle not in PARTICLES:
+        if particle not in Particle:
             exc = ValueError('Unknown particle: {0}.'.format(particle))
             errors.add(exc)
 
