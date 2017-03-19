@@ -9,7 +9,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.util.cbook import are_sequence_equal, unique, find_by_type
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 

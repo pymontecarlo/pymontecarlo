@@ -12,7 +12,7 @@ import math
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
 from pymontecarlo.options.particle import ELECTRON
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 

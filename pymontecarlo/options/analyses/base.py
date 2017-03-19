@@ -8,7 +8,7 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.base import Option
 
 # Globals and constants variables.
 
