@@ -35,8 +35,9 @@ class TestPhotonIntensityAnalysis(TestCase):
         result = simulation.find_result(EmittedPhotonIntensityResult)[0]
         self.assertEqual(7, len(result))
 
-        self.a.calculate(simulation, [simulation])
+        newresult = self.a.calculate(simulation, [simulation])
 
+        self.assertTrue(newresult)
         self.assertEqual(10, len(result))
 
         q = result[(29, 'Ka')]
@@ -50,6 +51,13 @@ class TestPhotonIntensityAnalysis(TestCase):
         q = result[(29, 'K')]
         self.assertAlmostEqual(13.5, q.n, 4)
         self.assertAlmostEqual(0.9, q.s, 4)
+
+        newresult = self.a.calculate(simulation, [simulation])
+        self.assertFalse(newresult)
+
+        # Just to make sure
+        newresult = self.a.calculate(simulation, [simulation])
+        self.assertFalse(newresult)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

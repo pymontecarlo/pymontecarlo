@@ -27,6 +27,8 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
         """
         Calculate additional photon intensities for common X-ray transition sets.
         """
+        newresult = super().calculate(simulation, simulations)
+
         for result in simulation.find_result(PhotonIntensityResult):
             zs = set(xrayline.atomic_number for xrayline in result)
 
@@ -59,3 +61,6 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
                         continue
 
                     result.data[xrayline] = total
+                    newresult = True
+
+        return newresult

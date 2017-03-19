@@ -29,7 +29,7 @@ class Analysis(Option):
     @abc.abstractmethod
     def calculate(self, simulation, simulations):
         """
-        Returns :class:`Result` for this analysis.
+        Calculates additional result(s) for this analysis.
         
         :arg simulation: simulation subjected to this analysis
         :type simulation :class:`Simulation`
@@ -37,9 +37,9 @@ class Analysis(Option):
         :arg simulations: other simulations in the project
         :type simulations: :class`:list` of :class:`Simulation`
         
-        :return: :class:`Result` of this analysis
+        :return: ``True`` if new results were added, ``False`` otherwise
         """
-        return None
+        return False
 
     @abc.abstractproperty
     def detectors(self):
