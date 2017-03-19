@@ -29,10 +29,7 @@ def find_convert_hdf5handler(obj, group):
             return handler
     raise ValueError("No handler found")
 
-class HDF5Handler(object):
-
-    CLASS = None
-    VERSION = 1
+class HDF5Handler(object, metaclass=abc.ABCMeta):
 
     ATTR_CLASS = '_class'
     ATTR_VERSION = '_version'
@@ -58,3 +55,11 @@ class HDF5Handler(object):
     def convert(self, obj, group):
         group.attrs[self.ATTR_CLASS] = np.string_(self.CLASS.__name__)
         group.attrs[self.ATTR_VERSION] = self.VERSION
+
+    @abc.abstractproperty
+    def CLASS(self):
+        raise NotImplementedError
+
+    @property
+    def VERSION(self):
+        return 1

@@ -13,8 +13,6 @@ from pymontecarlo import Settings
 
 class SettingsHDF5Handler(HDF5Handler):
 
-    CLASS = Settings
-
     def _parse_programs(self, obj, group):
         if 'programs' not in group:
             return
@@ -81,3 +79,7 @@ class SettingsHDF5Handler(HDF5Handler):
         self._convert_programs(obj.programs, group)
         self._convert_units(obj, group)
         self._convert_xrayline(obj, group)
+
+    @property
+    def CLASS(self):
+        return Settings
