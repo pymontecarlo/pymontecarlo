@@ -53,26 +53,26 @@ class TestSampleFigure(unittest.TestCase):
         del self.figure
         del self.ax
 
-
     def test_get_color(self):
         # TODO implement test_get_color
-        pass
+        raise NotImplementedError
 
     def test_get_material_color(self):
         # TODO implement test_get_material
-        pass
+        raise NotImplementedError
 
     # DRAW TEST
-
     def test_draw(self):
-        # TODO implement test_draw
-        pass
+        sf = SampleFigure(None, [], [])
+        self.assertRaises(AttributeError, sf.draw, ax=None)
 
     # DRAW SAMPLES TEST
-
     def test_draw_sample(self):
-        # TODO implement test_draw_sample
-        pass
+        sample = SubstrateSample(self.mat_ds)
+        sf = SampleFigure(sample, [], [])
+
+        sf._draw_sample(self.ax, sample)
+        self.assertEqual(len(self.ax.collections), 1)
 
     def _compose_sample(self, sample, len_):
         for p, l in zip(self.perspectives, len_):
@@ -101,24 +101,22 @@ class TestSampleFigure(unittest.TestCase):
         self._compose_sample(sample, (1, 1, 1))
 
     # DRAW BEAMS TEST
-
     def test_draw_beam(self):
-        # TODO implement test_draw_bream
-        pass
+        beam = GaussianBeam(energy_eV=1, diameter_m=1)
+        sf = SampleFigure(None, [beam], [])
 
-    def _compose_beam(self, beam, len_):
-        # TODO implement _compose_bream
-        for p, l in zip(self.perspectives, len_):
-            sf = SampleFigure(sample, [], [])
-            c = sf.sample_draw_methods[sample.__class__](sample, p)
-            self.assertEqual(len(c), l, msg='perspective: {}'.format(p))
+        sf._draw_beam(self.ax, beam)
+        self.assertEqual(len(self.ax.collections), 1)
 
     def test_compose_beam_gaussian(self):
-        # TODO implement test_compose_bream_gaussian
-        pass
+        beam = GaussianBeam(energy_eV=1, diameter_m=1)
+        sf = SampleFigure(None, [beam], [])
+
+        for p in self.perspectives:
+            c = sf._compose_beam_gaussian(beam=beam, perspective=p)
+            self.assertEqual(len(c), 1)
 
     # DRAW TRAJECTORIES TEST
-
     def test_draw_trajectory(self):
         # TODO implement test_draw_trajectory
-        pass
+        raise NotImplementedError

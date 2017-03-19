@@ -23,7 +23,6 @@ from pymontecarlo.util.color import COLOR_SET_GREY as CS_GREY, COLOR_SET_BROWN a
 
 # Globals and constant variables.
 
-
 class SampleFigure(Figure):
 
     _COLORS_ASSIGNED = {}
@@ -125,10 +124,8 @@ class SampleFigure(Figure):
         method = self.sample_draw_methods[sample_class]
 
         patches = method(sample, perspective)
-
         col = PatchCollection(patches, match_original=True)
 
-        # TODO rotate
         if perspective == 'XZ':
             trans = Affine2D().scale(sx=1, sy=1 + tan(abs(sample.tilt_rad))) + ax.transData
             col.set_transform(trans)
