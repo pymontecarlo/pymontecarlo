@@ -31,7 +31,7 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.model import RUTHERFORD, ElasticCrossSectionModel
+from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
@@ -85,8 +85,8 @@ class ValidatorMock(Validator):
 
         self.model_validate_methods[ElasticCrossSectionModel] = self._validate_model_valid_models
 
-        self.valid_models[ElasticCrossSectionModel] = [RUTHERFORD]
-        self.default_models[ElasticCrossSectionModel] = RUTHERFORD
+        self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD]
+        self.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.RUTHERFORD
 
 class ExporterMock(Exporter):
 
@@ -239,7 +239,7 @@ class TestCase(unittest.TestCase):
         sample = SubstrateSample(Material.pure(29))
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
         limits = [ShowersLimit(100)]
-        models = [RUTHERFORD]
+        models = [ElasticCrossSectionModel.RUTHERFORD]
         return Options(self.program, beam, sample, analyses, limits, models)
 
     def create_basic_photonintensityresult(self):

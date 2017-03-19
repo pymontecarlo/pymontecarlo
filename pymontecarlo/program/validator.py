@@ -585,7 +585,7 @@ class Validator(object):
             exc = ValueError('Model ({0}) is not supported.'.format(model))
             errors.add(exc)
 
-        return model_class(model.name, model.reference)
+        return model
 
     def validate_analyses(self, analyses, options):
         errors = set()
