@@ -37,9 +37,9 @@ class TestProject(TestCase):
                                           result_classes=[EmittedPhotonIntensityResult])
         self.assertEqual(3, len(datarows))
 
-        self.assertEqual(7, len(datarows[0]))
-        self.assertEqual(7, len(datarows[1]))
-        self.assertEqual(7, len(datarows[2]))
+        self.assertEqual(9, len(datarows[0]))
+        self.assertEqual(9, len(datarows[1]))
+        self.assertEqual(9, len(datarows[2]))
 
         datarows = self.p.create_datarows(only_different_options=True,
                                           result_classes=[GeneratedPhotonIntensityResult])
@@ -54,9 +54,9 @@ class TestProject(TestCase):
                                                           GeneratedPhotonIntensityResult])
         self.assertEqual(3, len(datarows))
 
-        self.assertEqual(7, len(datarows[0]))
-        self.assertEqual(7, len(datarows[1]))
-        self.assertEqual(10, len(datarows[2]))
+        self.assertEqual(9, len(datarows[0]))
+        self.assertEqual(9, len(datarows[1]))
+        self.assertEqual(12, len(datarows[2]))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

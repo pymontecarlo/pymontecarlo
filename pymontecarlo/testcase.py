@@ -245,11 +245,13 @@ class TestCase(unittest.TestCase):
     def create_basic_photonintensityresult(self):
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = EmittedPhotonIntensityResultBuilder(analysis)
-        b.add_intensity((13, 'Ka1'), 1.0, 0.1)
-        b.add_intensity((13, 'Ka2'), 2.0, 0.2)
-        b.add_intensity((13, 'Kb1'), 4.0, 0.5)
-        b.add_intensity((13, 'Kb3'), 5.0, 0.7)
-        b.add_intensity((13, 'Ll'), 3.0, 0.1)
+        b.add_intensity((29, 'Ka1'), 1.0, 0.1)
+        b.add_intensity((29, 'Ka2'), 2.0, 0.2)
+        b.add_intensity((29, 'Kb1'), 4.0, 0.5)
+        b.add_intensity((29, 'Kb3'), 5.0, 0.7)
+        b.add_intensity((29, 'Kb5I'), 1.0, 0.1)
+        b.add_intensity((29, 'Kb5II'), 0.5, 0.1)
+        b.add_intensity((29, 'Ll'), 3.0, 0.1)
         return b.build()
 
     def create_basic_simulation(self):
@@ -272,9 +274,9 @@ class TestCase(unittest.TestCase):
 
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = GeneratedPhotonIntensityResultBuilder(analysis)
-        b.add_intensity((13, 'Ka1'), 10.0, 0.1)
-        b.add_intensity((13, 'Ka2'), 20.0, 0.2)
-        b.add_intensity((13, 'Kb1'), 40.0, 0.5)
+        b.add_intensity((29, 'Ka1'), 10.0, 0.1)
+        b.add_intensity((29, 'Ka2'), 20.0, 0.2)
+        b.add_intensity((29, 'Kb1'), 40.0, 0.5)
 
         sim3 = self.create_basic_simulation()
         sim3.options.beam.diameter_m = 20e-9
