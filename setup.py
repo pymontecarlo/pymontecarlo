@@ -26,8 +26,20 @@ EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx'
 CMDCLASS = versioneer.get_cmdclass()
 
 ENTRY_POINTS = {'pymontecarlo.program': [],
+
                 'pymontecarlo.fileformat':
-                ['SettingsHDF5Handler = pymontecarlo.fileformat.settings:SettingsHDF5Handler']}
+                ['SettingsHDF5Handler = pymontecarlo.fileformat.settings:SettingsHDF5Handler',
+
+                 'GaussianBeamHDF5Handler = pymontecarlo.fileformat.options.beam.gaussian:GaussianBeamHDF5Handler',
+
+                 'MaterialHDF5Handler = pymontecarlo.fileformat.options.material:MaterialHDF5Handler',
+                 'LayerHDF5Handler = pymontecarlo.fileformat.options.sample.base:LayerHDF5Handler',
+                 'SubstrateSampleHDF5Handler = pymontecarlo.fileformat.options.sample.substrate:SubstrateSampleHDF5Handler',
+                 'InclusionSampleHDF5Handler = pymontecarlo.fileformat.options.sample.inclusion:InclusionSampleHDF5Handler',
+                 'HorizontalLayerSampleHDF5Handler = pymontecarlo.fileformat.options.sample.horizontallayers:HorizontalLayerSampleHDF5Handler',
+                 'VerticalLayerSampleHDF5Handler = pymontecarlo.fileformat.options.sample.verticallayers:VerticalLayerSampleHDF5Handler',
+                 'SphereSampleHDF5Handler = pymontecarlo.fileformat.options.sample.sphere:SphereSampleHDF5Handler',
+                 ]}
 
 setup(name="pyMonteCarlo",
       version=versioneer.get_version(),

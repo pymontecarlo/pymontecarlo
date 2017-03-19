@@ -47,3 +47,9 @@ class ImportError_(AccumulatedError):
 
 class ProgramNotFound(PymontecarloError):
     pass
+
+class ParseError(PymontecarloError):
+    pass
+
+class ConvertError(PymontecarloError):
+    pass
