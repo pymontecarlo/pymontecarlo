@@ -119,10 +119,14 @@ class OptionsBuilder(OptionBuilder):
             self.analyses.append(analysis)
 
     def add_limit(self, program, limit):
-        self.limits.setdefault(program, []).append(limit)
+        self.limits.setdefault(program, [])
+        if limit not in self.limits[program]:
+            self.limits[program].append(limit)
 
     def add_model(self, program, model):
-        self.models.setdefault(program, []).append(model)
+        self.models.setdefault(program, [])
+        if model not in self.models[program]:
+            self.models[program].append(model)
 
     def build(self):
         list_options = []
