@@ -14,6 +14,8 @@ import time
 # Third party modules.
 import pkg_resources
 
+import h5py
+
 # Local modules.
 import pymontecarlo
 from pymontecarlo.program.base import Program
@@ -289,3 +291,15 @@ class TestCase(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         self.tmpdirs.append(tmpdir)
         return tmpdir
+
+    def convert_parse_hdf5handler(self, handler, obj):
+        filepath = os.path.join(self.create_temp_dir(), 'object.h5')
+        with h5py.File(filepath) as f:
+            self.assertTrue(handler.can_convert(obj, f))
+            handler.convert(obj, f)
+
+        with h5py.File(filepath) as f:
+            self.assertTrue(handler.can_parse(f))
+            obj2 = handler.parse(f)
+
+        return obj2

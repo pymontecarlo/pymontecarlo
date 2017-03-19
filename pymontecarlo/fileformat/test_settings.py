@@ -4,10 +4,8 @@
 # Standard library modules.
 import unittest
 import logging
-import os
 
 # Third party modules.
-import h5py
 
 # Local modules.
 from pymontecarlo import Settings
@@ -18,24 +16,11 @@ from pymontecarlo.fileformat.settings import SettingsHDF5Handler
 
 class TestSettingsHDF5Handler(TestCase):
 
-    def setUp(self):
-        super().setUp()
-
-        self.handler = SettingsHDF5Handler()
-
     def testconvert_parse(self):
+        handler = SettingsHDF5Handler()
         settings = Settings([self.program])
-
-        filepath = os.path.join(self.create_temp_dir(), 'settings.h5')
-        with h5py.File(filepath) as f:
-            self.assertTrue(self.handler.can_convert(settings, f))
-            self.handler.convert(settings, f)
-
-        with h5py.File(filepath) as f:
-            self.assertTrue(self.handler.can_parse(f))
-            settings = self.handler.parse(f)
-
-        self.assertEqual(1, len(settings.programs))
+        settings2 = self.convert_parse_hdf5handler(handler, settings)
+        self.assertEqual(1, len(settings2.programs))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
