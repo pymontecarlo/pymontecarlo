@@ -30,6 +30,8 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                 'pymontecarlo.fileformat':
                 ['SettingsHDF5Handler = pymontecarlo.fileformat.settings:SettingsHDF5Handler',
 
+                 'XrayLineHDF5Handler = pymontecarlo.fileformat.util.xrayline:XrayLineHDF5Handler',
+
                  'GaussianBeamHDF5Handler = pymontecarlo.fileformat.options.beam.gaussian:GaussianBeamHDF5Handler',
 
                  'MaterialHDF5Handler = pymontecarlo.fileformat.options.material:MaterialHDF5Handler',
@@ -39,6 +41,11 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'HorizontalLayerSampleHDF5Handler = pymontecarlo.fileformat.options.sample.horizontallayers:HorizontalLayerSampleHDF5Handler',
                  'VerticalLayerSampleHDF5Handler = pymontecarlo.fileformat.options.sample.verticallayers:VerticalLayerSampleHDF5Handler',
                  'SphereSampleHDF5Handler = pymontecarlo.fileformat.options.sample.sphere:SphereSampleHDF5Handler',
+
+                 'PhotonDetectorHDF5Handler = pymontecarlo.fileformat.options.detector.photon:PhotonDetectorHDF5Handler',
+
+                 'ShowersLimitHDF5Handler = pymontecarlo.fileformat.options.limit.showers:ShowersLimitHDF5Handler',
+                 'UncertaintyLimitHDF5Handler = pymontecarlo.fileformat.options.limit.uncertainty:UncertaintyLimitHDF5Handler',
                  ]}
 
 setup(name="pyMonteCarlo",
