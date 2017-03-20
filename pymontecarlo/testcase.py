@@ -155,6 +155,9 @@ class ProgramMock(Program):
     def __init__(self, foo=None):
         self.foo = foo
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.foo == other.foo
+
     @classmethod
     def getidentifier(cls):
         return 'mock'

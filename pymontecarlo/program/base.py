@@ -8,10 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.options.base import Option
 
 # Globals and constants variables.
 
-class Program(metaclass=abc.ABCMeta):
+class Program(Option, metaclass=abc.ABCMeta):
 
     def __repr__(self):
         return '<{classname}({name})>' \
@@ -56,3 +57,7 @@ class Program(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_default_limits(self, options):
         raise NotImplementedError
+
+    def create_datarow(self, **kwargs):
+        #TODO: Implement datarow
+        return super().create_datarow(**kwargs)
