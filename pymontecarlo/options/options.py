@@ -43,8 +43,9 @@ class Options(Option):
             .format(classname=self.__class__.__name__, **self.__dict__)
 
     def __eq__(self, other):
+        # NOTE: Here we only care that two programs have the same identifier
         return super().__eq__(other) and \
-            self.program == other.program and \
+            self.program.getidentifier() == other.program.getidentifier() and \
             self.beam == other.beam and \
             self.sample == other.sample and \
             are_sequence_equal(self.analyses, other.analyses) and \
