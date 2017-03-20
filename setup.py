@@ -44,8 +44,23 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                  'PhotonDetectorHDF5Handler = pymontecarlo.fileformat.options.detector.photon:PhotonDetectorHDF5Handler',
 
+                 'PhotonIntensityAnalysisHDF5Handler = pymontecarlo.fileformat.options.analyses.photonintensity:PhotonIntensityAnalysisHDF5Handler',
+                 'KRatioAnalysisHDF5Handler = pymontecarlo.fileformat.options.analyses.kratio:KRatioAnalysisHDF5Handler',
+
                  'ShowersLimitHDF5Handler = pymontecarlo.fileformat.options.limit.showers:ShowersLimitHDF5Handler',
                  'UncertaintyLimitHDF5Handler = pymontecarlo.fileformat.options.limit.uncertainty:UncertaintyLimitHDF5Handler',
+
+                 'BremsstrahlungEmissionModelHDF5Handler = pymontecarlo.fileformat.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHDF5Handler',
+                 'DirectionCosineModelHDF5Handler = pymontecarlo.fileformat.options.model.direction_cosine:DirectionCosineModelHDF5Handler',
+                 'ElasticCrossSectionModelHDF5Handler = pymontecarlo.fileformat.options.model.elastic_cross_section:ElasticCrossSectionModelHDF5Handler',
+                 'EnergyLossModelHDF5Handler = pymontecarlo.fileformat.options.model.energy_loss:EnergyLossModelHDF5Handler',
+                 'FluorescenceModelHDF5Handler = pymontecarlo.fileformat.options.model.fluorescence:FluorescenceModelHDF5Handler',
+                 'InelasticCrossSectionModelHDF5Handler = pymontecarlo.fileformat.options.model.inelastic_cross_section:InelasticCrossSectionModelHDF5Handler',
+                 'IonizationCrossSectionModelHDF5Handler = pymontecarlo.fileformat.options.model.ionization_cross_section:IonizationCrossSectionModelHDF5Handler',
+                 'IonizationPotentialModelHDF5Handler = pymontecarlo.fileformat.options.model.ionization_potential:IonizationPotentialModelHDF5Handler',
+                 'MassAbsorptionCoefficientModelHDF5Handler = pymontecarlo.fileformat.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelHDF5Handler',
+                 'PhotonScatteringCrossSectionModelHDF5Handler = pymontecarlo.fileformat.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelHDF5Handler',
+                 'RandomNumberGeneratorModelHDF5Handler = pymontecarlo.fileformat.options.model.random_number_generator:RandomNumberGeneratorModelHDF5Handler',
                  ]}
 
 setup(name="pyMonteCarlo",
