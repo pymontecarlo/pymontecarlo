@@ -20,7 +20,9 @@ class TestModule(TestCase):
     def testphoton_range(self):
         material = Material.pure(29)
         xrayline = XrayLine(29, 'Ka1')
-        self.assertAlmostEqual(8.4064e-7, photon_range(20e3, material, xrayline), 10)
+
+        actual = photon_range(20e3, material, xrayline, reference='perkins1991')
+        self.assertAlmostEqual(8.42816e-7, actual, 10)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

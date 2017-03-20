@@ -11,7 +11,7 @@ import pyxray
 
 # Globals and constants variables.
 
-def photon_range(e0, material, xrayline):
+def photon_range(e0, material, xrayline, reference=None):
     """
     This function returns the generated photon range in *material* at
     incident electron energy *e0* for a characteristic x ray line *transition*.
@@ -33,9 +33,9 @@ def photon_range(e0, material, xrayline):
         raise ValueError('{} is not in material'.format(xrayline))
 
     if xrayline.is_xray_transitionset():
-        energy_eV = pyxray.xray_transitionset_energy_eV(*xrayline)
+        energy_eV = pyxray.xray_transitionset_energy_eV(*xrayline, reference=reference)
     else:
-        energy_eV = pyxray.xray_transition_energy_eV(*xrayline)
+        energy_eV = pyxray.xray_transition_energy_eV(*xrayline, reference=reference)
     if energy_eV > e0:
         return 0.0
 
