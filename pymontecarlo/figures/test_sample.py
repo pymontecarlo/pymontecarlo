@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""" """
+#!/usr/bin/env python3
 
 # Standard library modules.
 import unittest
@@ -64,7 +63,7 @@ class TestSampleFigure(unittest.TestCase):
     # DRAW TEST
     def test_draw(self):
         sf = SampleFigure(None, [], [])
-        self.assertRaises(AttributeError, sf.draw, ax=None)
+        self.assertRaises(TypeError, sf.draw, ax=None)
 
     # DRAW SAMPLES TEST
     def test_draw_sample(self):

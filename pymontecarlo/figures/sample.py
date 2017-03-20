@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Figure to draw a sample.
 """
@@ -29,9 +31,14 @@ class SampleFigure(Figure):
     _COLORS_USED = []
 
     def __init__(self, sample=None, beams=None, trajectories=None):
+        """
+        :param sample: an instance of Sample(Option)
+        :param beams: a list of instances of Beam(Option)
+        :param trajectories: a list of instances of Trajectory
+        """
         super().__init__()
 
-        self.ax_size = 2
+        self._view_size = 2
 
         self.sample = sample
 
@@ -69,7 +76,7 @@ class SampleFigure(Figure):
 
         return randchoice(color_set)
 
-    def _get_material_color(self, key, color_set):
+    def _get_material_color(self, material, color_set):
         """
         This method ensures that:
         * colors of different materials differ (at least if enough colors are available in set)
@@ -80,8 +87,7 @@ class SampleFigure(Figure):
         :return: color of a type matplotlib accepts
         """
 
-        # TODO use Material as key once it's hashable
-        key = key.__repr__()
+        key = material.__repr__()
 
         if key in SampleFigure._COLORS_ASSIGNED:
             return SampleFigure._COLORS_ASSIGNED[key]
@@ -95,9 +101,46 @@ class SampleFigure(Figure):
 
         return color
 
-    def draw(self, ax, perspective='XZ'):
+    def _recalc_view_size(self):
 
-        self.ax_size = 2.2
+        SCALE_FACTOR = 5
+        view_size = 0.
+        sample_view_size = 0.
+        beam_view_size = 0.
+
+        # Consider sample
+        if self.sample.__class__ == SubstrateSample:
+            pass
+
+        elif self.sample.__class__ == InclusionSample:
+            sample_view_size = self.sample.inclusion_diameter_m
+
+        elif self.sample.__class__ == HorizontalLayerSample or \
+             self.sample.__class__ == VerticalLayerSample:
+            sample_view_size = sum([l.thickness_m for l in self.sample.layers])
+
+        elif self.sample.__class__ == SphereSample:
+            sample_view_size = self.sample.diameter_m
+
+        # Consider beams
+        for beam in self.beams:
+            if beam.__class__ == GaussianBeam:
+                beam_view_size = max(beam_view_size, beam.diameter_m)
+
+        # TODO consider trajectories
+        for trajectory in self.trajectories:
+            pass
+
+        self._view_size = max(sample_view_size * SCALE_FACTOR,
+                              beam_view_size * SCALE_FACTOR * 2,
+                              10e-16)
+
+    def draw(self, ax, perspective='XZ'):
+        """
+        :param ax: an instance of matplotlib.axes.Axes
+        :param perspective: element of ('XZ', 'XZ', 'XY')
+        """
+        self._recalc_view_size()
 
         if self.sample:
             self._draw_sample(ax, self.sample, perspective)
@@ -108,12 +151,12 @@ class SampleFigure(Figure):
         for trajectory in self.trajectories:
             self._draw_trajectory(ax, trajectory, perspective)
 
-        ax.set_xlim((-self.ax_size / 2., self.ax_size / 2.))
-        ax.set_ylim((-self.ax_size / 2., self.ax_size / 2.))
+        # self._view_size *= 1.1
+        ax.set_xlim((-self._view_size / 2., self._view_size / 2.))
+        ax.set_ylim((-self._view_size / 2., self._view_size / 2.))
         ax.set_aspect('equal')
 
     # DRAW SAMPLES
-
     def _draw_sample(self, ax, sample, perspective='XZ'):
         sample_class = sample.__class__
 
@@ -138,33 +181,34 @@ class SampleFigure(Figure):
 
         ax.add_collection(col)
 
-    def _compose_sample_substrate(self, sample, perspective='XZ'):
+    def _compose_substrate(self, material, perspective='XZ'):
         perspective = perspective.upper()
 
         if perspective == 'XZ' or perspective == 'YZ':
-            patches = [Rectangle((-1, 0), 2, -1, color=self._get_material_color(sample.material,
-                                                                                CS_GREY))]
+            patches = [Rectangle((-self._view_size / 2., 0), self._view_size, -self._view_size / 2.,
+                                 color=self._get_material_color(material, CS_GREY))]
         else:
-            patches = [Rectangle((-1, 1), 2, -2, color=self._get_material_color(sample.material,
-                                                                                CS_GREY))]
+            patches = [Rectangle((-self._view_size / 2., self._view_size / 2.),
+                                 self._view_size, -self._view_size,
+                                 color=self._get_material_color(material, CS_GREY))]
 
         return patches
+
+    def _compose_sample_substrate(self, sample, perspective='XZ'):
+        perspective = perspective.upper()
+        return self._compose_substrate(sample.material, perspective)
 
     def _compose_sample_inclusion(self, sample, perspective='XZ'):
         patches = list()
         perspective = perspective.upper()
 
+        patches.extend(self._compose_substrate(sample.substrate_material, perspective))
+
         if perspective == 'XZ' or perspective == 'YZ':
-            patches.append(Rectangle((-1, 0), 2, -1,
-                                     color=self._get_material_color(sample.substrate_material,
-                                                                    CS_GREY)))
             patches.append(Wedge((0, 0), sample.inclusion_diameter_m, 180, 0,
                                  color=self._get_material_color(sample.inclusion_material,
                                                                 CS_BROWN)))
         else:
-            patches.append(Rectangle((-1, 1), 2, -2,
-                                     color=self._get_material_color(sample.substrate_material,
-                                                                    CS_GREY)))
             patches.append(Circle((0, 0), sample.inclusion_diameter_m,
                                   color=self._get_material_color(sample.inclusion_material,
                                                                  CS_BROWN)))
@@ -177,23 +221,17 @@ class SampleFigure(Figure):
 
         if perspective == 'XZ' or perspective == 'YZ':
             depth_m = 0
-
-            patches.append(Rectangle((-1, 0), 2, -1,
-                                     color=self._get_material_color(sample.substrate_material,
-                                                                    CS_GREY)))
+            patches.extend(self._compose_substrate(sample.substrate_material, perspective))
 
             for layer in sample.layers:
-                patches.append(Rectangle((-1, depth_m), 2, -layer.thickness_m,
-                                         color=self._get_material_color(layer.material,
-                                                                        CS_BROWN)))
+                patches.append(Rectangle((-self._view_size / 2., depth_m),
+                                         self._view_size, -layer.thickness_m,
+                                         color=self._get_material_color(layer.material, CS_BROWN)))
                 depth_m -= layer.thickness_m
         else:
-            if len(sample.layers) == 0:
-                patches.append(Rectangle((-1, 1), 2, -2,
-                                         color=self._get_material_color(sample.substrate_material,
-                                                                        CS_GREY)))
-            else:
-                patches.append(Rectangle((-1, 1), 2, -2,
+            if len(sample.layers) > 0:
+                patches.append(Rectangle((-self._view_size / 2., self._view_size / 2.),
+                                         self._view_size, -self._view_size,
                                          color=self._get_material_color(sample.layers[0].material,
                                                                         CS_GREY)))
 
@@ -204,37 +242,41 @@ class SampleFigure(Figure):
         perspective = perspective.upper()
 
         if perspective == 'XZ':
-            patches.append(Rectangle((0, 0), -1, -1,
-                                     color=self._get_material_color(sample.left_material,
-                                                                    CS_GREY)))
-            patches.append(Rectangle((0, 0), 1, -1,
+            patches.append(Rectangle((0, 0), -self._view_size / 2., -self._view_size / 2.,
+                                     color=self._get_material_color(sample.left_material, CS_GREY)))
+            patches.append(Rectangle((0, 0), self._view_size / 2., -self._view_size / 2.,
                                      color=self._get_material_color(sample.right_material,
                                                                     CS_GREY)))
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
-                patches.append(Rectangle((pos[0], 0), layer.thickness_m, -1,
+                patches.append(Rectangle((pos[0], 0), layer.thickness_m, -self._view_size / 2.,
                                          color=self._get_material_color(layer.material, CS_BROWN)))
         elif perspective == 'YZ':
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 if pos[1] >= 0.0:
-                    patches.append(Rectangle((-1, 0), 2, -1,
+                    patches.append(Rectangle((-self._view_size / 2., 0),
+                                             self._view_size, -self._view_size / 2.,
                                              color=self._get_material_color(layer.material,
                                                                             CS_BROWN)))
                     break
+
             if len(patches) == 0:
-                patches.append(Rectangle((1, 0), 2, -1,
+                patches.append(Rectangle((self._view_size / 2., 0),
+                                         self._view_size, -self._view_size / 2.,
                                          color=self._get_material_color(sample.left_material,
                                                                         CS_GREY)))
         elif perspective == 'XY':
-            patches.append(Rectangle((0, 1), -1, -2,
-                                     color=self._get_material_color(sample.left_material,
-                                                                    CS_GREY)))
-            patches.append(Rectangle((0, 1), 1, -2,
+            patches.append(Rectangle((0, self._view_size / 2.),
+                                     -self._view_size / 2., -self._view_size,
+                                     color=self._get_material_color(sample.left_material, CS_GREY)))
+            patches.append(Rectangle((0, self._view_size / 2.),
+                                     self._view_size / 2., -self._view_size,
                                      color=self._get_material_color(sample.right_material,
                                                                     CS_GREY)))
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
-                patches.append(Rectangle((pos[0], 1), layer.thickness_m, -2,
+                patches.append(Rectangle((pos[0], self._view_size / 2.),
+                                         layer.thickness_m, -self._view_size,
                                          color=self._get_material_color(layer.material, CS_BROWN)))
 
         return patches
@@ -253,7 +295,6 @@ class SampleFigure(Figure):
         return patches
 
     # DRAW BEAMS
-
     def _draw_beam(self, ax, beam, perspective='XZ'):
         beam_class = beam.__class__
         if beam_class not in self.beam_draw_methods:
@@ -262,7 +303,6 @@ class SampleFigure(Figure):
         method = self.beam_draw_methods[beam_class]
 
         patches = method(beam, perspective)
-
         col = PatchCollection(patches, match_original=True)
 
         # TODO rotate
@@ -279,16 +319,15 @@ class SampleFigure(Figure):
         patches = list()
 
         if perspective == 'XZ' or perspective == 'YZ':
-            patches.append(Rectangle((0 - beam.diameter_m / 2, 0), beam.diameter_m, 1,
+            patches.append(Rectangle((0 - beam.diameter_m / 2, 0),
+                                     beam.diameter_m, (self._view_size / 2.) * 1.5,
                                      color='#00549F'))
         else:
-            # FIXME for some reason radius behaves like diameter
-            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#FF0000'))
+            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#00549F'))
 
         return patches
 
     # DRAW TRAJECTORIES
-
     def _draw_trajectory(self, ax, trajectory, perspective='XZ'):
         raise NotImplementedError
 
@@ -304,8 +343,8 @@ from matplotlib import figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QApplication, QVBoxLayout, QHBoxLayout, QGridLayout, QComboBox,\
-    QSlider, QRadioButton, QButtonGroup, QLabel
+from PyQt5.QtWidgets import QDialog, QApplication, QVBoxLayout, QHBoxLayout, QGridLayout,\
+    QComboBox, QSlider, QRadioButton, QButtonGroup, QLabel
 
 class QtPlt (QDialog):
 
@@ -316,72 +355,73 @@ class QtPlt (QDialog):
         QDialog.__init__ (self)
 
         # matplotlib
-        self.figure = figure.Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self._figure = figure.Figure()
+        self._canvas = FigureCanvas(self._figure)
+        self._toolbar = NavigationToolbar2QT(self._canvas, self)
 
         # comboboxes
-        self.combo_sample = QComboBox()
-        self.combo_sample.addItem('--- choose sample ---', None)
-        self.combo_sample.addItem('SubstrateSample', SubstrateSample)
-        self.combo_sample.addItem('InclusionSample', InclusionSample)
-        self.combo_sample.addItem('HLayerSample', HorizontalLayerSample)
-        self.combo_sample.addItem('VLayerSample', VerticalLayerSample)
-        self.combo_sample.addItem('SphereSample', SphereSample)
-        self.combo_sample.currentIndexChanged.connect(self.plot)
+        self._combo_sample = QComboBox()
+        self._combo_sample.addItem('--- choose sample ---', None)
+        self._combo_sample.addItem('SubstrateSample', SubstrateSample)
+        self._combo_sample.addItem('InclusionSample', InclusionSample)
+        self._combo_sample.addItem('HLayerSample', HorizontalLayerSample)
+        self._combo_sample.addItem('VLayerSample', VerticalLayerSample)
+        self._combo_sample.addItem('SphereSample', SphereSample)
+        self._combo_sample.currentIndexChanged.connect(self.plot)
 
-        self.combo_beam = QComboBox()
-        self.combo_beam.addItem('--- choose beam ---', None)
-        self.combo_beam.addItem('GaussianBeam', GaussianBeam)
-        self.combo_beam.currentIndexChanged.connect(self.plot)
+        self._combo_beam = QComboBox()
+        self._combo_beam.addItem('--- choose beam ---', None)
+        self._combo_beam.addItem('GaussianBeam', GaussianBeam)
+        self._combo_beam.currentIndexChanged.connect(self.plot)
 
-        self.combo_trajectory = QComboBox()
-        self.combo_trajectory.addItem('--- choose trajectory ---', None)
-        self.combo_trajectory.currentIndexChanged.connect(self.plot)
+        self._combo_trajectory = QComboBox()
+        self._combo_trajectory.addItem('--- choose trajectory ---', None)
+        self._combo_trajectory.currentIndexChanged.connect(self.plot)
 
         # slider
-        self.slider_tilt_deg = QSlider(Qt.Horizontal)
-        self.slider_tilt_deg.setMinimum(-180)
-        self.slider_tilt_deg.setMaximum(180)
-        self.slider_tilt_deg.setValue(0)
-        self.slider_tilt_deg.sliderReleased.connect(self.plot)
+        self._slider_tilt_deg = QSlider(Qt.Horizontal)
+        self._slider_tilt_deg.setMinimum(-180)
+        self._slider_tilt_deg.setMaximum(180)
+        self._slider_tilt_deg.setValue(0)
+        self._slider_tilt_deg.sliderReleased.connect(self.plot)
 
-        self.slider_rotation_deg = QSlider(Qt.Horizontal)
-        self.slider_rotation_deg.setMinimum(-180)
-        self.slider_rotation_deg.setMaximum(180)
-        self.slider_rotation_deg.setValue(0)
-        self.slider_rotation_deg.sliderReleased.connect(self.plot)
+        self._slider_rotation_deg = QSlider(Qt.Horizontal)
+        self._slider_rotation_deg.setMinimum(-180)
+        self._slider_rotation_deg.setMaximum(180)
+        self._slider_rotation_deg.setValue(0)
+        self._slider_rotation_deg.sliderReleased.connect(self.plot)
+        self._slider_rotation_deg.setDisabled(True)
 
         # radio buttons
-        self.radio_xz = QRadioButton('XZ')
+        self._radio_xz = QRadioButton('XZ')
         self.radio_yz = QRadioButton('YZ')
         self.radio_xy = QRadioButton('XY')
-        self.radio_xz.setChecked(True)
+        self._radio_xz.setChecked(True)
 
-        self.radio_perspective = QButtonGroup()
-        self.radio_perspective.addButton(self.radio_xz)
-        self.radio_perspective.addButton(self.radio_yz)
-        self.radio_perspective.addButton(self.radio_xy)
-        self.radio_perspective.buttonClicked.connect(self.plot)
+        self._radio_perspective = QButtonGroup()
+        self._radio_perspective.addButton(self._radio_xz)
+        self._radio_perspective.addButton(self.radio_yz)
+        self._radio_perspective.addButton(self.radio_xy)
+        self._radio_perspective.buttonClicked.connect(self.plot)
 
         # layout
         sublayout_combo = QHBoxLayout()
-        sublayout_combo.addWidget(self.combo_sample)
-        sublayout_combo.addWidget(self.combo_beam)
-        sublayout_combo.addWidget(self.combo_trajectory)
+        sublayout_combo.addWidget(self._combo_sample)
+        sublayout_combo.addWidget(self._combo_beam)
+        sublayout_combo.addWidget(self._combo_trajectory)
 
         sublayout_perspective = QGridLayout()
-        sublayout_perspective.addWidget(self.radio_xz, 1, 1)
+        sublayout_perspective.addWidget(self._radio_xz, 1, 1)
         sublayout_perspective.addWidget(self.radio_yz, 2, 1)
         sublayout_perspective.addWidget(self.radio_xy, 3, 1)
         sublayout_perspective.addWidget(QLabel('tilt'), 1, 2)
         sublayout_perspective.addWidget(QLabel('rotation'), 2, 2)
-        sublayout_perspective.addWidget(self.slider_tilt_deg, 1, 3)
-        sublayout_perspective.addWidget(self.slider_rotation_deg, 2, 3)
+        sublayout_perspective.addWidget(self._slider_tilt_deg, 1, 3)
+        sublayout_perspective.addWidget(self._slider_rotation_deg, 2, 3)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
+        layout.addWidget(self._toolbar)
+        layout.addWidget(self._canvas)
         layout.addLayout(sublayout_combo)
         layout.addLayout(sublayout_perspective)
         self.setLayout(layout)
@@ -398,13 +438,13 @@ class QtPlt (QDialog):
         rg = Material('Rg', {111: 1.}, 1.)
         au = Material('Au', {79: 1.}, 1.)
 
-        tilt_rad = deg2rad(self.slider_tilt_deg.value())
-        rotation_rad = deg2rad(self.slider_rotation_deg.value())
+        tilt_rad = deg2rad(self._slider_tilt_deg.value())
+        rotation_rad = deg2rad(self._slider_rotation_deg.value())
 
         layer = [Layer(Material('Re', {75: 1.}, 1.), .1), Layer(Material('Os', {76: 1.}, 1.), .15),
                  Layer(Material('Ir', {77: 1.}, 1.), .2), Layer(Material('Pt', {78: 1.}, 1.), .05)]
 
-        sample_cls = self.combo_sample.currentData()
+        sample_cls = self._combo_sample.currentData()
 
         if sample_cls == SubstrateSample:
             sample = SubstrateSample(ds, tilt_rad=tilt_rad, rotation_rad=rotation_rad)
@@ -420,14 +460,14 @@ class QtPlt (QDialog):
         else:
             sample = None
 
-        beam_cls = self.combo_beam.currentData()
+        beam_cls = self._combo_beam.currentData()
 
         if beam_cls == GaussianBeam:
             beams = [GaussianBeam(42., 0.05)]
         else:
             beams = []
 
-        trajectory_cls = beam_cls = self.combo_trajectory.currentData()
+        trajectory_cls = beam_cls = self._combo_trajectory.currentData()
 
         # TODO handle trajectories
         trajectories = []
@@ -441,12 +481,12 @@ class QtPlt (QDialog):
 
         sf = SampleFigure(sample, beams, trajectories)
 
-        self.figure.clf()
+        self._figure.clf()
 
-        ax = self.figure.add_subplot(111)
+        ax = self._figure.add_subplot(111)
         sf.draw(ax=ax, perspective=perspective)
 
-        self.canvas.draw_idle()
+        self._canvas.draw_idle()
 
 
 if __name__ == "__main__":
