@@ -23,6 +23,8 @@ class Simulation(object):
         self.results = results.copy()
 
     def __eq__(self, other):
+        # NOTE: This is on design since two simulations should have the
+        # same or equivalent results if their options are the same
         return self.options == other.options
 
     def find_result(self, result_class):

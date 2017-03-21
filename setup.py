@@ -29,8 +29,12 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                 'pymontecarlo.fileformat':
                 ['SettingsHDF5Handler = pymontecarlo.fileformat.settings:SettingsHDF5Handler',
+                 'SimulationHDF5Handler = pymontecarlo.fileformat.simulation:SimulationHDF5Handler',
+                 'ProjectHDF5Handler = pymontecarlo.fileformat.project:ProjectHDF5Handler',
 
                  'XrayLineHDF5Handler = pymontecarlo.fileformat.util.xrayline:XrayLineHDF5Handler',
+
+                 'Options = pymontecarlo.fileformat.options.options:OptionsHDF5Handler',
 
                  'GaussianBeamHDF5Handler = pymontecarlo.fileformat.options.beam.gaussian:GaussianBeamHDF5Handler',
 
