@@ -12,9 +12,9 @@ from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 class VerticalLayerSampleHDF5Handler(LayeredSampleHDF5Handler):
 
-    ATTR_LEFT_MATERIAL = 'left_material'
-    ATTR_RIGHT_MATERIAL = 'right_material'
-    ATTR_DEPTH = 'depth_m'
+    ATTR_LEFT_MATERIAL = 'left material'
+    ATTR_RIGHT_MATERIAL = 'right material'
+    ATTR_DEPTH = 'depth (m)'
 
     def _parse_left_material(self, group):
         ref_material = group.attrs[self.ATTR_LEFT_MATERIAL]

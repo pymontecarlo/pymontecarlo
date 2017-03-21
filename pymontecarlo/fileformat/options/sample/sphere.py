@@ -13,7 +13,7 @@ from pymontecarlo.options.sample.sphere import SphereSample
 class SphereSampleHDF5Handler(SampleHDF5Handler):
 
     ATTR_MATERIAL = 'material'
-    ATTR_DIAMETER = 'diameter_m'
+    ATTR_DIAMETER = 'diameter (m)'
 
     def _parse_material(self, group):
         ref_material = group.attrs[self.ATTR_MATERIAL]

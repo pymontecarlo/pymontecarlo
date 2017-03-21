@@ -44,9 +44,9 @@ class MaterialHDF5HandlerMixin:
 class MaterialHDF5Handler(HDF5Handler):
 
     ATTR_NAME = 'name'
-    DATASET_ATOMIC_NUMBER = 'atomic_number'
-    DATASET_WEIGHT_FRACTION = 'weight_fraction'
-    ATTR_DENSITY = 'density_kg_per_m3'
+    DATASET_ATOMIC_NUMBER = 'atomic number'
+    DATASET_WEIGHT_FRACTION = 'weight fraction'
+    ATTR_DENSITY = 'density (kg/m3)'
 
     def _parse_name(self, group):
         return str(group.attrs[self.ATTR_NAME])

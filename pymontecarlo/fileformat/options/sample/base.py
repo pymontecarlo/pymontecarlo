@@ -17,8 +17,8 @@ from pymontecarlo.options.sample.base import Layer
 
 class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 
-    ATTR_TILT = 'tilt_rad'
-    ATTR_ROTATION = 'rotation_rad'
+    ATTR_TILT = 'tilt (rad)'
+    ATTR_ROTATION = 'rotation (rad)'
 
     def _parse_tilt_rad(self, group):
         return float(group.attrs[self.ATTR_TILT])
@@ -46,7 +46,7 @@ class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 class LayerHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 
     ATTR_MATERIAL = 'material'
-    ATTR_THICKNESS = 'thickness_m'
+    ATTR_THICKNESS = 'thickness (m)'
 
     def _parse_material(self, group):
         ref_material = group.attrs[self.ATTR_MATERIAL]

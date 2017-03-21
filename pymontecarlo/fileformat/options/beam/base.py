@@ -14,7 +14,7 @@ from pymontecarlo.options.particle import Particle
 
 class BeamHDF5Handler(HDF5Handler):
 
-    ATTR_ENERGY = 'energy_eV'
+    ATTR_ENERGY = 'energy (eV)'
     ATTR_PARTICLE = 'particle'
 
     def _parse_energy_eV(self, group):

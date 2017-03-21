@@ -12,11 +12,11 @@ from pymontecarlo.options.beam.gaussian import GaussianBeam
 
 class GaussianBeamHDF5Handler(BeamHDF5Handler):
 
-    ATTR_DIAMETER = 'diameter_m'
-    ATTR_X0 = 'x0_m'
-    ATTR_Y0 = 'y0_m'
-    ATTR_POLAR = 'polar_rad'
-    ATTR_AZIMUTH = 'azimuth_rad'
+    ATTR_DIAMETER = 'diameter (m)'
+    ATTR_X0 = 'x0 (m)'
+    ATTR_Y0 = 'y0 (m)'
+    ATTR_POLAR = 'polar (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
 
     def _parse_diameter_m(self, group):
         return float(group.attrs[self.ATTR_DIAMETER])

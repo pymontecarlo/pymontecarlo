@@ -16,7 +16,7 @@ from pymontecarlo.options.analyses.kratio import KRatioAnalysis
 
 class KRatioAnalysisHDF5Handler(PhotonAnalysisHDF5Handler, MaterialHDF5HandlerMixin):
 
-    DATASET_ATOMIC_NUMBER = 'atomic_number'
+    DATASET_ATOMIC_NUMBER = 'atomic number'
     DATASET_STANDARDS = 'standards'
 
     def _parse_standard_materials(self, group):

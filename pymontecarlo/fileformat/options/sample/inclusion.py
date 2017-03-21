@@ -14,7 +14,7 @@ class InclusionSampleHDF5Handler(SampleHDF5Handler):
 
     ATTR_SUBSTRATE = 'substrate'
     ATTR_INCLUSION = 'inclusion'
-    ATTR_DIAMETER = 'diameter_m'
+    ATTR_DIAMETER = 'diameter (m)'
 
     def _parse_substrate_material(self, group):
         ref_material = group.attrs[self.ATTR_SUBSTRATE]

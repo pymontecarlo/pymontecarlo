@@ -12,8 +12,8 @@ from pymontecarlo.options.detector.photon import PhotonDetector
 
 class PhotonDetectorHDF5Handler(DetectorHDF5Handler):
 
-    ATTR_ELEVATION = 'elevation_rad'
-    ATTR_AZIMUTH = 'azimuth_rad'
+    ATTR_ELEVATION = 'elevation (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
 
     def _parse_elevation_rad(self, group):
         return float(group.attrs[self.ATTR_ELEVATION])
