@@ -41,7 +41,9 @@ class GeneratedPhotonIntensityResult(PhotonIntensityResult):
 class PhotonIntensityResultBuilder(PhotonResultBuilder):
 
     def add_intensity(self, xrayline, value, error, unit='1/(sr.electron)'):
-        self._add(xrayline, unit_registry.Quantity(value, unit).plus_minus(error))
+        q = unit_registry.Quantity(value, unit).plus_minus(error)
+        q = q.to('1/(sr.electron)')
+        self._add(xrayline, q)
 
 class EmittedPhotonIntensityResultBuilder(PhotonIntensityResultBuilder):
 
