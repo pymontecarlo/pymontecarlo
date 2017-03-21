@@ -102,7 +102,7 @@ class OptionsHDF5Handler(HDF5Handler):
         self._convert_hdf5handlers(sample, group_sample)
 
     def _convert_analysis(self, analysis, group):
-        name = str(id(analysis))
+        name = '{} [{:d}]'.format(analysis.__class__.__name__, id(analysis))
         group_analysis = group.create_group(name)
         self._convert_hdf5handlers(analysis, group_analysis)
 
@@ -112,7 +112,7 @@ class OptionsHDF5Handler(HDF5Handler):
             self._convert_analysis(analysis, group_analyses)
 
     def _convert_limit(self, limit, group):
-        name = str(id(limit))
+        name = '{} [{:d}]'.format(limit.__class__.__name__, id(limit))
         group_limit = group.create_group(name)
         self._convert_hdf5handlers(limit, group_limit)
 
@@ -122,7 +122,7 @@ class OptionsHDF5Handler(HDF5Handler):
             self._convert_analysis(limit, group_limits)
 
     def _convert_model(self, model, group):
-        name = str(id(model))
+        name = '{} [{:d}]'.format(model.__class__.__name__, id(model))
         group_model = group.create_group(name)
         self._convert_hdf5handlers(model, group_model)
 

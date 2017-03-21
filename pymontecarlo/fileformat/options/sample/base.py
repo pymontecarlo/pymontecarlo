@@ -107,7 +107,7 @@ class LayeredSampleHDF5Handler(SampleHDF5Handler, MaterialHDF5HandlerMixin):
         group.require_group(self.GROUP_MATERIALS)
         group_layers = group.require_group(self.GROUP_LAYERS)
 
-        name = str(id(layer))
+        name = 'layer {} [{:d}]'.format(layer.material, id(layer))
         if name in group_layers:
             return group_layers[name]
 

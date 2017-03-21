@@ -31,7 +31,7 @@ class MaterialHDF5HandlerMixin:
         if group_materials is None:
             group_materials = group.create_group(self.GROUP_MATERIALS)
 
-        name = str(id(material))
+        name = '{} [{:d}]'.format(material.name, id(material))
         if name in group_materials:
             return group_materials[name]
 

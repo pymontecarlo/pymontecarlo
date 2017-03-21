@@ -27,9 +27,9 @@ class TestOptionsHDF5Handler(TestCase):
 #        print(options.models, options2.models)
         self.assertEqual(options2, options)
 
-#        import h5py
-#        with h5py.File('/tmp/options.h5', 'w') as f:
-#            handler.convert(options, f)
+        import h5py
+        with h5py.File('/tmp/options.h5', 'w') as f:
+            handler.convert(options, f)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -29,7 +29,7 @@ class DetectorHDF5HandlerMixin:
         if group_detectors is None:
             group_detectors = group.create_group(self.GROUP_DETECTORS)
 
-        name = str(id(detector))
+        name = '{} [{:d}]'.format(detector.__class__.__name__, id(detector))
         if name in group_detectors:
             return group_detectors[name]
 
