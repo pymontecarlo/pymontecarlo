@@ -61,6 +61,10 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'MassAbsorptionCoefficientModelHDF5Handler = pymontecarlo.fileformat.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelHDF5Handler',
                  'PhotonScatteringCrossSectionModelHDF5Handler = pymontecarlo.fileformat.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelHDF5Handler',
                  'RandomNumberGeneratorModelHDF5Handler = pymontecarlo.fileformat.options.model.random_number_generator:RandomNumberGeneratorModelHDF5Handler',
+
+                 'EmittedPhotonIntensityResultHDF5Handler = pymontecarlo.fileformat.results.photonintensity:EmittedPhotonIntensityResultHDF5Handler',
+                 'GeneratedPhotonIntensityResultResultHDF5Handler = pymontecarlo.fileformat.results.photonintensity:GeneratedPhotonIntensityResultResultHDF5Handler',
+                 'KRatioResultHDF5Handler = pymontecarlo.fileformat.results.kratio:KRatioResultHDF5Handler',
                  ]}
 
 setup(name="pyMonteCarlo",
