@@ -37,5 +37,9 @@ class KRatioResultBuilder(PhotonResultBuilder):
         super().__init__(analysis, KRatioResult)
 
     def add_kratio(self, xrayline, unkintensity, stdintensity):
-        kratio = unkintensity / stdintensity
+        qunk = unit_registry.Quantity(unkintensity)
+        qstd = unit_registry.Quantity(stdintensity)
+        kratio = qunk.to_base_units() / qstd.to_base_units()
+        if not hasattr(kratio, 's'):
+            kratio = kratio.plus_minus(0.0)
         self._add(xrayline, kratio)
