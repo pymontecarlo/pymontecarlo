@@ -23,6 +23,7 @@ class TestProject(TestCase):
 
     def testskeleton(self):
         self.assertEqual(3, len(self.p.simulations))
+        self.assertEqual(2, len(self.p.result_classes))
 
     def testcreate_options_datarows(self):
         datarows = self.p.create_options_datarows(only_different_columns=True)

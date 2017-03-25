@@ -112,3 +112,15 @@ class Project(object):
 
         if self.filepath is None:
             raise IOError('No file path defined')
+
+    @property
+    def result_classes(self):
+        """
+        Returns all types of result.
+        """
+        classes = set()
+
+        for simulation in self.simulations:
+            classes.update(type(result) for result in simulation.results)
+
+        return classes
