@@ -11,7 +11,7 @@ import functools
 # Local modules.
 from pymontecarlo.util.future import FutureExecutor
 from pymontecarlo.util.cbook import find_by_type
-from pymontecarlo.util.datarow import DataRowCreator
+from pymontecarlo.util.datarow import DataRowCreator, DataRow
 
 # Globals and constants variables.
 
@@ -50,45 +50,59 @@ class Project(object):
             future = executor.submit(self)
             return future.result()
 
-    def create_datarows(self, only_different_options=False, result_classes=None):
+    def create_options_datarows(self, only_different_columns=False):
         """
         Returns a :class:`list` of :class:`Datarow`, one for each simulation.
         
-        If *only_different_options*, the data rows will only contain the columns
+        If *only_different_columns*, the data rows will only contain the columns
         that are different between the options.
-        
-        If *result_classes* is a list of :class:`Result`, only the columns from
-        this result classes will be returned. If ``None``, the data row will
-        only contain the columns from the options.
         """
         if not self.simulations:
             return []
 
-        if result_classes is None:
-            result_classes = []
-
-        # Options
         datarows = []
         for simulation in self.simulations:
             datarow = simulation.options.create_datarow()
             datarows.append(datarow)
 
-        if only_different_options:
-            tmpdatarows = []
+        if not only_different_columns:
+            return datarows
 
-            for datarow in datarows:
-                newdatarow = functools.reduce(operator.or_, [datarow ^ other for other in datarows])
-                tmpdatarows.append(newdatarow)
+        datarows2 = []
+        for datarow in datarows:
+            newdatarow = functools.reduce(operator.or_, [datarow ^ other for other in datarows])
+            datarows2.append(newdatarow)
 
-            datarows = tmpdatarows
+        return datarows2
 
-        # Results
-        for simulation, datarow in zip(self.simulations, datarows):
+    def create_results_datarows(self, result_classes=None):
+        """
+        Returns a :class:`list` of :class:`Datarow`, one for each simulation.
+        
+        If *result_classes* is a list of :class:`Result`, only the columns from
+        this result classes will be returned. If ``None``, the columns from 
+        all results will be returned.
+        """
+        if not self.simulations:
+            return []
+
+        datarows = []
+        for simulation in self.simulations:
+            datarow = DataRow()
+
             for result in find_by_type(simulation.results, DataRowCreator):
-                if type(result) not in result_classes:
-                    continue
                 prefix = result.getname().lower() + ' '
-                datarow.update_with_prefix(prefix, result.create_datarow())
+
+                if result_classes is None: # Include all results
+                    datarow.update_with_prefix(prefix, result.create_datarow())
+
+                elif type(result) in result_classes:
+                    if len(result_classes) == 1:
+                        datarow.update(result.create_datarow())
+                    else:
+                        datarow.update_with_prefix(prefix, result.create_datarow())
+
+            datarows.append(datarow)
 
         return datarows
 
