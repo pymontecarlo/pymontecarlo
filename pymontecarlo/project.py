@@ -12,6 +12,8 @@ import functools
 from pymontecarlo.util.future import FutureExecutor
 from pymontecarlo.util.cbook import find_by_type
 from pymontecarlo.util.datarow import DataRowCreator, DataRow
+from pymontecarlo.fileformat.reader import HDF5ReaderMixin
+from pymontecarlo.fileformat.writer import HDF5WriterMixin
 
 # Globals and constants variables.
 
@@ -35,7 +37,7 @@ class RecalculateProjectExecutor(FutureExecutor):
 
         return self._submit(target, project)
 
-class Project(object):
+class Project(HDF5ReaderMixin, HDF5WriterMixin):
 
     def __init__(self, filepath=None):
         self.filepath = filepath

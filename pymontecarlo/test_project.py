@@ -4,6 +4,7 @@
 # Standard library modules.
 import unittest
 import logging
+import os
 
 # Third party modules.
 
@@ -11,6 +12,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
+from pymontecarlo.project import Project
 
 # Globals and constants variables.
 
@@ -57,6 +59,13 @@ class TestProject(TestCase):
         self.assertEqual(7, len(datarows[0]))
         self.assertEqual(7, len(datarows[1]))
         self.assertEqual(10, len(datarows[2]))
+
+    def testread_write(self):
+        filepath = os.path.join(self.create_temp_dir(), 'project.h5')
+        self.p.write(filepath)
+        p = Project.read(filepath)
+        self.assertEqual(3, len(p.simulations))
+        self.assertEqual(2, len(p.result_classes))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
