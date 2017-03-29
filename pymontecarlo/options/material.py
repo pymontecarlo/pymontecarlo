@@ -14,6 +14,7 @@ import numpy as np
 
 # Local modules.
 import pymontecarlo.util.cbook as cbook
+from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
     calculate_density_kg_per_m3, generate_name, from_formula
 from pymontecarlo.options.base import Option, OptionBuilder
@@ -25,7 +26,18 @@ class Material(Option):
     WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE = 1e-7 # 0.1 ppm
     DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3 = 1e-5
 
-    def __init__(self, name, composition, density_kg_per_m3):
+    COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
+
+    @classmethod
+    def set_color_set(cls, color_set):
+        """
+        Sets the set of colors used to assign a color to a material.
+        
+        :arg color_set: iterable of colors
+        """
+        cls.COLOR_CYCLER = itertools.cycle(color_set)
+
+    def __init__(self, name, composition, density_kg_per_m3, color=None):
         """
         Creates a new material.
 
@@ -40,6 +52,10 @@ class Material(Option):
 
         :arg density_kg_per_m3: material's density in kg/m3.
         :type density_kg_per_m3: :class:`float`
+        
+        :arg color: color representing a material. If ``None``, a color is
+            automatically selected from the provided color set. See
+            :meth:`set_color_set`.
         """
         super().__init__()
 
@@ -47,8 +63,12 @@ class Material(Option):
         self.composition = composition.copy()
         self.density_kg_per_m3 = density_kg_per_m3
 
+        if color is None:
+            color = next(self.COLOR_CYCLER)
+        self.color = color
+
     @classmethod
-    def pure(cls, z):
+    def pure(cls, z, color=None):
         """
         Returns the material for the specified pure element.
 
@@ -59,10 +79,10 @@ class Material(Option):
         composition = {z: 1.0}
         density_kg_per_m3 = pyxray.element_mass_density_kg_per_m3(z)
 
-        return cls(name, composition, density_kg_per_m3)
+        return cls(name, composition, density_kg_per_m3, color)
 
     @classmethod
-    def from_formula(cls, formula, density_kg_per_m3=None):
+    def from_formula(cls, formula, density_kg_per_m3=None, color=None):
         """
         Returns the material for the specified formula.
         
@@ -74,7 +94,7 @@ class Material(Option):
         if density_kg_per_m3 is None:
             density_kg_per_m3 = calculate_density_kg_per_m3(composition)
 
-        return cls(formula, composition, density_kg_per_m3)
+        return cls(formula, composition, density_kg_per_m3, color)
 
     def __repr__(self):
         return '<{classname}({name}, {composition}, {density:g} kg/m3)>' \
@@ -88,6 +108,7 @@ class Material(Option):
         return self.name
 
     def __eq__(self, other):
+        # NOTE: color is not tested in equality
         return super().__eq__(other) and \
             self.name == other.name and \
             cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE) and \
@@ -113,6 +134,7 @@ class _Vacuum(Material):
             inst.name = 'Vacuum'
             inst.composition = {}
             inst.density_kg_per_m3 = 0.0
+            inst.color = '#000000'
             cls._instance = inst
         return cls._instance
 

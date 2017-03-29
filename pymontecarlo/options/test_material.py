@@ -22,6 +22,7 @@ class TestVACUUM(TestCase):
         self.assertEqual('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_per_m3, 4)
+        self.assertEqual('#000000', VACUUM.color)
 
     def testcopy(self):
         self.assertIs(VACUUM, copy.copy(VACUUM))
@@ -39,7 +40,7 @@ class TestMaterial(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.m = Material('Pure Cu', {29: 1.0}, 8960.0)
+        self.m = Material('Pure Cu', {29: 1.0}, 8960.0, '#FF0000')
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -52,6 +53,8 @@ class TestMaterial(TestCase):
 
         self.assertAlmostEqual(8960.0, self.m.density_kg_per_m3, 4)
         self.assertAlmostEqual(8.960, self.m.density_g_per_cm3, 4)
+
+        self.assertEqual('#FF0000', self.m.color)
 
     def testpure(self):
         m = Material.pure(29)
@@ -94,6 +97,18 @@ class TestMaterial(TestCase):
 
     def testcreate_datarow(self):
         self.assertEqual(2, len(self.m.create_datarow()))
+
+    def testset_color_set(self):
+        Material.set_color_set(['#00FF00', '#0000FF'])
+
+        m = Material.pure(13)
+        self.assertEqual('#00FF00', m.color)
+
+        m = Material.pure(14)
+        self.assertEqual('#0000FF', m.color)
+
+        m = Material.pure(15)
+        self.assertEqual('#00FF00', m.color)
 
 class TestMaterialBuilder(TestCase):
 
