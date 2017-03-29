@@ -7,20 +7,9 @@ import collections
 import pyxray
 
 # Local modules.
+import pymontecarlo
 
 # Globals and constants variables.
-
-_preferred_notation = 'iupac'
-
-def set_preferred_notation(notation):
-    global _preferred_notation
-    _preferred_notation = notation
-
-_preferred_encoding = 'utf16'
-
-def set_preferred_encoding(encoding):
-    global _preferred_encoding
-    _preferred_encoding = encoding
 
 class XrayLine(collections.namedtuple('XrayLine', ('element', 'line'))):
 
@@ -42,7 +31,15 @@ class XrayLine(collections.namedtuple('XrayLine', ('element', 'line'))):
             method = pyxray.xray_transitionset_notation
         else:
             method = pyxray.xray_transition_notation
-        notation = method(self.line, _preferred_notation, _preferred_encoding)
+
+        settings = pymontecarlo.settings
+        preferred_notation = settings.preferred_xrayline_notation
+        preferred_encoding = settings.preferred_xrayline_encoding
+
+        try:
+            notation = method(self.line, preferred_notation, preferred_encoding)
+        except pyxray.NotFound:
+            notation = method(self.line, 'iupac', preferred_encoding)
 
         return '{0} {1}'.format(symbol, notation)
 

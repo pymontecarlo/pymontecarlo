@@ -9,9 +9,9 @@ import logging
 import pyxray
 
 # Local modules.
+import pymontecarlo
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.util.xrayline import \
-    XrayLine, set_preferred_encoding, set_preferred_notation
+from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -36,12 +36,13 @@ class TestXrayLine(TestCase):
         self.assertEqual(hash(x), hash(self.x))
 
     def test__str__(self):
-        set_preferred_notation('siegbahn')
-        set_preferred_encoding('ascii')
+        settings = pymontecarlo.settings
+        settings.preferred_xrayline_notation = 'siegbahn'
+        settings.preferred_xrayline_encoding = 'ascii'
         self.assertEqual('Al Ka1', str(self.x))
 
-        set_preferred_notation('siegbahn')
-        set_preferred_encoding('latex')
+        settings.preferred_xrayline_notation = 'siegbahn'
+        settings.preferred_xrayline_encoding = 'latex'
         self.assertEqual('Al \\ensuremath{\\mathrm{K}\\alpha_1}', str(self.x))
 
     def test__eq__(self):

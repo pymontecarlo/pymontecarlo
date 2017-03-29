@@ -3,81 +3,48 @@ Local runner.
 """
 
 # Standard library modules.
-import concurrent.futures
+import os
+import tempfile
+import shutil
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.base import Runner, Tracker
-from pymontecarlo.exceptions import WorkerCancelledError
+from pymontecarlo.runner.base import SimulationRunner
 
 # Globals and constants variables.
 
-class LocalTracker(Tracker):
+class LocalSimulationRunner(SimulationRunner):
 
-    def __init__(self, options, worker, future):
-        super().__init__(options)
-        self.worker = worker
-        self.future = future
-
-    def cancel(self):
-        self.future.cancel()
-        self.worker.cancel()
-
-    @property
-    def progress(self):
-        return self.worker.progress
-
-    @property
-    def status(self):
-        return self.worker.status
-
-class LocalRunner(Runner):
-
-    def __init__(self, project=None, max_workers=1):
-        super().__init__(project, max_workers)
-        self.executor = None
-        self.futures = set()
-
-    def _on_worker_done(self, future):
-        if future.cancelled():
-            return
-
-        try:
-            simulation = future.result()
-
-        except WorkerCancelledError:
-            self.options_cancelled_count += 1
-
-        except:
-            self.options_failed_count += 1
-
+    def _prepare_target(self):
+        # Create output directory
+        if self.project.filepath is not None:
+            head, tail = os.path.split(self.project.filepath)
+            simsdirname = os.path.splitext(tail)[0] + '_simulations'
+            simdir = os.path.join(head, simsdirname)
+            temporary = False
         else:
-            self.project.add_simulation(simulation)
-            self.options_simulated_count += 1
+            temporary = True
 
-    def start(self):
-        if self.executor is not None:
-            raise RuntimeError('Already started')
-        self.executor = concurrent.futures.ThreadPoolExecutor(self.max_workers)
+        # Run function
+        def target(token, simulation):
+            program = simulation.options.program
+            worker = program.create_worker()
 
-    def shutdown(self, wait=True):
-        if self.executor is None:
-            return
-        self.executor.shutdown(wait)
-        self.executor = None
+            if temporary:
+                outputdir = tempfile.mkdtemp()
+            else:
+                outputdir = os.path.join(simdir, simulation.identifier)
+            os.makedirs(outputdir, exist_ok=True)
 
-    def _submit(self, options):
-        program = options.program
-        worker = program.create_worker()
+            try:
+                worker.run(token, simulation, outputdir)
 
-        future = self.executor.submit(worker.run, options)
-        future.add_done_callback(self._on_worker_done)
+            finally:
+                if temporary:
+                    shutil.rmtree(outputdir, ignore_errors=True)
 
-        self.futures.add(future)
-        self.options_submitted_count += 1
+            return simulation
 
-        return LocalTracker(options, worker, future)
+        return target
 
-    def wait(self, timeout=None):
-        concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)

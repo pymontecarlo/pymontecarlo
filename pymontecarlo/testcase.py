@@ -12,15 +12,20 @@ import shutil
 import time
 
 # Third party modules.
+import pkg_resources
+
+import h5py
 
 # Local modules.
-from pymontecarlo.settings import load_settings, _set_settings
-from pymontecarlo.exceptions import WorkerCancelledError
+import pymontecarlo
 from pymontecarlo.program.base import Program
+from pymontecarlo.program.configurator import Configurator
 from pymontecarlo.program.expander import Expander, expand_to_single
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
+from pymontecarlo.program.importer import Importer
+from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
 from pymontecarlo.options.beam import GaussianBeam
@@ -28,15 +33,33 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.model import RUTHERFORD, ElasticCrossSectionModel
+from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis
-from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
+from pymontecarlo.results.photonintensity import \
+    EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
+from pymontecarlo.fileformat.base import HDF5Handler
 
 # Globals and constants variables.
 
-basepath = os.path.dirname(__file__)
-filepath = os.path.join(basepath, 'testdata', 'settings.cfg')
-settings = load_settings([filepath])
+class ConfiguratorMock(Configurator):
+
+    def prepare_parser(self, parser, program=None):
+        parser.description = 'Configure Mock.'
+
+        kwargs = {}
+        kwargs['help'] = 'tore value internally'
+        if program is not None:
+            kwargs['default'] = program.foo
+            kwargs['help'] += ' (current: {})'.format(program.foo)
+        else:
+            kwargs['required'] = True
+        parser.add_argument('--foo', **kwargs)
+
+    def create_program(self, namespace, clasz):
+        return clasz(namespace.foo)
+
+    def fullname(self):
+        return 'Mock'
 
 class ExpanderMock(Expander):
 
@@ -64,8 +87,8 @@ class ValidatorMock(Validator):
 
         self.model_validate_methods[ElasticCrossSectionModel] = self._validate_model_valid_models
 
-        self.valid_models[ElasticCrossSectionModel] = [RUTHERFORD]
-        self.default_models[ElasticCrossSectionModel] = RUTHERFORD
+        self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD]
+        self.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.RUTHERFORD
 
 class ExporterMock(Exporter):
 
@@ -107,51 +130,38 @@ class ExporterMock(Exporter):
 
 class WorkerMock(Worker):
 
-    def __init__(self):
-        super().__init__()
-
-        self._progress = 0.0
-        self._status = ''
-        self._cancelled = False
-
-    def run(self, options):
-        self._progress = 0.0
-        self._status = 'Started'
-
+    def run(self, token, simulation, outputdir):
+        options = simulation.options
         program = options.program
         exporter = program.create_exporter()
 
-        try:
-            dirpath = tempfile.mkdtemp()
-            exporter.export(options, dirpath)
+        exporter.export(options, outputdir)
 
-            for _ in range(10):
-                if self._cancelled:
-                    raise WorkerCancelledError
-                time.sleep(0.01)
+        token.update(0.0, 'Started')
+        for _ in range(10):
+            if token.cancelled():
+                break
+            time.sleep(0.01)
 
-        finally:
-            shutil.rmtree(dirpath, ignore_errors=True)
+        token.update(1.0, 'Done')
 
-        self._progress = 1.0
-        self._status = 'Done'
+class ImporterMock(Importer):
 
-        return Simulation(options)
-
-    def cancel(self):
-        self._cancelled = True
-        self._progress = 0.0
-        self._status = 'Cancelled'
-
-    @property
-    def progress(self):
-        return self._progress
-
-    @property
-    def status(self):
-        return self._status
+    def _import(self, options, dirpath, errors):
+        return []
 
 class ProgramMock(Program):
+
+    def __init__(self, foo=None):
+        self.foo = foo
+
+    @classmethod
+    def getidentifier(cls):
+        return 'mock'
+
+    @classmethod
+    def create_configurator(cls):
+        return ConfiguratorMock()
 
     def create_expander(self):
         return ExpanderMock()
@@ -162,21 +172,53 @@ class ProgramMock(Program):
     def create_exporter(self):
         return ExporterMock()
 
+    def create_importer(self):
+        return ImporterMock()
+
     def create_worker(self):
         return WorkerMock()
 
     def create_default_limits(self, options):
         return [ShowersLimit(100)]
 
-    @property
-    def name(self):
-        return 'mock'
+class ProgramHDF5HandlerMock(HDF5Handler):
+
+    CLASS = ProgramMock
+
+    def parse(self, group):
+        return super().parse(group)
+
+    def convert(self, obj, group):
+        super().convert(obj, group)
 
 class TestCase(unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
         super().__init__(methodName)
-        _set_settings(settings)
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        # Add program HDF5 handler
+        requirement = pkg_resources.Requirement('pymontecarlo')
+        distribution = pkg_resources.working_set.find(requirement)
+        entry_map = distribution.get_entry_map('pymontecarlo.fileformat')
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
+                                                     attrs=('ProgramHDF5HandlerMock',),
+                                                     dist=distribution)
+
+        # Add program to available programs
+        entry_map = distribution.get_entry_map('pymontecarlo.program')
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.testcase',
+                                                     attrs=('ProgramMock',),
+                                                     dist=distribution)
+
+        pymontecarlo.settings.reload()
+
+        pymontecarlo.settings.preferred_xrayline_encoding = 'utf16'
+        pymontecarlo.settings.preferred_xrayline_notation = 'iupac'
+        pymontecarlo.settings.clear_preferred_units()
 
     def setUp(self):
         super().setUp()
@@ -199,17 +241,19 @@ class TestCase(unittest.TestCase):
         sample = SubstrateSample(Material.pure(29))
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
         limits = [ShowersLimit(100)]
-        models = [RUTHERFORD]
+        models = [ElasticCrossSectionModel.RUTHERFORD]
         return Options(self.program, beam, sample, analyses, limits, models)
 
     def create_basic_photonintensityresult(self):
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = EmittedPhotonIntensityResultBuilder(analysis)
-        b.add_intensity((13, 'Ka1'), 1.0, 0.1)
-        b.add_intensity((13, 'Ka2'), 2.0, 0.2)
-        b.add_intensity((13, 'Kb1'), 4.0, 0.5)
-        b.add_intensity((13, 'Kb3'), 5.0, 0.7)
-        b.add_intensity((13, 'Ll'), 3.0, 0.1)
+        b.add_intensity((29, 'Ka1'), 1.0, 0.1)
+        b.add_intensity((29, 'Ka2'), 2.0, 0.2)
+        b.add_intensity((29, 'Kb1'), 4.0, 0.5)
+        b.add_intensity((29, 'Kb3'), 5.0, 0.7)
+        b.add_intensity((29, 'Kb5I'), 1.0, 0.1)
+        b.add_intensity((29, 'Kb5II'), 0.5, 0.1)
+        b.add_intensity((29, 'Ll'), 3.0, 0.1)
         return b.build()
 
     def create_basic_simulation(self):
@@ -220,8 +264,42 @@ class TestCase(unittest.TestCase):
 
         return Simulation(options, results)
 
+    def create_basic_project(self):
+        project = Project()
+
+        sim1 = self.create_basic_simulation()
+        project.add_simulation(sim1)
+
+        sim2 = self.create_basic_simulation()
+        sim2.options.beam.energy_eV = 20e3
+        project.add_simulation(sim2)
+
+        analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
+        b = GeneratedPhotonIntensityResultBuilder(analysis)
+        b.add_intensity((29, 'Ka1'), 10.0, 0.1)
+        b.add_intensity((29, 'Ka2'), 20.0, 0.2)
+        b.add_intensity((29, 'Kb1'), 40.0, 0.5)
+
+        sim3 = self.create_basic_simulation()
+        sim3.options.beam.diameter_m = 20e-9
+        sim3.results.append(b.build())
+        project.add_simulation(sim3)
+
+        return project
+
     def create_temp_dir(self):
         tmpdir = tempfile.mkdtemp()
         self.tmpdirs.append(tmpdir)
         return tmpdir
 
+    def convert_parse_hdf5handler(self, handler, obj):
+        filepath = os.path.join(self.create_temp_dir(), 'object.h5')
+        with h5py.File(filepath) as f:
+            self.assertTrue(handler.can_convert(obj, f))
+            handler.convert(obj, f)
+
+        with h5py.File(filepath) as f:
+            self.assertTrue(handler.can_parse(f))
+            obj2 = handler.parse(f)
+
+        return obj2

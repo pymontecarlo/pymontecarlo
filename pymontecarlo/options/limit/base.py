@@ -7,7 +7,7 @@ Base classes for limits
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 

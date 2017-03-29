@@ -1,90 +1,99 @@
-#!/usr/bin/env python
-"""
-================================================================================
-:mod:`material` -- XML handler for material
-================================================================================
-
-.. module:: material
-   :synopsis: XML handler for material
-
-.. inheritance-diagram:: pymontecarlo.fileformat.options.material
-
-"""
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
-__license__ = "GPL v3"
+""""""
 
 # Standard library modules.
-import xml.etree.ElementTree as etree
 
 # Third party modules.
+import numpy as np
 
 # Local modules.
-from pymontecarlo.fileformat.xmlhandler import _XMLHandler
-from pymontecarlo.options.material import Material, VACUUM, _Vacuum
-from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.fileformat.base import HDF5Handler
+from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
-_PARTICLES_LOOKUP = dict(zip(map(str, PARTICLES), PARTICLES))
 
-class MaterialXMLHandler(_XMLHandler):
+class MaterialHDF5HandlerMixin:
 
-    TAG = '{http://pymontecarlo.sf.net}material'
-    CLASS = Material
+    GROUP_MATERIALS = 'materials'
 
-    def parse(self, element):
-        composition = {}
-        subelement = element.find('composition')
-        if subelement is None:
-            raise ValueError("Element 'composition' not found")
-        for subsubelement in subelement.iter('element'):
-            wf = float(subsubelement.get('weightFraction'))
-            z = int(subsubelement.get('z'))
-            composition[z] = wf
+    def _parse_material_internal(self, group, ref_material):
+        group_material = group.file[ref_material]
+        return self._parse_hdf5handlers(group_material)
 
-        name = element.get('name')
+    def _find_materials_group(self, group):
+        if self.GROUP_MATERIALS in group:
+            return group[self.GROUP_MATERIALS]
+        if group.parent == group:
+            return None
+        return self._find_materials_group(group.parent)
 
-        density_kg_m3 = float(element.get('density'))
+    def _convert_material_internal(self, material, group):
+        group_materials = self._find_materials_group(group)
+        if group_materials is None:
+            group_materials = group.create_group(self.GROUP_MATERIALS)
 
-        absorption_energy_eV = {}
-        for subelement in element.iter('absorptionEnergy'):
-            particle = _PARTICLES_LOOKUP[subelement.get('particle')]
-            energy_eV = float(subelement.text)
-            absorption_energy_eV[particle] = energy_eV
+        name = '{} [{:d}]'.format(material.name, id(material))
+        if name in group_materials:
+            return group_materials[name]
 
-        return Material(composition, name, density_kg_m3, absorption_energy_eV)
+        group_material = group_materials.create_group(name)
 
-    def convert(self, obj):
-        element = _XMLHandler.convert(self, obj)
+        self._convert_hdf5handlers(material, group_material)
 
-        subelement = etree.SubElement(element, 'composition')
-        for z, wf in obj.composition.items():
-            subsubelement = etree.SubElement(subelement, 'element')
-            subsubelement.set('z', str(z))
-            subsubelement.set('weightFraction', str(wf))
+        return group_material
 
-        element.set('name', obj.name)
+class MaterialHDF5Handler(HDF5Handler):
 
-        element.set('density', str(obj.density_kg_m3))
+    ATTR_NAME = 'name'
+    DATASET_ATOMIC_NUMBER = 'atomic number'
+    DATASET_WEIGHT_FRACTION = 'weight fraction'
+    ATTR_DENSITY = 'density (kg/m3)'
 
-        for particle, energy_eV in obj.absorption_energy_eV.items():
-            subelement = etree.SubElement(element, 'absorptionEnergy')
-            subelement.set('particle', str(particle))
-            subelement.text = str(energy_eV)
+    def _parse_name(self, group):
+        return str(group.attrs[self.ATTR_NAME])
 
-        return element
+    def _parse_composition(self, group):
+        zs = group[self.DATASET_ATOMIC_NUMBER]
+        wfs = group[self.DATASET_WEIGHT_FRACTION]
+        return dict((int(z), float(wf)) for z, wf in zip(zs, wfs))
 
-class VACUUMXMLHandler(_XMLHandler):
+    def _parse_density_kg_per_m3(self, group):
+        return float(group.attrs[self.ATTR_DENSITY])
 
-    TAG = '{http://pymontecarlo.sf.net}vacuum'
-    CLASS = _Vacuum
+    def can_parse(self, group):
+        return super().can_parse(group) and \
+            self.ATTR_NAME in group.attrs and \
+            self.DATASET_ATOMIC_NUMBER in group and \
+            self.DATASET_WEIGHT_FRACTION in group and \
+            self.ATTR_DENSITY in group.attrs
 
-    def parse(self, element):
-        return VACUUM
+    def parse(self, group):
+        name = self._parse_name(group)
+        composition = self._parse_composition(group)
+        density_kg_per_m3 = self._parse_density_kg_per_m3(group)
+        return self.CLASS(name, composition, density_kg_per_m3)
 
-    def convert(self, obj):
-        return _XMLHandler.convert(self, obj)
+    def _convert_name(self, material, group):
+        group.attrs[self.ATTR_NAME] = material.name
+
+    def _convert_composition(self, material, group):
+        zs = sorted(material.composition.keys())
+        ds_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, data=zs, dtype=np.int)
+
+        wfs = [material.composition[z] for z in zs]
+        ds_wf = group.create_dataset(self.DATASET_WEIGHT_FRACTION, data=wfs)
+
+        ds_wf.dims.create_scale(ds_z)
+        ds_wf.dims[0].attach_scale(ds_z)
+
+    def _convert_density_kg_per_m3(self, material, group):
+        group.attrs[self.ATTR_DENSITY] = material.density_kg_per_m3
+
+    def convert(self, material, group):
+        super().convert(material, group)
+        self._convert_name(material, group)
+        self._convert_composition(material, group)
+        self._convert_density_kg_per_m3(material, group)
+
+    @property
+    def CLASS(self):
+        return Material

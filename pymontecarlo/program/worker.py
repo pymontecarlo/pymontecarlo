@@ -12,11 +12,11 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
+from pymontecarlo.exceptions import WorkerError
 
 # Globals and constants variables.
 
-class Worker(metaclass=abc.ABCMeta):
+class Worker:
     """
     Base class for all workers.
     A worker is used to run one simulation with a given program and
@@ -28,52 +28,17 @@ class Worker(metaclass=abc.ABCMeta):
     One should rather use a runner.
     """
 
-#    def create(self, options, outputdir, *args, **kwargs):
-#        """
-#        Creates the simulation file(s) from the options and saves it inside the
-#        output directory.
-#        This method should be implemented by derived class as it is specific
-#        to the different Monte Carlo programs.
-#
-#        :arg options: options of a simulation
-#        :arg outputdir: directory where to save the simulation file(s)
-#        """
-#        filepath = os.path.join(outputdir, options.name + '.xml')
-#        options.write(filepath)
-#
-#        return self._exporter.export(options, outputdir)
-
     @abc.abstractmethod
-    def run(self, options):
+    def run(self, token, simulation, outputdir):
         """
         Creates and runs a simulation from the specified options.
 
-        :arg options: options of simulation
-
-        :return: simulation
+        :arg simulation: simulation containing options to simulate
+        :arg outputdir: directory where to save simulation results.
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def cancel(self):
-        """
-        Cancels worker.
-        """
-        raise NotImplementedError
-
-    @abc.abstractproperty
-    def progress(self):
-        return 0.0
-
-    @abc.abstractproperty
-    def status(self):
-        return ''
-
-class SubprocessWorker(Worker):
-
-    def __init__(self):
-        super().__init__()
-        self._process = None
+class SubprocessWorkerMixin:
 
     def _create_process(self, *args, **kwargs):
         if sys.platform == "win32":
@@ -82,19 +47,25 @@ class SubprocessWorker(Worker):
         else:
             startupinfo = None
         logging.debug('Args: %s' % subprocess.list2cmdline(args[0]))
-        self._process = subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
-        return self._process
+        return subprocess.Popen(*args, startupinfo=startupinfo, **kwargs)
 
-    def _join_process(self):
-        self._process.wait()
-        returncode = self._process.returncode
-        self._process = None
+    def _wait_process(self, process, token, interval=1):
+        while True:
+            if token.cancelled():
+                process.kill()
+                break
+
+            try:
+                if process.wait(interval) is not None:
+                    break
+            except subprocess.TimeoutExpired:
+                continue
+
+        returncode = process.poll()
         logging.debug('returncode: %s' % returncode)
         if returncode != 0:
             raise WorkerError
 
-    def cancel(self):
-        if self._process is not None:
-            self._process.kill()
-            raise WorkerCancelledError
+        return returncode
+
 

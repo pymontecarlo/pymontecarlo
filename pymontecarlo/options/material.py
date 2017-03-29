@@ -16,7 +16,7 @@ import numpy as np
 import pymontecarlo.util.cbook as cbook
 from pymontecarlo.options.composition import \
     calculate_density_kg_per_m3, generate_name, from_formula
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 

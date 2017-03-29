@@ -9,6 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase, WorkerMock
+from pymontecarlo.simulation import Simulation
+from pymontecarlo.util.future import Token
 
 # Globals and constants variables.
 
@@ -19,13 +21,17 @@ class TestWorker(TestCase):
 
         self.w = WorkerMock()
 
-    def testrun(self):
-        options = self.create_basic_options()
-        simulation = self.w.run(options)
+        self.outputdir = self.create_temp_dir()
 
-        self.assertAlmostEqual(1.0, self.w.progress)
-        self.assertEqual('Done', self.w.status)
-        self.assertEqual(simulation.options, options)
+    def testrun(self):
+        token = Token()
+        options = self.create_basic_options()
+        simulation = Simulation(options)
+        self.w.run(token, simulation, self.outputdir)
+
+        self.assertAlmostEqual(1.0, token.progress)
+        self.assertEqual('Done', token.status)
+        self.assertFalse(token.cancelled())
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

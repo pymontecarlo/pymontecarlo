@@ -21,7 +21,7 @@ from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.options.particle import PARTICLES
+from pymontecarlo.options.particle import Particle
 from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
@@ -55,7 +55,8 @@ class Validator(object):
         return options
 
     def _validate_options(self, options, errors):
-        program = options.program
+        program = \
+            self._validate_program(options.program, options, errors)
         beam = \
             self._validate_beam(options.beam, options, errors)
         sample = \
@@ -68,6 +69,18 @@ class Validator(object):
             self._validate_models(options.models, options, errors)
 
         return Options(program, beam, sample, analyses, limits, models)
+
+    def validate_program(self, program, options):
+        errors = set()
+        program = self._validate_program(program, options, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return program
+
+    def _validate_program(self, program, options, errors):
+        return program
 
     def validate_beam(self, beam, options):
         errors = set()
@@ -98,7 +111,7 @@ class Validator(object):
         return energy_eV
 
     def _validate_beam_base_particle(self, particle, options, errors):
-        if particle not in PARTICLES:
+        if particle not in Particle:
             exc = ValueError('Unknown particle: {0}.'.format(particle))
             errors.add(exc)
 
@@ -572,7 +585,7 @@ class Validator(object):
             exc = ValueError('Model ({0}) is not supported.'.format(model))
             errors.add(exc)
 
-        return model_class(model.name, model.reference)
+        return model
 
     def validate_analyses(self, analyses, options):
         errors = set()

@@ -12,7 +12,7 @@ import math
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
     DegreesAttribute, are_sequence_equal, unique
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 

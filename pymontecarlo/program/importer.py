@@ -9,7 +9,6 @@ import abc
 
 # Local modules.
 from pymontecarlo.exceptions import ImportError_
-from pymontecarlo.simulation import Simulation
 
 # Globals and constants variables.
 
@@ -20,18 +19,18 @@ class Importer(metaclass=abc.ABCMeta):
 
     def import_(self, options, dirpath):
         """
-        Imports the results and returns a :class:`Simulation`
+        Imports the results and returns a :class:`list` of :class:`Result`.
 
         :arg options: options used for the simulation
         :arg dirpath: path containing the simulation files
         """
         errors = set()
-        simulation = self._import(options, dirpath, errors)
+        results = self._import(options, dirpath, errors)
 
         if errors:
             raise ImportError_(*errors)
 
-        return simulation
+        return results
 
     @abc.abstractmethod
     def _import(self, options, dirpath, errors):
@@ -40,26 +39,23 @@ class Importer(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    def _create_simulation(self, options):
-        """
-        Creates the simulation object.
-        """
-        return Simulation(options)
-
-    def _run_importers(self, simulation, dirpath, errors, *args, **kwargs):
+    def _run_importers(self, options, dirpath, errors, *args, **kwargs):
         """
         Internal command to call the register import functions. 
         All optional arguments passed to this method are transferred to the
         import methods.
         """
-        analyses = simulation.options.analyses
-        self._import_analyses(analyses, simulation, dirpath, errors, *args, **kwargs)
+        return self._import_analyses(options, dirpath, errors, *args, **kwargs)
 
-    def _import_analyses(self, analyses, simulation, dirpath, errors, *args, **kwargs):
-        for analysis in analyses:
-            self._import_analysis(analysis, simulation, dirpath, errors, *args, **kwargs)
+    def _import_analyses(self, options, dirpath, errors, *args, **kwargs):
+        results = []
 
-    def _import_analysis(self, analysis, simulation, dirpath, errors, *args, **kwargs):
+        for analysis in options.analyses:
+            results += self._import_analysis(analysis, dirpath, errors, *args, **kwargs)
+
+        return results
+
+    def _import_analysis(self, analysis, dirpath, errors, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.import_analysis_methods:
             exc = ValueError('Analysis ({0}) is not supported.'
@@ -68,4 +64,4 @@ class Importer(metaclass=abc.ABCMeta):
             return
 
         method = self.import_analysis_methods[analysis_class]
-        method(analysis, simulation, dirpath, errors, *args, **kwargs)
+        return method(analysis, dirpath, errors, *args, **kwargs)

@@ -11,8 +11,8 @@ import math
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
-from pymontecarlo.options.particle import ELECTRON
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.particle import Particle
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -23,7 +23,7 @@ class Beam(Option):
 
     BEAM_ENERGY_TOLERANCE_eV = 1e-2 # 0.01 eV
 
-    def __init__(self, energy_eV, particle=ELECTRON):
+    def __init__(self, energy_eV, particle=Particle.ELECTRON):
         """
         :arg energy_eV: initial energy of the particle(s)
         :type energy_eV: :class:`float`

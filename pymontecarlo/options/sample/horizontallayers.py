@@ -67,10 +67,10 @@ class HorizontalLayerSample(LayeredSample):
     def layers_zpositions_m(self):
         zpositions = []
 
-        zmax_m = 0.0
+        zmin_m = 0.0
         for layer in self.layers:
-            zmin_m = zmax_m
-            zmax_m = zmin_m - layer.thickness_m
+            zmax_m = zmin_m
+            zmin_m = zmax_m - layer.thickness_m
             zpositions.append((zmin_m, zmax_m))
 
         return zpositions

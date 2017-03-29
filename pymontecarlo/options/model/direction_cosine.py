@@ -13,11 +13,7 @@ from pymontecarlo.options.model.base import Model
 
 class DirectionCosineModel(Model):
 
-    @property
-    def category(self):
-        return 'direction cosine'
-
-SOUM1979 = DirectionCosineModel('Soum et al.', 'Soum et al. (1979)')
-DROUIN1996 = DirectionCosineModel('Drouin', 'Drouin (1996)')
-DEMERS2000 = DirectionCosineModel('Demers - Matrices rotation', 'Demers (2000)')
-LOWNEY1994 = DirectionCosineModel('Lowney (1994)',)
+    SOUM1979 = ('Soum et al.', 'Soum et al. (1979)')
+    DROUIN1996 = ('Drouin', 'Drouin (1996)')
+    DEMERS2000 = ('Demers - Matrices rotation', 'Demers (2000)')
+    LOWNEY1994 = ('Lowney (1994)',)

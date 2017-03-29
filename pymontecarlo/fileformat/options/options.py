@@ -1,357 +1,149 @@
-#!/usr/bin/env python
-"""
-================================================================================
-:mod:`options` -- XML handler for options
-================================================================================
-
-.. module:: options
-   :synopsis: XML handler for options
-
-.. inheritance-diagram:: pymontecarlo.fileformat.options.options
-
-"""
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
-__license__ = "GPL v3"
+""""""
 
 # Standard library modules.
-import xml.etree.ElementTree as etree
 
 # Third party modules.
-import numpy as np
 
 # Local modules.
-from pymontecarlo.fileformat.handler import \
-    find_convert_handler, find_parse_handler
-
+from pymontecarlo.fileformat.base import HDF5Handler
+from pymontecarlo.fileformat.options.material import MaterialHDF5HandlerMixin
 from pymontecarlo.options.options import Options
 
-import pymontecarlo.util.xmlutil as xmlutil
-from pymontecarlo.util.monitorable import _MonitorableThread, _Monitorable
-from pymontecarlo.util.filelock import FileLock
-
 # Globals and constants variables.
-VERSION = '6'
 
-class _OptionsElementReaderThread(_MonitorableThread):
+class OptionsHDF5Handler(HDF5Handler):
 
-    def __init__(self, element):
-        _MonitorableThread.__init__(self, args=(element,))
+    GROUP_PROGRAM = 'program'
+    GROUP_BEAM = 'beam'
+    GROUP_SAMPLE = 'sample'
+    GROUP_ANALYSES = 'analyses'
+    GROUP_LIMITS = 'limits'
+    GROUP_MODELS = 'models'
 
-    def _run(self, element):
-        self._update_status(0.1, "Check version")
-        if self.is_cancelled(): return
-        version = self._read_version(element)
-        if version != VERSION:
-            raise ValueError('Incompatible version: %s != %s' % \
-                             (version, VERSION))
+    GROUP_DETECTORS = 'detectors'
+    GROUP_MATERIALS = MaterialHDF5HandlerMixin.GROUP_MATERIALS
 
-        self._update_status(0.13, "Reading name")
-        if self.is_cancelled(): return
-        name = self._read_name(element)
-        options = Options(name)
+    def _parse_program(self, group):
+        group_program = group[self.GROUP_PROGRAM]
+        return self._parse_hdf5handlers(group_program)
 
-        self._update_status(0.16, "Reading UUID")
-        if self.is_cancelled(): return
-        options._uuid = self._read_uuid(element)
+    def _parse_beam(self, group):
+        group_beam = group[self.GROUP_BEAM]
+        return self._parse_hdf5handlers(group_beam)
 
-        self._update_status(0.2, "Reading programs")
-        if self.is_cancelled(): return
-        options.programs.update(self._read_programs(element))
+    def _parse_sample(self, group):
+        group_sample = group[self.GROUP_SAMPLE]
+        return self._parse_hdf5handlers(group_sample)
 
-        self._update_status(0.3, "Reading beams")
-        if self.is_cancelled(): return
-        options.beam = self._read_beams(element)
+    def _parse_analysis(self, group):
+        return self._parse_hdf5handlers(group)
 
-        self._update_status(0.4, "Reading geometries")
-        if self.is_cancelled(): return
-        options.geometry = self._read_geometries(element)
+    def _parse_analyses(self, group):
+        group_analyses = group[self.GROUP_ANALYSES]
 
-        self._update_status(0.6, "Reading detectors")
-        if self.is_cancelled(): return
-        options.detectors.update(self._read_detectors(element))
+        analyses = []
+        for group_analysis in group_analyses.values():
+            analyses.append(self._parse_analysis(group_analysis))
 
-        self._update_status(0.8, "Reading limits")
-        if self.is_cancelled(): return
-        options.limits.update(self._read_limits(element))
+        return analyses
 
-        self._update_status(0.9, "Reading models")
-        if self.is_cancelled(): return
-        options.models.update(self._read_models(element))
+    def _parse_limit(self, group):
+        return self._parse_hdf5handlers(group)
 
-        return options
+    def _parse_limits(self, group):
+        group_limits = group[self.GROUP_LIMITS]
 
-    def _read_version(self, element):
-        return element.attrib['version']
-
-    def _read_name(self, element):
-        return element.attrib['name']
-
-    def _read_uuid(self, element):
-        return element.attrib['uuid']
-
-    def _read_programs(self, element):
-        subelement = element.find('programs')
-        if subelement is None:
-            return set()
-
-        programs = set()
-        for subsubelement in subelement:
-            programs.add(subsubelement.text)
-
-        return programs
-
-    def _read_beams(self, element):
-        subelement = element.find('beam')
-        if subelement is None:
-            return []
-
-        beams = []
-        for subsubelement in subelement:
-            handler = find_parse_handler('pymontecarlo.fileformat.options.beam', subsubelement)
-            beams.append(handler.parse(subsubelement))
-
-        return beams
-
-    def _read_geometries(self, element):
-        subelement = element.find('geometry')
-        if subelement is None:
-            return []
-
-        geometries = []
-        for subsubelement in subelement:
-            handler = find_parse_handler('pymontecarlo.fileformat.options.geometry', subsubelement)
-            geometries.append(handler.parse(subsubelement))
-
-        return geometries
-
-    def _read_detectors(self, element):
-        subelement = element.find('detectors')
-        if subelement is None:
-            return {}
-
-        detectors = {}
-        for subsubelement in subelement:
-            key = subsubelement.attrib['_key']
-            handler = find_parse_handler('pymontecarlo.fileformat.options.detector', subsubelement)
-            detector = handler.parse(subsubelement)
-            detectors.setdefault(key, []).append(detector)
-
-        return detectors
-
-    def _read_limits(self, element):
-        subelement = element.find('limits')
-        if subelement is None:
-            return set()
-
-        limits = set()
-        for subsubelement in subelement:
-            handler = find_parse_handler('pymontecarlo.fileformat.options.limit', subsubelement)
-            limits.add(handler.parse(subsubelement))
+        limits = []
+        for group_limit in group_limits.values():
+            limits.append(self._parse_limit(group_limit))
 
         return limits
 
-    def _read_models(self, element):
-        subelement = element.find('models')
-        if subelement is None:
-            return set()
+    def _parse_model(self, group):
+        return self._parse_hdf5handlers(group)
 
-        models = set()
-        for subsubelement in subelement:
-            handler = find_parse_handler('pymontecarlo.fileformat.options.model', subsubelement)
-            models.add(handler.parse(subsubelement))
+    def _parse_models(self, group):
+        group_models = group[self.GROUP_MODELS]
+
+        models = []
+        for group_model in group_models.values():
+            models.append(self._parse_model(group_model))
 
         return models
 
-class _OptionsSourceReaderThread(_OptionsElementReaderThread):
+    def can_parse(self, group):
+        return super().can_parse(group) and \
+            self.GROUP_PROGRAM in group and \
+            self.GROUP_BEAM in group and \
+            self.GROUP_SAMPLE in group and \
+            self.GROUP_ANALYSES in group and \
+            self.GROUP_LIMITS in group and \
+            self.GROUP_MODELS in group
 
-    def __init__(self, source):
-        _MonitorableThread.__init__(self, args=(source,))
+    def parse(self, group):
+        program = self._parse_program(group)
+        beam = self._parse_beam(group)
+        sample = self._parse_sample(group)
+        analyses = self._parse_analyses(group)
+        limits = self._parse_limits(group)
+        models = self._parse_models(group)
+        return self.CLASS(program, beam, sample, analyses, limits, models)
 
-    def _run(self, source):
-        element = xmlutil.parse(source)
-        return _OptionsElementReaderThread._run(self, element)
+    def _convert_program(self, program, group):
+        group_program = group.create_group(self.GROUP_PROGRAM)
+        self._convert_hdf5handlers(program, group_program)
 
-class _OptionsFilepathReaderThread(_OptionsSourceReaderThread):
+    def _convert_beam(self, beam, group):
+        group_beam = group.create_group(self.GROUP_BEAM)
+        self._convert_hdf5handlers(beam, group_beam)
 
-    def __init__(self, filepath):
-        _MonitorableThread.__init__(self, args=(filepath,))
+    def _convert_sample(self, sample, group):
+        group_sample = group.create_group(self.GROUP_SAMPLE)
+        self._convert_hdf5handlers(sample, group_sample)
 
-    def _run(self, filepath):
-        with FileLock(filepath), open(filepath, 'rb') as fp:
-            return _OptionsSourceReaderThread._run(self, fp)
+    def _convert_analysis(self, analysis, group):
+        name = '{} [{:d}]'.format(analysis.__class__.__name__, id(analysis))
+        group_analysis = group.create_group(name)
+        self._convert_hdf5handlers(analysis, group_analysis)
 
-class OptionsReader(_Monitorable):
+    def _convert_analyses(self, analyses, group):
+        group_analyses = group.create_group(self.GROUP_ANALYSES)
+        for analysis in analyses:
+            self._convert_analysis(analysis, group_analyses)
 
-    def _create_thread(self, filepath=None, source=None, element=None, *args, **kwargs):
-        if filepath is not None:
-            return _OptionsFilepathReaderThread(filepath)
-        if source is not None:
-            return _OptionsSourceReaderThread(source)
-        elif element is not None:
-            return _OptionsElementReaderThread(element)
-        raise
+    def _convert_limit(self, limit, group):
+        name = '{} [{:d}]'.format(limit.__class__.__name__, id(limit))
+        group_limit = group.create_group(name)
+        self._convert_hdf5handlers(limit, group_limit)
 
-    def can_read(self, source):
-        if hasattr(source, 'read'):
-            element = xmlutil.parse(source)
-        else:
-            with FileLock(source), open(source, 'rb') as fp:
-                element = xmlutil.parse(fp)
-        return self.can_parse(element)
+    def _convert_limits(self, limits, group):
+        group_limits = group.create_group(self.GROUP_LIMITS)
+        for limit in limits:
+            self._convert_analysis(limit, group_limits)
 
-    def can_parse(self, element):
-        return element.tag == '{http://pymontecarlo.sf.net}options'
+    def _convert_model(self, model, group):
+        name = '{} [{:d}]'.format(model.__class__.__name__, id(model))
+        group_model = group.create_group(name)
+        self._convert_hdf5handlers(model, group_model)
 
-    def read(self, source):
-        if hasattr(source, 'read'):
-            self._start(source=source)
-        else:
-            self._start(filepath=source)
+    def _convert_models(self, models, group):
+        group_models = group.create_group(self.GROUP_MODELS)
+        for model in models:
+            self._convert_model(model, group_models)
 
-    def parse(self, element):
-        self._start(element=element)
+    def convert(self, options, group):
+        super().convert(options, group)
 
-class _OptionsElementWriterThread(_MonitorableThread):
+        group.require_group(self.GROUP_MATERIALS)
+        group.require_group(self.GROUP_DETECTORS)
 
-    def __init__(self, options):
-        _MonitorableThread.__init__(self, args=(options,))
+        self._convert_program(options.program, group)
+        self._convert_beam(options.beam, group)
+        self._convert_sample(options.sample, group)
+        self._convert_analyses(options.analyses, group)
+        self._convert_limits(options.limits, group)
+        self._convert_models(options.models, group)
 
-    def _run(self, options):
-        element = etree.Element('{http://pymontecarlo.sf.net}options')
-
-        self._update_status(0.1, "Writing version")
-        if self.is_cancelled(): return
-        self._write_version(options, element)
-
-        self._update_status(0.13, "Writing name")
-        if self.is_cancelled(): return
-        self._write_name(options, element)
-
-        self._update_status(0.16, "Writing UUID")
-        if self.is_cancelled(): return
-        self._write_uuid(options, element)
-
-        self._update_status(0.2, "Writing programs")
-        if self.is_cancelled(): return
-        self._write_programs(options, element)
-
-        self._update_status(0.3, "Writing beams")
-        if self.is_cancelled(): return
-        self._write_beams(options, element)
-
-        self._update_status(0.4, "Writing geometries")
-        if self.is_cancelled(): return
-        self._write_geometries(options, element)
-
-        self._update_status(0.6, "Writing detectors")
-        if self.is_cancelled(): return
-        self._write_detectors(options, element)
-
-        self._update_status(0.8, "Writing limits")
-        if self.is_cancelled(): return
-        self._write_limits(options, element)
-
-        self._update_status(0.9, "Writing models")
-        if self.is_cancelled(): return
-        self._write_models(options, element)
-
-        return element
-
-    def _write_version(self, options, element):
-        element.set('version', VERSION)
-
-    def _write_name(self, options, element):
-        element.set('name', options.name)
-
-    def _write_uuid(self, options, element):
-        element.set('uuid', options._uuid or 'xsi:nil')
-
-    def _write_programs(self, options, element):
-        subelement = etree.SubElement(element, 'programs')
-        for alias in options.programs.aliases():
-            subsubelement = etree.SubElement(subelement, 'program')
-            subsubelement.text = alias
-
-    def _write_beams(self, options, element):
-        subelement = etree.SubElement(element, 'beam')
-        for beam in np.array(options.beam, ndmin=1):
-            handler = find_convert_handler('pymontecarlo.fileformat.options.beam', beam)
-            subelement.append(handler.convert(beam))
-
-    def _write_geometries(self, options, element):
-        subelement = etree.SubElement(element, 'geometry')
-        for geometry in np.array(options.geometry, ndmin=1):
-            handler = find_convert_handler('pymontecarlo.fileformat.options.geometry', geometry)
-            subelement.append(handler.convert(geometry))
-
-    def _write_detectors(self, options, element):
-        subelement = etree.SubElement(element, 'detectors')
-        for key, detectors in options.detectors.items():
-            for detector in np.array(detectors, ndmin=1):
-                handler = find_convert_handler('pymontecarlo.fileformat.options.detector', detector)
-                subsubelement = handler.convert(detector)
-                subsubelement.set('_key', key)
-                subelement.append(subsubelement)
-
-    def _write_limits(self, options, element):
-        subelement = etree.SubElement(element, 'limits')
-        for limit in options.limits:
-            handler = find_convert_handler('pymontecarlo.fileformat.options.limit', limit)
-            subelement.append(handler.convert(limit))
-
-    def _write_models(self, options, element):
-        subelement = etree.SubElement(element, 'models')
-        for model in options.models:
-            handler = find_convert_handler('pymontecarlo.fileformat.options.model', model)
-            subelement.append(handler.convert(model))
-
-class _OptionsSourceWriterThread(_OptionsElementWriterThread):
-
-    def __init__(self, options, source):
-        _MonitorableThread.__init__(self, args=(options, source))
-
-    def _run(self, options, source):
-        element = _OptionsElementWriterThread._run(self, options)
-        source.write(xmlutil.tostring(element))
-        return source
-
-class _OptionsFilepathWriterThread(_OptionsElementWriterThread):
-
-    def __init__(self, options, filepath):
-        _MonitorableThread.__init__(self, args=(options, filepath))
-
-    def _run(self, options, filepath):
-        element = _OptionsElementWriterThread._run(self, options)
-        with FileLock(filepath), open(filepath, 'wb') as fp:
-            fp.write(xmlutil.tostring(element))
-        return filepath
-
-class OptionsWriter(_Monitorable):
-
-    def _create_thread(self, options, filepath=None, source=None, *args, **kwargs):
-        if filepath is not None:
-            return _OptionsFilepathWriterThread(options, filepath)
-        elif source is not None:
-            return _OptionsSourceWriterThread(options, source)
-        else:
-            return _OptionsElementWriterThread(options)
-
-    def can_write(self, options):
-        return self.can_convert(options)
-
-    def can_convert(self, options):
-        return type(options) is Options
-
-    def write(self, options, source):
-        if hasattr(source, 'write'):
-            self._start(options, source=source)
-        else:
-            self._start(options, filepath=source)
-
-    def convert(self, options):
-        self._start(options)
+    @property
+    def CLASS(self):
+        return Options

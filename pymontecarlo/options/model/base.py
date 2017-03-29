@@ -4,36 +4,32 @@ Base models.
 
 # Standard library modules.
 import abc
+import enum
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.option import Option
+from pymontecarlo.options.base import Option
 
 # Globals and constants variables.
 
-class Model(Option):
+class ModelMeta(enum.EnumMeta, abc.ABCMeta):
+    pass
 
-    def __init__(self, name, reference=''):
-        self.name = name
+class Model(Option, enum.Enum, metaclass=ModelMeta):
+
+    def __init__(self, fullname, reference=''):
+        self.fullname = fullname
         self.reference = reference
 
-    def __repr__(self):
-        return '<{classname}({name})>' \
-            .format(classname=self.__class__.__name__,
-                    name=self.name)
+    def __eq__(self, other):
+        # NOTE: Must be implemented from Option,
+        # but should only used equality from Enum
+        return enum.Enum.__eq__(self, other)
 
     def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return super().__eq__(other) and \
-            self.name == other.name and \
-            self.reference == other.reference
+        return self.fullname
 
     def create_datarow(self, **kwargs):
         return super().create_datarow(**kwargs)
 
-    @abc.abstractproperty
-    def category(self):
-        raise NotImplementedError

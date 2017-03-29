@@ -18,8 +18,7 @@ from pymontecarlo.options.sample import \
      VerticalLayerSample, SphereSample)
 from pymontecarlo.options.detector.photon import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
-from pymontecarlo.options.model import \
-    ElasticCrossSectionModel, RUTHERFORD, ELSEPA2005, POUCHOU_PICHOIR1991
+from pymontecarlo.options.model import ElasticCrossSectionModel, MassAbsorptionCoefficientModel
 from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.util.xrayline import XrayLine
 
@@ -52,8 +51,8 @@ class TestValidator(TestCase):
 
         self.v.model_validate_methods[ElasticCrossSectionModel] = self.v._validate_model_valid_models
 
-        self.v.valid_models[ElasticCrossSectionModel] = [ELSEPA2005]
-        self.v.default_models[ElasticCrossSectionModel] = ELSEPA2005
+        self.v.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.ELSEPA2005]
+        self.v.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.ELSEPA2005
 
         self.options = self.create_basic_options()
 
@@ -235,12 +234,12 @@ class TestValidator(TestCase):
         self.assertEqual(2, len(errors))
 
     def testvalidate_models(self):
-        models = [ELSEPA2005]
+        models = [ElasticCrossSectionModel.ELSEPA2005]
         models2 = self.v.validate_models(models, self.options)
         self.assertSequenceEqual(models2, models)
 
     def testvalidate_models_exception(self):
-        models = [RUTHERFORD]
+        models = [ElasticCrossSectionModel.RUTHERFORD]
         self.assertRaises(ValidationError, self.v.validate_models, models, self.options)
 
         errors = set()
@@ -250,16 +249,16 @@ class TestValidator(TestCase):
     def testvalidate_models_default(self):
         models = []
         models2 = self.v.validate_models(models, self.options)
-        self.assertSequenceEqual(models2, [ELSEPA2005])
+        self.assertSequenceEqual(models2, [ElasticCrossSectionModel.ELSEPA2005])
 
     def testvalidate_model(self):
-        model = ELSEPA2005
+        model = ElasticCrossSectionModel.ELSEPA2005
         model2 = self.v.validate_model(model, self.options)
         self.assertEqual(model2, model)
-        self.assertIsNot(model2, model)
+        self.assertIs(model2, model)
 
     def testvalidate_model_exception(self):
-        model = RUTHERFORD
+        model = ElasticCrossSectionModel.RUTHERFORD
         self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
 
         errors = set()
@@ -267,7 +266,7 @@ class TestValidator(TestCase):
         self.assertEqual(1, len(errors))
 
     def testvalidate_model_exception2(self):
-        model = POUCHOU_PICHOIR1991
+        model = MassAbsorptionCoefficientModel.POUCHOU_PICHOIR1991
         self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
 
         errors = set()

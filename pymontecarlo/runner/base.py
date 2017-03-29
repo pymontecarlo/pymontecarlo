@@ -9,93 +9,63 @@ import abc
 
 # Local modules.
 from pymontecarlo.project import Project
+from pymontecarlo.simulation import Simulation
+from pymontecarlo.util.future import FutureExecutor
 
 # Globals and constants variables.
 
-class Tracker(metaclass=abc.ABCMeta):
-
-    def __init__(self, options):
-        self.options = options
-
-    @abc.abstractmethod
-    def cancel(self):
-        """
-        Cancels the simulation
-        """
-        raise NotImplementedError
-
-    @abc.abstractproperty
-    def progress(self):
-        """
-        Returns progress of simulation as a :class:`float` from 0.0 to 1.0
-        """
-        return 0.0
-
-    @abc.abstractproperty
-    def status(self):
-        """
-        Returns status of simulation.
-        """
-        return ''
-
-class Runner(metaclass=abc.ABCMeta):
+class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
     def __init__(self, project=None, max_workers=1):
+        super().__init__(max_workers)
+
         if project is None:
             project = Project()
         self.project = project
 
-        self.max_workers = max_workers
-        self.options_failed_count = 0
-        self.options_cancelled_count = 0
-        self.options_submitted_count = 0
-        self.options_simulated_count = 0
+    def _on_done(self, future):
+        simulation = super()._on_done(future)
+        if simulation:
+            self.project.add_simulation(simulation)
 
-    def __enter__(self):
-        self.start()
-        return self
+    def _prepare_simulations(self, options, simulations=None):
+        if simulations is None:
+            simulations = []
 
-    def __exit__(self, exctype, value, tb):
-        self.shutdown(wait=True)
-        return False
+        for analysis in options.analyses:
+            for other_options in analysis.apply(options):
+                self._prepare_simulations(other_options, simulations)
+
+        program = options.program
+        validator = program.create_validator()
+        options = validator.validate_options(options)
+        simulation = Simulation(options)
+        if simulation not in self.project.simulations:
+            simulations.append(simulation)
+
+        return simulations
 
     @abc.abstractmethod
-    def start(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def shutdown(self, wait=True):
+    def _prepare_target(self):
         raise NotImplementedError
 
     def submit(self, options):
         """
-        Submits the options in the queue and returns a :class:`Tracker` object.
-        """
-        program = options.program
-        validator = program.create_validator()
-        options = validator.validate_options(options)
-        return self._submit(options)
-
-    @abc.abstractmethod
-    def _submit(self, options):
-        """
-        Actual implementation of :meth:`submit`.
+        Submits the options in the queue.
+        If a simulation with the same options already exists in the project,
+        the simulation is skipped.
+        If additional simulations are required based on the analyses of the
+        submitted options, they will also be submitted.
         
-        It should increment :var:`options_submitted_count` by one.
-        
-        :arg options: valid options
+        :return: a list of :class:`Future` object, one for each launched 
+            simulation
         """
-        raise NotImplementedError
+        simulations = self._prepare_simulations(options)
+        target = self._prepare_target()
 
-    @abc.abstractmethod
-    def wait(self, timeout=None):
-        raise NotImplementedError
+        futures = []
+        for simulation in simulations:
+            future = self._submit(target, simulation)
+            futures.append(future)
 
-    @property
-    def progress(self):
-        """
-        Returns progress of runner as a :class:`float` from 0.0 to 1.0
-        """
-        return (self.options_simulated_count + \
-                self.options_failed_count + \
-                self.options_cancelled_count) / self.options_submitted_count
+        return futures

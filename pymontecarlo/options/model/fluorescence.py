@@ -13,10 +13,6 @@ from pymontecarlo.options.model.base import Model
 
 class FluorescenceModel(Model):
 
-    @property
-    def category(self):
-        return 'fluorescence'
-
-NONE = FluorescenceModel('no fluorescence')
-FLUORESCENCE = FluorescenceModel('fluorescence')
-FLUORESCENCE_COMPTON = FluorescenceModel('fluorescence with Compton')
+    NONE = ('no fluorescence')
+    FLUORESCENCE = ('fluorescence')
+    FLUORESCENCE_COMPTON = ('fluorescence with Compton')

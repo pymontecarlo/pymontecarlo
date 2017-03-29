@@ -9,7 +9,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.util.cbook import are_sequence_equal, unique, find_by_type
-from pymontecarlo.options.option import Option, OptionBuilder
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -43,8 +43,9 @@ class Options(Option):
             .format(classname=self.__class__.__name__, **self.__dict__)
 
     def __eq__(self, other):
+        # NOTE: Here we only care that two programs have the same identifier
         return super().__eq__(other) and \
-            self.program == other.program and \
+            self.program.getidentifier() == other.program.getidentifier() and \
             self.beam == other.beam and \
             self.sample == other.sample and \
             are_sequence_equal(self.analyses, other.analyses) and \
@@ -119,10 +120,14 @@ class OptionsBuilder(OptionBuilder):
             self.analyses.append(analysis)
 
     def add_limit(self, program, limit):
-        self.limits.setdefault(program, []).append(limit)
+        self.limits.setdefault(program, [])
+        if limit not in self.limits[program]:
+            self.limits[program].append(limit)
 
     def add_model(self, program, model):
-        self.models.setdefault(program, []).append(model)
+        self.models.setdefault(program, [])
+        if model not in self.models[program]:
+            self.models[program].append(model)
 
     def build(self):
         list_options = []
