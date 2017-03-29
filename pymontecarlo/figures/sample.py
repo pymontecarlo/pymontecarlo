@@ -6,6 +6,7 @@ Figure to draw a sample.
 
 # Standard library modules.
 from math import tan
+import enum
 
 # Third party modules.
 import matplotlib
@@ -23,6 +24,12 @@ from pymontecarlo.options.sample import SubstrateSample, InclusionSample, Horizo
 from pymontecarlo.options.sample.base import Layer
 
 # Globals and constant variables.
+
+@enum.unique
+class Perspective(enum.Enum):
+    XZ = 'xz'
+    XY = 'xy'
+    YZ = 'yz'
 
 class SampleFigure(Figure):
 
@@ -45,6 +52,8 @@ class SampleFigure(Figure):
         if not trajectories:
             trajectories = []
         self.trajectories = trajectories
+
+        self.perspective = Perspective.XZ
 
         self.sample_draw_methods = dict()
         self.sample_draw_methods[SubstrateSample] = self._compose_sample_substrate
@@ -90,21 +99,20 @@ class SampleFigure(Figure):
                               beam_view_size * SCALE_FACTOR * 2,
                               10e-16)
 
-    def draw(self, ax, perspective='XZ'):
+    def draw(self, ax):
         """
         :param ax: an instance of matplotlib.axes.Axes
-        :param perspective: element of ('XZ', 'XZ', 'XY')
         """
         self._recalc_view_size()
 
         if self.sample:
-            self._draw_sample(ax, self.sample, perspective)
+            self._draw_sample(ax, self.sample, self.perspective)
 
         for beam in self.beams:
-            self._draw_beam(ax, beam, perspective)
+            self._draw_beam(ax, beam, self.perspective)
 
         for trajectory in self.trajectories:
-            self._draw_trajectory(ax, trajectory, perspective)
+            self._draw_trajectory(ax, trajectory, self.perspective)
 
         # self._view_size *= 1.1
         ax.set_xlim((-self._view_size / 2., self._view_size / 2.))
@@ -112,67 +120,67 @@ class SampleFigure(Figure):
         ax.set_aspect('equal')
 
     # DRAW SAMPLES
-    def _draw_sample(self, ax, sample, perspective='XZ'):
+    def _draw_sample(self, ax, sample, perspective):
         sample_class = sample.__class__
 
         if sample_class not in self.sample_draw_methods:
             return
 
-        perspective = perspective.upper()
         method = self.sample_draw_methods[sample_class]
 
         patches = method(sample, perspective)
         col = PatchCollection(patches, match_original=True)
 
-        if perspective == 'XZ':
+        if perspective is Perspective.XZ:
             trans = Affine2D().scale(sx=1, sy=1 + tan(abs(sample.tilt_rad))) + ax.transData
             col.set_transform(trans)
-        elif perspective == 'YZ':
+        elif perspective is Perspective.YZ:
             trans = Affine2D().rotate_around(0, 0, sample.tilt_rad) + ax.transData
             col.set_transform(trans)
-        elif perspective == 'XY':
+        elif perspective is Perspective.XY:
             trans = Affine2D().scale(sx=1, sy=1 + tan(abs(sample.tilt_rad))) + ax.transData
             col.set_transform(trans)
 
         ax.add_collection(col)
 
-    def _compose_substrate(self, material, perspective='XZ'):
-        perspective = perspective.upper()
-
-        if perspective == 'XZ' or perspective == 'YZ':
-            patches = [Rectangle((-self._view_size / 2., 0), self._view_size, -self._view_size / 2.,
-                                 color=material.color)]
-        else:
+    def _compose_substrate(self, material, perspective):
+        if perspective is Perspective.XY:
             patches = [Rectangle((-self._view_size / 2., self._view_size / 2.),
                                  self._view_size, -self._view_size,
                                  color=material.color)]
+        else:
+            patches = [Rectangle((-self._view_size / 2., 0), self._view_size, -self._view_size / 2.,
+                                 color=material.color)]
 
         return patches
 
-    def _compose_sample_substrate(self, sample, perspective='XZ'):
-        perspective = perspective.upper()
+    def _compose_sample_substrate(self, sample, perspective):
         return self._compose_substrate(sample.material, perspective)
 
-    def _compose_sample_inclusion(self, sample, perspective='XZ'):
+    def _compose_sample_inclusion(self, sample, perspective):
         patches = list()
-        perspective = perspective.upper()
 
         patches.extend(self._compose_substrate(sample.substrate_material, perspective))
 
-        if perspective == 'XZ' or perspective == 'YZ':
-            patches.append(Wedge((0, 0), sample.inclusion_diameter_m, 180, 0,
-                                 color=sample.inclusion_material.color))
-        else:
+        if perspective is Perspective.XY:
             patches.append(Circle((0, 0), sample.inclusion_diameter_m,
                                   color=sample.inclusion_material.color))
+        else:
+            patches.append(Wedge((0, 0), sample.inclusion_diameter_m, 180, 0,
+                                 color=sample.inclusion_material.color))
 
         return patches
 
-    def _compose_sample_hlayer(self, sample, perspective='XZ'):
+    def _compose_sample_hlayer(self, sample, perspective):
         patches = list()
-        perspective = perspective.upper()
 
-        if perspective == 'XZ' or perspective == 'YZ':
+        if perspective is Perspective.XY:
+            if len(sample.layers) > 0:
+                patches.append(Rectangle((-self._view_size / 2., self._view_size / 2.),
+                                         self._view_size, -self._view_size,
+                                         color=sample.layers[0].material.color))
+
+        else:
             depth_m = 0
             patches.extend(self._compose_substrate(sample.substrate_material, perspective))
 
@@ -181,19 +189,13 @@ class SampleFigure(Figure):
                                          self._view_size, -layer.thickness_m,
                                          color=layer.material.color))
                 depth_m -= layer.thickness_m
-        else:
-            if len(sample.layers) > 0:
-                patches.append(Rectangle((-self._view_size / 2., self._view_size / 2.),
-                                         self._view_size, -self._view_size,
-                                         color=sample.layers[0].material.color))
 
         return patches
 
-    def _compose_sample_vlayer(self, sample, perspective='XZ'):
+    def _compose_sample_vlayer(self, sample, perspective):
         patches = list()
-        perspective = perspective.upper()
 
-        if perspective == 'XZ':
+        if perspective is Perspective.XZ:
             patches.append(Rectangle((0, 0), -self._view_size / 2., -self._view_size / 2.,
                                      color=sample.left_material.color))
             patches.append(Rectangle((0, 0), self._view_size / 2., -self._view_size / 2.,
@@ -202,7 +204,7 @@ class SampleFigure(Figure):
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 patches.append(Rectangle((pos[0], 0), layer.thickness_m, -self._view_size / 2.,
                                          color=layer.material.color))
-        elif perspective == 'YZ':
+        elif perspective is Perspective.YZ:
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 if pos[1] >= 0.0:
                     patches.append(Rectangle((-self._view_size / 2., 0),
@@ -215,7 +217,7 @@ class SampleFigure(Figure):
                                          self._view_size, -self._view_size / 2.,
                                          color=sample.left_material.color))
 
-        elif perspective == 'XY':
+        elif perspective is Perspective.XY:
             patches.append(Rectangle((0, self._view_size / 2.),
                                      - self._view_size / 2., -self._view_size,
                                      color=sample.left_material.color))
@@ -230,21 +232,20 @@ class SampleFigure(Figure):
 
         return patches
 
-    def _compose_sample_sphere(self, sample, perspective='XZ'):
+    def _compose_sample_sphere(self, sample, perspective):
         patches = list()
-        perspective = perspective.upper()
 
-        if perspective == 'XZ' or perspective == 'YZ':
-            patches.append(Circle((0, sample.diameter_m / -2.), sample.diameter_m / 2.,
+        if perspective is Perspective.XY:
+            patches.append(Circle((0, 0), sample.diameter_m / 2.,
                                   color=sample.material.color))
         else:
-            patches.append(Circle((0, 0), sample.diameter_m / 2.,
+            patches.append(Circle((0, sample.diameter_m / -2.), sample.diameter_m / 2.,
                                   color=sample.material.color))
 
         return patches
 
     # DRAW BEAMS
-    def _draw_beam(self, ax, beam, perspective='XZ'):
+    def _draw_beam(self, ax, beam, perspective):
         beam_class = beam.__class__
         if beam_class not in self.beam_draw_methods:
             return
@@ -255,29 +256,29 @@ class SampleFigure(Figure):
         col = PatchCollection(patches, match_original=True)
 
         # TODO rotate
-        if perspective == 'XZ':
+        if perspective is Perspective.XZ:
             pass
-        elif perspective == 'YZ':
+        elif perspective is Perspective.YZ:
             pass
-        elif perspective == 'XY':
+        elif perspective is Perspective.XY:
             pass
 
         ax.add_collection(col)
 
-    def _compose_beam_gaussian(self, beam, perspective='XZ'):
+    def _compose_beam_gaussian(self, beam, perspective):
         patches = list()
 
-        if perspective == 'XZ' or perspective == 'YZ':
+        if perspective is Perspective.XY:
+            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#00549F'))
+        else:
             patches.append(Rectangle((0 - beam.diameter_m / 2, 0),
                                      beam.diameter_m, (self._view_size / 2.) * 1.5,
                                      color='#00549F'))
-        else:
-            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#00549F'))
 
         return patches
 
     # DRAW TRAJECTORIES
-    def _draw_trajectory(self, ax, trajectory, perspective='XZ'):
+    def _draw_trajectory(self, ax, trajectory, perspective):
         raise NotImplementedError
 
 
@@ -427,19 +428,19 @@ class QtPlt (QDialog):
         # TODO handle trajectories
         trajectories = []
 
-        if self.radio_yz.isChecked():
-            perspective = 'YZ'
-        elif self.radio_xy.isChecked():
-            perspective = 'XY'
-        else:
-            perspective = 'XZ'
-
         sf = SampleFigure(sample, beams, trajectories)
+
+        if self.radio_yz.isChecked():
+            sf.perspective = Perspective.YZ
+        elif self.radio_xy.isChecked():
+            sf.perspective = Perspective.XY
+        else:
+            sf.perspective = Perspective.XZ
 
         self._figure.clf()
 
         ax = self._figure.add_subplot(111)
-        sf.draw(ax=ax, perspective=perspective)
+        sf.draw(ax=ax)
 
         self._canvas.draw_idle()
 
