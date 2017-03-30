@@ -39,6 +39,11 @@ class TestParticle(TestCase):
         self.assertEqual(0, Particle.PHOTON.charge)
         self.assertEqual(1, Particle.POSITRON.charge)
 
+    def testcolor(self):
+        self.assertEqual('#00549F', Particle.ELECTRON.color)
+        self.assertEqual('#FFD700', Particle.PHOTON.color)
+        self.assertEqual('#FFAB60', Particle.POSITRON.color)
+
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
