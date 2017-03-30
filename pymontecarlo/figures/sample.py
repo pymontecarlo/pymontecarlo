@@ -55,55 +55,54 @@ class SampleFigure(Figure):
 
         self.perspective = Perspective.XZ
 
-        self.sample_draw_methods = dict()
+        self.sample_draw_methods = {}
         self.sample_draw_methods[SubstrateSample] = self._compose_sample_substrate
         self.sample_draw_methods[InclusionSample] = self._compose_sample_inclusion
         self.sample_draw_methods[HorizontalLayerSample] = self._compose_sample_hlayer
         self.sample_draw_methods[VerticalLayerSample] = self._compose_sample_vlayer
         self.sample_draw_methods[SphereSample] = self._compose_sample_sphere
 
-        self.beam_draw_methods = dict()
+        self.beam_draw_methods = {}
         self.beam_draw_methods[GaussianBeam] = self._compose_beam_gaussian
 
-    def _recalc_view_size(self):
+        self.view_size_methods = {}
+        self.view_size_methods[InclusionSample] = self._calculate_view_size_inclusion_sample
+        self.view_size_methods[HorizontalLayerSample] = self._calculate_view_size_layered_sample
+        self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
+        self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
+        self.view_size_methods[GaussianBeam] = self._calculate_view_size_gaussian_beam
 
+    def _recalculate_view_size(self):
         SCALE_FACTOR = 5
-        view_size = 0.
-        sample_view_size = 0.
-        beam_view_size = 0.
+        view_size = 10e-16
 
-        # Consider sample
-        if self.sample.__class__ == SubstrateSample:
-            pass
+        for obj in [self.sample] + self.beams + self.trajectories:
+            clasz = obj.__class__
+            if clasz not in self.view_size_methods:
+                continue
 
-        elif self.sample.__class__ == InclusionSample:
-            sample_view_size = self.sample.inclusion_diameter_m
+            method = self.view_size_methods[clasz]
+            view_size = max(view_size, method(obj) * SCALE_FACTOR)
 
-        elif self.sample.__class__ == HorizontalLayerSample or \
-             self.sample.__class__ == VerticalLayerSample:
-            sample_view_size = sum([l.thickness_m for l in self.sample.layers])
+        self._view_size = view_size
 
-        elif self.sample.__class__ == SphereSample:
-            sample_view_size = self.sample.diameter_m
+    def _calculate_view_size_inclusion_sample(self, sample):
+        return sample.inclusion_diameter_m
 
-        # Consider beams
-        for beam in self.beams:
-            if beam.__class__ == GaussianBeam:
-                beam_view_size = max(beam_view_size, beam.diameter_m)
+    def _calculate_view_size_layered_sample(self, sample):
+        return sum([l.thickness_m for l in sample.layers])
 
-        # TODO consider trajectories
-        for trajectory in self.trajectories:
-            pass
+    def _calculate_view_size_sphere_sample(self, sample):
+        return sample.diameter_m
 
-        self._view_size = max(sample_view_size * SCALE_FACTOR,
-                              beam_view_size * SCALE_FACTOR * 2,
-                              10e-16)
+    def _calculate_view_size_gaussian_beam(self, beam):
+        return beam.diameter_m * 2
 
     def draw(self, ax):
         """
         :param ax: an instance of matplotlib.axes.Axes
         """
-        self._recalc_view_size()
+        self._recalculate_view_size()
 
         if self.sample:
             self._draw_sample(ax, self.sample, self.perspective)
