@@ -2,32 +2,26 @@
 
 # Standard library modules.
 import unittest
-# import logging
+import logging
 
 # Third party modules.
+from matplotlib import figure
 
 # Local modules.
-from pymontecarlo.figures.sample import SampleFigure
+from pymontecarlo.figures.sample import SampleFigure, Perspective
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
-from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
-    VerticalLayerSample, SphereSample
+from pymontecarlo.options.sample import \
+    (SubstrateSample, InclusionSample, HorizontalLayerSample,
+     VerticalLayerSample, SphereSample)
 from pymontecarlo.options.sample.base import Layer
-
-# from pymontecarlo.testcase import TestCase
-# from pymontecarlo.options.detector import PhotonDetector
-# from pymontecarlo.options.detector.base import Detector
-# from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
-# from pymontecarlo.options.model import ElasticCrossSectionModel, EnergyLossModel
-
-from matplotlib import figure
 
 class TestSampleFigure(unittest.TestCase):
 
     def setUp(self):
 
         # test data
-        self.perspectives = ('XZ', 'YZ', 'XY')
+        self.perspectives = (Perspective.XZ, Perspective.YZ, Perspective.XY)
 
         self.mat_ds = Material('Ds', {110: 1.}, 1.)
         self.mat_rg = Material('Rg', {111: 1.}, 1.)
@@ -42,42 +36,26 @@ class TestSampleFigure(unittest.TestCase):
         self.figure = figure.Figure()
         self.ax = self.figure.add_subplot(111)
 
-    def tearDown(self):
-        del self.perspectives
-        del self.mat_ds
-        del self.mat_rg
-        del self.mat_au
-        del self.layer
-
-        del self.figure
-        del self.ax
-
-    def test_get_color(self):
-        # TODO implement test_get_color
-        raise NotImplementedError
-
-    def test_get_material_color(self):
-        # TODO implement test_get_material
-        raise NotImplementedError
-
     # DRAW TEST
-    def test_draw(self):
-        sf = SampleFigure(None, [], [])
-        self.assertRaises(TypeError, sf.draw, ax=None)
+    def test_draw_nothing(self):
+        sf = SampleFigure()
+        sf.draw(self.ax)
+        self.assertEqual(len(self.ax.collections), 0)
 
     # DRAW SAMPLES TEST
     def test_draw_sample(self):
         sample = SubstrateSample(self.mat_ds)
-        sf = SampleFigure(sample, [], [])
+        sf = SampleFigure(sample)
 
-        sf._draw_sample(self.ax, sample)
+        sf._draw_sample(self.ax, sample, Perspective.XZ, 2.0)
         self.assertEqual(len(self.ax.collections), 1)
 
-    def _compose_sample(self, sample, len_):
-        for p, l in zip(self.perspectives, len_):
-            sf = SampleFigure(sample, [], [])
-            c = sf.sample_draw_methods[sample.__class__](sample, p)
-            self.assertEqual(len(c), l, msg='perspective: {}'.format(p))
+    def _compose_sample(self, sample, patches_counts):
+        for perspective, expected in zip(self.perspectives, patches_counts):
+            sf = SampleFigure(sample)
+            method = sf.sample_draw_methods[sample.__class__]
+            patches = method(sample, perspective, 2.0)
+            self.assertEqual(expected, len(patches))
 
     def test_compose_sample_substrate(self):
         sample = SubstrateSample(self.mat_ds)
@@ -104,18 +82,17 @@ class TestSampleFigure(unittest.TestCase):
         beam = GaussianBeam(energy_eV=1, diameter_m=1)
         sf = SampleFigure(None, [beam], [])
 
-        sf._draw_beam(self.ax, beam)
+        sf._draw_beam(self.ax, beam, Perspective.XZ, 2.0)
         self.assertEqual(len(self.ax.collections), 1)
 
     def test_compose_beam_gaussian(self):
         beam = GaussianBeam(energy_eV=1, diameter_m=1)
         sf = SampleFigure(None, [beam], [])
 
-        for p in self.perspectives:
-            c = sf._compose_beam_gaussian(beam=beam, perspective=p)
+        for perspective in self.perspectives:
+            c = sf._compose_beam_gaussian(beam, perspective, 2.0)
             self.assertEqual(len(c), 1)
 
-    # DRAW TRAJECTORIES TEST
-    def test_draw_trajectory(self):
-        # TODO implement test_draw_trajectory
-        raise NotImplementedError
+if __name__ == '__main__': #pragma: no cover
+    logging.getLogger().setLevel(logging.DEBUG)
+    unittest.main()
