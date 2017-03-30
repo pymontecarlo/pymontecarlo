@@ -266,14 +266,17 @@ class SampleFigure(Figure):
         ax.add_collection(col)
 
     def _compose_beam_gaussian(self, beam, perspective):
-        patches = list()
+        patches = []
+
+        radius = beam.diameter_m / 2
+        color = beam.particle.color
 
         if perspective is Perspective.XY:
-            patches.append(Circle((0, 0), radius=beam.diameter_m / 2., color='#00549F'))
+            patches.append(Circle((0, 0), radius=radius, color=color))
         else:
-            patches.append(Rectangle((0 - beam.diameter_m / 2, 0),
-                                     beam.diameter_m, (self._view_size / 2.) * 1.5,
-                                     color='#00549F'))
+            width = beam.diameter_m
+            height = (self._view_size / 2) * 1.5
+            patches.append(Rectangle((-radius, 0), width, height, color=color))
 
         return patches
 
