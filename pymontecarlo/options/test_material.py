@@ -22,7 +22,7 @@ class TestVACUUM(TestCase):
         self.assertEqual('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
         self.assertAlmostEqual(0.0, VACUUM.density_kg_per_m3, 4)
-        self.assertEqual('#000000', VACUUM.color)
+        self.assertTupleEqual((0.0, 0.0, 0.0, 0.0), VACUUM.color)
 
     def testcopy(self):
         self.assertIs(VACUUM, copy.copy(VACUUM))

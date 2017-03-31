@@ -134,7 +134,7 @@ class _Vacuum(Material):
             inst.name = 'Vacuum'
             inst.composition = {}
             inst.density_kg_per_m3 = 0.0
-            inst.color = '#000000'
+            inst.color = (0.0, 0.0, 0.0, 0.0) # invisible
             cls._instance = inst
         return cls._instance
 
