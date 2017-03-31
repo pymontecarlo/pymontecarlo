@@ -22,6 +22,10 @@ class TestMaterialHDF5Handler(TestCase):
         material2 = self.convert_parse_hdf5handler(handler, material)
         self.assertEqual(material2, material)
 
+#        import h5py
+#        with h5py.File('/tmp/material.h5', 'w') as f:
+#            handler.convert(material, f)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

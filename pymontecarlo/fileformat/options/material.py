@@ -5,6 +5,8 @@
 # Third party modules.
 import numpy as np
 
+import matplotlib.colors
+
 # Local modules.
 from pymontecarlo.fileformat.base import HDF5Handler
 from pymontecarlo.options.material import Material
@@ -47,6 +49,7 @@ class MaterialHDF5Handler(HDF5Handler):
     DATASET_ATOMIC_NUMBER = 'atomic number'
     DATASET_WEIGHT_FRACTION = 'weight fraction'
     ATTR_DENSITY = 'density (kg/m3)'
+    ATTR_COLOR = 'color'
 
     def _parse_name(self, group):
         return str(group.attrs[self.ATTR_NAME])
@@ -59,12 +62,16 @@ class MaterialHDF5Handler(HDF5Handler):
     def _parse_density_kg_per_m3(self, group):
         return float(group.attrs[self.ATTR_DENSITY])
 
+    def _parse_color(self, group):
+        return tuple(group.attrs[self.ATTR_COLOR])
+
     def can_parse(self, group):
         return super().can_parse(group) and \
             self.ATTR_NAME in group.attrs and \
             self.DATASET_ATOMIC_NUMBER in group and \
             self.DATASET_WEIGHT_FRACTION in group and \
-            self.ATTR_DENSITY in group.attrs
+            self.ATTR_DENSITY in group.attrs and \
+            self.ATTR_COLOR in group.attrs
 
     def parse(self, group):
         name = self._parse_name(group)
@@ -88,11 +95,16 @@ class MaterialHDF5Handler(HDF5Handler):
     def _convert_density_kg_per_m3(self, material, group):
         group.attrs[self.ATTR_DENSITY] = material.density_kg_per_m3
 
+    def _convert_color(self, material, group):
+        rgba = matplotlib.colors.to_rgba(material.color)
+        group.attrs[self.ATTR_COLOR] = rgba
+
     def convert(self, material, group):
         super().convert(material, group)
         self._convert_name(material, group)
         self._convert_composition(material, group)
         self._convert_density_kg_per_m3(material, group)
+        self._convert_color(material, group)
 
     @property
     def CLASS(self):
