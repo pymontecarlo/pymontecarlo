@@ -111,6 +111,9 @@ def calculate_density_kg_per_m3(composition):
     """
     density = 0.0
 
+    if not composition:
+        return density
+
     for z, fraction in composition.items():
         density += fraction / pyxray.element_mass_density_kg_per_m3(z)
 
