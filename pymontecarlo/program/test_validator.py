@@ -63,12 +63,12 @@ class TestValidator(TestCase):
         self.assertIsNot(material2, material)
 
     def testvalidate_material_exception(self):
-        material = Material(' ', {120: 0.5}, -1.0)
+        material = Material(' ', {120: 0.5}, -1.0, 'blah')
         self.assertRaises(ValidationError, self.v.validate_material, material, self.options)
 
         errors = set()
         self.v._validate_material(material, self.options, errors)
-        self.assertEqual(4, len(errors))
+        self.assertEqual(5, len(errors))
 
     def testvalidate_beam_gaussian(self):
         beam = GaussianBeam(10e3, 0.123)

@@ -8,6 +8,8 @@ import math
 # Third party modules.
 import pyxray.descriptor
 
+import matplotlib.colors
+
 # Local modules.
 from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.options.options import Options
@@ -190,8 +192,10 @@ class Validator(object):
             self._validate_material_base_composition(material.composition, options, errors)
         density_kg_per_m3 = \
             self._validate_material_base_density_kg_per_m3(material.density_kg_per_m3, options, errors)
+        color = \
+            self._validate_material_base_color(material.color, options, errors)
 
-        return Material(name, composition, density_kg_per_m3)
+        return Material(name, composition, density_kg_per_m3, color)
 
     def _validate_material_base_name(self, name, options, errors):
         name = name.strip()
@@ -233,6 +237,14 @@ class Validator(object):
             errors.add(exc)
 
         return density_kg_per_m3
+
+    def _validate_material_base_color(self, color, options, errors):
+        if not matplotlib.colors.is_color_like(color):
+            exc = ValueError('Color ({}) is not a valid color.'
+                             .format(color))
+            errors.add(exc)
+
+        return color
 
     def validate_sample(self, sample, options):
         errors = set()

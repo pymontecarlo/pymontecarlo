@@ -28,15 +28,6 @@ class Material(Option):
 
     COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
 
-    @classmethod
-    def set_color_set(cls, color_set):
-        """
-        Sets the set of colors used to assign a color to a material.
-        
-        :arg color_set: iterable of colors
-        """
-        cls.COLOR_CYCLER = itertools.cycle(color_set)
-
     def __init__(self, name, composition, density_kg_per_m3, color=None):
         """
         Creates a new material.
@@ -66,6 +57,15 @@ class Material(Option):
         if color is None:
             color = next(self.COLOR_CYCLER)
         self.color = color
+
+    @classmethod
+    def set_color_set(cls, color_set):
+        """
+        Sets the set of colors used to assign a color to a material.
+        
+        :arg color_set: iterable of colors
+        """
+        cls.COLOR_CYCLER = itertools.cycle(color_set)
 
     @classmethod
     def pure(cls, z, color=None):
