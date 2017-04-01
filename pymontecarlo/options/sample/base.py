@@ -94,7 +94,7 @@ class SampleBuilder(OptionBuilder):
         self.tilts_rad.add(tilt_rad)
 
     def add_tilt_deg(self, tilt_deg):
-        self.add_tilt_deg(math.radians(tilt_deg))
+        self.add_tilt_rad(math.radians(tilt_deg))
 
     def add_rotation_rad(self, rotation_rad):
         self.rotations_rad.add(rotation_rad)
