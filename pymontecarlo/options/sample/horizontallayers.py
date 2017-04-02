@@ -3,11 +3,12 @@ Horizontal layers sample.
 """
 
 # Standard library modules.
+import itertools
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import LayeredSample
+from pymontecarlo.options.sample.base import LayeredSample, LayeredSampleBuilder
 from pymontecarlo.options.material import VACUUM
 
 # Globals and constants variables.
@@ -74,3 +75,37 @@ class HorizontalLayerSample(LayeredSample):
             zpositions.append((zmin_m, zmax_m))
 
         return zpositions
+
+class HorizontalLayerSampleBuilder(LayeredSampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.substrate_materials = []
+
+    def __len__(self):
+        substrate_materials = self._calculate_subtrate_material_combinations()
+        return super().__len__() * len(substrate_materials)
+
+    def _calculate_subtrate_material_combinations(self):
+        substrate_materials = self.substrate_materials
+
+        if not substrate_materials:
+            substrate_materials = [None]
+
+        return substrate_materials
+
+    def add_substrate_material(self, material):
+        if material not in self.substrate_materials:
+            self.substrate_materials.append(material)
+
+    def build(self):
+        substrate_materials = self._calculate_subtrate_material_combinations()
+        layers_list = self._calculate_layer_combinations()
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
+
+        product = itertools.product(substrate_materials,
+                                    layers_list,
+                                    tilts_rad,
+                                    rotations_rad)
+        return [HorizontalLayerSample(*args) for args in product]

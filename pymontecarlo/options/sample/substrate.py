@@ -57,5 +57,9 @@ class SubstrateSampleBuilder(SampleBuilder):
             self.materials.append(material)
 
     def build(self):
-        product = itertools.product(self.materials, *self._get_combinations())
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
+        product = itertools.product(self.materials,
+                                    tilts_rad,
+                                    rotations_rad)
         return [SubstrateSample(*args) for args in product]

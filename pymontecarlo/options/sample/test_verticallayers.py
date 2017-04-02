@@ -9,7 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
+from pymontecarlo.options.sample.verticallayers import \
+    VerticalLayerSample, VerticalLayerSampleBuilder
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
@@ -109,6 +110,18 @@ class TestVerticalLayerSample(TestCase):
         s1 = VerticalLayerSample(COPPER, ZINC)
         s1.add_layer(GALLIUM, 501.0)
         self.assertNotEqual(s1, self.s1)
+
+class TestVerticalLayerSampleBuilder(TestCase):
+
+    def testbuild(self):
+        b = VerticalLayerSampleBuilder()
+        b.add_left_material(COPPER)
+        b.add_right_material(COPPER)
+        bl = b.add_layer(ZINC, 10)
+        bl.add_material(GALLIUM)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

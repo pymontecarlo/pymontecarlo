@@ -4,11 +4,14 @@ Vertical layers sample
 
 # Standard library modules.
 import math
+import functools
+import operator
+import itertools
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import LayeredSample
+from pymontecarlo.options.sample.base import LayeredSample, LayeredSampleBuilder
 
 # Globals and constants variables.
 
@@ -73,17 +76,52 @@ class VerticalLayerSample(LayeredSample):
 
         return xpositions_m
 
-#def _calculate_positions(self):
-#        layers = np.array(self.geometry.layers, ndmin=1)
-#        thicknesses = list(map(_THICKNESS_GETTER, layers))
-#
-#        positions = []
-#        if thicknesses: # simple couple
-#            middle = sum(thicknesses) / 2.0
-#            for i in range(len(thicknesses)):
-#                positions.append(sum(thicknesses[:i]) - middle)
-#            positions.append(positions[-1] + thicknesses[-1])
-#        else:
-#            positions.append(0.0)
-#
-#        return positions
+class VerticalLayerSampleBuilder(LayeredSampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.left_materials = []
+        self.right_materials = []
+        self.depths_m = set()
+
+    def __len__(self):
+        it = [super().__len__(),
+              self.left_materials,
+              self.right_materials,
+              self._calculate_depth_m()]
+        return functools.reduce(operator.mul, it)
+
+    def _calculate_depth_m(self):
+        depths_m = self.depths_m
+
+        if not depths_m:
+            depths_m = [float('inf')]
+
+        return depths_m
+
+    def add_left_material(self, material):
+        if material not in self.left_materials:
+            self.left_materials.append(material)
+
+    def add_right_material(self, material):
+        if material not in self.right_materials:
+            self.right_materials.append(material)
+
+    def add_depth_m(self, depth_m):
+        self.depths_m.add(depth_m)
+
+    def build(self):
+        left_materials = self.left_materials
+        right_materials = self.right_materials
+        layers_list = self._calculate_layer_combinations()
+        depths_m = self._calculate_depth_m()
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
+
+        product = itertools.product(left_materials,
+                                    right_materials,
+                                    layers_list,
+                                    depths_m,
+                                    tilts_rad,
+                                    rotations_rad)
+        return [VerticalLayerSample(*args) for args in product]

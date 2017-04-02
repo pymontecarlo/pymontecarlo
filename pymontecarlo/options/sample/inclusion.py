@@ -82,8 +82,11 @@ class InclusionSampleBuilder(SampleBuilder):
         self.inclusion_diameters_m.add(diameter_m)
 
     def build(self):
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
         product = itertools.product(self.substrate_materials,
                                     self.inclusion_materials,
                                     self.inclusion_diameters_m,
-                                    *self._get_combinations())
+                                    tilts_rad,
+                                    rotations_rad)
         return [InclusionSample(*args) for args in product]

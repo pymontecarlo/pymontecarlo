@@ -9,7 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
+from pymontecarlo.options.sample.horizontallayers import \
+    HorizontalLayerSample, HorizontalLayerSampleBuilder
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -138,6 +139,17 @@ class TestHorizontalLayerSample(TestCase):
         s1.add_layer(ZINC, 124.456)
         s1.add_layer(GALLIUM, 456.789)
         self.assertNotEqual(s1, self.s1)
+
+class TestHorizontalLayerSampleBuilder(TestCase):
+
+    def testbuild(self):
+        b = HorizontalLayerSampleBuilder()
+        b.add_substrate_material(COPPER)
+        bl = b.add_layer(ZINC, 10)
+        bl.add_material(GALLIUM)
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

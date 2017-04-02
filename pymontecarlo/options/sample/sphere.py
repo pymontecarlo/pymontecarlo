@@ -71,7 +71,10 @@ class SphereSampleBuilder(SampleBuilder):
         self.diameters_m.add(diameter_m)
 
     def build(self):
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
         product = itertools.product(self.materials,
                                     self.diameters_m,
-                                    *self._get_combinations())
+                                    tilts_rad,
+                                    rotations_rad)
         return [SphereSample(*args) for args in product]

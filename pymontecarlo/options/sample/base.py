@@ -5,6 +5,7 @@ Base classes for samples.
 # Standard library modules.
 import abc
 import math
+import itertools
 
 # Third party modules.
 
@@ -76,19 +77,25 @@ class SampleBuilder(OptionBuilder):
         self.rotations_rad = set()
 
     def __len__(self):
-        tilts_rad, rotations_rad = self._get_combinations()
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
         return len(tilts_rad) * len(rotations_rad)
 
-    def _get_combinations(self):
+    def _calculate_tilt_combinations(self):
         tilts_rad = self.tilts_rad
-        rotations_rad = self.rotations_rad
 
         if not tilts_rad:
             tilts_rad = [0.0]
+
+        return tilts_rad
+
+    def _calculate_rotation_combinations(self):
+        rotations_rad = self.rotations_rad
+
         if not rotations_rad:
             rotations_rad = [0.0]
 
-        return tilts_rad, rotations_rad
+        return rotations_rad
 
     def add_tilt_rad(self, tilt_rad):
         self.tilts_rad.add(tilt_rad)
@@ -134,6 +141,32 @@ class Layer(Option):
         datarow.add('thickness', self.thickness_m, 0.0, 'm', self.THICKNESS_TOLERANCE_m)
         return datarow
 
+class LayerBuilder(OptionBuilder):
+
+    def __init__(self):
+        self.materials = []
+        self.thicknesses_m = set()
+
+    def __len__(self):
+        return len(self.materials) * len(self.thicknesses_m)
+
+    def add_material(self, material):
+        if material not in self.materials:
+            self.materials.append(material)
+
+    def add_thickness_m(self, thickness_m):
+        self.thicknesses_m.add(thickness_m)
+
+    def build(self):
+        product = itertools.product(self.materials,
+                                    self.thicknesses_m)
+
+        layers = []
+        for material, thickness_m in product:
+            layers.append(Layer(material, thickness_m))
+
+        return layers
+
 class LayeredSample(Sample):
 
     def __init__(self, layers=None, tilt_rad=0.0, rotation_rad=0.0):
@@ -172,3 +205,29 @@ class LayeredSample(Sample):
     def materials(self):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
+
+class LayeredSampleBuilder(SampleBuilder):
+
+    def __init__(self):
+        super().__init__()
+        self.layer_builders = []
+
+    def __len__(self):
+        layers_list = self._calculate_layer_combinations()
+        return super().__len__() * len(layers_list)
+
+    def _calculate_layer_combinations(self):
+        layers_list = [builder.build() for builder in self.layer_builders]
+        return list(itertools.product(*layers_list))
+
+    def add_layer_builder(self, builder):
+        self.layer_builders.append(builder)
+
+    def add_layer(self, material, thickness_m):
+        builder = LayerBuilder()
+        builder.add_material(material)
+        builder.add_thickness_m(thickness_m)
+        self.add_layer_builder(builder)
+        return builder
+
+

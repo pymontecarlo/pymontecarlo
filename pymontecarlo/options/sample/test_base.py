@@ -11,7 +11,9 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.sample.base import Sample, SampleBuilder
+from pymontecarlo.options.sample.base import \
+    Sample, SampleBuilder, LayeredSample, LayeredSampleBuilder
+from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 
@@ -27,12 +29,30 @@ class SampleMock(Sample):
 class SampleBuilderMock(SampleBuilder):
 
     def build(self):
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
+
         samples = []
-        for tilt_rad, rotation_rad in itertools.product(*self._get_combinations()):
+        for tilt_rad, rotation_rad in itertools.product(tilts_rad, rotations_rad):
             samples.append(SampleMock(tilt_rad, rotation_rad))
         return samples
 
-class Test_Sample(TestCase):
+class LayeredSampleBuilderMock(LayeredSampleBuilder):
+
+    def build(self):
+        layers_list = self._calculate_layer_combinations()
+        tilts_rad = self._calculate_tilt_combinations()
+        rotations_rad = self._calculate_rotation_combinations()
+
+        product = itertools.product(layers_list, tilts_rad, rotations_rad)
+
+        samples = []
+        for layers, tilt_rad, rotation_rad in product:
+            samples.append(LayeredSample(layers, tilt_rad, rotation_rad))
+
+        return samples
+
+class TestSample(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -60,7 +80,7 @@ class Test_Sample(TestCase):
         s = SampleMock(1.1, 2.3)
         self.assertNotEqual(s, self.s)
 
-class Test_SampleBuilder(TestCase):
+class TestSampleBuilder(TestCase):
 
     def testbuild(self):
         b = SampleBuilderMock()
@@ -93,6 +113,46 @@ class Test_SampleBuilder(TestCase):
 
         samples = b.build()
         self.assertEqual(2, len(samples))
+
+class TestLayeredSampleBuilder(TestCase):
+
+    def testbuild(self):
+        b = LayeredSampleBuilderMock()
+        b.add_layer(Material.pure(29), 10)
+        b.add_layer(Material.pure(30), 20)
+
+        samples = b.build()
+        self.assertEqual(1, len(samples))
+
+        sample = samples[0]
+        self.assertEqual(2, len(sample.layers))
+
+    def testbuild2(self):
+        b = LayeredSampleBuilderMock()
+        bl = b.add_layer(Material.pure(29), 10)
+        bl.add_material(Material.pure(30))
+
+        samples = b.build()
+        self.assertEqual(2, len(samples))
+
+        sample = samples[0]
+        self.assertEqual(1, len(sample.layers))
+        self.assertAlmostEqual(10, sample.layers[0].thickness_m, 4)
+
+    def testbuild3(self):
+        b = LayeredSampleBuilderMock()
+        bl = b.add_layer(Material.pure(29), 10)
+        bl.add_material(Material.pure(30))
+        bl = b.add_layer(Material.pure(29), 20)
+        bl.add_material(Material.pure(30))
+
+        samples = b.build()
+        self.assertEqual(4, len(samples))
+
+        sample = samples[0]
+        self.assertEqual(2, len(sample.layers))
+        self.assertAlmostEqual(10, sample.layers[0].thickness_m, 4)
+        self.assertAlmostEqual(20, sample.layers[1].thickness_m, 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
