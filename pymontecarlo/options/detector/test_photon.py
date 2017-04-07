@@ -10,11 +10,11 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.detector.photon import PhotonDetector
+from pymontecarlo.options.detector.photon import PhotonDetector, PhotonDetectorBuilder
 
 # Globals and constants variables.
 
-class TestPhotonIntensityDetector(TestCase):
+class TestPhotonDetector(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -45,6 +45,29 @@ class TestPhotonIntensityDetector(TestCase):
 
     def testcreate_datarow(self):
         self.assertEqual(2, len(self.d.create_datarow()))
+
+class TestPhotonDetectorBuilder(TestCase):
+
+    def testbuild(self):
+        b = PhotonDetectorBuilder()
+        b.add_azimuth_deg(0.0)
+        self.assertEqual(0, len(b))
+        self.assertEqual(0, len(b.build()))
+
+    def testbuild2(self):
+        b = PhotonDetectorBuilder()
+        b.add_elevation_deg(1.1)
+        self.assertEqual(1, len(b))
+        self.assertEqual(1, len(b.build()))
+
+    def testbuild3(self):
+        b = PhotonDetectorBuilder()
+        b.add_elevation_deg(1.1)
+        b.add_elevation_deg(2.2)
+        b.add_azimuth_deg(3.3)
+        b.add_azimuth_deg(4.4)
+        self.assertEqual(4, len(b))
+        self.assertEqual(4, len(b.build()))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -4,11 +4,12 @@ Photon (X-ray) detector.
 
 # Standard library modules.
 import math
+import itertools
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.detector.base import Detector
+from pymontecarlo.options.detector.base import Detector, DetectorBuilder
 from pymontecarlo.util.cbook import DegreesAttribute
 
 # Globals and constants variables.
@@ -44,3 +45,39 @@ class PhotonDetector(Detector):
     elevation_deg = DegreesAttribute('elevation_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
+class PhotonDetectorBuilder(DetectorBuilder):
+
+    def __init__(self):
+        self.elevations_rad = set()
+        self.azimuths_rad = set()
+
+    def __len__(self):
+        azimuths_rad = self._calculate_azimuth_combinations()
+        return len(self.elevations_rad) * len(azimuths_rad)
+
+    def _calculate_azimuth_combinations(self):
+        azimuths_rad = self.azimuths_rad
+
+        if not azimuths_rad:
+            azimuths_rad = [0.0]
+
+        return azimuths_rad
+
+    def add_elevation_rad(self, elevation_rad):
+        self.elevations_rad.add(elevation_rad)
+
+    def add_elevation_deg(self, elevation_deg):
+        self.add_elevation_rad(math.radians(elevation_deg))
+
+    def add_azimuth_rad(self, azimuth_rad):
+        self.azimuths_rad.add(azimuth_rad)
+
+    def add_azimuth_deg(self, azimuth_deg):
+        self.add_azimuth_rad(math.radians(azimuth_deg))
+
+    def build(self):
+        elevations_rad = self.elevations_rad
+        azimuths_rad = self._calculate_azimuth_combinations()
+
+        product = itertools.product(elevations_rad, azimuths_rad)
+        return [PhotonDetector(*args) for args in product]
