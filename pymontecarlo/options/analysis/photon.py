@@ -8,7 +8,7 @@ Photon related analysis.
 import pyxray
 
 # Local modules.
-from pymontecarlo.options.analyses.base import Analysis
+from pymontecarlo.options.analysis.base import Analysis
 
 # Globals and constants variables.
 

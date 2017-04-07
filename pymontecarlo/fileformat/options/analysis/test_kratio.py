@@ -9,8 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.fileformat.options.analyses.kratio import KRatioAnalysisHDF5Handler
-from pymontecarlo.options.analyses.kratio import KRatioAnalysis
+from pymontecarlo.fileformat.options.analysis.kratio import KRatioAnalysisHDF5Handler
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.

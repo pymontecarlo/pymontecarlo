@@ -48,8 +48,8 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                  'PhotonDetectorHDF5Handler = pymontecarlo.fileformat.options.detector.photon:PhotonDetectorHDF5Handler',
 
-                 'PhotonIntensityAnalysisHDF5Handler = pymontecarlo.fileformat.options.analyses.photonintensity:PhotonIntensityAnalysisHDF5Handler',
-                 'KRatioAnalysisHDF5Handler = pymontecarlo.fileformat.options.analyses.kratio:KRatioAnalysisHDF5Handler',
+                 'PhotonIntensityAnalysisHDF5Handler = pymontecarlo.fileformat.options.analysis.photonintensity:PhotonIntensityAnalysisHDF5Handler',
+                 'KRatioAnalysisHDF5Handler = pymontecarlo.fileformat.options.analysis.kratio:KRatioAnalysisHDF5Handler',
 
                  'ShowersLimitHDF5Handler = pymontecarlo.fileformat.options.limit.showers:ShowersLimitHDF5Handler',
                  'UncertaintyLimitHDF5Handler = pymontecarlo.fileformat.options.limit.uncertainty:UncertaintyLimitHDF5Handler',

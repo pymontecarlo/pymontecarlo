@@ -11,7 +11,7 @@ import logging
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.fileformat.results.photonintensity import \
     EmittedPhotonIntensityResultHDF5Handler, GeneratedPhotonIntensityResultResultHDF5Handler
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import GeneratedPhotonIntensityResultBuilder
 
 # Globals and constants variables.

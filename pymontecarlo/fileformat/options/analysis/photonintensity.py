@@ -5,8 +5,8 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.fileformat.options.analyses.photon import PhotonAnalysisHDF5Handler
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.fileformat.options.analysis.photon import PhotonAnalysisHDF5Handler
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 
 # Globals and constants variables.
 

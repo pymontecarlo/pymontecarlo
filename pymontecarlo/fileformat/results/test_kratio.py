@@ -11,7 +11,7 @@ import logging
 
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.fileformat.results.kratio import KRatioResultHDF5Handler
-from pymontecarlo.options.analyses.kratio import KRatioAnalysis
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 from pymontecarlo.results.kratio import KRatioResultBuilder
 
 # Globals and constants variables.

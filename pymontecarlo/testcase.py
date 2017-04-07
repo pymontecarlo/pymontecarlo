@@ -34,7 +34,7 @@ from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
-from pymontecarlo.options.analyses import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
 from pymontecarlo.fileformat.base import HDF5Handler

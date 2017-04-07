@@ -10,8 +10,8 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.options.analyses.kratio import KRatioAnalysis
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.material import Material

@@ -8,7 +8,7 @@ Analysis to record photon intensity emitted towards a detector.
 import pyxray
 
 # Local modules.
-from pymontecarlo.options.analyses.photon import \
+from pymontecarlo.options.analysis.photon import \
     PhotonAnalysis, COMMON_XRAY_TRANSITION_SETS
 from pymontecarlo.results.photonintensity import PhotonIntensityResult
 from pymontecarlo.util.xrayline import XrayLine

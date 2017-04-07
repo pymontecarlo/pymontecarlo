@@ -8,9 +8,9 @@ import numpy as np
 import h5py
 
 # Local modules.
-from pymontecarlo.fileformat.options.analyses.photon import PhotonAnalysisHDF5Handler
+from pymontecarlo.fileformat.options.analysis.photon import PhotonAnalysisHDF5Handler
 from pymontecarlo.fileformat.options.material import MaterialHDF5HandlerMixin
-from pymontecarlo.options.analyses.kratio import KRatioAnalysis
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 
 # Globals and constants variables.
 

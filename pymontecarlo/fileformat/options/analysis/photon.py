@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.fileformat.options.analyses.base import AnalysisHDF5Handler
+from pymontecarlo.fileformat.options.analysis.base import AnalysisHDF5Handler
 
 # Globals and constants variables.
 

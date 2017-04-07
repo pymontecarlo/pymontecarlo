@@ -11,7 +11,7 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 
 # Globals and constants variables.

@@ -19,7 +19,7 @@ from pymontecarlo.options.sample import \
 from pymontecarlo.options.detector.photon import PhotonDetector
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel, MassAbsorptionCoefficientModel
-from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.

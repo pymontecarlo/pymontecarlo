@@ -9,8 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.fileformat.options.analyses.photonintensity import PhotonIntensityAnalysisHDF5Handler
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.fileformat.options.analysis.photonintensity import PhotonIntensityAnalysisHDF5Handler
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 
 # Globals and constants variables.
 

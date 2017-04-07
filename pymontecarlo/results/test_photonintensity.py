@@ -10,7 +10,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.detector.photon import PhotonDetector
 
 # Globals and constants variables.

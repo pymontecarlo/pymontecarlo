@@ -20,7 +20,7 @@ from pymontecarlo.options.sample import \
      VerticalLayerSample, SphereSample)
 from pymontecarlo.options.sample.base import Layer
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.analyses import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import Particle
