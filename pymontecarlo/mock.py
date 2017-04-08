@@ -16,6 +16,7 @@ from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
 from pymontecarlo.program.importer import Importer
 from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.sample.base import Sample
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
@@ -23,6 +24,12 @@ from pymontecarlo.options.analysis import PhotonIntensityAnalysis
 from pymontecarlo.fileformat.base import HDF5Handler
 
 # Globals and constants variables.
+
+class SampleMock(Sample):
+
+    @property
+    def materials(self):
+        return []
 
 class ConfiguratorMock(Configurator):
 
