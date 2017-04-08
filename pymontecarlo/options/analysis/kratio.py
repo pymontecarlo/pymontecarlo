@@ -11,7 +11,7 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
-from pymontecarlo.options.analysis.photon import PhotonAnalysis
+from pymontecarlo.options.analysis.photon import PhotonAnalysis, PhotonAnalysisBuilder
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
@@ -160,7 +160,10 @@ class KRatioAnalysis(PhotonAnalysis):
 
         return newresult
 
+class KRatioAnalysisBuilder(PhotonAnalysisBuilder):
 
+    def build(self):
+        return [KRatioAnalysis(d) for d in self.photon_detectors]
 
 
 

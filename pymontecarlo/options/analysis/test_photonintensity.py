@@ -11,7 +11,8 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.photonintensity import \
+    PhotonIntensityAnalysis, PhotonIntensityAnalysisBuilder
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 
 # Globals and constants variables.
@@ -58,6 +59,29 @@ class TestPhotonIntensityAnalysis(TestCase):
         # Just to make sure
         newresult = self.a.calculate(simulation, [simulation])
         self.assertFalse(newresult)
+
+class TestPhotonIntensityAnalysisBuilder(TestCase):
+
+    def testbuild(self):
+        b = PhotonIntensityAnalysisBuilder()
+        self.assertEqual(0, len(b))
+        self.assertEqual(0, len(b.build()))
+
+    def testbuild2(self):
+        b = PhotonIntensityAnalysisBuilder()
+        b.add_photon_detector(self.create_basic_photondetector())
+        b.add_photon_detector(self.create_basic_photondetector())
+        self.assertEqual(1, len(b))
+        self.assertEqual(1, len(b.build()))
+
+    def testbuild3(self):
+        b = PhotonIntensityAnalysisBuilder()
+        b.add_photon_detector(self.create_basic_photondetector())
+        d2 = self.create_basic_photondetector()
+        d2.elevation_deg = 0.1
+        b.add_photon_detector(d2)
+        self.assertEqual(2, len(b))
+        self.assertEqual(2, len(b.build()))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

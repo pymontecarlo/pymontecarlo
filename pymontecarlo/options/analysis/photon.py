@@ -8,7 +8,7 @@ Photon related analysis.
 import pyxray
 
 # Local modules.
-from pymontecarlo.options.analysis.base import Analysis
+from pymontecarlo.options.analysis.base import Analysis, AnalysisBuilder
 
 # Globals and constants variables.
 
@@ -37,3 +37,15 @@ class PhotonAnalysis(Analysis):
     @property
     def detectors(self):
         return super().detectors + (self.photon_detector,)
+
+class PhotonAnalysisBuilder(AnalysisBuilder):
+
+    def __init__(self):
+        self.photon_detectors = []
+
+    def __len__(self):
+        return len(self.photon_detectors)
+
+    def add_photon_detector(self, detector):
+        if detector not in self.photon_detectors:
+            self.photon_detectors.append(detector)

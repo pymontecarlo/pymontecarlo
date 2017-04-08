@@ -8,7 +8,7 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import Option
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 
@@ -47,3 +47,6 @@ class Analysis(Option):
         Returns a :class:`tuple` of detectors used by this analysis.
         """
         return ()
+
+class AnalysisBuilder(OptionBuilder):
+    pass
