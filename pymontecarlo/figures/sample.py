@@ -68,7 +68,7 @@ class SampleFigure(Figure):
 
     def _recalculate_view_size(self):
         SCALE_FACTOR = 5
-        view_size = 10e-16
+        view_size = 1e-9
 
         for obj in [self.sample] + self.beams + self.trajectories:
             clasz = obj.__class__
