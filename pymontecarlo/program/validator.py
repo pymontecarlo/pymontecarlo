@@ -474,8 +474,7 @@ class Validator(object):
 
     def _validate_limits(self, limits, options, errors):
         if not limits:
-            exc = ValueError('At least one limit must be defined')
-            errors.add(exc)
+            limits = options.program.create_default_limits(options)
 
         outlimits = []
 
@@ -512,6 +511,8 @@ class Validator(object):
         return ShowersLimit(showers)
 
     def _validate_limit_showers_number_trajectories(self, number_trajectories, options, errors):
+        number_trajectories = int(number_trajectories)
+
         if number_trajectories <= 0:
             exc = ValueError('Number of trajectories ({0:d}) must be greater than 0.'
                              .format(number_trajectories))
