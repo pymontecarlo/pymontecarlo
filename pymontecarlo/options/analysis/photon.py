@@ -29,6 +29,10 @@ class PhotonAnalysis(Analysis):
         return super().__eq__(other) and \
             self.photon_detector == other.photon_detector
 
+    def __repr__(self):
+        return '<{classname}(detector={photon_detector})>' \
+            .format(classname=self.__class__.__name__, **self.__dict__)
+
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
         datarow |= self.photon_detector.create_datarow(**kwargs)
