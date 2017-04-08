@@ -9,6 +9,7 @@ import itertools
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.util.cbook import unique
 
 # Globals and constants variables.
 
@@ -20,6 +21,18 @@ def expand_to_single(objects):
         combinations.setdefault(object_class, []).append(object)
 
     return list(itertools.product(*combinations.values()))
+
+def expand_analyses_to_single_detector(analyses):
+    unique_detectors = unique(analysis.detectors for analysis in analyses)
+
+    combinations = [[] for _ in range(len(unique_detectors))]
+
+    for analysis in analyses:
+        index = unique_detectors.index(analysis.detectors)
+
+        combinations[index].append(analysis)
+
+    return combinations
 
 class Expander(metaclass=abc.ABCMeta):
     """

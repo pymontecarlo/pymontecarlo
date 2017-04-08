@@ -10,7 +10,7 @@ import time
 # Local modules.
 from pymontecarlo.program.base import Program
 from pymontecarlo.program.configurator import Configurator
-from pymontecarlo.program.expander import Expander, expand_to_single
+from pymontecarlo.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
 from pymontecarlo.program.worker import Worker
@@ -54,7 +54,7 @@ class ConfiguratorMock(Configurator):
 class ExpanderMock(Expander):
 
     def expand_analyses(self, analyses):
-        return expand_to_single(analyses)
+        return expand_analyses_to_single_detector(analyses)
 
     def expand_limits(self, limits):
         return expand_to_single(limits)
