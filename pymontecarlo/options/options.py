@@ -136,13 +136,13 @@ class OptionsBuilder(OptionBuilder):
             expander = program.create_expander()
 
             analyses = self.analyses
-            analysis_combinations = expander.expand_analyses(analyses) or [(None,)]
+            analysis_combinations = expander.expand_analyses(analyses) or [None]
 
             limits = self.limits.get(program, [])
-            limit_combinations = expander.expand_limits(limits) or [(None,)]
+            limit_combinations = expander.expand_limits(limits) or [None]
 
             models = self.models.get(program, [])
-            model_combinations = expander.expand_models(models) or [(None,)]
+            model_combinations = expander.expand_models(models) or [None]
 
             product = itertools.product(self.beams,
                                         self.samples,
@@ -151,10 +151,15 @@ class OptionsBuilder(OptionBuilder):
                                         model_combinations)
             for beam, sample, analyses, limits, models in product:
                 options = Options(program, beam, sample, analyses, limits, models)
+
+                if options in list_options:
+                    continue
                 list_options.append(options)
 
-                for analysis in analyses:
-                    list_options.extend(analysis.apply(options))
+                for analysis in options.analyses:
+                    for extra_options in analysis.apply(options):
+                        if extra_options not in list_options:
+                            list_options.append(extra_options)
 
         return list_options
 
