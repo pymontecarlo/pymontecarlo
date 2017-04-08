@@ -233,12 +233,18 @@ class TestCase(unittest.TestCase):
         for tmpdir in self.tmpdirs:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
+    def create_basic_beam(self):
+        return GaussianBeam(15e3, 10e-9)
+
+    def create_basic_sample(self):
+        return SubstrateSample(Material.pure(29))
+
     def create_basic_photondetector(self):
         return PhotonDetector(math.radians(40.0))
 
     def create_basic_options(self):
-        beam = GaussianBeam(15e3, 10e-9)
-        sample = SubstrateSample(Material.pure(29))
+        beam = self.create_basic_beam()
+        sample = self.create_basic_sample()
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
         limits = [ShowersLimit(100)]
         models = [ElasticCrossSectionModel.RUTHERFORD]
