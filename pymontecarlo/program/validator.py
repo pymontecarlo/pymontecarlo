@@ -507,17 +507,17 @@ class Validator(object):
 
     def _validate_limit_showers(self, limit, options, errors):
         showers = \
-            self._validate_limit_showers_showers(limit.showers, options, errors)
+            self._validate_limit_showers_number_trajectories(limit.number_trajectories, options, errors)
 
         return ShowersLimit(showers)
 
-    def _validate_limit_showers_showers(self, showers, options, errors):
-        if showers <= 0:
-            exc = ValueError('Number of showers ({0:d}) must be greater than 0.'
-                             .format(showers))
+    def _validate_limit_showers_number_trajectories(self, number_trajectories, options, errors):
+        if number_trajectories <= 0:
+            exc = ValueError('Number of trajectories ({0:d}) must be greater than 0.'
+                             .format(number_trajectories))
             errors.add(exc)
 
-        return showers
+        return number_trajectories
 
     def _validate_limit_uncertainty(self, limit, options, errors):
         xrayline = \
