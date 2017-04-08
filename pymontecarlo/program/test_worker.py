@@ -8,7 +8,8 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase, WorkerMock
+from pymontecarlo.testcase import TestCase
+from pymontecarlo.mock import WorkerMock
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.future import Token
 

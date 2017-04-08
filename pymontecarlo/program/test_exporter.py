@@ -9,7 +9,8 @@ import os
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase, ExporterMock
+from pymontecarlo.testcase import TestCase
+from pymontecarlo.mock import ExporterMock
 
 # Globals and constants variables.
 
