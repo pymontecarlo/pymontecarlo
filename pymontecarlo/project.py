@@ -108,12 +108,10 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
 
         return datarows
 
-    def save(self, filepath=None):
+    def write(self, filepath=None):
         if filepath is not None:
             self.filepath = filepath
-
-        if self.filepath is None:
-            raise IOError('No file path defined')
+        super().write(filepath)
 
     @property
     def result_classes(self):
