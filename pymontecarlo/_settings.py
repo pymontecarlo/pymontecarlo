@@ -8,7 +8,7 @@ import os
 # Local modules.
 import pymontecarlo
 from pymontecarlo.exceptions import ProgramNotFound, ValidationError
-from pymontecarlo.util.entrypoint import resolve_entrypoints
+import pymontecarlo.util.entrypoint as entrypoint
 from pymontecarlo.util.path import get_config_dir
 from pymontecarlo.fileformat.reader import HDF5ReaderMixin
 from pymontecarlo.fileformat.writer import HDF5WriterMixin
@@ -61,12 +61,14 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     def reload(self):
         self._available_programs = None
+        entrypoint._ENTRYPOINTS.clear()
 
     def iter_available_programs(self):
         # NOTE: The late initialization is required for settings to be loaded
         # correctly in __init__
         if self._available_programs is None:
-            self._available_programs = resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS)
+            self._available_programs = \
+                entrypoint.resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS)
         return iter(self._available_programs)
 
     def iter_programs(self):
