@@ -6,7 +6,7 @@ from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import HorizontalLayerSample, SubstrateSample, VerticalLayerSample
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.analyses import KRatioAnalysis
+from pymontecarlo.options.analysis import KRatioAnalysis
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.options import Options
 
@@ -57,3 +57,5 @@ project.recalculate()
 print('{} were simulated'.format(len(project.simulations)))
 for simulation in project.simulations:
     print(simulation.results)
+
+project.write('/tmp/example.mcsim')
