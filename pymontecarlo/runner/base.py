@@ -18,6 +18,7 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
     def __init__(self, project=None, max_workers=1):
         super().__init__(max_workers)
+        self.submitted_options = []
 
         if project is None:
             project = Project()
@@ -40,7 +41,8 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         validator = program.create_validator()
         options = validator.validate_options(options)
         simulation = Simulation(options)
-        if simulation not in self.project.simulations:
+        if options not in self.submitted_options:
+            self.submitted_options.append(options)
             simulations.append(simulation)
 
         return simulations
@@ -69,3 +71,7 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
             futures.append(future)
 
         return futures
+
+    def shutdown(self):
+        super().shutdown()
+        self.submitted_options.clear()
