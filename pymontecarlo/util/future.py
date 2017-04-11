@@ -168,13 +168,15 @@ class FutureExecutor(Monitorable):
         """
         Returns whether the executor is running and can accept submission.
         """
-        return self.executor is not None
+        return any(future.running() for future in self.futures)
 
     def cancelled(self):
         return False
 
     @property
     def progress(self):
+        if self.submitted_count == 0:
+            return 0
         return (self.done_count + self.failed_count + self.cancelled_count) / self.submitted_count
 
     @property
