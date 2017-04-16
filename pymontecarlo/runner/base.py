@@ -26,8 +26,16 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
     def _on_done(self, future):
         simulation = super()._on_done(future)
+
         if simulation:
             self.project.add_simulation(simulation)
+
+        else:
+            try:
+                options = future.args[0].options
+                self.submitted_options.remove(options)
+            except:
+                pass
 
     def _prepare_simulations(self, options, simulations=None):
         if simulations is None:
@@ -37,13 +45,24 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
             for other_options in analysis.apply(options):
                 self._prepare_simulations(other_options, simulations)
 
+        # Validate
         program = options.program
         validator = program.create_validator()
         options = validator.validate_options(options)
+
+        # Create simulation
         simulation = Simulation(options)
-        if options not in self.submitted_options:
-            self.submitted_options.append(options)
-            simulations.append(simulation)
+
+        # Check if it has been submitted
+        if options in self.submitted_options:
+            return simulations
+
+        if simulation in self.project.simulations:
+            return simulations
+
+        # Add to submission list
+        self.submitted_options.append(options)
+        simulations.append(simulation)
 
         return simulations
 
@@ -54,10 +73,14 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
     def submit(self, options):
         """
         Submits the options in the queue.
-        If a simulation with the same options already exists in the project,
-        the simulation is skipped.
+        
+        If the options are not valid, a :exc:`ValidationError` is raised.
+        
         If additional simulations are required based on the analyses of the
         submitted options, they will also be submitted.
+        
+        If a simulation with the same options already exists in the project,
+        the simulation is skipped.
         
         :return: a list of :class:`Future` object, one for each launched 
             simulation

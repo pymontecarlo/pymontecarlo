@@ -14,7 +14,7 @@ class Token:
 
     def __init__(self):
         self._progress = 0.0
-        self._status = ''
+        self._status = 'Not started'
         self._cancelled = False
 
     def cancel(self):
@@ -37,9 +37,11 @@ class Token:
 
 class FutureAdapter(Monitorable):
 
-    def __init__(self, future, token):
+    def __init__(self, future, token, args, kwargs):
         self.future = future
         self.token = token
+        self.args = args
+        self.kwargs = kwargs
 
     def running(self):
         return self.future.running()
@@ -98,14 +100,17 @@ class FutureExecutor(Monitorable):
 
     def _on_done(self, future):
         if future.cancelled():
+            future.token.update(1.0, 'Cancelled')
             self.cancelled_count += 1
             return
 
         if future.exception():
+            future.token.update(1.0, 'Error')
             self.failed_futures.add(future)
             self.failed_count += 1
             return
 
+        future.token.update(1.0, 'Done')
         self.done_count += 1
         return future.result()
 
@@ -157,7 +162,7 @@ class FutureExecutor(Monitorable):
         future = self.executor.submit(target, token, *args, **kwargs)
         self.futures.add(future)
 
-        future2 = FutureAdapter(future, token)
+        future2 = FutureAdapter(future, token, args, kwargs)
         future2.add_done_callback(self._on_done)
 
         self.submitted_count += 1

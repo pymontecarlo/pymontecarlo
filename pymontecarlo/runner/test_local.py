@@ -54,10 +54,10 @@ class TestLocalSimulationRunner(TestCase):
             self.r.submit(options2)
 
         self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(2, self.r.submitted_count)
+        self.assertEqual(1, self.r.submitted_count)
         self.assertEqual(0, self.r.failed_count)
         self.assertEqual(0, self.r.cancelled_count)
-        self.assertEqual(2, self.r.done_count)
+        self.assertEqual(1, self.r.done_count)
 
         project = self.r.project
         self.assertEqual(1, len(project.simulations)) # Because options1 == options2
