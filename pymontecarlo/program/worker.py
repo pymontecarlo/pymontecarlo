@@ -10,6 +10,7 @@ import logging
 import abc
 
 # Third party modules.
+import psutil
 
 # Local modules.
 from pymontecarlo.exceptions import WorkerError
@@ -52,8 +53,10 @@ class SubprocessWorkerMixin:
     def _wait_process(self, process, token, interval=1):
         while True:
             if token.cancelled():
-                process.kill()
-                break
+                psprocess = psutil.Process(process.pid)
+                for subpsprocess in psprocess.children(recursive=True):
+                    subpsprocess.kill()
+                psprocess.kill()
 
             try:
                 if process.wait(interval) is not None:
