@@ -19,6 +19,7 @@ class Token:
 
     def cancel(self):
         self._cancelled = True
+        self.update(1.0, 'Cancelled')
 
     def cancelled(self):
         return self._cancelled
