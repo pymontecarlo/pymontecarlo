@@ -13,7 +13,7 @@ import abc
 import psutil
 
 # Local modules.
-from pymontecarlo.exceptions import WorkerError
+from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
 
 # Globals and constants variables.
 
@@ -57,6 +57,7 @@ class SubprocessWorkerMixin:
                 for subpsprocess in psprocess.children(recursive=True):
                     subpsprocess.kill()
                 psprocess.kill()
+                raise WorkerCancelledError('Worker cancelled')
 
             try:
                 if process.wait(interval) is not None:
@@ -67,7 +68,7 @@ class SubprocessWorkerMixin:
         returncode = process.poll()
         logging.debug('returncode: %s' % returncode)
         if returncode != 0:
-            raise WorkerError
+            raise WorkerError('Program did not end properly')
 
         return returncode
 
