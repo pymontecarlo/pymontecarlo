@@ -96,6 +96,7 @@ class FutureExecutor(Monitorable):
         return self
 
     def __exit__(self, exctype, value, tb):
+        self.wait()
         self.shutdown()
         return False
 
@@ -117,14 +118,21 @@ class FutureExecutor(Monitorable):
 
     def start(self):
         if self.executor is not None:
-            raise RuntimeError('Already started')
+            return
         self.executor = concurrent.futures.ThreadPoolExecutor(self.max_workers)
 
-    def shutdown(self):
+    def shutdown(self, force=True):
         if self.executor is None:
             return
-        self.executor.shutdown()
-        self.executor = None
+
+        if force:
+            self.executor.shutdown(wait=False)
+
+            for future in self.futures:
+                if future.running():
+                    future.cancel()
+
+        self.executor.shutdown(wait=True)
         self.futures.clear()
 
     def wait(self, timeout=None):
@@ -133,8 +141,9 @@ class FutureExecutor(Monitorable):
         Otherwise waits for *timeout* and returns ``True`` if all submissions
         were executed, ``False`` otherwise.
         """
+        fs = [future.future for future in self.futures]
         _done, notdone = \
-            concurrent.futures.wait(self.futures, timeout, concurrent.futures.ALL_COMPLETED)
+            concurrent.futures.wait(fs, timeout, concurrent.futures.ALL_COMPLETED)
         return not notdone
 
     def _submit(self, target, *args, **kwargs):
@@ -161,10 +170,10 @@ class FutureExecutor(Monitorable):
 
         token = Token()
         future = self.executor.submit(target, token, *args, **kwargs)
-        self.futures.add(future)
 
         future2 = FutureAdapter(future, token, args, kwargs)
         future2.add_done_callback(self._on_done)
+        self.futures.add(future2)
 
         self.submitted_count += 1
 
