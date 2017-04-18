@@ -96,7 +96,6 @@ class FutureExecutor(Monitorable):
         return self
 
     def __exit__(self, exctype, value, tb):
-        self.wait()
         self.shutdown()
         return False
 
@@ -121,17 +120,17 @@ class FutureExecutor(Monitorable):
             return
         self.executor = concurrent.futures.ThreadPoolExecutor(self.max_workers)
 
-    def shutdown(self, force=True):
+    def cancel(self):
+        """
+        Cancels all not completed futures.
+        """
+        for future in self.futures:
+            if not future.done():
+                future.cancel()
+
+    def shutdown(self):
         if self.executor is None:
             return
-
-        if force:
-            self.executor.shutdown(wait=False)
-
-            for future in self.futures:
-                if future.running():
-                    future.cancel()
-
         self.executor.shutdown(wait=True)
         self.futures.clear()
 
