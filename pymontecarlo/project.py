@@ -12,8 +12,8 @@ import functools
 from pymontecarlo.util.future import FutureExecutor
 from pymontecarlo.util.cbook import find_by_type
 from pymontecarlo.util.datarow import DataRowCreator, DataRow
-from pymontecarlo.fileformat.reader import HDF5ReaderMixin
-from pymontecarlo.fileformat.writer import HDF5WriterMixin
+from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
+from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
 
 # Globals and constants variables.
 

@@ -21,7 +21,7 @@ from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis
-from pymontecarlo.fileformat.base import HDF5Handler
+from pymontecarlo.formats.hdf5.base import HDF5Handler
 
 # Globals and constants variables.
 

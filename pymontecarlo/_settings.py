@@ -10,8 +10,8 @@ import pymontecarlo
 from pymontecarlo.exceptions import ProgramNotFound, ValidationError
 import pymontecarlo.util.entrypoint as entrypoint
 from pymontecarlo.util.path import get_config_dir
-from pymontecarlo.fileformat.reader import HDF5ReaderMixin
-from pymontecarlo.fileformat.writer import HDF5WriterMixin
+from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
+from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
 
 # Globals and constants variables.
 ENTRYPOINT_AVAILABLE_PROGRAMS = 'pymontecarlo.program'

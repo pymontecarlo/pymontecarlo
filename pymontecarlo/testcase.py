@@ -44,7 +44,7 @@ class TestCase(unittest.TestCase):
         # Add program HDF5 handler
         requirement = pkg_resources.Requirement('pymontecarlo')
         distribution = pkg_resources.working_set.find(requirement)
-        entry_map = distribution.get_entry_map('pymontecarlo.fileformat')
+        entry_map = distribution.get_entry_map('pymontecarlo.formats.hdf5')
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
