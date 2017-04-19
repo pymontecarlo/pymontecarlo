@@ -23,6 +23,17 @@ def are_sequence_equal(list0, list1):
 
     return True
 
+def are_sequence_similar(list0, list1):
+    if len(list0) != len(list1):
+        return False
+
+    for item0 in list0:
+        count = sum(item0 == item1 for item1 in list1)
+        if count != 1:
+            return False
+
+    return True
+
 def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
     if len(list0) != len(list1):
         return False

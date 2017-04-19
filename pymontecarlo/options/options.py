@@ -8,7 +8,7 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import are_sequence_equal, unique, find_by_type
+from pymontecarlo.util.cbook import are_sequence_similar, unique, find_by_type
 from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
@@ -48,9 +48,9 @@ class Options(Option):
             self.program.getidentifier() == other.program.getidentifier() and \
             self.beam == other.beam and \
             self.sample == other.sample and \
-            are_sequence_equal(self.analyses, other.analyses) and \
-            are_sequence_equal(self.limits, other.limits) and \
-            are_sequence_equal(self.models, other.models)
+            are_sequence_similar(self.analyses, other.analyses) and \
+            are_sequence_similar(self.limits, other.limits) and \
+            are_sequence_similar(self.models, other.models)
 
     def create_datarow(self, **kwargs):
         datarow = super().create_datarow(**kwargs)
