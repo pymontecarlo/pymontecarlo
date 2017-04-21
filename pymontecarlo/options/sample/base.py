@@ -23,27 +23,27 @@ class Sample(Option):
     """
 
     TILT_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
-    ROTATION_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+    AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
 
-    def __init__(self, tilt_rad=0.0, rotation_rad=0.0):
+    def __init__(self, tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a new sample.
         
         :arg tilt_rad: tilt around the x-axis
         :type tilt_rad: :class:`float`
         
-        :arg rotation_rad: rotation around the z-axis of the tilted sample
-        :type rotation_rad: :class:`float`
+        :arg azimuth_rad: rotation around the z-axis of the tilted sample
+        :type azimuth_rad: :class:`float`
         """
         super().__init__()
 
         self.tilt_rad = tilt_rad
-        self.rotation_rad = rotation_rad
+        self.azimuth_rad = azimuth_rad
 
     def __eq__(self, other):
         return super().__eq__(other) and \
             math.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
-            math.isclose(self.rotation_rad, other.rotation_rad, abs_tol=self.ROTATION_TOLERANCE_rad)
+            math.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -52,12 +52,6 @@ class Sample(Option):
             materials.remove(VACUUM)
 
         return tuple(unique(materials))
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow.add('sample tilt', self.tilt_rad, 0.0, 'rad', self.TILT_TOLERANCE_rad)
-        datarow.add('sample rotation', self.rotation_rad, 0.0, 'rad', self.ROTATION_TOLERANCE_rad)
-        return datarow
 
     @abc.abstractproperty
     def materials(self): #pragma: no cover
@@ -68,18 +62,18 @@ class Sample(Option):
         raise NotImplementedError
 
     tilt_deg = DegreesAttribute('tilt_rad')
-    rotation_deg = DegreesAttribute('rotation_rad')
+    azimuth_deg = DegreesAttribute('azimuth_rad')
 
 class SampleBuilder(OptionBuilder):
 
     def __init__(self):
         self.tilts_rad = set()
-        self.rotations_rad = set()
+        self.azimuths_rad = set()
 
     def __len__(self):
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
-        return len(tilts_rad) * len(rotations_rad)
+        azimuths_rad = self._calculate_azimuth_combinations()
+        return len(tilts_rad) * len(azimuths_rad)
 
     def _calculate_tilt_combinations(self):
         tilts_rad = self.tilts_rad
@@ -89,13 +83,13 @@ class SampleBuilder(OptionBuilder):
 
         return tilts_rad
 
-    def _calculate_rotation_combinations(self):
-        rotations_rad = self.rotations_rad
+    def _calculate_azimuth_combinations(self):
+        azimuths_rad = self.azimuths_rad
 
-        if not rotations_rad:
-            rotations_rad = [0.0]
+        if not azimuths_rad:
+            azimuths_rad = [0.0]
 
-        return rotations_rad
+        return azimuths_rad
 
     def add_tilt_rad(self, tilt_rad):
         self.tilts_rad.add(tilt_rad)
@@ -103,11 +97,11 @@ class SampleBuilder(OptionBuilder):
     def add_tilt_deg(self, tilt_deg):
         self.add_tilt_rad(math.radians(tilt_deg))
 
-    def add_rotation_rad(self, rotation_rad):
-        self.rotations_rad.add(rotation_rad)
+    def add_azimuth_rad(self, azimuth_rad):
+        self.azimuths_rad.add(azimuth_rad)
 
-    def add_rotation_deg(self, rotation_deg):
-        self.add_rotation_rad(math.radians(rotation_deg))
+    def add_azimuth_deg(self, azimuth_deg):
+        self.add_azimuth_rad(math.radians(azimuth_deg))
 
 class Layer(Option):
 
@@ -169,8 +163,8 @@ class LayerBuilder(OptionBuilder):
 
 class LayeredSample(Sample):
 
-    def __init__(self, layers=None, tilt_rad=0.0, rotation_rad=0.0):
-        super().__init__(tilt_rad, rotation_rad)
+    def __init__(self, layers=None, tilt_rad=0.0, azimuth_rad=0.0):
+        super().__init__(tilt_rad, azimuth_rad)
 
         if layers is None:
             layers = []

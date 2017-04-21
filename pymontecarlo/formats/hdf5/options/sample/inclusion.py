@@ -38,8 +38,8 @@ class InclusionSampleHDF5Handler(SampleHDF5Handler):
         inclusion_material = self._parse_inclusion_material(group)
         diameter_m = self._parse_diameter_m(group)
         tilt_rad = self._parse_tilt_rad(group)
-        rotation_rad = self._parse_rotation_rad(group)
-        return self.CLASS(substrate_material, inclusion_material, diameter_m, tilt_rad, rotation_rad)
+        azimuth_rad = self._parse_azimuth_rad(group)
+        return self.CLASS(substrate_material, inclusion_material, diameter_m, tilt_rad, azimuth_rad)
 
     def _convert_substrate_material(self, material, group):
         group_material = self._convert_material_internal(material, group)

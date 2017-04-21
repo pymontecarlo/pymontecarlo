@@ -54,7 +54,7 @@ class TestSubstrateSampleBuilder(TestCase):
 
         for sample in samples:
             self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
 
     def testbuild2(self):
         b = SubstrateSampleBuilder()
@@ -68,14 +68,14 @@ class TestSubstrateSampleBuilder(TestCase):
 
         for sample in samples:
             self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
 
     def testbuild3(self):
         b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_tilt_rad(1.1)
-        b.add_rotation_rad(2.2)
+        b.add_azimuth_rad(2.2)
 
         samples = b.build()
         self.assertEqual(2, len(samples))
@@ -83,15 +83,15 @@ class TestSubstrateSampleBuilder(TestCase):
 
         for sample in samples:
             self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
-            self.assertAlmostEqual(2.2, sample.rotation_rad, 4)
+            self.assertAlmostEqual(2.2, sample.azimuth_rad, 4)
 
     def testbuild4(self):
         b = SubstrateSampleBuilder()
         b.add_material(COPPER)
         b.add_material(ZINC)
         b.add_tilt_rad(1.1)
-        b.add_rotation_rad(2.2)
-        b.add_rotation_rad(2.3)
+        b.add_azimuth_rad(2.2)
+        b.add_azimuth_rad(2.3)
 
         samples = b.build()
         self.assertEqual(4, len(samples))
@@ -100,8 +100,8 @@ class TestSubstrateSampleBuilder(TestCase):
     def testbuild5(self):
         b = SubstrateSampleBuilder()
         b.add_tilt_rad(1.1)
-        b.add_rotation_rad(2.2)
-        b.add_rotation_rad(2.3)
+        b.add_azimuth_rad(2.2)
+        b.add_azimuth_rad(2.3)
 
         samples = b.build()
         self.assertEqual(0, len(samples))

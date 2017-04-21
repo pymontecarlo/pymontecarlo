@@ -16,7 +16,7 @@ from pymontecarlo.options.material import VACUUM
 class HorizontalLayerSample(LayeredSample):
 
     def __init__(self, substrate_material=None, layers=None,
-                 tilt_rad=0.0, rotation_rad=0.0):
+                 tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a multi-layers geometry.
         The layers are assumed to be in the x-y plane (normal parallel to z) at
@@ -28,7 +28,7 @@ class HorizontalLayerSample(LayeredSample):
             If ``None``, the geometry does not have a substrate, only layers
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        super().__init__(layers, tilt_rad, rotation_rad)
+        super().__init__(layers, tilt_rad, azimuth_rad)
 
         if substrate_material is None:
             substrate_material = VACUUM
@@ -102,7 +102,7 @@ class HorizontalLayerSampleBuilder(LayeredSampleBuilder):
         substrate_materials = self._calculate_subtrate_material_combinations()
         layers_list = self._calculate_layer_combinations()
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
 
         product = itertools.product(substrate_materials,
                                     layers_list,

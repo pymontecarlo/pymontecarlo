@@ -25,8 +25,8 @@ class SubstrateSampleHDF5Handler(SampleHDF5Handler):
     def parse(self, group):
         material = self._parse_material(group)
         tilt_rad = self._parse_tilt_rad(group)
-        rotation_rad = self._parse_rotation_rad(group)
-        return self.CLASS(material, tilt_rad, rotation_rad)
+        azimuth_rad = self._parse_azimuth_rad(group)
+        return self.CLASS(material, tilt_rad, azimuth_rad)
 
     def _convert_material(self, material, group):
         group_material = self._convert_material_internal(material, group)

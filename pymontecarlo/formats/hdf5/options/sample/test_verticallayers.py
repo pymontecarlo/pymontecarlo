@@ -23,7 +23,7 @@ class TestVerticalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = VerticalLayerSampleHDF5Handler()
-        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, rotation_rad=0.2)
+        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample2 = self.convert_parse_hdf5handler(handler, sample)
@@ -31,7 +31,7 @@ class TestVerticalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse_infinite_depth(self):
         handler = VerticalLayerSampleHDF5Handler()
-        sample = VerticalLayerSample(COPPER, ZINC, tilt_rad=0.1, rotation_rad=0.2)
+        sample = VerticalLayerSample(COPPER, ZINC, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample2 = self.convert_parse_hdf5handler(handler, sample)
@@ -39,7 +39,7 @@ class TestVerticalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse_same_layer(self):
         handler = VerticalLayerSampleHDF5Handler()
-        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, rotation_rad=0.2)
+        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, azimuth_rad=0.2)
         layer = sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample.layers.append(layer)
@@ -48,7 +48,7 @@ class TestVerticalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse_same_material(self):
         handler = VerticalLayerSampleHDF5Handler()
-        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, rotation_rad=0.2)
+        sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample.add_layer(GERMANIUM, 30e-9)

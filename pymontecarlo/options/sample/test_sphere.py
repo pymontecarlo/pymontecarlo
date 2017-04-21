@@ -55,7 +55,7 @@ class TestSphereSampleBuilder(TestCase):
 
         for sample in samples:
             self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

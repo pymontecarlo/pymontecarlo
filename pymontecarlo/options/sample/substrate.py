@@ -16,13 +16,13 @@ from pymontecarlo.options.sample.base import Sample, SampleBuilder
 
 class SubstrateSample(Sample):
 
-    def __init__(self, material, tilt_rad=0.0, rotation_rad=0.0):
+    def __init__(self, material, tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a substrate sample. 
         At tilt of 0.0\u00b0, the sample is entirely made of the specified 
         material below ``z = 0``.
         """
-        super().__init__(tilt_rad, rotation_rad)
+        super().__init__(tilt_rad, azimuth_rad)
         self.material = material
 
     def __repr__(self):
@@ -58,7 +58,7 @@ class SubstrateSampleBuilder(SampleBuilder):
 
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
         product = itertools.product(self.materials,
                                     tilts_rad,
                                     rotations_rad)

@@ -18,30 +18,30 @@ from pymontecarlo.options.sample.base import Layer
 class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 
     ATTR_TILT = 'tilt (rad)'
-    ATTR_ROTATION = 'rotation (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
 
     def _parse_tilt_rad(self, group):
         return float(group.attrs[self.ATTR_TILT])
 
-    def _parse_rotation_rad(self, group):
-        return float(group.attrs[self.ATTR_ROTATION])
+    def _parse_azimuth_rad(self, group):
+        return float(group.attrs[self.ATTR_AZIMUTH])
 
     def can_parse(self, group):
         return super().can_parse(group) and \
             self.ATTR_TILT in group.attrs and \
-            self.ATTR_ROTATION in group.attrs
+            self.ATTR_AZIMUTH in group.attrs
 
     def _convert_tilt_rad(self, sample, group):
         group.attrs[self.ATTR_TILT] = sample.tilt_rad
 
-    def _convert_rotation_rad(self, sample, group):
-        group.attrs[self.ATTR_ROTATION] = sample.rotation_rad
+    def _convert_azimuth_rad(self, sample, group):
+        group.attrs[self.ATTR_AZIMUTH] = sample.azimuth_rad
 
     @abc.abstractmethod
     def convert(self, sample, group):
         super().convert(sample, group)
         self._convert_tilt_rad(sample, group)
-        self._convert_rotation_rad(sample, group)
+        self._convert_azimuth_rad(sample, group)
 
 class LayerHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 

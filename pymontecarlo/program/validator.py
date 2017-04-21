@@ -273,22 +273,22 @@ class Validator(object):
 
         return tilt_rad
 
-    def _validate_sample_base_rotation_rad(self, rotation_rad, options, errors):
-        if not math.isfinite(rotation_rad):
+    def _validate_sample_base_azimuth_rad(self, azimuth_rad, options, errors):
+        if not math.isfinite(azimuth_rad):
             exc = ValueError('Rotation must be a finite number.')
             errors.add(exc)
 
-        return rotation_rad
+        return azimuth_rad
 
     def _validate_sample_substrate(self, sample, options, errors):
         material = \
             self._validate_sample_substrate_material(sample.material, options, errors)
         tilt_rad = \
             self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
+        azimuth_rad = \
+            self._validate_sample_base_azimuth_rad(sample.azimuth_rad, options, errors)
 
-        return SubstrateSample(material, tilt_rad, rotation_rad)
+        return SubstrateSample(material, tilt_rad, azimuth_rad)
 
     def _validate_sample_substrate_material(self, material, options, errors):
         if material is VACUUM:
@@ -306,10 +306,10 @@ class Validator(object):
             self._validate_sample_inclusion_inclusion_diameter_m(sample.inclusion_diameter_m, options, errors)
         tilt_rad = \
             self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
+        azimuth_rad = \
+            self._validate_sample_base_azimuth_rad(sample.azimuth_rad, options, errors)
 
-        return InclusionSample(substrate_material, inclusion_material, inclusion_diameter_m, tilt_rad, rotation_rad)
+        return InclusionSample(substrate_material, inclusion_material, inclusion_diameter_m, tilt_rad, azimuth_rad)
 
     def _validate_sample_inclusion_substrate_material(self, material, options, errors):
         return self._validate_material(material, options, errors)
@@ -351,10 +351,10 @@ class Validator(object):
             self._validate_sample_horizontallayers_layers(sample.layers, options, errors)
         tilt_rad = \
             self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
+        azimuth_rad = \
+            self._validate_sample_base_azimuth_rad(sample.azimuth_rad, options, errors)
 
-        return HorizontalLayerSample(substrate_material, layers, tilt_rad, rotation_rad)
+        return HorizontalLayerSample(substrate_material, layers, tilt_rad, azimuth_rad)
 
     def _validate_sample_horizontallayers_substrate_material(self, material, options, errors):
         return self._validate_material(material, options, errors)
@@ -382,10 +382,10 @@ class Validator(object):
             self._validate_sample_verticallayers_depth_m(sample.depth_m, options, errors)
         tilt_rad = \
             self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
+        azimuth_rad = \
+            self._validate_sample_base_azimuth_rad(sample.azimuth_rad, options, errors)
 
-        return VerticalLayerSample(left_material, right_material, layers, depth_m, tilt_rad, rotation_rad)
+        return VerticalLayerSample(left_material, right_material, layers, depth_m, tilt_rad, azimuth_rad)
 
     def _validate_sample_verticallayers_left_material(self, material, options, errors):
         if material is VACUUM:
@@ -419,10 +419,10 @@ class Validator(object):
             self._validate_sample_sphere_diameter_m(sample.diameter_m, options, errors)
         tilt_rad = \
             self._validate_sample_base_tilt_rad(sample.tilt_rad, options, errors)
-        rotation_rad = \
-            self._validate_sample_base_rotation_rad(sample.rotation_rad, options, errors)
+        azimuth_rad = \
+            self._validate_sample_base_azimuth_rad(sample.azimuth_rad, options, errors)
 
-        return SphereSample(material, diameter_m, tilt_rad, rotation_rad)
+        return SphereSample(material, diameter_m, tilt_rad, azimuth_rad)
 
     def _validate_sample_sphere_material(self, material, options, errors):
         if material is VACUUM:

@@ -20,7 +20,7 @@ class VerticalLayerSample(LayeredSample):
     DEPTH_TOLERANCE_m = 1e-12 # 1 fm
 
     def __init__(self, left_material, right_material, layers=None,
-                 depth_m=float('inf'), tilt_rad=0.0, rotation_rad=0.0):
+                 depth_m=float('inf'), tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a grain boundaries sample.
         It consists of 0 or many layers in the y-z plane (normal parallel to x)
@@ -31,7 +31,7 @@ class VerticalLayerSample(LayeredSample):
         :arg right_material: material on the right side
         :arg layers: :class:`list` of :class:`.Layer`
         """
-        super().__init__(layers, tilt_rad, rotation_rad)
+        super().__init__(layers, tilt_rad, azimuth_rad)
 
         self.left_material = left_material
         self.right_material = right_material
@@ -116,7 +116,7 @@ class VerticalLayerSampleBuilder(LayeredSampleBuilder):
         layers_list = self._calculate_layer_combinations()
         depths_m = self._calculate_depth_m()
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
 
         product = itertools.product(left_materials,
                                     right_materials,

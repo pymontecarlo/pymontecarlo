@@ -22,7 +22,7 @@ class TestHorizontalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = HorizontalLayerSampleHDF5Handler()
-        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, rotation_rad=0.2)
+        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(ZINC, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample2 = self.convert_parse_hdf5handler(handler, sample)
@@ -30,7 +30,7 @@ class TestHorizontalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse_same_layer(self):
         handler = HorizontalLayerSampleHDF5Handler()
-        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, rotation_rad=0.2)
+        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         layer = sample.add_layer(ZINC, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
         sample.layers.append(layer)
@@ -39,7 +39,7 @@ class TestHorizontalLayerSampleHDF5Handler(TestCase):
 
     def testconvert_parse_same_material(self):
         handler = HorizontalLayerSampleHDF5Handler()
-        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, rotation_rad=0.2)
+        sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(ZINC, 20e-9)
         sample.add_layer(COPPER, 50e-9)
         sample.add_layer(ZINC, 30e-9)

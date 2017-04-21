@@ -21,12 +21,12 @@ class InclusionSample(Sample):
 
     def __init__(self, substrate_material,
                  inclusion_material, inclusion_diameter_m,
-                 tilt_rad=0.0, rotation_rad=0.0):
+                 tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates an inclusion sample.
         The sample consists of a hemisphere inclusion inside a substrate.
         """
-        super().__init__(tilt_rad, rotation_rad)
+        super().__init__(tilt_rad, azimuth_rad)
 
         self.substrate_material = substrate_material
         self.inclusion_material = inclusion_material
@@ -83,7 +83,7 @@ class InclusionSampleBuilder(SampleBuilder):
 
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
         product = itertools.product(self.substrate_materials,
                                     self.inclusion_materials,
                                     self.inclusion_diameters_m,

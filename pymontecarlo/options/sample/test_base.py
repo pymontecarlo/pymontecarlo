@@ -19,8 +19,8 @@ from pymontecarlo.options.material import Material
 
 class SampleMock(Sample):
 
-    def __init__(self, tilt_rad, rotation_rad):
-        super().__init__(tilt_rad, rotation_rad)
+    def __init__(self, tilt_rad, azimuth_rad):
+        super().__init__(tilt_rad, azimuth_rad)
 
     @property
     def materials(self):
@@ -30,11 +30,11 @@ class SampleBuilderMock(SampleBuilder):
 
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
 
         samples = []
-        for tilt_rad, rotation_rad in itertools.product(tilts_rad, rotations_rad):
-            samples.append(SampleMock(tilt_rad, rotation_rad))
+        for tilt_rad, azimuth_rad in itertools.product(tilts_rad, rotations_rad):
+            samples.append(SampleMock(tilt_rad, azimuth_rad))
         return samples
 
 class LayeredSampleBuilderMock(LayeredSampleBuilder):
@@ -42,13 +42,13 @@ class LayeredSampleBuilderMock(LayeredSampleBuilder):
     def build(self):
         layers_list = self._calculate_layer_combinations()
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
 
         product = itertools.product(layers_list, tilts_rad, rotations_rad)
 
         samples = []
-        for layers, tilt_rad, rotation_rad in product:
-            samples.append(LayeredSample(layers, tilt_rad, rotation_rad))
+        for layers, tilt_rad, azimuth_rad in product:
+            samples.append(LayeredSample(layers, tilt_rad, azimuth_rad))
 
         return samples
 
@@ -61,7 +61,7 @@ class TestSample(TestCase):
 
     def testskeleton(self):
         self.assertAlmostEqual(1.1, self.s.tilt_rad, 4)
-        self.assertAlmostEqual(2.2, self.s.rotation_rad, 4)
+        self.assertAlmostEqual(2.2, self.s.azimuth_rad, 4)
         self.assertAlmostEqual(math.degrees(1.1), self.s.tilt_deg, 4)
         self.assertAlmostEqual(math.degrees(2.2), self.s.rotation_deg, 4)
 
@@ -90,26 +90,26 @@ class TestSampleBuilder(TestCase):
 
         sample = samples[0]
         self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-        self.assertAlmostEqual(0.0, sample.rotation_rad, 4)
+        self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
 
     def testbuild2(self):
         b = SampleBuilderMock()
         b.add_tilt_rad(1.1)
-        b.add_rotation_rad(2.2)
+        b.add_azimuth_rad(2.2)
 
         samples = b.build()
         self.assertEqual(1, len(samples))
 
         sample = samples[0]
         self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
-        self.assertAlmostEqual(2.2, sample.rotation_rad, 4)
+        self.assertAlmostEqual(2.2, sample.azimuth_rad, 4)
 
     def testbuild3(self):
         b = SampleBuilderMock()
         b.add_tilt_rad(1.1)
         b.add_tilt_rad(1.1)
-        b.add_rotation_rad(2.2)
-        b.add_rotation_rad(2.3)
+        b.add_azimuth_rad(2.2)
+        b.add_azimuth_rad(2.3)
 
         samples = b.build()
         self.assertEqual(2, len(samples))

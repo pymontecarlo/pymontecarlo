@@ -26,8 +26,8 @@ class HorizontalLayerSampleHDF5Handler(LayeredSampleHDF5Handler):
         substrate_material = self._parse_substrate_material(group)
         layers = self._parse_layers(group)
         tilt_rad = self._parse_tilt_rad(group)
-        rotation_rad = self._parse_rotation_rad(group)
-        return self.CLASS(substrate_material, layers, tilt_rad, rotation_rad)
+        azimuth_rad = self._parse_azimuth_rad(group)
+        return self.CLASS(substrate_material, layers, tilt_rad, azimuth_rad)
 
     def _convert_substrate_material(self, material, group):
         group_material = self._convert_material_internal(material, group)

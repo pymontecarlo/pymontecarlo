@@ -19,7 +19,7 @@ class SphereSample(Sample):
 
     DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
 
-    def __init__(self, material, diameter_m, tilt_rad=0.0, rotation_rad=0.0):
+    def __init__(self, material, diameter_m, tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a geometry consisting of a sphere.
         The sphere is entirely located below the ``z=0`` plane.
@@ -27,7 +27,7 @@ class SphereSample(Sample):
         :arg material: material
         :arg diameter_m: diameter (in meters)
         """
-        super().__init__(tilt_rad, rotation_rad)
+        super().__init__(tilt_rad, azimuth_rad)
         self.material = material
         self.diameter_m = diameter_m
 
@@ -72,7 +72,7 @@ class SphereSampleBuilder(SampleBuilder):
 
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
-        rotations_rad = self._calculate_rotation_combinations()
+        rotations_rad = self._calculate_azimuth_combinations()
         product = itertools.product(self.materials,
                                     self.diameters_m,
                                     tilts_rad,
