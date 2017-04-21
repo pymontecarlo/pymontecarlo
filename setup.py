@@ -39,6 +39,7 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'GaussianBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.gaussian:GaussianBeamHDF5Handler',
 
                  'MaterialHDF5Handler = pymontecarlo.formats.hdf5.options.material:MaterialHDF5Handler',
+                 'VacuumHDF5Handler = pymontecarlo.formats.hdf5.options.material:VacuumHDF5Handler',
                  'LayerHDF5Handler = pymontecarlo.formats.hdf5.options.sample.base:LayerHDF5Handler',
                  'SubstrateSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.substrate:SubstrateSampleHDF5Handler',
                  'InclusionSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.inclusion:InclusionSampleHDF5Handler',

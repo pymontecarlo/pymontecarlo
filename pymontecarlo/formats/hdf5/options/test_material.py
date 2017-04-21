@@ -9,8 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.hdf5.options.material import MaterialHDF5Handler
-from pymontecarlo.options.material import Material
+from pymontecarlo.formats.hdf5.options.material import MaterialHDF5Handler, VacuumHDF5Handler
+from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
 
@@ -19,6 +19,12 @@ class TestMaterialHDF5Handler(TestCase):
     def testconvert_parse(self):
         handler = MaterialHDF5Handler()
         material = Material('Brass', {29: 0.5, 30: 0.5}, 8960.0)
+        material2 = self.convert_parse_hdf5handler(handler, material)
+        self.assertEqual(material2, material)
+
+    def testconvert_parse_vacuum(self):
+        handler = VacuumHDF5Handler()
+        material = VACUUM
         material2 = self.convert_parse_hdf5handler(handler, material)
         self.assertEqual(material2, material)
 

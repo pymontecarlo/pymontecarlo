@@ -9,7 +9,7 @@ import matplotlib.colors
 
 # Local modules.
 from pymontecarlo.formats.hdf5.base import HDF5Handler
-from pymontecarlo.options.material import Material
+from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
 
@@ -109,3 +109,15 @@ class MaterialHDF5Handler(HDF5Handler):
     @property
     def CLASS(self):
         return Material
+
+class VacuumHDF5Handler(HDF5Handler):
+
+    def parse(self, group):
+        return VACUUM
+
+    def convert(self, vacuum, group):
+        super().convert(vacuum, group)
+
+    @property
+    def CLASS(self):
+        return type(VACUUM)
