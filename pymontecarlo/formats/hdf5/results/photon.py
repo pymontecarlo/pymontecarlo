@@ -9,8 +9,9 @@ import h5py
 
 import numpy as np
 
+import uncertainties
+
 # Local modules.
-from pymontecarlo import unit_registry
 from pymontecarlo.formats.hdf5.results.base import ResultHDF5Handler
 
 # Globals and constants variables.
@@ -22,7 +23,6 @@ class PhotonResultHDF5Handler(ResultHDF5Handler):
     DATASET_XRAYLINE_REFERENCES = 'xrayline scale'
 
     DATASET_QUANTITY = 'quantity scale'
-    ATTR_UNIT = 'unit'
 
     def _parse_analysis(self, group):
         group_analysis = group[self.GROUP_ANALYSIS]
@@ -42,12 +42,10 @@ class PhotonResultHDF5Handler(ResultHDF5Handler):
         raise NotImplementedError
 
     def _parse_values_0d(self, name, group):
-        unit = unit_registry.parse_units(group[name].attrs[self.ATTR_UNIT])
-
         values = []
 
         for n, s in group[name]:
-            q = unit_registry.Quantity(n, unit).plus_minus(s)
+            q = uncertainties.ufloat(n, s)
             values.append(q)
 
         return values
@@ -92,7 +90,6 @@ class PhotonResultHDF5Handler(ResultHDF5Handler):
         shape = (len(values), 2)
         dtype = np.float
         ds_values = group.create_dataset(name, shape=shape, dtype=dtype)
-        ds_values.attrs[self.ATTR_UNIT] = str(values[0].units)
 
         for i, quantity in enumerate(values):
             ds_values[i] = [quantity.n, quantity.s]

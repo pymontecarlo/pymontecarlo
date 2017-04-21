@@ -25,11 +25,6 @@ class ShowersLimit(Limit):
         return super().__eq__(other) and \
             self.number_trajectories == other.number_trajectories
 
-    def create_datarow(self):
-        datarow = super().create_datarow()
-        datarow.add('number of trajectories', self.number_trajectories)
-        return datarow
-
 class ShowersLimitBuilder(LimitBuilder):
 
     def __init__(self):

@@ -49,15 +49,6 @@ class VerticalLayerSample(LayeredSample):
             self.right_material == other.right_material and \
             math.isclose(self.depth_m, other.depth_m, abs_tol=self.DEPTH_TOLERANCE_m)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        prefix = "left substrate's "
-        datarow.update_with_prefix(prefix, self.left_material.create_datarow(**kwargs))
-        prefix = "right substrate's "
-        datarow.update_with_prefix(prefix, self.right_material.create_datarow(**kwargs))
-        datarow.add("vertical layers' depth", self.depth_m, 0.0, 'm', self.DEPTH_TOLERANCE_m)
-        return datarow
-
     @property
     def materials(self):
         return self._cleanup_materials(self.left_material,

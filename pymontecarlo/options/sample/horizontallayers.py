@@ -53,12 +53,6 @@ class HorizontalLayerSample(LayeredSample):
         """
         return self.substrate_material is not VACUUM
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        prefix = "substrate's "
-        datarow.update_with_prefix(prefix, self.substrate_material.create_datarow(**kwargs))
-        return datarow
-
     @property
     def materials(self):
         return self._cleanup_materials(self.substrate_material,

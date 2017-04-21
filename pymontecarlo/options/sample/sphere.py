@@ -41,13 +41,6 @@ class SphereSample(Sample):
             self.material == other.material and \
             math.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        prefix = "sphere's "
-        datarow.update_with_prefix(prefix, self.material.create_datarow(**kwargs))
-        datarow.add("sphere's diameter", self.diameter_m, 0.0, 'm', self.DIAMETER_TOLERANCE_m)
-        return datarow
-
     @property
     def materials(self):
         return self._cleanup_materials(self.material)

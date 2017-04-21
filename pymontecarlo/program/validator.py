@@ -130,12 +130,8 @@ class Validator(object):
             self._validate_beam_gaussian_x0_m(beam.x0_m, options, errors)
         y0_m = \
             self._validate_beam_gaussian_y0_m(beam.y0_m, options, errors)
-        polar_rad = \
-            self._validate_beam_gaussian_polar_rad(beam.polar_rad, options, errors)
-        azimuth_rad = \
-            self._validate_beam_gaussian_azimuth_rad(beam.azimuth_rad, options, errors)
 
-        return GaussianBeam(energy_eV, diameter_m, particle, x0_m, y0_m, polar_rad, azimuth_rad)
+        return GaussianBeam(energy_eV, diameter_m, particle, x0_m, y0_m)
 
     def _validate_beam_gaussian_diameter_m(self, diameter_m, options, errors):
         if diameter_m < 0.0:
@@ -158,20 +154,6 @@ class Validator(object):
             errors.add(exc)
 
         return y0_m
-
-    def _validate_beam_gaussian_polar_rad(self, polar_rad, options, errors):
-        if not math.isfinite(polar_rad):
-            exc = ValueError('Polar angle must be a finite number.')
-            errors.add(exc)
-
-        return polar_rad
-
-    def _validate_beam_gaussian_azimuth_rad(self, azimuth_rad, options, errors):
-        if not math.isfinite(azimuth_rad):
-            exc = ValueError('Azimuth angle must be a finite number.')
-            errors.add(exc)
-
-        return azimuth_rad
 
     def validate_material(self, material, options):
         errors = set()
@@ -223,7 +205,7 @@ class Validator(object):
             outcomposition[z] = wf
 
         total = sum(outcomposition.values())
-        if not math.isclose(total, 1.0, abs_tol=Material.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE):
+        if not math.isclose(total, 1.0, abs_tol=Material.WEIGHT_FRACTION_TOLERANCE):
             exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
                              .format(total))
             errors.add(exc)

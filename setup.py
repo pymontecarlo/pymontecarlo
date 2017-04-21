@@ -20,7 +20,7 @@ PACKAGES = find_packages()
 
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
-                    'matplotlib', 'tabulate', 'psutil']
+                    'matplotlib', 'tabulate', 'psutil', 'pandas']
 EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex']}
 
 CMDCLASS = versioneer.get_cmdclass()
@@ -70,6 +70,40 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'EmittedPhotonIntensityResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:EmittedPhotonIntensityResultHDF5Handler',
                  'GeneratedPhotonIntensityResultResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:GeneratedPhotonIntensityResultResultHDF5Handler',
                  'KRatioResultHDF5Handler = pymontecarlo.formats.hdf5.results.kratio:KRatioResultHDF5Handler',
+                 ],
+
+                'pymontecarlo.formats.series':
+                [
+                 'GaussianBeamSeriesHandler = pymontecarlo.formats.series.options.beam.gaussian:GaussianBeamSeriesHandler',
+
+                 'MaterialSeriesHandler = pymontecarlo.formats.series.options.material:MaterialSeriesHandler',
+                 'VacuumSeriesHandler = pymontecarlo.formats.series.options.material:VacuumSeriesHandler',
+                 'LayerSeriesHandler = pymontecarlo.formats.series.options.sample.base:LayerSeriesHandler',
+                 'SubstrateSampleSeriesHandler = pymontecarlo.formats.series.options.sample.substrate:SubstrateSampleSeriesHandler',
+                 'InclusionSampleSeriesHandler = pymontecarlo.formats.series.options.sample.inclusion:InclusionSampleSeriesHandler',
+                 'HorizontalLayerSampleSeriesHandler = pymontecarlo.formats.series.options.sample.horizontallayers:HorizontalLayerSampleSeriesHandler',
+                 'VerticalLayerSampleSeriesHandler = pymontecarlo.formats.series.options.sample.verticallayers:VerticalLayerSampleSeriesHandler',
+                 'SphereSampleSeriesHandler = pymontecarlo.formats.series.options.sample.sphere:SphereSampleSeriesHandler',
+
+                 'PhotonDetectorSeriesHandler = pymontecarlo.formats.series.options.detector.photon:PhotonDetectorSeriesHandler',
+
+                 'PhotonIntensityAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.photonintensity:PhotonIntensityAnalysisSeriesHandler',
+                 'KRatioAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.kratio:KRatioAnalysisSeriesHandler',
+
+                 'ShowersLimitSeriesHandler = pymontecarlo.formats.series.options.limit.showers:ShowersLimitSeriesHandler',
+                 'UncertaintyLimitSeriesHandler = pymontecarlo.formats.series.options.limit.uncertainty:UncertaintyLimitSeriesHandler',
+
+                 'BremsstrahlungEmissionModelSeriesHandler = pymontecarlo.formats.series.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelSeriesHandler',
+                 'DirectionCosineModelSeriesHandler = pymontecarlo.formats.series.options.model.direction_cosine:DirectionCosineModelSeriesHandler',
+                 'ElasticCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.elastic_cross_section:ElasticCrossSectionModelSeriesHandler',
+                 'EnergyLossModelSeriesHandler = pymontecarlo.formats.series.options.model.energy_loss:EnergyLossModelSeriesHandler',
+                 'FluorescenceModelSeriesHandler = pymontecarlo.formats.series.options.model.fluorescence:FluorescenceModelSeriesHandler',
+                 'InelasticCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.inelastic_cross_section:InelasticCrossSectionModelSeriesHandler',
+                 'IonizationCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.ionization_cross_section:IonizationCrossSectionModelSeriesHandler',
+                 'IonizationPotentialModelSeriesHandler = pymontecarlo.formats.series.options.model.ionization_potential:IonizationPotentialModelSeriesHandler',
+                 'MassAbsorptionCoefficientModelSeriesHandler = pymontecarlo.formats.series.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelSeriesHandler',
+                 'PhotonScatteringCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelSeriesHandler',
+                 'RandomNumberGeneratorModelSeriesHandler = pymontecarlo.formats.series.options.model.random_number_generator:RandomNumberGeneratorModelSeriesHandler',
                  ]}
 
 setup(name="pyMonteCarlo",

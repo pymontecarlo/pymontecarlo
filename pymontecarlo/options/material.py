@@ -23,8 +23,8 @@ from pymontecarlo.options.base import Option, OptionBuilder
 
 class Material(Option):
 
-    WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE = 1e-7 # 0.1 ppm
-    DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3 = 1e-5
+    WEIGHT_FRACTION_TOLERANCE = 1e-7 # 0.1 ppm
+    DENSITY_TOLERANCE_kg_per_m3 = 1e-5
 
     COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
 
@@ -111,16 +111,8 @@ class Material(Option):
         # NOTE: color is not tested in equality
         return super().__eq__(other) and \
             self.name == other.name and \
-            cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_SIGNIFICANT_TOLERANCE) and \
-            math.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_SIGNIFICANT_TOLERANCE_kg_per_m3)
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        for z, wf in self.composition.items():
-            column = '{0} weight fraction'.format(pyxray.element_symbol(z))
-            datarow.add(column, wf)
-        datarow.add('density', self.density_kg_per_m3, 0.0, 'kg/m^3')
-        return datarow
+            cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_TOLERANCE) and \
+            math.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
 
     density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
@@ -155,9 +147,6 @@ class _Vacuum(Material):
 
     def __reduce__(self):
         return (self.__class__, ())
-
-    def create_datarow(self, **kwargs):
-        return Option.create_datarow(**kwargs)
 
 VACUUM = _Vacuum()
 

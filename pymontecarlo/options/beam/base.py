@@ -21,7 +21,7 @@ class Beam(Option):
     Base beam.
     """
 
-    BEAM_ENERGY_TOLERANCE_eV = 1e-2 # 0.01 eV
+    ENERGY_TOLERANCE_eV = 1e-2 # 0.01 eV
 
     def __init__(self, energy_eV, particle=Particle.ELECTRON):
         """
@@ -38,13 +38,8 @@ class Beam(Option):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.energy_eV, other.energy_eV, abs_tol=self.BEAM_ENERGY_TOLERANCE_eV) and \
+            math.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
             self.particle == other.particle
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow.add('beam energy', self.energy_eV, 0.0, 'eV', self.BEAM_ENERGY_TOLERANCE_eV)
-        return datarow
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 

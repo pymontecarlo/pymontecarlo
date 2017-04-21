@@ -43,9 +43,6 @@ class TestPhotonDetector(TestCase):
         d = PhotonDetector(math.radians(35), math.radians(91))
         self.assertNotEqual(d, self.d)
 
-    def testcreate_datarow(self):
-        self.assertEqual(2, len(self.d.create_datarow()))
-
 class TestPhotonDetectorBuilder(TestCase):
 
     def testbuild(self):

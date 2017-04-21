@@ -8,11 +8,10 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.datarow import DataRowCreator
 
 # Globals and constants variables.
 
-class Option(DataRowCreator, metaclass=abc.ABCMeta):
+class Option(metaclass=abc.ABCMeta):
     """
     Base class of all the options.
     All derived classes should implement

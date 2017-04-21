@@ -19,7 +19,7 @@ class TestGaussianBeamHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = GaussianBeamHDF5Handler()
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
         beam2 = self.convert_parse_hdf5handler(handler, beam)
         self.assertEqual(beam2, beam)
 

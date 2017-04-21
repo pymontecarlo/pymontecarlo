@@ -52,23 +52,6 @@ class Options(Option):
             are_sequence_similar(self.limits, other.limits) and \
             are_sequence_similar(self.models, other.models)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-
-        datarow.update(self.beam.create_datarow(**kwargs))
-        datarow.update(self.sample.create_datarow(**kwargs))
-
-        for analysis in self.analyses:
-            datarow.update(analysis.create_datarow(**kwargs))
-
-        for limit in self.limits:
-            datarow.update(limit.create_datarow(**kwargs))
-
-        for model in self.models:
-            datarow.update(model.create_datarow(**kwargs))
-
-        return datarow
-
     def find_analyses(self, analysis_class):
         return find_by_type(self.analyses, analysis_class)
 

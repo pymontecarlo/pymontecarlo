@@ -78,13 +78,12 @@ class TestValidator(TestCase):
 
     def testvalidate_beam_gaussian_exception(self):
         beam = GaussianBeam(0.0, -1.0, 'particle',
-                            float('inf'), float('nan'),
                             float('inf'), float('nan'))
         self.assertRaises(ValidationError, self.v.validate_beam, beam, self.options)
 
         errors = set()
         self.v._validate_beam(beam, self.options, errors)
-        self.assertEqual(7, len(errors))
+        self.assertEqual(5, len(errors))
 
     def testvalidate_sample_substrate(self):
         sample = SubstrateSample(COPPER)

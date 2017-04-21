@@ -28,18 +28,6 @@ class TestOptions(TestCase):
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)
 
-    def testcreate_datarow(self):
-        datarow = self.options.create_datarow()
-        self.assertEqual(13, len(datarow))
-
-        options = self.create_basic_options()
-        options.beam.energy_eV = 14e3
-        other_datarow = options.create_datarow()
-
-        diff = datarow ^ other_datarow
-        self.assertEqual(1, len(diff))
-        self.assertIn('beam energy', datarow)
-
     def testfind_detectors(self):
         detectors = self.options.find_detectors(PhotonDetector)
         self.assertEqual(1, len(detectors))

@@ -30,10 +30,6 @@ class TestEmittedPhotonIntensityResult(TestCase):
         b.add_intensity((13, 'Ll'), 3.0, 0.1)
         self.r = b.build()
 
-    def testcreate_datarow(self):
-        datarow = self.r.create_datarow()
-        self.assertEqual(5, len(datarow))
-
     def testget(self):
         q = self.r.get((13, 'Ka1'))
         self.assertAlmostEqual(1.0, q.n, 4)

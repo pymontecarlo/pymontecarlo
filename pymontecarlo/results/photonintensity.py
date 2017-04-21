@@ -3,34 +3,19 @@
 # Standard library modules.
 
 # Third party modules.
+import uncertainties
 
 # Local modules.
-from pymontecarlo import unit_registry
-from pymontecarlo.results.photon import PhotonResult, PhotonResultBuilder
-from pymontecarlo.util.datarow import DataRowCreator
+from pymontecarlo.results.photon import PhotonSingleResult, PhotonResultBuilder
 
 # Globals and constants variables.
 
-class PhotonIntensityResult(PhotonResult, DataRowCreator):
+class PhotonIntensityResult(PhotonSingleResult):
     """
     Mapping of :class:`XrayLine` and photon intensities, expressed in
     ``1/(sr.electron)``.
     """
-
-    _DEFAULT = object()
-
-    def get(self, key, default=_DEFAULT):
-        if default is self._DEFAULT:
-            default = unit_registry.Quantity(0.0, '1/(sr.electron)').plus_minus(0.0)
-        return super().get(key, default)
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow()
-
-        for xrayline, q in self.items():
-            datarow.add(xrayline, q.n, q.s, q.units)
-
-        return datarow
+    pass
 
 class EmittedPhotonIntensityResult(PhotonIntensityResult):
     pass
@@ -40,9 +25,13 @@ class GeneratedPhotonIntensityResult(PhotonIntensityResult):
 
 class PhotonIntensityResultBuilder(PhotonResultBuilder):
 
-    def add_intensity(self, xrayline, value, error, unit='1/(sr.electron)'):
-        q = unit_registry.Quantity(value, unit).plus_minus(error)
-        q = q.to('1/(sr.electron)')
+    def add_intensity(self, xrayline, value, error):
+        """
+        :arg value: intensity in ``1/(sr.electron)``
+        
+        :arg error: error on the intensity in ``1/(sr.electron)``
+        """
+        q = uncertainties.ufloat(value, error)
         self._add(xrayline, q)
 
 class EmittedPhotonIntensityResultBuilder(PhotonIntensityResultBuilder):

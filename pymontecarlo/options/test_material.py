@@ -95,9 +95,6 @@ class TestMaterial(TestCase):
         m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
         self.assertNotEqual(m2, self.m)
 
-    def testcreate_datarow(self):
-        self.assertEqual(2, len(self.m.create_datarow()))
-
     def testset_color_set(self):
         Material.set_color_set(['#00FF00', '#0000FF'])
 

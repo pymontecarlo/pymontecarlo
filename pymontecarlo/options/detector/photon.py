@@ -36,12 +36,6 @@ class PhotonDetector(Detector):
             math.isclose(self.elevation_rad, other.elevation_rad, abs_tol=self.ELEVATION_TOLERANCE_rad) and \
             math.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow.add('photon detector elevation angle', self.elevation_rad, 0.0, 'rad', self.ELEVATION_TOLERANCE_rad)
-        datarow.add('photon detector azimuth angle', self.azimuth_rad, 0.0, 'rad', self.AZIMUTH_TOLERANCE_rad)
-        return datarow
-
     elevation_deg = DegreesAttribute('elevation_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 

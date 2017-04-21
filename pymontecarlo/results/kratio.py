@@ -3,33 +3,18 @@
 # Standard library modules.
 
 # Third party modules.
+import uncertainties
 
 # Local modules.
-from pymontecarlo import unit_registry
-from pymontecarlo.results.photon import PhotonResult, PhotonResultBuilder
-from pymontecarlo.util.datarow import DataRowCreator
+from pymontecarlo.results.photon import PhotonSingleResult, PhotonResultBuilder
 
 # Globals and constants variables.
 
-class KRatioResult(PhotonResult, DataRowCreator):
+class KRatioResult(PhotonSingleResult):
     """
     Mapping of :class:`XrayLine` and k-ratios.
     """
-
-    _DEFAULT = object()
-
-    def get(self, key, default=_DEFAULT):
-        if default is self._DEFAULT:
-            default = unit_registry.Quantity(0.0).plus_minus(0.0)
-        return super().get(key, default)
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow()
-
-        for xrayline, q in self.items():
-            datarow.add(xrayline, q.n, q.s, q.units)
-
-        return datarow
+    pass
 
 class KRatioResultBuilder(PhotonResultBuilder):
 
@@ -37,9 +22,7 @@ class KRatioResultBuilder(PhotonResultBuilder):
         super().__init__(analysis, KRatioResult)
 
     def add_kratio(self, xrayline, unkintensity, stdintensity):
-        qunk = unit_registry.Quantity(unkintensity)
-        qstd = unit_registry.Quantity(stdintensity)
-        kratio = qunk.to_base_units() / qstd.to_base_units()
+        kratio = unkintensity / stdintensity
         if not hasattr(kratio, 's'):
-            kratio = kratio.plus_minus(0.0)
+            kratio = uncertainties.ufloat(kratio, 0.0)
         self._add(xrayline, kratio)

@@ -6,6 +6,7 @@ Photon based results.
 import collections
 
 # Third party modules.
+import uncertainties
 
 # Local modules.
 from pymontecarlo.results.base import Result, ResultBuilder
@@ -37,6 +38,15 @@ class PhotonResult(Result, collections.Mapping):
     def __repr__(self):
         return '<{}({})>'.format(self.__class__.__name__,
                                  ', '.join(map(str, self)))
+
+class PhotonSingleResult(PhotonResult):
+
+    _DEFAULT = object()
+
+    def get(self, key, default=_DEFAULT):
+        if default is self._DEFAULT:
+            default = uncertainties.ufloat(0.0, 0.0)
+        return super().get(key, default)
 
 class PhotonResultBuilder(ResultBuilder):
 

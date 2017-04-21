@@ -63,7 +63,7 @@ class TestSample(TestCase):
         self.assertAlmostEqual(1.1, self.s.tilt_rad, 4)
         self.assertAlmostEqual(2.2, self.s.azimuth_rad, 4)
         self.assertAlmostEqual(math.degrees(1.1), self.s.tilt_deg, 4)
-        self.assertAlmostEqual(math.degrees(2.2), self.s.rotation_deg, 4)
+        self.assertAlmostEqual(math.degrees(2.2), self.s.azimuth_deg, 4)
 
     def testmaterials(self):
         materials = self.s.materials

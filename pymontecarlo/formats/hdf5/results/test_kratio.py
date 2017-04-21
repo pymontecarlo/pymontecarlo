@@ -16,7 +16,7 @@ from pymontecarlo.results.kratio import KRatioResultBuilder
 
 # Globals and constants variables.
 
-class TestSubstrateSampleHDF5Handler(TestCase):
+class TestKRatioResultHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = KRatioResultHDF5Handler()

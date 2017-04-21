@@ -129,12 +129,6 @@ class Layer(Option):
         return self.material == other.material and \
             math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow.update(self.material.create_datarow(**kwargs))
-        datarow.add('thickness', self.thickness_m, 0.0, 'm', self.THICKNESS_TOLERANCE_m)
-        return datarow
-
 class LayerBuilder(OptionBuilder):
 
     def __init__(self):
@@ -187,13 +181,6 @@ class LayeredSample(Sample):
         layer = Layer(material, thickness_m)
         self.layers.append(layer)
         return layer
-
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        for i, layer in enumerate(self.layers):
-            prefix = "layer {0:d}'s ".format(i)
-            datarow.update_with_prefix(prefix, layer.create_datarow(**kwargs))
-        return datarow
 
     @property
     def materials(self):

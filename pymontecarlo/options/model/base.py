@@ -29,7 +29,3 @@ class Model(Option, enum.Enum, metaclass=ModelMeta):
 
     def __str__(self):
         return self.fullname
-
-    def create_datarow(self, **kwargs):
-        return super().create_datarow(**kwargs)
-

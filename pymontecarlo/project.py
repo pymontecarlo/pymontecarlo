@@ -7,13 +7,14 @@ import operator
 import functools
 
 # Third party modules.
+import pandas as pd
 
 # Local modules.
 from pymontecarlo.util.future import FutureExecutor
 from pymontecarlo.util.cbook import find_by_type
-from pymontecarlo.util.datarow import DataRowCreator, DataRow
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
+from pymontecarlo.formats.series.options.options import OptionsSeriesHandler
 
 # Globals and constants variables.
 
@@ -52,32 +53,31 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             future = executor.submit(self)
             return future.result()
 
-    def create_options_datarows(self, only_different_columns=False):
+    def create_options_dataframe(self, only_different_columns=False):
         """
         Returns a :class:`list` of :class:`Datarow`, one for each simulation.
         
         If *only_different_columns*, the data rows will only contain the columns
         that are different between the options.
         """
-        if not self.simulations:
-            return []
+        handler = OptionsSeriesHandler()
+        list_series = [handler.convert(sim.options) for sim in self.simulations]
+        df = pd.DataFrame(list_series)
 
-        datarows = []
-        for simulation in self.simulations:
-            datarow = simulation.options.create_datarow()
-            datarows.append(datarow)
+        if not only_different_columns or len(df) < 2:
+            return df
 
-        if not only_different_columns:
-            return datarows
+        drop_columns = []
+        for column in df.columns:
+            values = df[column].values
+            if all(column.compare(values[0], v) for v in values):
+                drop_columns.append(column)
 
-        datarows2 = []
-        for datarow in datarows:
-            newdatarow = functools.reduce(operator.or_, [datarow ^ other for other in datarows])
-            datarows2.append(newdatarow)
+        df = df.drop(drop_columns, axis=1)
 
-        return datarows2
+        return df
 
-    def create_results_datarows(self, result_classes=None):
+    def create_results_dataframe(self, result_classes=None):
         """
         Returns a :class:`list` of :class:`Datarow`, one for each simulation.
         

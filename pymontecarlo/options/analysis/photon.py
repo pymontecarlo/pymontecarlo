@@ -33,11 +33,6 @@ class PhotonAnalysis(Analysis):
         return '<{classname}(detector={photon_detector})>' \
             .format(classname=self.__class__.__name__, **self.__dict__)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow |= self.photon_detector.create_datarow(**kwargs)
-        return datarow
-
     @property
     def detectors(self):
         return super().detectors + (self.photon_detector,)

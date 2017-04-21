@@ -34,9 +34,3 @@ class UncertaintyLimit(Limit):
             self.detector == other.detector and \
             math.isclose(self.uncertainty, other.uncertainty, abs_tol=self.UNCERTAINTY_TOLERANCE)
 
-    def create_datarow(self, **kwargs):
-        datarow = super().create_datarow(**kwargs)
-        datarow |= self.detector.create_datarow(**kwargs)
-        datarow.add('uncertainty value', self.uncertainty, tolerance=self.UNCERTAINTY_TOLERANCE)
-        return datarow
-

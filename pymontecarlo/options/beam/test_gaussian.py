@@ -4,7 +4,6 @@
 # Standard library modules.
 import unittest
 import logging
-import math
 
 # Third party modules.
 
@@ -21,7 +20,7 @@ class TestGaussianBeam(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.2)
+        self.beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
 
     def testskeleton(self):
         self.assertEqual(Particle.POSITRON, self.beam.particle)
@@ -34,43 +33,28 @@ class TestGaussianBeam(TestCase):
         self.assertAlmostEqual(1.0, self.beam.x0_m, 4)
         self.assertAlmostEqual(2.0, self.beam.y0_m, 4)
 
-        self.assertAlmostEqual(0.1, self.beam.polar_rad, 4)
-        self.assertAlmostEqual(math.degrees(0.1), self.beam.polar_deg, 4)
-
-        self.assertAlmostEqual(0.2, self.beam.azimuth_rad, 4)
-        self.assertAlmostEqual(math.degrees(0.2), self.beam.azimuth_deg, 4)
-
-    def testcreate_datarow(self):
-        self.assertEqual(6, len(self.beam.create_datarow()))
-
     def test__repr__(self):
-        expected = '<GaussianBeam(POSITRON, 15000 eV, 123.456 m, (1, 2) m, 0.1 rad, 0.2 rad)>'
+        expected = '<GaussianBeam(POSITRON, 15000 eV, 123.456 m, (1, 2) m)>'
         self.assertEqual(expected, repr(self.beam))
 
     def test__eq__(self):
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
         self.assertEqual(beam, self.beam)
 
     def test__ne__(self):
-        beam = GaussianBeam(14e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(14e3, 123.456, Particle.POSITRON, 1.0, 2.0)
         self.assertNotEqual(beam, self.beam)
 
-        beam = GaussianBeam(15e3, 124.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(15e3, 124.456, Particle.POSITRON, 1.0, 2.0)
         self.assertNotEqual(beam, self.beam)
 
-        beam = GaussianBeam(15e3, 123.456, Particle.ELECTRON, 1.0, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(15e3, 123.456, Particle.ELECTRON, 1.0, 2.0)
         self.assertNotEqual(beam, self.beam)
 
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.1, 2.0, 0.1, 0.2)
+        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.1, 2.0)
         self.assertNotEqual(beam, self.beam)
 
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.1, 0.1, 0.2)
-        self.assertNotEqual(beam, self.beam)
-
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.11, 0.2)
-        self.assertNotEqual(beam, self.beam)
-
-        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0, 0.1, 0.21)
+        beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.1)
         self.assertNotEqual(beam, self.beam)
 
         beam = Beam(15e3, Particle.POSITRON)
