@@ -115,6 +115,8 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                 'pymontecarlo.formats.html':
                 [
+                 'OptionsHtmlHandler = pymontecarlo.formats.html.options.options:OptionsHtmlHandler',
+
                  'GaussianBeamHtmlHandler = pymontecarlo.formats.html.options.beam.gaussian:GaussianBeamHtmlHandler',
 
                  'MaterialHtmlHandler = pymontecarlo.formats.html.options.material:MaterialHtmlHandler',
