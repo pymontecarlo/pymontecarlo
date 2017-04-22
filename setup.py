@@ -20,7 +20,8 @@ PACKAGES = find_packages()
 
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
-                    'matplotlib', 'tabulate', 'psutil', 'pandas', 'blinker']
+                    'matplotlib', 'tabulate', 'psutil', 'pandas', 'blinker',
+                    'dominate']
 EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex']}
 
 CMDCLASS = versioneer.get_cmdclass()
@@ -110,6 +111,41 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'EmittedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:EmittedPhotonIntensityResultSeriesHandler',
                  'GeneratedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:GeneratedPhotonIntensityResultSeriesHandler',
                  'KRatioResultSeriesHandler = pymontecarlo.formats.series.results.kratio:KRatioResultSeriesHandler',
+                 ],
+
+                'pymontecarlo.formats.html':
+                [
+                 'GaussianBeamHtmlHandler = pymontecarlo.formats.html.options.beam.gaussian:GaussianBeamHtmlHandler',
+
+                 'MaterialHtmlHandler = pymontecarlo.formats.html.options.material:MaterialHtmlHandler',
+                 'VacuumHtmlHandler = pymontecarlo.formats.html.options.material:VacuumHtmlHandler',
+                 'LayerHtmlHandler = pymontecarlo.formats.html.options.sample.base:LayerHtmlHandler',
+                 'SubstrateSampleHtmlHandler = pymontecarlo.formats.html.options.sample.substrate:SubstrateSampleHtmlHandler',
+                 'InclusionSampleHtmlHandler = pymontecarlo.formats.html.options.sample.inclusion:InclusionSampleHtmlHandler',
+                 'HorizontalLayerSampleHtmlHandler = pymontecarlo.formats.html.options.sample.horizontallayers:HorizontalLayerSampleHtmlHandler',
+                 'VerticalLayerSampleHtmlHandler = pymontecarlo.formats.html.options.sample.verticallayers:VerticalLayerSampleHtmlHandler',
+                 'SphereSampleHtmlHandler = pymontecarlo.formats.html.options.sample.sphere:SphereSampleHtmlHandler',
+
+                 'PhotonDetectorHtmlHandler = pymontecarlo.formats.html.options.detector.photon:PhotonDetectorHtmlHandler',
+
+                 'PhotonIntensityAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.photonintensity:PhotonIntensityAnalysisHtmlHandler',
+                 'KRatioAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.kratio:KRatioAnalysisHtmlHandler',
+
+                 'ShowersLimitHtmlHandler = pymontecarlo.formats.html.options.limit.showers:ShowersLimitHtmlHandler',
+                 'UncertaintyLimitHtmlHandler = pymontecarlo.formats.html.options.limit.uncertainty:UncertaintyLimitHtmlHandler',
+
+                 'BremsstrahlungEmissionModelHtmlHandler = pymontecarlo.formats.html.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHtmlHandler',
+                 'DirectionCosineModelHtmlHandler = pymontecarlo.formats.html.options.model.direction_cosine:DirectionCosineModelHtmlHandler',
+                 'ElasticCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.elastic_cross_section:ElasticCrossSectionModelHtmlHandler',
+                 'EnergyLossModelHtmlHandler = pymontecarlo.formats.html.options.model.energy_loss:EnergyLossModelHtmlHandler',
+                 'FluorescenceModelHtmlHandler = pymontecarlo.formats.html.options.model.fluorescence:FluorescenceModelHtmlHandler',
+                 'InelasticCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.inelastic_cross_section:InelasticCrossSectionModelHtmlHandler',
+                 'IonizationCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.ionization_cross_section:IonizationCrossSectionModelHtmlHandler',
+                 'IonizationPotentialModelHtmlHandler = pymontecarlo.formats.html.options.model.ionization_potential:IonizationPotentialModelHtmlHandler',
+                 'MassAbsorptionCoefficientModelHtmlHandler = pymontecarlo.formats.html.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelHtmlHandler',
+                 'PhotonScatteringCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelHtmlHandler',
+                 'RandomNumberGeneratorModelHtmlHandler = pymontecarlo.formats.html.options.model.random_number_generator:RandomNumberGeneratorModelHtmlHandler',
+
                  ]}
 
 setup(name="pyMonteCarlo",

@@ -80,6 +80,13 @@ def find_by_type(objects, clasz):
             found_objects.append(obj)
     return found_objects
 
+def organize_by_type(objects):
+    out = {}
+    for obj in objects:
+        clasz = obj.__class__
+        out.setdefault(clasz, []).append(obj)
+    return out
+
 class MultiplierAttribute(object):
 
     def __init__(self, attrname, multiplier):

@@ -104,19 +104,22 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
                 return True
         return False
 
-    def set_preferred_unit(self, unit):
-        if isinstance(unit, str):
-            unit = pymontecarlo.unit_registry.parse_units(unit)
+    def set_preferred_unit(self, units):
+        if isinstance(units, str):
+            units = pymontecarlo.unit_registry.parse_units(units)
 
-        _, base_unit = pymontecarlo.unit_registry._get_base_units(unit)
-        self.preferred_units[base_unit] = unit
+        _, base_units = pymontecarlo.unit_registry._get_base_units(units)
+        self.preferred_units[base_units] = units
         self.preferred_units_changed.send()
 
     def clear_preferred_units(self):
         self.preferred_units.clear()
         self.preferred_units_changed.send()
 
-    def to_preferred_unit(self, q):
+    def to_preferred_unit(self, q, units=None):
+        if not hasattr(q, 'units'):
+            q = pymontecarlo.unit_registry.Quantity(q, units)
+
         _, base_unit = pymontecarlo.unit_registry._get_base_units(q.units)
 
         try:
