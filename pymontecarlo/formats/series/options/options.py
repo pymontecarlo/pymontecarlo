@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler, SeriesColumn
+from pymontecarlo.formats.series.base import SeriesHandler, NamedSeriesColumn
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
@@ -15,7 +15,7 @@ class OptionsSeriesHandler(SeriesHandler):
     def convert(self, options):
         s = super().convert(options)
 
-        column = SeriesColumn('program', 'prog')
+        column = NamedSeriesColumn('program', 'prog')
         s[column] = options.program.getidentifier()
 
         s_beam = self._find_and_convert(options.beam)

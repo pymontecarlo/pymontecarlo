@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
-from pymontecarlo.formats.series.base import SeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.options.model.energy_loss import EnergyLossModel
 
 # Globals and constants variables.
@@ -16,7 +16,7 @@ class EnergyLossModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = SeriesColumn('energy loss', 'dE/dS')
+        column = NamedSeriesColumn('energy loss', 'dE/dS')
         s[column] = model.name
 
         return s

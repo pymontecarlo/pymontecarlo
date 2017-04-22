@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
-from pymontecarlo.formats.series.base import SeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.options.model.mass_absorption_coefficient import MassAbsorptionCoefficientModel
 
 # Globals and constants variables.
@@ -16,7 +16,7 @@ class MassAbsorptionCoefficientModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = SeriesColumn('mass absorption coefficient', 'mac')
+        column = NamedSeriesColumn('mass absorption coefficient', 'mac')
         s[column] = model.name
 
         return s

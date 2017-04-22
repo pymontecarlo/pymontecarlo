@@ -9,17 +9,17 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.base import SeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn
 
 # Globals and constants variables.
 
-class TestSeriesColumn(TestCase):
+class TestNamedSeriesColumn(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.column0 = SeriesColumn('a', 'b')
-        self.column1 = SeriesColumn('a', 'b', 'm', 0.1)
+        self.column0 = NamedSeriesColumn('a', 'b')
+        self.column1 = NamedSeriesColumn('a', 'b', 'm', 0.1)
 
     def testcompare(self):
         self.assertTrue(self.column0.compare('foo', 'foo'))

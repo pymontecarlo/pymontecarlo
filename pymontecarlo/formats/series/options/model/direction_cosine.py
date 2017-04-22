@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
-from pymontecarlo.formats.series.base import SeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.options.model.direction_cosine import DirectionCosineModel
 
 # Globals and constants variables.
@@ -16,7 +16,7 @@ class DirectionCosineModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = SeriesColumn('direction cosine', 'cosine')
+        column = NamedSeriesColumn('direction cosine', 'cosine')
         s[column] = model.name
 
         return s

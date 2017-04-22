@@ -6,7 +6,7 @@
 import pyxray
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler, SeriesColumn
+from pymontecarlo.formats.series.base import SeriesHandler, NamedSeriesColumn
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -21,10 +21,10 @@ class MaterialSeriesHandler(SeriesHandler):
             name = '{} weight fraction'.format(symbol)
             abbrev = 'wt.{}'.format(symbol)
             tolerance = Material.WEIGHT_FRACTION_TOLERANCE
-            column = SeriesColumn(name, abbrev, tolerance=tolerance)
+            column = NamedSeriesColumn(name, abbrev, tolerance=tolerance)
             s[column] = wf
 
-        column = SeriesColumn('density', 'rho', 'kg/m^3', Material.DENSITY_TOLERANCE_kg_per_m3)
+        column = NamedSeriesColumn('density', 'rho', 'kg/m^3', Material.DENSITY_TOLERANCE_kg_per_m3)
         s[column] = material.density_kg_per_m3
 
         return s

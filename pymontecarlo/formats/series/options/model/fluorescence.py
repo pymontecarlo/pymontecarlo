@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
-from pymontecarlo.formats.series.base import SeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.options.model.fluorescence import FluorescenceModel
 # Globals and constants variables.
 
@@ -15,7 +15,7 @@ class FluorescenceModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = SeriesColumn('fluorescence', 'fluo')
+        column = NamedSeriesColumn('fluorescence', 'fluo')
         s[column] = model.name
 
         return s

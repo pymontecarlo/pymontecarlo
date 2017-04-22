@@ -23,13 +23,7 @@ def find_convert_serieshandler(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
 
-class SeriesColumn:
-
-    def __init__(self, name, abbrev, unit=None, tolerance=None):
-        self._name = name
-        self._abbrev = abbrev
-        self._unit = unit
-        self._tolerance = tolerance
+class SeriesColumn(metaclass=abc.ABCMeta):
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -52,26 +46,15 @@ class SeriesColumn:
         else:
             return math.isclose(value0, value1, abs_tol=self.tolerance)
 
-    def with_prefix(self, prefix, prefix_abbrev=None):
-        """
-        Returns a new column with the prepended prefix.
-        """
-        if prefix_abbrev is None:
-            prefix_abbrev = prefix
-
-        name = prefix + self.name
-        abbrev = prefix_abbrev + self.abbrev
-        return self.__class__(name, abbrev, self.unit, self.tolerance)
-
     def format_value(self, value):
-        if self.unit:
+        if self.unit is not None:
             q = pymontecarlo.unit_registry.Quantity(value, self.unit)
             q = pymontecarlo.settings.to_preferred_unit(q)
             value = q.magnitude
 
         if isinstance(value, float):
-            if self.tolerance:
-                if self.unit:
+            if self.tolerance is not None:
+                if self.unit is not None:
                     q_tolerance = pymontecarlo.unit_registry.Quantity(self.tolerance, self.unit)
                     q_tolerance = pymontecarlo.settings.to_preferred_unit(q_tolerance)
                     tolerance = q_tolerance.magnitude
@@ -85,13 +68,17 @@ class SeriesColumn:
         else:
             return '{}'.format(value)
 
-    @property
+    @abc.abstractmethod
+    def with_prefix(self, prefix, prefix_abbrev=None):
+        raise NotImplementedError
+
+    @abc.abstractproperty
     def name(self):
-        return self._name
+        raise NotImplementedError
 
     @property
     def fullname(self):
-        if not self.unit:
+        if self.unit is None:
             return self.name
 
         q = pymontecarlo.unit_registry.Quantity(1.0, self.unit)
@@ -101,6 +88,42 @@ class SeriesColumn:
             unitname = '{0:P}'.format(q.units)
 
         return '{} ({})'.format(self.name, unitname)
+
+    @abc.abstractproperty
+    def abbrev(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def unit(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def tolerance(self):
+        raise NotImplementedError
+
+class NamedSeriesColumn(SeriesColumn):
+
+    def __init__(self, name, abbrev, unit=None, tolerance=None):
+        super().__init__()
+        self._name = name
+        self._abbrev = abbrev
+        self._unit = unit
+        self._tolerance = tolerance
+
+    def with_prefix(self, prefix, prefix_abbrev=None):
+        """
+        Returns a new column with the prepended prefix.
+        """
+        if prefix_abbrev is None:
+            prefix_abbrev = prefix
+
+        name = prefix + self.name
+        abbrev = prefix_abbrev + self.abbrev
+        return NamedSeriesColumn(name, abbrev, self.unit, self.tolerance)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def abbrev(self):
