@@ -50,6 +50,17 @@ class SeriesColumn:
         else:
             return math.isclose(value0, value1, abs_tol=self.tolerance)
 
+    def with_prefix(self, prefix, prefix_abbrev=None):
+        """
+        Returns a new column with the prepended prefix.
+        """
+        if prefix_abbrev is None:
+            prefix_abbrev = prefix
+
+        name = prefix + self.name
+        abbrev = prefix_abbrev + self.abbrev
+        return self.__class__(name, abbrev, self.unit, self.tolerance)
+
     @property
     def name(self):
         return self._name
@@ -67,17 +78,10 @@ class SeriesColumn:
         return self._tolerance
 
 def update_with_prefix(s, prefix, prefix_abbrev=None):
-    if prefix_abbrev is None:
-        prefix_abbrev = prefix
-
     s_new = pd.Series()
 
     for column, value in s.items():
-        name = prefix + column.name
-        abbrev = prefix_abbrev + column.abbrev
-        unit = column.unit
-        tolerance = column.tolerance
-        column_new = SeriesColumn(name, abbrev, unit, tolerance)
+        column_new = column.with_prefix(prefix, prefix_abbrev)
         s_new[column_new] = value
 
     return s_new
