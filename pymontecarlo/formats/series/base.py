@@ -8,8 +8,10 @@ import math
 import pandas as pd
 
 # Local modules.
+import pymontecarlo
 from pymontecarlo.exceptions import ConvertError
 from pymontecarlo.util.entrypoint import resolve_entrypoints
+from pymontecarlo.util.tolerance import tolerance_to_decimals
 
 # Globals and constants variables.
 ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
@@ -61,9 +63,44 @@ class SeriesColumn:
         abbrev = prefix_abbrev + self.abbrev
         return self.__class__(name, abbrev, self.unit, self.tolerance)
 
+    def format_value(self, value):
+        if self.unit:
+            q = pymontecarlo.unit_registry.Quantity(value, self.unit)
+            q = pymontecarlo.settings.to_preferred_unit(q)
+            value = q.magnitude
+
+        if isinstance(value, float):
+            if self.tolerance:
+                if self.unit:
+                    q_tolerance = pymontecarlo.unit_registry.Quantity(self.tolerance, self.unit)
+                    q_tolerance = pymontecarlo.settings.to_preferred_unit(q_tolerance)
+                    tolerance = q_tolerance.magnitude
+                else:
+                    tolerance = self.tolerance
+
+                precision = tolerance_to_decimals(tolerance)
+                return '{0:.{precision}f}'.format(value, precision=precision)
+            else:
+                return '{:g}'.format(value)
+        else:
+            return '{}'.format(value)
+
     @property
     def name(self):
         return self._name
+
+    @property
+    def fullname(self):
+        if not self.unit:
+            return self.name
+
+        q = pymontecarlo.unit_registry.Quantity(1.0, self.unit)
+        q = pymontecarlo.settings.to_preferred_unit(q)
+        unitname = '{0:~P}'.format(q.units)
+        if not unitname: # required for radian and degree
+            unitname = '{0:P}'.format(q.units)
+
+        return '{} ({})'.format(self.name, unitname)
 
     @property
     def abbrev(self):
