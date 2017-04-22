@@ -25,7 +25,7 @@ class PhotonIntensityResultHDF5Handler(PhotonResultHDF5Handler):
     def _convert_values(self, values, group):
         return self._convert_values_0d(values, self.DATASET_INTENSITIES, group)
 
-class GeneratedPhotonIntensityResultResultHDF5Handler(PhotonIntensityResultHDF5Handler):
+class GeneratedPhotonIntensityResultHDF5Handler(PhotonIntensityResultHDF5Handler):
 
     @property
     def CLASS(self):
