@@ -12,6 +12,7 @@ from pymontecarlo.simulation import Simulation
 
 class SimulationHDF5Handler(HDF5Handler):
 
+    ATTR_IDENTIFIER = 'identifier'
     GROUP_OPTIONS = 'options'
     GROUP_RESULTS = 'results'
 
@@ -29,15 +30,20 @@ class SimulationHDF5Handler(HDF5Handler):
 
         return results
 
+    def _parse_identifier(self, group):
+        return group.attrs[self.ATTR_IDENTIFIER]
+
     def can_parse(self, group):
         return super().can_parse(group) and \
             self.GROUP_OPTIONS in group and \
-            self.GROUP_RESULTS in group
+            self.GROUP_RESULTS in group and \
+            self.ATTR_IDENTIFIER in group.attrs
 
     def parse(self, group):
         options = self._parse_options(group)
         results = self._parse_results(group)
-        return self.CLASS(options, results)
+        identifier = self._parse_identifier(group)
+        return self.CLASS(options, results, identifier)
 
     def _convert_options(self, options, group):
         group_options = group.create_group(self.GROUP_OPTIONS)
@@ -51,10 +57,14 @@ class SimulationHDF5Handler(HDF5Handler):
             group_result = group_results.create_group(name)
             self._convert_hdf5handlers(result, group_result)
 
+    def _convert_identifier(self, identifier, group):
+        group.attrs[self.ATTR_IDENTIFIER] = identifier
+
     def convert(self, simulation, group):
         super().convert(simulation, group)
         self._convert_options(simulation.options, group)
         self._convert_results(simulation.results, group)
+        self._convert_identifier(simulation.identifier, group)
 
     @property
     def CLASS(self):

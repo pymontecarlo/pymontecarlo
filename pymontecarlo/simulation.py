@@ -39,14 +39,16 @@ def create_identifier(options):
 
 class Simulation(object):
 
-    def __init__(self, options, results=None):
+    def __init__(self, options, results=None, identifier=None):
         self.options = options
 
         if results is None:
             results = []
         self.results = results.copy()
 
-        self.identifier = create_identifier(options)
+        if identifier is None:
+            identifier = create_identifier(options)
+        self.identifier = identifier
 
     def __eq__(self, other):
         # NOTE: This is on design since two simulations should have the
