@@ -19,7 +19,7 @@ class TestPhotonDetector(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.d = PhotonDetector(math.radians(35), math.radians(90))
+        self.d = PhotonDetector('det', math.radians(35), math.radians(90))
 
     def testskeleton(self):
         self.assertAlmostEqual(math.radians(35), self.d.elevation_rad, 4)
@@ -29,14 +29,17 @@ class TestPhotonDetector(TestCase):
         self.assertAlmostEqual(90.0, self.d.azimuth_deg, 4)
 
     def test__repr__(self):
-        expected = '<PhotonDetector(elevation=35.0°, azimuth=90.0°)>'
+        expected = '<PhotonDetector(det, elevation=35.0°, azimuth=90.0°)>'
         self.assertEqual(expected, repr(self.d))
 
     def test__eq__(self):
-        d = PhotonDetector(math.radians(35), math.radians(90))
+        d = PhotonDetector('det', math.radians(35), math.radians(90))
         self.assertEqual(d, self.d)
 
     def test__ne__(self):
+        d = PhotonDetector('det2', math.radians(35), math.radians(90))
+        self.assertNotEqual(d, self.d)
+
         d = PhotonDetector(math.radians(36), math.radians(90))
         self.assertNotEqual(d, self.d)
 

@@ -16,9 +16,6 @@ class UncertaintyLimitSeriesHandler(LimitSeriesHandler):
     def convert(self, limit):
         s = super().convert(limit)
 
-        s_detector = self._find_and_convert(limit.detector)
-        s = s.append(s_detector)
-
         column = NamedSeriesColumn('uncertainty value', 'unc', tolerance=UncertaintyLimit.UNCERTAINTY_TOLERANCE)
         s[column] = limit.uncertainty
 

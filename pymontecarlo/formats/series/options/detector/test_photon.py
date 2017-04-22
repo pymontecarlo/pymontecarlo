@@ -9,19 +9,17 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.options.analysis.kratio import KRatioAnalysisSeriesHandler
-from pymontecarlo.options.analysis.kratio import KRatioAnalysis
+from pymontecarlo.formats.series.options.detector.photon import PhotonDetectorSeriesHandler
 
 # Globals and constants variables.
 
-class TestKRatioAnalysisSeriesHandler(TestCase):
+class TestPhotonDetectorSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = KRatioAnalysisSeriesHandler()
+        handler = PhotonDetectorSeriesHandler()
         detector = self.create_basic_photondetector()
-        analysis = KRatioAnalysis(detector)
-        s = handler.convert(analysis)
-        self.assertEqual(0, len(s))
+        s = handler.convert(detector)
+        self.assertEqual(2, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

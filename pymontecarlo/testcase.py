@@ -81,7 +81,7 @@ class TestCase(unittest.TestCase):
         return SubstrateSample(Material.pure(29))
 
     def create_basic_photondetector(self):
-        return PhotonDetector(math.radians(40.0))
+        return PhotonDetector('xray', math.radians(40.0))
 
     def create_basic_options(self):
         beam = self.create_basic_beam()

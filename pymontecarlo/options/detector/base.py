@@ -12,7 +12,13 @@ from pymontecarlo.options.base import Option, OptionBuilder
 # Globals and constants variables.
 
 class Detector(Option):
-    pass
+
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.name == other.name
 
 class DetectorBuilder(OptionBuilder):
     pass

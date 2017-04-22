@@ -22,7 +22,7 @@ class TestUncertaintyLimitSeriesHandler(TestCase):
         detector = self.create_basic_photondetector()
         limit = UncertaintyLimit(XrayLine(13, 'Ka1'), detector, 0.02)
         s = handler.convert(limit)
-        self.assertEqual(3, len(s))
+        self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

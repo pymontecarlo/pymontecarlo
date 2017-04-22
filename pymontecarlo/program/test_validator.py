@@ -167,23 +167,23 @@ class TestValidator(TestCase):
         self.assertEqual(2, len(errors))
 
     def testvalidate_analysis_photonintensity(self):
-        detector = PhotonDetector(1.1, 2.2)
+        detector = PhotonDetector('det', 1.1, 2.2)
         analysis = PhotonIntensityAnalysis(detector)
         analysis2 = self.v.validate_analysis(analysis, self.options)
         self.assertEqual(analysis2, analysis)
         self.assertIsNot(analysis2, analysis)
 
     def testvalidate_analysis_photonintensity_exception(self):
-        detector = PhotonDetector(2.0, -1.0)
+        detector = PhotonDetector('', 2.0, -1.0)
         analysis = PhotonIntensityAnalysis(detector)
         self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
         self.v._validate_analysis(analysis, self.options, errors)
-        self.assertEqual(2, len(errors))
+        self.assertEqual(3, len(errors))
 
     def testvalidate_analysis_kratio(self):
-        detector = PhotonDetector(1.1, 2.2)
+        detector = PhotonDetector('det', 1.1, 2.2)
         analysis = KRatioAnalysis(detector)
         analysis.add_standard_material(13, Material.pure(13))
         analysis2 = self.v.validate_analysis(analysis, self.options)
@@ -191,14 +191,14 @@ class TestValidator(TestCase):
         self.assertIsNot(analysis2, analysis)
 
     def testvalidate_analysis_kratio_exception(self):
-        detector = PhotonDetector(2.0, -1.0)
+        detector = PhotonDetector('', 2.0, -1.0)
         analysis = KRatioAnalysis(detector)
         analysis.add_standard_material(14, Material.pure(13))
         self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
         self.v._validate_analysis(analysis, self.options, errors)
-        self.assertEqual(3, len(errors))
+        self.assertEqual(4, len(errors))
 
     def testvalidate_limit_showers(self):
         limit = ShowersLimit(1000)
@@ -216,7 +216,7 @@ class TestValidator(TestCase):
 
     def testvalidate_limit_uncertainty(self):
         xrayline = XrayLine(13, 'Ka1')
-        detector = PhotonDetector(1.1, 2.2)
+        detector = PhotonDetector('det', 1.1, 2.2)
         limit = UncertaintyLimit(xrayline, detector, 0.02)
         limit2 = self.v.validate_limit(limit, self.options)
         self.assertEqual(limit2, limit)
@@ -224,13 +224,13 @@ class TestValidator(TestCase):
 
     def testvalidate_limit_uncertainty_exception(self):
         xrayline = XrayLine(13, 'Ka1')
-        detector = PhotonDetector(float('nan'), -1)
+        detector = PhotonDetector('', float('nan'), -1)
         limit = UncertaintyLimit(xrayline, detector, 0.0)
         self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
 
         errors = set()
         self.v._validate_limit(limit, self.options, errors)
-        self.assertEqual(2, len(errors))
+        self.assertEqual(3, len(errors))
 
     def testvalidate_models(self):
         models = [ElasticCrossSectionModel.ELSEPA2005]

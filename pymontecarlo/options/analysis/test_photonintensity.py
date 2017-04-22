@@ -22,7 +22,7 @@ class TestPhotonIntensityAnalysis(TestCase):
     def setUp(self):
         super().setUp()
 
-        det = PhotonDetector(math.radians(40.0))
+        det = PhotonDetector('det', math.radians(40.0))
         self.a = PhotonIntensityAnalysis(det)
 
         self.options = self.create_basic_options()

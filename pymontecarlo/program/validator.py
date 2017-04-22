@@ -421,13 +421,24 @@ class Validator(object):
 
         return diameter_m
 
+    def _validate_detector_base_name(self, name, options, errors):
+        name = name.strip()
+        if not name:
+            exc = ValueError('Name ({0:s}) must be at least one character.'
+                             .format(name))
+            errors.add(exc)
+
+        return name
+
     def _validate_detector_photon(self, detector, options, errors):
+        name = \
+            self._validate_detector_base_name(detector.name, options, errors)
         elevation_rad = \
             self._validate_detector_photon_elevation_rad(detector.elevation_rad, options, errors)
         azimuth_rad = \
             self._validate_detector_photon_azimuth_rad(detector.azimuth_rad, options, errors)
 
-        return PhotonDetector(elevation_rad, azimuth_rad)
+        return PhotonDetector(name, elevation_rad, azimuth_rad)
 
     def _validate_detector_photon_elevation_rad(self, elevation_rad, options, errors):
         if elevation_rad < -math.pi / 2 or elevation_rad > math.pi / 2:

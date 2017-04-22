@@ -27,9 +27,10 @@ class PhotonDetectorHDF5Handler(DetectorHDF5Handler):
             self.ATTR_AZIMUTH in group.attrs
 
     def parse(self, group):
+        name = self._parse_name(group)
         elevation_rad = self._parse_elevation_rad(group)
         azimuth_rad = self._parse_azimuth_rad(group)
-        return self.CLASS(elevation_rad, azimuth_rad)
+        return self.CLASS(name, elevation_rad, azimuth_rad)
 
     def _convert_elevation_rad(self, elevation_rad, group):
         group.attrs[self.ATTR_ELEVATION] = elevation_rad

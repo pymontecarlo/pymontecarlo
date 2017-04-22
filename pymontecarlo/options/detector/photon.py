@@ -19,15 +19,16 @@ class PhotonDetector(Detector):
     ELEVATION_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
     AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
 
-    def __init__(self, elevation_rad, azimuth_rad=0.0):
-        super().__init__()
+    def __init__(self, name, elevation_rad, azimuth_rad=0.0):
+        super().__init__(name)
 
         self.elevation_rad = elevation_rad
         self.azimuth_rad = azimuth_rad
 
     def __repr__(self):
-        return '<{classname}(elevation={elevation_deg}\u00b0, azimuth={azimuth_deg}\u00b0)>' \
+        return '<{classname}({name}, elevation={elevation_deg}\u00b0, azimuth={azimuth_deg}\u00b0)>' \
             .format(classname=self.__class__.__name__,
+                    name=self.name,
                     elevation_deg=self.elevation_deg,
                     azimuth_deg=self.azimuth_deg)
 
@@ -74,4 +75,5 @@ class PhotonDetectorBuilder(DetectorBuilder):
         azimuths_rad = self._calculate_azimuth_combinations()
 
         product = itertools.product(elevations_rad, azimuths_rad)
-        return [PhotonDetector(*args) for args in product]
+        return [PhotonDetector('det{:d}'.format(i), *args)
+                for i, args in enumerate(product)]

@@ -16,10 +16,14 @@ class PhotonDetectorSeriesHandler(DetectorSeriesHandler):
     def convert(self, detector):
         s = super().convert(detector)
 
-        column = NamedSeriesColumn('photon detector elevation angle', 'ph. det. theta', 'rad', PhotonDetector.ELEVATION_TOLERANCE_rad)
+        name = '{} elevation angle'.format(detector.name)
+        abbrev = '{} theta'.format(detector.name)
+        column = NamedSeriesColumn(name, abbrev, 'rad', PhotonDetector.ELEVATION_TOLERANCE_rad)
         s[column] = detector.elevation_rad
 
-        column = NamedSeriesColumn('photon detector azimuth angle', 'ph. det. phi', 'rad', PhotonDetector.AZIMUTH_TOLERANCE_rad)
+        name = '{} azimuth angle'.format(detector.name)
+        abbrev = '{} phi'.format(detector.name)
+        column = NamedSeriesColumn(name, abbrev, 'rad', PhotonDetector.AZIMUTH_TOLERANCE_rad)
         s[column] = detector.azimuth_rad
 
         return s

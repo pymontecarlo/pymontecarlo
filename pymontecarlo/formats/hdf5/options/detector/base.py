@@ -1,6 +1,7 @@
 """"""
 
 # Standard library modules.
+import abc
 
 # Third party modules.
 
@@ -40,4 +41,20 @@ class DetectorHDF5HandlerMixin:
         return group_detector
 
 class DetectorHDF5Handler(HDF5Handler):
-    pass
+
+    ATTR_NAME = 'name'
+
+    def _parse_name(self, group):
+        return group.attrs[self.ATTR_NAME]
+
+    def can_parse(self, group):
+        return super().can_parse(group) and \
+            self.ATTR_NAME in group.attrs
+
+    def _convert_name(self, detector, group):
+        group.attrs[self.ATTR_NAME] = detector.name
+
+    @abc.abstractmethod
+    def convert(self, detector, group):
+        super().convert(detector, group)
+        self._convert_name(detector, group)

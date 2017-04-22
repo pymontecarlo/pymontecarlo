@@ -19,7 +19,7 @@ class TestPhotonDetectorHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = PhotonDetectorHDF5Handler()
-        detector = PhotonDetector(math.radians(35), math.radians(45))
+        detector = PhotonDetector('det', math.radians(35), math.radians(45))
         detector2 = self.convert_parse_hdf5handler(handler, detector)
         self.assertEqual(detector2, detector)
 

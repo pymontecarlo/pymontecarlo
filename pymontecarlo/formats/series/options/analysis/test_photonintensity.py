@@ -21,7 +21,7 @@ class TestPhotonIntensityAnalysisSeriesHandler(TestCase):
         detector = self.create_basic_photondetector()
         analysis = PhotonIntensityAnalysis(detector)
         s = handler.convert(analysis)
-        self.assertEqual(2, len(s))
+        self.assertEqual(0, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
