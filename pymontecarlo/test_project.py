@@ -43,48 +43,48 @@ class TestProject(TestCase):
         df = self.p.create_results_dataframe()
         self.assertEqual(3, len(df))
 
-        self.assertEqual(10, len(df.loc[0]))
-        self.assertEqual(10, len(df.loc[1]))
-        self.assertEqual(10, len(df.loc[2]))
+        self.assertEqual(20, len(df.loc[0]))
+        self.assertEqual(20, len(df.loc[1]))
+        self.assertEqual(20, len(df.loc[2]))
 
-        self.assertEqual(7, len(df.loc[0].dropna()))
-        self.assertEqual(7, len(df.loc[1].dropna()))
-        self.assertEqual(10, len(df.loc[2].dropna()))
+        self.assertEqual(14, len(df.loc[0].dropna()))
+        self.assertEqual(14, len(df.loc[1].dropna()))
+        self.assertEqual(20, len(df.loc[2].dropna()))
 
     def testcreate_results_dataframe_with_results(self):
         result_classes = [EmittedPhotonIntensityResult]
         df = self.p.create_results_dataframe(result_classes)
         self.assertEqual(3, len(df))
 
-        self.assertEqual(7, len(df.loc[0]))
-        self.assertEqual(7, len(df.loc[1]))
-        self.assertEqual(7, len(df.loc[2]))
+        self.assertEqual(14, len(df.loc[0]))
+        self.assertEqual(14, len(df.loc[1]))
+        self.assertEqual(14, len(df.loc[2]))
 
     def testcreate_results_dataframe_with_missing_results(self):
         result_classes = [GeneratedPhotonIntensityResult]
         df = self.p.create_results_dataframe(result_classes)
         self.assertEqual(3, len(df))
 
-        self.assertEqual(3, len(df.loc[0]))
-        self.assertEqual(3, len(df.loc[1]))
-        self.assertEqual(3, len(df.loc[2]))
+        self.assertEqual(6, len(df.loc[0]))
+        self.assertEqual(6, len(df.loc[1]))
+        self.assertEqual(6, len(df.loc[2]))
 
         self.assertEqual(0, len(df.loc[0].dropna()))
         self.assertEqual(0, len(df.loc[1].dropna()))
-        self.assertEqual(3, len(df.loc[2].dropna()))
+        self.assertEqual(6, len(df.loc[2].dropna()))
 
     def testcreate_results_dataframe_with_two_results(self):
         result_classes = [EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult]
         df = self.p.create_results_dataframe(result_classes)
         self.assertEqual(3, len(df))
 
-        self.assertEqual(10, len(df.loc[0]))
-        self.assertEqual(10, len(df.loc[1]))
-        self.assertEqual(10, len(df.loc[2]))
+        self.assertEqual(20, len(df.loc[0]))
+        self.assertEqual(20, len(df.loc[1]))
+        self.assertEqual(20, len(df.loc[2]))
 
-        self.assertEqual(7, len(df.loc[0].dropna()))
-        self.assertEqual(7, len(df.loc[1].dropna()))
-        self.assertEqual(10, len(df.loc[2].dropna()))
+        self.assertEqual(14, len(df.loc[0].dropna()))
+        self.assertEqual(14, len(df.loc[1].dropna()))
+        self.assertEqual(20, len(df.loc[2].dropna()))
 
     def testread_write(self):
         filepath = os.path.join(self.create_temp_dir(), 'project.h5')

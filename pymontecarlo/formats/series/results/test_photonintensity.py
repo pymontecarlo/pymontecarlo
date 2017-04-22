@@ -22,7 +22,7 @@ class TestEmittedPhotonIntensityResultSeriesHandler(TestCase):
         handler = EmittedPhotonIntensityResultSeriesHandler()
         result = self.create_basic_photonintensityresult()
         s = handler.convert(result)
-        self.assertEqual(7, len(s))
+        self.assertEqual(14, len(s))
 
 class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
 
@@ -35,7 +35,7 @@ class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
         b.add_intensity((29, 'Kb1'), 40.0, 0.5)
         result = b.build()
         s = handler.convert(result)
-        self.assertEqual(3, len(s))
+        self.assertEqual(6, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
