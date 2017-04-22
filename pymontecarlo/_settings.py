@@ -4,6 +4,7 @@
 import os
 
 # Third party modules.
+import blinker
 
 # Local modules.
 import pymontecarlo
@@ -20,6 +21,10 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
 
+    preferred_units_changed = blinker.Signal()
+    preferred_xrayline_notation_changed = blinker.Signal()
+    preferred_xrayline_encoding_changed = blinker.Signal()
+
     def __init__(self, programs=None):
         # Programs
         if programs is None:
@@ -32,8 +37,8 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         self.preferred_units = {}
 
         # X-ray line
-        self.preferred_xrayline_notation = 'iupac'
-        self.preferred_xrayline_encoding = 'utf16'
+        self._preferred_xrayline_notation = 'iupac'
+        self._preferred_xrayline_encoding = 'utf16'
 
     @classmethod
     def read(cls, filepath=None):
@@ -105,9 +110,11 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
         _, base_unit = pymontecarlo.unit_registry._get_base_units(unit)
         self.preferred_units[base_unit] = unit
+        self.preferred_units_changed.send()
 
     def clear_preferred_units(self):
         self.preferred_units.clear()
+        self.preferred_units_changed.send()
 
     def to_preferred_unit(self, q):
         _, base_unit = pymontecarlo.unit_registry._get_base_units(q.units)
@@ -117,3 +124,25 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             return q.to(preferred_unit)
         except KeyError:
             return q.to(base_unit)
+
+    @property
+    def preferred_xrayline_notation(self):
+        return self._preferred_xrayline_notation
+
+    @preferred_xrayline_notation.setter
+    def preferred_xrayline_notation(self, notation):
+        if self._preferred_xrayline_notation == notation:
+            return
+        self._preferred_xrayline_notation = notation
+        self.preferred_xrayline_notation_changed.send()
+
+    @property
+    def preferred_xrayline_encoding(self):
+        return self._preferred_xrayline_encoding
+
+    @preferred_xrayline_encoding.setter
+    def preferred_xrayline_encoding(self, encoding):
+        if self._preferred_xrayline_encoding == encoding:
+            return
+        self._preferred_xrayline_encoding = encoding
+        self.preferred_xrayline_encoding_changed.send()
