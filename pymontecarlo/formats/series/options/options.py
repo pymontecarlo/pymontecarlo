@@ -24,6 +24,10 @@ class OptionsSeriesHandler(SeriesHandler):
         s_sample = self._find_and_convert(options.sample)
         s = s.append(s_sample)
 
+        for detector in options.detectors:
+            s_detector = self._find_and_convert(detector)
+            s = s.append(s_detector)
+
         for analysis in options.analyses:
             s_analysis = self._find_and_convert(analysis)
             s = s.append(s_analysis)

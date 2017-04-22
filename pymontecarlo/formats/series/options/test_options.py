@@ -19,7 +19,7 @@ class TestOptionsSeriesHandler(TestCase):
         handler = OptionsSeriesHandler()
         options = self.create_basic_options()
         s = handler.convert(options)
-        self.assertEqual(12, len(s))
+        self.assertEqual(14, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
