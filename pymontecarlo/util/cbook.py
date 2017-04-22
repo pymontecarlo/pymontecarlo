@@ -110,7 +110,8 @@ def get_valid_filename(s):
     """
     s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
     s = s.strip().replace(' ', '_')
-    return re.sub(r'(?u)[^-\w.]', '', s)
+    s = re.sub(r'(?u)[^-\w.]', '', s)
+    return s[:255]
 
 class MultiplierAttribute(object):
 
