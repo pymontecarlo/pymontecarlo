@@ -19,7 +19,7 @@ class MaterialSeriesHandler(SeriesHandler):
         for z, wf in material.composition.items():
             symbol = pyxray.element_symbol(z)
             name = '{} weight fraction'.format(symbol)
-            abbrev = 'wt.{}'.format(symbol)
+            abbrev = 'wt{}'.format(symbol)
             tolerance = Material.WEIGHT_FRACTION_TOLERANCE
             column = NamedSeriesColumn(name, abbrev, tolerance=tolerance)
             s[column] = wf

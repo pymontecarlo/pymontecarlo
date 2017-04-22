@@ -47,7 +47,7 @@ class LayeredSampleHandler(SampleSeriesHandler):
 
         for i, layer in enumerate(sample.layers):
             prefix = "layer #{0:d} ".format(i)
-            prefix_abbrev = "L#{0:d} ".format(i)
+            prefix_abbrev = "L{0:d} ".format(i)
 
             s_layer = self._find_and_convert(layer, prefix, prefix_abbrev)
             s = s.append(s_layer)
