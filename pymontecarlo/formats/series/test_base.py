@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.base import NamedSeriesColumn
+from pymontecarlo.formats.series.base import NamedSeriesColumn, ErrorSeriesColumn
 
 # Globals and constants variables.
 
@@ -34,6 +34,17 @@ class TestNamedSeriesColumn(TestCase):
 
         self.assertEqual('{:.1f}'.format(2.0), self.column1.format_value(2.0))
         self.assertEqual('{:.1f}'.format(0.2), self.column1.format_value(0.2))
+
+class TestErrorSeriesColumn(TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        parent = NamedSeriesColumn('a', 'b', 'm', 0.1)
+        self.column = ErrorSeriesColumn(parent)
+
+    def testskeleton(self):
+        self.assertEqual('\u03C3(a)', self.column.name)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

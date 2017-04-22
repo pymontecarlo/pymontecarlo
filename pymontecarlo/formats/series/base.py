@@ -68,10 +68,6 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return '{}'.format(value)
 
-    @abc.abstractmethod
-    def with_prefix(self, prefix, prefix_abbrev=None):
-        raise NotImplementedError
-
     @abc.abstractproperty
     def name(self):
         raise NotImplementedError
@@ -110,17 +106,6 @@ class NamedSeriesColumn(SeriesColumn):
         self._unit = unit
         self._tolerance = tolerance
 
-    def with_prefix(self, prefix, prefix_abbrev=None):
-        """
-        Returns a new column with the prepended prefix.
-        """
-        if prefix_abbrev is None:
-            prefix_abbrev = prefix
-
-        name = prefix + self.name
-        abbrev = prefix_abbrev + self.abbrev
-        return NamedSeriesColumn(name, abbrev, self.unit, self.tolerance)
-
     @property
     def name(self):
         return self._name
@@ -137,11 +122,65 @@ class NamedSeriesColumn(SeriesColumn):
     def tolerance(self):
         return self._tolerance
 
+class _ParentSeriesColumn(SeriesColumn):
+
+    def __init__(self, parent):
+        super().__init__()
+        self._parent = parent
+
+    @property
+    def name(self):
+        return self.parent.name
+
+    @property
+    def abbrev(self):
+        return self.parent.abbrev
+
+    @property
+    def unit(self):
+        return self.parent.unit
+
+    @property
+    def tolerance(self):
+        return self.parent.tolerance
+
+    @property
+    def parent(self):
+        return self._parent
+
+class PrefixSeriesColumn(_ParentSeriesColumn):
+
+    def __init__(self, parent, prefix, prefix_abbrev=None):
+        super().__init__(parent)
+        self._prefix = prefix
+        self._prefix_abbrev = prefix_abbrev or prefix
+
+    @property
+    def name(self):
+        return self._prefix + super().name
+
+    @property
+    def abbrev(self):
+        return self._prefix_abbrev + super().abbrev
+
+class ErrorSeriesColumn(_ParentSeriesColumn):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    @property
+    def name(self):
+        return '\u03C3({})'.format(super().name)
+
+    @property
+    def abbrev(self):
+        return '\u03C3({})'.format(super().abbrev)
+
 def update_with_prefix(s, prefix, prefix_abbrev=None):
     s_new = pd.Series()
 
     for column, value in s.items():
-        column_new = column.with_prefix(prefix, prefix_abbrev)
+        column_new = PrefixSeriesColumn(column, prefix, prefix_abbrev)
         s_new[column_new] = value
 
     return s_new
