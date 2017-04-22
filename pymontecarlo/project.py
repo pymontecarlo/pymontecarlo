@@ -133,8 +133,10 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
         return pd.DataFrame(list_series)
 
     def write(self, filepath=None):
-        if filepath is not None:
-            self.filepath = filepath
+        if filepath is None:
+            filepath = self.filepath
+        if filepath is None:
+            raise RuntimeError('No file path given')
         super().write(filepath)
 
     @property
