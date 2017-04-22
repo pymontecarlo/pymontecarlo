@@ -3,18 +3,17 @@ Project.
 """
 
 # Standard library modules.
-import operator
-import functools
 
 # Third party modules.
 import pandas as pd
 
 # Local modules.
 from pymontecarlo.util.future import FutureExecutor
-from pymontecarlo.util.cbook import find_by_type
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.formats.series.options.options import OptionsSeriesHandler
+from pymontecarlo.formats.series.base import \
+    find_convert_serieshandler, update_with_prefix
+from pymontecarlo.exceptions import ConvertError
 
 # Globals and constants variables.
 
@@ -55,13 +54,19 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
 
     def create_options_dataframe(self, only_different_columns=False):
         """
-        Returns a :class:`list` of :class:`Datarow`, one for each simulation.
+        Returns a :class:`pandas.DataFrame`.
         
         If *only_different_columns*, the data rows will only contain the columns
         that are different between the options.
         """
-        handler = OptionsSeriesHandler()
-        list_series = [handler.convert(sim.options) for sim in self.simulations]
+        list_series = []
+
+        for simulation in self.simulations:
+            options = simulation.options
+            handler = find_convert_serieshandler(options)
+            s = handler.convert(options)
+            list_series.append(s)
+
         df = pd.DataFrame(list_series)
 
         if not only_different_columns or len(df) < 2:
@@ -79,34 +84,39 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
 
     def create_results_dataframe(self, result_classes=None):
         """
-        Returns a :class:`list` of :class:`Datarow`, one for each simulation.
+        Returns a :class:`pandas.DataFrame`.
         
         If *result_classes* is a list of :class:`Result`, only the columns from
         this result classes will be returned. If ``None``, the columns from 
         all results will be returned.
         """
-        if not self.simulations:
-            return []
-
-        datarows = []
+        list_series = []
         for simulation in self.simulations:
-            datarow = DataRow()
+            s = pd.Series()
 
-            for result in find_by_type(simulation.results, DataRowCreator):
+            for result in simulation.results:
+                try:
+                    handler = find_convert_serieshandler(result)
+                except ConvertError:
+                    continue
+
                 prefix = result.getname().lower() + ' '
+                s_result = handler.convert(result)
 
                 if result_classes is None: # Include all results
-                    datarow.update_with_prefix(prefix, result.create_datarow())
+                    s_result = update_with_prefix(s_result, prefix)
+                    s = s.append(s_result)
 
                 elif type(result) in result_classes:
                     if len(result_classes) == 1:
-                        datarow.update(result.create_datarow())
+                        s = s.append(s_result)
                     else:
-                        datarow.update_with_prefix(prefix, result.create_datarow())
+                        s_result = update_with_prefix(s_result, prefix)
+                        s = s.append(s_result)
 
-            datarows.append(datarow)
+            list_series.append(s)
 
-        return datarows
+        return pd.DataFrame(list_series)
 
     def write(self, filepath=None):
         if filepath is not None:

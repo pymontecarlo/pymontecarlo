@@ -34,7 +34,7 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                  'XrayLineHDF5Handler = pymontecarlo.formats.hdf5.util.xrayline:XrayLineHDF5Handler',
 
-                 'Options = pymontecarlo.formats.hdf5.options.options:OptionsHDF5Handler',
+                 'OptionsHDF5Handler = pymontecarlo.formats.hdf5.options.options:OptionsHDF5Handler',
 
                  'GaussianBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.gaussian:GaussianBeamHDF5Handler',
 
@@ -68,12 +68,14 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'RandomNumberGeneratorModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.random_number_generator:RandomNumberGeneratorModelHDF5Handler',
 
                  'EmittedPhotonIntensityResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:EmittedPhotonIntensityResultHDF5Handler',
-                 'GeneratedPhotonIntensityResultResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:GeneratedPhotonIntensityResultResultHDF5Handler',
+                 'GeneratedPhotonIntensityResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:GeneratedPhotonIntensityResultHDF5Handler',
                  'KRatioResultHDF5Handler = pymontecarlo.formats.hdf5.results.kratio:KRatioResultHDF5Handler',
                  ],
 
                 'pymontecarlo.formats.series':
                 [
+                 'OptionsSeriesHandler = pymontecarlo.formats.series.options.options:OptionsSeriesHandler',
+
                  'GaussianBeamSeriesHandler = pymontecarlo.formats.series.options.beam.gaussian:GaussianBeamSeriesHandler',
 
                  'MaterialSeriesHandler = pymontecarlo.formats.series.options.material:MaterialSeriesHandler',
@@ -104,6 +106,10 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'MassAbsorptionCoefficientModelSeriesHandler = pymontecarlo.formats.series.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelSeriesHandler',
                  'PhotonScatteringCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelSeriesHandler',
                  'RandomNumberGeneratorModelSeriesHandler = pymontecarlo.formats.series.options.model.random_number_generator:RandomNumberGeneratorModelSeriesHandler',
+
+                 'EmittedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:EmittedPhotonIntensityResultSeriesHandler',
+                 'GeneratedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:GeneratedPhotonIntensityResultSeriesHandler',
+                 'KRatioResultSeriesHandler = pymontecarlo.formats.series.results.kratio:KRatioResultSeriesHandler',
                  ]}
 
 setup(name="pyMonteCarlo",
