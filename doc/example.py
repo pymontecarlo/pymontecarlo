@@ -27,7 +27,7 @@ sample = SubstrateSample(mat2)
 #sample = VerticalLayerSample(mat1, mat2)
 #sample.add_layer(mat3, 10e-9)
 
-photon_detector = PhotonDetector(math.radians(35.0))
+photon_detector = PhotonDetector('xray', math.radians(35.0))
 analysis = KRatioAnalysis(photon_detector)
 
 limit = ShowersLimit(1000)
