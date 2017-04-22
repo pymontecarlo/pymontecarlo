@@ -5,7 +5,8 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.results.photon import PhotonResultSeriesHandler
+from pymontecarlo.formats.series.results.photon import \
+    PhotonResultSeriesHandler, XrayLineSeriesColumn
 from pymontecarlo.results.kratio import KRatioResult
 
 # Globals and constants variables.
@@ -16,7 +17,7 @@ class KRatioResultSeriesHandler(PhotonResultSeriesHandler):
         s = super().convert(result)
 
         for xrayline, q in result.items():
-            column = self._create_xrayline_column(xrayline)
+            column = XrayLineSeriesColumn(xrayline)
             s[column] = q
 
         return s

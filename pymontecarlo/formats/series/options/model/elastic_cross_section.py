@@ -6,6 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
+from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.options.model.elastic_cross_section import ElasticCrossSectionModel
 
 # Globals and constants variables.
@@ -15,7 +16,7 @@ class ElasticCrossSectionModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = self._create_column('elastic cross-section', 'elastic')
+        column = SeriesColumn('elastic cross-section', 'elastic')
         s[column] = model.name
 
         return s

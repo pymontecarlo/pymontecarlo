@@ -6,6 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.limit.base import LimitSeriesHandler
+from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.options.limit.showers import ShowersLimit
 
 # Globals and constants variables.
@@ -15,7 +16,7 @@ class ShowersLimitSeriesHandler(LimitSeriesHandler):
     def convert(self, limit):
         s = super().convert(limit)
 
-        column = self._create_column('number of trajectories', 'N')
+        column = SeriesColumn('number of trajectories', 'N')
         s[column] = limit.number_trajectories
 
         return s

@@ -6,6 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
+from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.options.model.bremsstrahlung_emission import BremsstrahlungEmissionModel
 
 # Globals and constants variables.
@@ -15,7 +16,7 @@ class BremsstrahlungEmissionModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = self._create_column('bremsstrahlung emission', 'bremss')
+        column = SeriesColumn('bremsstrahlung emission', 'bremss')
         s[column] = model.name
 
         return s

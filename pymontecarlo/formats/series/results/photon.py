@@ -39,6 +39,4 @@ class XrayLineSeriesColumn(SeriesColumn):
         return self._xrayline
 
 class PhotonResultSeriesHandler(ResultSeriesHandler):
-
-    def _create_xrayline_column(self, xrayline, unit=None, tolerance=None):
-        return XrayLineSeriesColumn(xrayline, unit, tolerance)
+    pass

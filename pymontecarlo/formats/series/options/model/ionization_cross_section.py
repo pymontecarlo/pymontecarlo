@@ -6,6 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
+from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.options.model.ionization_cross_section import IonizationCrossSectionModel
 # Globals and constants variables.
 
@@ -14,7 +15,7 @@ class IonizationCrossSectionModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = self._create_column('ionization cross-section', 'ioniz. xsection')
+        column = SeriesColumn('ionization cross-section', 'ioniz. xsection')
         s[column] = model.name
 
         return s

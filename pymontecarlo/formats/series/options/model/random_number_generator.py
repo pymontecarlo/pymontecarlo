@@ -6,6 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
+from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.options.model.random_number_generator import RandomNumberGeneratorModel
 
 # Globals and constants variables.
@@ -15,7 +16,7 @@ class RandomNumberGeneratorModelSeriesHandler(ModelSeriesHandler):
     def convert(self, model):
         s = super().convert(model)
 
-        column = self._create_column('random number generator', 'random')
+        column = SeriesColumn('random number generator', 'random')
         s[column] = model.name
 
         return s

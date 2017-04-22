@@ -5,8 +5,10 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.results.photon import PhotonResultSeriesHandler
-from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
+from pymontecarlo.formats.series.results.photon import \
+    PhotonResultSeriesHandler, XrayLineSeriesColumn
+from pymontecarlo.results.photonintensity import \
+    EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
 
 # Globals and constants variables.
 
@@ -16,7 +18,7 @@ class PhotonIntensityResultSeriesHandler(PhotonResultSeriesHandler):
         s = super().convert(result)
 
         for xrayline, q in result.items():
-            column = self._create_xrayline_column(xrayline, unit='1/(sr.electron)')
+            column = XrayLineSeriesColumn(xrayline, unit='1/(sr.electron)')
             s[column] = q
 
         return s

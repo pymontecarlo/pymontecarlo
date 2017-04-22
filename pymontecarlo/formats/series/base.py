@@ -66,29 +66,31 @@ class SeriesColumn:
     def tolerance(self):
         return self._tolerance
 
+def update_with_prefix(s, prefix, prefix_abbrev=None):
+    if prefix_abbrev is None:
+        prefix_abbrev = prefix
+
+    s_new = pd.Series()
+
+    for column, value in s.items():
+        name = prefix + column.name
+        abbrev = prefix_abbrev + column.abbrev
+        unit = column.unit
+        tolerance = column.tolerance
+        column_new = SeriesColumn(name, abbrev, unit, tolerance)
+        s_new[column_new] = value
+
+    return s_new
+
 class SeriesHandler(object, metaclass=abc.ABCMeta):
 
-    def _create_column(self, name, abbrev=None, unit=None, tolerance=None):
-        return SeriesColumn(name, abbrev, unit, tolerance)
+    def _find_and_convert(self, obj, prefix=None, prefix_abbrev=None):
+        s = find_convert_serieshandler(obj).convert(obj)
 
-    def _update_with_prefix(self, s, prefix, prefix_abbrev=None):
-        if prefix_abbrev is None:
-            prefix_abbrev = prefix
+        if prefix:
+            s = update_with_prefix(s, prefix, prefix_abbrev)
 
-        s_new = pd.Series()
-
-        for column, value in s.items():
-            name = prefix + column.name
-            abbrev = prefix_abbrev + column.abbrev
-            unit = column.unit
-            tolerance = column.tolerance
-            column_new = self._create_column(name, abbrev, unit, tolerance)
-            s_new[column_new] = value
-
-        return s_new
-
-    def _convert_serieshandlers(self, obj):
-        return find_convert_serieshandler(obj).convert(obj)
+        return s
 
     def can_convert(self, obj):
         return type(obj) is self.CLASS
