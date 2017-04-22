@@ -83,7 +83,7 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         if not unitname: # required for radian and degree
             unitname = '{0:P}'.format(q.units)
 
-        return '{} ({})'.format(self.name, unitname)
+        return '{} [{}]'.format(self.name, unitname)
 
     @abc.abstractproperty
     def abbrev(self):
