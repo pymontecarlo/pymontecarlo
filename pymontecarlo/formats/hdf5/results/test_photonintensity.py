@@ -10,7 +10,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.formats.hdf5.results.photonintensity import \
-    EmittedPhotonIntensityResultHDF5Handler, GeneratedPhotonIntensityResultResultHDF5Handler
+    EmittedPhotonIntensityResultHDF5Handler, GeneratedPhotonIntensityResultHDF5Handler
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import GeneratedPhotonIntensityResultBuilder
 
@@ -30,10 +30,10 @@ class TestEmittedPhotonIntensityResultHDF5Handler(TestCase):
 #        with h5py.File('/tmp/result.h5', 'w') as f:
 #            handler.convert(result, f)
 
-class TestGeneratedPhotonIntensityResultResultHDF5Handler(TestCase):
+class TestGeneratedPhotonIntensityResultHDF5Handler(TestCase):
 
     def testconvert_parse(self):
-        handler = GeneratedPhotonIntensityResultResultHDF5Handler()
+        handler = GeneratedPhotonIntensityResultHDF5Handler()
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = GeneratedPhotonIntensityResultBuilder(analysis)
         b.add_intensity((29, 'Ka1'), 10.0, 0.1)
