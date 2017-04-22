@@ -11,7 +11,7 @@ from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
-class XrayLineSeriesColumn(SeriesColumn):
+class SeriesXrayLineColumn(SeriesColumn):
 
     def __init__(self, xrayline, unit=None, tolerance=None):
         name = abbrev = str(xrayline)
