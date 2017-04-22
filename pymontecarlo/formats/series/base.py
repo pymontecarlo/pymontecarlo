@@ -25,6 +25,8 @@ def find_convert_serieshandler(obj):
 
 class SeriesColumn(metaclass=abc.ABCMeta):
 
+    _default = object()
+
     def __eq__(self, other):
         if isinstance(other, str):
             return self.name == other
@@ -46,20 +48,23 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return math.isclose(value0, value1, abs_tol=self.tolerance)
 
-    def format_value(self, value):
-        if self.unit is not None:
-            q = pymontecarlo.unit_registry.Quantity(value, self.unit)
+    def format_value(self, value, unit=_default, tolerance=_default):
+        if tolerance is self._default:
+            tolerance = self.tolerance
+        if unit is self._default:
+            unit = self.unit
+
+        if unit is not None:
+            q = pymontecarlo.unit_registry.Quantity(value, unit)
             q = pymontecarlo.settings.to_preferred_unit(q)
             value = q.magnitude
 
         if isinstance(value, float):
-            if self.tolerance is not None:
-                if self.unit is not None:
-                    q_tolerance = pymontecarlo.unit_registry.Quantity(self.tolerance, self.unit)
+            if tolerance is not None:
+                if unit is not None:
+                    q_tolerance = pymontecarlo.unit_registry.Quantity(tolerance, unit)
                     q_tolerance = pymontecarlo.settings.to_preferred_unit(q_tolerance)
                     tolerance = q_tolerance.magnitude
-                else:
-                    tolerance = self.tolerance
 
                 precision = tolerance_to_decimals(tolerance)
                 return '{0:.{precision}f}'.format(value, precision=precision)
@@ -92,6 +97,19 @@ class SeriesColumn(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def unit(self):
         raise NotImplementedError
+
+    @property
+    def unitname(self):
+        if self.unit is None:
+            return ''
+
+        q = pymontecarlo.unit_registry.Quantity(1.0, self.unit)
+        q = pymontecarlo.settings.to_preferred_unit(q)
+        unitname = '{0:~P}'.format(q.units)
+        if not unitname: # required for radian and degree
+            unitname = '{0:P}'.format(q.units)
+
+        return unitname
 
     @abc.abstractproperty
     def tolerance(self):

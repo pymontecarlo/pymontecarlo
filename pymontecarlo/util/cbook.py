@@ -5,6 +5,8 @@ Cookbook solutions.
 # Standard library modules.
 import math
 import abc
+import unicodedata
+import re
 
 # Third party modules.
 import more_itertools
@@ -86,6 +88,29 @@ def organize_by_type(objects):
         clasz = obj.__class__
         out.setdefault(clasz, []).append(obj)
     return out
+
+def slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = re.sub('[^\w\s-]', '', value).strip().lower()
+    value = re.sub('[-\s]+', '-', value)
+    return value
+
+def get_valid_filename(s):
+    """
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    >>> get_valid_filename("john's portrait in 2004.jpg")
+    'johns_portrait_in_2004.jpg'
+    """
+    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
+    s = s.strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 class MultiplierAttribute(object):
 

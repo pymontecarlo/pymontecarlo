@@ -3,6 +3,7 @@ Project.
 """
 
 # Standard library modules.
+import re
 
 # Third party modules.
 import pandas as pd
@@ -44,8 +45,21 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
         self.simulations = []
 
     def add_simulation(self, simulation):
-        if simulation not in self.simulations:
-            self.simulations.append(simulation)
+        if simulation in self.simulations:
+            return
+
+        identifiers = [s.identifier for s in self.simulations
+                       if s.identifier.startswith(simulation.identifier)]
+        if identifiers:
+            last = -1
+            for identifier in identifiers:
+                m = re.search(r'-(\d+)$', identifier)
+                if m is not None:
+                    last = max(last, int(m.group(1)))
+
+            simulation.identifier += '-{:d}'.format(last + 1)
+
+        self.simulations.append(simulation)
 
     def recalculate(self):
         with RecalculateProjectExecutor() as executor:

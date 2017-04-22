@@ -24,6 +24,9 @@ class TestSimulation(TestCase):
         results = self.sim.find_result(EmittedPhotonIntensityResult)
         self.assertEqual(1, len(results))
 
+    def testidentifier(self):
+        print(self.sim.identifier)
+
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
