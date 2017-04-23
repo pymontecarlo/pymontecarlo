@@ -54,7 +54,7 @@ with LocalSimulationRunner(project, max_workers=3) as runner:
         print(future.exception())
 
 # Results
-project.recalculate()
+#project.recalculate()
 print('{} were simulated'.format(len(project.simulations)))
 for simulation in project.simulations:
     print(simulation.results)

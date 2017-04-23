@@ -10,7 +10,7 @@ import abc
 # Local modules.
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
-from pymontecarlo.util.future import FutureExecutor
+from pymontecarlo.util.future import FutureExecutor, Token, FutureAdapter
 from pymontecarlo.util.cbook import unique
 from pymontecarlo.formats.series.base import create_identifier
 from pymontecarlo.formats.series.options.base import create_options_dataframe
@@ -39,6 +39,16 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
                 self.submitted_options.remove(options)
             except:
                 pass
+
+        # Recalculate if all other futures are done and recalculation is required
+        if not self.executor._shutdown and self.done() and self.project.recalculate_required:
+            target = self.project.recalculate
+            token = Token()
+            future = self.executor.submit(target, token)
+
+            future2 = FutureAdapter(future, token, (), {})
+            self.futures.add(future2)
+            self.submitted.send(future2)
 
     def _expand_options(self, list_options):
         final_list_options = []

@@ -7,6 +7,7 @@ import concurrent.futures
 
 # Local modules.
 from pymontecarlo.util.cbook import Monitorable
+from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
@@ -79,6 +80,8 @@ class FutureAdapter(Monitorable):
         return self.token.status
 
 class FutureExecutor(Monitorable):
+
+    submitted = Signal()
 
     def __init__(self, max_workers=1):
         self.max_workers = max_workers
@@ -175,6 +178,7 @@ class FutureExecutor(Monitorable):
         self.futures.add(future2)
 
         self.submitted_count += 1
+        self.submitted.send(future2)
 
         return future2
 
@@ -183,6 +187,9 @@ class FutureExecutor(Monitorable):
         Returns whether the executor is running and can accept submission.
         """
         return any(future.running() for future in self.futures)
+
+    def done(self):
+        return all(future.done() for future in self.futures)
 
     def cancelled(self):
         return False
