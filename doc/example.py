@@ -39,6 +39,7 @@ from pymontecarlo.runner.local import LocalSimulationRunner
 from pymontecarlo.project import Project
 
 project = Project()
+project.filepath = '/tmp/example.mcsim'
 
 with LocalSimulationRunner(project, max_workers=3) as runner:
     futures = runner.submit(options)
@@ -58,4 +59,4 @@ print('{} were simulated'.format(len(project.simulations)))
 for simulation in project.simulations:
     print(simulation.results)
 
-project.write('/tmp/example.mcsim')
+project.write()
