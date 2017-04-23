@@ -72,7 +72,7 @@ class GaussianBeamBuilder(BeamBuilder):
     def __len__(self):
         it = [super().__len__(),
               len(self.diameters_m),
-              len(self.positions) or 1]
+              len(self.positions)]
         return functools.reduce(operator.mul, it)
 
     def add_diameter_m(self, diameter_m):
@@ -90,14 +90,10 @@ class GaussianBeamBuilder(BeamBuilder):
         if not particles:
             particles = [Particle.ELECTRON]
 
-        positions = self.positions
-        if not positions:
-            positions = [(0.0, 0.0)]
-
         product = itertools.product(self.energies_eV,
                                     self.diameters_m,
                                     particles,
-                                    positions)
+                                    self.positions)
 
         beams = []
         for energy_eV, diameter_m, particle, (x0_m, y0_m) in product:

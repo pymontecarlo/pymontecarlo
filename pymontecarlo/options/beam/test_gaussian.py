@@ -111,13 +111,8 @@ class TestGaussianBeamBuilder(TestCase):
         b.add_particle(Particle.ELECTRON)
 
         beams = b.build()
-        self.assertEqual(1, len(beams))
-        self.assertEqual(1, len(b))
-
-        for beam in beams:
-            self.assertAlmostEqual(0.0, beam.x0_m, 4)
-            self.assertAlmostEqual(0.0, beam.y0_m, 4)
-
+        self.assertEqual(0, len(beams))
+        self.assertEqual(0, len(b))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
