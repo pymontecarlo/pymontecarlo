@@ -25,7 +25,7 @@ class UncertaintyLimit(Limit):
     def __repr__(self):
         return '<{classname}({xrayline} <= {uncertainty}%)>' \
             .format(classname=self.__class__.__name__,
-                    xrayline=self.xrayline,
+                    xrayline=self.xrayline.name,
                     uncertainty=self.uncertainty * 100.0)
 
     def __eq__(self, other):

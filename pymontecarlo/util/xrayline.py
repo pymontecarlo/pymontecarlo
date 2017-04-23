@@ -15,18 +15,20 @@ class XrayLine:
     def __init__(self, element, line):
         self._element = pyxray.element(element)
 
-        try:
-            self._line = pyxray.xray_transition(line)
-        except pyxray.NotFound:
-            self._line = pyxray.xray_transitionset(line)
+        if not isinstance(line, (pyxray.XrayTransition, pyxray.XrayTransitionSet)):
+            try:
+                line = pyxray.xray_transition(line)
+            except pyxray.NotFound:
+                line = pyxray.xray_transitionset(line)
+        self._line = line
 
-        self._update_str()
+        self._name = None # Late initialization
 
         signal = pymontecarlo.settings.preferred_xrayline_notation_changed
-        signal.connect(self._update_str)
+        signal.connect(self._on_settings_changed)
 
         signal = pymontecarlo.settings.preferred_xrayline_encoding_changed
-        signal.connect(self._update_str)
+        signal.connect(self._on_settings_changed)
 
     def __hash__(self):
         return hash((self.element, self.line))
@@ -40,12 +42,14 @@ class XrayLine:
         return iter((self.element, self.line))
 
     def __repr__(self):
-        return '<{0}({1})>'.format(self.__class__.__name__, str(self))
+        return '<{}({} {})>'.format(self.__class__.__name__,
+                                    self._element._repr_inner(),
+                                    self._line._repr_inner())
 
-    def __str__(self):
-        return self._str
+    def _on_settings_changed(self, sender):
+        self._name = None
 
-    def _update_str(self, *args):
+    def _create_name(self, *args):
         symbol = pyxray.element_symbol(self.element)
 
         if self.is_xray_transitionset():
@@ -62,7 +66,7 @@ class XrayLine:
         except pyxray.NotFound:
             notation = method(self.line, 'iupac', preferred_encoding)
 
-        self._str = '{0} {1}'.format(symbol, notation)
+        return '{0} {1}'.format(symbol, notation)
 
     def is_xray_transitionset(self):
         return isinstance(self.line, pyxray.XrayTransitionSet)
@@ -78,4 +82,10 @@ class XrayLine:
     @property
     def line(self):
         return self._line
+
+    @property
+    def name(self):
+        if self._name is None:
+            self._name = self._create_name()
+        return self._name
 

@@ -29,11 +29,11 @@ class SeriesXrayLineColumn(SeriesColumn):
 
     @property
     def name(self):
-        return str(self.xrayline)
+        return self.xrayline.name
 
     @property
     def abbrev(self):
-        return str(self.xrayline)
+        return self.xrayline.name
 
     @property
     def unit(self):

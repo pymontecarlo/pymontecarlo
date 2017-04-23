@@ -27,7 +27,7 @@ class XrayLineHDF5HandlerMixin:
     def _convert_xrayline_internal(self, xrayline, group):
         group_xraylines = self._require_xraylines_group(group)
 
-        name = str(xrayline)
+        name = xrayline.name
         if name in group_xraylines:
             return group_xraylines[name]
 
