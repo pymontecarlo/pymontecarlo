@@ -64,6 +64,19 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         if errors:
             raise ValidationError(*errors)
 
+    def update(self, settings):
+        settings.validate()
+
+        self.programs.clear()
+        self.programs = settings.programs.copy()
+
+        self.preferred_units.clear()
+        self.preferred_units.update(settings.preferred_units)
+        self.preferred_units_changed.send()
+
+        self.preferred_xrayline_notation = settings.preferred_xrayline_notation
+        self.preferred_xrayline_encoding = settings.preferred_xrayline_encoding
+
     def reload(self):
         self._available_programs = None
         entrypoint._ENTRYPOINTS.clear()
