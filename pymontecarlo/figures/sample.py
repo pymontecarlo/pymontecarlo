@@ -24,8 +24,8 @@ from pymontecarlo.options.sample import SubstrateSample, InclusionSample, Horizo
 @enum.unique
 class Perspective(enum.Enum):
     XZ = 'xz'
-    XY = 'xy'
     YZ = 'yz'
+    XY = 'xy'
 
 class SampleFigure(Figure):
 
@@ -66,7 +66,7 @@ class SampleFigure(Figure):
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
         self.view_size_methods[GaussianBeam] = self._calculate_view_size_gaussian_beam
 
-    def _recalculate_view_size(self):
+    def _recalculate_view_size(self, perspective):
         SCALE_FACTOR = 5
         view_size = 1e-9
 
@@ -76,27 +76,34 @@ class SampleFigure(Figure):
                 continue
 
             method = self.view_size_methods[clasz]
-            view_size = max(view_size, method(obj) * SCALE_FACTOR)
+            view_size = max(view_size, method(obj, perspective) * SCALE_FACTOR)
 
         return view_size
 
-    def _calculate_view_size_inclusion_sample(self, sample):
+    def _calculate_view_size_inclusion_sample(self, sample, perspective):
         return sample.inclusion_diameter_m
 
-    def _calculate_view_size_layered_sample(self, sample):
+    def _calculate_view_size_layered_sample(self, sample, perspective):
         return sum([l.thickness_m for l in sample.layers])
 
-    def _calculate_view_size_sphere_sample(self, sample):
+    def _calculate_view_size_sphere_sample(self, sample, perspective):
         return sample.diameter_m
 
-    def _calculate_view_size_gaussian_beam(self, beam):
-        return beam.diameter_m * 2
+    def _calculate_view_size_gaussian_beam(self, beam, perspective):
+        view_size = beam.diameter_m * 2
+
+        if perspective is Perspective.XY:
+            return view_size + max(beam.x0_m, beam.y0_m)
+        elif perspective is Perspective.XZ:
+            return view_size + beam.x0_m
+        elif perspective is Perspective.YZ:
+            return view_size + beam.y0_m
 
     def draw(self, ax):
         """
         :param ax: an instance of matplotlib.axes.Axes
         """
-        view_size = self._recalculate_view_size()
+        view_size = self._recalculate_view_size(self.perspective)
 
         if self.sample:
             self._draw_sample(ax, self.sample, self.perspective, view_size)
@@ -264,13 +271,19 @@ class SampleFigure(Figure):
         ax.add_collection(col)
 
     def _compose_beam_gaussian(self, beam, perspective, view_size):
+        x0_m = beam.x0_m
+        y0_m = beam.y0_m
         radius_m = beam.diameter_m / 2
         color = beam.particle.color
 
         if perspective is Perspective.XY:
-            return [Circle((0, 0), radius=radius_m, color=color)]
-        else:
-            return [Rectangle((-radius_m, 0),
+            return [Circle((x0_m, y0_m), radius=radius_m, color=color)]
+        elif perspective is Perspective.XZ:
+            return [Rectangle((-radius_m - x0_m, 0),
+                              beam.diameter_m, (view_size / 2) * 1.5,
+                              color=color)]
+        elif perspective is Perspective.YZ:
+            return [Rectangle((-radius_m - y0_m, 0),
                               beam.diameter_m, (view_size / 2) * 1.5,
                               color=color)]
 
