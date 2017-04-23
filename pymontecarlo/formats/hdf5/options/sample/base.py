@@ -15,6 +15,30 @@ from pymontecarlo.options.sample.base import Layer
 
 # Globals and constants variables.
 
+class SampleHDF5HandlerMixin:
+
+    GROUP_SAMPLES = 'samples'
+
+    def _parse_sample_internal(self, group, ref_sample):
+        group_sample = group.file[ref_sample]
+        return self._parse_hdf5handlers(group_sample)
+
+    def _require_samples_group(self, group):
+        return group.file.require_group(self.GROUP_SAMPLES)
+
+    def _convert_sample_internal(self, sample, group):
+        group_samples = self._require_samples_group(group)
+
+        name = '{} [{:d}]'.format(sample.__class__.__name__, id(sample))
+        if name in group_samples:
+            return group_samples[name]
+
+        group_sample = group_samples.create_group(name)
+
+        self._convert_hdf5handlers(sample, group_sample)
+
+        return group_sample
+
 class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
 
     ATTR_TILT = 'tilt (rad)'

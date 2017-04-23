@@ -13,27 +13,28 @@ import uncertainties
 
 # Local modules.
 from pymontecarlo.formats.hdf5.results.base import ResultHDF5Handler
+from pymontecarlo.formats.hdf5.options.analysis.base import AnalysisHDF5HandlerMixin
+from pymontecarlo.formats.hdf5.util.xrayline import XrayLineHDF5HandlerMixin
 
 # Globals and constants variables.
 
-class PhotonResultHDF5Handler(ResultHDF5Handler):
+class PhotonResultHDF5Handler(ResultHDF5Handler,
+                              AnalysisHDF5HandlerMixin,
+                              XrayLineHDF5HandlerMixin):
 
-    GROUP_ANALYSIS = 'analysis'
-    GROUP_XRAYLINES = 'xraylines'
+    ATTR_ANALYSIS = 'analysis'
     DATASET_XRAYLINE_REFERENCES = 'xrayline scale'
-
     DATASET_QUANTITY = 'quantity scale'
 
     def _parse_analysis(self, group):
-        group_analysis = group[self.GROUP_ANALYSIS]
-        return self._parse_hdf5handlers(group_analysis)
+        ref_analysis = group.attrs[self.ATTR_ANALYSIS]
+        return self._parse_analysis_internal(group, ref_analysis)
 
     def _parse_keys(self, group):
         keys = []
 
         for ref_xrayline in group[self.DATASET_XRAYLINE_REFERENCES]:
-            group_xrayline = group.file[ref_xrayline]
-            keys.append(self._parse_hdf5handlers(group_xrayline))
+            keys.append(self._parse_xrayline_internal(group, ref_xrayline))
 
         return keys
 
@@ -52,9 +53,9 @@ class PhotonResultHDF5Handler(ResultHDF5Handler):
 
     def can_parse(self, group):
         return super().can_parse(group) and \
-            self.GROUP_ANALYSIS in group and \
-            self.GROUP_XRAYLINES in group and \
-            self.DATASET_XRAYLINE_REFERENCES in group
+            self.ATTR_ANALYSIS in group.attrs and \
+            self.DATASET_XRAYLINE_REFERENCES in group and \
+            self.DATASET_QUANTITY in group
 
     def parse(self, group):
         analysis = self._parse_analysis(group)
@@ -64,20 +65,17 @@ class PhotonResultHDF5Handler(ResultHDF5Handler):
         return self.CLASS(analysis, data)
 
     def _convert_analysis(self, analysis, group):
-        group_analysis = group.create_group(self.GROUP_ANALYSIS)
-        self._convert_hdf5handlers(analysis, group_analysis)
+        group_analysis = self._convert_analysis_internal(analysis, group)
+        group.attrs[self.ATTR_ANALYSIS] = group_analysis.ref
 
     def _convert_keys(self, keys, group):
-        group_xraylines = group.create_group(self.GROUP_XRAYLINES)
-
         shape = (len(keys),)
         dtype = h5py.special_dtype(ref=h5py.Reference)
         ds_keys = group.create_dataset(self.DATASET_XRAYLINE_REFERENCES,
                                        shape=shape, dtype=dtype)
 
         for i, xrayline in enumerate(keys):
-            group_xrayline = group_xraylines.create_group(str(xrayline))
-            self._convert_hdf5handlers(xrayline, group_xrayline)
+            group_xrayline = self._convert_xrayline_internal(xrayline, group)
             ds_keys[i] = group_xrayline.ref
 
         return ds_keys

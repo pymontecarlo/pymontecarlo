@@ -21,17 +21,11 @@ class MaterialHDF5HandlerMixin:
         group_material = group.file[ref_material]
         return self._parse_hdf5handlers(group_material)
 
-    def _find_materials_group(self, group):
-        if self.GROUP_MATERIALS in group:
-            return group[self.GROUP_MATERIALS]
-        if group.parent == group:
-            return None
-        return self._find_materials_group(group.parent)
+    def _require_materials_group(self, group):
+        return group.file.require_group(self.GROUP_MATERIALS)
 
     def _convert_material_internal(self, material, group):
-        group_materials = self._find_materials_group(group)
-        if group_materials is None:
-            group_materials = group.create_group(self.GROUP_MATERIALS)
+        group_materials = self._require_materials_group(group)
 
         name = '{} [{:d}]'.format(material.name, id(material))
         if name in group_materials:

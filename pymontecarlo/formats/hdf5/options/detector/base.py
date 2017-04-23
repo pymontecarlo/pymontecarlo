@@ -18,17 +18,11 @@ class DetectorHDF5HandlerMixin:
         group_detector = group.file[ref_detector]
         return self._parse_hdf5handlers(group_detector)
 
-    def _find_detectors_group(self, group):
-        if self.GROUP_DETECTORS in group:
-            return group[self.GROUP_DETECTORS]
-        if group.parent == group:
-            return None
-        return self._find_detectors_group(group.parent)
+    def _require_detectors_group(self, group):
+        return group.file.require_group(self.GROUP_DETECTORS)
 
     def _convert_detector_internal(self, detector, group):
-        group_detectors = self._find_detectors_group(group)
-        if group_detectors is None:
-            group_detectors = group.create_group(self.GROUP_DETECTORS)
+        group_detectors = self._require_detectors_group(group)
 
         name = '{} [{:d}]'.format(detector.__class__.__name__, id(detector))
         if name in group_detectors:

@@ -13,6 +13,30 @@ from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
+class XrayLineHDF5HandlerMixin:
+
+    GROUP_XRAYLINES = 'xraylines'
+
+    def _parse_xrayline_internal(self, group, ref_xrayline):
+        group_xrayline = group.file[ref_xrayline]
+        return self._parse_hdf5handlers(group_xrayline)
+
+    def _require_xraylines_group(self, group):
+        return group.file.require_group(self.GROUP_XRAYLINES)
+
+    def _convert_xrayline_internal(self, xrayline, group):
+        group_xraylines = self._require_xraylines_group(group)
+
+        name = str(xrayline)
+        if name in group_xraylines:
+            return group_xraylines[name]
+
+        group_xrayline = group_xraylines.create_group(name)
+
+        self._convert_hdf5handlers(xrayline, group_xrayline)
+
+        return group_xrayline
+
 class XrayLineHDF5Handler(HDF5Handler):
 
     ATTR_ATOMIC_NUMBER = 'atomic_number'

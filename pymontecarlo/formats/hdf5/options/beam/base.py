@@ -12,6 +12,30 @@ from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
 
+class BeamHDF5HandlerMixin:
+
+    GROUP_BEAMS = 'beams'
+
+    def _parse_beam_internal(self, group, ref_beam):
+        group_beam = group.file[ref_beam]
+        return self._parse_hdf5handlers(group_beam)
+
+    def _require_beams_group(self, group):
+        return group.file.require_group(self.GROUP_BEAMS)
+
+    def _convert_beam_internal(self, beam, group):
+        group_beams = self._require_beams_group(group)
+
+        name = '{} [{:d}]'.format(beam.__class__.__name__, id(beam))
+        if name in group_beams:
+            return group_beams[name]
+
+        group_beam = group_beams.create_group(name)
+
+        self._convert_hdf5handlers(beam, group_beam)
+
+        return group_beam
+
 class BeamHDF5Handler(HDF5Handler):
 
     ATTR_ENERGY = 'energy (eV)'
