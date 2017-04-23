@@ -4,7 +4,6 @@
 import os
 
 # Third party modules.
-import blinker
 
 # Local modules.
 import pymontecarlo
@@ -13,6 +12,7 @@ import pymontecarlo.util.entrypoint as entrypoint
 from pymontecarlo.util.path import get_config_dir
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
+from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 ENTRYPOINT_AVAILABLE_PROGRAMS = 'pymontecarlo.program'
@@ -20,6 +20,10 @@ ENTRYPOINT_AVAILABLE_PROGRAMS = 'pymontecarlo.program'
 class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
+
+    preferred_units_changed = Signal()
+    preferred_xrayline_notation_changed = Signal()
+    preferred_xrayline_encoding_changed = Signal()
 
     def __init__(self, programs=None):
         # Programs
@@ -35,10 +39,6 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         # X-ray line
         self._preferred_xrayline_notation = 'iupac'
         self._preferred_xrayline_encoding = 'utf16'
-
-        self.preferred_units_changed = blinker.Signal()
-        self.preferred_xrayline_notation_changed = blinker.Signal()
-        self.preferred_xrayline_encoding_changed = blinker.Signal()
 
     @classmethod
     def read(cls, filepath=None):

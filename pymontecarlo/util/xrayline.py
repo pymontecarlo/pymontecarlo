@@ -46,7 +46,7 @@ class XrayLine:
                                     self._element._repr_inner(),
                                     self._line._repr_inner())
 
-    def _on_settings_changed(self, sender):
+    def _on_settings_changed(self):
         self._name = None
 
     def _create_name(self, *args):
