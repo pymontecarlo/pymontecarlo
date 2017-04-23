@@ -21,10 +21,6 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
 
-    preferred_units_changed = blinker.Signal()
-    preferred_xrayline_notation_changed = blinker.Signal()
-    preferred_xrayline_encoding_changed = blinker.Signal()
-
     def __init__(self, programs=None):
         # Programs
         if programs is None:
@@ -39,6 +35,10 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         # X-ray line
         self._preferred_xrayline_notation = 'iupac'
         self._preferred_xrayline_encoding = 'utf16'
+
+        self.preferred_units_changed = blinker.Signal()
+        self.preferred_xrayline_notation_changed = blinker.Signal()
+        self.preferred_xrayline_encoding_changed = blinker.Signal()
 
     @classmethod
     def read(cls, filepath=None):

@@ -177,6 +177,9 @@ class _ParentSeriesColumn(SeriesColumn):
         super().__init__()
         self._parent = parent
 
+    def __hash__(self):
+        return hash(self.parent)
+
     @property
     def name(self):
         return self.parent.name
@@ -204,6 +207,9 @@ class PrefixSeriesColumn(_ParentSeriesColumn):
         self._prefix = prefix
         self._prefix_abbrev = prefix_abbrev or prefix
 
+    def __hash__(self):
+        return hash((self._prefix, self.parent))
+
     @property
     def name(self):
         return self._prefix + super().name
@@ -216,6 +222,9 @@ class ErrorSeriesColumn(_ParentSeriesColumn):
 
     def __init__(self, parent):
         super().__init__(parent)
+
+    def __hash__(self):
+        return hash(('error', self.parent))
 
     @property
     def name(self):
