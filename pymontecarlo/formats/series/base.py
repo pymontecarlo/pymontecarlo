@@ -104,6 +104,17 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return '{}'.format(value)
 
+    def convert_value(self, value, unit=_default):
+        if unit is self._default:
+            unit = self.unit
+
+        if unit is not None:
+            q = pymontecarlo.unit_registry.Quantity(value, unit)
+            q = pymontecarlo.settings.to_preferred_unit(q)
+            value = q.magnitude
+
+        return value
+
     @abc.abstractproperty
     def name(self):
         raise NotImplementedError
