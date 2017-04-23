@@ -7,35 +7,11 @@ Simulation.
 # Third party modules.
 
 # Local modules.
-import pymontecarlo
-from pymontecarlo.util.cbook import find_by_type, get_valid_filename
-from pymontecarlo.formats.series.base import find_convert_serieshandler
+from pymontecarlo.util.cbook import find_by_type
+from pymontecarlo.formats.series.base import \
+    find_convert_serieshandler, create_identifier
 
 # Globals and constants variables.
-
-def create_identifier(options):
-    handler = find_convert_serieshandler(options)
-    s = handler.convert(options)
-
-    try:
-        preferred_units = list(pymontecarlo.settings.preferred_units.values())
-        pymontecarlo.settings.clear_preferred_units(quiet=True)
-        pymontecarlo.settings.set_preferred_unit('nm', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('deg', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('keV', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('g/cm^3', quiet=True)
-
-        items = []
-        for column, value in s.iteritems():
-            key = column.abbrev
-            value = column.format_value(value, tolerance=None)
-            unitname = column.unitname
-            items.append('{}_{}{}'.format(key, value, unitname))
-    finally:
-        for units in preferred_units:
-            pymontecarlo.settings.set_preferred_unit(units, quiet=True)
-
-    return get_valid_filename('_'.join(items))
 
 class Simulation(object):
 
@@ -47,7 +23,9 @@ class Simulation(object):
         self.results = results.copy()
 
         if identifier is None:
-            identifier = create_identifier(options)
+            handler = find_convert_serieshandler(options)
+            s = handler.convert(options)
+            identifier = create_identifier(s)
         self.identifier = identifier
 
     def __eq__(self, other):

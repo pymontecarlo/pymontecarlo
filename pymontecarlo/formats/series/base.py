@@ -12,6 +12,7 @@ import pymontecarlo
 from pymontecarlo.exceptions import ConvertError
 from pymontecarlo.util.entrypoint import resolve_entrypoints
 from pymontecarlo.util.tolerance import tolerance_to_decimals
+from pymontecarlo.util.cbook import get_valid_filename
 
 # Globals and constants variables.
 ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
@@ -22,6 +23,36 @@ def find_convert_serieshandler(obj):
         if handler.can_convert(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
+
+def create_identifier(series):
+    try:
+        preferred_units = list(pymontecarlo.settings.preferred_units.values())
+        pymontecarlo.settings.clear_preferred_units(quiet=True)
+        pymontecarlo.settings.set_preferred_unit('nm', quiet=True)
+        pymontecarlo.settings.set_preferred_unit('deg', quiet=True)
+        pymontecarlo.settings.set_preferred_unit('keV', quiet=True)
+        pymontecarlo.settings.set_preferred_unit('g/cm^3', quiet=True)
+
+        items = []
+        for column, value in series.iteritems():
+            key = column.abbrev
+            value = column.format_value(value, tolerance=None)
+            unitname = column.unitname
+            items.append('{}_{}{}'.format(key, value, unitname))
+    finally:
+        for units in preferred_units:
+            pymontecarlo.settings.set_preferred_unit(units, quiet=True)
+
+    return get_valid_filename('_'.join(items))
+
+def update_with_prefix(s, prefix, prefix_abbrev=None):
+    s_new = pd.Series()
+
+    for column, value in s.items():
+        column_new = PrefixSeriesColumn(column, prefix, prefix_abbrev)
+        s_new[column_new] = value
+
+    return s_new
 
 class SeriesColumn(metaclass=abc.ABCMeta):
 
@@ -193,15 +224,6 @@ class ErrorSeriesColumn(_ParentSeriesColumn):
     @property
     def abbrev(self):
         return '\u03C3({})'.format(super().abbrev)
-
-def update_with_prefix(s, prefix, prefix_abbrev=None):
-    s_new = pd.Series()
-
-    for column, value in s.items():
-        column_new = PrefixSeriesColumn(column, prefix, prefix_abbrev)
-        s_new[column_new] = value
-
-    return s_new
 
 class SeriesHandler(object, metaclass=abc.ABCMeta):
 

@@ -11,6 +11,9 @@ import abc
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.future import FutureExecutor
+from pymontecarlo.util.cbook import unique
+from pymontecarlo.formats.series.base import create_identifier
+from pymontecarlo.formats.series.options.base import create_options_dataframe
 
 # Globals and constants variables.
 
@@ -37,32 +40,75 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
             except:
                 pass
 
-    def _prepare_simulations(self, options, simulations=None):
-        if simulations is None:
-            simulations = []
+    def _expand_options(self, list_options):
+        final_list_options = []
 
-        for analysis in options.analyses:
-            for other_options in analysis.apply(options):
-                self._prepare_simulations(other_options, simulations)
+        for options in list_options:
+            final_list_options.append(options)
 
-        # Validate
-        program = options.program
-        validator = program.create_validator()
-        options = validator.validate_options(options)
+            for analysis in options.analyses:
+                final_list_options.extend(analysis.apply(options))
 
-        # Create simulation
-        simulation = Simulation(options)
+        return unique(final_list_options)
 
-        # Check if it has been submitted
-        if options in self.submitted_options:
-            return simulations
+    def _validate_options(self, list_options):
+        valid_list_options = []
 
-        if simulation in self.project.simulations:
-            return simulations
+        for options in list_options:
+            program = options.program
+            validator = program.create_validator()
+            valid_options = validator.validate_options(options)
+            valid_list_options.append(valid_options)
 
-        # Add to submission list
-        self.submitted_options.append(options)
-        simulations.append(simulation)
+        return valid_list_options
+
+    def _exclude_simulated_options(self, list_options):
+        final_list_options = []
+
+        for options in list_options:
+            # Exclude already submitted options
+            if options in self.submitted_options:
+                continue
+
+            # Exclude if simulation with same options already exists in project
+            # and has results
+            dummy_simulation = Simulation(options, identifier='dummy')
+            if dummy_simulation in self.project.simulations:
+                index = self.project.simulations.index(dummy_simulation)
+                real_simulation = self.project.simulations[index]
+                if real_simulation.results:
+                    continue
+
+            final_list_options.append(options)
+
+        return final_list_options
+
+    def _create_identifiers(self, list_options):
+        df = create_options_dataframe(list_options, only_different_columns=True)
+
+        identifiers = []
+        for _index, series in df.iterrows():
+            identifiers.append(create_identifier(series))
+
+        return identifiers
+
+    def _create_simulations(self, list_options, identifiers):
+        simulations = []
+
+        for options, identifier in zip(list_options, identifiers):
+            simulation = Simulation(options, identifier=identifier)
+            simulations.append(simulation)
+
+        return simulations
+
+    def _prepare_simulations(self, list_options):
+        list_options = self._expand_options(list_options)
+        list_options = self._validate_options(list_options)
+        list_options = self._exclude_simulated_options(list_options)
+
+        identifiers = self._create_identifiers(list_options)
+
+        simulations = self._create_simulations(list_options, identifiers)
 
         return simulations
 
@@ -70,7 +116,7 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
     def _prepare_target(self):
         raise NotImplementedError
 
-    def submit(self, options):
+    def submit(self, *list_options):
         """
         Submits the options in the queue.
         
@@ -85,11 +131,12 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         :return: a list of :class:`Future` object, one for each launched 
             simulation
         """
-        simulations = self._prepare_simulations(options)
+        simulations = self._prepare_simulations(list_options)
         target = self._prepare_target()
 
         futures = []
         for simulation in simulations:
+            self.submitted_options.append(simulation.options)
             future = self._submit(target, simulation)
             futures.append(future)
 
