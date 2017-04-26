@@ -28,11 +28,11 @@ class Configurator:
 
     @abc.abstractmethod
     def prepare_parser(self, parser, program=None):
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
     def create_program(self, namespace, clasz):
-        raise NotImplementedError
+        return clasz()
 
     @abc.abstractproperty
     def fullname(self):

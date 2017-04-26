@@ -57,6 +57,12 @@ def _create_config_command(parser):
 
         parser_program = subparsers_programs.add_parser(identifier)
 
+        group_activation = parser_program.add_mutually_exclusive_group(required=True)
+        group_activation.add_argument('--activate', action='store_true',
+                                      help='Activate program')
+        group_activation.add_argument('--deactivate', action='store_false',
+                                      help='Deactivate program')
+
         try:
             configurator.prepare_parser(parser_program, program)
         except:
@@ -115,22 +121,24 @@ def _parse_config_command(parser, ns):
 
         # Create program
         configurator = program_class.create_configurator()
-        program = configurator.create_program(ns, program_class)
+        if ns.activate:
+            program = configurator.create_program(ns, program_class)
 
-        # Validate
-        try:
-            validator = program.create_validator()
-            validator.validate_program(program, None)
-        except Exception as ex:
-            parser.error(str(ex))
+            # Validate
+            try:
+                validator = program.create_validator()
+                validator.validate_program(program, None)
+            except Exception as ex:
+                parser.error(str(ex))
 
         # Remove existing program
         configured_programs = settings.programs
-        for configured_program in find_by_type(configured_programs, type(program)):
+        for configured_program in find_by_type(configured_programs, program_class):
             settings.programs.remove(configured_program)
 
         # Add new program
-        settings.programs.append(program)
+        if ns.activate:
+            settings.programs.append(program)
 
         # Save settings
         settings.write()
