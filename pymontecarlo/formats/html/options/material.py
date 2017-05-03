@@ -27,7 +27,7 @@ class MaterialHtmlHandler(TableHtmlHandler):
 
         key = self._create_label('Color')
         color = matplotlib.colors.to_hex(material.color)
-        value = tags.span(material.color, style='color: ' + color)
+        value = tags.span(color, style='color: ' + color)
         row[key] = value
 
         key = self._create_label('Density', 'kg/m^3')
