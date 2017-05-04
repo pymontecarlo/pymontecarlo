@@ -11,14 +11,13 @@ __license__ = "GPL v3"
 # Standard library modules.
 import unittest
 import logging
-import copy
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.particle import ELECTRON, PHOTON, POSITRON
+from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
 
@@ -31,33 +30,19 @@ class TestParticle(TestCase):
         TestCase.tearDown(self)
 
     def test__str__(self):
-        self.assertEqual('electron', str(ELECTRON))
-        self.assertEqual('photon', str(PHOTON))
-        self.assertEqual('positron', str(POSITRON))
-
-    def test__int__(self):
-        self.assertEqual(1, int(ELECTRON))
-        self.assertEqual(2, int(PHOTON))
-        self.assertEqual(3, int(POSITRON))
-
-    def test__repr__(self):
-        self.assertEqual('<ELECTRON>', repr(ELECTRON))
-        self.assertEqual('<PHOTON>', repr(PHOTON))
-        self.assertEqual('<POSITRON>', repr(POSITRON))
-
-    def test__copy__(self):
-        self.assertIs(ELECTRON, copy.copy(ELECTRON))
-        self.assertIs(PHOTON, copy.copy(PHOTON))
-        self.assertIs(POSITRON, copy.copy(POSITRON))
-
-        self.assertIs(ELECTRON, copy.deepcopy(ELECTRON))
-        self.assertIs(PHOTON, copy.deepcopy(PHOTON))
-        self.assertIs(POSITRON, copy.deepcopy(POSITRON))
-
+        self.assertEqual('ELECTRON', str(Particle.ELECTRON))
+        self.assertEqual('PHOTON', str(Particle.PHOTON))
+        self.assertEqual('POSITRON', str(Particle.POSITRON))
+#
     def testcharge(self):
-        self.assertEqual(-1, ELECTRON.charge)
-        self.assertEqual(0, PHOTON.charge)
-        self.assertEqual(1, POSITRON.charge)
+        self.assertEqual(-1, Particle.ELECTRON.charge)
+        self.assertEqual(0, Particle.PHOTON.charge)
+        self.assertEqual(1, Particle.POSITRON.charge)
+
+    def testcolor(self):
+        self.assertEqual('#00549F', Particle.ELECTRON.color)
+        self.assertEqual('#FFD700', Particle.PHOTON.color)
+        self.assertEqual('#FFAB60', Particle.POSITRON.color)
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

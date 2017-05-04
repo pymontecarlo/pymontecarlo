@@ -1,13 +1,6 @@
 #!/usr/bin/env python
 """ """
 
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
-
 # Standard library modules.
 import unittest
 import logging
@@ -19,29 +12,17 @@ import pickle
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.options.particle import ELECTRON, PHOTON, POSITRON
-from pymontecarlo.options.material import Material, VACUUM
+from pymontecarlo.options.material import Material, VACUUM, MaterialBuilder
 
 # Globals and constants variables.
 
 class TestVACUUM(TestCase):
 
-    def setUp(self):
-        TestCase.setUp(self)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-
     def testskeleton(self):
         self.assertEqual('Vacuum', str(VACUUM))
         self.assertEqual({}, VACUUM.composition)
-        self.assertEqual({}, VACUUM.composition_atomic)
-        self.assertAlmostEqual(0.0, VACUUM.density_kg_m3, 4)
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[ELECTRON], 4)
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[PHOTON], 4)
-        self.assertAlmostEqual(0.0, VACUUM.absorption_energy_eV[POSITRON], 4)
-
-        self.assertRaises(AttributeError, setattr, VACUUM, 'name', 'test')
+        self.assertAlmostEqual(0.0, VACUUM.density_kg_per_m3, 4)
+        self.assertTupleEqual((0.0, 0.0, 0.0, 0.0), VACUUM.color)
 
     def testcopy(self):
         self.assertIs(VACUUM, copy.copy(VACUUM))
@@ -50,27 +31,16 @@ class TestVACUUM(TestCase):
     def testpickle(self):
         self.assertIs(VACUUM, pickle.loads(pickle.dumps(VACUUM)))
 
-#     def testfrom_xml(self):
-#         element = mapper.to_xml(VACUUM)
-#         obj = mapper.from_xml(element)
-#
-#         self.assertIs(obj, VACUUM)
-# #
-#     def testto_xml(self):
-#         element = mapper.to_xml(VACUUM)
-#
-#         self.assertEqual(0, len(list(element)))
+    def test__repr__(self):
+        expected = '<Vacuum()>'
+        self.assertEqual(expected, repr(VACUUM))
 
 class TestMaterial(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
-        self.m = Material({'Cu': '?'}, 'Pure Cu', None,
-                          {ELECTRON: 50.0, PHOTON: 51.0, POSITRON: 52.0})
-
-    def tearDown(self):
-        TestCase.tearDown(self)
+        self.m = Material('Pure Cu', {29: 1.0}, 8960.0, '#FF0000')
 
     def testskeleton(self):
         self.assertTrue(True)
@@ -81,37 +51,10 @@ class TestMaterial(TestCase):
         self.assertTrue(29 in self.m.composition)
         self.assertAlmostEqual(1.0, self.m.composition[29])
 
-        self.assertAlmostEqual(8960.0, self.m.density_kg_m3, 4)
-        self.assertAlmostEqual(8.960, self.m.density_g_cm3, 4)
+        self.assertAlmostEqual(8960.0, self.m.density_kg_per_m3, 4)
+        self.assertAlmostEqual(8.960, self.m.density_g_per_cm3, 4)
 
-        self.assertAlmostEqual(50, self.m.absorption_energy_eV[ELECTRON], 4)
-        self.assertAlmostEqual(51, self.m.absorption_energy_eV[PHOTON], 4)
-        self.assertAlmostEqual(52, self.m.absorption_energy_eV[POSITRON], 4)
-
-    def testcomposition_from_formula(self):
-        weightFractionAl = 0.21358626371988801
-        weightFractionNa = 0.27298103136883051
-        weightFractionB = 0.51343270491128157
-
-        comp = Material.composition_from_formula('Al2Na3B12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        comp = Material.composition_from_formula('Al 2 Na 3 B 12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        comp = Material.composition_from_formula('Al2 Na3 B12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        self.assertRaises(ValueError, Material.composition_from_formula, 'Aq2 Na3 B12')
-
-        comp = Material.composition_from_formula('Al2')
-        self.assertAlmostEqual(1.0, comp[13], 4)
+        self.assertEqual('#FF0000', self.m.color)
 
     def testpure(self):
         m = Material.pure(29)
@@ -121,58 +64,74 @@ class TestMaterial(TestCase):
         self.assertIn(29, m.composition)
         self.assertAlmostEqual(1.0, m.composition[29], 4)
 
-        self.assertIn(29, self.m.composition_atomic)
-        self.assertAlmostEqual(1.0, self.m.composition_atomic[29], 4)
+        self.assertAlmostEqual(8.96, m.density_kg_per_m3 / 1000.0, 4)
+        self.assertAlmostEqual(8.96, m.density_g_per_cm3, 4)
 
-        self.assertAlmostEqual(8.96, m.density_kg_m3 / 1000.0, 4)
-        self.assertAlmostEqual(8.96, m.density_g_cm3, 4)
+    def testfrom_formula(self):
+        m = Material.from_formula('SiO2', 1250.0)
 
-        self.assertAlmostEqual(50, m.absorption_energy_eV[ELECTRON], 4)
-        self.assertAlmostEqual(50, m.absorption_energy_eV[PHOTON], 4)
+        self.assertEqual('SiO2', str(m))
 
-    def testcomposition_atomic(self):
-        # Wildcard
-        m = Material({29: 0.7, 30: '?'})
+        self.assertIn(14, m.composition)
+        self.assertAlmostEqual(0.4674, m.composition[14], 4)
 
-        self.assertIn(29, m.composition_atomic)
-        self.assertAlmostEqual(0.70594, m.composition_atomic[29], 4)
-        self.assertIn(30, m.composition_atomic)
-        self.assertAlmostEqual(0.29405, m.composition_atomic[30], 4)
+        self.assertIn(8, m.composition)
+        self.assertAlmostEqual(0.5326, m.composition[8], 4)
 
-        # Multiple wildcards
-        m = Material({29: '?', 30: '?'})
-        self.assertIn(29, m.composition_atomic)
-        self.assertAlmostEqual(0.50711, m.composition_atomic[29], 4)
-        self.assertIn(30, m.composition_atomic)
-        self.assertAlmostEqual(0.49289, m.composition_atomic[30], 4)
+        self.assertAlmostEqual(1.25, m.density_kg_per_m3 / 1000.0, 4)
+        self.assertAlmostEqual(1.25, m.density_g_per_cm3, 4)
 
-    def testcalculate_composition(self):
-        # Wildcard
-        composition = Material.calculate_composition({29: 0.7, 30: '?'})
+    def test__repr__(self):
+        expected = '<Material(Pure Cu, 100%Cu, 8960 kg/m3)>'
+        self.assertEqual(expected, repr(self.m))
 
-        self.assertIn(29, composition)
-        self.assertAlmostEqual(0.7, composition[29], 4)
-        self.assertIn(30, composition)
-        self.assertAlmostEqual(0.3, composition[30], 4)
+    def test__eq__(self):
+        m2 = Material('Pure Cu', {29: 1.0}, 8960.0)
+        self.assertEqual(m2, self.m)
 
-        # Multiple wildcards
-        composition = Material.calculate_composition({29: '?', 30: '?'})
+        m2 = Material('Pure Cu', {29: 1.0}, 8961.0)
+        self.assertNotEqual(m2, self.m)
 
-        self.assertIn(29, composition)
-        self.assertAlmostEqual(0.5, composition[29], 4)
-        self.assertIn(30, composition)
-        self.assertAlmostEqual(0.5, composition[30], 4)
+        m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
+        self.assertNotEqual(m2, self.m)
 
-    def testabsorption_energy_eV(self):
-        m = Material({'Cu': '?'}, 'Pure Cu', None, 52)
-        self.assertAlmostEqual(52, m.absorption_energy_eV[ELECTRON], 4)
-        self.assertAlmostEqual(52, m.absorption_energy_eV[PHOTON], 4)
-        self.assertAlmostEqual(52, m.absorption_energy_eV[POSITRON], 4)
+    def testset_color_set(self):
+        Material.set_color_set(['#00FF00', '#0000FF'])
 
-        m = Material({'Cu': '?'}, 'Pure Cu', None, {PHOTON: 51.0})
-        self.assertAlmostEqual(Material.DEFAULT_ABSORPTION_ENERGY_eV, m.absorption_energy_eV[ELECTRON], 4)
-        self.assertAlmostEqual(51, m.absorption_energy_eV[PHOTON], 4)
-        self.assertAlmostEqual(Material.DEFAULT_ABSORPTION_ENERGY_eV, m.absorption_energy_eV[POSITRON], 4)
+        m = Material.pure(13)
+        self.assertEqual('#00FF00', m.color)
+
+        m = Material.pure(14)
+        self.assertEqual('#0000FF', m.color)
+
+        m = Material.pure(15)
+        self.assertEqual('#00FF00', m.color)
+
+class TestMaterialBuilder(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+
+        self.b = MaterialBuilder(26)
+        self.b.add_element(29, 0.05)
+        self.b.add_element_range(28, 0.1, 0.2, 0.02)
+        self.b.add_element(24, (0.01, 0.05, 0.07))
+        self.b.add_element_interval(6, 0.0, 1.0, 5)
+
+    def tearDown(self):
+        TestCase.tearDown(self)
+
+    def test__len__(self):
+        self.assertEqual(5 * 3 * 5, len(self.b))
+
+    def testbuild(self):
+        compositions = self.b.build()
+        self.assertEqual(5 * 3 * 5, len(compositions))
+
+    def testno_element(self):
+        b = MaterialBuilder(26)
+        self.assertEqual(1, len(b))
+        self.assertEqual(1, len(b.build()))
 
 if __name__ == '__main__': # pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

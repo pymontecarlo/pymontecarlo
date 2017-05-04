@@ -1,56 +1,33 @@
 #!/usr/bin/env python
 """ """
 
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
-
 # Standard library modules.
 import unittest
 import logging
-import tempfile
-import shutil
 import os
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-
-from pymontecarlo.program.exporter import XMLExporter
-from pymontecarlo.program.test_config import DummyConverter
-from pymontecarlo.options.options import Options
+from pymontecarlo.mock import ExporterMock
 
 # Globals and constants variables.
 
-class TestXMLExporter(TestCase):
+class TestExporter(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
 
-        self.tmpdir = tempfile.mkdtemp()
-
-        self.ops = Options("test1")
-
-        self.e = XMLExporter(DummyConverter)
-
-    def tearDown(self):
-        TestCase.tearDown(self)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        self.e = ExporterMock()
 
     def testexport(self):
-        filepath = self.e.export(self.ops, self.tmpdir)
+        options = self.create_basic_options()
+        dirpath = self.create_temp_dir()
+        self.e.export(options, dirpath)
 
-        self.assertTrue(os.path.exists(filepath))
-        self.assertIn(os.path.basename(filepath), os.listdir(self.tmpdir))
+        self.assertTrue(os.path.exists(os.path.join(dirpath, 'sim.json')))
 
-    def testexport_multivalue_options(self):
-        self.ops.beam.energy_eV = [1e3, 2e3]
-        self.assertRaises(ValueError, self.e.export, self.ops, self.tmpdir)
-
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()

@@ -1,205 +1,130 @@
-#!/usr/bin/env python
 """
-================================================================================
-:mod:`exporter` -- Base class for exporters
-================================================================================
-
-.. module:: exporter
-   :synopsis: Base class for exporters
-
-.. inheritance-diagram:: pymontecarlo.input.exporter
-
+Base class for exporters
 """
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
 
 # Standard library modules.
-import os
-from abc import ABCMeta, abstractmethod
+import abc
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.expander import OptionsExpander
+from pymontecarlo.exceptions import ExportError
 
 # Globals and constants variables.
 
-class ExporterWarning(Warning):
-    pass
-
-class ExporterException(Exception):
-    pass
-
-class Exporter(object, metaclass=ABCMeta):
+class Exporter(object, metaclass=abc.ABCMeta):
     """
     Base class for all exporters.
     """
 
     def __init__(self):
-        self._expander = OptionsExpander()
+        self.beam_export_methods = {}
+        self.sample_export_methods = {}
+        self.analysis_export_methods = {}
+        self.limit_export_methods = {}
+        self.model_export_methods = {}
 
-        self._beam_exporters = {}
-        self._geometry_exporters = {}
-        self._detector_exporters = {}
-        self._limit_exporters = {}
-        self._model_exporters = {}
-
-    def export(self, options, dirpath, *args, **kwargs):
+    def export(self, options, dirpath):
         """
-        Exports options to a file inside the specified output directory.
-        Returns the filepath of the exported options.
+        Exports options to the specified output directory.
+        It is assumed that the options object is valid for this program.
 
         :arg options: options to export
-            The options must only contained a single value for each parameter.
         :arg dirpath: full path to output directory
         """
-        if self._expander.is_expandable(options):
-            raise ValueError("Only options with singular value can be exported")
+        errors = set()
+        self._export(options, dirpath, errors)
 
-        return self._export(options, dirpath, *args, **kwargs)
+        if errors:
+            raise ExportError(*errors)
 
-    @abstractmethod
-    def _export(self, options, dirpath, *args, **kwargs):
+    @abc.abstractmethod
+    def _export(self, options, dirpath, errors):
         """
         Performs the actual export.
+        
+        :arg options: options to export
+        :arg dirpath: full path to output directory
+        :arg errors: :class:`set` to accumulate encountered errors
         """
         raise NotImplementedError
 
-    def _run_exporters(self, options, *args, **kwargs):
+    def _run_exporters(self, options, errors, *args, **kwargs):
         """
-        Internal command to call the register export functions.
+        Internal command to call the register export functions. 
+        All optional arguments passed to this method are transferred to the
+        export methods.
         """
-        self._export_beam(options, *args, **kwargs)
-        self._export_geometry(options, *args, **kwargs)
-        self._export_detectors(options, *args, **kwargs)
-        self._export_limits(options, *args, **kwargs)
-        self._export_models(options, *args, **kwargs)
+        self._export_beam(options.beam, errors, *args, **kwargs)
+        self._export_sample(options.sample, errors, *args, **kwargs)
+        self._export_analyses(options.analyses, errors, *args, **kwargs)
+        self._export_limits(options.limits, errors, *args, **kwargs)
+        self._export_models(options.models, errors, *args, **kwargs)
 
-    def _export_beam(self, options, *args, **kwargs):
-        """
-        Exports the beam.
-        If a exporter function is defined, it calls this function with the
-        following arguments:
+    def _export_beam(self, beam, errors, *args, **kwargs):
+        beam_class = beam.__class__
+        if beam_class not in self.beam_export_methods:
+            exc = ValueError('Beam ({0}) is not supported.'
+                             .format(beam_class.__name__))
+            errors.add(exc)
+            return
 
-            * options object
-            * beam object
-            * optional arguments and keyword-arguments
-        """
-        clasz = options.beam.__class__
-        method = self._beam_exporters.get(clasz)
+        method = self.beam_export_methods[beam_class]
+        method(beam, errors, *args, **kwargs)
 
-        if not method:
-            raise ExporterException("Could not export beam '%s'" % clasz.__name__)
+    def _export_sample(self, sample, errors, *args, **kwargs):
+        sample_class = sample.__class__
+        if sample_class not in self.sample_export_methods:
+            exc = ValueError('Sample ({0}) is not supported.'
+                             .format(sample_class.__name__))
+            errors.add(exc)
+            return
 
-        method(options, options.beam, *args, **kwargs)
+        method = self.sample_export_methods[sample_class]
+        method(sample, errors, *args, **kwargs)
 
-    def _export_geometry(self, options, *args, **kwargs):
-        """
-        Exports the geometry.
-        If a exporter function is defined, it calls this function with the
-        following arguments:
+    def _export_analyses(self, analyses, errors, *args, **kwargs):
+        for analysis in analyses:
+            self._export_analysis(analysis, errors, *args, **kwargs)
 
-            * options object
-            * geometry object
-            * optional arguments and keyword-arguments
-        """
-        clasz = options.geometry.__class__
-        method = self._geometry_exporters.get(clasz)
+    def _export_analysis(self, analysis, errors, *args, **kwargs):
+        analysis_class = analysis.__class__
+        if analysis_class not in self.analysis_export_methods:
+            exc = ValueError('Analysis ({0}) is not supported.'
+                             .format(analysis_class.__name__))
+            errors.add(exc)
+            return
 
-        if method:
-            method(options, options.geometry, *args, **kwargs)
-        else:
-            raise ExporterException("Could not export geometry '%s'" % clasz.__name__)
+        method = self.analysis_export_methods[analysis_class]
+        method(analysis, errors, *args, **kwargs)
 
-    def _export_detectors(self, options, *args, **kwargs):
-        """
-        Exports the detectors.
-        If a exporter function is defined, it calls this function with the
-        following arguments for each detector:
+    def _export_limits(self, limits, errors, *args, **kwargs):
+        for limit in limits:
+            self._export_limit(limit, errors, *args, **kwargs)
 
-            * options object
-            * name/key of detector
-            * detector object
-            * optional arguments and keyword-arguments
-        """
-        for name, detector in options.detectors.items():
-            clasz = detector.__class__
-            method = self._detector_exporters.get(clasz)
+    def _export_limit(self, limit, errors, *args, **kwargs):
+        limit_class = limit.__class__
+        if limit_class not in self.limit_export_methods:
+            exc = ValueError('Limit ({0}) is not supported.'
+                             .format(limit_class.__name__))
+            errors.add(exc)
+            return
 
-            if not method:
-                raise ExporterException("Could not export detector '%s' (%s)" % \
-                                        (name, clasz.__name__))
+        method = self.limit_export_methods[limit_class]
+        method(limit, errors, *args, **kwargs)
 
-            method(options, name, detector, *args, **kwargs)
+    def _export_models(self, models, errors, *args, **kwargs):
+        for model in models:
+            self._export_model(model, errors, *args, **kwargs)
 
-    def _export_limits(self, options, *args, **kwargs):
-        """
-        Exports the limit.
-        If a exporter function is defined, it calls this function with the
-        following arguments for each limit:
+    def _export_model(self, model, errors, *args, **kwargs):
+        model_class = model.__class__
+        if model_class not in self.model_export_methods:
+            exc = ValueError('Model ({0}) is not supported.'
+                             .format(model_class.__name__))
+            errors.add(exc)
+            return
 
-            * options object
-            * limit object
-            * optional arguments and keyword-arguments
-        """
-        for limit in options.limits:
-            clasz = limit.__class__
-            method = self._limit_exporters.get(clasz)
+        method = self.model_export_methods[model_class]
+        method(model, errors, *args, **kwargs)
 
-            if not method:
-                raise ExporterException("Could not export limit '%s'" % \
-                                        clasz.__name__)
-
-            method(options, limit, *args, **kwargs)
-
-    def _export_models(self, options, *args, **kwargs):
-        """
-        Exports the models.
-        If a exporter function is defined, it calls this function with the
-        following arguments for each model:
-
-            * options object
-            * model object
-            * optional arguments and keyword-arguments
-        """
-        for model in options.models:
-            type_ = model.type
-            method = self._model_exporters.get(type_)
-
-            if not method:
-                raise ExporterException("Could not export model of type '%s'" % \
-                                        type_.name)
-
-            method(options, model, *args, **kwargs)
-
-    def _export_dummy(self, options, *args, **kwargs):
-        pass
-
-class XMLExporter(Exporter):
-    """
-    Exports the options to a XML file.
-    """
-
-    def __init__(self, converter):
-        Exporter.__init__(self)
-
-        for beam in converter.BEAMS:
-            self._beam_exporters[beam] = self._export_dummy
-        for geometry in converter.GEOMETRIES:
-            self._geometry_exporters[geometry] = self._export_dummy
-        for detector in converter.DETECTORS:
-            self._detector_exporters[detector] = self._export_dummy
-        for limit in converter.LIMITS:
-            self._limit_exporters[limit] = self._export_dummy
-        for model in converter.MODELS:
-            self._model_exporters[model] = self._export_dummy
-
-    def _export(self, options, dirpath, *args, **kwargs):
-        filepath = os.path.join(dirpath, options.name + '.xml')
-        options.write(filepath)
-        return filepath

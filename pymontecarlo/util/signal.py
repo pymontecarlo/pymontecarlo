@@ -1,25 +1,7 @@
-#!/usr/bin/env python
-"""
-================================================================================
-:mod:`signal` -- Signal pattern
-================================================================================
-
-.. module:: signal
-   :synopsis: signal pattern
-
-.. inheritance-diagram:: pyhmsa.util.signal
-
-"""
-
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2014 Philippe T. Pinard"
-__license__ = "GPL v3"
+""""""
 
 # Standard library modules.
-import threading
+import weakref
 
 # Third party modules.
 
@@ -27,26 +9,37 @@ import threading
 
 # Globals and constants variables.
 
-
-class Signal(object):
+class _BoundSignal:
 
     def __init__(self):
-        self._handlers = set()
-        self._lock = threading.Lock()
+        self._handlers = []
 
-    def __call__(self, *args):
-        self.fire(*args)
+    def _iter_handlers(self):
+        for ref in list(self._handlers):
+            func = ref()
+            if func is None:
+                self._handlers.remove(ref)
+                continue
+            yield ref, func
 
-    def connect(self, handler):
-        self._handlers.add(handler)
+    def connect(self, func):
+        self._handlers.append(weakref.WeakMethod(func))
 
-    def disconnect(self, handler):
-        self._handlers.discard(handler)
+    def disconnect(self, func):
+        for ref, other_func in self._iter_handlers():
+            if func == other_func:
+                self._handlers.remove(ref)
 
-    def fire(self, *args):
-        with self._lock:
-            for handler in self._handlers:
-                try:
-                    handler(*args)
-                except:
-                    continue
+    def send(self, *args, **kwargs):
+        for _ref, func in self._iter_handlers():
+            func(*args, **kwargs)
+
+class Signal:
+
+    def __init__(self):
+        self._bounds = weakref.WeakKeyDictionary()
+
+    def __get__(self, obj, type=None):
+        if obj not in self._bounds:
+            self._bounds[obj] = _BoundSignal()
+        return self._bounds[obj]
