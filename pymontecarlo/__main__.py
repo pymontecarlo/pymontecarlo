@@ -12,7 +12,7 @@ import tabulate
 
 # Local modules.
 import pymontecarlo
-from pymontecarlo.util.cbook import find_by_type
+from pymontecarlo.exceptions import ProgramNotFound
 
 # Globals and constants variables.
 
@@ -51,9 +51,13 @@ def _create_config_command(parser):
     # Programs
     subparsers_programs = parser.add_subparsers(title='Programs', dest='program')
 
-    for clasz, program in pymontecarlo.settings.iter_programs():
+    for clasz in pymontecarlo.settings.available_programs:
         configurator = clasz.create_configurator()
         identifier = clasz.getidentifier()
+        try:
+            program = pymontecarlo.settings.get_activated_program(identifier)
+        except ProgramNotFound:
+            program = None
 
         parser_program = subparsers_programs.add_parser(identifier)
 
@@ -74,15 +78,19 @@ def _parse(parser, ns):
         logger.setLevel(logging.DEBUG)
 
     if ns.programs:
-        header = ['Program', 'Available', 'Configured', 'Details']
+        header = ['Program', 'Available', 'Activated', 'Details']
         rows = []
-        for clasz, program in pymontecarlo.settings.iter_programs():
+        for clasz in pymontecarlo.settings.available_programs:
             configurator = clasz.create_configurator()
             identifier = clasz.getidentifier()
-            configured = program is not None
+            try:
+                program = pymontecarlo.settings.get_activated_program(identifier)
+            except ProgramNotFound:
+                program = None
+            activated = program is not None
 
             details = []
-            if configured:
+            if activated:
                 dummy = argparse.ArgumentParser()
                 configurator.prepare_parser(dummy, program)
                 for action in dummy._actions:
@@ -90,7 +98,7 @@ def _parse(parser, ns):
                         continue
                     details.append('{}: {}'.format(action.dest, action.default))
 
-            rows.append([identifier, True, configured, ', '.join(details)])
+            rows.append([identifier, True, activated, ', '.join(details)])
 
         parser.exit(message=tabulate.tabulate(rows, header) + os.linesep)
 
@@ -110,14 +118,8 @@ def _parse_config_command(parser, ns):
     if ns.program:
         settings = pymontecarlo.settings
 
-        program_class = None
-        for clasz in settings.iter_available_programs():
-            if ns.program == clasz.getidentifier():
-                program_class = clasz
-                break
-
-        if program_class is None:
-            parser.exit('Cannot find type of program')
+        identifier = ns.program
+        program_class = settings.get_available_program_class(identifier)
 
         # Create program
         configurator = program_class.create_configurator()
@@ -132,13 +134,11 @@ def _parse_config_command(parser, ns):
                 parser.error(str(ex))
 
         # Remove existing program
-        configured_programs = settings.programs
-        for configured_program in find_by_type(configured_programs, program_class):
-            settings.programs.remove(configured_program)
+        settings.deactivate_program(identifier)
 
         # Add new program
         if ns.activate:
-            settings.programs.append(program)
+            settings.activate_program(program)
 
         # Save settings
         settings.write()

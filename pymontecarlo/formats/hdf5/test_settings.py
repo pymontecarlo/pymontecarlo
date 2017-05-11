@@ -18,9 +18,10 @@ class TestSettingsHDF5Handler(TestCase):
 
     def testconvert_parse(self):
         handler = SettingsHDF5Handler()
-        settings = Settings([self.program])
+        settings = Settings()
+        settings.activate_program(self.program)
         settings2 = self.convert_parse_hdf5handler(handler, settings)
-        self.assertEqual(1, len(settings2.programs))
+        self.assertEqual(1, len(settings2.activated_programs))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

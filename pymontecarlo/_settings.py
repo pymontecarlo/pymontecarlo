@@ -21,17 +21,15 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
 
+    activated_programs_changed = Signal()
     preferred_units_changed = Signal()
     preferred_xrayline_notation_changed = Signal()
     preferred_xrayline_encoding_changed = Signal()
 
-    def __init__(self, programs=None):
+    def __init__(self):
         # Programs
-        if programs is None:
-            programs = []
-        self.programs = list(programs)
-
-        self._available_programs = None
+        self._activated_programs = {} # key: identifier, value: program object
+        self._available_programs = {} # key: identifier, value: program class
 
         # Units
         self.preferred_units = {}
@@ -53,7 +51,7 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     def _validate(self, errors):
         # Programs
-        for program in self.programs:
+        for program in self.activated_programs:
             validator = program.create_validator()
             validator._validate_program(program, None, errors)
 
@@ -67,8 +65,8 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
     def update(self, settings):
         settings.validate()
 
-        self.programs.clear()
-        self.programs = settings.programs.copy()
+        self._activated_programs.clear()
+        self._activated_programs = settings._activated_programs.copy()
 
         self.preferred_units.clear()
         self.preferred_units.update(settings.preferred_units)
@@ -78,44 +76,50 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         self.preferred_xrayline_encoding = settings.preferred_xrayline_encoding
 
     def reload(self):
-        self._available_programs = None
+        self._available_programs.clear()
         entrypoint._ENTRYPOINTS.clear()
 
-    def iter_available_programs(self):
-        # NOTE: The late initialization is required for settings to be loaded
-        # correctly in __init__
-        if self._available_programs is None:
-            self._available_programs = \
-                entrypoint.resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS)
-        return iter(self._available_programs)
-
-    def iter_programs(self):
-        """
-        Each iteration returns a tuple, where the first item is the class of
-        available programs, and the second item is an instance of this program if
-        configured, otherwise ``None``.
-    
-        :arg programs: configured programs
-        """
-        configured_programs = dict((type(p), p) for p in self.programs)
-
-        for clasz in self.iter_available_programs():
-            yield clasz, configured_programs.get(clasz)
-
-    def get_program(self, identifier):
+    def get_activated_program(self, identifier):
         """
         Returns the :class:`Program` matching the specified identifier.
         """
-        for program in self.programs:
-            if program.getidentifier() == identifier:
-                return program
-        raise ProgramNotFound('{} is not configured'.format(identifier))
+        try:
+            return self._activated_programs[identifier]
+        except KeyError:
+            raise ProgramNotFound('{} is not configured'.format(identifier))
 
-    def has_program(self, identifier):
-        for program in self.programs:
-            if program.getidentifier() == identifier:
-                return True
-        return False
+    def get_available_program_class(self, identifier):
+        """
+        Returns the :class:`Program` class matching the specified identifier.
+        """
+        try:
+            self.available_programs # Initialize
+            return self._available_programs[identifier]
+        except KeyError:
+            raise ProgramNotFound('{} is not available'.format(identifier))
+
+    def is_program_activated(self, identifier):
+        return identifier in self._activated_programs
+
+    def is_program_available(self, identifier):
+        return identifier in self._available_programs
+
+    def activate_program(self, program):
+        identifier = program.getidentifier()
+
+        if self.is_program_activated(identifier):
+            raise ValueError('{} is already activated'.format(identifier))
+
+        self._activated_programs[identifier] = program
+        self.activated_programs_changed.send()
+
+    def deactivate_program(self, identifier):
+        self._activated_programs.pop(identifier, None)
+        self.activated_programs_changed.send()
+
+    def deactivate_all_programs(self):
+        self._activated_programs.clear()
+        self.activated_programs_changed.send()
 
     def set_preferred_unit(self, units, quiet=False):
         if isinstance(units, str):
@@ -144,6 +148,31 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             return q.to(preferred_unit)
         except KeyError:
             return q.to(base_unit)
+
+    @property
+    def activated_programs(self):
+        """
+        Returns a :class:`tuple` of all activated programs. 
+        The items are :class:`Program` instances.
+        """
+        return tuple(self._activated_programs.values())
+
+    @property
+    def available_programs(self):
+        """
+        Returns a :class:`tuple` of all available programs, whether or not
+        they are activated.
+        The items are :class:`Program` classes.
+        """
+        # Late initialization
+        if not self._available_programs:
+            self._available_programs = {}
+
+            for clasz in entrypoint.resolve_entrypoints(ENTRYPOINT_AVAILABLE_PROGRAMS):
+                identifier = clasz.getidentifier()
+                self._available_programs[identifier] = clasz
+
+        return tuple(self._available_programs.values())
 
     @property
     def preferred_xrayline_notation(self):

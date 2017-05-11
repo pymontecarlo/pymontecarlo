@@ -36,18 +36,19 @@ class TestSettings(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.settings = Settings([self.program])
+        self.settings = Settings()
+        self.settings.activate_program(self.program)
 
     def testread_write(self):
         filepath = os.path.join(self.create_temp_dir(), 'settings.h5')
         self.settings.write(filepath)
 
         settings = Settings.read(filepath)
-        self.assertEqual(1, len(settings.programs))
+        self.assertEqual(1, len(settings.activated_programs))
 
-    def testget_program(self):
-        self.assertEqual(self.program, self.settings.get_program('mock'))
-        self.assertRaises(ProgramNotFound, self.settings.get_program, 'foo')
+    def testget_activated_program(self):
+        self.assertEqual(self.program, self.settings.get_activated_program('mock'))
+        self.assertRaises(ProgramNotFound, self.settings.get_activated_program, 'foo')
 
     def testset_preferred_unit(self):
         self.settings.set_preferred_unit(unit_registry.lb)
