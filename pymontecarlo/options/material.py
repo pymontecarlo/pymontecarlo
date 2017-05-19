@@ -16,7 +16,7 @@ import numpy as np
 import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
-    calculate_density_kg_per_m3, generate_name, from_formula
+    calculate_density_kg_per_m3, generate_name, from_formula, to_repr
 from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
@@ -79,7 +79,7 @@ class Material(Option):
         composition = {z: 1.0}
         density_kg_per_m3 = pyxray.element_mass_density_kg_per_m3(z)
 
-        return cls(name, composition, density_kg_per_m3, color)
+        return cls(name, composition, density_kg_per_m3, color=color)
 
     @classmethod
     def from_formula(cls, formula, density_kg_per_m3=None, color=None):
@@ -94,14 +94,13 @@ class Material(Option):
         if density_kg_per_m3 is None:
             density_kg_per_m3 = calculate_density_kg_per_m3(composition)
 
-        return cls(formula, composition, density_kg_per_m3, color)
+        return cls(formula, composition, density_kg_per_m3, color=color)
 
     def __repr__(self):
         return '<{classname}({name}, {composition}, {density:g} kg/m3)>' \
             .format(classname=self.__class__.__name__,
                     name=self.name,
-                    composition=' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
-                                         for z, wf in self.composition.items()),
+                    composition=to_repr(self.composition),
                     density=self.density_kg_per_m3)
 
     def __str__(self):

@@ -164,3 +164,10 @@ def generate_name(composition):
         name = 'Untitled'
 
     return name
+
+def to_repr(composition):
+    """
+    Returns a repr string from a composition :class:`dict`.
+    """
+    return ' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
+                    for z, wf in composition.items())
