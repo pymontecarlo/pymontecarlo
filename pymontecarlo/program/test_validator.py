@@ -12,7 +12,8 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam.gaussian import GaussianBeam
+from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
@@ -35,6 +36,7 @@ class TestValidator(TestCase):
 
         self.v = Validator()
 
+        self.v.beam_validate_methods[CylindricalBeam] = self.v._validate_beam_cylindrical
         self.v.beam_validate_methods[GaussianBeam] = self.v._validate_beam_gaussian
 
         self.v.sample_validate_methods[SubstrateSample] = self.v._validate_sample_substrate
@@ -68,6 +70,21 @@ class TestValidator(TestCase):
 
         errors = set()
         self.v._validate_material(material, self.options, errors)
+        self.assertEqual(5, len(errors))
+
+    def testvalidate_beam_cylindrical(self):
+        beam = CylindricalBeam(10e3, 0.123)
+        beam2 = self.v.validate_beam(beam, self.options)
+        self.assertEqual(beam2, beam)
+        self.assertIsNot(beam2, beam)
+
+    def testvalidate_beam_cylindrical_exception(self):
+        beam = GaussianBeam(0.0, -1.0, 'particle',
+                            float('inf'), float('nan'))
+        self.assertRaises(ValidationError, self.v.validate_beam, beam, self.options)
+
+        errors = set()
+        self.v._validate_beam(beam, self.options, errors)
         self.assertEqual(5, len(errors))
 
     def testvalidate_beam_gaussian(self):

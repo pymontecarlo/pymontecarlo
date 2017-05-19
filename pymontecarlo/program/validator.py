@@ -13,7 +13,8 @@ import matplotlib.colors
 # Local modules.
 from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.options.options import Options
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam.gaussian import GaussianBeam
+from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
@@ -118,6 +119,42 @@ class Validator(object):
             errors.add(exc)
 
         return particle
+
+    def _validate_beam_cylindrical(self, beam, options, errors):
+        energy_eV = \
+            self._validate_beam_base_energy_eV(beam.energy_eV, options, errors)
+        particle = \
+            self._validate_beam_base_particle(beam.particle, options, errors)
+        diameter_m = \
+            self._validate_beam_cylindrical_diameter_m(beam.diameter_m, options, errors)
+        x0_m = \
+            self._validate_beam_cylindrical_x0_m(beam.x0_m, options, errors)
+        y0_m = \
+            self._validate_beam_cylindrical_y0_m(beam.y0_m, options, errors)
+
+        return CylindricalBeam(energy_eV, diameter_m, particle, x0_m, y0_m)
+
+    def _validate_beam_cylindrical_diameter_m(self, diameter_m, options, errors):
+        if diameter_m < 0.0:
+            exc = ValueError('Diameter ({0:g} m) must be greater or equal to 0.0.'
+                             .format(diameter_m))
+            errors.add(exc)
+
+        return diameter_m
+
+    def _validate_beam_cylindrical_x0_m(self, x0_m, options, errors):
+        if not math.isfinite(x0_m):
+            exc = ValueError('Initial x position must be a finite number.')
+            errors.add(exc)
+
+        return x0_m
+
+    def _validate_beam_cylindrical_y0_m(self, y0_m, options, errors):
+        if not math.isfinite(y0_m):
+            exc = ValueError('Initial y position must be a finite number.')
+            errors.add(exc)
+
+        return y0_m
 
     def _validate_beam_gaussian(self, beam, options, errors):
         energy_eV = \

@@ -37,6 +37,7 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                  'OptionsHDF5Handler = pymontecarlo.formats.hdf5.options.options:OptionsHDF5Handler',
 
+                 'CylindricalBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.cylindrical:CylindricalBeamHDF5Handler',
                  'GaussianBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.gaussian:GaussianBeamHDF5Handler',
 
                  'MaterialHDF5Handler = pymontecarlo.formats.hdf5.options.material:MaterialHDF5Handler',
@@ -77,6 +78,7 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                 [
                  'OptionsSeriesHandler = pymontecarlo.formats.series.options.options:OptionsSeriesHandler',
 
+                 'CylindricalBeamSeriesHandler = pymontecarlo.formats.series.options.beam.cylindrical:CylindricalBeamSeriesHandler',
                  'GaussianBeamSeriesHandler = pymontecarlo.formats.series.options.beam.gaussian:GaussianBeamSeriesHandler',
 
                  'MaterialSeriesHandler = pymontecarlo.formats.series.options.material:MaterialSeriesHandler',
@@ -118,6 +120,7 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'OptionsHtmlHandler = pymontecarlo.formats.html.options.options:OptionsHtmlHandler',
 
                  'GaussianBeamHtmlHandler = pymontecarlo.formats.html.options.beam.gaussian:GaussianBeamHtmlHandler',
+                 'CylindricalBeamHtmlHandler = pymontecarlo.formats.html.options.beam.cylindrical:CylindricalBeamHtmlHandler',
 
                  'MaterialHtmlHandler = pymontecarlo.formats.html.options.material:MaterialHtmlHandler',
                  'VacuumHtmlHandler = pymontecarlo.formats.html.options.material:VacuumHtmlHandler',
