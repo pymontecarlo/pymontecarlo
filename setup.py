@@ -22,7 +22,7 @@ INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
                     'matplotlib', 'tabulate', 'psutil', 'pandas',
                     'dominate']
-EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex']}
+EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex', 'sphinx_rtd_theme']}
 
 CMDCLASS = versioneer.get_cmdclass()
 
