@@ -103,19 +103,19 @@ class ExporterMock(Exporter):
         with open(filepath, 'w') as fp:
             json.dump(outdict, fp)
 
-    def _export_beam_gaussian(self, beam, errors, outdict):
+    def _export_beam_gaussian(self, beam, options, errors, outdict):
         outdict['beam'] = 'gaussian'
 
-    def _export_sample_substrate(self, sample, errors, outdict):
+    def _export_sample_substrate(self, sample, options, errors, outdict):
         outdict['sample'] = 'substrate'
 
-    def _export_analysis_photonintensity(self, analysis, errors, outdict):
+    def _export_analysis_photonintensity(self, analysis, options, errors, outdict):
         outdict.setdefault('analyses', []).append('photon intensity')
 
-    def _export_limit_showers(self, limit, errors, outdict):
+    def _export_limit_showers(self, limit, options, errors, outdict):
         outdict.setdefault('limits', []).append('showers')
 
-    def _export_model_generic(self, model, errors, outdict):
+    def _export_model_generic(self, model, options, errors, outdict):
         outdict.setdefault('models', []).append(model.name)
 
 class WorkerMock(Worker):
