@@ -42,11 +42,12 @@ class Analysis(Option):
         return False
 
     @abc.abstractproperty
-    def detectors(self):
+    def detector(self):
         """
-        Returns a :class:`tuple` of detectors used by this analysis.
+        Returns the detector used by this analysis or ``None`` if no detector
+        is necessary.
         """
-        return ()
+        return None
 
 class AnalysisBuilder(OptionBuilder):
     pass

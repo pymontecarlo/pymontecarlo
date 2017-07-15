@@ -52,8 +52,20 @@ class Options(Option):
             are_sequence_similar(self.limits, other.limits) and \
             are_sequence_similar(self.models, other.models)
 
-    def find_analyses(self, analysis_class):
-        return find_by_type(self.analyses, analysis_class)
+    def find_analyses(self, analysis_class, detector=None):
+        """
+        Finds all analyses matching the specified class.
+        If *detector* is not ``None``, the analysis detector must also be
+        equal to the specified detector.
+        
+        :return: :class:`list` of analysis objects
+        """
+        analyses = find_by_type(self.analyses, analysis_class)
+
+        if detector is None:
+            return analyses
+
+        return [analysis for analysis in analyses if analysis.detector == detector]
 
     def find_limits(self, limit_class):
         return find_by_type(self.limits, limit_class)
@@ -69,10 +81,7 @@ class Options(Option):
         """
         Returns a :class:`tuple` of all detectors defined in the analyses.
         """
-        detectors = []
-        for analysis in self.analyses:
-            detectors.extend(analysis.detectors)
-        return tuple(unique(detectors))
+        return tuple(unique(analysis.detector for analysis in self.analyses))
 
 class OptionsBuilder(OptionBuilder):
 

@@ -23,12 +23,12 @@ def expand_to_single(objects):
     return list(itertools.product(*combinations.values()))
 
 def expand_analyses_to_single_detector(analyses):
-    unique_detectors = unique(analysis.detectors for analysis in analyses)
+    unique_detectors = unique(analysis.detector for analysis in analyses)
 
     combinations = [[] for _ in range(len(unique_detectors))]
 
     for analysis in analyses:
-        index = unique_detectors.index(analysis.detectors)
+        index = unique_detectors.index(analysis.detector)
 
         combinations[index].append(analysis)
 

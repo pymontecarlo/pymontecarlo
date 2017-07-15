@@ -34,8 +34,8 @@ class PhotonAnalysis(Analysis):
             .format(classname=self.__class__.__name__, **self.__dict__)
 
     @property
-    def detectors(self):
-        return super().detectors + (self.photon_detector,)
+    def detector(self):
+        return self.photon_detector
 
 class PhotonAnalysisBuilder(AnalysisBuilder):
 
