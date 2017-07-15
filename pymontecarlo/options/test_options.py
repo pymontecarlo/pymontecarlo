@@ -15,6 +15,7 @@ from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel, EnergyLossModel
 from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.options.analysis.base import Analysis
 
 # Globals and constants variables.
 
@@ -34,6 +35,19 @@ class TestOptions(TestCase):
 
         detectors = self.options.find_detectors(Detector)
         self.assertEqual(1, len(detectors))
+
+    def testfind_analyses(self):
+        analyses = self.options.find_analyses(PhotonIntensityAnalysis)
+        self.assertEqual(1, len(analyses))
+
+        analyses = self.options.find_analyses(Analysis)
+        self.assertEqual(1, len(analyses))
+
+        analyses = self.options.find_analyses(PhotonIntensityAnalysis, self.options.detectors[0])
+        self.assertEqual(1, len(analyses))
+
+        analyses = self.options.find_analyses(Detector)
+        self.assertEqual(0, len(analyses))
 
     def testfind_limits(self):
         limits = self.options.find_limits(ShowersLimit)
