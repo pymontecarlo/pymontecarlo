@@ -113,6 +113,17 @@ def get_valid_filename(s):
     s = re.sub(r'(?u)[^-\w.]', '', s)
     return s[:255]
 
+def normalize_angle(angle_rad):
+    """
+    Ensure angle is between 0 and 360 (excluded).
+    """
+    angle_rad = angle_rad % (2 * math.pi)
+
+    if angle_rad < 0:
+        angle_rad += (2 * math.pi)
+
+    return angle_rad
+
 class MultiplierAttribute(object):
 
     def __init__(self, attrname, multiplier):
