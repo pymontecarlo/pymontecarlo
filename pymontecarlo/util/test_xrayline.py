@@ -11,9 +11,21 @@ import pyxray
 # Local modules.
 import pymontecarlo
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.util.xrayline import XrayLine
+from pymontecarlo.util.xrayline import XrayLine, find_lowest_energy_known_xrayline
 
 # Globals and constants variables.
+
+class TestXrayLineModule(TestCase):
+
+    def testfind_lowest_energy_known_xrayline(self):
+        xrayline = find_lowest_energy_known_xrayline([6])
+        self.assertEqual(xrayline, XrayLine(6, 'Ka1'))
+
+        xrayline = find_lowest_energy_known_xrayline([13])
+        self.assertEqual(xrayline, XrayLine(13, 'Ll'))
+
+        xrayline = find_lowest_energy_known_xrayline([13], minimum_energy_eV=1e3)
+        self.assertEqual(xrayline, XrayLine(13, 'Ka1'))
 
 class TestXrayLine(TestCase):
 
