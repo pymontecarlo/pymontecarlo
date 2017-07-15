@@ -21,6 +21,7 @@ from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis
+from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.formats.hdf5.base import HDF5Handler
 
 # Globals and constants variables.
@@ -89,6 +90,8 @@ class ExporterMock(Exporter):
 
         self.sample_export_methods[SubstrateSample] = self._export_sample_substrate
 
+        self.detector_export_methods[PhotonDetector] = self._export_detector_photon
+
         self.analysis_export_methods[PhotonIntensityAnalysis] = self._export_analysis_photonintensity
 
         self.limit_export_methods[ShowersLimit] = self._export_limit_showers
@@ -108,6 +111,9 @@ class ExporterMock(Exporter):
 
     def _export_sample_substrate(self, sample, options, errors, outdict):
         outdict['sample'] = 'substrate'
+
+    def _export_detector_photon(self, detect, options, errors, outdict):
+        outdict.setdefault('photon', []).append('photon')
 
     def _export_analysis_photonintensity(self, analysis, options, errors, outdict):
         outdict.setdefault('analyses', []).append('photon intensity')

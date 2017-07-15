@@ -20,6 +20,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.beam_export_methods = {}
         self.sample_export_methods = {}
+        self.detector_export_methods = {}
         self.analysis_export_methods = {}
         self.limit_export_methods = {}
         self.model_export_methods = {}
@@ -57,6 +58,7 @@ class Exporter(object, metaclass=abc.ABCMeta):
         """
         self._export_beam(options.beam, options, errors, *args, **kwargs)
         self._export_sample(options.sample, options, errors, *args, **kwargs)
+        self._export_detectors(options.detectors, options, errors, *args, **kwargs)
         self._export_analyses(options.analyses, options, errors, *args, **kwargs)
         self._export_limits(options.limits, options, errors, *args, **kwargs)
         self._export_models(options.models, options, errors, *args, **kwargs)
@@ -82,6 +84,21 @@ class Exporter(object, metaclass=abc.ABCMeta):
 
         method = self.sample_export_methods[sample_class]
         method(sample, options, errors, *args, **kwargs)
+
+    def _export_detectors(self, detectors, options, errors, *args, **kwargs):
+        for detector in detectors:
+            self._export_detector(detector, options, errors, *args, **kwargs)
+
+    def _export_detector(self, detector, options, errors, *args, **kwargs):
+        detector_class = detector.__class__
+        if detector_class not in self.detector_export_methods:
+            exc = ValueError('Detector ({0}) is not supported.'
+                             .format(detector_class.__name__))
+            errors.add(exc)
+            return
+
+        method = self.detector_export_methods[detector_class]
+        method(detector, options, errors, *args, **kwargs)
 
     def _export_analyses(self, analyses, options, errors, *args, **kwargs):
         for analysis in analyses:
