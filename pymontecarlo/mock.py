@@ -9,7 +9,6 @@ import time
 
 # Local modules.
 from pymontecarlo.program.base import Program
-from pymontecarlo.program.configurator import Configurator
 from pymontecarlo.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
 from pymontecarlo.program.validator import Validator
 from pymontecarlo.program.exporter import Exporter
@@ -31,26 +30,6 @@ class SampleMock(Sample):
     @property
     def materials(self):
         return []
-
-class ConfiguratorMock(Configurator):
-
-    def prepare_parser(self, parser, program=None):
-        parser.description = 'Configure Mock.'
-
-        kwargs = {}
-        kwargs['help'] = 'tore value internally'
-        if program is not None:
-            kwargs['default'] = program.foo
-            kwargs['help'] += ' (current: {})'.format(program.foo)
-        else:
-            kwargs['required'] = True
-        parser.add_argument('--foo', **kwargs)
-
-    def create_program(self, namespace, clasz):
-        return clasz(namespace.foo)
-
-    def fullname(self):
-        return 'Mock'
 
 class ExpanderMock(Expander):
 
