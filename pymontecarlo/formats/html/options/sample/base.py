@@ -14,34 +14,34 @@ from pymontecarlo.options.sample.base import Sample, Layer
 
 class SampleHtmlHandler(HtmlHandler):
 
-    def convert(self, sample, level=1):
-        root = super().convert(sample, level=1)
+    def convert(self, sample, settings, level=1):
+        root = super().convert(sample, settings, level)
 
         root += self._create_header(level, 'Angles')
         dl = tags.dl()
-        dl += self._create_description('Tilt', sample.tilt_rad, 'rad', Sample.TILT_TOLERANCE_rad)
-        dl += self._create_description('Azimuth', sample.azimuth_rad, 'rad', Sample.AZIMUTH_TOLERANCE_rad)
+        dl += self._create_description(settings, 'Tilt', sample.tilt_rad, 'rad', Sample.TILT_TOLERANCE_rad)
+        dl += self._create_description(settings, 'Azimuth', sample.azimuth_rad, 'rad', Sample.AZIMUTH_TOLERANCE_rad)
         root += dl
 
         root += self._create_header(level, 'Material(s)')
-        root += self._create_table_objects(sample.materials)
+        root += self._create_table_objects(sample.materials, settings)
 
         return root
 
 class LayerHtmlHandler(TableHtmlHandler):
 
-    def convert_rows(self, layer):
+    def convert_rows(self, layer, settings):
         row = OrderedDict()
 
-        key = self._create_label('Material')
-        value = self._format_value(layer.material.name)
+        key = self._create_label(settings, 'Material')
+        value = self._format_value(settings, layer.material.name)
         row[key] = value
 
-        key = self._create_label('Thickness', 'm')
-        value = self._format_value(layer.thickness_m, 'm', Layer.THICKNESS_TOLERANCE_m)
+        key = self._create_label(settings, 'Thickness', 'm')
+        value = self._format_value(settings, layer.thickness_m, 'm', Layer.THICKNESS_TOLERANCE_m)
         row[key] = value
 
-        rows = super().convert_rows(layer)
+        rows = super().convert_rows(layer, settings)
         rows.append(row)
         return rows
 
@@ -51,10 +51,10 @@ class LayerHtmlHandler(TableHtmlHandler):
 
 class LayeredSampleHtmlHandler(SampleHtmlHandler):
 
-    def convert(self, sample, level=1):
-        root = super().convert(sample, level=1)
+    def convert(self, sample, settings, level=1):
+        root = super().convert(sample, settings, level)
 
         root += self._create_header(level, 'Layer(s)')
-        root += self._create_table_objects(sample.layers)
+        root += self._create_table_objects(sample.layers, settings)
 
         return root

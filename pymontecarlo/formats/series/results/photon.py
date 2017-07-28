@@ -13,8 +13,8 @@ from pymontecarlo.util.xrayline import XrayLine
 
 class SeriesXrayLineColumn(SeriesColumn):
 
-    def __init__(self, xrayline, unit=None, tolerance=None):
-        super().__init__()
+    def __init__(self, settings, xrayline, unit=None, tolerance=None):
+        super().__init__(settings)
         self._xrayline = xrayline
         self._unit = unit
         self._tolerance = tolerance
@@ -29,11 +29,11 @@ class SeriesXrayLineColumn(SeriesColumn):
 
     @property
     def name(self):
-        return self.xrayline.name
+        return self.xrayline.getname(self.settings)
 
     @property
     def abbrev(self):
-        return self.xrayline.name
+        return self.xrayline.getname(self.settings)
 
     @property
     def unit(self):

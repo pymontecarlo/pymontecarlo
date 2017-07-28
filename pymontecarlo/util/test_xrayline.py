@@ -9,7 +9,6 @@ import logging
 import pyxray
 
 # Local modules.
-import pymontecarlo
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.util.xrayline import XrayLine, find_lowest_energy_known_xrayline
 
@@ -47,15 +46,14 @@ class TestXrayLine(TestCase):
         x = XrayLine(pyxray.Element(13), line)
         self.assertEqual(hash(x), hash(self.x))
 
-    def testname(self):
-        settings = pymontecarlo.settings
-        settings.preferred_xrayline_notation = 'siegbahn'
-        settings.preferred_xrayline_encoding = 'ascii'
-        self.assertEqual('Al Ka1', self.x.name)
+    def testgetname(self):
+        self.settings.preferred_xrayline_notation = 'siegbahn'
+        self.settings.preferred_xrayline_encoding = 'ascii'
+        self.assertEqual('Al Ka1', self.x.getname(self.settings))
 
-        settings.preferred_xrayline_notation = 'siegbahn'
-        settings.preferred_xrayline_encoding = 'latex'
-        self.assertEqual('Al \\ensuremath{\\mathrm{K}\\alpha_1}', self.x.name)
+        self.settings.preferred_xrayline_notation = 'siegbahn'
+        self.settings.preferred_xrayline_encoding = 'latex'
+        self.assertEqual('Al \\ensuremath{\\mathrm{K}\\alpha_1}', self.x.getname(self.settings))
 
     def test__eq__(self):
         K = pyxray.AtomicSubshell(1, 0, 1)

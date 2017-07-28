@@ -12,13 +12,13 @@ from pymontecarlo.options.beam.base import Beam
 
 class BeamSeriesHandler(SeriesHandler):
 
-    def convert(self, beam):
-        s = super().convert(beam)
+    def convert(self, beam, settings):
+        s = super().convert(beam, settings)
 
-        column = NamedSeriesColumn('beam energy', 'E0', 'eV', Beam.ENERGY_TOLERANCE_eV)
+        column = NamedSeriesColumn(settings, 'beam energy', 'E0', 'eV', Beam.ENERGY_TOLERANCE_eV)
         s[column] = beam.energy_eV
 
-        column = NamedSeriesColumn('beam particle', 'par')
+        column = NamedSeriesColumn(settings, 'beam particle', 'par')
         s[column] = str(beam.particle)
 
         return s

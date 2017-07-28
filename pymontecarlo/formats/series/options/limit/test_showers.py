@@ -19,7 +19,7 @@ class TestShowersLimitSeriesHandler(TestCase):
     def testconvert(self):
         handler = ShowersLimitSeriesHandler()
         limit = ShowersLimit(123)
-        s = handler.convert(limit)
+        s = handler.convert(limit, self.settings)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

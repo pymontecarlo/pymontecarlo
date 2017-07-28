@@ -18,8 +18,8 @@ class TestNamedSeriesColumn(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.column0 = NamedSeriesColumn('a', 'b')
-        self.column1 = NamedSeriesColumn('a', 'b', 'm', 0.1)
+        self.column0 = NamedSeriesColumn(self.settings, 'a', 'b')
+        self.column1 = NamedSeriesColumn(self.settings, 'a', 'b', 'm', 0.1)
 
     def testcompare(self):
         self.assertTrue(self.column0.compare('foo', 'foo'))
@@ -40,7 +40,7 @@ class TestErrorSeriesColumn(TestCase):
     def setUp(self):
         super().setUp()
 
-        parent = NamedSeriesColumn('a', 'b', 'm', 0.1)
+        parent = NamedSeriesColumn(self.settings, 'a', 'b', 'm', 0.1)
         self.column = ErrorSeriesColumn(parent)
 
     def testskeleton(self):

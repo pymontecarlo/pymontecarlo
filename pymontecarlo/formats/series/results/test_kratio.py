@@ -25,7 +25,7 @@ class TestKRatioResultSeriesHandler(TestCase):
         b.add_kratio((29, 'Ka1'), 2.0, 5.0)
         b.add_kratio((29, 'Ka'), 4.0, 5.0)
         result = b.build()
-        s = handler.convert(result)
+        s = handler.convert(result, self.settings)
         self.assertEqual(4, len(s))
 
 if __name__ == '__main__': #pragma: no cover

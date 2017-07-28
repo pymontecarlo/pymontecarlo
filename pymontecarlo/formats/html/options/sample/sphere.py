@@ -13,14 +13,14 @@ from pymontecarlo.options.sample.sphere import SphereSample
 
 class SphereSampleHtmlHandler(SampleHtmlHandler):
 
-    def convert(self, sample, level=1):
-        root = super().convert(sample, level)
+    def convert(self, sample, settings, level=1):
+        root = super().convert(sample, settings, level)
 
         root += self._create_header(level, 'Sphere')
 
         dl = tags.dl()
-        dl += self._create_description('Material', sample.material.name)
-        dl += self._create_description('Diameter', sample.diameter_m, 'm', SphereSample.DIAMETER_TOLERANCE_m)
+        dl += self._create_description(settings, 'Material', sample.material.name)
+        dl += self._create_description(settings, 'Diameter', sample.diameter_m, 'm', SphereSample.DIAMETER_TOLERANCE_m)
         root += dl
 
         return root

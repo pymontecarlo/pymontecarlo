@@ -20,7 +20,7 @@ class TestPhotonIntensityAnalysisHtmlHandler(TestCase):
         handler = PhotonIntensityAnalysisHtmlHandler()
         detector = self.create_basic_photondetector()
         analysis = PhotonIntensityAnalysis(detector)
-        root = handler.convert(analysis)
+        root = handler.convert(analysis, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

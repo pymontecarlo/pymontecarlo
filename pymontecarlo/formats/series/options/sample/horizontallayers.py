@@ -12,10 +12,10 @@ from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
 
 class HorizontalLayerSampleSeriesHandler(LayeredSampleHandler):
 
-    def convert(self, sample):
-        s = super().convert(sample)
+    def convert(self, sample, settings):
+        s = super().convert(sample, settings)
 
-        s_material = self._find_and_convert(sample.substrate_material, 'substrate ', 'subs ')
+        s_material = self._find_and_convert(sample.substrate_material, settings, 'substrate ', 'subs ')
         s = s.append(s_material)
 
         return s

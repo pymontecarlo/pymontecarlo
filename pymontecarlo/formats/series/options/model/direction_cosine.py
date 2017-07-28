@@ -13,10 +13,10 @@ from pymontecarlo.options.model.direction_cosine import DirectionCosineModel
 
 class DirectionCosineModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model):
-        s = super().convert(model)
+    def convert(self, model, settings):
+        s = super().convert(model, settings)
 
-        column = NamedSeriesColumn('direction cosine', 'cosine')
+        column = NamedSeriesColumn(settings, 'direction cosine', 'cosine')
         s[column] = model.name
 
         return s

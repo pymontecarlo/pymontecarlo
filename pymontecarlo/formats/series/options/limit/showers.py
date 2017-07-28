@@ -13,10 +13,10 @@ from pymontecarlo.options.limit.showers import ShowersLimit
 
 class ShowersLimitSeriesHandler(LimitSeriesHandler):
 
-    def convert(self, limit):
-        s = super().convert(limit)
+    def convert(self, limit, settings):
+        s = super().convert(limit, settings)
 
-        column = NamedSeriesColumn('number of trajectories', 'N')
+        column = NamedSeriesColumn(settings, 'number of trajectories', 'N')
         s[column] = limit.number_trajectories
 
         return s

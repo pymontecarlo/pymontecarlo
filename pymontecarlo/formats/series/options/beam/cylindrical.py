@@ -13,16 +13,16 @@ from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 
 class CylindricalBeamSeriesHandler(BeamSeriesHandler):
 
-    def convert(self, beam):
-        s = super().convert(beam)
+    def convert(self, beam, settings):
+        s = super().convert(beam, settings)
 
-        column = NamedSeriesColumn('beam diameter', 'd0', 'm', CylindricalBeam.DIAMETER_TOLERANCE_m)
+        column = NamedSeriesColumn(settings, 'beam diameter', 'd0', 'm', CylindricalBeam.DIAMETER_TOLERANCE_m)
         s[column] = beam.diameter_m
 
-        column = NamedSeriesColumn('beam initial x position', 'x0', 'm', CylindricalBeam.POSITION_TOLERANCE_m)
+        column = NamedSeriesColumn(settings, 'beam initial x position', 'x0', 'm', CylindricalBeam.POSITION_TOLERANCE_m)
         s[column] = beam.x0_m
 
-        column = NamedSeriesColumn('beam initial y position', 'y0', 'm', CylindricalBeam.POSITION_TOLERANCE_m)
+        column = NamedSeriesColumn(settings, 'beam initial y position', 'y0', 'm', CylindricalBeam.POSITION_TOLERANCE_m)
         s[column] = beam.y0_m
 
         return s

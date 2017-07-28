@@ -10,7 +10,7 @@ from pymontecarlo.formats.series.base import find_convert_serieshandler
 
 # Globals and constants variables.
 
-def create_options_dataframe(list_options, only_different_columns=False):
+def create_options_dataframe(list_options, settings, only_different_columns=False):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -21,7 +21,7 @@ def create_options_dataframe(list_options, only_different_columns=False):
 
     for options in list_options:
         handler = find_convert_serieshandler(options)
-        s = handler.convert(options)
+        s = handler.convert(options, settings)
         list_series.append(s)
 
     df = pd.DataFrame(list_series)

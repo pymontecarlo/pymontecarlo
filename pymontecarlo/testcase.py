@@ -15,7 +15,7 @@ import pkg_resources
 import h5py
 
 # Local modules.
-import pymontecarlo
+from pymontecarlo.settings import Settings
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
@@ -29,6 +29,8 @@ from pymontecarlo.options.analysis import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
 from pymontecarlo.mock import ProgramMock
+from pymontecarlo.util.entrypoint import \
+    reset_entrypoints, ENTRYPOINT_HDF5HANDLER
 
 # Globals and constants variables.
 
@@ -44,29 +46,24 @@ class TestCase(unittest.TestCase):
         # Add program HDF5 handler
         requirement = pkg_resources.Requirement('pymontecarlo')
         distribution = pkg_resources.working_set.find(requirement)
-        entry_map = distribution.get_entry_map('pymontecarlo.formats.hdf5')
+        entry_map = distribution.get_entry_map(ENTRYPOINT_HDF5HANDLER)
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
+        #
+        # Reset entry points
+        reset_entrypoints()
 
-        # Add program to available programs
-        entry_map = distribution.get_entry_map('pymontecarlo.program')
-        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
-                                                     attrs=('ProgramMock',),
-                                                     dist=distribution)
-
-        pymontecarlo.settings.reload()
-
-        pymontecarlo.settings.preferred_xrayline_encoding = 'utf16'
-        pymontecarlo.settings.preferred_xrayline_notation = 'iupac'
-        pymontecarlo.settings.clear_preferred_units()
+        cls.program = ProgramMock()
 
     def setUp(self):
         super().setUp()
 
         self.tmpdirs = []
 
-        self.program = ProgramMock()
+        self.settings = Settings()
+        self.settings.preferred_xrayline_encoding = 'utf16'
+        self.settings.preferred_xrayline_notation = 'iupac'
 
     def tearDown(self):
         super().tearDown()

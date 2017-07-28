@@ -19,7 +19,7 @@ class TestIonizationPotentialModelHtmlHandler(TestCase):
     def testconvert(self):
         handler = IonizationPotentialModelHtmlHandler()
         model = IonizationPotentialModel.BERGER_SELTZER1964
-        root = handler.convert(model)
+        root = handler.convert(model, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

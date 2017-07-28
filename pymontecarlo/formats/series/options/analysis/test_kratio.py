@@ -20,7 +20,7 @@ class TestKRatioAnalysisSeriesHandler(TestCase):
         handler = KRatioAnalysisSeriesHandler()
         detector = self.create_basic_photondetector()
         analysis = KRatioAnalysis(detector)
-        s = handler.convert(analysis)
+        s = handler.convert(analysis, self.settings)
         self.assertEqual(0, len(s))
 
 if __name__ == '__main__': #pragma: no cover

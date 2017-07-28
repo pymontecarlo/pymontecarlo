@@ -19,7 +19,7 @@ class TestMaterialHtmlHandler(TestCase):
     def testconvert(self):
         handler = MaterialHtmlHandler()
         material = Material('Brass', {29: 0.5, 30: 0.5}, 8960.0)
-        root = handler.convert(material)
+        root = handler.convert(material, self.settings)
         self.assertEqual(1, len(root.children))
 
 #        with open('/tmp/test.html', 'w') as fp:

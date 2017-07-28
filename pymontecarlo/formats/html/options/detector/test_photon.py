@@ -18,7 +18,7 @@ class TestPhotonDetectorHtmlHandler(TestCase):
     def testconvert(self):
         handler = PhotonDetectorHtmlHandler()
         detector = self.create_basic_photondetector()
-        root = handler.convert(detector)
+        root = handler.convert(detector, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

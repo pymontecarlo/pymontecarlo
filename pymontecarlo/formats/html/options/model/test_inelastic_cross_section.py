@@ -19,7 +19,7 @@ class TestInelasticCrossSectionModelHtmlHandler(TestCase):
     def testconvert(self):
         handler = InelasticCrossSectionModelHtmlHandler()
         model = InelasticCrossSectionModel.STERNHEIMER_LILJEQUIST1952
-        root = handler.convert(model)
+        root = handler.convert(model, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

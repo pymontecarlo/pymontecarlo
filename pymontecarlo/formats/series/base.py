@@ -8,40 +8,27 @@ import math
 import pandas as pd
 
 # Local modules.
-import pymontecarlo
 from pymontecarlo.exceptions import ConvertError
-from pymontecarlo.util.entrypoint import resolve_entrypoints
+from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_SERIESHANDLER
 from pymontecarlo.util.tolerance import tolerance_to_decimals
 from pymontecarlo.util.cbook import get_valid_filename
 
 # Globals and constants variables.
-ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
 
 def find_convert_serieshandler(obj):
-    for clasz in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER):
+    for clasz in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER).values():
         handler = clasz()
         if handler.can_convert(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
 
 def create_identifier(series):
-    try:
-        preferred_units = list(pymontecarlo.settings.preferred_units.values())
-        pymontecarlo.settings.clear_preferred_units(quiet=True)
-        pymontecarlo.settings.set_preferred_unit('nm', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('deg', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('keV', quiet=True)
-        pymontecarlo.settings.set_preferred_unit('g/cm^3', quiet=True)
-
-        items = []
-        for column, value in series.iteritems():
-            key = column.abbrev
-            value = column.format_value(value, tolerance=None)
-            unitname = column.unitname
-            items.append('{}_{}{}'.format(key, value, unitname))
-    finally:
-        for units in preferred_units:
-            pymontecarlo.settings.set_preferred_unit(units, quiet=True)
+    items = []
+    for column, value in series.iteritems():
+        key = column.abbrev
+        value = column.format_value(value, tolerance=None)
+        unitname = column.unitname
+        items.append('{}_{}{}'.format(key, value, unitname))
 
     return get_valid_filename('_'.join(items))
 
@@ -57,6 +44,9 @@ def update_with_prefix(s, prefix, prefix_abbrev=None):
 class SeriesColumn(metaclass=abc.ABCMeta):
 
     _default = object()
+
+    def __init__(self, settings):
+        self.settings = settings
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -86,15 +76,13 @@ class SeriesColumn(metaclass=abc.ABCMeta):
             unit = self.unit
 
         if unit is not None:
-            q = pymontecarlo.unit_registry.Quantity(value, unit)
-            q = pymontecarlo.settings.to_preferred_unit(q)
+            q = self.settings.to_preferred_unit(value, unit)
             value = q.magnitude
 
         if isinstance(value, float):
             if tolerance is not None:
                 if unit is not None:
-                    q_tolerance = pymontecarlo.unit_registry.Quantity(tolerance, unit)
-                    q_tolerance = pymontecarlo.settings.to_preferred_unit(q_tolerance)
+                    q_tolerance = self.settings.to_preferred_unit(tolerance, unit)
                     tolerance = q_tolerance.magnitude
 
                 precision = tolerance_to_decimals(tolerance)
@@ -109,8 +97,7 @@ class SeriesColumn(metaclass=abc.ABCMeta):
             unit = self.unit
 
         if unit is not None:
-            q = pymontecarlo.unit_registry.Quantity(value, unit)
-            q = pymontecarlo.settings.to_preferred_unit(q)
+            q = self.settings.to_preferred_unit(value, unit)
             value = q.magnitude
 
         return value
@@ -124,8 +111,7 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         if self.unit is None:
             return self.name
 
-        q = pymontecarlo.unit_registry.Quantity(1.0, self.unit)
-        q = pymontecarlo.settings.to_preferred_unit(q)
+        q = self.settings.to_preferred_unit(1.0, self.unit)
         unitname = '{0:~P}'.format(q.units)
         if not unitname: # required for radian and degree
             unitname = '{0:P}'.format(q.units)
@@ -145,8 +131,7 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         if self.unit is None:
             return ''
 
-        q = pymontecarlo.unit_registry.Quantity(1.0, self.unit)
-        q = pymontecarlo.settings.to_preferred_unit(q)
+        q = self.settings.to_preferred_unit(1.0, self.unit)
         unitname = '{0:~P}'.format(q.units)
         if not unitname: # required for radian and degree
             unitname = '{0:P}'.format(q.units)
@@ -159,8 +144,8 @@ class SeriesColumn(metaclass=abc.ABCMeta):
 
 class NamedSeriesColumn(SeriesColumn):
 
-    def __init__(self, name, abbrev, unit=None, tolerance=None):
-        super().__init__()
+    def __init__(self, settings, name, abbrev, unit=None, tolerance=None):
+        super().__init__(settings)
         self._name = name
         self._abbrev = abbrev
         self._unit = unit
@@ -185,7 +170,7 @@ class NamedSeriesColumn(SeriesColumn):
 class _ParentSeriesColumn(SeriesColumn):
 
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent.settings)
         self._parent = parent
 
     def __hash__(self):
@@ -247,8 +232,8 @@ class ErrorSeriesColumn(_ParentSeriesColumn):
 
 class SeriesHandler(object, metaclass=abc.ABCMeta):
 
-    def _find_and_convert(self, obj, prefix=None, prefix_abbrev=None):
-        s = find_convert_serieshandler(obj).convert(obj)
+    def _find_and_convert(self, obj, settings, prefix=None, prefix_abbrev=None):
+        s = find_convert_serieshandler(obj).convert(obj, settings)
 
         if prefix:
             s = update_with_prefix(s, prefix, prefix_abbrev)
@@ -259,7 +244,7 @@ class SeriesHandler(object, metaclass=abc.ABCMeta):
         return type(obj) is self.CLASS
 
     @abc.abstractmethod
-    def convert(self, obj):
+    def convert(self, obj, settings):
         return pd.Series()
 
     @abc.abstractproperty

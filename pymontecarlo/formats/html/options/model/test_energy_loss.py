@@ -19,7 +19,7 @@ class TestEnergyLossModelHtmlHandler(TestCase):
     def testconvert(self):
         handler = EnergyLossModelHtmlHandler()
         model = EnergyLossModel.BETHE1930
-        root = handler.convert(model)
+        root = handler.convert(model, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

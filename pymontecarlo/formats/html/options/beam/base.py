@@ -13,12 +13,12 @@ from pymontecarlo.options.beam.base import Beam
 
 class BeamHtmlHandler(HtmlHandler):
 
-    def convert(self, beam, level=1):
-        root = super().convert(beam, level=1)
+    def convert(self, beam, settings, level=1):
+        root = super().convert(beam, settings, level)
 
         dl = tags.dl()
-        dl += self._create_description('Energy', beam.energy_eV, 'eV', Beam.ENERGY_TOLERANCE_eV)
-        dl += self._create_description('Particle', beam.particle)
+        dl += self._create_description(settings, 'Energy', beam.energy_eV, 'eV', Beam.ENERGY_TOLERANCE_eV)
+        dl += self._create_description(settings, 'Particle', beam.particle)
         root += dl
 
         return root

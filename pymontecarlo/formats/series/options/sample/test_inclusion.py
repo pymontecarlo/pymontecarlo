@@ -20,7 +20,7 @@ class TestInclusionSampleSeriesHandler(TestCase):
     def testconvert(self):
         handler = InclusionSampleSeriesHandler()
         sample = InclusionSample(Material.pure(29), Material.pure(30), 50e-9, 0.1, 0.2)
-        s = handler.convert(sample)
+        s = handler.convert(sample, self.settings)
         self.assertEqual(7, len(s))
 
 if __name__ == '__main__': #pragma: no cover

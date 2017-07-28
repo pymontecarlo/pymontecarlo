@@ -13,20 +13,20 @@ from pymontecarlo.options.sample.inclusion import InclusionSample
 
 class InclusionSampleHtmlHandler(SampleHtmlHandler):
 
-    def convert(self, sample, level=1):
-        root = super().convert(sample, level)
+    def convert(self, sample, settings, level=1):
+        root = super().convert(sample, settings, level)
 
         root += self._create_header(level, 'Substrate')
 
         dl = tags.dl()
-        dl += self._create_description('Material', sample.substrate_material.name)
+        dl += self._create_description(settings, 'Material', sample.substrate_material.name)
         root += dl
 
         root += self._create_header(level, 'Inclusion')
 
         dl = tags.dl()
-        dl += self._create_description('Material', sample.inclusion_material.name)
-        dl += self._create_description('Diameter', sample.inclusion_diameter_m, 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
+        dl += self._create_description(settings, 'Material', sample.inclusion_material.name)
+        dl += self._create_description(settings, 'Diameter', sample.inclusion_diameter_m, 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
         root += dl
 
         return root

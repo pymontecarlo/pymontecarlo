@@ -13,22 +13,22 @@ from pymontecarlo.options.detector.photon import PhotonDetector
 
 class PhotonDetectorHtmlHandler(DetectorHtmlHandler):
 
-    def convert_rows(self, detector):
+    def convert_rows(self, detector, settings):
         row = OrderedDict()
 
-        key = self._create_label('Name')
-        value = self._format_value(detector.name)
+        key = self._create_label(settings, 'Name')
+        value = self._format_value(settings, detector.name)
         row[key] = value
 
-        key = self._create_label('Elevation', 'rad')
-        value = self._format_value(detector.elevation_rad, 'rad', PhotonDetector.ELEVATION_TOLERANCE_rad)
+        key = self._create_label(settings, 'Elevation', 'rad')
+        value = self._format_value(settings, detector.elevation_rad, 'rad', PhotonDetector.ELEVATION_TOLERANCE_rad)
         row[key] = value
 
-        key = self._create_label('Azimuth', 'rad')
-        value = self._format_value(detector.azimuth_rad, 'rad', PhotonDetector.AZIMUTH_TOLERANCE_rad)
+        key = self._create_label(settings, 'Azimuth', 'rad')
+        value = self._format_value(settings, detector.azimuth_rad, 'rad', PhotonDetector.AZIMUTH_TOLERANCE_rad)
         row[key] = value
 
-        rows = super().convert_rows(detector)
+        rows = super().convert_rows(detector, settings)
         rows.append(row)
         return rows
 

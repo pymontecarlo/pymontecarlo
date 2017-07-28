@@ -25,7 +25,7 @@ class TestHorizontalLayerSampleHtmlHandler(TestCase):
         sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(ZINC, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        root = handler.convert(sample)
+        root = handler.convert(sample, self.settings)
         self.assertEqual(8, len(root.children))
 
     def testconvert_vacuum(self):
@@ -33,7 +33,7 @@ class TestHorizontalLayerSampleHtmlHandler(TestCase):
         sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(VACUUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        root = handler.convert(sample)
+        root = handler.convert(sample, self.settings)
         self.assertEqual(8, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

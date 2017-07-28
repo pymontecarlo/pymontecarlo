@@ -19,7 +19,7 @@ class TestRandomNumberGeneratorModelHtmlHandler(TestCase):
     def testconvert(self):
         handler = RandomNumberGeneratorModelHtmlHandler()
         model = RandomNumberGeneratorModel.LAGGED_FIBONACCI
-        root = handler.convert(model)
+        root = handler.convert(model, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

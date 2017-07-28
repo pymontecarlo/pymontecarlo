@@ -15,11 +15,11 @@ from pymontecarlo.results.photonintensity import \
 
 class PhotonIntensityResultSeriesHandler(PhotonResultSeriesHandler):
 
-    def convert(self, result):
-        s = super().convert(result)
+    def convert(self, result, settings):
+        s = super().convert(result, settings)
 
         for xrayline, q in result.items():
-            column = SeriesXrayLineColumn(xrayline, unit='1/(sr.electron)')
+            column = SeriesXrayLineColumn(settings, xrayline, unit='1/(sr.electron)')
             s[column] = q.n
 
             column = ErrorSeriesColumn(column)

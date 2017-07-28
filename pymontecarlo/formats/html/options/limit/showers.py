@@ -13,11 +13,11 @@ from pymontecarlo.options.limit.showers import ShowersLimit
 
 class ShowersLimitHtmlHandler(LimitHtmlHandler):
 
-    def convert(self, limit, level=1):
-        root = super().convert(limit)
+    def convert(self, limit, settings, level=1):
+        root = super().convert(limit, settings, level)
 
         dl = tags.dl()
-        dl += self._create_description('Number of trajectories', limit.number_trajectories)
+        dl += self._create_description(settings, 'Number of trajectories', limit.number_trajectories)
         root += dl
 
         return root

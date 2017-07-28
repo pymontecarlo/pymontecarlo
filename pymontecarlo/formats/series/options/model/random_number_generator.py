@@ -13,10 +13,10 @@ from pymontecarlo.options.model.random_number_generator import RandomNumberGener
 
 class RandomNumberGeneratorModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model):
-        s = super().convert(model)
+    def convert(self, model, settings):
+        s = super().convert(model, settings)
 
-        column = NamedSeriesColumn('random number generator', 'random')
+        column = NamedSeriesColumn(settings, 'random number generator', 'random')
         s[column] = model.name
 
         return s

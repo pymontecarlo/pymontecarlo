@@ -24,11 +24,3 @@ unit_registry = pint.UnitRegistry()
 unit_registry.define('electron = mol')
 pint.set_application_registry(unit_registry)
 
-#--- Settings
-
-from pymontecarlo._settings import Settings
-
-try:
-    settings = Settings.read()
-except:
-    settings = Settings()

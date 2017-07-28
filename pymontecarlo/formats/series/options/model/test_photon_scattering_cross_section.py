@@ -19,7 +19,7 @@ class TestPhotonScatteringCrossSectionModelSeriesHandler(TestCase):
     def testconvert(self):
         handler = PhotonScatteringCrossSectionModelSeriesHandler()
         model = PhotonScatteringCrossSectionModel.BRUSA1996
-        s = handler.convert(model)
+        s = handler.convert(model, self.settings)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -6,7 +6,6 @@
 import pyxray
 
 # Local modules.
-import pymontecarlo
 
 # Globals and constants variables.
 
@@ -47,14 +46,6 @@ class XrayLine:
                 line = pyxray.xray_transitionset(line)
         self._line = line
 
-        self._name = None # Late initialization
-
-        signal = pymontecarlo.settings.preferred_xrayline_notation_changed
-        signal.connect(self._on_settings_changed)
-
-        signal = pymontecarlo.settings.preferred_xrayline_encoding_changed
-        signal.connect(self._on_settings_changed)
-
     def __hash__(self):
         return hash((self.element, self.line))
 
@@ -71,10 +62,7 @@ class XrayLine:
                                     self._element._repr_inner(),
                                     self._line._repr_inner())
 
-    def _on_settings_changed(self):
-        self._name = None
-
-    def _create_name(self, *args):
+    def getname(self, settings=None):
         symbol = pyxray.element_symbol(self.element)
 
         if self.is_xray_transitionset():
@@ -82,9 +70,8 @@ class XrayLine:
         else:
             method = pyxray.xray_transition_notation
 
-        settings = pymontecarlo.settings
-        preferred_notation = settings.preferred_xrayline_notation
-        preferred_encoding = settings.preferred_xrayline_encoding
+        preferred_notation = settings.preferred_xrayline_notation if settings else 'iupac'
+        preferred_encoding = settings.preferred_xrayline_encoding if settings else 'utf16'
 
         try:
             notation = method(self.line, preferred_notation, preferred_encoding)
@@ -107,10 +94,4 @@ class XrayLine:
     @property
     def line(self):
         return self._line
-
-    @property
-    def name(self):
-        if self._name is None:
-            self._name = self._create_name()
-        return self._name
 

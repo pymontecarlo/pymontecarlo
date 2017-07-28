@@ -11,6 +11,11 @@ from pkg_resources import iter_entry_points
 # Globals and constants variables.
 _ENTRYPOINTS = {}
 
+ENTRYPOINT_PROGRAMS = 'pymontecarlo.program'
+ENTRYPOINT_HDF5HANDLER = 'pymontecarlo.formats.hdf5'
+ENTRYPOINT_HTMLHANDLER = 'pymontecarlo.formats.html'
+ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
+
 def resolve_entrypoints(group):
     """
     Returns a dictionary where the keys are the entry point's name and
@@ -24,6 +29,9 @@ def resolve_entrypoints(group):
     if threading.current_thread() != threading.main_thread():
         raise RuntimeError('Handler must be initialized in main thread')
 
-    entrypoints = tuple(ep.resolve() for ep in iter_entry_points(group))
+    entrypoints = dict((ep.name, ep.resolve()) for ep in iter_entry_points(group))
     _ENTRYPOINTS[group] = entrypoints
     return entrypoints
+
+def reset_entrypoints():
+    _ENTRYPOINTS.clear()

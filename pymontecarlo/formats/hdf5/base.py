@@ -11,20 +11,19 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.exceptions import ParseError, ConvertError
-from pymontecarlo.util.entrypoint import resolve_entrypoints
+from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_HDF5HANDLER
 
 # Globals and constants variables.
-ENTRYPOINT_HDF5HANDLER = 'pymontecarlo.formats.hdf5'
 
 def find_parse_hdf5handler(group):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER):
+    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
         handler = clasz()
         if handler.can_parse(group):
             return handler
     raise ParseError("No handler found for group: {!r}".format(group))
 
 def find_convert_hdf5handler(obj, group):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER):
+    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
         handler = clasz()
         if handler.can_convert(obj, group):
             return handler

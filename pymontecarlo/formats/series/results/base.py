@@ -12,7 +12,7 @@ from pymontecarlo.exceptions import ConvertError
 
 # Globals and constants variables.
 
-def create_results_dataframe(list_results, result_classes=None):
+def create_results_dataframe(list_results, settings, result_classes=None):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -32,7 +32,7 @@ def create_results_dataframe(list_results, result_classes=None):
                 continue
 
             prefix = result.getname().lower() + ' '
-            s_result = handler.convert(result)
+            s_result = handler.convert(result, settings)
 
             if result_classes is None: # Include all results
                 s_result = update_with_prefix(s_result, prefix)

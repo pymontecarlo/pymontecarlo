@@ -19,7 +19,7 @@ class TestRandomNumberGeneratorModelSeriesHandler(TestCase):
     def testconvert(self):
         handler = RandomNumberGeneratorModelSeriesHandler()
         model = RandomNumberGeneratorModel.LAGGED_FIBONACCI
-        s = handler.convert(model)
+        s = handler.convert(model, self.settings)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

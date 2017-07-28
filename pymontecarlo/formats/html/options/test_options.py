@@ -38,7 +38,7 @@ class TestOptionsHtmlHandler(TestCase):
         analysis.add_standard_material(30, ZINC)
         options.analyses.append(analysis)
 
-        doc = handler.convert(options)
+        doc = handler.convert(options, self.settings)
         self.assertEqual(12, len(doc.getElementsByTagName('dt')))
 
 #        with open('/tmp/test.html', 'w') as fp:

@@ -7,6 +7,7 @@ Simulation.
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.settings import Settings
 from pymontecarlo.util.cbook import find_by_type
 from pymontecarlo.formats.series.base import \
     find_convert_serieshandler, create_identifier
@@ -23,8 +24,14 @@ class Simulation(object):
         self.results = results.copy()
 
         if identifier is None:
+            settings = Settings()
+            settings.set_preferred_unit('nm')
+            settings.set_preferred_unit('deg')
+            settings.set_preferred_unit('keV')
+            settings.set_preferred_unit('g/cm^3')
+
             handler = find_convert_serieshandler(options)
-            s = handler.convert(options)
+            s = handler.convert(options, settings)
             identifier = create_identifier(s)
         self.identifier = identifier
 

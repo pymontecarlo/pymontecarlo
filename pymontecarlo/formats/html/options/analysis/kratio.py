@@ -14,8 +14,8 @@ from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 
 class KRatioAnalysisHtmlHandler(PhotonAnalysisHtmlHandler):
 
-    def convert(self, analysis, level=1):
-        root = super().convert(analysis, level)
+    def convert(self, analysis, settings, level=1):
+        root = super().convert(analysis, settings, level)
 
         root += self._create_header(level, 'Standards')
 
@@ -23,12 +23,12 @@ class KRatioAnalysisHtmlHandler(PhotonAnalysisHtmlHandler):
         for z, material in analysis.standard_materials.items():
             row = OrderedDict()
 
-            key = self._create_label('Element')
-            value = self._format_value(pyxray.element_symbol(z))
+            key = self._create_label(settings, 'Element')
+            value = self._format_value(settings, pyxray.element_symbol(z))
             row[key] = value
 
-            key = self._create_label('Material')
-            value = self._format_value(material.name)
+            key = self._create_label(settings, 'Material')
+            value = self._format_value(settings, material.name)
             row[key] = value
 
             rows.append(row)

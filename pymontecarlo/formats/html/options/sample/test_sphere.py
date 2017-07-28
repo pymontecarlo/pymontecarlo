@@ -20,7 +20,7 @@ class TestSphereSampleHtmlHandler(TestCase):
     def testconvert(self):
         handler = SphereSampleHtmlHandler()
         sample = SphereSample(Material.pure(29), 50e-9, 0.1, 0.2)
-        root = handler.convert(sample)
+        root = handler.convert(sample, self.settings)
         self.assertEqual(6, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

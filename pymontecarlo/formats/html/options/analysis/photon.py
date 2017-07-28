@@ -12,11 +12,11 @@ from pymontecarlo.formats.html.options.analysis.base import AnalysisHtmlHandler
 
 class PhotonAnalysisHtmlHandler(AnalysisHtmlHandler):
 
-    def convert(self, analysis, level=1):
-        root = super().convert(analysis, level)
+    def convert(self, analysis, settings, level=1):
+        root = super().convert(analysis, settings, level)
 
         dl = tags.dl()
-        dl += self._create_description('Detector', analysis.photon_detector.name)
+        dl += self._create_description(settings, 'Detector', analysis.photon_detector.name)
         root += dl
 
         return root

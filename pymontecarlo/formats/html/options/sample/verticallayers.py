@@ -13,15 +13,15 @@ from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 class VerticalLayerSampleHtmlHandler(LayeredSampleHtmlHandler):
 
-    def convert(self, sample, level=1):
-        root = super().convert(sample, level=1)
+    def convert(self, sample, settings, level=1):
+        root = super().convert(sample, settings, level)
 
         root += self._create_header(level, 'Substrates')
 
         dl = tags.dl()
-        dl += self._create_description('Left material', sample.left_material.name)
-        dl += self._create_description('Right material', sample.right_material.name)
-        dl += self._create_description('Depth', sample.depth_m, 'm', VerticalLayerSample.DEPTH_TOLERANCE_m)
+        dl += self._create_description(settings, 'Left material', sample.left_material.name)
+        dl += self._create_description(settings, 'Right material', sample.right_material.name)
+        dl += self._create_description(settings, 'Depth', sample.depth_m, 'm', VerticalLayerSample.DEPTH_TOLERANCE_m)
         root += dl
 
         return root

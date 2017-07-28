@@ -13,10 +13,10 @@ from pymontecarlo.options.model.mass_absorption_coefficient import MassAbsorptio
 
 class MassAbsorptionCoefficientModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model):
-        s = super().convert(model)
+    def convert(self, model, settings):
+        s = super().convert(model, settings)
 
-        column = NamedSeriesColumn('mass absorption coefficient', 'mac')
+        column = NamedSeriesColumn(settings, 'mass absorption coefficient', 'mac')
         s[column] = model.name
 
         return s

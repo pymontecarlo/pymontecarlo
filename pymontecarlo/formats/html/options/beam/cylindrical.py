@@ -12,13 +12,13 @@ from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 
 class CylindricalBeamHtmlHandler(BeamHtmlHandler):
 
-    def convert(self, beam, level=1):
-        root = super().convert(beam, level=1)
+    def convert(self, beam, settings, level=1):
+        root = super().convert(beam, settings, level)
 
         dl = root.getElementsByTagName('dl')[-1]
-        dl += self._create_description('Diameter', beam.diameter_m, 'm', CylindricalBeam.DIAMETER_TOLERANCE_m)
-        dl += self._create_description('Initial x position', beam.x0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)
-        dl += self._create_description('Initial y position', beam.y0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)
+        dl += self._create_description(settings, 'Diameter', beam.diameter_m, 'm', CylindricalBeam.DIAMETER_TOLERANCE_m)
+        dl += self._create_description(settings, 'Initial x position', beam.x0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)
+        dl += self._create_description(settings, 'Initial y position', beam.y0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)
 
         return root
 

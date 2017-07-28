@@ -13,10 +13,10 @@ from pymontecarlo.options.model.energy_loss import EnergyLossModel
 
 class EnergyLossModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model):
-        s = super().convert(model)
+    def convert(self, model, settings):
+        s = super().convert(model, settings)
 
-        column = NamedSeriesColumn('energy loss', 'dE/dS')
+        column = NamedSeriesColumn(settings, 'energy loss', 'dE/dS')
         s[column] = model.name
 
         return s

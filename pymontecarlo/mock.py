@@ -151,14 +151,6 @@ class ProgramMock(Program):
     def __init__(self, foo=None):
         self.foo = foo
 
-    @classmethod
-    def getidentifier(cls):
-        return 'mock'
-
-    @classmethod
-    def create_configurator(cls):
-        return ConfiguratorMock()
-
     def create_expander(self):
         return ExpanderMock()
 
@@ -176,6 +168,10 @@ class ProgramMock(Program):
 
     def create_default_limits(self, options):
         return [ShowersLimit(100)]
+
+    @property
+    def name(self):
+        return 'mock'
 
 class ProgramHDF5HandlerMock(HDF5Handler):
 

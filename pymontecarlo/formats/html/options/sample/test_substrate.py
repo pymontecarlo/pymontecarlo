@@ -20,7 +20,7 @@ class TestSubstrateSampleHtmlHandler(TestCase):
     def testconvert(self):
         handler = SubstrateSampleHtmlHandler()
         sample = SubstrateSample(Material.pure(29), 0.1, 0.2)
-        root = handler.convert(sample)
+        root = handler.convert(sample, self.settings)
         self.assertEqual(4, len(root.children))
 
 #        with open('/tmp/test.html', 'w') as fp:

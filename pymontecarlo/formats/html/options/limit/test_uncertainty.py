@@ -21,7 +21,7 @@ class TestUncertaintyLimitHtmlHandler(TestCase):
         handler = UncertaintyLimitHtmlHandler()
         detector = self.create_basic_photondetector()
         limit = UncertaintyLimit(XrayLine(13, 'Ka1'), detector, 0.02)
-        root = handler.convert(limit)
+        root = handler.convert(limit, self.settings)
         self.assertEqual(1, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

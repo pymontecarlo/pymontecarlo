@@ -15,23 +15,10 @@ class Program(metaclass=abc.ABCMeta):
 
     def __repr__(self):
         return '<{classname}({name})>' \
-            .format(classname=self.__class__.__name__, name=self.getidentifier())
+            .format(classname=self.__class__.__name__, name=self.name)
 
-    @abc.abstractclassmethod
-    def getidentifier(cls): #@NoSelf
-        """
-        Returns key to identify program. Should not contain any white space.
-        
-        .. note:: This is a class method.
-        """
-        raise NotImplementedError
-
-    @abc.abstractclassmethod
-    def create_configurator(cls): #@NoSelf
-        """
-        .. note:: This is a class method.
-        """
-        raise NotImplementedError
+    def __eq__(self, other):
+        return type(other) == type(self) and self.name == other.name
 
     @abc.abstractmethod
     def create_expander(self):
@@ -55,4 +42,8 @@ class Program(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_default_limits(self, options):
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def name(self):
         raise NotImplementedError

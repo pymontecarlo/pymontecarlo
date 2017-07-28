@@ -12,26 +12,26 @@ from pymontecarlo.options.sample.base import Sample, Layer
 
 class SampleSeriesHandler(SeriesHandler):
 
-    def convert(self, sample):
-        s = super().convert(sample)
+    def convert(self, sample, settings):
+        s = super().convert(sample, settings)
 
-        column = NamedSeriesColumn('sample tilt', 'theta0', 'rad', Sample.TILT_TOLERANCE_rad)
+        column = NamedSeriesColumn(settings, 'sample tilt', 'theta0', 'rad', Sample.TILT_TOLERANCE_rad)
         s[column] = sample.tilt_rad
 
-        column = NamedSeriesColumn('sample azimuth', 'phi0', 'rad', Sample.AZIMUTH_TOLERANCE_rad)
+        column = NamedSeriesColumn(settings, 'sample azimuth', 'phi0', 'rad', Sample.AZIMUTH_TOLERANCE_rad)
         s[column] = sample.azimuth_rad
 
         return s
 
 class LayerSeriesHandler(SeriesHandler):
 
-    def convert(self, layer):
-        s = super().convert(layer)
+    def convert(self, layer, settings):
+        s = super().convert(layer, settings)
 
-        s_material = self._find_and_convert(layer.material)
+        s_material = self._find_and_convert(layer.material, settings)
         s = s.append(s_material)
 
-        column = NamedSeriesColumn('thickness', 't', 'm', Layer.THICKNESS_TOLERANCE_m)
+        column = NamedSeriesColumn(settings, 'thickness', 't', 'm', Layer.THICKNESS_TOLERANCE_m)
         s[column] = layer.thickness_m
 
         return s
@@ -42,14 +42,14 @@ class LayerSeriesHandler(SeriesHandler):
 
 class LayeredSampleHandler(SampleSeriesHandler):
 
-    def convert(self, sample):
-        s = super().convert(sample)
+    def convert(self, sample, settings):
+        s = super().convert(sample, settings)
 
         for i, layer in enumerate(sample.layers):
             prefix = "layer #{0:d} ".format(i)
             prefix_abbrev = "L{0:d} ".format(i)
 
-            s_layer = self._find_and_convert(layer, prefix, prefix_abbrev)
+            s_layer = self._find_and_convert(layer, settings, prefix, prefix_abbrev)
             s = s.append(s_layer)
 
         return s

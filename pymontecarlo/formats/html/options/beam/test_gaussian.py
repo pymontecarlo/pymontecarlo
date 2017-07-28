@@ -20,7 +20,7 @@ class TestGaussianBeamHtmlHandler(TestCase):
     def testconvert(self):
         handler = GaussianBeamHtmlHandler()
         beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
-        root = handler.convert(beam)
+        root = handler.convert(beam, self.settings)
         self.assertEqual(1, len(root.children))
 
 #        with open('/tmp/test.html', 'w') as fp:

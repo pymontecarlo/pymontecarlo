@@ -20,7 +20,7 @@ class TestInclusionSampleHtmlHandler(TestCase):
     def testconvert(self):
         handler = InclusionSampleHtmlHandler()
         sample = InclusionSample(Material.pure(29), Material.pure(30), 50e-9, 0.1, 0.2)
-        root = handler.convert(sample)
+        root = handler.convert(sample, self.settings)
         self.assertEqual(8, len(root.children))
 
 if __name__ == '__main__': #pragma: no cover

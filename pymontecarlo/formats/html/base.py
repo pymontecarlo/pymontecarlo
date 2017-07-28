@@ -8,16 +8,14 @@ import dominate.tags as tags
 from dominate.util import raw
 
 # Local modules.
-import pymontecarlo
 from pymontecarlo.exceptions import ConvertError
-from pymontecarlo.util.entrypoint import resolve_entrypoints
+from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_HTMLHANDLER
 from pymontecarlo.util.tolerance import tolerance_to_decimals
 
 # Globals and constants variables.
-ENTRYPOINT_HTMLHANDLER = 'pymontecarlo.formats.html'
 
 def find_convert_htmlhandler(obj):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HTMLHANDLER):
+    for clasz in resolve_entrypoints(ENTRYPOINT_HTMLHANDLER).values():
         handler = clasz()
         if handler.can_convert(obj):
             return handler
@@ -25,21 +23,19 @@ def find_convert_htmlhandler(obj):
 
 class HtmlHandler(object, metaclass=abc.ABCMeta):
 
-    def _find_and_convert(self, obj, level=1):
-        return find_convert_htmlhandler(obj).convert(obj, level)
+    def _find_and_convert(self, obj, settings, level=1):
+        return find_convert_htmlhandler(obj).convert(obj, settings, level)
 
-    def _format_value(self, value, unit=None, tolerance=None):
+    def _format_value(self, settings, value, unit=None, tolerance=None):
         precision = None
         if tolerance is not None:
             if unit is not None:
-                q_tolerance = pymontecarlo.unit_registry.Quantity(tolerance, unit)
-                q_tolerance = pymontecarlo.settings.to_preferred_unit(q_tolerance)
+                q_tolerance = settings.to_preferred_unit(tolerance, unit)
                 tolerance = q_tolerance.magnitude
             precision = tolerance_to_decimals(tolerance)
 
         if unit is not None:
-            q = pymontecarlo.unit_registry.Quantity(value, unit)
-            q = pymontecarlo.settings.to_preferred_unit(q)
+            q = settings.to_preferred_unit(value, unit)
             value = q.magnitude
 
         if isinstance(value, float):
@@ -50,10 +46,9 @@ class HtmlHandler(object, metaclass=abc.ABCMeta):
 
         return '{}'.format(value)
 
-    def _create_label(self, label, unit=None):
+    def _create_label(self, settings, label, unit=None):
         if unit is not None:
-            q = pymontecarlo.unit_registry.Quantity(1.0, unit)
-            q = pymontecarlo.settings.to_preferred_unit(q)
+            q = settings.to_preferred_unit(1.0, unit)
             unit = q.units
 
             unitname = '{:~H}'.format(unit)
@@ -68,11 +63,11 @@ class HtmlHandler(object, metaclass=abc.ABCMeta):
         clasz = getattr(tags, 'h{:d}'.format(level))
         return clasz(text)
 
-    def _create_description(self, label, value, unit=None, tolerance=None):
-        label = self._create_label(label, unit)
+    def _create_description(self, settings, label, value, unit=None, tolerance=None):
+        label = self._create_label(settings, label, unit)
         dt = tags.dt(raw(label))
 
-        value = self._format_value(value, unit, tolerance)
+        value = self._format_value(settings, value, unit, tolerance)
         dd = tags.dd(value)
 
         return [dt, dd]
@@ -106,12 +101,12 @@ class HtmlHandler(object, metaclass=abc.ABCMeta):
 
         return table
 
-    def _create_table_objects(self, objs):
+    def _create_table_objects(self, objs, settings):
         # Accumulate rows
         rows = []
         for obj in objs:
             handler = find_convert_htmlhandler(obj)
-            rows.extend(handler.convert_rows(obj))
+            rows.extend(handler.convert_rows(obj, settings))
 
         return self._create_table(rows)
 
@@ -119,7 +114,7 @@ class HtmlHandler(object, metaclass=abc.ABCMeta):
         return type(obj) is self.CLASS
 
     @abc.abstractmethod
-    def convert(self, obj, level=1):
+    def convert(self, obj, settings, level=1):
         return tags.html_tag()
 
     @abc.abstractproperty
@@ -133,10 +128,10 @@ class HtmlHandler(object, metaclass=abc.ABCMeta):
 class TableHtmlHandler(HtmlHandler):
 
     @abc.abstractmethod
-    def convert_rows(self, obj):
+    def convert_rows(self, obj, settings):
         return []
 
-    def convert(self, obj, level=1):
-        root = super().convert(obj, level)
-        root += self._create_table_objects([obj])
+    def convert(self, obj, settings, level=1):
+        root = super().convert(obj, settings, level)
+        root += self._create_table_objects([obj], settings)
         return root

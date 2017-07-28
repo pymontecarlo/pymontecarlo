@@ -13,10 +13,10 @@ from pymontecarlo.options.limit.uncertainty import UncertaintyLimit
 
 class UncertaintyLimitSeriesHandler(LimitSeriesHandler):
 
-    def convert(self, limit):
-        s = super().convert(limit)
+    def convert(self, limit, settings):
+        s = super().convert(limit, settings)
 
-        column = NamedSeriesColumn('uncertainty value', 'unc', tolerance=UncertaintyLimit.UNCERTAINTY_TOLERANCE)
+        column = NamedSeriesColumn(settings, 'uncertainty value', 'unc', tolerance=UncertaintyLimit.UNCERTAINTY_TOLERANCE)
         s[column] = limit.uncertainty
 
         return s
