@@ -16,14 +16,16 @@ from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_HDF5HAN
 # Globals and constants variables.
 
 def find_parse_hdf5handler(group):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
+    for entrypoint in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
+        clasz = entrypoint.resolve()
         handler = clasz()
         if handler.can_parse(group):
             return handler
     raise ParseError("No handler found for group: {!r}".format(group))
 
 def find_convert_hdf5handler(obj, group):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
+    for entrypoint in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
+        clasz = entrypoint.resolve()
         handler = clasz()
         if handler.can_convert(obj, group):
             return handler

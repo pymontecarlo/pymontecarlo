@@ -16,7 +16,8 @@ from pymontecarlo.util.cbook import get_valid_filename
 # Globals and constants variables.
 
 def find_convert_serieshandler(obj):
-    for clasz in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER).values():
+    for entrypoint in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER).values():
+        clasz = entrypoint.resolve()
         handler = clasz()
         if handler.can_convert(obj):
             return handler

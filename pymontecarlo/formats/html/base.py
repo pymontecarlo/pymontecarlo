@@ -15,7 +15,8 @@ from pymontecarlo.util.tolerance import tolerance_to_decimals
 # Globals and constants variables.
 
 def find_convert_htmlhandler(obj):
-    for clasz in resolve_entrypoints(ENTRYPOINT_HTMLHANDLER).values():
+    for entrypoint in resolve_entrypoints(ENTRYPOINT_HTMLHANDLER).values():
+        clasz = entrypoint.resolve()
         handler = clasz()
         if handler.can_convert(obj):
             return handler

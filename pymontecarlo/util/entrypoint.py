@@ -19,7 +19,7 @@ ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
 def resolve_entrypoints(group):
     """
     Returns a dictionary where the keys are the entry point's name and
-    the values are the entry point's class.
+    the values are the entry point.
     """
     if group in _ENTRYPOINTS:
         return _ENTRYPOINTS[group]
@@ -29,7 +29,7 @@ def resolve_entrypoints(group):
     if threading.current_thread() != threading.main_thread():
         raise RuntimeError('Handler must be initialized in main thread')
 
-    entrypoints = dict((ep.name, ep.resolve()) for ep in iter_entry_points(group))
+    entrypoints = dict((ep.name, ep) for ep in iter_entry_points(group))
     _ENTRYPOINTS[group] = entrypoints
     return entrypoints
 

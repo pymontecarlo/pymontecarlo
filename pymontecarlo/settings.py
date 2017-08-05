@@ -10,9 +10,6 @@ import pymontecarlo
 from pymontecarlo.util.path import get_config_dir
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.util.entrypoint import \
-    resolve_entrypoints, ENTRYPOINT_PROGRAMS
-from pymontecarlo.exceptions import ProgramNotFound
 
 # Globals and constants variables.
 
@@ -60,20 +57,3 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
             return q.to(preferred_unit)
         except KeyError:
             return q.to(base_unit)
-
-def is_program_available(name):
-    return name in resolve_entrypoints(ENTRYPOINT_PROGRAMS)
-
-def get_program(name, *args, **kwargs):
-    """
-    Returns an instance of a program.
-    The program is created based on the provided ``*args`` and ``**kwargs``.
-    
-    :exc: raises :class:`ProgramNotFound` if no program is found
-    """
-    try:
-        clasz = resolve_entrypoints(ENTRYPOINT_PROGRAMS)[name]
-    except KeyError:
-        raise ProgramNotFound('Program {} does not exist'.format(name))
-
-    return clasz(*args, **kwargs)
