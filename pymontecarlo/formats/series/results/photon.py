@@ -29,11 +29,14 @@ class SeriesXrayLineColumn(SeriesColumn):
 
     @property
     def name(self):
-        return self.xrayline.getname(self.settings)
+        if self.settings.preferred_xrayline_notation == 'siegbahn':
+            return self.xrayline.siegbahn
+        else:
+            return self.xrayline.iupac
 
     @property
     def abbrev(self):
-        return self.xrayline.getname(self.settings)
+        return self.name
 
     @property
     def unit(self):

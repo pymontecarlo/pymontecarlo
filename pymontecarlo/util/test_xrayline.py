@@ -46,14 +46,11 @@ class TestXrayLine(TestCase):
         x = XrayLine(pyxray.Element(13), line)
         self.assertEqual(hash(x), hash(self.x))
 
-    def testgetname(self):
-        self.settings.preferred_xrayline_notation = 'siegbahn'
-        self.settings.preferred_xrayline_encoding = 'ascii'
-        self.assertEqual('Al Ka1', self.x.getname(self.settings))
+    def testiupac(self):
+        self.assertEqual('Al K\u2013L3', self.x.iupac)
 
-        self.settings.preferred_xrayline_notation = 'siegbahn'
-        self.settings.preferred_xrayline_encoding = 'latex'
-        self.assertEqual('Al \\ensuremath{\\mathrm{K}\\alpha_1}', self.x.getname(self.settings))
+    def testsiegbahn(self):
+        self.assertEqual('Al K\u03b11', self.x.siegbahn)
 
     def test__eq__(self):
         K = pyxray.AtomicSubshell(1, 0, 1)
