@@ -9,6 +9,7 @@ import pandas as pd
 
 # Local modules.
 from pymontecarlo.exceptions import ConvertError
+from pymontecarlo.settings import Settings
 from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_SERIESHANDLER
 from pymontecarlo.util.tolerance import tolerance_to_decimals
 from pymontecarlo.util.cbook import get_valid_filename
@@ -23,7 +24,13 @@ def find_convert_serieshandler(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
 
-def create_identifier(settings, series):
+def create_identifier(series):
+    settings = Settings()
+    settings.set_preferred_unit('nm')
+    settings.set_preferred_unit('deg')
+    settings.set_preferred_unit('keV')
+    settings.set_preferred_unit('g/cm^3')
+
     items = []
     for column, value in series.iteritems():
         key = column.abbrev

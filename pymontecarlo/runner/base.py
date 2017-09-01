@@ -9,7 +9,6 @@ import abc
 
 # Local modules.
 from pymontecarlo.project import Project
-from pymontecarlo.settings import Settings
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.future import FutureExecutor, Token, FutureAdapter
 from pymontecarlo.util.cbook import unique
@@ -20,17 +19,13 @@ from pymontecarlo.formats.series.options.base import create_options_dataframe
 
 class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
-    def __init__(self, project=None, settings=None, max_workers=1):
+    def __init__(self, project=None, max_workers=1):
         super().__init__(max_workers)
         self.submitted_options = []
 
         if project is None:
             project = Project()
         self.project = project
-
-        if settings is None:
-            settings = Settings()
-        self.settings = settings
 
     def _on_done(self, future):
         simulation = super()._on_done(future)
@@ -103,7 +98,7 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
 
         identifiers = []
         for _index, series in df.iterrows():
-            identifiers.append(create_identifier(self.settings, series))
+            identifiers.append(create_identifier(series))
 
         return identifiers
 
