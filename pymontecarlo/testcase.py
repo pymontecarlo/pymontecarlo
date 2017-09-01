@@ -15,7 +15,7 @@ import pkg_resources
 import h5py
 
 # Local modules.
-from pymontecarlo.settings import Settings
+from pymontecarlo.settings import Settings, XrayNotation
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
@@ -71,8 +71,7 @@ class TestCase(unittest.TestCase):
         self.tmpdirs = []
 
         self.settings = Settings()
-        self.settings.preferred_xrayline_encoding = 'utf16'
-        self.settings.preferred_xrayline_notation = 'iupac'
+        self.settings.preferred_xray_notation = XrayNotation.IUPAC
 
     def tearDown(self):
         super().tearDown()

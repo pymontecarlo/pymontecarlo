@@ -11,7 +11,7 @@ import math
 
 # Local modules.
 from pymontecarlo import unit_registry
-from pymontecarlo.settings import Settings
+from pymontecarlo.settings import Settings, XrayNotation
 from pymontecarlo.testcase import TestCase
 import pymontecarlo.util.physics as physics
 
@@ -25,16 +25,14 @@ class TestSettings(TestCase):
         self.settings = Settings()
 
     def testread_write(self):
-        self.settings.preferred_xrayline_encoding = 'latex'
-        self.settings.preferred_xrayline_notation = 'siegbahn'
+        self.settings.preferred_xray_notation = XrayNotation.SIEGBAHN
         self.settings.set_preferred_unit('nm')
 
         filepath = os.path.join(self.create_temp_dir(), 'settings.h5')
         self.settings.write(filepath)
 
         settings = Settings.read(filepath)
-        self.assertEqual('latex', settings.preferred_xrayline_encoding)
-        self.assertEqual('siegbahn', settings.preferred_xrayline_notation)
+        self.assertEqual(XrayNotation.SIEGBAHN, settings.preferred_xray_notation)
         self.assertEqual(unit_registry.nanometer, settings.to_preferred_unit(1.0, unit_registry.meter).units)
 
     def testset_preferred_unit(self):

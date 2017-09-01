@@ -8,6 +8,7 @@
 from pymontecarlo.formats.series.base import SeriesColumn
 from pymontecarlo.formats.series.results.base import ResultSeriesHandler
 from pymontecarlo.util.xrayline import XrayLine
+from pymontecarlo.settings import XrayNotation
 
 # Globals and constants variables.
 
@@ -29,7 +30,7 @@ class SeriesXrayLineColumn(SeriesColumn):
 
     @property
     def name(self):
-        if self.settings.preferred_xrayline_notation == 'siegbahn':
+        if self.settings.preferred_xray_notation == XrayNotation.SIEGBAHN:
             return self.xrayline.siegbahn
         else:
             return self.xrayline.iupac

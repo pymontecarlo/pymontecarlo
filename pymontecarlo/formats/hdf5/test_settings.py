@@ -18,8 +18,7 @@ class TestSettingsHDF5Handler(TestCase):
     def testconvert_parse(self):
         handler = SettingsHDF5Handler()
         settings2 = self.convert_parse_hdf5handler(handler, self.settings)
-        self.assertEqual(self.settings.preferred_xrayline_encoding, settings2.preferred_xrayline_encoding)
-        self.assertEqual(self.settings.preferred_xrayline_notation, settings2.preferred_xrayline_notation)
+        self.assertEqual(self.settings.preferred_xray_notation, settings2.preferred_xray_notation)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

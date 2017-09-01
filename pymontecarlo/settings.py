@@ -2,6 +2,7 @@
 
 # Standard library modules.
 import os
+import enum
 
 # Third party modules.
 
@@ -13,6 +14,10 @@ from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
 
 # Globals and constants variables.
 
+class XrayNotation(enum.Enum):
+    IUPAC = 'iupac'
+    SIEGBAHN = 'siegbahn'
+
 class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
@@ -22,8 +27,7 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
         self.preferred_units = {}
 
         # X-ray line
-        self.preferred_xrayline_notation = 'iupac'
-        self.preferred_xrayline_encoding = 'utf16'
+        self.preferred_xray_notation = XrayNotation.IUPAC
 
     @classmethod
     def read(cls, filepath=None):
