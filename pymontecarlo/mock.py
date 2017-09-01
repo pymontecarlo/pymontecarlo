@@ -199,13 +199,13 @@ class ProgramHDF5HandlerMock(ProgramHDF5Handler):
 
 class ProgramSeriesHandlerMock(ProgramSeriesHandler):
 
-    def convert(self, program, settings):
-        s = super().convert(program, settings)
+    def convert(self, program):
+        s = super().convert(program)
 
-        column = NamedSeriesColumn(settings, 'foo', 'foo')
+        column = NamedSeriesColumn('foo', 'foo')
         s[column] = program.foo
 
-        s_model = self._find_and_convert(program.elastic_cross_section_model, settings)
+        s_model = self._find_and_convert(program.elastic_cross_section_model)
         s = s.append(s_model)
 
         return s

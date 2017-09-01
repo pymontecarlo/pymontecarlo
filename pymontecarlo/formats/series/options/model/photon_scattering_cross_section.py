@@ -13,10 +13,10 @@ from pymontecarlo.options.model.photon_scattering_cross_section import PhotonSca
 
 class PhotonScatteringCrossSectionModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model, settings):
-        s = super().convert(model, settings)
+    def convert(self, model):
+        s = super().convert(model)
 
-        column = NamedSeriesColumn(settings, 'photon scattering cross-section', 'ph. scatter')
+        column = NamedSeriesColumn('photon scattering cross-section', 'ph. scatter')
         s[column] = model.name
 
         return s

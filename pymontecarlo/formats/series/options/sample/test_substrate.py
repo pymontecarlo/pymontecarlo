@@ -20,7 +20,7 @@ class TestSubstrateSampleSeriesHandler(TestCase):
     def testconvert(self):
         handler = SubstrateSampleSeriesHandler()
         sample = SubstrateSample(Material.pure(29), 0.1, 0.2)
-        s = handler.convert(sample, self.settings)
+        s = handler.convert(sample)
         self.assertEqual(4, len(s))
 
 if __name__ == '__main__': #pragma: no cover

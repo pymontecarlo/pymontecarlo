@@ -23,12 +23,12 @@ def find_convert_serieshandler(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
 
-def create_identifier(series):
+def create_identifier(settings, series):
     items = []
     for column, value in series.iteritems():
         key = column.abbrev
-        value = column.format_value(value, tolerance=None)
-        unitname = column.unitname
+        value = column.format_value(settings, value, tolerance=None)
+        unitname = column.format_unit(settings)
         items.append('{}_{}{}'.format(key, value, unitname))
 
     return get_valid_filename('_'.join(items))
@@ -45,9 +45,6 @@ def update_with_prefix(s, prefix, prefix_abbrev=None):
 class SeriesColumn(metaclass=abc.ABCMeta):
 
     _default = object()
-
-    def __init__(self, settings):
-        self.settings = settings
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -70,20 +67,42 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return math.isclose(value0, value1, abs_tol=self.tolerance)
 
-    def format_value(self, value, unit=_default, tolerance=_default):
+    def format_name(self, settings):
+        if self.unit is None:
+            return self.name
+
+        q = settings.to_preferred_unit(1.0, self.unit)
+        unitname = '{0:~P}'.format(q.units)
+        if not unitname: # required for radian and degree
+            unitname = '{0:P}'.format(q.units)
+
+        return '{} [{}]'.format(self.name, unitname)
+
+    def format_unit(self, settings):
+        if self.unit is None:
+            return ''
+
+        q = settings.to_preferred_unit(1.0, self.unit)
+        unitname = '{0:~P}'.format(q.units)
+        if not unitname: # required for radian and degree
+            unitname = '{0:P}'.format(q.units)
+
+        return unitname
+
+    def format_value(self, settings, value, unit=_default, tolerance=_default):
         if tolerance is self._default:
             tolerance = self.tolerance
         if unit is self._default:
             unit = self.unit
 
         if unit is not None:
-            q = self.settings.to_preferred_unit(value, unit)
+            q = settings.to_preferred_unit(value, unit)
             value = q.magnitude
 
         if isinstance(value, float):
             if tolerance is not None:
                 if unit is not None:
-                    q_tolerance = self.settings.to_preferred_unit(tolerance, unit)
+                    q_tolerance = settings.to_preferred_unit(tolerance, unit)
                     tolerance = q_tolerance.magnitude
 
                 precision = tolerance_to_decimals(tolerance)
@@ -93,12 +112,12 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return '{}'.format(value)
 
-    def convert_value(self, value, unit=_default):
+    def convert_value(self, settings, value, unit=_default):
         if unit is self._default:
             unit = self.unit
 
         if unit is not None:
-            q = self.settings.to_preferred_unit(value, unit)
+            q = settings.to_preferred_unit(value, unit)
             value = q.magnitude
 
         return value
@@ -106,18 +125,6 @@ class SeriesColumn(metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def name(self):
         raise NotImplementedError
-
-    @property
-    def fullname(self):
-        if self.unit is None:
-            return self.name
-
-        q = self.settings.to_preferred_unit(1.0, self.unit)
-        unitname = '{0:~P}'.format(q.units)
-        if not unitname: # required for radian and degree
-            unitname = '{0:P}'.format(q.units)
-
-        return '{} [{}]'.format(self.name, unitname)
 
     @abc.abstractproperty
     def abbrev(self):
@@ -127,26 +134,14 @@ class SeriesColumn(metaclass=abc.ABCMeta):
     def unit(self):
         raise NotImplementedError
 
-    @property
-    def unitname(self):
-        if self.unit is None:
-            return ''
-
-        q = self.settings.to_preferred_unit(1.0, self.unit)
-        unitname = '{0:~P}'.format(q.units)
-        if not unitname: # required for radian and degree
-            unitname = '{0:P}'.format(q.units)
-
-        return unitname
-
     @abc.abstractproperty
     def tolerance(self):
         raise NotImplementedError
 
 class NamedSeriesColumn(SeriesColumn):
 
-    def __init__(self, settings, name, abbrev, unit=None, tolerance=None):
-        super().__init__(settings)
+    def __init__(self, name, abbrev, unit=None, tolerance=None):
+        super().__init__()
         self._name = name
         self._abbrev = abbrev
         self._unit = unit
@@ -171,7 +166,7 @@ class NamedSeriesColumn(SeriesColumn):
 class _ParentSeriesColumn(SeriesColumn):
 
     def __init__(self, parent):
-        super().__init__(parent.settings)
+        super().__init__()
         self._parent = parent
 
     def __hash__(self):
@@ -233,8 +228,8 @@ class ErrorSeriesColumn(_ParentSeriesColumn):
 
 class SeriesHandler(object, metaclass=abc.ABCMeta):
 
-    def _find_and_convert(self, obj, settings, prefix=None, prefix_abbrev=None):
-        s = find_convert_serieshandler(obj).convert(obj, settings)
+    def _find_and_convert(self, obj, prefix=None, prefix_abbrev=None):
+        s = find_convert_serieshandler(obj).convert(obj)
 
         if prefix:
             s = update_with_prefix(s, prefix, prefix_abbrev)
@@ -245,7 +240,7 @@ class SeriesHandler(object, metaclass=abc.ABCMeta):
         return type(obj) is self.CLASS
 
     @abc.abstractmethod
-    def convert(self, obj, settings):
+    def convert(self, obj):
         return pd.Series()
 
     @abc.abstractproperty

@@ -13,10 +13,10 @@ from pymontecarlo.options.model.inelastic_cross_section import InelasticCrossSec
 
 class InelasticCrossSectionModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model, settings):
-        s = super().convert(model, settings)
+    def convert(self, model):
+        s = super().convert(model)
 
-        column = NamedSeriesColumn(settings, 'inelastic cross-section', 'inelastic')
+        column = NamedSeriesColumn('inelastic cross-section', 'inelastic')
         s[column] = model.name
 
         return s

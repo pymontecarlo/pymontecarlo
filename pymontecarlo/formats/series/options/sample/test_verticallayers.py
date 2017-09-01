@@ -26,7 +26,7 @@ class TestVerticalLayerSampleSeriesHandler(TestCase):
         sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        s = handler.convert(sample, self.settings)
+        s = handler.convert(sample)
         self.assertEqual(13, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -19,7 +19,7 @@ class TestDirectionCosineModelSeriesHandler(TestCase):
     def testconvert(self):
         handler = DirectionCosineModelSeriesHandler()
         model = DirectionCosineModel.DEMERS2000
-        s = handler.convert(model, self.settings)
+        s = handler.convert(model)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -14,8 +14,8 @@ from pymontecarlo.settings import XrayNotation
 
 class SeriesXrayLineColumn(SeriesColumn):
 
-    def __init__(self, settings, xrayline, unit=None, tolerance=None):
-        super().__init__(settings)
+    def __init__(self, xrayline, unit=None, tolerance=None):
+        super().__init__()
         self._xrayline = xrayline
         self._unit = unit
         self._tolerance = tolerance
@@ -28,12 +28,15 @@ class SeriesXrayLineColumn(SeriesColumn):
     def __hash__(self):
         return hash(self.xrayline)
 
-    @property
-    def name(self):
-        if self.settings.preferred_xray_notation == XrayNotation.SIEGBAHN:
+    def format_name(self, settings):
+        if settings.preferred_xray_notation == XrayNotation.SIEGBAHN:
             return self.xrayline.siegbahn
         else:
             return self.xrayline.iupac
+
+    @property
+    def name(self):
+        return self.xrayline.iupac
 
     @property
     def abbrev(self):

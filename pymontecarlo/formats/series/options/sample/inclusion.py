@@ -13,16 +13,16 @@ from pymontecarlo.options.sample.inclusion import InclusionSample
 
 class InclusionSampleSeriesHandler(SampleSeriesHandler):
 
-    def convert(self, sample, settings):
-        s = super().convert(sample, settings)
+    def convert(self, sample):
+        s = super().convert(sample)
 
-        s_material = self._find_and_convert(sample.substrate_material, settings, 'substrate ', 'subs ')
+        s_material = self._find_and_convert(sample.substrate_material, 'substrate ', 'subs ')
         s = s.append(s_material)
 
-        s_material = self._find_and_convert(sample.inclusion_material, settings, 'inclusion ', 'incl ')
+        s_material = self._find_and_convert(sample.inclusion_material, 'inclusion ', 'incl ')
         s = s.append(s_material)
 
-        column = NamedSeriesColumn(settings, 'inclusion diameter', 'd', 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
+        column = NamedSeriesColumn('inclusion diameter', 'd', 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
         s[column] = sample.inclusion_diameter_m
 
         return s

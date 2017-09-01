@@ -11,10 +11,10 @@ from pymontecarlo.formats.series.base import SeriesHandler, NamedSeriesColumn
 
 class ProgramSeriesHandler(SeriesHandler):
 
-    def convert(self, program, settings):
-        s = super().convert(program, settings)
+    def convert(self, program):
+        s = super().convert(program)
 
-        column = NamedSeriesColumn(settings, 'program', 'prog')
+        column = NamedSeriesColumn('program', 'prog')
         s[column] = program.name
 
         return s

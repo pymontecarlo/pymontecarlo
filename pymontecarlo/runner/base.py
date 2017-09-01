@@ -99,11 +99,11 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         return final_list_options
 
     def _create_identifiers(self, list_options):
-        df = create_options_dataframe(list_options, self.settings, only_different_columns=True)
+        df = create_options_dataframe(list_options, only_different_columns=True)
 
         identifiers = []
         for _index, series in df.iterrows():
-            identifiers.append(create_identifier(series))
+            identifiers.append(create_identifier(self.settings, series))
 
         return identifiers
 

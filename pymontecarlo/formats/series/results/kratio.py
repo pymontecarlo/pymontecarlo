@@ -14,11 +14,11 @@ from pymontecarlo.results.kratio import KRatioResult
 
 class KRatioResultSeriesHandler(PhotonResultSeriesHandler):
 
-    def convert(self, result, settings):
-        s = super().convert(result, settings)
+    def convert(self, result):
+        s = super().convert(result)
 
         for xrayline, q in result.items():
-            column = SeriesXrayLineColumn(settings, xrayline)
+            column = SeriesXrayLineColumn(xrayline)
             s[column] = q.n
 
             column = ErrorSeriesColumn(column)

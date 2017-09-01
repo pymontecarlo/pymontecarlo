@@ -13,16 +13,16 @@ from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 class VerticalLayerSampleSeriesHandler(LayeredSampleHandler):
 
-    def convert(self, sample, settings):
-        s = super().convert(sample, settings)
+    def convert(self, sample):
+        s = super().convert(sample)
 
-        s_material = self._find_and_convert(sample.left_material, settings, 'left substrate ', 'left ')
+        s_material = self._find_and_convert(sample.left_material, 'left substrate ', 'left ')
         s = s.append(s_material)
 
-        s_material = self._find_and_convert(sample.right_material, settings, 'right substrate ', 'right ')
+        s_material = self._find_and_convert(sample.right_material, 'right substrate ', 'right ')
         s = s.append(s_material)
 
-        column = NamedSeriesColumn(settings, 'vertical layers depth', 'zmax', 'm', VerticalLayerSample.DEPTH_TOLERANCE_m)
+        column = NamedSeriesColumn('vertical layers depth', 'zmax', 'm', VerticalLayerSample.DEPTH_TOLERANCE_m)
         s[column] = sample.depth_m
 
         return s

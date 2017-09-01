@@ -31,8 +31,8 @@ class Simulation(object):
             settings.set_preferred_unit('g/cm^3')
 
             handler = find_convert_serieshandler(options)
-            s = handler.convert(options, settings)
-            identifier = create_identifier(s)
+            s = handler.convert(options)
+            identifier = create_identifier(settings, s)
         self.identifier = identifier
 
     def __eq__(self, other):

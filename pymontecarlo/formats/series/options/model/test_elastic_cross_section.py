@@ -19,7 +19,7 @@ class TestElasticCrossSectionModelSeriesHandler(TestCase):
     def testconvert(self):
         handler = ElasticCrossSectionModelSeriesHandler()
         model = ElasticCrossSectionModel.ELSEPA2005
-        s = handler.convert(model, self.settings)
+        s = handler.convert(model)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

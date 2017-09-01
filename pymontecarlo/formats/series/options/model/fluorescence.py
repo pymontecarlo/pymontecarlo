@@ -12,10 +12,10 @@ from pymontecarlo.options.model.fluorescence import FluorescenceModel
 
 class FluorescenceModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model, settings):
-        s = super().convert(model, settings)
+    def convert(self, model):
+        s = super().convert(model)
 
-        column = NamedSeriesColumn(settings, 'fluorescence', 'fluo')
+        column = NamedSeriesColumn('fluorescence', 'fluo')
         s[column] = model.name
 
         return s

@@ -18,7 +18,7 @@ class TestProgramSeriesHandler(TestCase):
     def testconvert(self):
         handler = ProgramSeriesHandlerMock()
         program = self.create_basic_program()
-        s = handler.convert(program, self.settings)
+        s = handler.convert(program)
         self.assertEqual(3, len(s))
         self.assertEqual('mock', s['program'])
         self.assertEqual(123, s['foo'])

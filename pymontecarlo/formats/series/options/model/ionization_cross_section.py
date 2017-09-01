@@ -12,10 +12,10 @@ from pymontecarlo.options.model.ionization_cross_section import IonizationCrossS
 
 class IonizationCrossSectionModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model, settings):
-        s = super().convert(model, settings)
+    def convert(self, model):
+        s = super().convert(model)
 
-        column = NamedSeriesColumn(settings, 'ionization cross-section', 'ioniz. xsection')
+        column = NamedSeriesColumn('ionization cross-section', 'ioniz. xsection')
         s[column] = model.name
 
         return s

@@ -13,13 +13,13 @@ from pymontecarlo.options.sample.sphere import SphereSample
 
 class SphereSampleSeriesHandler(SampleSeriesHandler):
 
-    def convert(self, sample, settings):
-        s = super().convert(sample, settings)
+    def convert(self, sample):
+        s = super().convert(sample)
 
-        s_material = self._find_and_convert(sample.material, settings, 'sphere ', 'sphere ')
+        s_material = self._find_and_convert(sample.material, 'sphere ', 'sphere ')
         s = s.append(s_material)
 
-        column = NamedSeriesColumn(settings, 'sphere diameter', 'd', 'm', SphereSample.DIAMETER_TOLERANCE_m)
+        column = NamedSeriesColumn('sphere diameter', 'd', 'm', SphereSample.DIAMETER_TOLERANCE_m)
         s[column] = sample.diameter_m
 
         return s

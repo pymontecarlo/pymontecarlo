@@ -13,10 +13,10 @@ from pymontecarlo.options.model.ionization_potential import IonizationPotentialM
 
 class IonizationPotentialModelSeriesHandler(ModelSeriesHandler):
 
-    def convert(self, model, settings):
-        s = super().convert(model, settings)
+    def convert(self, model):
+        s = super().convert(model)
 
-        column = NamedSeriesColumn(settings, 'ionization potential', 'ioniz. potential')
+        column = NamedSeriesColumn('ionization potential', 'ioniz. potential')
         s[column] = model.name
 
         return s
