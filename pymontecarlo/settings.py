@@ -33,6 +33,9 @@ class Settings(HDF5ReaderMixin, HDF5WriterMixin):
     def read(cls, filepath=None):
         if filepath is None:
             filepath = os.path.join(get_config_dir(), cls.DEFAULT_FILENAME)
+            if not os.path.exists(filepath):
+                return cls()
+
         return super().read(filepath)
 #
     def write(self, filepath=None):
