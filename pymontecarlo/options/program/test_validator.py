@@ -9,8 +9,8 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.mock import ValidatorMock
 from pymontecarlo.exceptions import ValidationError
-from pymontecarlo.program.validator import Validator
 from pymontecarlo.options.material import Material, VACUUM
 from pymontecarlo.options.beam.gaussian import GaussianBeam
 from pymontecarlo.options.beam.cylindrical import CylindricalBeam
@@ -18,7 +18,6 @@ from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
      VerticalLayerSample, SphereSample)
 from pymontecarlo.options.detector.photon import PhotonDetector
-from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel, MassAbsorptionCoefficientModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.util.xrayline import XrayLine
@@ -34,27 +33,7 @@ class TestValidator(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.v = Validator()
-
-        self.v.beam_validate_methods[CylindricalBeam] = self.v._validate_beam_cylindrical
-        self.v.beam_validate_methods[GaussianBeam] = self.v._validate_beam_gaussian
-
-        self.v.sample_validate_methods[SubstrateSample] = self.v._validate_sample_substrate
-        self.v.sample_validate_methods[InclusionSample] = self.v._validate_sample_inclusion
-        self.v.sample_validate_methods[HorizontalLayerSample] = self.v._validate_sample_horizontallayers
-        self.v.sample_validate_methods[VerticalLayerSample] = self.v._validate_sample_verticallayers
-        self.v.sample_validate_methods[SphereSample] = self.v._validate_sample_sphere
-
-        self.v.analysis_validate_methods[PhotonIntensityAnalysis] = self.v._validate_analysis_photonintensity
-        self.v.analysis_validate_methods[KRatioAnalysis] = self.v._validate_analysis_kratio
-
-        self.v.limit_validate_methods[ShowersLimit] = self.v._validate_limit_showers
-        self.v.limit_validate_methods[UncertaintyLimit] = self.v._validate_limit_uncertainty
-
-        self.v.model_validate_methods[ElasticCrossSectionModel] = self.v._validate_model_valid_models
-
-        self.v.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.ELSEPA2005]
-        self.v.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.ELSEPA2005
+        self.v = ValidatorMock()
 
         self.options = self.create_basic_options()
 
@@ -217,74 +196,22 @@ class TestValidator(TestCase):
         self.v._validate_analysis(analysis, self.options, errors)
         self.assertEqual(4, len(errors))
 
-    def testvalidate_limit_showers(self):
-        limit = ShowersLimit(1000)
-        limit2 = self.v.validate_limit(limit, self.options)
-        self.assertEqual(limit2, limit)
-        self.assertIsNot(limit2, limit)
-
-    def testvalidate_limit_showers_exception(self):
-        limit = ShowersLimit(0)
-        self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
-
+    def test_validate_model(self):
+        model = ElasticCrossSectionModel.RUTHERFORD
         errors = set()
-        self.v._validate_limit(limit, self.options, errors)
-        self.assertEqual(1, len(errors))
-
-    def testvalidate_limit_uncertainty(self):
-        xrayline = XrayLine(13, 'Ka1')
-        detector = PhotonDetector('det', 1.1, 2.2)
-        limit = UncertaintyLimit(xrayline, detector, 0.02)
-        limit2 = self.v.validate_limit(limit, self.options)
-        self.assertEqual(limit2, limit)
-        self.assertIsNot(limit2, limit)
-
-    def testvalidate_limit_uncertainty_exception(self):
-        xrayline = XrayLine(13, 'Ka1')
-        detector = PhotonDetector('', float('nan'), -1)
-        limit = UncertaintyLimit(xrayline, detector, 0.0)
-        self.assertRaises(ValidationError, self.v.validate_limit, limit, self.options)
-
-        errors = set()
-        self.v._validate_limit(limit, self.options, errors)
-        self.assertEqual(3, len(errors))
-
-    def testvalidate_models(self):
-        models = [ElasticCrossSectionModel.ELSEPA2005]
-        models2 = self.v.validate_models(models, self.options)
-        self.assertSequenceEqual(models2, models)
-
-    def testvalidate_models_exception(self):
-        models = [ElasticCrossSectionModel.RUTHERFORD]
-        self.assertRaises(ValidationError, self.v.validate_models, models, self.options)
-
-        errors = set()
-        self.v._validate_models(models, self.options, errors)
-        self.assertEqual(1, len(errors))
-
-    def testvalidate_models_default(self):
-        models = []
-        models2 = self.v.validate_models(models, self.options)
-        self.assertSequenceEqual(models2, [ElasticCrossSectionModel.ELSEPA2005])
-
-    def testvalidate_model(self):
-        model = ElasticCrossSectionModel.ELSEPA2005
-        model2 = self.v.validate_model(model, self.options)
+        model2 = self.v._validate_model(model, self.options, errors)
         self.assertEqual(model2, model)
         self.assertIs(model2, model)
+        self.assertEqual(0, len(errors))
 
-    def testvalidate_model_exception(self):
-        model = ElasticCrossSectionModel.RUTHERFORD
-        self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
-
+    def test_validate_model_exception(self):
+        model = ElasticCrossSectionModel.ELSEPA2005
         errors = set()
         self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))
 
-    def testvalidate_model_exception2(self):
+    def test_validate_model_exception2(self):
         model = MassAbsorptionCoefficientModel.POUCHOU_PICHOIR1991
-        self.assertRaises(ValidationError, self.v.validate_model, model, self.options)
-
         errors = set()
         self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))

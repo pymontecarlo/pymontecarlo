@@ -17,7 +17,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 
-from pymontecarlo.program.importer import Importer # @UnusedImport
+from pymontecarlo.options.program.importer import Importer # @UnusedImport
 
 # Globals and constants variables.
 

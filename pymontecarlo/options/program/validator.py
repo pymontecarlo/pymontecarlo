@@ -3,6 +3,7 @@ Base validation.
 """
 
 # Standard library modules.
+import abc
 import math
 
 # Third party modules.
@@ -22,14 +23,12 @@ from pymontecarlo.options.sample import \
 from pymontecarlo.options.sample.base import Layer
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
-from pymontecarlo.options.limit import ShowersLimit, UncertaintyLimit
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
-class Validator(object):
+class Validator(object, metaclass=abc.ABCMeta):
     """
     Base validator of options and its components.
     
@@ -42,9 +41,6 @@ class Validator(object):
         self.beam_validate_methods = {}
         self.sample_validate_methods = {}
         self.analysis_validate_methods = {}
-        self.limit_validate_methods = {}
-        self.model_validate_methods = {}
-
         self.valid_models = {}
         self.default_models = {}
 
@@ -66,12 +62,8 @@ class Validator(object):
             self._validate_sample(options.sample, options, errors)
         analyses = \
             self._validate_analyses(options.analyses, options, errors)
-        limits = \
-            self._validate_limits(options.limits, options, errors)
-        models = \
-            self._validate_models(options.models, options, errors)
 
-        return Options(program, beam, sample, analyses, limits, models)
+        return Options(program, beam, sample, analyses)
 
     def validate_program(self, program, options):
         errors = set()
@@ -82,8 +74,17 @@ class Validator(object):
 
         return program
 
+    @abc.abstractmethod
     def _validate_program(self, program, options, errors):
-        return program
+        raise NotImplementedError
+
+    def _validate_model(self, model, options, errors):
+        model_class = model.__class__
+        if model not in self.valid_models.get(model_class, []):
+            exc = ValueError('Model ({0}) is not supported.'.format(model))
+            errors.add(exc)
+
+        return model
 
     def validate_beam(self, beam, options):
         errors = set()
@@ -493,143 +494,6 @@ class Validator(object):
 
         return azimuth_rad
 
-    def validate_limits(self, limits, options):
-        errors = set()
-        limits = self._validate_limits(limits, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return limits
-
-    def _validate_limits(self, limits, options, errors):
-        if not limits:
-            limits = options.program.create_default_limits(options)
-
-        outlimits = []
-
-        for limit in limits:
-            outlimit = self._validate_limit(limit, options, errors)
-            outlimits.append(outlimit)
-
-        return outlimits
-
-    def validate_limit(self, limit, options):
-        errors = set()
-        limit = self._validate_limit(limit, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return limit
-
-    def _validate_limit(self, limit, options, errors):
-        limit_class = limit.__class__
-        if limit_class not in self.limit_validate_methods:
-            exc = ValueError('Limit ({0}) is not supported.'
-                             .format(limit_class.__name__))
-            errors.add(exc)
-            return limit
-
-        method = self.limit_validate_methods[limit_class]
-        return method(limit, options, errors)
-
-    def _validate_limit_showers(self, limit, options, errors):
-        showers = \
-            self._validate_limit_showers_number_trajectories(limit.number_trajectories, options, errors)
-
-        return ShowersLimit(showers)
-
-    def _validate_limit_showers_number_trajectories(self, number_trajectories, options, errors):
-        number_trajectories = int(number_trajectories)
-
-        if number_trajectories <= 0:
-            exc = ValueError('Number of trajectories ({0:d}) must be greater than 0.'
-                             .format(number_trajectories))
-            errors.add(exc)
-
-        return number_trajectories
-
-    def _validate_limit_uncertainty(self, limit, options, errors):
-        xrayline = \
-            self._validate_limit_uncertainty_xrayline(limit.xrayline, options, errors)
-        detector = \
-            self._validate_limit_uncertainty_detector(limit.detector, options, errors)
-        uncertainty = \
-            self._validate_limit_uncertainty_uncertainty(limit.uncertainty, options, errors)
-
-        return UncertaintyLimit(xrayline, detector, uncertainty)
-
-    def _validate_limit_uncertainty_xrayline(self, xrayline, options, errors):
-        # Notes: No validate is required. Arguments are internally validated.
-        return XrayLine(xrayline.element, xrayline.line)
-
-    def _validate_limit_uncertainty_detector(self, detector, options, errors):
-        return self._validate_detector_photon(detector, options, errors)
-
-    def _validate_limit_uncertainty_uncertainty(self, uncertainty, options, errors):
-        if uncertainty <= 0:
-            exc = ValueError('Uncertainty ({0:g}) must be greater than 0.'
-                             .format(uncertainty))
-            errors.add(exc)
-
-        return uncertainty
-
-    def validate_models(self, models, options):
-        errors = set()
-        models = self._validate_models(models, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return models
-
-    def _validate_models(self, models, options, errors):
-        outmodels = []
-
-        for model in models:
-            outmodel = self._validate_model(model, options, errors)
-            outmodels.append(outmodel)
-
-        # Add default model if missing
-        model_classes = set()
-        for model in outmodels:
-            model_classes.add(model.__class__)
-
-        for model_class, default_model in self.default_models.items():
-            if model_class not in model_classes:
-                outmodels.append(default_model)
-
-        return outmodels
-
-    def validate_model(self, model, options):
-        errors = set()
-        model = self._validate_model(model, options, errors)
-
-        if errors:
-            raise ValidationError(*errors)
-
-        return model
-
-    def _validate_model(self, model, options, errors):
-        model_class = model.__class__
-        if model_class not in self.model_validate_methods:
-            exc = ValueError('Model ({0}) is not supported.'
-                             .format(model_class.__name__))
-            errors.add(exc)
-            return model
-
-        method = self.model_validate_methods[model_class]
-        return method(model, options, errors)
-
-    def _validate_model_valid_models(self, model, options, errors):
-        model_class = model.__class__
-        if model not in self.valid_models.get(model_class, []):
-            exc = ValueError('Model ({0}) is not supported.'.format(model))
-            errors.add(exc)
-
-        return model
-
     def validate_analyses(self, analyses, options):
         errors = set()
         analyses = self._validate_analyses(analyses, options, errors)
@@ -697,4 +561,3 @@ class Validator(object):
             outmaterials[z] = outmaterial
 
         return outmaterials
-

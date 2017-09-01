@@ -22,8 +22,6 @@ class Exporter(object, metaclass=abc.ABCMeta):
         self.sample_export_methods = {}
         self.detector_export_methods = {}
         self.analysis_export_methods = {}
-        self.limit_export_methods = {}
-        self.model_export_methods = {}
 
     def export(self, options, dirpath):
         """
@@ -56,12 +54,15 @@ class Exporter(object, metaclass=abc.ABCMeta):
         All optional arguments passed to this method are transferred to the
         export methods.
         """
+        self._export_program(options.program, options, errors, *args, **kwargs)
         self._export_beam(options.beam, options, errors, *args, **kwargs)
         self._export_sample(options.sample, options, errors, *args, **kwargs)
         self._export_detectors(options.detectors, options, errors, *args, **kwargs)
         self._export_analyses(options.analyses, options, errors, *args, **kwargs)
-        self._export_limits(options.limits, options, errors, *args, **kwargs)
-        self._export_models(options.models, options, errors, *args, **kwargs)
+
+    @abc.abstractmethod
+    def _export_program(self, program, options, errors, *args, **kwargs):
+        raise NotImplementedError
 
     def _export_beam(self, beam, options, errors, *args, **kwargs):
         beam_class = beam.__class__
@@ -114,34 +115,3 @@ class Exporter(object, metaclass=abc.ABCMeta):
 
         method = self.analysis_export_methods[analysis_class]
         method(analysis, options, errors, *args, **kwargs)
-
-    def _export_limits(self, limits, options, errors, *args, **kwargs):
-        for limit in limits:
-            self._export_limit(limit, options, errors, *args, **kwargs)
-
-    def _export_limit(self, limit, options, errors, *args, **kwargs):
-        limit_class = limit.__class__
-        if limit_class not in self.limit_export_methods:
-            exc = ValueError('Limit ({0}) is not supported.'
-                             .format(limit_class.__name__))
-            errors.add(exc)
-            return
-
-        method = self.limit_export_methods[limit_class]
-        method(limit, options, errors, *args, **kwargs)
-
-    def _export_models(self, models, options, errors, *args, **kwargs):
-        for model in models:
-            self._export_model(model, options, errors, *args, **kwargs)
-
-    def _export_model(self, model, options, errors, *args, **kwargs):
-        model_class = model.__class__
-        if model_class not in self.model_export_methods:
-            exc = ValueError('Model ({0}) is not supported.'
-                             .format(model_class.__name__))
-            errors.add(exc)
-            return
-
-        method = self.model_export_methods[model_class]
-        method(model, options, errors, *args, **kwargs)
-

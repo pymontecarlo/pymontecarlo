@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.program.expander import expand_to_single, expand_analyses_to_single_detector
+from pymontecarlo.options.program.expander import expand_to_single, expand_analyses_to_single_detector
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 
 # Globals and constants variables.

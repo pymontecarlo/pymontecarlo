@@ -54,9 +54,6 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'PhotonIntensityAnalysisHDF5Handler = pymontecarlo.formats.hdf5.options.analysis.photonintensity:PhotonIntensityAnalysisHDF5Handler',
                  'KRatioAnalysisHDF5Handler = pymontecarlo.formats.hdf5.options.analysis.kratio:KRatioAnalysisHDF5Handler',
 
-                 'ShowersLimitHDF5Handler = pymontecarlo.formats.hdf5.options.limit.showers:ShowersLimitHDF5Handler',
-                 'UncertaintyLimitHDF5Handler = pymontecarlo.formats.hdf5.options.limit.uncertainty:UncertaintyLimitHDF5Handler',
-
                  'BremsstrahlungEmissionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHDF5Handler',
                  'DirectionCosineModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.direction_cosine:DirectionCosineModelHDF5Handler',
                  'ElasticCrossSectionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.elastic_cross_section:ElasticCrossSectionModelHDF5Handler',
@@ -95,9 +92,6 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'PhotonIntensityAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.photonintensity:PhotonIntensityAnalysisSeriesHandler',
                  'KRatioAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.kratio:KRatioAnalysisSeriesHandler',
 
-                 'ShowersLimitSeriesHandler = pymontecarlo.formats.series.options.limit.showers:ShowersLimitSeriesHandler',
-                 'UncertaintyLimitSeriesHandler = pymontecarlo.formats.series.options.limit.uncertainty:UncertaintyLimitSeriesHandler',
-
                  'BremsstrahlungEmissionModelSeriesHandler = pymontecarlo.formats.series.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelSeriesHandler',
                  'DirectionCosineModelSeriesHandler = pymontecarlo.formats.series.options.model.direction_cosine:DirectionCosineModelSeriesHandler',
                  'ElasticCrossSectionModelSeriesHandler = pymontecarlo.formats.series.options.model.elastic_cross_section:ElasticCrossSectionModelSeriesHandler',
@@ -135,9 +129,6 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
 
                  'PhotonIntensityAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.photonintensity:PhotonIntensityAnalysisHtmlHandler',
                  'KRatioAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.kratio:KRatioAnalysisHtmlHandler',
-
-                 'ShowersLimitHtmlHandler = pymontecarlo.formats.html.options.limit.showers:ShowersLimitHtmlHandler',
-                 'UncertaintyLimitHtmlHandler = pymontecarlo.formats.html.options.limit.uncertainty:UncertaintyLimitHtmlHandler',
 
                  'BremsstrahlungEmissionModelHtmlHandler = pymontecarlo.formats.html.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHtmlHandler',
                  'DirectionCosineModelHtmlHandler = pymontecarlo.formats.html.options.model.direction_cosine:DirectionCosineModelHtmlHandler',

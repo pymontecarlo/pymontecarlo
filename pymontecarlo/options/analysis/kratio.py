@@ -3,6 +3,7 @@
 # Standard library modules.
 import logging
 logger = logging.getLogger(__name__)
+import copy
 
 # Third party modules.
 
@@ -55,7 +56,8 @@ class KRatioAnalysis(PhotonAnalysis):
     def _create_standard_options(self, options):
         builder = OptionsBuilder()
 
-        builder.add_program(options.program)
+        program = copy.copy(options.program)
+        builder.add_program(program)
 
         beam = GaussianBeam(energy_eV=options.beam.energy_eV,
                             diameter_m=0.0,
@@ -66,12 +68,6 @@ class KRatioAnalysis(PhotonAnalysis):
             for z in material.composition:
                 standard = self.get_standard_material(z)
                 builder.add_sample(SubstrateSample(standard))
-
-        for limit in options.limits:
-            builder.add_limit(options.program, limit)
-
-        for model in options.models:
-            builder.add_model(options.program, model)
 
         analysis = PhotonIntensityAnalysis(self.photon_detector)
         builder.add_analysis(analysis)

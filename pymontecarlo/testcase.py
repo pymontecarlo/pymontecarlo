@@ -23,14 +23,14 @@ from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
 from pymontecarlo.mock import ProgramMock
 from pymontecarlo.util.entrypoint import \
-    reset_entrypoints, ENTRYPOINT_HDF5HANDLER
+    (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
+     ENTRYPOINT_HTMLHANDLER)
 
 # Globals and constants variables.
 
@@ -43,18 +43,27 @@ class TestCase(unittest.TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        # Add program HDF5 handler
+        # Add program HDF5, series and HTML handlers
         requirement = pkg_resources.Requirement('pymontecarlo')
         distribution = pkg_resources.working_set.find(requirement)
+
         entry_map = distribution.get_entry_map(ENTRYPOINT_HDF5HANDLER)
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
-        #
+
+        entry_map = distribution.get_entry_map(ENTRYPOINT_SERIESHANDLER)
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
+                                                     attrs=('ProgramSeriesHandlerMock',),
+                                                     dist=distribution)
+
+        entry_map = distribution.get_entry_map(ENTRYPOINT_HTMLHANDLER)
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
+                                                     attrs=('ProgramHtmlHandlerMock',),
+                                                     dist=distribution)
+
         # Reset entry points
         reset_entrypoints()
-
-        cls.program = ProgramMock()
 
     def setUp(self):
         super().setUp()
@@ -71,6 +80,12 @@ class TestCase(unittest.TestCase):
         for tmpdir in self.tmpdirs:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
+    def create_basic_program(self):
+        program = ProgramMock()
+        program.foo = 123
+        program.elastic_cross_section_model = ElasticCrossSectionModel.MOTT_CZYZEWSKI1990
+        return program
+
     def create_basic_beam(self):
         return GaussianBeam(15e3, 10e-9)
 
@@ -81,12 +96,11 @@ class TestCase(unittest.TestCase):
         return PhotonDetector('xray', math.radians(40.0))
 
     def create_basic_options(self):
+        program = self.create_basic_program()
         beam = self.create_basic_beam()
         sample = self.create_basic_sample()
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
-        limits = [ShowersLimit(100)]
-        models = [ElasticCrossSectionModel.RUTHERFORD]
-        return Options(self.program, beam, sample, analyses, limits, models)
+        return Options(program, beam, sample, analyses)
 
     def create_basic_photonintensityresult(self):
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())

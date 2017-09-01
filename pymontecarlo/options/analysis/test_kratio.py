@@ -10,13 +10,13 @@ import math
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
+from pymontecarlo.mock import ProgramMock
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.options import Options
-from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
 from pymontecarlo.results.kratio import KRatioResult
@@ -43,8 +43,6 @@ class TestKRatioAnalysis(TestCase):
         self.assertIsInstance(options.sample, SubstrateSample)
         self.assertEqual(Material.pure(29), options.sample.material)
         self.assertSequenceEqual(self.options.detectors, options.detectors)
-        self.assertSequenceEqual(self.options.limits, options.limits)
-        self.assertSequenceEqual(self.options.models, options.models)
         self.assertEqual(1, len(options.analyses))
         self.assertIsInstance(options.analyses[0], PhotonIntensityAnalysis)
 
@@ -61,10 +59,10 @@ class TestKRatioAnalysis(TestCase):
 
     def testcalculate(self):
         # Create options
+        program = ProgramMock()
         beam = GaussianBeam(20e3, 10.e-9)
         sample = SubstrateSample(Material.from_formula('CaSiO4'))
-        limit = ShowersLimit(100)
-        unkoptions = Options(self.program, beam, sample, [self.a], [limit])
+        unkoptions = Options(program, beam, sample)
 
         list_standard_options = self.a.apply(unkoptions)
         self.assertEqual(3, len(list_standard_options))

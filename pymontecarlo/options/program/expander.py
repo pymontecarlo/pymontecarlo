@@ -49,22 +49,3 @@ class Expander(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def expand_limits(self, limits):
-        """
-        Takes a :class:`list` of limits and returns a :class:`list` of 
-        :class:`tuple` where each tuple corresponds to the limits for a
-        single :class:`Options`.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def expand_models(self, models):
-        """
-        Takes a :class:`list` of models and returns a :class:`list` of 
-        :class:`tuple` where each tuple corresponds to the models for a
-        single :class:`Options`.
-        """
-        raise NotImplementedError
-
-

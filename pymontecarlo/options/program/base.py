@@ -8,17 +8,22 @@ import abc
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.options.base import Option, OptionBuilder
 
 # Globals and constants variables.
 
-class Program(metaclass=abc.ABCMeta):
+class Program(Option):
+
+    def __init__(self, name):
+        self.name = name
 
     def __repr__(self):
         return '<{classname}({name})>' \
             .format(classname=self.__class__.__name__, name=self.name)
 
     def __eq__(self, other):
-        return type(other) == type(self) and self.name == other.name
+        return super().__eq__(other) and \
+            self.name == other.name
 
     @abc.abstractmethod
     def create_expander(self):
@@ -40,10 +45,5 @@ class Program(metaclass=abc.ABCMeta):
     def create_importer(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_default_limits(self, options):
-        raise NotImplementedError
-
-    @abc.abstractproperty
-    def name(self):
-        raise NotImplementedError
+class ProgramBuilder(OptionBuilder):
+    pass

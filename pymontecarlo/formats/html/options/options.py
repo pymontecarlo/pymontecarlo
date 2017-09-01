@@ -3,7 +3,6 @@
 # Standard library modules.
 
 # Third party modules.
-import dominate.tags as tags
 
 # Local modules.
 from pymontecarlo.formats.html.base import HtmlHandler
@@ -19,9 +18,7 @@ class OptionsHtmlHandler(HtmlHandler):
         root = super().convert(options, settings, level)
 
         root += self._create_header(level, 'Program')
-        dl = tags.dl()
-        dl += self._create_description(settings, 'Name', options.program.name)
-        root += dl
+        root += self._find_and_convert(options.program, settings, level + 1).children
 
         classname = camelcase_to_words(options.beam.__class__.__name__)
         root += self._create_header(level, classname)
@@ -42,15 +39,6 @@ class OptionsHtmlHandler(HtmlHandler):
             classname = camelcase_to_words(analysis.__class__.__name__)
             root += self._create_header(level + 1, classname)
             root += self._find_and_convert(analysis, settings, level + 1)
-
-        root += self._create_header(level, 'Limits')
-        for limit in options.limits:
-            classname = camelcase_to_words(limit.__class__.__name__)
-            root += self._create_header(level + 1, classname)
-            root += self._find_and_convert(limit, settings, level + 1)
-
-        root += self._create_header(level, 'Models')
-        root += self._create_table_objects(options.models, settings)
 
         return root
 

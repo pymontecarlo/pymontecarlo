@@ -15,8 +15,7 @@ from pymontecarlo.options.base import Option, OptionBuilder
 
 class Options(Option):
 
-    def __init__(self, program, beam, sample,
-                 analyses=None, limits=None, models=None):
+    def __init__(self, program, beam, sample, analyses=None):
         """
         Options for a simulation.
         """
@@ -30,14 +29,6 @@ class Options(Option):
             analyses = []
         self.analyses = list(analyses)
 
-        if limits is None:
-            limits = []
-        self.limits = list(limits)
-
-        if models is None:
-            models = []
-        self.models = list(models)
-
     def __repr__(self):
         return '<{classname}()>' \
             .format(classname=self.__class__.__name__, **self.__dict__)
@@ -47,9 +38,7 @@ class Options(Option):
             self.program == other.program and \
             self.beam == other.beam and \
             self.sample == other.sample and \
-            are_sequence_similar(self.analyses, other.analyses) and \
-            are_sequence_similar(self.limits, other.limits) and \
-            are_sequence_similar(self.models, other.models)
+            are_sequence_similar(self.analyses, other.analyses)
 
     def find_analyses(self, analysis_class, detector=None):
         """
@@ -65,12 +54,6 @@ class Options(Option):
             return analyses
 
         return [analysis for analysis in analyses if analysis.detector == detector]
-
-    def find_limits(self, limit_class):
-        return find_by_type(self.limits, limit_class)
-
-    def find_models(self, model_class):
-        return find_by_type(self.models, model_class)
 
     def find_detectors(self, detector_class):
         return find_by_type(self.detectors, detector_class)
@@ -89,14 +72,13 @@ class OptionsBuilder(OptionBuilder):
         self.beams = []
         self.samples = []
         self.analyses = []
-        self.limits = []
-        self.models = []
 
     def __len__(self):
         return len(self.build())
 
     def add_program(self, program):
-        self.programs.append(program)
+        if program not in self.programs:
+            self.programs.append(program)
 
     def add_beam(self, beam):
         if beam not in self.beams:
@@ -110,12 +92,6 @@ class OptionsBuilder(OptionBuilder):
         if analysis not in self.analyses:
             self.analyses.append(analysis)
 
-    def add_limit(self, program, limit):
-        self.limits.append((program, limit))
-
-    def add_model(self, program, model):
-        self.models.append((program, model))
-
     def build(self):
         list_options = []
 
@@ -125,19 +101,11 @@ class OptionsBuilder(OptionBuilder):
             analyses = self.analyses
             analysis_combinations = expander.expand_analyses(analyses) or [None]
 
-            limits = unique([l for p, l in self.limits if p == program])
-            limit_combinations = expander.expand_limits(limits) or [None]
-
-            models = unique([m for p, m in self.models if p == program])
-            model_combinations = expander.expand_models(models) or [None]
-
             product = itertools.product(self.beams,
                                         self.samples,
-                                        analysis_combinations,
-                                        limit_combinations,
-                                        model_combinations)
-            for beam, sample, analyses, limits, models in product:
-                options = Options(program, beam, sample, analyses, limits, models)
+                                        analysis_combinations)
+            for beam, sample, analyses in product:
+                options = Options(program, beam, sample, analyses)
 
                 if options in list_options:
                     continue
