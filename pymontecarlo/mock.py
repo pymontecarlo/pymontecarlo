@@ -27,7 +27,6 @@ from pymontecarlo.options.program.exporter import Exporter
 from pymontecarlo.options.program.worker import Worker
 from pymontecarlo.options.program.importer import Importer
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5Handler
-from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandler
 from pymontecarlo.formats.html.options.program.base import ProgramHtmlHandler
 
@@ -199,16 +198,11 @@ class ProgramHDF5HandlerMock(ProgramHDF5Handler):
 
 class ProgramSeriesHandlerMock(ProgramSeriesHandler):
 
-    def convert(self, program):
-        s = super().convert(program)
-
-        column = NamedSeriesColumn('foo', 'foo')
-        s[column] = program.foo
-
-        s_model = self._find_and_convert(program.elastic_cross_section_model)
-        s = s.append(s_model)
-
-        return s
+    def _convert(self, program):
+        builder = super()._convert(program)
+        builder.add_column('foo', 'foo', program.foo)
+        builder.add_object(program.elastic_cross_section_model)
+        return builder
 
     @property
     def CLASS(self):

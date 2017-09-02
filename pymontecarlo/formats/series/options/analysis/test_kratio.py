@@ -17,7 +17,7 @@ from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 class TestKRatioAnalysisSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = KRatioAnalysisSeriesHandler()
+        handler = KRatioAnalysisSeriesHandler(self.settings)
         detector = self.create_basic_photondetector()
         analysis = KRatioAnalysis(detector)
         s = handler.convert(analysis)

@@ -6,11 +6,15 @@
 import pandas as pd
 
 # Local modules.
-from pymontecarlo.formats.series.base import find_convert_serieshandler
+from pymontecarlo.formats.series.base import ensure_distinc_columns
+from pymontecarlo.formats.series.options.options import OptionsSeriesHandler
 
 # Globals and constants variables.
 
-def create_options_dataframe(list_options, only_different_columns=False):
+def create_options_dataframe(list_options, settings,
+                             only_different_columns=False,
+                             abbreviate_name=False,
+                             format_number=False):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -19,9 +23,9 @@ def create_options_dataframe(list_options, only_different_columns=False):
     """
     list_series = []
 
+    handler = OptionsSeriesHandler(settings)
     for options in list_options:
-        handler = find_convert_serieshandler(options)
-        s = handler.convert(options)
+        s = handler.convert(options, abbreviate_name, format_number)
         list_series.append(s)
 
     df = pd.DataFrame(list_series)
@@ -29,12 +33,6 @@ def create_options_dataframe(list_options, only_different_columns=False):
     if not only_different_columns or len(df) < 2:
         return df
 
-    drop_columns = []
-    for column in df.columns:
-        values = df[column].values
-        if all(column.compare(values[0], v) for v in values):
-            drop_columns.append(column)
+    _s, tolerances = handler.convert(options, abbreviate_name, format_number, return_tolerances=True)
 
-    df = df.drop(drop_columns, axis=1)
-
-    return df
+    return ensure_distinc_columns(df, tolerances)

@@ -6,26 +6,18 @@
 
 # Local modules.
 from pymontecarlo.formats.series.options.sample.base import SampleSeriesHandler
-from pymontecarlo.formats.series.base import NamedSeriesColumn
 from pymontecarlo.options.sample.inclusion import InclusionSample
 
 # Globals and constants variables.
 
 class InclusionSampleSeriesHandler(SampleSeriesHandler):
 
-    def convert(self, sample):
-        s = super().convert(sample)
-
-        s_material = self._find_and_convert(sample.substrate_material, 'substrate ', 'subs ')
-        s = s.append(s_material)
-
-        s_material = self._find_and_convert(sample.inclusion_material, 'inclusion ', 'incl ')
-        s = s.append(s_material)
-
-        column = NamedSeriesColumn('inclusion diameter', 'd', 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
-        s[column] = sample.inclusion_diameter_m
-
-        return s
+    def _convert(self, sample):
+        builder = super()._convert(sample)
+        builder.add_object(sample.substrate_material, 'substrate ', 'subs ')
+        builder.add_object(sample.inclusion_material, 'inclusion ', 'incl ')
+        builder.add_column('inclusion diameter', 'd', sample.inclusion_diameter_m, 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)
+        return builder
 
     @property
     def CLASS(self):

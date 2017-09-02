@@ -9,42 +9,37 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.base import NamedSeriesColumn, ErrorSeriesColumn
+from pymontecarlo.formats.series.base import SeriesBuilder
 
 # Globals and constants variables.
 
-class TestNamedSeriesColumn(TestCase):
+class TestSeriesBuilder(TestCase):
 
     def setUp(self):
         super().setUp()
 
-        self.column0 = NamedSeriesColumn('a', 'b')
-        self.column1 = NamedSeriesColumn('a', 'b', 'm', 0.1)
+        self.builder = SeriesBuilder(self.settings)
+        self.builder.add_column('a', 'b', 'foo')
+        self.builder.add_column('c', 'd', 0.2, 'm', 0.01)
+        self.builder.add_column('c', 'd', 6.0, 'm', error=True)
 
-    def testcompare(self):
-        self.assertTrue(self.column0.compare('foo', 'foo'))
-        self.assertFalse(self.column0.compare('foo', 'bar'))
+    def testbuild(self):
+        s = self.builder.build(abbreviate_name=False, format_number=False)
+        self.assertEqual('foo', s['a'])
+        self.assertAlmostEqual(0.2, s['c [m]'], 4)
+        self.assertAlmostEqual(6.0, s['\u03C3(c) [m]'], 4)
 
-        self.assertTrue(self.column1.compare(0.0, 0.05))
-        self.assertFalse(self.column1.compare(0.0, 0.2))
+    def testbuild_abbreviate_name(self):
+        s = self.builder.build(abbreviate_name=True, format_number=False)
+        self.assertEqual('foo', s['b'])
+        self.assertAlmostEqual(0.2, s['d[m]'], 4)
+        self.assertAlmostEqual(6.0, s['\u03C3(d)[m]'], 4)
 
-    def testformat_value(self):
-        self.assertEqual('foo', self.column0.format_value(self.settings, 'foo'))
-        self.assertEqual('{:g}'.format(1.0), self.column0.format_value(self.settings, 1.0))
-
-        self.assertEqual('{:.1f}'.format(2.0), self.column1.format_value(self.settings, 2.0))
-        self.assertEqual('{:.1f}'.format(0.2), self.column1.format_value(self.settings, 0.2))
-
-class TestErrorSeriesColumn(TestCase):
-
-    def setUp(self):
-        super().setUp()
-
-        parent = NamedSeriesColumn('a', 'b', 'm', 0.1)
-        self.column = ErrorSeriesColumn(parent)
-
-    def testskeleton(self):
-        self.assertEqual('\u03C3(a)', self.column.name)
+    def testbuild_format_number(self):
+        s = self.builder.build(abbreviate_name=False, format_number=True)
+        self.assertEqual('foo', s['a'])
+        self.assertEqual('0.20', s['c [m]'])
+        self.assertEqual('6', s['\u03C3(c) [m]'])
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

@@ -19,7 +19,7 @@ from pymontecarlo.options.particle import Particle
 class TestCylindricalBeamSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = CylindricalBeamSeriesHandler()
+        handler = CylindricalBeamSeriesHandler(self.settings)
         beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
         s = handler.convert(beam)
         self.assertEqual(5, len(s))

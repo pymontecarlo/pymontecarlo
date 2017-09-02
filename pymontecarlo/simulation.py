@@ -8,8 +8,7 @@ Simulation.
 
 # Local modules.
 from pymontecarlo.util.cbook import find_by_type
-from pymontecarlo.formats.series.base import \
-    find_convert_serieshandler, create_identifier
+from pymontecarlo.formats.series.base import create_identifier
 
 # Globals and constants variables.
 
@@ -23,9 +22,7 @@ class Simulation(object):
         self.results = results.copy()
 
         if identifier is None:
-            handler = find_convert_serieshandler(options)
-            s = handler.convert(options)
-            identifier = create_identifier(s)
+            identifier = create_identifier(options)
         self.identifier = identifier
 
     def __eq__(self, other):

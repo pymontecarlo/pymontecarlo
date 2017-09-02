@@ -18,7 +18,7 @@ from pymontecarlo.options.material import Material, VACUUM
 class TestMaterialSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = MaterialSeriesHandler()
+        handler = MaterialSeriesHandler(self.settings)
         material = Material('Brass', {29: 0.5, 30: 0.5}, 8960.0)
         s = handler.convert(material)
         self.assertEqual(3, len(s))
@@ -26,7 +26,7 @@ class TestMaterialSeriesHandler(TestCase):
 class TestVacuumSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = VacuumSeriesHandler()
+        handler = VacuumSeriesHandler(self.settings)
         material = VACUUM
         s = handler.convert(material)
         self.assertEqual(0, len(s))

@@ -16,100 +16,120 @@ from pymontecarlo.util.cbook import get_valid_filename
 
 # Globals and constants variables.
 
-def find_convert_serieshandler(obj):
+def find_convert_serieshandler(obj, settings):
     for entrypoint in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER).values():
         clasz = entrypoint.resolve()
-        handler = clasz()
+        handler = clasz(settings)
         if handler.can_convert(obj):
             return handler
     raise ConvertError("No handler found for object {!r}".format(obj))
 
-def create_identifier(series):
+def create_identifiers(objs):
     settings = Settings()
     settings.set_preferred_unit('nm')
     settings.set_preferred_unit('deg')
     settings.set_preferred_unit('keV')
     settings.set_preferred_unit('g/cm^3')
 
-    items = []
-    for column, value in series.iteritems():
-        key = column.abbrev
-        value = column.format_value(settings, value, tolerance=None)
-        unitname = column.format_unit(settings)
-        items.append('{}_{}{}'.format(key, value, unitname))
+    list_series = []
 
-    return get_valid_filename('_'.join(items))
+    for obj in objs:
+        handler = find_convert_serieshandler(obj, settings)
+        s = handler.convert(obj, abbreviate_name=True, format_number=True)
+        list_series.append(s)
 
-def update_with_prefix(s, prefix, prefix_abbrev=None):
-    s_new = pd.Series()
+    df = pd.DataFrame(list_series)
+    df = ensure_distinc_columns(df)
 
-    for column, value in s.items():
-        column_new = PrefixSeriesColumn(column, prefix, prefix_abbrev)
-        s_new[column_new] = value
+    identifiers = []
+    for _, s in df.iterrows():
+        items = ['{}={}'.format(key, value) for key, value in s.iteritems()]
+        identifier = get_valid_filename('_'.join(items))
+        identifiers.append(identifier)
 
-    return s_new
+    return identifiers
 
-class SeriesColumn(metaclass=abc.ABCMeta):
+def create_identifier(obj):
+    return create_identifiers([obj])[0]
 
-    _default = object()
+def ensure_distinc_columns(dataframe, tolerances=None):
+    if len(dataframe) < 2:
+        return dataframe
 
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.name == other
-        return type(self) == type(other) and self.name == other.name
+    if tolerances is None:
+        tolerances = {}
 
-    def __hash__(self):
-        # NOTE: To allow slicing of series using only name
-        return hash(self.name)
+    drop_columns = []
+    for column in dataframe.columns:
+        values = dataframe[column].values
+        tolerance = tolerances.get(column)
 
-    def __repr__(self):
-        return '<{}({})>'.format(self.__class__.__name__, self.name)
-
-    def __str__(self):
-        return self.name
-
-    def compare(self, value0, value1):
-        if self.tolerance is None:
-            return value0 == value1
+        if tolerance is None:
+            allequal = all(values[0] == v for v in values)
         else:
-            return math.isclose(value0, value1, abs_tol=self.tolerance)
+            allequal = all(math.isclose(values[0], v, abs_tol=tolerance) for v in values)
 
-    def format_name(self, settings):
-        if self.unit is None:
-            return self.name
+        if allequal:
+            drop_columns.append(column)
 
-        q = settings.to_preferred_unit(1.0, self.unit)
-        unitname = '{0:~P}'.format(q.units)
-        if not unitname: # required for radian and degree
-            unitname = '{0:P}'.format(q.units)
+    return dataframe.drop(drop_columns, axis=1)
 
-        return '{} [{}]'.format(self.name, unitname)
+class SeriesBuilder:
 
-    def format_unit(self, settings):
-        if self.unit is None:
+    def __init__(self, settings):
+        self.settings = settings
+        self.data = []
+
+    def _format_name(self, name, unit, error):
+        if error:
+            fmt = '\u03C3({name})'
+        else:
+            fmt = '{name}'
+
+        if unit is not None:
+            fmt += ' [{unitname}]'
+
+        if callable(name):
+            name = name(self.settings)
+
+        unitname = self._format_unit(unit)
+
+        return fmt.format(name=name, unitname=unitname)
+
+    def _format_abbrev(self, abbrev, unit, error):
+        if error:
+            fmt = '\u03C3({abbrev})'
+        else:
+            fmt = '{abbrev}'
+
+        if unit is not None:
+            fmt += '[{unitname}]'
+
+        if callable(abbrev):
+            abbrev = abbrev(self.settings)
+
+        unitname = self._format_unit(unit)
+
+        return fmt.format(abbrev=abbrev, unitname=unitname)
+
+    def _format_unit(self, unit):
+        if unit is None:
             return ''
 
-        q = settings.to_preferred_unit(1.0, self.unit)
+        q = self.settings.to_preferred_unit(1.0, unit)
         unitname = '{0:~P}'.format(q.units)
         if not unitname: # required for radian and degree
             unitname = '{0:P}'.format(q.units)
 
         return unitname
 
-    def format_value(self, settings, value, unit=_default, tolerance=_default):
-        if tolerance is self._default:
-            tolerance = self.tolerance
-        if unit is self._default:
-            unit = self.unit
-
-        if unit is not None:
-            q = settings.to_preferred_unit(value, unit)
-            value = q.magnitude
+    def _format_value(self, value, unit, tolerance):
+        value = self._convert_value(value, unit)
 
         if isinstance(value, float):
             if tolerance is not None:
                 if unit is not None:
-                    q_tolerance = settings.to_preferred_unit(tolerance, unit)
+                    q_tolerance = self.settings.to_preferred_unit(tolerance, unit)
                     tolerance = q_tolerance.magnitude
 
                 precision = tolerance_to_decimals(tolerance)
@@ -119,136 +139,81 @@ class SeriesColumn(metaclass=abc.ABCMeta):
         else:
             return '{}'.format(value)
 
-    def convert_value(self, settings, value, unit=_default):
-        if unit is self._default:
-            unit = self.unit
-
+    def _convert_value(self, value, unit):
         if unit is not None:
-            q = settings.to_preferred_unit(value, unit)
+            q = self.settings.to_preferred_unit(value, unit)
             value = q.magnitude
-
         return value
 
-    @abc.abstractproperty
-    def name(self):
-        raise NotImplementedError
+    def add_column(self, name, abbrev, value, unit=None, tolerance=None, error=False):
+        datum = {'name': name,
+                 'abbrev': abbrev,
+                 'value': value,
+                 'unit': unit,
+                 'tolerance': tolerance,
+                 'error': error}
+        self.data.append(datum)
 
-    @abc.abstractproperty
-    def abbrev(self):
-        raise NotImplementedError
+    def add_object(self, obj, prefix='', prefix_abbrev=''):
+        handler = find_convert_serieshandler(obj, self.settings)
+        other = handler._convert(obj)
 
-    @abc.abstractproperty
-    def unit(self):
-        raise NotImplementedError
+        prefix_abbrev = prefix_abbrev or prefix
 
-    @abc.abstractproperty
-    def tolerance(self):
-        raise NotImplementedError
+        for datum in other.data:
+            datum = datum.copy()
+            datum['prefix'] = datum.get('prefix', '') + prefix
+            datum['prefix_abbrev'] = datum.get('prefix_abbrev', '') + prefix_abbrev
+            self.data.append(datum)
 
-class NamedSeriesColumn(SeriesColumn):
+    def build(self, abbreviate_name=False, format_number=False, return_tolerances=False):
+        s = pd.Series()
+        tolerances = {}
 
-    def __init__(self, name, abbrev, unit=None, tolerance=None):
-        super().__init__()
-        self._name = name
-        self._abbrev = abbrev
-        self._unit = unit
-        self._tolerance = tolerance
+        for datum in self.data:
+            value = datum['value']
+            unit = datum['unit']
+            error = datum['error']
+            tolerance = datum['tolerance']
 
-    @property
-    def name(self):
-        return self._name
+            if abbreviate_name:
+                abbrev = datum['abbrev']
+                prefix_abbrev = datum.get('prefix_abbrev', '')
+                key = prefix_abbrev + self._format_abbrev(abbrev, unit, error)
+            else:
+                name = datum['name']
+                prefix = datum.get('prefix', '')
+                key = prefix + self._format_name(name, unit, error)
 
-    @property
-    def abbrev(self):
-        return self._abbrev
+            if format_number:
+                value = self._format_value(value, unit, tolerance)
+            else:
+                value = self._convert_value(value, unit)
 
-    @property
-    def unit(self):
-        return self._unit
+            s[key] = value
 
-    @property
-    def tolerance(self):
-        return self._tolerance
+            if tolerance is not None:
+                tolerances[key] = self._convert_value(tolerance, unit)
 
-class _ParentSeriesColumn(SeriesColumn):
+        if return_tolerances:
+            return s, tolerances
 
-    def __init__(self, parent):
-        super().__init__()
-        self._parent = parent
-
-    def __hash__(self):
-        return hash(self.parent)
-
-    @property
-    def name(self):
-        return self.parent.name
-
-    @property
-    def abbrev(self):
-        return self.parent.abbrev
-
-    @property
-    def unit(self):
-        return self.parent.unit
-
-    @property
-    def tolerance(self):
-        return self.parent.tolerance
-
-    @property
-    def parent(self):
-        return self._parent
-
-class PrefixSeriesColumn(_ParentSeriesColumn):
-
-    def __init__(self, parent, prefix, prefix_abbrev=None):
-        super().__init__(parent)
-        self._prefix = prefix
-        self._prefix_abbrev = prefix_abbrev or prefix
-
-    def __hash__(self):
-        return hash((self._prefix, self.parent))
-
-    @property
-    def name(self):
-        return self._prefix + super().name
-
-    @property
-    def abbrev(self):
-        return self._prefix_abbrev + super().abbrev
-
-class ErrorSeriesColumn(_ParentSeriesColumn):
-
-    def __init__(self, parent):
-        super().__init__(parent)
-
-    def __hash__(self):
-        return hash(('error', self.parent))
-
-    @property
-    def name(self):
-        return '\u03C3({})'.format(super().name)
-
-    @property
-    def abbrev(self):
-        return '\u03C3({})'.format(super().abbrev)
+        return s
 
 class SeriesHandler(object, metaclass=abc.ABCMeta):
 
-    def _find_and_convert(self, obj, prefix=None, prefix_abbrev=None):
-        s = find_convert_serieshandler(obj).convert(obj)
-
-        if prefix:
-            s = update_with_prefix(s, prefix, prefix_abbrev)
-
-        return s
+    def __init__(self, settings):
+        self.settings = settings
 
     def can_convert(self, obj):
         return type(obj) is self.CLASS
 
+    def convert(self, obj, abbreviate_name=False, format_number=False, return_tolerances=False):
+        return self._convert(obj).build(abbreviate_name, format_number, return_tolerances)
+
     @abc.abstractmethod
-    def convert(self, obj):
-        return pd.Series()
+    def _convert(self, obj):
+        return SeriesBuilder(self.settings)
 
     @abc.abstractproperty
     def CLASS(self):

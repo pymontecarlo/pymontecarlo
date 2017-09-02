@@ -12,8 +12,7 @@ from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.future import FutureExecutor, Token, FutureAdapter
 from pymontecarlo.util.cbook import unique
-from pymontecarlo.formats.series.base import create_identifier
-from pymontecarlo.formats.series.options.base import create_options_dataframe
+from pymontecarlo.formats.series.base import create_identifiers
 
 # Globals and constants variables.
 
@@ -94,13 +93,7 @@ class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
         return final_list_options
 
     def _create_identifiers(self, list_options):
-        df = create_options_dataframe(list_options, only_different_columns=True)
-
-        identifiers = []
-        for _index, series in df.iterrows():
-            identifiers.append(create_identifier(series))
-
-        return identifiers
+        return create_identifiers(list_options)
 
     def _create_simulations(self, list_options, identifiers):
         simulations = []

@@ -18,7 +18,7 @@ from pymontecarlo.options.material import Material
 class TestSphereSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = SphereSampleSeriesHandler()
+        handler = SphereSampleSeriesHandler(self.settings)
         sample = SphereSample(Material.pure(29), 50e-9, 0.1, 0.2)
         s = handler.convert(sample)
         self.assertEqual(5, len(s))

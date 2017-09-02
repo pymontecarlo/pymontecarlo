@@ -12,13 +12,10 @@ from pymontecarlo.options.sample.substrate import SubstrateSample
 
 class SubstrateSampleSeriesHandler(SampleSeriesHandler):
 
-    def convert(self, sample):
-        s = super().convert(sample)
-
-        s_material = self._find_and_convert(sample.material, 'substrate ', 'subs ')
-        s = s.append(s_material)
-
-        return s
+    def _convert(self, sample):
+        builder = super()._convert(sample)
+        builder.add_object(sample.material, 'substrate ', 'subs ')
+        return builder
 
     @property
     def CLASS(self):

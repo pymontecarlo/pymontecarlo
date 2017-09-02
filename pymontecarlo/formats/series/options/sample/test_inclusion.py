@@ -18,7 +18,7 @@ from pymontecarlo.options.material import Material
 class TestInclusionSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = InclusionSampleSeriesHandler()
+        handler = InclusionSampleSeriesHandler(self.settings)
         sample = InclusionSample(Material.pure(29), Material.pure(30), 50e-9, 0.1, 0.2)
         s = handler.convert(sample)
         self.assertEqual(7, len(s))

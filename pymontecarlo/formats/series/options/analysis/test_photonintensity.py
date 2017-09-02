@@ -17,7 +17,7 @@ from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysi
 class TestPhotonIntensityAnalysisSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = PhotonIntensityAnalysisSeriesHandler()
+        handler = PhotonIntensityAnalysisSeriesHandler(self.settings)
         detector = self.create_basic_photondetector()
         analysis = PhotonIntensityAnalysis(detector)
         s = handler.convert(analysis)

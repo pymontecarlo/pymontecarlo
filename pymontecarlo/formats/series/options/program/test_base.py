@@ -16,13 +16,13 @@ from pymontecarlo.mock import ProgramSeriesHandlerMock
 class TestProgramSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = ProgramSeriesHandlerMock()
+        handler = ProgramSeriesHandlerMock(self.settings)
         program = self.create_basic_program()
         s = handler.convert(program)
         self.assertEqual(3, len(s))
         self.assertEqual('mock', s['program'])
         self.assertEqual(123, s['foo'])
-        self.assertEqual('MOTT_CZYZEWSKI1990', s['elastic cross-section'])
+        self.assertEqual('MOTT_CZYZEWSKI1990', s['elastic cross section model'])
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

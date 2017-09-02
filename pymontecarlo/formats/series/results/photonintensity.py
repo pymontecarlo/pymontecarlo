@@ -6,8 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.results.photon import \
-    PhotonResultSeriesHandler, SeriesXrayLineColumn
-from pymontecarlo.formats.series.base import ErrorSeriesColumn
+    PhotonResultSeriesHandler, xrayline_name_func
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
 
@@ -15,17 +14,15 @@ from pymontecarlo.results.photonintensity import \
 
 class PhotonIntensityResultSeriesHandler(PhotonResultSeriesHandler):
 
-    def convert(self, result):
-        s = super().convert(result)
+    def _convert(self, result):
+        builder = super()._convert(result)
 
         for xrayline, q in result.items():
-            column = SeriesXrayLineColumn(xrayline, unit='1/(sr.electron)')
-            s[column] = q.n
+            name = abbrev = xrayline_name_func(xrayline)
+            builder.add_column(name, abbrev, q.n, '1/(sr.electron)')
+            builder.add_column(name, abbrev, q.s, '1/(sr.electron)', error=True)
 
-            column = ErrorSeriesColumn(column)
-            s[column] = q.s
-
-        return s
+        return builder
 
 class EmittedPhotonIntensityResultSeriesHandler(PhotonIntensityResultSeriesHandler):
 

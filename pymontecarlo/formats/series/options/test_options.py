@@ -16,7 +16,7 @@ from pymontecarlo.formats.series.options.options import OptionsSeriesHandler
 class TestOptionsSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = OptionsSeriesHandler()
+        handler = OptionsSeriesHandler(self.settings)
         options = self.create_basic_options()
         s = handler.convert(options)
         self.assertEqual(14, len(s))

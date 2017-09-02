@@ -9,16 +9,16 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.options.model.fluorescence import FluorescenceModelSeriesHandler
-from pymontecarlo.options.model.fluorescence import FluorescenceModel
+from pymontecarlo.formats.series.options.model.base import ModelSeriesHandler
+from pymontecarlo.options.model.bremsstrahlung_emission import BremsstrahlungEmissionModel
 
 # Globals and constants variables.
 
-class TestFluorescenceModelSeriesHandler(TestCase):
+class TestModelSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = FluorescenceModelSeriesHandler()
-        model = FluorescenceModel.FLUORESCENCE_COMPTON
+        handler = ModelSeriesHandler(self.settings)
+        model = BremsstrahlungEmissionModel.SELTZER_BERGER1985
         s = handler.convert(model)
         self.assertEqual(1, len(s))
 

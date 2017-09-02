@@ -6,13 +6,15 @@
 import pandas as pd
 
 # Local modules.
-from pymontecarlo.formats.series.base import \
-    SeriesHandler, find_convert_serieshandler, update_with_prefix
+from pymontecarlo.formats.series.base import SeriesHandler, SeriesBuilder
 from pymontecarlo.exceptions import ConvertError
 
 # Globals and constants variables.
 
-def create_results_dataframe(list_results, result_classes=None):
+def create_results_dataframe(list_results, settings,
+                             result_classes=None,
+                             abbreviate_name=False,
+                             format_number=False):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -23,29 +25,24 @@ def create_results_dataframe(list_results, result_classes=None):
     list_series = []
 
     for results in list_results:
-        s = pd.Series()
+        builder = SeriesBuilder(settings)
 
         for result in results:
+            prefix = result.getname().lower() + ' '
+
             try:
-                handler = find_convert_serieshandler(result)
+                if result_classes is None: # Include all results
+                    builder.add_object(result, prefix)
+
+                elif type(result) in result_classes:
+                    if len(result_classes) == 1:
+                        builder.add_object(result)
+                    else:
+                        builder.add_object(result, prefix)
             except ConvertError:
                 continue
 
-            prefix = result.getname().lower() + ' '
-            s_result = handler.convert(result)
-
-            if result_classes is None: # Include all results
-                s_result = update_with_prefix(s_result, prefix)
-                s = s.append(s_result)
-
-            elif type(result) in result_classes:
-                if len(result_classes) == 1:
-                    s = s.append(s_result)
-                else:
-                    s_result = update_with_prefix(s_result, prefix)
-                    s = s.append(s_result)
-
-        list_series.append(s)
+        list_series.append(builder.build(abbreviate_name, format_number))
 
     return pd.DataFrame(list_series)
 

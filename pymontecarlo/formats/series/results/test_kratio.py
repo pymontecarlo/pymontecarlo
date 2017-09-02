@@ -19,7 +19,7 @@ from pymontecarlo.results.kratio import KRatioResultBuilder
 class TestKRatioResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = KRatioResultSeriesHandler()
+        handler = KRatioResultSeriesHandler(self.settings)
         analysis = KRatioAnalysis(self.create_basic_photondetector())
         b = KRatioResultBuilder(analysis)
         b.add_kratio((29, 'Ka1'), 2.0, 5.0)

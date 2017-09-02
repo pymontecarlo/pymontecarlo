@@ -19,7 +19,7 @@ from pymontecarlo.results.photonintensity import GeneratedPhotonIntensityResultB
 class TestEmittedPhotonIntensityResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = EmittedPhotonIntensityResultSeriesHandler()
+        handler = EmittedPhotonIntensityResultSeriesHandler(self.settings)
         result = self.create_basic_photonintensityresult()
         s = handler.convert(result)
         self.assertEqual(14, len(s))
@@ -27,7 +27,7 @@ class TestEmittedPhotonIntensityResultSeriesHandler(TestCase):
 class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = GeneratedPhotonIntensityResultSeriesHandler()
+        handler = GeneratedPhotonIntensityResultSeriesHandler(self.settings)
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = GeneratedPhotonIntensityResultBuilder(analysis)
         b.add_intensity((29, 'Ka1'), 10.0, 0.1)

@@ -12,27 +12,20 @@ from pymontecarlo.options.options import Options
 
 class OptionsSeriesHandler(SeriesHandler):
 
-    def convert(self, options):
-        s = super().convert(options)
+    def _convert(self, options):
+        builder = super()._convert(options)
 
-        s_program = self._find_and_convert(options.program)
-        s = s.append(s_program)
-
-        s_beam = self._find_and_convert(options.beam)
-        s = s.append(s_beam)
-
-        s_sample = self._find_and_convert(options.sample)
-        s = s.append(s_sample)
+        builder.add_object(options.program)
+        builder.add_object(options.beam)
+        builder.add_object(options.sample)
 
         for detector in options.detectors:
-            s_detector = self._find_and_convert(detector)
-            s = s.append(s_detector)
+            builder.add_object(detector)
 
         for analysis in options.analyses:
-            s_analysis = self._find_and_convert(analysis)
-            s = s.append(s_analysis)
+            builder.add_object(analysis)
 
-        return s
+        return builder
 
     @property
     def CLASS(self):

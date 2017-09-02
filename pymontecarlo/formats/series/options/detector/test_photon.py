@@ -16,7 +16,7 @@ from pymontecarlo.formats.series.options.detector.photon import PhotonDetectorSe
 class TestPhotonDetectorSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = PhotonDetectorSeriesHandler()
+        handler = PhotonDetectorSeriesHandler(self.settings)
         detector = self.create_basic_photondetector()
         s = handler.convert(detector)
         self.assertEqual(2, len(s))

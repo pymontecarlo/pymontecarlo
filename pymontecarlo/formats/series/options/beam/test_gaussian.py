@@ -18,7 +18,7 @@ from pymontecarlo.options.particle import Particle
 class TestGaussianBeamSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = GaussianBeamSeriesHandler()
+        handler = GaussianBeamSeriesHandler(self.settings)
         beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
         s = handler.convert(beam)
         self.assertEqual(5, len(s))

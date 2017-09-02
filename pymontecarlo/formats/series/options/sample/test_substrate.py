@@ -18,7 +18,7 @@ from pymontecarlo.options.material import Material
 class TestSubstrateSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = SubstrateSampleSeriesHandler()
+        handler = SubstrateSampleSeriesHandler(self.settings)
         sample = SubstrateSample(Material.pure(29), 0.1, 0.2)
         s = handler.convert(sample)
         self.assertEqual(4, len(s))
