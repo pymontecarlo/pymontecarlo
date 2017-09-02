@@ -16,7 +16,6 @@ class FormatBuilder(object, metaclass=abc.ABCMeta):
         self.settings = settings
         self.abbreviate_name = abbreviate_name
         self.format_number = format_number
-        self.data = []
 
     def _format_label(self, datum):
         name = datum['abbrev'] if self.abbreviate_name else datum['name']
@@ -72,8 +71,8 @@ class FormatBuilder(object, metaclass=abc.ABCMeta):
             value = q.magnitude
         return value
 
-    def _add_datum(self, name, abbrev, value, unit=None, tolerance=None, error=False,
-                   prefix_name='', prefix_abbrev=''):
+    def _create_datum(self, name, abbrev, value, unit=None, tolerance=None, error=False,
+                      prefix_name='', prefix_abbrev=''):
         datum = {'name': name,
                  'abbrev': abbrev,
                  'value': value,
@@ -82,36 +81,9 @@ class FormatBuilder(object, metaclass=abc.ABCMeta):
                  'error': error,
                  'prefix_name': prefix_name,
                  'prefix_abbrev': prefix_abbrev}
-        self.data.append(datum)
-
-    def _add_builder(self, builder, prefix_name='', prefix_abbrev=''):
-        prefix_abbrev = prefix_abbrev or prefix_name
-
-        for datum in builder.data:
-            name = datum['name']
-            abbrev = datum['abbrev']
-            value = datum['value']
-            unit = datum['unit']
-            tolerance = datum['tolerance']
-            error = datum['error']
-            prefix_name2 = datum['prefix_name'] + prefix_name
-            prefix_abbrev2 = datum['prefix_abbrev'] + prefix_abbrev
-            self._add_datum(name, abbrev, value, unit, tolerance, error, prefix_name2, prefix_abbrev2)
+        return datum
 
     @abc.abstractmethod
     def build(self):
         raise NotImplementedError
 
-    def gettolerances(self):
-        tolerances = {}
-
-        for datum in self.data:
-            label = self._format_label(datum)
-
-            unit = datum['unit']
-            tolerance = datum['tolerance']
-
-            if tolerance is not None:
-                tolerances[label] = self._convert_value(tolerance, unit)
-
-        return tolerances

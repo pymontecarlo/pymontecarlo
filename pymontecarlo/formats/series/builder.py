@@ -13,16 +13,26 @@ from pymontecarlo.formats.builder import FormatBuilder
 
 class SeriesBuilder(FormatBuilder):
 
+    def __init__(self, settings, abbreviate_name=False, format_number=False):
+        super().__init__(settings, abbreviate_name, format_number)
+        self.data = []
+
     def add_column(self, name, abbrev, value, unit=None, tolerance=None, error=False):
-        self._add_datum(name, abbrev, value, unit, tolerance, error)
+        datum = self._create_datum(name, abbrev, value, unit, tolerance, error)
+        self.data.append(datum)
 
     def add_object(self, obj, prefix_name='', prefix_abbrev=''):
         handler = find_convert_serieshandler(obj)
-
         builder = self.__class__(self.settings)
         handler.convert(obj, builder)
 
-        self._add_builder(builder, prefix_name, prefix_abbrev)
+        prefix_abbrev = prefix_abbrev or prefix_name
+
+        for datum in builder.data:
+            datum = datum.copy()
+            datum['prefix_name'] = datum['prefix_name'] + prefix_name
+            datum['prefix_abbrev'] = datum['prefix_abbrev'] + prefix_abbrev
+            self.data.append(datum)
 
     def build(self):
         s = pd.Series()
@@ -33,3 +43,17 @@ class SeriesBuilder(FormatBuilder):
             s[label] = value
 
         return s
+
+    def gettolerances(self):
+        tolerances = {}
+
+        for datum in self.data:
+            label = self._format_label(datum)
+
+            unit = datum['unit']
+            tolerance = datum['tolerance']
+
+            if tolerance is not None:
+                tolerances[label] = self._convert_value(tolerance, unit)
+
+        return tolerances

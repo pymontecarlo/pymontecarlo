@@ -30,8 +30,9 @@ from pymontecarlo.results.photonintensity import \
 from pymontecarlo.mock import ProgramMock
 from pymontecarlo.util.entrypoint import \
     (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
-     ENTRYPOINT_HTMLHANDLER)
+     ENTRYPOINT_DOCUMENTHANDLER)
 from pymontecarlo.formats.series.builder import SeriesBuilder
+from pymontecarlo.formats.document.builder import DocumentBuilder
 
 # Globals and constants variables.
 
@@ -58,9 +59,9 @@ class TestCase(unittest.TestCase):
                                                      attrs=('ProgramSeriesHandlerMock',),
                                                      dist=distribution)
 
-        entry_map = distribution.get_entry_map(ENTRYPOINT_HTMLHANDLER)
+        entry_map = distribution.get_entry_map(ENTRYPOINT_DOCUMENTHANDLER)
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
-                                                     attrs=('ProgramHtmlHandlerMock',),
+                                                     attrs=('ProgramDocumentHandlerMock',),
                                                      dist=distribution)
 
         # Reset entry points
@@ -166,3 +167,22 @@ class TestCase(unittest.TestCase):
         builder = SeriesBuilder(self.settings)
         handler.convert(obj, builder)
         return builder.build()
+
+    def convert_documenthandler(self, handler, obj):
+        builder = DocumentBuilder(self.settings)
+        handler.convert(obj, builder)
+        return builder.build()
+
+    def count_document_nodes(self, document):
+        def recursive(node, total=0):
+            if not hasattr(node, 'children'):
+                return total
+
+            total += len(node.children)
+            for childnode in node:
+                return recursive(childnode, total)
+
+            return total
+
+        return recursive(document)
+

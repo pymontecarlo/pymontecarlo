@@ -28,7 +28,7 @@ from pymontecarlo.options.program.worker import Worker
 from pymontecarlo.options.program.importer import Importer
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5Handler
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandler
-from pymontecarlo.formats.html.options.program.base import ProgramHtmlHandler
+from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandler
 
 # Globals and constants variables.
 
@@ -207,17 +207,17 @@ class ProgramSeriesHandlerMock(ProgramSeriesHandler):
     def CLASS(self):
         return ProgramMock
 
-class ProgramHtmlHandlerMock(ProgramHtmlHandler):
+class ProgramDocumentHandlerMock(ProgramDocumentHandler):
 
-    def convert(self, program, settings, level=1):
-        root = super().convert(program, settings, level)
+    def convert(self, program, builder):
+        super().convert(program, builder)
 
-        dl = root.getElementsByTagName('dl')[-1]
-        dl += self._create_description(settings, 'Foo', program.foo)
+        description = builder.require_description('program')
+        description.add_item('Foo', program.foo)
 
-        root += self._find_and_convert(program.elastic_cross_section_model, settings, level + 1).children
-
-        return root
+        section = builder.add_section()
+        section.add_title('Models')
+        section.add_object(program.elastic_cross_section_model)
 
     @property
     def CLASS(self):

@@ -13,7 +13,7 @@ _ENTRYPOINTS = {}
 
 ENTRYPOINT_PROGRAMS = 'pymontecarlo.program'
 ENTRYPOINT_HDF5HANDLER = 'pymontecarlo.formats.hdf5'
-ENTRYPOINT_HTMLHANDLER = 'pymontecarlo.formats.html'
+ENTRYPOINT_DOCUMENTHANDLER = 'pymontecarlo.formats.document'
 ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
 
 def resolve_entrypoints(group):

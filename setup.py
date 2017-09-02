@@ -21,7 +21,7 @@ PACKAGES = find_packages()
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
                     'matplotlib', 'tabulate', 'psutil', 'pandas',
-                    'dominate']
+                    'docutils']
 EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex']}
 
 CMDCLASS = versioneer.get_cmdclass()
@@ -99,39 +99,28 @@ ENTRY_POINTS = {'pymontecarlo.program': [],
                  'KRatioResultSeriesHandler = pymontecarlo.formats.series.results.kratio:KRatioResultSeriesHandler',
                  ],
 
-                'pymontecarlo.formats.html':
+                'pymontecarlo.formats.document':
                 [
-                 'OptionsHtmlHandler = pymontecarlo.formats.html.options.options:OptionsHtmlHandler',
+                 'OptionsDocumentHandler = pymontecarlo.formats.document.options.options:OptionsDocumentHandler',
 
-                 'GaussianBeamHtmlHandler = pymontecarlo.formats.html.options.beam.gaussian:GaussianBeamHtmlHandler',
-                 'CylindricalBeamHtmlHandler = pymontecarlo.formats.html.options.beam.cylindrical:CylindricalBeamHtmlHandler',
+                 'GaussianBeamDocumentHandler = pymontecarlo.formats.document.options.beam.gaussian:GaussianBeamDocumentHandler',
+                 'CylindricalBeamDocumentHandler = pymontecarlo.formats.document.options.beam.cylindrical:CylindricalBeamDocumentHandler',
 
-                 'MaterialHtmlHandler = pymontecarlo.formats.html.options.material:MaterialHtmlHandler',
-                 'VacuumHtmlHandler = pymontecarlo.formats.html.options.material:VacuumHtmlHandler',
-                 'LayerHtmlHandler = pymontecarlo.formats.html.options.sample.base:LayerHtmlHandler',
-                 'SubstrateSampleHtmlHandler = pymontecarlo.formats.html.options.sample.substrate:SubstrateSampleHtmlHandler',
-                 'InclusionSampleHtmlHandler = pymontecarlo.formats.html.options.sample.inclusion:InclusionSampleHtmlHandler',
-                 'HorizontalLayerSampleHtmlHandler = pymontecarlo.formats.html.options.sample.horizontallayers:HorizontalLayerSampleHtmlHandler',
-                 'VerticalLayerSampleHtmlHandler = pymontecarlo.formats.html.options.sample.verticallayers:VerticalLayerSampleHtmlHandler',
-                 'SphereSampleHtmlHandler = pymontecarlo.formats.html.options.sample.sphere:SphereSampleHtmlHandler',
+                 'MaterialDocumentHandler = pymontecarlo.formats.document.options.material:MaterialDocumentHandler',
+                 'VacuumDocumentHandler = pymontecarlo.formats.document.options.material:VacuumDocumentHandler',
+                 'LayerDocumentHandler = pymontecarlo.formats.document.options.sample.base:LayerDocumentHandler',
+                 'SubstrateSampleDocumentHandler = pymontecarlo.formats.document.options.sample.substrate:SubstrateSampleDocumentHandler',
+                 'InclusionSampleDocumentHandler = pymontecarlo.formats.document.options.sample.inclusion:InclusionSampleDocumentHandler',
+                 'HorizontalLayerSampleDocumentHandler = pymontecarlo.formats.document.options.sample.horizontallayers:HorizontalLayerSampleDocumentHandler',
+                 'VerticalLayerSampleDocumentHandler = pymontecarlo.formats.document.options.sample.verticallayers:VerticalLayerSampleDocumentHandler',
+                 'SphereSampleDocumentHandler = pymontecarlo.formats.document.options.sample.sphere:SphereSampleDocumentHandler',
 
-                 'PhotonDetectorHtmlHandler = pymontecarlo.formats.html.options.detector.photon:PhotonDetectorHtmlHandler',
+                 'PhotonDetectorDocumentHandler = pymontecarlo.formats.document.options.detector.photon:PhotonDetectorDocumentHandler',
 
-                 'PhotonIntensityAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.photonintensity:PhotonIntensityAnalysisHtmlHandler',
-                 'KRatioAnalysisHtmlHandler = pymontecarlo.formats.html.options.analysis.kratio:KRatioAnalysisHtmlHandler',
+                 'PhotonIntensityAnalysisDocumentHandler = pymontecarlo.formats.document.options.analysis.photonintensity:PhotonIntensityAnalysisDocumentHandler',
+                 'KRatioAnalysisDocumentHandler = pymontecarlo.formats.document.options.analysis.kratio:KRatioAnalysisDocumentHandler',
 
-                 'BremsstrahlungEmissionModelHtmlHandler = pymontecarlo.formats.html.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHtmlHandler',
-                 'DirectionCosineModelHtmlHandler = pymontecarlo.formats.html.options.model.direction_cosine:DirectionCosineModelHtmlHandler',
-                 'ElasticCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.elastic_cross_section:ElasticCrossSectionModelHtmlHandler',
-                 'EnergyLossModelHtmlHandler = pymontecarlo.formats.html.options.model.energy_loss:EnergyLossModelHtmlHandler',
-                 'FluorescenceModelHtmlHandler = pymontecarlo.formats.html.options.model.fluorescence:FluorescenceModelHtmlHandler',
-                 'InelasticCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.inelastic_cross_section:InelasticCrossSectionModelHtmlHandler',
-                 'IonizationCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.ionization_cross_section:IonizationCrossSectionModelHtmlHandler',
-                 'IonizationPotentialModelHtmlHandler = pymontecarlo.formats.html.options.model.ionization_potential:IonizationPotentialModelHtmlHandler',
-                 'MassAbsorptionCoefficientModelHtmlHandler = pymontecarlo.formats.html.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelHtmlHandler',
-                 'PhotonScatteringCrossSectionModelHtmlHandler = pymontecarlo.formats.html.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelHtmlHandler',
-                 'RandomNumberGeneratorModelHtmlHandler = pymontecarlo.formats.html.options.model.random_number_generator:RandomNumberGeneratorModelHtmlHandler',
-
+                 'ModelDocumentHandler = pymontecarlo.formats.document.options.model.base:ModelDocumentHandler',
                  ]}
 
 setup(name="pyMonteCarlo",
