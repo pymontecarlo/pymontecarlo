@@ -10,27 +10,10 @@ import abc
 import numpy as np
 
 # Local modules.
-from pymontecarlo.exceptions import ParseError, ConvertError
-from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_HDF5HANDLER
+from pymontecarlo.formats.hdf5.entrypoint import \
+    find_convert_hdf5handler, find_parse_hdf5handler
 
 # Globals and constants variables.
-
-def find_parse_hdf5handler(group):
-    for entrypoint in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
-        clasz = entrypoint.resolve()
-        handler = clasz()
-        if handler.can_parse(group):
-            return handler
-    raise ParseError("No handler found for group: {!r}".format(group))
-
-def find_convert_hdf5handler(obj, group):
-    for entrypoint in resolve_entrypoints(ENTRYPOINT_HDF5HANDLER).values():
-        clasz = entrypoint.resolve()
-        handler = clasz()
-        if handler.can_convert(obj, group):
-            return handler
-    raise ConvertError("No handler found for object {!r} and group {!r}"
-                       .format(obj, group))
 
 class HDF5Handler(object, metaclass=abc.ABCMeta):
 
