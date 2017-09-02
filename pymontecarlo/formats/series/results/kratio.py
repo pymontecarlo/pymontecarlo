@@ -13,8 +13,8 @@ from pymontecarlo.results.kratio import KRatioResult
 
 class KRatioResultSeriesHandler(PhotonResultSeriesHandler):
 
-    def _convert(self, result):
-        builder = super()._convert(result)
+    def create_builder(self, result):
+        builder = super().create_builder(result)
 
         for xrayline, q in result.items():
             name = abbrev = xrayline_name_func(xrayline)

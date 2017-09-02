@@ -57,7 +57,10 @@ def create_options_dataframe(list_options, settings,
     if not only_different_columns or len(df) < 2:
         return df
 
-    _s, tolerances = handler.convert(options, abbreviate_name, format_number, return_tolerances=True)
+    builder = handler.create_builder(options)
+    builder.abbreviate_name = abbreviate_name
+    builder.format_number = format_number
+    tolerances = builder.gettolerances()
 
     return ensure_distinc_columns(df, tolerances)
 
@@ -75,7 +78,7 @@ def create_results_dataframe(list_results, settings,
     list_series = []
 
     for results in list_results:
-        builder = SeriesBuilder(settings)
+        builder = SeriesBuilder(settings, abbreviate_name, format_number)
 
         for result in results:
             prefix = result.getname().lower() + ' '
@@ -92,6 +95,6 @@ def create_results_dataframe(list_results, settings,
             except ConvertError:
                 continue
 
-        list_series.append(builder.build(abbreviate_name, format_number))
+        list_series.append(builder.build())
 
     return pd.DataFrame(list_series)

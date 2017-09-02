@@ -11,5 +11,5 @@ from pymontecarlo.formats.series.options.analysis.base import AnalysisSeriesHand
 
 class PhotonAnalysisSeriesHandler(AnalysisSeriesHandler):
 
-    def _convert(self, analysis):
-        return super()._convert(analysis)
+    def create_builder(self, analysis):
+        return super().create_builder(analysis)

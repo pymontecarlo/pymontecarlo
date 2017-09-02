@@ -13,8 +13,8 @@ from pymontecarlo.util.human import camelcase_to_words
 
 class ModelSeriesHandler(SeriesHandler):
 
-    def _convert(self, model):
-        builder = super()._convert(model)
+    def create_builder(self, model):
+        builder = super().create_builder(model)
 
         name = camelcase_to_words(type(model).__name__).lower()
         abbrev = name[:6]

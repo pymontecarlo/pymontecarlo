@@ -12,8 +12,8 @@ from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
 
 class HorizontalLayerSampleSeriesHandler(LayeredSampleHandler):
 
-    def _convert(self, sample):
-        builder = super()._convert(sample)
+    def create_builder(self, sample):
+        builder = super().create_builder(sample)
         builder.add_object(sample.substrate_material, 'substrate ', 'subs ')
         return builder
 

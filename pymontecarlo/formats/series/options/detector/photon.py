@@ -12,8 +12,8 @@ from pymontecarlo.options.detector.photon import PhotonDetector
 
 class PhotonDetectorSeriesHandler(DetectorSeriesHandler):
 
-    def _convert(self, detector):
-        builder = super()._convert(detector)
+    def create_builder(self, detector):
+        builder = super().create_builder(detector)
 
         name = '{} elevation angle'.format(detector.name)
         abbrev = '{} theta'.format(detector.name)

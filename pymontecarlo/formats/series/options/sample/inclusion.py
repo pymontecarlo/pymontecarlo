@@ -12,8 +12,8 @@ from pymontecarlo.options.sample.inclusion import InclusionSample
 
 class InclusionSampleSeriesHandler(SampleSeriesHandler):
 
-    def _convert(self, sample):
-        builder = super()._convert(sample)
+    def create_builder(self, sample):
+        builder = super().create_builder(sample)
         builder.add_object(sample.substrate_material, 'substrate ', 'subs ')
         builder.add_object(sample.inclusion_material, 'inclusion ', 'incl ')
         builder.add_column('inclusion diameter', 'd', sample.inclusion_diameter_m, 'm', InclusionSample.INCLUSION_DIAMETER_TOLERANCE_m)

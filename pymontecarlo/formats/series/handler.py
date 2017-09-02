@@ -18,11 +18,14 @@ class SeriesHandler(object, metaclass=abc.ABCMeta):
     def can_convert(self, obj):
         return type(obj) is self.CLASS
 
-    def convert(self, obj, abbreviate_name=False, format_number=False, return_tolerances=False):
-        return self._convert(obj).build(abbreviate_name, format_number, return_tolerances)
+    def convert(self, obj, abbreviate_name=False, format_number=False):
+        builder = self.create_builder(obj)
+        builder.abbreviate_name = abbreviate_name
+        builder.format_number = format_number
+        return builder.build()
 
     @abc.abstractmethod
-    def _convert(self, obj):
+    def create_builder(self, obj):
         return SeriesBuilder(self.settings)
 
     @abc.abstractproperty

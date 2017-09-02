@@ -198,8 +198,8 @@ class ProgramHDF5HandlerMock(ProgramHDF5Handler):
 
 class ProgramSeriesHandlerMock(ProgramSeriesHandler):
 
-    def _convert(self, program):
-        builder = super()._convert(program)
+    def create_builder(self, program):
+        builder = super().create_builder(program)
         builder.add_column('foo', 'foo', program.foo)
         builder.add_object(program.elastic_cross_section_model)
         return builder

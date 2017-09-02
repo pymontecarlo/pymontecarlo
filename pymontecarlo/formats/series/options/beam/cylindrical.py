@@ -12,8 +12,8 @@ from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 
 class CylindricalBeamSeriesHandler(BeamSeriesHandler):
 
-    def _convert(self, beam):
-        builder = super()._convert(beam)
+    def create_builder(self, beam):
+        builder = super().create_builder(beam)
         builder.add_column('beam diameter', 'd0', beam.diameter_m, 'm', CylindricalBeam.DIAMETER_TOLERANCE_m)
         builder.add_column('beam initial x position', 'x0', beam.x0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)
         builder.add_column('beam initial y position', 'y0', beam.y0_m, 'm', CylindricalBeam.POSITION_TOLERANCE_m)

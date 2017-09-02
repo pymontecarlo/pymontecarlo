@@ -13,8 +13,8 @@ from pymontecarlo.options.material import Material, VACUUM
 
 class MaterialSeriesHandler(SeriesHandler):
 
-    def _convert(self, material):
-        builder = super()._convert(material)
+    def create_builder(self, material):
+        builder = super().create_builder(material)
 
         for z, wf in material.composition.items():
             symbol = pyxray.element_symbol(z)
@@ -33,8 +33,8 @@ class MaterialSeriesHandler(SeriesHandler):
 
 class VacuumSeriesHandler(SeriesHandler):
 
-    def _convert(self, vacuum):
-        return super()._convert(vacuum)
+    def create_builder(self, vacuum):
+        return super().create_builder(vacuum)
 
     @property
     def CLASS(self):
