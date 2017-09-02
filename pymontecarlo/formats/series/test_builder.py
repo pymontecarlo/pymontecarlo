@@ -9,7 +9,7 @@ import logging
 
 # Local modules.
 from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.series.base import SeriesBuilder
+from pymontecarlo.formats.series.builder import SeriesBuilder
 
 # Globals and constants variables.
 

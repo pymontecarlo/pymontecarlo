@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandler
 from pymontecarlo.options.model.base import Model
 from pymontecarlo.util.human import camelcase_to_words
 

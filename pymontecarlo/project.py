@@ -11,8 +11,7 @@ import threading
 # Local modules.
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.formats.series.options.base import create_options_dataframe
-from pymontecarlo.formats.series.results.base import create_results_dataframe
+from pymontecarlo.formats.series.helper import create_options_dataframe, create_results_dataframe
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.

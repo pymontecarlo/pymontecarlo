@@ -12,7 +12,7 @@ from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.future import FutureExecutor, Token, FutureAdapter
 from pymontecarlo.util.cbook import unique
-from pymontecarlo.formats.series.base import create_identifiers
+from pymontecarlo.formats.series.identifier import create_identifiers
 
 # Globals and constants variables.
 

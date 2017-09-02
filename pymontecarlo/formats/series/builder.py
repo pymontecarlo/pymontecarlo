@@ -1,78 +1,15 @@
 """"""
 
 # Standard library modules.
-import abc
-import math
 
 # Third party modules.
 import pandas as pd
 
 # Local modules.
-from pymontecarlo.exceptions import ConvertError
-from pymontecarlo.settings import Settings
-from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_SERIESHANDLER
 from pymontecarlo.util.tolerance import tolerance_to_decimals
-from pymontecarlo.util.cbook import get_valid_filename
+from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
 
 # Globals and constants variables.
-
-def find_convert_serieshandler(obj, settings):
-    for entrypoint in resolve_entrypoints(ENTRYPOINT_SERIESHANDLER).values():
-        clasz = entrypoint.resolve()
-        handler = clasz(settings)
-        if handler.can_convert(obj):
-            return handler
-    raise ConvertError("No handler found for object {!r}".format(obj))
-
-def create_identifiers(objs):
-    settings = Settings()
-    settings.set_preferred_unit('nm')
-    settings.set_preferred_unit('deg')
-    settings.set_preferred_unit('keV')
-    settings.set_preferred_unit('g/cm^3')
-
-    list_series = []
-
-    for obj in objs:
-        handler = find_convert_serieshandler(obj, settings)
-        s = handler.convert(obj, abbreviate_name=True, format_number=True)
-        list_series.append(s)
-
-    df = pd.DataFrame(list_series)
-    df = ensure_distinc_columns(df)
-
-    identifiers = []
-    for _, s in df.iterrows():
-        items = ['{}={}'.format(key, value) for key, value in s.iteritems()]
-        identifier = get_valid_filename('_'.join(items))
-        identifiers.append(identifier)
-
-    return identifiers
-
-def create_identifier(obj):
-    return create_identifiers([obj])[0]
-
-def ensure_distinc_columns(dataframe, tolerances=None):
-    if len(dataframe) < 2:
-        return dataframe
-
-    if tolerances is None:
-        tolerances = {}
-
-    drop_columns = []
-    for column in dataframe.columns:
-        values = dataframe[column].values
-        tolerance = tolerances.get(column)
-
-        if tolerance is None:
-            allequal = all(values[0] == v for v in values)
-        else:
-            allequal = all(math.isclose(values[0], v, abs_tol=tolerance) for v in values)
-
-        if allequal:
-            drop_columns.append(column)
-
-    return dataframe.drop(drop_columns, axis=1)
 
 class SeriesBuilder:
 
@@ -199,26 +136,3 @@ class SeriesBuilder:
             return s, tolerances
 
         return s
-
-class SeriesHandler(object, metaclass=abc.ABCMeta):
-
-    def __init__(self, settings):
-        self.settings = settings
-
-    def can_convert(self, obj):
-        return type(obj) is self.CLASS
-
-    def convert(self, obj, abbreviate_name=False, format_number=False, return_tolerances=False):
-        return self._convert(obj).build(abbreviate_name, format_number, return_tolerances)
-
-    @abc.abstractmethod
-    def _convert(self, obj):
-        return SeriesBuilder(self.settings)
-
-    @abc.abstractproperty
-    def CLASS(self):
-        raise NotImplementedError
-
-    @property
-    def VERSION(self):
-        return 1

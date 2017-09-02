@@ -6,7 +6,7 @@
 import pyxray
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandler
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.

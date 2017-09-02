@@ -8,7 +8,7 @@ Simulation.
 
 # Local modules.
 from pymontecarlo.util.cbook import find_by_type
-from pymontecarlo.formats.series.base import create_identifier
+from pymontecarlo.formats.series.identifier import create_identifier
 
 # Globals and constants variables.
 
