@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 
 # Globals and constants variables.
 

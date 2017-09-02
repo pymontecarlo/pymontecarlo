@@ -8,7 +8,7 @@ import pyxray
 import numpy as np
 
 # Local modules.
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.

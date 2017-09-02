@@ -9,7 +9,7 @@ import numpy as np
 import h5py
 
 # Local modules.
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 from pymontecarlo.formats.hdf5.options.material import MaterialHDF5HandlerMixin
 from pymontecarlo.options.sample.base import Layer
 
