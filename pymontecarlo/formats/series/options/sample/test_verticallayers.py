@@ -22,11 +22,11 @@ GERMANIUM = Material.pure(32)
 class TestVerticalLayerSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = VerticalLayerSampleSeriesHandler(self.settings)
+        handler = VerticalLayerSampleSeriesHandler()
         sample = VerticalLayerSample(COPPER, ZINC, depth_m=0.3, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(GERMANIUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        s = handler.convert(sample)
+        s = self.convert_serieshandler(handler, sample)
         self.assertEqual(13, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -19,13 +19,13 @@ from pymontecarlo.results.kratio import KRatioResultBuilder
 class TestKRatioResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = KRatioResultSeriesHandler(self.settings)
+        handler = KRatioResultSeriesHandler()
         analysis = KRatioAnalysis(self.create_basic_photondetector())
         b = KRatioResultBuilder(analysis)
         b.add_kratio((29, 'Ka1'), 2.0, 5.0)
         b.add_kratio((29, 'Ka'), 4.0, 5.0)
         result = b.build()
-        s = handler.convert(result)
+        s = self.convert_serieshandler(handler, result)
         self.assertEqual(4, len(s))
 
 if __name__ == '__main__': #pragma: no cover

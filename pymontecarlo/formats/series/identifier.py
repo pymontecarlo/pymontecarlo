@@ -10,6 +10,7 @@ from pymontecarlo.settings import Settings
 from pymontecarlo.util.cbook import get_valid_filename
 from pymontecarlo.formats.series.helper import ensure_distinc_columns
 from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
+from pymontecarlo.formats.series.builder import SeriesBuilder
 
 # Globals and constants variables.
 
@@ -23,8 +24,12 @@ def create_identifiers(objs):
     list_series = []
 
     for obj in objs:
-        handler = find_convert_serieshandler(obj, settings)
-        s = handler.convert(obj, abbreviate_name=True, format_number=True)
+        handler = find_convert_serieshandler(obj)
+
+        builder = SeriesBuilder(settings, abbreviate_name=True, format_number=True)
+        handler.convert(obj, builder)
+
+        s = builder.build()
         list_series.append(s)
 
     df = pd.DataFrame(list_series)

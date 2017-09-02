@@ -12,8 +12,8 @@ from pymontecarlo.options.options import Options
 
 class OptionsSeriesHandler(SeriesHandler):
 
-    def create_builder(self, options):
-        builder = super().create_builder(options)
+    def convert(self, options, builder):
+        super().convert(options, builder)
 
         builder.add_object(options.program)
         builder.add_object(options.beam)
@@ -24,8 +24,6 @@ class OptionsSeriesHandler(SeriesHandler):
 
         for analysis in options.analyses:
             builder.add_object(analysis)
-
-        return builder
 
     @property
     def CLASS(self):

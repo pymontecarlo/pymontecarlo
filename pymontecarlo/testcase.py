@@ -31,6 +31,7 @@ from pymontecarlo.mock import ProgramMock
 from pymontecarlo.util.entrypoint import \
     (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
      ENTRYPOINT_HTMLHANDLER)
+from pymontecarlo.formats.series.builder import SeriesBuilder
 
 # Globals and constants variables.
 
@@ -160,3 +161,8 @@ class TestCase(unittest.TestCase):
             obj2 = handler.parse(f)
 
         return obj2
+
+    def convert_serieshandler(self, handler, obj):
+        builder = SeriesBuilder(self.settings)
+        handler.convert(obj, builder)
+        return builder.build()

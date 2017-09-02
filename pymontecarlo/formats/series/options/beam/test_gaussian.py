@@ -18,9 +18,9 @@ from pymontecarlo.options.particle import Particle
 class TestGaussianBeamSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = GaussianBeamSeriesHandler(self.settings)
+        handler = GaussianBeamSeriesHandler()
         beam = GaussianBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
-        s = handler.convert(beam)
+        s = self.convert_serieshandler(handler, beam)
         self.assertEqual(5, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -47,9 +47,14 @@ def create_options_dataframe(list_options, settings,
     """
     list_series = []
 
-    handler = OptionsSeriesHandler(settings)
+    handler = OptionsSeriesHandler()
+
     for options in list_options:
-        s = handler.convert(options, abbreviate_name, format_number)
+        builder = SeriesBuilder(settings, abbreviate_name, format_number)
+
+        handler.convert(options, builder)
+
+        s = builder.build()
         list_series.append(s)
 
     df = pd.DataFrame(list_series)
@@ -57,9 +62,6 @@ def create_options_dataframe(list_options, settings,
     if not only_different_columns or len(df) < 2:
         return df
 
-    builder = handler.create_builder(options)
-    builder.abbreviate_name = abbreviate_name
-    builder.format_number = format_number
     tolerances = builder.gettolerances()
 
     return ensure_distinc_columns(df, tolerances)

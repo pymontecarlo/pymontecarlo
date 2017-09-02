@@ -18,9 +18,9 @@ from pymontecarlo.options.material import Material
 class TestSubstrateSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = SubstrateSampleSeriesHandler(self.settings)
+        handler = SubstrateSampleSeriesHandler()
         sample = SubstrateSample(Material.pure(29), 0.1, 0.2)
-        s = handler.convert(sample)
+        s = self.convert_serieshandler(handler, sample)
         self.assertEqual(4, len(s))
 
 if __name__ == '__main__': #pragma: no cover

@@ -17,9 +17,9 @@ from pymontecarlo.options.model.bremsstrahlung_emission import BremsstrahlungEmi
 class TestModelSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = ModelSeriesHandler(self.settings)
+        handler = ModelSeriesHandler()
         model = BremsstrahlungEmissionModel.SELTZER_BERGER1985
-        s = handler.convert(model)
+        s = self.convert_serieshandler(handler, model)
         self.assertEqual(1, len(s))
 
 if __name__ == '__main__': #pragma: no cover

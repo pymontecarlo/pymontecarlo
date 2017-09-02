@@ -11,7 +11,6 @@ from pymontecarlo.formats.series.handler import SeriesHandler
 
 class ProgramSeriesHandler(SeriesHandler):
 
-    def create_builder(self, program):
-        builder = super().create_builder(program)
+    def convert(self, program, builder):
+        super().convert(program, builder)
         builder.add_column('program', 'prog', program.name)
-        return builder

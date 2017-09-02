@@ -13,15 +13,13 @@ from pymontecarlo.results.kratio import KRatioResult
 
 class KRatioResultSeriesHandler(PhotonResultSeriesHandler):
 
-    def create_builder(self, result):
-        builder = super().create_builder(result)
+    def convert(self, result, builder):
+        super().convert(result, builder)
 
         for xrayline, q in result.items():
             name = abbrev = xrayline_name_func(xrayline)
             builder.add_column(name, abbrev, q.n)
             builder.add_column(name, abbrev, q.s, error=True)
-
-        return builder
 
     @property
     def CLASS(self):

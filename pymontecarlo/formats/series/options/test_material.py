@@ -18,17 +18,17 @@ from pymontecarlo.options.material import Material, VACUUM
 class TestMaterialSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = MaterialSeriesHandler(self.settings)
+        handler = MaterialSeriesHandler()
         material = Material('Brass', {29: 0.5, 30: 0.5}, 8960.0)
-        s = handler.convert(material)
+        s = self.convert_serieshandler(handler, material)
         self.assertEqual(3, len(s))
 
 class TestVacuumSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = VacuumSeriesHandler(self.settings)
+        handler = VacuumSeriesHandler()
         material = VACUUM
-        s = handler.convert(material)
+        s = self.convert_serieshandler(handler, material)
         self.assertEqual(0, len(s))
 
 if __name__ == '__main__': #pragma: no cover

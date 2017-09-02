@@ -12,12 +12,11 @@ from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 class VerticalLayerSampleSeriesHandler(LayeredSampleHandler):
 
-    def create_builder(self, sample):
-        builder = super().create_builder(sample)
+    def convert(self, sample, builder):
+        super().convert(sample, builder)
         builder.add_object(sample.left_material, 'left substrate ', 'left ')
         builder.add_object(sample.right_material, 'right substrate ', 'right ')
         builder.add_column('vertical layers depth', 'zmax', sample.depth_m, 'm', VerticalLayerSample.DEPTH_TOLERANCE_m)
-        return builder
 
     @property
     def CLASS(self):

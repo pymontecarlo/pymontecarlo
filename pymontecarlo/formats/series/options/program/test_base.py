@@ -16,9 +16,9 @@ from pymontecarlo.mock import ProgramSeriesHandlerMock
 class TestProgramSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = ProgramSeriesHandlerMock(self.settings)
+        handler = ProgramSeriesHandlerMock()
         program = self.create_basic_program()
-        s = handler.convert(program)
+        s = self.convert_serieshandler(handler, program)
         self.assertEqual(3, len(s))
         self.assertEqual('mock', s['program'])
         self.assertEqual(123, s['foo'])

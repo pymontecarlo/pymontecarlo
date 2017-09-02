@@ -12,11 +12,10 @@ from pymontecarlo.options.sample.sphere import SphereSample
 
 class SphereSampleSeriesHandler(SampleSeriesHandler):
 
-    def create_builder(self, sample):
-        builder = super().create_builder(sample)
+    def convert(self, sample, builder):
+        super().convert(sample, builder)
         builder.add_object(sample.material, 'sphere ', 'sphere ')
         builder.add_column('sphere diameter', 'd', sample.diameter_m, 'm', SphereSample.DIAMETER_TOLERANCE_m)
-        return builder
 
     @property
     def CLASS(self):

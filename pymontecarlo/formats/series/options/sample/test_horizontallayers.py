@@ -21,19 +21,19 @@ GALLIUM = Material.pure(31)
 class TestHorizontalLayerSampleSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = HorizontalLayerSampleSeriesHandler(self.settings)
+        handler = HorizontalLayerSampleSeriesHandler()
         sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(ZINC, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        s = handler.convert(sample)
+        s = self.convert_serieshandler(handler, sample)
         self.assertEqual(10, len(s))
 
     def testconvert_vacuum(self):
-        handler = HorizontalLayerSampleSeriesHandler(self.settings)
+        handler = HorizontalLayerSampleSeriesHandler()
         sample = HorizontalLayerSample(COPPER, tilt_rad=0.1, azimuth_rad=0.2)
         sample.add_layer(VACUUM, 20e-9)
         sample.add_layer(GALLIUM, 50e-9)
-        s = handler.convert(sample)
+        s = self.convert_serieshandler(handler, sample)
         self.assertEqual(8, len(s))
 
 if __name__ == '__main__': #pragma: no cover

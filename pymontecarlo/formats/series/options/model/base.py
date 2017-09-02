@@ -13,14 +13,12 @@ from pymontecarlo.util.human import camelcase_to_words
 
 class ModelSeriesHandler(SeriesHandler):
 
-    def create_builder(self, model):
-        builder = super().create_builder(model)
+    def convert(self, model, builder):
+        super().convert(model, builder)
 
         name = camelcase_to_words(type(model).__name__).lower()
         abbrev = name[:6]
         builder.add_column(name, abbrev, model.name)
-
-        return builder
 
     def can_convert(self, obj):
         return isinstance(obj, self.CLASS)

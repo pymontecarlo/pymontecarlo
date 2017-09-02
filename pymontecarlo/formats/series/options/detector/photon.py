@@ -12,8 +12,8 @@ from pymontecarlo.options.detector.photon import PhotonDetector
 
 class PhotonDetectorSeriesHandler(DetectorSeriesHandler):
 
-    def create_builder(self, detector):
-        builder = super().create_builder(detector)
+    def convert(self, detector, builder):
+        super().convert(detector, builder)
 
         name = '{} elevation angle'.format(detector.name)
         abbrev = '{} theta'.format(detector.name)
@@ -22,8 +22,6 @@ class PhotonDetectorSeriesHandler(DetectorSeriesHandler):
         name = '{} azimuth angle'.format(detector.name)
         abbrev = '{} phi'.format(detector.name)
         builder.add_column(name, abbrev, detector.azimuth_rad, 'rad', PhotonDetector.AZIMUTH_TOLERANCE_rad)
-
-        return builder
 
     @property
     def CLASS(self):

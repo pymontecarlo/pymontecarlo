@@ -19,22 +19,22 @@ from pymontecarlo.results.photonintensity import GeneratedPhotonIntensityResultB
 class TestEmittedPhotonIntensityResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = EmittedPhotonIntensityResultSeriesHandler(self.settings)
+        handler = EmittedPhotonIntensityResultSeriesHandler()
         result = self.create_basic_photonintensityresult()
-        s = handler.convert(result)
+        s = self.convert_serieshandler(handler, result)
         self.assertEqual(14, len(s))
 
 class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
 
     def testconvert(self):
-        handler = GeneratedPhotonIntensityResultSeriesHandler(self.settings)
+        handler = GeneratedPhotonIntensityResultSeriesHandler()
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
         b = GeneratedPhotonIntensityResultBuilder(analysis)
         b.add_intensity((29, 'Ka1'), 10.0, 0.1)
         b.add_intensity((29, 'Ka2'), 20.0, 0.2)
         b.add_intensity((29, 'Kb1'), 40.0, 0.5)
         result = b.build()
-        s = handler.convert(result)
+        s = self.convert_serieshandler(handler, result)
         self.assertEqual(6, len(s))
 
 if __name__ == '__main__': #pragma: no cover

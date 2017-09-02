@@ -17,8 +17,11 @@ class SeriesBuilder(FormatBuilder):
         self._add_datum(name, abbrev, value, unit, tolerance, error)
 
     def add_object(self, obj, prefix_name='', prefix_abbrev=''):
-        handler = find_convert_serieshandler(obj, self.settings)
-        builder = handler.create_builder(obj)
+        handler = find_convert_serieshandler(obj)
+
+        builder = self.__class__(self.settings)
+        handler.convert(obj, builder)
+
         self._add_builder(builder, prefix_name, prefix_abbrev)
 
     def build(self):
