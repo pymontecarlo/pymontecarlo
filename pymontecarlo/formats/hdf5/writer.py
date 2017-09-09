@@ -7,7 +7,7 @@ import h5py
 
 # Local modules.
 from pymontecarlo.util.future import FutureExecutor
-from pymontecarlo.formats.hdf5.base import find_convert_hdf5handler
+from pymontecarlo.formats.hdf5.handler import find_convert_hdf5handler
 
 # Globals and constants variables.
 

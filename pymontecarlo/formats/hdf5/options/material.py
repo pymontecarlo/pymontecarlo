@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.colors
 
 # Local modules.
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.

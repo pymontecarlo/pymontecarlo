@@ -7,7 +7,7 @@ import abc
 
 # Local modules.
 from pymontecarlo.exceptions import ParseError
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.

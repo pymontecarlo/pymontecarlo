@@ -110,7 +110,7 @@ def get_valid_filename(s):
     """
     s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
     s = s.strip().replace(' ', '_')
-    s = re.sub(r'(?u)[^-\w.]', '', s)
+    s = re.sub(r'(?u)[^-\w.=]', '', s)
     return s[:255]
 
 def normalize_angle(angle_rad):

@@ -21,7 +21,7 @@ class TestEmittedPhotonIntensityResultSeriesHandler(TestCase):
     def testconvert(self):
         handler = EmittedPhotonIntensityResultSeriesHandler()
         result = self.create_basic_photonintensityresult()
-        s = handler.convert(result)
+        s = self.convert_serieshandler(handler, result)
         self.assertEqual(14, len(s))
 
 class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
@@ -34,7 +34,7 @@ class TestGeneratedPhotonIntensityResultSeriesHandler(TestCase):
         b.add_intensity((29, 'Ka2'), 20.0, 0.2)
         b.add_intensity((29, 'Kb1'), 40.0, 0.5)
         result = b.build()
-        s = handler.convert(result)
+        s = self.convert_serieshandler(handler, result)
         self.assertEqual(6, len(s))
 
 if __name__ == '__main__': #pragma: no cover

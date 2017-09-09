@@ -18,7 +18,7 @@ class TestPhotonDetectorSeriesHandler(TestCase):
     def testconvert(self):
         handler = PhotonDetectorSeriesHandler()
         detector = self.create_basic_photondetector()
-        s = handler.convert(detector)
+        s = self.convert_serieshandler(handler, detector)
         self.assertEqual(2, len(s))
 
 if __name__ == '__main__': #pragma: no cover

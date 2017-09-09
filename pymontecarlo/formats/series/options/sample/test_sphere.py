@@ -20,7 +20,7 @@ class TestSphereSampleSeriesHandler(TestCase):
     def testconvert(self):
         handler = SphereSampleSeriesHandler()
         sample = SphereSample(Material.pure(29), 50e-9, 0.1, 0.2)
-        s = handler.convert(sample)
+        s = self.convert_serieshandler(handler, sample)
         self.assertEqual(5, len(s))
 
 if __name__ == '__main__': #pragma: no cover

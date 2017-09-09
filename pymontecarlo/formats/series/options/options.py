@@ -5,42 +5,25 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler, NamedSeriesColumn
+from pymontecarlo.formats.series.handler import SeriesHandler
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
 
 class OptionsSeriesHandler(SeriesHandler):
 
-    def convert(self, options):
-        s = super().convert(options)
+    def convert(self, options, builder):
+        super().convert(options, builder)
 
-        column = NamedSeriesColumn('program', 'prog')
-        s[column] = options.program.getidentifier()
-
-        s_beam = self._find_and_convert(options.beam)
-        s = s.append(s_beam)
-
-        s_sample = self._find_and_convert(options.sample)
-        s = s.append(s_sample)
+        builder.add_object(options.program)
+        builder.add_object(options.beam)
+        builder.add_object(options.sample)
 
         for detector in options.detectors:
-            s_detector = self._find_and_convert(detector)
-            s = s.append(s_detector)
+            builder.add_object(detector)
 
         for analysis in options.analyses:
-            s_analysis = self._find_and_convert(analysis)
-            s = s.append(s_analysis)
-
-        for limit in options.limits:
-            s_limit = self._find_and_convert(limit)
-            s = s.append(s_limit)
-
-        for model in options.models:
-            s_model = self._find_and_convert(model)
-            s = s.append(s_model)
-
-        return s
+            builder.add_object(analysis)
 
     @property
     def CLASS(self):

@@ -11,8 +11,7 @@ import threading
 # Local modules.
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.formats.series.options.base import create_options_dataframe
-from pymontecarlo.formats.series.results.base import create_results_dataframe
+from pymontecarlo.formats.series.helper import create_options_dataframe, create_results_dataframe
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
@@ -68,7 +67,8 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             self.recalculate_required = False
             self.recalculated.send()
 
-    def create_options_dataframe(self, only_different_columns=False):
+    def create_options_dataframe(self, settings, only_different_columns=False,
+                                 abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
         
@@ -76,9 +76,11 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
         that are different between the options.
         """
         list_options = [simulation.options for simulation in self.simulations]
-        return create_options_dataframe(list_options, only_different_columns)
+        return create_options_dataframe(list_options, settings, only_different_columns,
+                                        abbreviate_name, format_number)
 
-    def create_results_dataframe(self, result_classes=None):
+    def create_results_dataframe(self, settings, result_classes=None,
+                                 abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
         
@@ -87,7 +89,8 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
         all results will be returned.
         """
         list_results = [simulation.results for simulation in self.simulations]
-        return create_results_dataframe(list_results, result_classes)
+        return create_results_dataframe(list_results, settings, result_classes,
+                                        abbreviate_name, format_number)
 
     def write(self, filepath=None):
         if filepath is None:

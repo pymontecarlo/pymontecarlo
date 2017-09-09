@@ -20,6 +20,7 @@ class TestOptionsHDF5Handler(TestCase):
         options = self.create_basic_options()
         options2 = self.convert_parse_hdf5handler(handler, options)
 #        print(options.program, options2.program, options.program == options2.program)
+#        print(options.program.models, options2.program.models)
 #        print(options.beam, options2.beam, options.beam == options2.beam)
 #        print(options.sample, options2.sample, options.sample == options2.sample)
 #        print(options.analyses, options2.analyses)

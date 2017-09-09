@@ -28,11 +28,11 @@ class TestProject(TestCase):
         self.assertEqual(2, len(self.p.result_classes))
 
     def testcreate_options_dataframe(self):
-        df = self.p.create_options_dataframe(only_different_columns=False)
+        df = self.p.create_options_dataframe(self.settings, only_different_columns=False)
         self.assertEqual(3, len(df))
 
     def testcreate_options_dataframe_only_different_columns(self):
-        df = self.p.create_options_dataframe(only_different_columns=True)
+        df = self.p.create_options_dataframe(self.settings, only_different_columns=True)
         self.assertEqual(3, len(df))
 
         self.assertEqual(2, len(df.loc[0]))
@@ -40,7 +40,7 @@ class TestProject(TestCase):
         self.assertEqual(2, len(df.loc[2]))
 
     def testcreate_results_dataframe(self):
-        df = self.p.create_results_dataframe()
+        df = self.p.create_results_dataframe(self.settings)
         self.assertEqual(3, len(df))
 
         self.assertEqual(20, len(df.loc[0]))
@@ -53,7 +53,7 @@ class TestProject(TestCase):
 
     def testcreate_results_dataframe_with_results(self):
         result_classes = [EmittedPhotonIntensityResult]
-        df = self.p.create_results_dataframe(result_classes)
+        df = self.p.create_results_dataframe(self.settings, result_classes)
         self.assertEqual(3, len(df))
 
         self.assertEqual(14, len(df.loc[0]))
@@ -62,7 +62,7 @@ class TestProject(TestCase):
 
     def testcreate_results_dataframe_with_missing_results(self):
         result_classes = [GeneratedPhotonIntensityResult]
-        df = self.p.create_results_dataframe(result_classes)
+        df = self.p.create_results_dataframe(self.settings, result_classes)
         self.assertEqual(3, len(df))
 
         self.assertEqual(6, len(df.loc[0]))
@@ -75,7 +75,7 @@ class TestProject(TestCase):
 
     def testcreate_results_dataframe_with_two_results(self):
         result_classes = [EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult]
-        df = self.p.create_results_dataframe(result_classes)
+        df = self.p.create_results_dataframe(self.settings, result_classes)
         self.assertEqual(3, len(df))
 
         self.assertEqual(20, len(df.loc[0]))

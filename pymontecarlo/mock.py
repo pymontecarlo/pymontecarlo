@@ -8,20 +8,27 @@ import time
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.program.base import Program
-from pymontecarlo.program.configurator import Configurator
-from pymontecarlo.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
-from pymontecarlo.program.validator import Validator
-from pymontecarlo.program.exporter import Exporter
-from pymontecarlo.program.worker import Worker
-from pymontecarlo.program.importer import Importer
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam.gaussian import GaussianBeam
+from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 from pymontecarlo.options.sample.base import Sample
-from pymontecarlo.options.sample import SubstrateSample
-from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.model import ElasticCrossSectionModel
-from pymontecarlo.options.analysis import PhotonIntensityAnalysis
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.options.sample.substrate import SubstrateSample
+from pymontecarlo.options.sample.inclusion import InclusionSample
+from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
+from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
+from pymontecarlo.options.sample.sphere import SphereSample
+from pymontecarlo.options.model.elastic_cross_section import ElasticCrossSectionModel
+from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis
+from pymontecarlo.options.detector.photon import PhotonDetector
+from pymontecarlo.options.program.base import Program
+from pymontecarlo.options.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
+from pymontecarlo.options.program.validator import Validator
+from pymontecarlo.options.program.exporter import Exporter
+from pymontecarlo.options.program.worker import Worker
+from pymontecarlo.options.program.importer import Importer
+from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5Handler
+from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandler
+from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandler
 
 # Globals and constants variables.
 
@@ -30,26 +37,6 @@ class SampleMock(Sample):
     @property
     def materials(self):
         return []
-
-class ConfiguratorMock(Configurator):
-
-    def prepare_parser(self, parser, program=None):
-        parser.description = 'Configure Mock.'
-
-        kwargs = {}
-        kwargs['help'] = 'tore value internally'
-        if program is not None:
-            kwargs['default'] = program.foo
-            kwargs['help'] += ' (current: {})'.format(program.foo)
-        else:
-            kwargs['required'] = True
-        parser.add_argument('--foo', **kwargs)
-
-    def create_program(self, namespace, clasz):
-        return clasz(namespace.foo)
-
-    def fullname(self):
-        return 'Mock'
 
 class ExpanderMock(Expander):
 
@@ -67,33 +54,32 @@ class ValidatorMock(Validator):
     def __init__(self):
         super().__init__()
 
+        self.beam_validate_methods[CylindricalBeam] = self._validate_beam_cylindrical
         self.beam_validate_methods[GaussianBeam] = self._validate_beam_gaussian
 
         self.sample_validate_methods[SubstrateSample] = self._validate_sample_substrate
+        self.sample_validate_methods[InclusionSample] = self._validate_sample_inclusion
+        self.sample_validate_methods[HorizontalLayerSample] = self._validate_sample_horizontallayers
+        self.sample_validate_methods[VerticalLayerSample] = self._validate_sample_verticallayers
+        self.sample_validate_methods[SphereSample] = self._validate_sample_sphere
 
         self.analysis_validate_methods[PhotonIntensityAnalysis] = self._validate_analysis_photonintensity
+        self.analysis_validate_methods[KRatioAnalysis] = self._validate_analysis_kratio
 
-        self.limit_validate_methods[ShowersLimit] = self._validate_limit_showers
+        self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
 
-        self.model_validate_methods[ElasticCrossSectionModel] = self._validate_model_valid_models
-
-        self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD]
-        self.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.RUTHERFORD
+    def _validate_program(self, program, options, errors):
+        elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors)
+        return ProgramMock(program.foo, elastic_cross_section_model)
 
 class ExporterMock(Exporter):
 
     def __init__(self):
         super().__init__()
-
         self.beam_export_methods[GaussianBeam] = self._export_beam_gaussian
-
         self.sample_export_methods[SubstrateSample] = self._export_sample_substrate
-
+        self.detector_export_methods[PhotonDetector] = self._export_detector_photon
         self.analysis_export_methods[PhotonIntensityAnalysis] = self._export_analysis_photonintensity
-
-        self.limit_export_methods[ShowersLimit] = self._export_limit_showers
-
-        self.model_export_methods[ElasticCrossSectionModel] = self._export_model_generic
 
     def _export(self, options, dirpath, errors):
         outdict = {}
@@ -103,20 +89,22 @@ class ExporterMock(Exporter):
         with open(filepath, 'w') as fp:
             json.dump(outdict, fp)
 
+    def _export_program(self, program, options, errors, outdict):
+        outdict.setdefault('program', {})
+        outdict['program']['foo'] = program.foo
+        outdict['program']['elastic_cross_section_model'] = str(program.elastic_cross_section_model)
+
     def _export_beam_gaussian(self, beam, options, errors, outdict):
         outdict['beam'] = 'gaussian'
 
     def _export_sample_substrate(self, sample, options, errors, outdict):
         outdict['sample'] = 'substrate'
 
+    def _export_detector_photon(self, detect, options, errors, outdict):
+        outdict.setdefault('photon', []).append('photon')
+
     def _export_analysis_photonintensity(self, analysis, options, errors, outdict):
         outdict.setdefault('analyses', []).append('photon intensity')
-
-    def _export_limit_showers(self, limit, options, errors, outdict):
-        outdict.setdefault('limits', []).append('showers')
-
-    def _export_model_generic(self, model, options, errors, outdict):
-        outdict.setdefault('models', []).append(model.name)
 
 class WorkerMock(Worker):
 
@@ -142,16 +130,17 @@ class ImporterMock(Importer):
 
 class ProgramMock(Program):
 
-    def __init__(self, foo=None):
+    def __init__(self,
+                 foo=None,
+                 elastic_cross_section_model=ElasticCrossSectionModel.RUTHERFORD):
+        super().__init__('mock')
         self.foo = foo
+        self.elastic_cross_section_model = elastic_cross_section_model
 
-    @classmethod
-    def getidentifier(cls):
-        return 'mock'
-
-    @classmethod
-    def create_configurator(cls):
-        return ConfiguratorMock()
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.foo == other.foo and \
+            self.elastic_cross_section_model == other.elastic_cross_section_model
 
     def create_expander(self):
         return ExpanderMock()
@@ -168,15 +157,67 @@ class ProgramMock(Program):
     def create_worker(self):
         return WorkerMock()
 
-    def create_default_limits(self, options):
-        return [ShowersLimit(100)]
+class ProgramHDF5HandlerMock(ProgramHDF5Handler):
 
-class ProgramHDF5HandlerMock(HDF5Handler):
+    ATTR_FOO = 'foo'
+    ATTR_ELASTIC_CROSS_SECTION_MODEL = 'elastic_cross_section_model'
 
-    CLASS = ProgramMock
+    def _parse_foo(self, group):
+        return group.attrs[self.ATTR_FOO]
+
+    def _parse_elastic_cross_section_model(self, group):
+        ref_model = group.attrs[self.ATTR_ELASTIC_CROSS_SECTION_MODEL]
+        return self._parse_model_internal(group, ref_model)
 
     def parse(self, group):
-        return super().parse(group)
+        program = super().parse(group)
+        program.foo = self._parse_foo(group)
+        program.elastic_cross_section_model = self._parse_elastic_cross_section_model(group)
+        return program
 
-    def convert(self, obj, group):
-        super().convert(obj, group)
+    def can_parse(self, group):
+        return super().can_parse(group) and \
+            self.ATTR_FOO in group.attrs
+
+    def _convert_foo(self, foo, group):
+        group.attrs[self.ATTR_FOO] = foo
+
+    def _convert_elastic_cross_section_model(self, model, group):
+        group_model = self._convert_model_internal(model, group)
+        group.attrs[self.ATTR_ELASTIC_CROSS_SECTION_MODEL] = group_model.ref
+
+    def convert(self, program, group):
+        super().convert(program, group)
+        self._convert_foo(program.foo, group)
+        self._convert_elastic_cross_section_model(program.elastic_cross_section_model, group)
+
+    @property
+    def CLASS(self):
+        return ProgramMock
+
+class ProgramSeriesHandlerMock(ProgramSeriesHandler):
+
+    def convert(self, program, builder):
+        super().convert(program, builder)
+        builder.add_column('foo', 'foo', program.foo)
+        builder.add_object(program.elastic_cross_section_model)
+
+    @property
+    def CLASS(self):
+        return ProgramMock
+
+class ProgramDocumentHandlerMock(ProgramDocumentHandler):
+
+    def convert(self, program, builder):
+        super().convert(program, builder)
+
+        description = builder.require_description('program')
+        description.add_item('Foo', program.foo)
+
+        section = builder.add_section()
+        section.add_title('Models')
+        section.add_object(program.elastic_cross_section_model)
+
+    @property
+    def CLASS(self):
+        return ProgramMock

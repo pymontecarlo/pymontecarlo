@@ -15,7 +15,7 @@ import pkg_resources
 import h5py
 
 # Local modules.
-import pymontecarlo
+from pymontecarlo.settings import Settings, XrayNotation
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.options.options import Options
@@ -23,12 +23,16 @@ from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.limit import ShowersLimit
 from pymontecarlo.options.model import ElasticCrossSectionModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
 from pymontecarlo.mock import ProgramMock
+from pymontecarlo.util.entrypoint import \
+    (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
+     ENTRYPOINT_DOCUMENTHANDLER)
+from pymontecarlo.formats.series.builder import SeriesBuilder
+from pymontecarlo.formats.document.builder import DocumentBuilder
 
 # Globals and constants variables.
 
@@ -41,38 +45,47 @@ class TestCase(unittest.TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        # Add program HDF5 handler
+        # Add program HDF5, series and HTML handlers
         requirement = pkg_resources.Requirement('pymontecarlo')
         distribution = pkg_resources.working_set.find(requirement)
-        entry_map = distribution.get_entry_map('pymontecarlo.formats.hdf5')
+
+        entry_map = distribution.get_entry_map(ENTRYPOINT_HDF5HANDLER)
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
                                                      attrs=('ProgramHDF5HandlerMock',),
                                                      dist=distribution)
 
-        # Add program to available programs
-        entry_map = distribution.get_entry_map('pymontecarlo.program')
+        entry_map = distribution.get_entry_map(ENTRYPOINT_SERIESHANDLER)
         entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
-                                                     attrs=('ProgramMock',),
+                                                     attrs=('ProgramSeriesHandlerMock',),
                                                      dist=distribution)
 
-        pymontecarlo.settings.reload()
+        entry_map = distribution.get_entry_map(ENTRYPOINT_DOCUMENTHANDLER)
+        entry_map['mock'] = pkg_resources.EntryPoint('mock', 'pymontecarlo.mock',
+                                                     attrs=('ProgramDocumentHandlerMock',),
+                                                     dist=distribution)
 
-        pymontecarlo.settings.preferred_xrayline_encoding = 'utf16'
-        pymontecarlo.settings.preferred_xrayline_notation = 'iupac'
-        pymontecarlo.settings.clear_preferred_units()
+        # Reset entry points
+        reset_entrypoints()
 
     def setUp(self):
         super().setUp()
 
         self.tmpdirs = []
 
-        self.program = ProgramMock()
+        self.settings = Settings()
+        self.settings.preferred_xray_notation = XrayNotation.IUPAC
 
     def tearDown(self):
         super().tearDown()
 
         for tmpdir in self.tmpdirs:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def create_basic_program(self):
+        program = ProgramMock()
+        program.foo = 123
+        program.elastic_cross_section_model = ElasticCrossSectionModel.MOTT_CZYZEWSKI1990
+        return program
 
     def create_basic_beam(self):
         return GaussianBeam(15e3, 10e-9)
@@ -84,12 +97,11 @@ class TestCase(unittest.TestCase):
         return PhotonDetector('xray', math.radians(40.0))
 
     def create_basic_options(self):
+        program = self.create_basic_program()
         beam = self.create_basic_beam()
         sample = self.create_basic_sample()
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
-        limits = [ShowersLimit(100)]
-        models = [ElasticCrossSectionModel.RUTHERFORD]
-        return Options(self.program, beam, sample, analyses, limits, models)
+        return Options(program, beam, sample, analyses)
 
     def create_basic_photonintensityresult(self):
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())
@@ -150,3 +162,27 @@ class TestCase(unittest.TestCase):
             obj2 = handler.parse(f)
 
         return obj2
+
+    def convert_serieshandler(self, handler, obj):
+        builder = SeriesBuilder(self.settings)
+        handler.convert(obj, builder)
+        return builder.build()
+
+    def convert_documenthandler(self, handler, obj):
+        builder = DocumentBuilder(self.settings)
+        handler.convert(obj, builder)
+        return builder.build()
+
+    def count_document_nodes(self, document):
+        def recursive(node, total=0):
+            if not hasattr(node, 'children'):
+                return total
+
+            total += len(node.children)
+            for childnode in node:
+                return recursive(childnode, total)
+
+            return total
+
+        return recursive(document)
+

@@ -18,6 +18,9 @@ import textwrap
 class PymontecarloError(Exception):
     """Base exception of pymontecarlo."""
 
+class PymontecarloWarning(Warning):
+    pass
+
 class AccumulatedError(PymontecarloError):
 
     _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
@@ -46,6 +49,9 @@ class ImportError_(AccumulatedError):
     pass
 
 class ProgramNotFound(PymontecarloError):
+    pass
+
+class ProgramNotLoadedWarning(PymontecarloWarning):
     pass
 
 class ParseError(PymontecarloError):

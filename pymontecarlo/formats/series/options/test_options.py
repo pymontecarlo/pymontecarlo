@@ -18,7 +18,7 @@ class TestOptionsSeriesHandler(TestCase):
     def testconvert(self):
         handler = OptionsSeriesHandler()
         options = self.create_basic_options()
-        s = handler.convert(options)
+        s = self.convert_serieshandler(handler, options)
         self.assertEqual(14, len(s))
 
 if __name__ == '__main__': #pragma: no cover

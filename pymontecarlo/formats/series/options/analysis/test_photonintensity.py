@@ -20,7 +20,7 @@ class TestPhotonIntensityAnalysisSeriesHandler(TestCase):
         handler = PhotonIntensityAnalysisSeriesHandler()
         detector = self.create_basic_photondetector()
         analysis = PhotonIntensityAnalysis(detector)
-        s = handler.convert(analysis)
+        s = self.convert_serieshandler(handler, analysis)
         self.assertEqual(0, len(s))
 
 if __name__ == '__main__': #pragma: no cover

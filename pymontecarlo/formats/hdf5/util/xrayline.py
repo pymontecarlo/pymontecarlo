@@ -8,7 +8,7 @@ import pyxray
 import numpy as np
 
 # Local modules.
-from pymontecarlo.formats.hdf5.base import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5Handler
 from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
@@ -27,7 +27,7 @@ class XrayLineHDF5HandlerMixin:
     def _convert_xrayline_internal(self, xrayline, group):
         group_xraylines = self._require_xraylines_group(group)
 
-        name = xrayline.name
+        name = xrayline.iupac
         if name in group_xraylines:
             return group_xraylines[name]
 

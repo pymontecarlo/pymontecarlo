@@ -6,7 +6,6 @@
 import pyxray
 
 # Local modules.
-import pymontecarlo
 
 # Globals and constants variables.
 
@@ -38,6 +37,7 @@ def find_lowest_energy_known_xrayline(zs, minimum_energy_eV=0.0):
 class XrayLine:
 
     def __init__(self, element, line):
+        # Ensure pyxray objects
         self._element = pyxray.element(element)
 
         if not isinstance(line, (pyxray.XrayTransition, pyxray.XrayTransitionSet)):
@@ -47,13 +47,22 @@ class XrayLine:
                 line = pyxray.xray_transitionset(line)
         self._line = line
 
-        self._name = None # Late initialization
+        self._is_xray_transitionset = isinstance(line, pyxray.XrayTransitionSet)
 
-        signal = pymontecarlo.settings.preferred_xrayline_notation_changed
-        signal.connect(self._on_settings_changed)
+        # Create names
+        symbol = pyxray.element_symbol(self.element)
 
-        signal = pymontecarlo.settings.preferred_xrayline_encoding_changed
-        signal.connect(self._on_settings_changed)
+        if self._is_xray_transitionset:
+            method = pyxray.xray_transitionset_notation
+        else:
+            method = pyxray.xray_transition_notation
+
+        self._iupac = '{} {}'.format(symbol, method(line, 'iupac', 'utf16'))
+
+        try:
+            self._siegbahn = '{} {}'.format(symbol, method(line, 'siegbahn', 'utf16'))
+        except pyxray.NotFound:
+            self._siegbahn = self._iupac
 
     def __hash__(self):
         return hash((self.element, self.line))
@@ -71,30 +80,8 @@ class XrayLine:
                                     self._element._repr_inner(),
                                     self._line._repr_inner())
 
-    def _on_settings_changed(self):
-        self._name = None
-
-    def _create_name(self, *args):
-        symbol = pyxray.element_symbol(self.element)
-
-        if self.is_xray_transitionset():
-            method = pyxray.xray_transitionset_notation
-        else:
-            method = pyxray.xray_transition_notation
-
-        settings = pymontecarlo.settings
-        preferred_notation = settings.preferred_xrayline_notation
-        preferred_encoding = settings.preferred_xrayline_encoding
-
-        try:
-            notation = method(self.line, preferred_notation, preferred_encoding)
-        except pyxray.NotFound:
-            notation = method(self.line, 'iupac', preferred_encoding)
-
-        return '{0} {1}'.format(symbol, notation)
-
     def is_xray_transitionset(self):
-        return isinstance(self.line, pyxray.XrayTransitionSet)
+        return self._is_xray_transitionset
 
     @property
     def element(self):
@@ -109,8 +96,10 @@ class XrayLine:
         return self._line
 
     @property
-    def name(self):
-        if self._name is None:
-            self._name = self._create_name()
-        return self._name
+    def iupac(self):
+        return self._iupac
+
+    @property
+    def siegbahn(self):
+        return self._siegbahn
 

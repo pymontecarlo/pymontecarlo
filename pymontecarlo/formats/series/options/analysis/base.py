@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.base import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandler
 
 # Globals and constants variables.
 
