@@ -67,7 +67,6 @@ class ValidatorMock(Validator):
         self.analysis_validate_methods[KRatioAnalysis] = self._validate_analysis_kratio
 
         self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
-        self.default_models[ElasticCrossSectionModel] = ElasticCrossSectionModel.RUTHERFORD
 
     def _validate_program(self, program, options, errors):
         elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors)
