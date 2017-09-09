@@ -41,7 +41,7 @@ Contributors
 - `Silvia Richter <https://github.com/silrichter>`_ (`RWTH Aachen University <http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm>`_, Aachen, Germany)
 
 .. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
-.. image:: https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/gfe.png
+.. image:: https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg
 
 Copyrights
 ----------
