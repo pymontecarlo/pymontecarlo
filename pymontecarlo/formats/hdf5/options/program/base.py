@@ -3,9 +3,6 @@
 # Standard library modules.
 
 # Third party modules.
-import h5py
-
-import numpy as np
 
 # Local modules.
 from pymontecarlo.formats.hdf5.handler import HDF5Handler

@@ -42,7 +42,6 @@ class Validator(object, metaclass=abc.ABCMeta):
         self.sample_validate_methods = {}
         self.analysis_validate_methods = {}
         self.valid_models = {}
-        self.default_models = {}
 
     def validate_options(self, options):
         errors = set()
