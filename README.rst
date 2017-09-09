@@ -1,9 +1,21 @@
-pyMonteCarlo
-============
+===========================
+|pymontecarlo| pyMonteCarlo
+===========================
+
+.. |pymontecarlo| image:: https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/logo_64x64.png
+   :alt: hello
 
 .. image:: https://img.shields.io/pypi/v/pymontecarlo.svg
+   :target: https://pypi.org/project/pyMonteCarlo/
+   :alt: PyPI status
+
 .. image:: https://img.shields.io/travis/pymontecarlo/pymontecarlo.svg
+   :target: https://travis-ci.org/pymontecarlo/pymontecarlo
+   :alt: Travis CI status
+
 .. image:: https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo.svg
+   :target: https://codecov.io/gh/pymontecarlo/pymontecarlo
+   :alt: Codecov status
 
 **pyMonteCarlo** is a programming interface to run identical simulations using 
 different Monte Carlo programs. The interface was designed to have common input 
@@ -15,10 +27,25 @@ common output format where results are expressed in the same units.
 
 **pyMonteCarlo** is currently under development.
 
-Authors
+License
 -------
+
+**pyMonteCarlo** is licensed under Apache Software License 2.0.
+
+Contributors
+------------
 
 - `Philippe T. Pinard <https://github.com/ppinard>`_ (High Wycombe, United Kingdom)
 - `Hendrix Demers <https://github.com/drix00>`_ (McGill University, Montreal, Canada)
 - `Raynald Gauvin <http://www.memrg.com>`_ (McGill University, Montreal, Canada)
 - `Silvia Richter <https://github.com/silrichter>`_ (`RWTH Aachen University <http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm>`_, Aachen, Germany)
+
+.. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
+.. image:: https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/gfe.png
+
+Copyrights
+----------
+
+Copyright (c) 2011 - 2016/06, Silvia Richter and Philippe Pinard
+
+Copyright (c) 2016/06 - , Philippe Pinard
