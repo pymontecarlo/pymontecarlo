@@ -3,7 +3,7 @@
 ===========================
 
 .. |pymontecarlo| image:: https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/logo_64x64.png
-   :alt: hello
+   :alt: 
 
 .. image:: https://img.shields.io/pypi/v/pymontecarlo.svg
    :target: https://pypi.org/project/pyMonteCarlo/
@@ -40,8 +40,11 @@ Contributors
 - `Raynald Gauvin <http://www.memrg.com>`_ (McGill University, Montreal, Canada)
 - `Silvia Richter <https://github.com/silrichter>`_ (`RWTH Aachen University <http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm>`_, Aachen, Germany)
 
-.. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
 .. image:: https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg
+   :height: 70px
+   
+.. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
+   :height: 40px
 
 Copyrights
 ----------
