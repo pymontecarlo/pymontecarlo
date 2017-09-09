@@ -20,7 +20,6 @@ from pymontecarlo.options.sample import \
 from pymontecarlo.options.detector.photon import PhotonDetector
 from pymontecarlo.options.model import ElasticCrossSectionModel, MassAbsorptionCoefficientModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
@@ -64,7 +63,7 @@ class TestValidator(TestCase):
 
         errors = set()
         self.v._validate_beam(beam, self.options, errors)
-        self.assertEqual(5, len(errors))
+        self.assertEqual(6, len(errors))
 
     def testvalidate_beam_gaussian(self):
         beam = GaussianBeam(10e3, 0.123)
@@ -79,7 +78,7 @@ class TestValidator(TestCase):
 
         errors = set()
         self.v._validate_beam(beam, self.options, errors)
-        self.assertEqual(5, len(errors))
+        self.assertEqual(6, len(errors))
 
     def testvalidate_sample_substrate(self):
         sample = SubstrateSample(COPPER)

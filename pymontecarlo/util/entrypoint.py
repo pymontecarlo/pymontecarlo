@@ -11,7 +11,6 @@ from pkg_resources import iter_entry_points
 # Globals and constants variables.
 _ENTRYPOINTS = {}
 
-ENTRYPOINT_PROGRAMS = 'pymontecarlo.program'
 ENTRYPOINT_HDF5HANDLER = 'pymontecarlo.formats.hdf5'
 ENTRYPOINT_DOCUMENTHANDLER = 'pymontecarlo.formats.document'
 ENTRYPOINT_SERIESHANDLER = 'pymontecarlo.formats.series'
