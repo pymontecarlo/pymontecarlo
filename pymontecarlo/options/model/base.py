@@ -27,5 +27,8 @@ class Model(Option, enum.Enum, metaclass=ModelMeta):
         # but should only used equality from Enum
         return enum.Enum.__eq__(self, other)
 
+    def __hash__(self):
+        return enum.Enum.__hash__(self)
+
     def __str__(self):
         return self.fullname
