@@ -32,7 +32,7 @@ class Analysis(Option):
         Calculates additional result(s) for this analysis.
         
         :arg simulation: simulation subjected to this analysis
-        :type simulation :class:`Simulation`
+        :type simulation: :class:`Simulation`
         
         :arg simulations: other simulations in the project
         :type simulations: :class`:list` of :class:`Simulation`

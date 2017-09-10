@@ -5,9 +5,6 @@
 ================================================================================
 
 .. module:: conversion
-   :synopsis: Conversion utilities
-
-.. inheritance-diagram:: latextools.bibtex.conversion
 
 """
 
