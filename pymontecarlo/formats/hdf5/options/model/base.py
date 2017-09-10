@@ -23,7 +23,7 @@ class ModelHDF5HandlerMixin:
     def _convert_model_internal(self, model, group):
         group_models = self._require_models_group(group)
 
-        name = '{} [{:d}]'.format(model.__class__.__name__, id(model))
+        name = '{} {} [{:d}]'.format(model.__class__.__name__, model.fullname, id(model))
         if name in group_models:
             return group_models[name]
 

@@ -24,7 +24,7 @@ class ProgramHDF5HandlerMixin:
     def _convert_program_internal(self, program, group):
         group_programs = self._require_programs_group(group)
 
-        name = program.name
+        name = '{} [{:d}]'.format(program.name, id(program))
         if name in group_programs:
             return group_programs[name]
 
