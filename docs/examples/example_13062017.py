@@ -9,75 +9,56 @@ import matplotlib.pyplot as plt
 
 # Local modules
 # Create options
-import pymontecarlo
-from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import HorizontalLayerSample, SubstrateSample, VerticalLayerSample
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.analyses import KRatioAnalysis
-from pymontecarlo.options.limit import ShowersLimit
-from pymontecarlo.options.options import Options
+from pymontecarlo.options.analysis import KRatioAnalysis, PhotonIntensityAnalysis
+from pymontecarlo.options.options import OptionsBuilder
 
-from pymontecarlo.options.beam.base import Beam, BeamBuilder
 from pymontecarlo.options.beam.gaussian import GaussianBeamBuilder
-from pymontecarlo.options.base import Option, OptionBuilder
 
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder, \
     EmittedPhotonIntensityResult
-from pymontecarlo.options.analyses.photon import PhotonAnalysis
-from pymontecarlo.options.analyses.photonintensity import PhotonIntensityAnalysis
 
+from pymontecarlo.runner.local import LocalSimulationRunner
+from pymontecarlo.project import Project
+
+from pymontecarlo_casino2.program import Casino2Program
 
 def main(argv=None):
-    program = pymontecarlo.settings.get_program('casino2')
+    options_builder = OptionsBuilder()
 
-    # beam = GaussianBeam(15e3, 10e-9)
+    program = Casino2Program()
+    program.number_trajectories = 1000
+    options_builder.add_program(program)
+
+    beam_builder = GaussianBeamBuilder()
+    beam_builder.add_energy_eV(15e3)
+    beam_builder.add_diameter_m(10e-9)
+    beam_builder.add_linescan_x(-1e-07, 1e-07, 5e-08)
+    beams = beam_builder.build()
+    print('beams', beams)
+    options_builder.beams.extend(beams)
 
     mat1 = Material.pure(26)
     mat2 = Material.pure(14)
-    # mat2 = Material.from_formula('SiO2')
-    # mat3 = Material('Stuff', {27: 0.5, 25: 0.2, 8: 0.3}, 4500.0)
-
-    # sample = SubstrateSample(mat2)
-
-    # sample = HorizontalLayerSample(mat3)
-    # sample.add_layer(mat2, 10e-9)
-    # sample.add_layer(mat3, 25e-9)
-
     sample = VerticalLayerSample(mat1, mat2)
-    # sample.add_layer(mat3, 10e-9)
+    options_builder.add_sample(sample)
 
-    photon_detector = PhotonDetector(math.radians(35.0))
+    photon_detector = PhotonDetector('xray', math.radians(35.0))
     # analysis = KRatioAnalysis(photon_detector)
     analysis = PhotonIntensityAnalysis(photon_detector)
+    options_builder.add_analysis(analysis)
 
-    limit = ShowersLimit(1000)
-
-    b = GaussianBeamBuilder()
-    b.add_energy_eV(15e3)
-    b.add_diameter_m(10e-9)
-    b.add_linescan_x(-1e-07, 1e-07, 5e-08)
-
-    beams = b.build()
-
-    print('beams', beams)
-
-    opt = []
-
-    for beam in beams:
-        opt.append(Options(program, beam, sample, [analysis], [limit]))
+    list_options = options_builder.build()
 
     # Run simulation
-    from pymontecarlo.runner.local import LocalSimulationRunner
-    from pymontecarlo.project import Project
-
     project = Project()
 
     # for options in opt:
 
     with LocalSimulationRunner(project, max_workers=3) as runner:
-
-        futures = [runner.submit(o) for o in opt]
+        futures = runner.submit(*list_options)
 
         print('{} simulations launched'.format(len(futures)))
 
@@ -126,20 +107,20 @@ def main(argv=None):
         print('{}\t{}'.format(k, v))
         print(v)
         plot_results(k, v)
-        sorted_results.append(k,v)
-        
+        sorted_results.append((k, v))
+
     return sorted_results
     print(sorted_results)
 
 def plot_results(label, listoftuples):
     #ylabels = {'kratio': 'k-ratio', 'mass': 'Mass (%)', 'atom': 'Atom (%)'}
-    
+
     fig = plt.figure()
     ax = fig.add_subplot("111")
-    
+
     ax.set_xlabel('Distance (nm)')
     ax.set_ylabel('Intensity')
-    plt.plot((*zip(*listoftuples)), label = label)
+    plt.plot((*zip(*listoftuples)), label=label)
     plt.legend()
     plt.show()
     print(label)
