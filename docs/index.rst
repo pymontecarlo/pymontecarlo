@@ -33,7 +33,7 @@ Contributors
    :maxdepth: 2
    
    examples
-   code/modules
+   api
 
 Indices and tables
 ==================
