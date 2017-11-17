@@ -9,7 +9,6 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.formats.hdf5.handler import HDF5Handler
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -95,4 +94,4 @@ class XrayLineHDF5Handler(HDF5Handler):
 
     @property
     def CLASS(self):
-        return XrayLine
+        return pyxray.XrayLine

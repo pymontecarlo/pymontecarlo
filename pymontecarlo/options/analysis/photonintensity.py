@@ -11,7 +11,6 @@ import pyxray
 from pymontecarlo.options.analysis.photon import \
     PhotonAnalysis, PhotonAnalysisBuilder, COMMON_XRAY_TRANSITION_SETS
 from pymontecarlo.results.photonintensity import PhotonIntensityResult
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -37,7 +36,7 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
 
                 for transitionset in COMMON_XRAY_TRANSITION_SETS:
                     # Check if it already exists
-                    xrayline = XrayLine(z, transitionset)
+                    xrayline = pyxray.XrayLine(z, transitionset)
                     if xrayline in result:
                         continue
 
@@ -49,7 +48,7 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
                     subxraylines = []
                     total = 0.0
                     for transition in transitions:
-                        subxrayline = XrayLine(z, transition)
+                        subxrayline = pyxray.XrayLine(z, transition)
                         q = result.get(subxrayline, None)
                         if q is None:
                             break

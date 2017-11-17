@@ -6,11 +6,11 @@ Photon based results.
 import collections
 
 # Third party modules.
+import pyxray
 import uncertainties
 
 # Local modules.
 from pymontecarlo.results.base import Result, ResultBuilder
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -32,7 +32,7 @@ class PhotonResult(Result, collections.Mapping):
         return iter(self.data)
 
     def __getitem__(self, xrayline):
-        xrayline = XrayLine(*xrayline)
+        xrayline = pyxray.XrayLine(*xrayline)
         return self.data[xrayline]
 
     def __repr__(self):
@@ -56,7 +56,7 @@ class PhotonResultBuilder(ResultBuilder):
         self.result_class = result_class
 
     def _add(self, xrayline, datum):
-        xrayline = XrayLine(*xrayline)
+        xrayline = pyxray.XrayLine(*xrayline)
         self.data[xrayline] = datum
 
     def build(self):
