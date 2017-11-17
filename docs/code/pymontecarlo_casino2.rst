@@ -1,3 +1,5 @@
+.. _pymontecarlo-casino2:
+
 pymontecarlo_casino2 package
 ============================
 

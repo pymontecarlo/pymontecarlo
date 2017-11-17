@@ -18,7 +18,9 @@ common output format where results are expressed in the same units.
 License
 =======
 
-**pyMonteCarlo** is licensed under Apache Software License 2.0.
+**pyMonteCarlo** and the packages providing interfaces to Monte Carlo programs
+are licensed under Apache Software License 2.0. 
+All graphical user interface (GUI) packages are licensed under GPL v3.
 
 Contributors
 ============
@@ -32,6 +34,8 @@ Contributors
    :caption: Contents
    :maxdepth: 2
    
+   installation
+   supported-monte-carlo-programs
    examples
    api
 
