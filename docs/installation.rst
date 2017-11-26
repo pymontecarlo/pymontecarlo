@@ -86,6 +86,11 @@ If not, another way to start **pyMonteCarlo** is the following:
 Development
 -----------
 
+.. warning::
+
+   Many projects in the **pyMonteCarlo** organization uses `Git LFS <https://git-lfs.github.com/>`_.
+   Please make sure it is installed before cloning any repository.
+
 Clone the **pyMonteCarlo** Github repository, either directly or after forking:
 
 .. code-block:: console
