@@ -5,7 +5,6 @@ Estimate of electron range
 # Standard library modules.
 
 # Third party modules.
-import pyxray
 
 # Local modules.
 
@@ -32,10 +31,7 @@ def photon_range(e0, material, xrayline, reference=None):
     if z not in material.composition:
         raise ValueError('{} is not in material'.format(xrayline))
 
-    if xrayline.is_xray_transitionset():
-        energy_eV = pyxray.xray_transitionset_energy_eV(*xrayline, reference=reference)
-    else:
-        energy_eV = pyxray.xray_transition_energy_eV(*xrayline, reference=reference)
+    energy_eV = xrayline.energy_eV
     if energy_eV > e0:
         return 0.0
 

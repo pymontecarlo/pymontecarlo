@@ -42,6 +42,7 @@ class XrayLineHDF5Handler(HDF5Handler):
     DATASET_TRANSITIONS = 'transitions'
     ATTR_IUPAC = 'iupac'
     ATTR_SIEGBAHN = 'siegbahn'
+    ATTR_ENERGY = 'energy'
 
     def _parse_element(self, group):
         return int(group.attrs[self.ATTR_ATOMIC_NUMBER])
@@ -63,19 +64,24 @@ class XrayLineHDF5Handler(HDF5Handler):
     def _parse_siebahn(self, group):
         return group.attrs[self.ATTR_SIEGBAHN]
 
+    def _parse_energy(self, group):
+        return float(group.attrs[self.ATTR_ENERGY])
+
     def can_parse(self, group):
         return super().can_parse(group) and \
             self.ATTR_ATOMIC_NUMBER in group.attrs and \
             self.DATASET_TRANSITIONS in group and \
             self.ATTR_IUPAC in group.attrs and \
-            self.ATTR_SIEGBAHN in group.attrs
+            self.ATTR_SIEGBAHN in group.attrs and \
+            self.ATTR_ENERGY in group.attrs
 
     def parse(self, group):
         element = self._parse_element(group)
         transitions = self._parse_transitions(group)
         iupac = self._parse_iupac(group)
         siegbahn = self._parse_siebahn(group)
-        return self.CLASS(element, transitions, iupac, siegbahn)
+        energy_eV = self._parse_energy(group)
+        return self.CLASS(element, transitions, iupac, siegbahn, energy_eV)
 
     def _convert_element(self, element, group):
         group.attrs[self.ATTR_ATOMIC_NUMBER] = element.atomic_number
@@ -95,12 +101,16 @@ class XrayLineHDF5Handler(HDF5Handler):
     def _convert_siegbahn(self, siegbahn, group):
         group.attrs[self.ATTR_SIEGBAHN] = siegbahn
 
+    def _convert_energy_eV(self, energy_eV, group):
+        group.attrs[self.ATTR_ENERGY] = energy_eV
+
     def convert(self, xrayline, group):
         super().convert(xrayline, group)
         self._convert_element(xrayline.element, group)
         self._convert_transitions(xrayline.transitions, group)
         self._convert_iupac(xrayline.iupac, group)
         self._convert_siegbahn(xrayline.siegbahn, group)
+        self._convert_energy_eV(xrayline.energy_eV, group)
 
     @property
     def CLASS(self):
