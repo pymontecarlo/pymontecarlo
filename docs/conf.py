@@ -73,6 +73,7 @@ todo_include_todos = True
 # pngmath_latex_preamble = latex_preamble
 
 autoclass_content = "both"
+autodoc_member_order = 'groupwise'
 
 # -- Options for HTML output ----------------------------------------------
 

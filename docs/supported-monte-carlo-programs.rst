@@ -6,6 +6,8 @@ Supported Monte Carlo programs
 
 Here are the currently supported Monte Carlo programs in **pyMonteCarlo**.
 
+.. _supported-monte-carlo-programs-casino2:
+
 Casino 2
 --------
 
