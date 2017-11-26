@@ -28,7 +28,7 @@ class Material(Option):
 
     COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
 
-    def __init__(self, name, composition, density_kg_per_m3, color=None):
+    def __init__(self, name, composition, density_kg_per_m3=None, color=None):
         """
         Creates a new material.
 
@@ -52,6 +52,8 @@ class Material(Option):
 
         self.name = name
         self.composition = composition.copy()
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
         self.density_kg_per_m3 = density_kg_per_m3
 
         if color is None:
