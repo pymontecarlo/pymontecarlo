@@ -19,7 +19,7 @@ class TestModule(TestCase):
 
     def testphoton_range(self):
         material = Material.pure(29)
-        xrayline = pyxray.XrayLine(29, 'Ka1')
+        xrayline = pyxray.xray_line(29, 'Ka1')
 
         actual = photon_range(20e3, material, xrayline, reference='perkins1991')
         self.assertAlmostEqual(8.42816e-7, actual, 10)

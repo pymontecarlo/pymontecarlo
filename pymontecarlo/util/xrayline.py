@@ -29,7 +29,7 @@ def find_lowest_energy_known_xrayline(zs, minimum_energy_eV=0.0):
 
             energy_eV = pyxray.xray_transition_energy_eV(z, xraytransition)
             if energy_eV < lowest_energy_eV and energy_eV >= minimum_energy_eV:
-                lowest_xrayline = pyxray.XrayLine(z, xraytransition)
+                lowest_xrayline = pyxray.xray_line(z, xraytransition)
                 lowest_energy_eV = energy_eV
 
     return lowest_xrayline

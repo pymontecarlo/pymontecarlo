@@ -18,13 +18,13 @@ class TestXrayLineHDF5Handler(TestCase):
 
     def testconvert_parse_xraytransition(self):
         handler = XrayLineHDF5Handler()
-        xrayline = pyxray.XrayLine(29, 'Ka1')
+        xrayline = pyxray.xray_line(29, 'Ka1')
         xrayline2 = self.convert_parse_hdf5handler(handler, xrayline)
         self.assertEqual(xrayline2, xrayline)
 
     def testconvert_parse_xraytransitionset(self):
         handler = XrayLineHDF5Handler()
-        xrayline = pyxray.XrayLine(29, 'Ka')
+        xrayline = pyxray.xray_line(29, 'Ka')
         xrayline2 = self.convert_parse_hdf5handler(handler, xrayline)
         self.assertEqual(xrayline2, xrayline)
 

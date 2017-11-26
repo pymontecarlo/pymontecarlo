@@ -6,7 +6,6 @@ Photon based results.
 import collections
 
 # Third party modules.
-import pyxray
 import uncertainties
 
 # Local modules.
@@ -32,12 +31,15 @@ class PhotonResult(Result, collections.Mapping):
         return iter(self.data)
 
     def __getitem__(self, xrayline):
-        xrayline = pyxray.XrayLine(*xrayline)
         return self.data[xrayline]
 
     def __repr__(self):
         return '<{}({})>'.format(self.__class__.__name__,
                                  ', '.join(map(str, self)))
+
+    @property
+    def atomic_numbers(self):
+        return frozenset(xrayline.z for xrayline in self.keys())
 
 class PhotonSingleResult(PhotonResult):
 
@@ -56,7 +58,6 @@ class PhotonResultBuilder(ResultBuilder):
         self.result_class = result_class
 
     def _add(self, xrayline, datum):
-        xrayline = pyxray.XrayLine(*xrayline)
         self.data[xrayline] = datum
 
     def build(self):

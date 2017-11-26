@@ -36,7 +36,7 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
 
                 for transitionset in COMMON_XRAY_TRANSITION_SETS:
                     # Check if it already exists
-                    xrayline = pyxray.XrayLine(z, transitionset)
+                    xrayline = pyxray.xray_line(z, transitionset)
                     if xrayline in result:
                         continue
 
@@ -48,7 +48,7 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
                     subxraylines = []
                     total = 0.0
                     for transition in transitions:
-                        subxrayline = pyxray.XrayLine(z, transition)
+                        subxrayline = pyxray.xray_line(z, transition)
                         q = result.get(subxrayline, None)
                         if q is None:
                             break
