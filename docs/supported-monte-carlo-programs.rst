@@ -9,7 +9,7 @@ Here are the currently supported Monte Carlo programs in **pyMonteCarlo**.
 .. _supported-monte-carlo-programs-casino2:
 
 Casino 2
---------
+========
 
 Authors
     Dominique Drouin, Alexandre Real Couture, Raynald Gauvin, Pierre Hovington,

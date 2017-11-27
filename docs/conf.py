@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('.'))
+
 import pymontecarlo
-
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
 
 # -- General configuration ------------------------------------------------
 
@@ -22,7 +22,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
               'sphinx.ext.graphviz',
-              'sphinx.ext.inheritance_diagram']
+              'sphinx.ext.inheritance_diagram',
+              'pymontecarlo_ext']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -172,3 +173,5 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+pymontecarlo_program_validators = {'Casino 2': 'pymontecarlo_casino2.validator:Casino2Validator'}

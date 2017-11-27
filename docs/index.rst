@@ -68,8 +68,9 @@ Contributors
    :maxdepth: 2
    
    installation
-   supported-monte-carlo-programs
    tutorial
+   supported-monte-carlo-programs
+   supported-options
    examples
    api
 

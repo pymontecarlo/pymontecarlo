@@ -5,18 +5,19 @@ Tutorial
 ========
 
 A (Monte Carlo) :class:`Simulation <pymontecarlo.simulation.Simulation>` 
-consists in (1) options, defining all the necessary parameters to setup the 
-simulation, and (2) results, containing all the outputs of a simulation.
+consists in (1) :ref:`options <tutorial-options>`, defining all the necessary 
+parameters to setup the simulation, and (2) :ref:`results <tutorial-results>`, 
+containing all the outputs of a simulation.
 One or more simulations form a :class:`Project <pymontecarlo.project.Project>`.
 A **pyMonteCarlo** project stored on disk has the extension `.mcsim`.
 It consists of a `HDF5 <http://hdf5group.org>`_ file and can be opened in the
 `HDFViewer <http://hdf5group.org>`_ or using any HDF5 library.
 
-Options
-=======
+.. _tutorial-options:
 
-Going back to the first component of a 
-:class:`Simulation <pymontecarlo.simulation.Simulation>`, the options.
+Setting up simulation options
+=============================
+
 The options are defined by the class 
 :class:`Options <pymontecarlo.options.options.Options>`.
 It contains all the parameters necessary to run a simulation.
@@ -66,8 +67,8 @@ downwards along the z-axis, i.e. following the vector ``(0, 0, -1)``.
 
 .. note:: 
 
-   See the **supported options** section for each Monte Carlo program on the
-   :ref:`supported-monte-carlo-programs` page for more details.
+   See the :ref:`supported options <supported-options>` page to know which
+   options is supported by which Monte Carlo program.
 
 The Gaussian beam is the most supported by the different Monte Carlo programs.
 Besides the incident energy, the diameter corresponding to the full width at 
@@ -181,4 +182,13 @@ If the density is not specified, it is calculated using this following formula:
 
 where :math:`\rho_i` and :math:`m_i` are respectively the elemental mass density 
 and mass fraction of element *i*.
- 
+
+.. _tutorial-run:
+
+Running simulation(s)
+=====================
+
+.. _tutorial-results:
+
+Interpreting simulation results
+===============================
