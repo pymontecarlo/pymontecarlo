@@ -68,7 +68,8 @@ Contributors
    :maxdepth: 2
    
    installation
-   tutorial
+   tutorial-python
+   tutorial-gui
    supported-monte-carlo-programs
    supported-options
    examples

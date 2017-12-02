@@ -1,8 +1,8 @@
-.. _tutorial:
+.. _tutorial-python:
 
-========
-Tutorial
-========
+=================
+Tutorial (Python)
+=================
 
 A (Monte Carlo) :class:`Simulation <pymontecarlo.simulation.Simulation>` 
 consists in (1) :ref:`options <tutorial-options>`, defining all the necessary 
@@ -21,7 +21,24 @@ Setting up simulation options
 The options are defined by the class 
 :class:`Options <pymontecarlo.options.options.Options>`.
 It contains all the parameters necessary to run a simulation.
-The parameters are grouped into four categories: program, beam, sample and analyses.
+The parameters are grouped into four categories: 
+:ref:`program <tutorial-options-program>`, 
+:ref:`beam <tutorial-options-beam>`, 
+:ref:`sample <tutorial-options-sample>` and 
+:ref:`analyses <tutorial-options-analyses>`.
+
+The beam, sample and analyses are independent of Monte Carlo programs.
+In other words, the same sample definition can be used for different Monte
+Carlo programs.
+For a given :class:`Options <pymontecarlo.options.options.Options>` instance,
+only the program needs to change to run the same simulation with different
+Monte Carlo programs.
+That being said not all beam, sample and analyses are supported by all
+Monte Carlo programs.
+Supported parameters for each Monte Carlo program are listed in the 
+:ref:`supported options <supported-options>` page.
+
+.. _tutorial-options-program:
 
 Program
 -------
@@ -50,6 +67,8 @@ attribute inside the class::
 All parameters are completely mutable and are only validated before a 
 simulation starts.
 
+.. _tutorial-options-beam:
+
 Beam
 ----
 
@@ -64,11 +83,6 @@ currently supported Monte Carlo programs only accept
 :attr:`ELECTRON <pymontecarlo.options.particle.Particle.ELECTRON>`.
 Unless otherwise stated, all beams assume that the incident particles travel
 downwards along the z-axis, i.e. following the vector ``(0, 0, -1)``.
-
-.. note:: 
-
-   See the :ref:`supported options <supported-options>` page to know which
-   options is supported by which Monte Carlo program.
 
 The Gaussian beam is the most supported by the different Monte Carlo programs.
 Besides the incident energy, the diameter corresponding to the full width at 
@@ -111,6 +125,8 @@ instance can only take one beam.
 This will result in an *exception* at validation::
 
     options.beam = beams # Incorrect
+
+.. _tutorial-options-sample:
 
 Sample
 ------
@@ -182,6 +198,54 @@ If the density is not specified, it is calculated using this following formula:
 
 where :math:`\rho_i` and :math:`m_i` are respectively the elemental mass density 
 and mass fraction of element *i*.
+
+Each sample has different methods and variables to setup the materials. 
+Here is an example for the substrate sample::
+
+    from pymontecarlo.options.sample import SubstrateSample
+    from pymontecarlo.options.material import Material
+    
+    copper = Material.pure(29)
+    substrate = Substrate(copper)
+    
+and here is an example for the horizontal layered sample. 
+The substrate is set to copper and two layers are added on top, forming from 
+top to bottom: 100nm of SiO2, 50nm of brass and then copper::
+    
+    from pymontecarlo.options.sample import SubstrateSample, HorizontalLayerSample
+    from pymontecarlo.options.material import Material
+    
+    copper = Material.pure(29)
+    sio2 = Material.from_formula('SiO2')
+    brass = Material('Brass', {29: 0.4, 30: 0.6})
+    
+    sample = HorizontalLayerSample(copper)
+    sample.add_layer(sio2, 100e-9)
+    sample.add_layer(brass, 50e-9)
+    
+One trick to make sure the sample is properly setup is to draw it.
+**pyMonteCarlo** uses `matplotlib <http://matplotlib.org>`_ to draw the sample
+in 2D along the XZ, YZ or XY perspective.
+Here is an example::
+
+    import matplotlib.pyplot as plt
+    from pymontecarlo.figures.sample import SampleFigure, Perspective
+    
+    plt.figure()
+    plt.subplot("111")
+    
+    samplefig = SampleFigure(sample)
+    samplefig.perspective = Perspective.XZ
+    samplefig.draw(plt.gca())
+    
+    plt.show()
+    
+.. _tutorial-options-analyses:
+    
+Analyses
+--------
+
+
 
 .. _tutorial-run:
 
