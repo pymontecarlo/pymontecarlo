@@ -13,7 +13,14 @@ physical models without manually creating and running new simulations for each
 Monte Carlo program. The analysis of the results is also simplified by the 
 common output format where results are expressed in the same units.
 
-**pyMonteCarlo** is currently under development.
+.. warning::
+   **pyMonteCarlo** is currently under development.
+
+Documentation
+-------------
+
+The `documentation <http://pypenelopetools.readthedocs.io>`_ contains the
+installation instructions, tutorials and API.
 
 Authors
 -------
