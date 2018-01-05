@@ -19,8 +19,8 @@ common output format where results are expressed in the same units.
 Documentation
 -------------
 
-The `documentation <http://pypenelopetools.readthedocs.io>`_ contains the
-installation instructions, tutorials and API.
+The `documentation <http://pymontecarlo.readthedocs.io>`_ contains the
+installation instructions, tutorials, supported Monte Carlo programs and API.
 
 Authors
 -------
