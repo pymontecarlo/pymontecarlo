@@ -25,8 +25,7 @@ physical models without manually creating and running new simulations for each
 Monte Carlo program. The analysis of the results is also simplified by the 
 common output format where results are expressed in the same units.
 
-.. warning::
-   **pyMonteCarlo** is currently under development.
+**pyMonteCarlo** is currently under development.
 
 Documentation
 -------------
