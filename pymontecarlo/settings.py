@@ -9,6 +9,7 @@ import enum
 # Local modules.
 import pymontecarlo
 from pymontecarlo.util.path import get_config_dir
+from pymontecarlo.util.signal import Signal
 from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
 from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
 
@@ -21,6 +22,8 @@ class XrayNotation(enum.Enum):
 class Settings(HDF5ReaderMixin, HDF5WriterMixin):
 
     DEFAULT_FILENAME = 'settings.h5'
+
+    settings_changed = Signal()
 
     def __init__(self):
         # Units

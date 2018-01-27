@@ -5,20 +5,13 @@ Photon related analysis.
 # Standard library modules.
 
 # Third party modules.
-import pyxray
 
 # Local modules.
 from pymontecarlo.options.analysis.base import Analysis, AnalysisBuilder
 
 # Globals and constants variables.
 
-COMMON_XRAY_TRANSITION_SETS = \
-    [pyxray.xray_transitionset('K'),
-     pyxray.xray_transitionset('L'),
-     pyxray.xray_transitionset('M'),
-     pyxray.xray_transitionset('Ka'), pyxray.xray_transitionset('Kb'),
-     pyxray.xray_transitionset('La'),
-     pyxray.xray_transitionset('Ma'), pyxray.xray_transitionset('Mz')]
+COMMON_XRAY_TRANSITION_SETS = ('K', 'L', 'M', 'Ka', 'Kb', 'La', 'Ma', 'Mz')
 
 class PhotonAnalysis(Analysis):
 

@@ -22,13 +22,11 @@ INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
                     'matplotlib', 'tabulate', 'psutil', 'pandas',
                     'docutils']
-EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex']}
+EXTRAS_REQUIRE = {'develop': ['nose', 'coverage', 'docutils', 'jinja2', 'sphinx', 'pybtex', 'sphinx_rtd_theme']}
 
 CMDCLASS = versioneer.get_cmdclass()
 
-ENTRY_POINTS = {'pymontecarlo.program': [],
-
-                'pymontecarlo.formats.hdf5':
+ENTRY_POINTS = {'pymontecarlo.formats.hdf5':
                 ['SettingsHDF5Handler = pymontecarlo.formats.hdf5.settings:SettingsHDF5Handler',
                  'SimulationHDF5Handler = pymontecarlo.formats.hdf5.simulation:SimulationHDF5Handler',
                  'ProjectHDF5Handler = pymontecarlo.formats.hdf5.project:ProjectHDF5Handler',

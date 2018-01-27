@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.entrypoint import resolve_entrypoints, ENTRYPOINT_PROGRAMS
 
 # Globals and constants variables.
 
@@ -21,9 +20,6 @@ def _create_parser():
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Run in debug mode')
-
-    parser.add_argument('--programs', action='store_true',
-                        help='List available programs')
 
     parser.add_argument('-o', required=False, metavar='FILE',
                         help='Path to project')
@@ -40,10 +36,6 @@ def _create_parser():
 def _parse(parser, ns):
     if ns.verbose:
         logger.setLevel(logging.DEBUG)
-
-    if ns.programs:
-        programs = sorted(resolve_entrypoints(ENTRYPOINT_PROGRAMS).keys())
-        parser.exit(message='Programs: ' + ', '.join(programs) + os.linesep)
 
 def main():
     parser = _create_parser()

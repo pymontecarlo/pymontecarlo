@@ -1,0 +1,8 @@
+nose
+coverage
+docutils
+jinja2
+sphinx
+pybtex
+sphinx_rtd_theme
+pymontecarlo-casino2

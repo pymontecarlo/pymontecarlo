@@ -4,6 +4,9 @@
 import os
 import json
 import time
+import itertools
+import operator
+import functools
 
 # Third party modules.
 
@@ -20,7 +23,7 @@ from pymontecarlo.options.model.elastic_cross_section import ElasticCrossSection
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 from pymontecarlo.options.detector.photon import PhotonDetector
-from pymontecarlo.options.program.base import Program
+from pymontecarlo.options.program.base import Program, ProgramBuilder
 from pymontecarlo.options.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
 from pymontecarlo.options.program.validator import Validator
 from pymontecarlo.options.program.exporter import Exporter
@@ -71,6 +74,15 @@ class ValidatorMock(Validator):
     def _validate_program(self, program, options, errors):
         elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors)
         return ProgramMock(program.foo, elastic_cross_section_model)
+
+    def _validate_beam_base_energy_eV(self, energy_eV, options, errors):
+        energy_eV = super()._validate_beam_base_energy_eV(energy_eV, options, errors)
+
+        if energy_eV < 5e2:
+            exc = ValueError('Beam energy must be greater or equal to 1000eV.')
+            errors.add(exc)
+
+        return energy_eV
 
 class ExporterMock(Exporter):
 
@@ -156,6 +168,34 @@ class ProgramMock(Program):
 
     def create_worker(self):
         return WorkerMock()
+
+class ProgramBuilderMock(ProgramBuilder):
+
+    def __init__(self):
+        self.foos = set()
+        self.elastic_cross_section_models = set()
+
+    def __len__(self):
+        it = [super().__len__(),
+              len(self.foos),
+              len(self.elastic_cross_section_models)]
+        return functools.reduce(operator.mul, it)
+
+    def add_foo(self, foo):
+        self.foos.add(foo)
+
+    def add_elastic_cross_section_model(self, model):
+        self.elastic_cross_section_models.add(model)
+
+    def build(self):
+        product = itertools.product(self.foos, self.elastic_cross_section_models)
+
+        programs = []
+        for foo, elastic_cross_section_model in product:
+            program = ProgramMock(foo, elastic_cross_section_model)
+            programs.append(program)
+
+        return programs
 
 class ProgramHDF5HandlerMock(ProgramHDF5Handler):
 

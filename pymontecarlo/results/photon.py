@@ -6,13 +6,22 @@ Photon based results.
 import collections
 
 # Third party modules.
+import pyxray
 import uncertainties
 
 # Local modules.
 from pymontecarlo.results.base import Result, ResultBuilder
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
+
+def _convert_xrayline(xrayline):
+    if isinstance(xrayline, pyxray.XrayLine):
+        return xrayline
+
+    try:
+        return pyxray.xray_line(*xrayline)
+    except:
+        raise ValueError('"{}" is not an XrayLine'.format(xrayline))
 
 class PhotonResult(Result, collections.Mapping):
     """
@@ -32,12 +41,16 @@ class PhotonResult(Result, collections.Mapping):
         return iter(self.data)
 
     def __getitem__(self, xrayline):
-        xrayline = XrayLine(*xrayline)
+        xrayline = _convert_xrayline(xrayline)
         return self.data[xrayline]
 
     def __repr__(self):
         return '<{}({})>'.format(self.__class__.__name__,
                                  ', '.join(map(str, self)))
+
+    @property
+    def atomic_numbers(self):
+        return frozenset(xrayline.z for xrayline in self.keys())
 
 class PhotonSingleResult(PhotonResult):
 
@@ -56,7 +69,7 @@ class PhotonResultBuilder(ResultBuilder):
         self.result_class = result_class
 
     def _add(self, xrayline, datum):
-        xrayline = XrayLine(*xrayline)
+        xrayline = _convert_xrayline(xrayline)
         self.data[xrayline] = datum
 
     def build(self):

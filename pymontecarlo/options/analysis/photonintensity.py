@@ -11,7 +11,6 @@ import pyxray
 from pymontecarlo.options.analysis.photon import \
     PhotonAnalysis, PhotonAnalysisBuilder, COMMON_XRAY_TRANSITION_SETS
 from pymontecarlo.results.photonintensity import PhotonIntensityResult
-from pymontecarlo.util.xrayline import XrayLine
 
 # Globals and constants variables.
 
@@ -30,26 +29,25 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
         newresult = super().calculate(simulation, simulations)
 
         for result in simulation.find_result(PhotonIntensityResult):
-            zs = set(xrayline.atomic_number for xrayline in result)
+            zs = set(xrayline.element.atomic_number for xrayline in result)
 
             for z in zs:
-                possible_transitions = set(pyxray.element_xray_transitions(z))
-
                 for transitionset in COMMON_XRAY_TRANSITION_SETS:
+                    # Check if transition set exists for element
+                    try:
+                        xrayline = pyxray.xray_line(z, transitionset)
+                    except pyxray.NotFound:
+                        continue
+
                     # Check if it already exists
-                    xrayline = XrayLine(z, transitionset)
                     if xrayline in result:
                         continue
 
-                    # Only add possible transitions for this element
-                    transitions = possible_transitions & transitionset.transitions
-                    if not transitions:
-                        continue
-
+                    # Add counts
                     subxraylines = []
                     total = 0.0
-                    for transition in transitions:
-                        subxrayline = XrayLine(z, transition)
+                    for transition in xrayline.transitions:
+                        subxrayline = pyxray.xray_line(z, transition)
                         q = result.get(subxrayline, None)
                         if q is None:
                             break
@@ -57,9 +55,11 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
                         subxraylines.append(subxrayline)
                         total += q
 
-                    if len(subxraylines) != len(transitions):
+                    # Check if all transitions were found
+                    if len(subxraylines) != len(xrayline.transitions):
                         continue
 
+                    # Add result
                     result.data[xrayline] = total
                     newresult = True
 
