@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Figure to draw a sample.
+FigureBase to draw a sample.
 """
 
 # Standard library modules.
@@ -14,7 +14,7 @@ from matplotlib.patches import Wedge, Rectangle, Circle
 from matplotlib.transforms import Affine2D
 
 # Local modules.
-from pymontecarlo.figures.base import Figure
+from pymontecarlo.figures.base import FigureBase
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
@@ -27,7 +27,7 @@ class Perspective(enum.Enum):
     YZ = 'yz'
     XY = 'xy'
 
-class SampleFigure(Figure):
+class SampleFigure(FigureBase):
 
     def __init__(self, sample=None, beams=None, trajectories=None):
         """
