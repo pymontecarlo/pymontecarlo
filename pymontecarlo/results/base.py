@@ -12,12 +12,12 @@ from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class Result:
+class ResultBase:
 
     @classmethod
     def getname(cls):
         name = cls.__name__
-        if name.endswith('Result'):
+        if name.endswith('ResultBase'):
             name = name[:-6]
         name = camelcase_to_words(name)
         return name.capitalize()
@@ -25,7 +25,7 @@ class Result:
     def __init__(self, analysis):
         self.analysis = analysis
 
-class ResultBuilder(metaclass=abc.ABCMeta):
+class ResultBuilderBase(metaclass=abc.ABCMeta):
 
     def __init__(self, analysis):
         self.analysis = analysis

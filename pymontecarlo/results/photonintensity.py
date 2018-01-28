@@ -6,11 +6,11 @@
 import uncertainties
 
 # Local modules.
-from pymontecarlo.results.photon import PhotonSingleResult, PhotonResultBuilder
+from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuilderBase
 
 # Globals and constants variables.
 
-class PhotonIntensityResult(PhotonSingleResult):
+class PhotonIntensityResult(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and photon intensities, expressed in
     ``1/(sr.electron)``.
@@ -23,7 +23,7 @@ class EmittedPhotonIntensityResult(PhotonIntensityResult):
 class GeneratedPhotonIntensityResult(PhotonIntensityResult):
     pass
 
-class PhotonIntensityResultBuilder(PhotonResultBuilder):
+class PhotonIntensityResultBuilder(PhotonResultBuilderBase):
 
     def add_intensity(self, xrayline, value, error):
         """

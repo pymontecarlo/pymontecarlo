@@ -6,17 +6,17 @@
 import uncertainties
 
 # Local modules.
-from pymontecarlo.results.photon import PhotonSingleResult, PhotonResultBuilder
+from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuilderBase
 
 # Globals and constants variables.
 
-class KRatioResult(PhotonSingleResult):
+class KRatioResult(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and k-ratios.
     """
     pass
 
-class KRatioResultBuilder(PhotonResultBuilder):
+class KRatioResultBuilder(PhotonResultBuilderBase):
 
     def __init__(self, analysis):
         super().__init__(analysis, KRatioResult)

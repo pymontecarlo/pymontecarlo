@@ -10,7 +10,7 @@ import pyxray
 import uncertainties
 
 # Local modules.
-from pymontecarlo.results.base import Result, ResultBuilder
+from pymontecarlo.results.base import ResultBase, ResultBuilderBase
 
 # Globals and constants variables.
 
@@ -23,7 +23,7 @@ def _convert_xrayline(xrayline):
     except:
         raise ValueError('"{}" is not an XrayLine'.format(xrayline))
 
-class PhotonResult(Result, collections.Mapping):
+class PhotonResultBase(ResultBase, collections.Mapping):
     """
     Base class for photon based results.
     It consists of a :class:`Mapping` where keys are :class:`XrayLine` and
@@ -52,7 +52,7 @@ class PhotonResult(Result, collections.Mapping):
     def atomic_numbers(self):
         return frozenset(xrayline.z for xrayline in self.keys())
 
-class PhotonSingleResult(PhotonResult):
+class PhotonSingleResultBase(PhotonResultBase):
 
     _DEFAULT = object()
 
@@ -61,7 +61,7 @@ class PhotonSingleResult(PhotonResult):
             default = uncertainties.ufloat(0.0, 0.0)
         return super().get(key, default)
 
-class PhotonResultBuilder(ResultBuilder):
+class PhotonResultBuilderBase(ResultBuilderBase):
 
     def __init__(self, analysis, result_class):
         super().__init__(analysis)
