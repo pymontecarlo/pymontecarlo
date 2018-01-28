@@ -29,9 +29,9 @@ from pymontecarlo.options.program.validator import ValidatorBase
 from pymontecarlo.options.program.exporter import ExporterBase
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
-from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5Handler
-from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandler
-from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandler
+from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5HandlerBase
+from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandlerBase
+from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
 
 # Globals and constants variables.
 
@@ -197,7 +197,7 @@ class ProgramBuilderMock(ProgramBuilderBase):
 
         return programs
 
-class ProgramHDF5HandlerMock(ProgramHDF5Handler):
+class ProgramHDF5HandlerMock(ProgramHDF5HandlerBase):
 
     ATTR_FOO = 'foo'
     ATTR_ELASTIC_CROSS_SECTION_MODEL = 'elastic_cross_section_model'
@@ -235,7 +235,7 @@ class ProgramHDF5HandlerMock(ProgramHDF5Handler):
     def CLASS(self):
         return ProgramMock
 
-class ProgramSeriesHandlerMock(ProgramSeriesHandler):
+class ProgramSeriesHandlerMock(ProgramSeriesHandlerBase):
 
     def convert(self, program, builder):
         super().convert(program, builder)
@@ -246,7 +246,7 @@ class ProgramSeriesHandlerMock(ProgramSeriesHandler):
     def CLASS(self):
         return ProgramMock
 
-class ProgramDocumentHandlerMock(ProgramDocumentHandler):
+class ProgramDocumentHandlerMock(ProgramDocumentHandlerBase):
 
     def convert(self, program, builder):
         super().convert(program, builder)

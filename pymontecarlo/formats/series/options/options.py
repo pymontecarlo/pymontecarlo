@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.handler import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandlerBase
 from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
 
-class OptionsSeriesHandler(SeriesHandler):
+class OptionsSeriesHandler(SeriesHandlerBase):
 
     def convert(self, options, builder):
         super().convert(options, builder)

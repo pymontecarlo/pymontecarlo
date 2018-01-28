@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.colors
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
@@ -37,7 +37,7 @@ class MaterialHDF5HandlerMixin:
 
         return group_material
 
-class MaterialHDF5Handler(HDF5Handler):
+class MaterialHDF5Handler(HDF5HandlerBase):
 
     ATTR_NAME = 'name'
     DATASET_ATOMIC_NUMBER = 'atomic number'
@@ -104,7 +104,7 @@ class MaterialHDF5Handler(HDF5Handler):
     def CLASS(self):
         return Material
 
-class VacuumHDF5Handler(HDF5Handler):
+class VacuumHDF5Handler(HDF5HandlerBase):
 
     def parse(self, group):
         return VACUUM

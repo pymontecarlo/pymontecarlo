@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.detector.base import DetectorHDF5Handler
+from pymontecarlo.formats.hdf5.options.detector.base import DetectorHDF5HandlerBase
 from pymontecarlo.options.detector.photon import PhotonDetector
 
 # Globals and constants variables.
 
-class PhotonDetectorHDF5Handler(DetectorHDF5Handler):
+class PhotonDetectorHDF5Handler(DetectorHDF5HandlerBase):
 
     ATTR_ELEVATION = 'elevation (rad)'
     ATTR_AZIMUTH = 'azimuth (rad)'

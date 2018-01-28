@@ -5,14 +5,14 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 from pymontecarlo.options.options import Options
 from pymontecarlo.util.cbook import organize_by_type
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class OptionsDocumentHandler(DocumentHandler):
+class OptionsDocumentHandler(DocumentHandlerBase):
 
     def convert(self, options, builder):
         super().convert(options, builder)

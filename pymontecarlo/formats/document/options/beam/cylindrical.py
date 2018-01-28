@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.beam.base import BeamDocumentHandler
+from pymontecarlo.formats.document.options.beam.base import BeamDocumentHandlerBase
 from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 
 # Globals and constants variables.
 
-class CylindricalBeamDocumentHandler(BeamDocumentHandler):
+class CylindricalBeamDocumentHandler(BeamDocumentHandlerBase):
 
     def convert(self, beam, builder):
         super().convert(beam, builder)

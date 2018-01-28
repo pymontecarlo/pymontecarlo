@@ -9,7 +9,7 @@ import abc
 
 # Globals and constants variables.
 
-class DocumentHandler(object, metaclass=abc.ABCMeta):
+class DocumentHandlerBase(metaclass=abc.ABCMeta):
 
     def can_convert(self, obj):
         return type(obj) is self.CLASS

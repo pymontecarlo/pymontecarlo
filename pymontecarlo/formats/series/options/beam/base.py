@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.handler import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandlerBase
 from pymontecarlo.options.beam.base import BeamBase
 
 # Globals and constants variables.
 
-class BeamSeriesHandler(SeriesHandler):
+class BeamSeriesHandlerBase(SeriesHandlerBase):
 
     def convert(self, beam, builder):
         super().convert(beam, builder)

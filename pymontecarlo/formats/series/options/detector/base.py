@@ -5,9 +5,9 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.handler import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandlerBase
 
 # Globals and constants variables.
 
-class DetectorSeriesHandler(SeriesHandler):
+class DetectorSeriesHandlerBase(SeriesHandlerBase):
     pass

@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.results.photon import PhotonResultHDF5Handler
+from pymontecarlo.formats.hdf5.results.photon import PhotonResultHDF5HandlerBase
 from pymontecarlo.results.kratio import KRatioResult
 
 # Globals and constants variables.
 
-class KRatioResultHDF5Handler(PhotonResultHDF5Handler):
+class KRatioResultHDF5Handler(PhotonResultHDF5HandlerBase):
 
     DATASET_KRATIOS = 'kratios'
 

@@ -12,15 +12,15 @@ import numpy as np
 import uncertainties
 
 # Local modules.
-from pymontecarlo.formats.hdf5.results.base import ResultHDF5Handler
+from pymontecarlo.formats.hdf5.results.base import ResultHDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.analysis.base import AnalysisHDF5HandlerMixin
 from pymontecarlo.formats.hdf5.util.xrayline import XrayLineHDF5HandlerMixin
 
 # Globals and constants variables.
 
-class PhotonResultHDF5Handler(ResultHDF5Handler,
-                              AnalysisHDF5HandlerMixin,
-                              XrayLineHDF5HandlerMixin):
+class PhotonResultHDF5HandlerBase(ResultHDF5HandlerBase,
+                                  AnalysisHDF5HandlerMixin,
+                                  XrayLineHDF5HandlerMixin):
 
     ATTR_ANALYSIS = 'analysis'
     DATASET_XRAYLINE_REFERENCES = 'xrayline scale'

@@ -5,13 +5,13 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 from pymontecarlo.options.model.base import ModelBase
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class ModelDocumentHandler(DocumentHandler):
+class ModelDocumentHandler(DocumentHandlerBase):
 
     def convert(self, model, builder):
         super().convert(model, builder)

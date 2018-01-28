@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.options.sample.base import LayeredSampleHandler
+from pymontecarlo.formats.series.options.sample.base import LayeredSampleHandlerBase
 from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 # Globals and constants variables.
 
-class VerticalLayerSampleSeriesHandler(LayeredSampleHandler):
+class VerticalLayerSampleSeriesHandler(LayeredSampleHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

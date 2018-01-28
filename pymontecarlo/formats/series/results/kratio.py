@@ -6,12 +6,12 @@
 
 # Local modules.
 from pymontecarlo.formats.series.results.photon import \
-    PhotonResultSeriesHandler, xrayline_name_func
+    PhotonResultSeriesHandlerBase, xrayline_name_func
 from pymontecarlo.results.kratio import KRatioResult
 
 # Globals and constants variables.
 
-class KRatioResultSeriesHandler(PhotonResultSeriesHandler):
+class KRatioResultSeriesHandler(PhotonResultSeriesHandlerBase):
 
     def convert(self, result, builder):
         super().convert(result, builder)

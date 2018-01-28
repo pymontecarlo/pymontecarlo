@@ -9,7 +9,7 @@ import abc
 
 # Globals and constants variables.
 
-class SeriesHandler(object, metaclass=abc.ABCMeta):
+class SeriesHandlerBase(metaclass=abc.ABCMeta):
 
     def can_convert(self, obj):
         return type(obj) is self.CLASS

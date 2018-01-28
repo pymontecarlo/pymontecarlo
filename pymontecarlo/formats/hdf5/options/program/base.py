@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.model.base import ModelHDF5HandlerMixin
 
 # Globals and constants variables.
@@ -34,8 +34,8 @@ class ProgramHDF5HandlerMixin:
 
         return group_program
 
-class ProgramHDF5Handler(HDF5Handler,
-                         ModelHDF5HandlerMixin):
+class ProgramHDF5HandlerBase(HDF5HandlerBase,
+                             ModelHDF5HandlerMixin):
 
     ATTR_NAME = 'name'
 

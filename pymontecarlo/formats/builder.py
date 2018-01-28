@@ -10,7 +10,7 @@ from pymontecarlo.util.tolerance import tolerance_to_decimals
 
 # Globals and constants variables.
 
-class FormatBuilder(object, metaclass=abc.ABCMeta):
+class FormatBuilderBase(metaclass=abc.ABCMeta):
 
     def __init__(self, settings, abbreviate_name=False, format_number=False):
         self.settings = settings

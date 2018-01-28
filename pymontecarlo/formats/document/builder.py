@@ -8,12 +8,12 @@ import docutils.nodes
 import docutils.utils
 
 # Local modules.
-from pymontecarlo.formats.builder import FormatBuilder
+from pymontecarlo.formats.builder import FormatBuilderBase
 from pymontecarlo.formats.document.entrypoint import find_convert_documenthandler
 
 # Globals and constants variables.
 
-class DocutilsFormatBuilder(FormatBuilder):
+class DocutilsFormatBuilderBase(FormatBuilderBase):
 
     def _format_value_node(self, datum, node_class=None):
         if node_class is None:
@@ -30,7 +30,7 @@ class DocutilsFormatBuilder(FormatBuilder):
 
         return node_class(text=super()._format_value(datum))
 
-class DocumentBuilder(DocutilsFormatBuilder):
+class DocumentBuilder(DocutilsFormatBuilderBase):
 
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
@@ -84,14 +84,14 @@ class DocumentBuilder(DocutilsFormatBuilder):
         document += section
 
         for node in self.nodes:
-            if isinstance(node, FormatBuilder):
+            if isinstance(node, FormatBuilderBase):
                 section += node.build().children
             elif isinstance(node, docutils.nodes.Node):
                 section += node
 
         return document
 
-class DescriptionBuilder(DocutilsFormatBuilder):
+class DescriptionBuilder(DocutilsFormatBuilderBase):
 
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
@@ -120,7 +120,7 @@ class DescriptionBuilder(DocutilsFormatBuilder):
         document += definition_list
         return document
 
-class TableBuilder(DocutilsFormatBuilder):
+class TableBuilder(DocutilsFormatBuilderBase):
 
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)

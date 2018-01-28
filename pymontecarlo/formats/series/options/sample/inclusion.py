@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.options.sample.base import SampleSeriesHandler
+from pymontecarlo.formats.series.options.sample.base import SampleSeriesHandlerBase
 from pymontecarlo.options.sample.inclusion import InclusionSample
 
 # Globals and constants variables.
 
-class InclusionSampleSeriesHandler(SampleSeriesHandler):
+class InclusionSampleSeriesHandler(SampleSeriesHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

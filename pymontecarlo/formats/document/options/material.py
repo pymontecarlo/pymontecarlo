@@ -8,12 +8,12 @@ import pyxray
 import matplotlib.colors
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
 
-class MaterialDocumentHandler(DocumentHandler):
+class MaterialDocumentHandler(DocumentHandlerBase):
 
     def convert(self, material, builder):
         super().convert(material, builder)

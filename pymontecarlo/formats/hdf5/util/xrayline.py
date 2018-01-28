@@ -8,7 +8,7 @@ import pyxray
 import numpy as np
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 
 # Globals and constants variables.
 
@@ -36,7 +36,7 @@ class XrayLineHDF5HandlerMixin:
 
         return group_xrayline
 
-class XrayLineHDF5Handler(HDF5Handler):
+class XrayLineHDF5Handler(HDF5HandlerBase):
 
     ATTR_ATOMIC_NUMBER = 'atomic_number'
     DATASET_TRANSITIONS = 'transitions'

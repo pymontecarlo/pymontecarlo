@@ -5,9 +5,9 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 
 # Globals and constants variables.
 
-class DetectorDocumentHandler(DocumentHandler):
+class DetectorDocumentHandlerBase(DocumentHandlerBase):
     pass

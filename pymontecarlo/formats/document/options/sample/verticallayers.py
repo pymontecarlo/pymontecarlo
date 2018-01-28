@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.sample.base import LayeredSampleDocumentHandler
+from pymontecarlo.formats.document.options.sample.base import LayeredSampleDocumentHandlerBase
 from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 # Globals and constants variables.
 
-class VerticalLayerSampleDocumentHandler(LayeredSampleDocumentHandler):
+class VerticalLayerSampleDocumentHandler(LayeredSampleDocumentHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

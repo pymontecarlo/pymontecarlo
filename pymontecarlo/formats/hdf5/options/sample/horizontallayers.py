@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.sample.base import LayeredSampleHDF5Handler
+from pymontecarlo.formats.hdf5.options.sample.base import LayeredSampleHDF5HandlerBase
 from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
 
 # Globals and constants variables.
 
-class HorizontalLayerSampleHDF5Handler(LayeredSampleHDF5Handler):
+class HorizontalLayerSampleHDF5Handler(LayeredSampleHDF5HandlerBase):
 
     ATTR_SUBSTRATE = 'substrate'
 

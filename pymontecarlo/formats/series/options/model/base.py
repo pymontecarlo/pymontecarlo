@@ -5,13 +5,13 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.handler import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandlerBase
 from pymontecarlo.options.model.base import ModelBase
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class ModelSeriesHandler(SeriesHandler):
+class ModelSeriesHandler(SeriesHandlerBase):
 
     def convert(self, model, builder):
         super().convert(model, builder)

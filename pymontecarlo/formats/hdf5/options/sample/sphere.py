@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.sample.base import SampleHDF5Handler
+from pymontecarlo.formats.hdf5.options.sample.base import SampleHDF5HandlerBase
 from pymontecarlo.options.sample.sphere import SphereSample
 
 # Globals and constants variables.
 
-class SphereSampleHDF5Handler(SampleHDF5Handler):
+class SphereSampleHDF5Handler(SampleHDF5HandlerBase):
 
     ATTR_MATERIAL = 'material'
     ATTR_DIAMETER = 'diameter (m)'

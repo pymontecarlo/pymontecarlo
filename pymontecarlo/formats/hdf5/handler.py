@@ -15,7 +15,7 @@ from pymontecarlo.formats.hdf5.entrypoint import \
 
 # Globals and constants variables.
 
-class HDF5Handler(object, metaclass=abc.ABCMeta):
+class HDF5HandlerBase(metaclass=abc.ABCMeta):
 
     ATTR_CLASS = '_class'
     ATTR_VERSION = '_version'

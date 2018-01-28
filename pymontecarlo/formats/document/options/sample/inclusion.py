@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.sample.base import SampleDocumentHandler
+from pymontecarlo.formats.document.options.sample.base import SampleDocumentHandlerBase
 from pymontecarlo.options.sample.inclusion import InclusionSample
 
 # Globals and constants variables.
 
-class InclusionSampleDocumentHandler(SampleDocumentHandler):
+class InclusionSampleDocumentHandler(SampleDocumentHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

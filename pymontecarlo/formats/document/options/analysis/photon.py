@@ -5,11 +5,11 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.analysis.base import AnalysisDocumentHandler
+from pymontecarlo.formats.document.options.analysis.base import AnalysisDocumentHandlerBase
 
 # Globals and constants variables.
 
-class PhotonAnalysisDocumentHandler(AnalysisDocumentHandler):
+class PhotonAnalysisDocumentHandlerBase(AnalysisDocumentHandlerBase):
 
     def convert(self, analysis, builder):
         super().convert(analysis, builder)

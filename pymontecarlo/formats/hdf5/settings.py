@@ -6,13 +6,13 @@
 import h5py
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.exceptions import ParseError
 from pymontecarlo.settings import Settings, XrayNotation
 
 # Globals and constants variables.
 
-class SettingsHDF5Handler(HDF5Handler):
+class SettingsHDF5Handler(HDF5HandlerBase):
 
     GROUP_UNITS = 'units'
     DATASET_PREFERRED_UNITS = 'preferred'

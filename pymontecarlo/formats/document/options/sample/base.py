@@ -5,13 +5,13 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 from pymontecarlo.options.sample.base import SampleBase, Layer
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class SampleDocumentHandler(DocumentHandler):
+class SampleDocumentHandlerBase(DocumentHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)
@@ -29,7 +29,7 @@ class SampleDocumentHandler(DocumentHandler):
         for material in sample.materials:
             section.add_object(material)
 
-class LayerDocumentHandler(DocumentHandler):
+class LayerDocumentHandler(DocumentHandlerBase):
 
     def convert(self, layer, builder):
         super().convert(layer, builder)
@@ -47,7 +47,7 @@ class LayerDocumentHandler(DocumentHandler):
     def CLASS(self):
         return Layer
 
-class LayeredSampleDocumentHandler(SampleDocumentHandler):
+class LayeredSampleDocumentHandlerBase(SampleDocumentHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

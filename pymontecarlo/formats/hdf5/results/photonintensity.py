@@ -5,13 +5,13 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.results.photon import PhotonResultHDF5Handler
+from pymontecarlo.formats.hdf5.results.photon import PhotonResultHDF5HandlerBase
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
 
 # Globals and constants variables.
 
-class PhotonIntensityResultHDF5Handler(PhotonResultHDF5Handler):
+class PhotonIntensityResultHDF5HandlerBase(PhotonResultHDF5HandlerBase):
 
     DATASET_INTENSITIES = 'intensities'
 
@@ -25,13 +25,13 @@ class PhotonIntensityResultHDF5Handler(PhotonResultHDF5Handler):
     def _convert_values(self, values, group):
         return self._convert_values_0d(values, self.DATASET_INTENSITIES, group)
 
-class GeneratedPhotonIntensityResultHDF5Handler(PhotonIntensityResultHDF5Handler):
+class GeneratedPhotonIntensityResultHDF5Handler(PhotonIntensityResultHDF5HandlerBase):
 
     @property
     def CLASS(self):
         return GeneratedPhotonIntensityResult
 
-class EmittedPhotonIntensityResultHDF5Handler(PhotonIntensityResultHDF5Handler):
+class EmittedPhotonIntensityResultHDF5Handler(PhotonIntensityResultHDF5HandlerBase):
 
     @property
     def CLASS(self):

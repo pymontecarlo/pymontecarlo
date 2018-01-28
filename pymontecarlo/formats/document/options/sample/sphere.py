@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.sample.base import SampleDocumentHandler
+from pymontecarlo.formats.document.options.sample.base import SampleDocumentHandlerBase
 from pymontecarlo.options.sample.sphere import SphereSample
 
 # Globals and constants variables.
 
-class SphereSampleDocumentHandler(SampleDocumentHandler):
+class SphereSampleDocumentHandler(SampleDocumentHandlerBase):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)

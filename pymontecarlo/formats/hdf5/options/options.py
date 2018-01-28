@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5HandlerMixin
 from pymontecarlo.formats.hdf5.options.beam.base import BeamHDF5HandlerMixin
 from pymontecarlo.formats.hdf5.options.sample.base import SampleHDF5HandlerMixin
@@ -17,7 +17,7 @@ from pymontecarlo.options.options import Options
 
 # Globals and constants variables.
 
-class OptionsHDF5Handler(HDF5Handler,
+class OptionsHDF5Handler(HDF5HandlerBase,
                          ProgramHDF5HandlerMixin,
                          BeamHDF5HandlerMixin,
                          SampleHDF5HandlerMixin,

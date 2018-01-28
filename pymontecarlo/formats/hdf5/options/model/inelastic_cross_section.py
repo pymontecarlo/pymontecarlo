@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.model.base import ModelHDF5Handler
+from pymontecarlo.formats.hdf5.options.model.base import ModelHDF5HandlerBase
 from pymontecarlo.options.model.inelastic_cross_section import InelasticCrossSectionModel
 
 # Globals and constants variables.
 
-class InelasticCrossSectionModelHDF5Handler(ModelHDF5Handler):
+class InelasticCrossSectionModelHDF5Handler(ModelHDF5HandlerBase):
 
     @property
     def CLASS(self):

@@ -8,13 +8,13 @@ import numpy as np
 import h5py
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.analysis.photon import PhotonAnalysisHDF5Handler
+from pymontecarlo.formats.hdf5.options.analysis.photon import PhotonAnalysisHDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.material import MaterialHDF5HandlerMixin
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 
 # Globals and constants variables.
 
-class KRatioAnalysisHDF5Handler(PhotonAnalysisHDF5Handler, MaterialHDF5HandlerMixin):
+class KRatioAnalysisHDF5Handler(PhotonAnalysisHDF5HandlerBase, MaterialHDF5HandlerMixin):
 
     DATASET_ATOMIC_NUMBER = 'atomic number'
     DATASET_STANDARDS = 'standards'

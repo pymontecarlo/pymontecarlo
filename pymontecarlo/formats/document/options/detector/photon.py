@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.options.detector.base import DetectorDocumentHandler
+from pymontecarlo.formats.document.options.detector.base import DetectorDocumentHandlerBase
 from pymontecarlo.options.detector.photon import PhotonDetector
 
 # Globals and constants variables.
 
-class PhotonDetectorDocumentHandler(DetectorDocumentHandler):
+class PhotonDetectorDocumentHandler(DetectorDocumentHandlerBase):
 
     def convert(self, detector, builder):
         super().convert(detector, builder)

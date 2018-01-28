@@ -5,13 +5,13 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 from pymontecarlo.options.beam.base import BeamBase
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class BeamDocumentHandler(DocumentHandler):
+class BeamDocumentHandlerBase(DocumentHandlerBase):
 
     def convert(self, beam, builder):
         super().convert(beam, builder)

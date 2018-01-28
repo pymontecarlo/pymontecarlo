@@ -6,7 +6,7 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 
 # Globals and constants variables.
 
@@ -34,7 +34,7 @@ class DetectorHDF5HandlerMixin:
 
         return group_detector
 
-class DetectorHDF5Handler(HDF5Handler):
+class DetectorHDF5HandlerBase(HDF5HandlerBase):
 
     ATTR_NAME = 'name'
 

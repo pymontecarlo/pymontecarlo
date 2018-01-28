@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.sample.base import SampleHDF5Handler
+from pymontecarlo.formats.hdf5.options.sample.base import SampleHDF5HandlerBase
 from pymontecarlo.options.sample.substrate import SubstrateSample
 
 # Globals and constants variables.
 
-class SubstrateSampleHDF5Handler(SampleHDF5Handler):
+class SubstrateSampleHDF5Handler(SampleHDF5HandlerBase):
 
     ATTR_MATERIAL = 'material'
 

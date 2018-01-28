@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.beam.base import BeamHDF5Handler
+from pymontecarlo.formats.hdf5.options.beam.base import BeamHDF5HandlerBase
 from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 
 # Globals and constants variables.
 
-class CylindricalBeamHDF5Handler(BeamHDF5Handler):
+class CylindricalBeamHDF5Handler(BeamHDF5HandlerBase):
 
     ATTR_DIAMETER = 'diameter (m)'
     ATTR_X0 = 'x0 (m)'

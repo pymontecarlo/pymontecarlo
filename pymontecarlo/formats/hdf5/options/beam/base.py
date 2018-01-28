@@ -7,7 +7,7 @@ import abc
 
 # Local modules.
 from pymontecarlo.exceptions import ParseError
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
@@ -36,7 +36,7 @@ class BeamHDF5HandlerMixin:
 
         return group_beam
 
-class BeamHDF5Handler(HDF5Handler):
+class BeamHDF5HandlerBase(HDF5HandlerBase):
 
     ATTR_ENERGY = 'energy (eV)'
     ATTR_PARTICLE = 'particle'

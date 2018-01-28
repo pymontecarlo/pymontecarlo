@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.options.detector.base import DetectorSeriesHandler
+from pymontecarlo.formats.series.options.detector.base import DetectorSeriesHandlerBase
 from pymontecarlo.options.detector.photon import PhotonDetector
 
 # Globals and constants variables.
 
-class PhotonDetectorSeriesHandler(DetectorSeriesHandler):
+class PhotonDetectorSeriesHandler(DetectorSeriesHandlerBase):
 
     def convert(self, detector, builder):
         super().convert(detector, builder)

@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.detector.base import DetectorHDF5HandlerMixin
 
 # Globals and constants variables.
@@ -34,5 +34,5 @@ class AnalysisHDF5HandlerMixin:
 
         return group_analysis
 
-class AnalysisHDF5Handler(HDF5Handler, DetectorHDF5HandlerMixin):
+class AnalysisHDF5HandlerBase(HDF5HandlerBase, DetectorHDF5HandlerMixin):
     pass

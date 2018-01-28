@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.project import Project
 
 # Globals and constants variables.
 
-class ProjectHDF5Handler(HDF5Handler):
+class ProjectHDF5Handler(HDF5HandlerBase):
 
     GROUP_SIMULATIONS = 'simulations'
 

@@ -5,11 +5,11 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document.handler import DocumentHandler
+from pymontecarlo.formats.document.handler import DocumentHandlerBase
 
 # Globals and constants variables.
 
-class ProgramDocumentHandler(DocumentHandler):
+class ProgramDocumentHandlerBase(DocumentHandlerBase):
 
     def convert(self, program, builder):
         super().convert(program, builder)

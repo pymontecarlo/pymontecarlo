@@ -5,7 +5,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.results.base import ResultSeriesHandler
+from pymontecarlo.formats.series.results.base import ResultSeriesHandlerBase
 from pymontecarlo.settings import XrayNotation
 
 # Globals and constants variables.
@@ -21,5 +21,5 @@ class xrayline_name_func:
         else:
             return self.xrayline.iupac
 
-class PhotonResultSeriesHandler(ResultSeriesHandler):
+class PhotonResultSeriesHandlerBase(ResultSeriesHandlerBase):
     pass

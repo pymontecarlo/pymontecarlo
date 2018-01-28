@@ -7,11 +7,11 @@ import pandas as pd
 
 # Local modules.
 from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
-from pymontecarlo.formats.builder import FormatBuilder
+from pymontecarlo.formats.builder import FormatBuilderBase
 
 # Globals and constants variables.
 
-class SeriesBuilder(FormatBuilder):
+class SeriesBuilder(FormatBuilderBase):
 
     def __init__(self, settings, abbreviate_name=False, format_number=False):
         super().__init__(settings, abbreviate_name, format_number)

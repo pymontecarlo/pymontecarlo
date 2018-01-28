@@ -9,7 +9,7 @@ import numpy as np
 import h5py
 
 # Local modules.
-from pymontecarlo.formats.hdf5.handler import HDF5Handler
+from pymontecarlo.formats.hdf5.handler import HDF5HandlerBase
 from pymontecarlo.formats.hdf5.options.material import MaterialHDF5HandlerMixin
 from pymontecarlo.options.sample.base import Layer
 
@@ -39,7 +39,7 @@ class SampleHDF5HandlerMixin:
 
         return group_sample
 
-class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
+class SampleHDF5HandlerBase(HDF5HandlerBase, MaterialHDF5HandlerMixin):
 
     ATTR_TILT = 'tilt (rad)'
     ATTR_AZIMUTH = 'azimuth (rad)'
@@ -67,7 +67,7 @@ class SampleHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
         self._convert_tilt_rad(sample, group)
         self._convert_azimuth_rad(sample, group)
 
-class LayerHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
+class LayerHDF5Handler(HDF5HandlerBase, MaterialHDF5HandlerMixin):
 
     ATTR_MATERIAL = 'material'
     ATTR_THICKNESS = 'thickness (m)'
@@ -105,7 +105,8 @@ class LayerHDF5Handler(HDF5Handler, MaterialHDF5HandlerMixin):
     def CLASS(self):
         return Layer
 
-class LayeredSampleHDF5Handler(SampleHDF5Handler, MaterialHDF5HandlerMixin):
+class LayeredSampleHDF5HandlerBase(SampleHDF5HandlerBase,
+                                   MaterialHDF5HandlerMixin):
 
     GROUP_LAYERS = 'layers'
     ATTR_LAYERS = 'layers'

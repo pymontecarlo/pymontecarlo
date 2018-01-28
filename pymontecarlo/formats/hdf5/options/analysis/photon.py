@@ -5,11 +5,11 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.analysis.base import AnalysisHDF5Handler
+from pymontecarlo.formats.hdf5.options.analysis.base import AnalysisHDF5HandlerBase
 
 # Globals and constants variables.
 
-class PhotonAnalysisHDF5Handler(AnalysisHDF5Handler):
+class PhotonAnalysisHDF5HandlerBase(AnalysisHDF5HandlerBase):
 
     ATTR_DETECTOR = 'detector'
 

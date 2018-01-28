@@ -5,12 +5,12 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.options.sample.base import LayeredSampleHDF5Handler
+from pymontecarlo.formats.hdf5.options.sample.base import LayeredSampleHDF5HandlerBase
 from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
 
 # Globals and constants variables.
 
-class VerticalLayerSampleHDF5Handler(LayeredSampleHDF5Handler):
+class VerticalLayerSampleHDF5Handler(LayeredSampleHDF5HandlerBase):
 
     ATTR_LEFT_MATERIAL = 'left material'
     ATTR_RIGHT_MATERIAL = 'right material'

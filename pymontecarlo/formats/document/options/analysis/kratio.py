@@ -6,12 +6,12 @@
 import pyxray
 
 # Local modules.
-from pymontecarlo.formats.document.options.analysis.photon import PhotonAnalysisDocumentHandler
+from pymontecarlo.formats.document.options.analysis.photon import PhotonAnalysisDocumentHandlerBase
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 
 # Globals and constants variables.
 
-class KRatioAnalysisDocumentHandler(PhotonAnalysisDocumentHandler):
+class KRatioAnalysisDocumentHandler(PhotonAnalysisDocumentHandlerBase):
 
     def convert(self, analysis, builder):
         super().convert(analysis, builder)

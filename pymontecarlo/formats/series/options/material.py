@@ -6,12 +6,12 @@
 import pyxray
 
 # Local modules.
-from pymontecarlo.formats.series.handler import SeriesHandler
+from pymontecarlo.formats.series.handler import SeriesHandlerBase
 from pymontecarlo.options.material import Material, VACUUM
 
 # Globals and constants variables.
 
-class MaterialSeriesHandler(SeriesHandler):
+class MaterialSeriesHandler(SeriesHandlerBase):
 
     def convert(self, material, builder):
         super().convert(material, builder)
@@ -31,7 +31,7 @@ class MaterialSeriesHandler(SeriesHandler):
     def CLASS(self):
         return Material
 
-class VacuumSeriesHandler(SeriesHandler):
+class VacuumSeriesHandler(SeriesHandlerBase):
 
     def convert(self, vacuum, builder):
         return super().convert(vacuum, builder)
