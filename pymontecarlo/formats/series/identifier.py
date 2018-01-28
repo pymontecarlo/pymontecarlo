@@ -8,7 +8,7 @@ import pandas as pd
 # Local modules.
 from pymontecarlo.settings import Settings
 from pymontecarlo.util.cbook import get_valid_filename
-from pymontecarlo.formats.series.helper import ensure_distinc_columns
+from pymontecarlo.formats.series.helper import ensure_distinct_columns
 from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
 from pymontecarlo.formats.series.builder import SeriesBuilder
 
@@ -33,7 +33,7 @@ def create_identifiers(objs):
         list_series.append(s)
 
     df = pd.DataFrame(list_series)
-    df = ensure_distinc_columns(df)
+    df = ensure_distinct_columns(df)
 
     identifiers = []
     for _, s in df.iterrows():

@@ -13,7 +13,7 @@ from pymontecarlo.exceptions import ConvertError
 
 # Globals and constants variables.
 
-def ensure_distinc_columns(dataframe, tolerances=None):
+def ensure_distinct_columns(dataframe, tolerances=None):
     if len(dataframe) < 2:
         return dataframe
 
@@ -64,7 +64,7 @@ def create_options_dataframe(list_options, settings,
 
     tolerances = builder.gettolerances()
 
-    return ensure_distinc_columns(df, tolerances)
+    return ensure_distinct_columns(df, tolerances)
 
 def create_results_dataframe(list_results, settings,
                              result_classes=None,
