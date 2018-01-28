@@ -11,7 +11,7 @@ import abc
 
 # Globals and constants variables.
 
-class Option(metaclass=abc.ABCMeta):
+class OptionBase(metaclass=abc.ABCMeta):
     """
     Base class of all the options.
     All derived classes should implement
@@ -28,7 +28,7 @@ class Option(metaclass=abc.ABCMeta):
         """
         return type(other) == type(self)
 
-class OptionBuilder(metaclass=abc.ABCMeta):
+class OptionBuilderBase(metaclass=abc.ABCMeta):
     """
     Base class of all option builders.
     All derived classes should implement

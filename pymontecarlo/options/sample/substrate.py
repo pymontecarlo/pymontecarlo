@@ -10,11 +10,11 @@ import operator
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import Sample, SampleBuilder
+from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
 
 # Globals and constants variables.
 
-class SubstrateSample(Sample):
+class SubstrateSample(SampleBase):
 
     def __init__(self, material, tilt_rad=0.0, azimuth_rad=0.0):
         """
@@ -36,7 +36,7 @@ class SubstrateSample(Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
-class SubstrateSampleBuilder(SampleBuilder):
+class SubstrateSampleBuilder(SampleBuilderBase):
 
     def __init__(self):
         super().__init__()

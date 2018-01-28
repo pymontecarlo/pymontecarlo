@@ -17,11 +17,11 @@ import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
     calculate_density_kg_per_m3, generate_name, from_formula, to_repr
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Material(Option):
+class Material(OptionBase):
 
     WEIGHT_FRACTION_TOLERANCE = 1e-7 # 0.1 ppm
     DENSITY_TOLERANCE_kg_per_m3 = 1e-5
@@ -151,7 +151,7 @@ class _Vacuum(Material):
 
 VACUUM = _Vacuum()
 
-class MaterialBuilder(OptionBuilder):
+class MaterialBuilder(OptionBuilderBase):
 
     def __init__(self, balance_z):
         self.balance_z = balance_z

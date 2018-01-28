@@ -9,11 +9,11 @@ import itertools
 
 # Local modules.
 from pymontecarlo.util.cbook import are_sequence_similar, unique, find_by_type
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Options(Option):
+class Options(OptionBase):
 
     def __init__(self, program, beam, sample, analyses=None):
         """
@@ -65,7 +65,7 @@ class Options(Option):
         """
         return tuple(unique(analysis.detector for analysis in self.analyses))
 
-class OptionsBuilder(OptionBuilder):
+class OptionsBuilder(OptionBuilderBase):
 
     def __init__(self):
         self.programs = []

@@ -17,7 +17,7 @@ from pymontecarlo.exceptions import WorkerError, WorkerCancelledError
 
 # Globals and constants variables.
 
-class Worker:
+class WorkerBase(metaclass=abc.ABCMeta):
     """
     Base class for all workers.
     A worker is used to run one simulation with a given program and
@@ -57,7 +57,7 @@ class SubprocessWorkerMixin:
                 for subpsprocess in psprocess.children(recursive=True):
                     subpsprocess.kill()
                 psprocess.kill()
-                raise WorkerCancelledError('Worker cancelled')
+                raise WorkerCancelledError('WorkerBase cancelled')
 
             try:
                 if process.wait(interval) is not None:

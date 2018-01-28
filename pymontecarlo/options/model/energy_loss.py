@@ -7,11 +7,11 @@ Energy loss models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class EnergyLossModel(Model):
+class EnergyLossModel(ModelBase):
 
     JOY_LUO1989 = ('Joy and Luo 1989', 'Joy and Luo (1989)')
     BETHE1930 = ("Bethe 1930", "Bethe H. Ann. Phys. (Leipzig) 1930; 5: 325")

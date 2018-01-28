@@ -11,11 +11,11 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import LayeredSample, LayeredSampleBuilder
+from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
 
 # Globals and constants variables.
 
-class VerticalLayerSample(LayeredSample):
+class VerticalLayerSample(LayeredSampleBase):
 
     DEPTH_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -67,7 +67,7 @@ class VerticalLayerSample(LayeredSample):
 
         return xpositions_m
 
-class VerticalLayerSampleBuilder(LayeredSampleBuilder):
+class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):
         super().__init__()

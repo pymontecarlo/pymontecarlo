@@ -8,11 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Program(Option):
+class ProgramBase(OptionBase):
 
     def __init__(self, name):
         self.name = name
@@ -45,5 +45,5 @@ class Program(Option):
     def create_importer(self):
         raise NotImplementedError
 
-class ProgramBuilder(OptionBuilder):
+class ProgramBuilderBase(OptionBuilderBase):
     pass

@@ -12,7 +12,7 @@ from pymontecarlo.exceptions import ExportError
 
 # Globals and constants variables.
 
-class Exporter(object, metaclass=abc.ABCMeta):
+class ExporterBase(metaclass=abc.ABCMeta):
     """
     Base class for all exporters.
     """

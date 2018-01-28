@@ -12,12 +12,12 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.base import \
-    Sample, SampleBuilder, LayeredSample, LayeredSampleBuilder
+    SampleBase, SampleBuilderBase, LayeredSampleBase, LayeredSampleBuilderBase
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 
-class SampleMock(Sample):
+class SampleMock(SampleBase):
 
     def __init__(self, tilt_rad, azimuth_rad):
         super().__init__(tilt_rad, azimuth_rad)
@@ -26,7 +26,7 @@ class SampleMock(Sample):
     def materials(self):
         return []
 
-class SampleBuilderMock(SampleBuilder):
+class SampleBuilderMock(SampleBuilderBase):
 
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
@@ -37,7 +37,7 @@ class SampleBuilderMock(SampleBuilder):
             samples.append(SampleMock(tilt_rad, azimuth_rad))
         return samples
 
-class LayeredSampleBuilderMock(LayeredSampleBuilder):
+class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
 
     def build(self):
         layers_list = self._calculate_layer_combinations()
@@ -48,7 +48,7 @@ class LayeredSampleBuilderMock(LayeredSampleBuilder):
 
         samples = []
         for layers, tilt_rad, azimuth_rad in product:
-            samples.append(LayeredSample(layers, tilt_rad, azimuth_rad))
+            samples.append(LayeredSampleBase(layers, tilt_rad, azimuth_rad))
 
         return samples
 

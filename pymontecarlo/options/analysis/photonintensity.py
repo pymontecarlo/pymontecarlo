@@ -9,12 +9,12 @@ import pyxray
 
 # Local modules.
 from pymontecarlo.options.analysis.photon import \
-    PhotonAnalysis, PhotonAnalysisBuilder, COMMON_XRAY_TRANSITION_SETS
+    PhotonAnalysisBase, PhotonAnalysisBuilderBase, COMMON_XRAY_TRANSITION_SETS
 from pymontecarlo.results.photonintensity import PhotonIntensityResult
 
 # Globals and constants variables.
 
-class PhotonIntensityAnalysis(PhotonAnalysis):
+class PhotonIntensityAnalysis(PhotonAnalysisBase):
 
     def __init__(self, photon_detector):
         super().__init__(photon_detector)
@@ -65,7 +65,7 @@ class PhotonIntensityAnalysis(PhotonAnalysis):
 
         return newresult
 
-class PhotonIntensityAnalysisBuilder(PhotonAnalysisBuilder):
+class PhotonIntensityAnalysisBuilder(PhotonAnalysisBuilderBase):
 
     def build(self):
         return [PhotonIntensityAnalysis(d) for d in self.photon_detectors]

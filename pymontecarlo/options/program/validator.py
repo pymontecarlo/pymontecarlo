@@ -28,7 +28,7 @@ from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
 
-class Validator(object, metaclass=abc.ABCMeta):
+class ValidatorBase(metaclass=abc.ABCMeta):
     """
     Base validator of options and its components.
     

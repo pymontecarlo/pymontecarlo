@@ -9,12 +9,12 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.detector.base import Detector, DetectorBuilder
+from pymontecarlo.options.detector.base import DetectorBase, DetectorBuilderBase
 from pymontecarlo.util.cbook import DegreesAttribute
 
 # Globals and constants variables.
 
-class PhotonDetector(Detector):
+class PhotonDetector(DetectorBase):
 
     ELEVATION_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
     AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
@@ -40,7 +40,7 @@ class PhotonDetector(Detector):
     elevation_deg = DegreesAttribute('elevation_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
-class PhotonDetectorBuilder(DetectorBuilder):
+class PhotonDetectorBuilder(DetectorBuilderBase):
 
     def __init__(self):
         self.elevations_rad = set()

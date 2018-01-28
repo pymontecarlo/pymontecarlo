@@ -8,11 +8,11 @@ import logging
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class ModelMock(Model):
+class ModelMock(ModelBase):
 
     A = ('model A', 'doe2017')
     B = ('model B', 'adams1990')

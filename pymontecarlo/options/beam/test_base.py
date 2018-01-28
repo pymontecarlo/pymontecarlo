@@ -10,7 +10,7 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.base import \
-    Beam, convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm
+    BeamBase, convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm
 from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
@@ -28,7 +28,7 @@ class TestBase(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.b = Beam(15e3, Particle.POSITRON)
+        self.b = BeamBase(15e3, Particle.POSITRON)
 
     def testskeleton(self):
         self.assertAlmostEqual(15e3, self.b.energy_eV, 4)
@@ -36,17 +36,17 @@ class TestBase(TestCase):
         self.assertEqual(Particle.POSITRON, self.b.particle)
 
     def test__eq__(self):
-        b = Beam(15e3, Particle.POSITRON)
+        b = BeamBase(15e3, Particle.POSITRON)
         self.assertEqual(b, self.b)
 
-        b = Beam(15000.009, Particle.POSITRON)
+        b = BeamBase(15000.009, Particle.POSITRON)
         self.assertEqual(b, self.b)
 
     def test__ne__(self):
-        b = Beam(14e3, Particle.POSITRON)
+        b = BeamBase(14e3, Particle.POSITRON)
         self.assertNotEqual(b, self.b)
 
-        b = Beam(15e3, Particle.ELECTRON)
+        b = BeamBase(15e3, Particle.ELECTRON)
         self.assertNotEqual(b, self.b)
 
 if __name__ == '__main__': #pragma: no cover

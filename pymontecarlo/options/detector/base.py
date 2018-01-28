@@ -7,11 +7,11 @@ Base detector.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Detector(Option):
+class DetectorBase(OptionBase):
 
     def __init__(self, name):
         super().__init__()
@@ -20,5 +20,5 @@ class Detector(Option):
     def __eq__(self, other):
         return super().__eq__(other) and self.name == other.name
 
-class DetectorBuilder(OptionBuilder):
+class DetectorBuilderBase(OptionBuilderBase):
     pass

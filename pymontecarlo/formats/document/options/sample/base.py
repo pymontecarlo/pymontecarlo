@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.document.handler import DocumentHandler
-from pymontecarlo.options.sample.base import Sample, Layer
+from pymontecarlo.options.sample.base import SampleBase, Layer
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
@@ -21,8 +21,8 @@ class SampleDocumentHandler(DocumentHandler):
         section = builder.add_section()
         section.add_title('Orientation')
         description = section.require_description('angles')
-        description.add_item('Tilt angle', sample.tilt_rad, 'rad', Sample.TILT_TOLERANCE_rad)
-        description.add_item('Azimuth rotation', sample.azimuth_rad, 'rad', Sample.AZIMUTH_TOLERANCE_rad)
+        description.add_item('Tilt angle', sample.tilt_rad, 'rad', SampleBase.TILT_TOLERANCE_rad)
+        description.add_item('Azimuth rotation', sample.azimuth_rad, 'rad', SampleBase.AZIMUTH_TOLERANCE_rad)
 
         section = builder.add_section()
         section.add_title('Material' if len(sample.materials) < 2 else 'Materials')

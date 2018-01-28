@@ -12,7 +12,7 @@ from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.cylindrical import \
     CylindricalBeam, CylindricalBeamBuilder
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.options.beam.base import Beam
+from pymontecarlo.options.beam.base import BeamBase
 
 # Globals and constants variables.
 
@@ -58,7 +58,7 @@ class TestCylindricalBeam(TestCase):
         beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.1)
         self.assertNotEqual(beam, self.beam)
 
-        beam = Beam(15e3, Particle.POSITRON)
+        beam = BeamBase(15e3, Particle.POSITRON)
         self.assertNotEqual(beam, self.beam)
 
 class TestCylindricalBeamBuilder(TestCase):

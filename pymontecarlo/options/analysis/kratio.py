@@ -12,7 +12,7 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
-from pymontecarlo.options.analysis.photon import PhotonAnalysis, PhotonAnalysisBuilder
+from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
@@ -20,7 +20,7 @@ from pymontecarlo.util.cbook import are_mapping_equal
 
 # Globals and constants variables.
 
-class KRatioAnalysis(PhotonAnalysis):
+class KRatioAnalysis(PhotonAnalysisBase):
 
     DEFAULT_NONPURE_STANDARD_MATERIALS = \
         {7: Material.from_formula('BN', 2.1e3),
@@ -156,7 +156,7 @@ class KRatioAnalysis(PhotonAnalysis):
 
         return newresult
 
-class KRatioAnalysisBuilder(PhotonAnalysisBuilder):
+class KRatioAnalysisBuilder(PhotonAnalysisBuilderBase):
 
     def build(self):
         return [KRatioAnalysis(d) for d in self.photon_detectors]

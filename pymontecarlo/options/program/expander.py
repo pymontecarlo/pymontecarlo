@@ -1,5 +1,5 @@
 """
-Expander of detectors and limits
+ExpanderBase of detectors and limits
 """
 
 # Standard library modules.
@@ -34,7 +34,7 @@ def expand_analyses_to_single_detector(analyses):
 
     return combinations
 
-class Expander(metaclass=abc.ABCMeta):
+class ExpanderBase(metaclass=abc.ABCMeta):
     """
     Expands list of detectors and limits to match the simulation capabilities
     of a Monte Carlo program.

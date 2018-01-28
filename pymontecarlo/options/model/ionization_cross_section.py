@@ -7,11 +7,11 @@ Ionization cross section models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class IonizationCrossSectionModel(Model):
+class IonizationCrossSectionModel(ModelBase):
 
     GAUVIN = ('Gauvin')
     POUCHOU1996 = ('Pouchou 1986', "Pochou & Pichoir in the proceedings from IXCOM 11 (1986)")

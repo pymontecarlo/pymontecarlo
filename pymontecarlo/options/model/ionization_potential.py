@@ -7,11 +7,11 @@ Ionization potential models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class IonizationPotentialModel(Model):
+class IonizationPotentialModel(ModelBase):
 
     JOY_LUO1989 = ('Joy and Luo', 'Joy and Luo (1989)')
     BERGER_SELTZER1964 = ("Berger & Seltzer 1964", "Berger MJ, Seltzer S. NASA Technical Publication SP-4012 (1964)")

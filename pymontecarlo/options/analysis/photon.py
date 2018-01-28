@@ -7,13 +7,13 @@ Photon related analysis.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.analysis.base import Analysis, AnalysisBuilder
+from pymontecarlo.options.analysis.base import AnalysisBase, AnalysisBuilderBase
 
 # Globals and constants variables.
 
 COMMON_XRAY_TRANSITION_SETS = ('K', 'L', 'M', 'Ka', 'Kb', 'La', 'Ma', 'Mz')
 
-class PhotonAnalysis(Analysis):
+class PhotonAnalysisBase(AnalysisBase):
 
     def __init__(self, photon_detector):
         self.photon_detector = photon_detector
@@ -30,7 +30,7 @@ class PhotonAnalysis(Analysis):
     def detector(self):
         return self.photon_detector
 
-class PhotonAnalysisBuilder(AnalysisBuilder):
+class PhotonAnalysisBuilderBase(AnalysisBuilderBase):
 
     def __init__(self):
         self.photon_detectors = []

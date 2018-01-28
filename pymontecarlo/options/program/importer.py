@@ -12,7 +12,7 @@ from pymontecarlo.exceptions import ImportError_
 
 # Globals and constants variables.
 
-class Importer(metaclass=abc.ABCMeta):
+class ImporterBase(metaclass=abc.ABCMeta):
 
     def __init__(self):
         self.import_analysis_methods = {}

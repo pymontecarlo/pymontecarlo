@@ -7,11 +7,11 @@ Random number generator models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class RandomNumberGeneratorModel(Model):
+class RandomNumberGeneratorModel(ModelBase):
 
     PRESS1996_RAND1 = ('Press et al. - rand1', 'Press et al. (1966)')
     PRESS1996_RAND2 = ('Press et al. - rand2', 'Press et al. (1966)')

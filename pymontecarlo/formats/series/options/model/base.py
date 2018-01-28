@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.handler import SeriesHandler
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
@@ -25,5 +25,5 @@ class ModelSeriesHandler(SeriesHandler):
 
     @property
     def CLASS(self):
-        return Model
+        return ModelBase
 

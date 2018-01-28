@@ -10,10 +10,10 @@ import logging
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
-from pymontecarlo.options.detector.base import Detector
+from pymontecarlo.options.detector.base import DetectorBase
 from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
-from pymontecarlo.options.analysis.base import Analysis
+from pymontecarlo.options.analysis.base import AnalysisBase
 
 # Globals and constants variables.
 
@@ -31,20 +31,20 @@ class TestOptions(TestCase):
         detectors = self.options.find_detectors(PhotonDetector)
         self.assertEqual(1, len(detectors))
 
-        detectors = self.options.find_detectors(Detector)
+        detectors = self.options.find_detectors(DetectorBase)
         self.assertEqual(1, len(detectors))
 
     def testfind_analyses(self):
         analyses = self.options.find_analyses(PhotonIntensityAnalysis)
         self.assertEqual(1, len(analyses))
 
-        analyses = self.options.find_analyses(Analysis)
+        analyses = self.options.find_analyses(AnalysisBase)
         self.assertEqual(1, len(analyses))
 
         analyses = self.options.find_analyses(PhotonIntensityAnalysis, self.options.detectors[0])
         self.assertEqual(1, len(analyses))
 
-        analyses = self.options.find_analyses(Detector)
+        analyses = self.options.find_analyses(DetectorBase)
         self.assertEqual(0, len(analyses))
 
 class TestOptionsBuilder(TestCase):

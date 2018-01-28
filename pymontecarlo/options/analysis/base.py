@@ -8,11 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Analysis(Option):
+class AnalysisBase(OptionBase):
 
     @abc.abstractmethod
     def apply(self, options):
@@ -49,5 +49,5 @@ class Analysis(Option):
         """
         return None
 
-class AnalysisBuilder(OptionBuilder):
+class AnalysisBuilderBase(OptionBuilderBase):
     pass

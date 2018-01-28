@@ -7,11 +7,11 @@ Fluorescence models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class FluorescenceModel(Model):
+class FluorescenceModel(ModelBase):
 
     NONE = ('no fluorescence')
     FLUORESCENCE = ('fluorescence')

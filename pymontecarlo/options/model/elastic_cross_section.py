@@ -7,11 +7,11 @@ Elastic cross section models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class ElasticCrossSectionModel(Model):
+class ElasticCrossSectionModel(ModelBase):
 
     MOTT_CZYZEWSKI1990 = ('Mott by interpolation (Czyzewski)', 'Czyzewski (1990)')
     MOTT_CZYZEWSKI1990_LINEAR = ('Mott by linear interpolation (Czyzewski)', 'Czyzewski (1990)')

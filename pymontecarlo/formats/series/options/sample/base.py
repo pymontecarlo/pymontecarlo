@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.series.handler import SeriesHandler
-from pymontecarlo.options.sample.base import Sample, Layer
+from pymontecarlo.options.sample.base import SampleBase, Layer
 
 # Globals and constants variables.
 
@@ -14,8 +14,8 @@ class SampleSeriesHandler(SeriesHandler):
 
     def convert(self, sample, builder):
         super().convert(sample, builder)
-        builder.add_column('sample tilt', 'theta0', sample.tilt_rad, 'rad', Sample.TILT_TOLERANCE_rad)
-        builder.add_column('sample azimuth', 'phi0', sample.azimuth_rad, 'rad', Sample.AZIMUTH_TOLERANCE_rad)
+        builder.add_column('sample tilt', 'theta0', sample.tilt_rad, 'rad', SampleBase.TILT_TOLERANCE_rad)
+        builder.add_column('sample azimuth', 'phi0', sample.azimuth_rad, 'rad', SampleBase.AZIMUTH_TOLERANCE_rad)
 
 class LayerSeriesHandler(SeriesHandler):
 

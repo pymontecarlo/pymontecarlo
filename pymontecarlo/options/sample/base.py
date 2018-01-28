@@ -13,11 +13,11 @@ import itertools
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import \
     DegreesAttribute, are_sequence_equal, unique
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Sample(Option):
+class SampleBase(OptionBase):
     """
     Base class for all sample representations.
     """
@@ -64,7 +64,7 @@ class Sample(Option):
     tilt_deg = DegreesAttribute('tilt_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
-class SampleBuilder(OptionBuilder):
+class SampleBuilderBase(OptionBuilderBase):
 
     def __init__(self):
         self.tilts_rad = set()
@@ -103,7 +103,7 @@ class SampleBuilder(OptionBuilder):
     def add_azimuth_deg(self, azimuth_deg):
         self.add_azimuth_rad(math.radians(azimuth_deg))
 
-class Layer(Option):
+class Layer(OptionBase):
 
     THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -129,7 +129,7 @@ class Layer(Option):
         return self.material == other.material and \
             math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
 
-class LayerBuilder(OptionBuilder):
+class LayerBuilder(OptionBuilderBase):
 
     def __init__(self):
         self.materials = []
@@ -155,7 +155,7 @@ class LayerBuilder(OptionBuilder):
 
         return layers
 
-class LayeredSample(Sample):
+class LayeredSampleBase(SampleBase):
 
     def __init__(self, layers=None, tilt_rad=0.0, azimuth_rad=0.0):
         super().__init__(tilt_rad, azimuth_rad)
@@ -187,7 +187,7 @@ class LayeredSample(Sample):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
 
-class LayeredSampleBuilder(SampleBuilder):
+class LayeredSampleBuilderBase(SampleBuilderBase):
 
     def __init__(self):
         super().__init__()

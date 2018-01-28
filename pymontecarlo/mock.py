@@ -13,7 +13,7 @@ import functools
 # Local modules.
 from pymontecarlo.options.beam.gaussian import GaussianBeam
 from pymontecarlo.options.beam.cylindrical import CylindricalBeam
-from pymontecarlo.options.sample.base import Sample
+from pymontecarlo.options.sample.base import SampleBase
 from pymontecarlo.options.sample.substrate import SubstrateSample
 from pymontecarlo.options.sample.inclusion import InclusionSample
 from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
@@ -23,25 +23,25 @@ from pymontecarlo.options.model.elastic_cross_section import ElasticCrossSection
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis
 from pymontecarlo.options.detector.photon import PhotonDetector
-from pymontecarlo.options.program.base import Program, ProgramBuilder
-from pymontecarlo.options.program.expander import Expander, expand_to_single, expand_analyses_to_single_detector
-from pymontecarlo.options.program.validator import Validator
-from pymontecarlo.options.program.exporter import Exporter
-from pymontecarlo.options.program.worker import Worker
-from pymontecarlo.options.program.importer import Importer
+from pymontecarlo.options.program.base import ProgramBase, ProgramBuilderBase
+from pymontecarlo.options.program.expander import ExpanderBase, expand_to_single, expand_analyses_to_single_detector
+from pymontecarlo.options.program.validator import ValidatorBase
+from pymontecarlo.options.program.exporter import ExporterBase
+from pymontecarlo.options.program.worker import WorkerBase
+from pymontecarlo.options.program.importer import ImporterBase
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5Handler
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandler
 from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandler
 
 # Globals and constants variables.
 
-class SampleMock(Sample):
+class SampleMock(SampleBase):
 
     @property
     def materials(self):
         return []
 
-class ExpanderMock(Expander):
+class ExpanderMock(ExpanderBase):
 
     def expand_analyses(self, analyses):
         return expand_analyses_to_single_detector(analyses)
@@ -52,7 +52,7 @@ class ExpanderMock(Expander):
     def expand_models(self, models):
         return expand_to_single(models)
 
-class ValidatorMock(Validator):
+class ValidatorMock(ValidatorBase):
 
     def __init__(self):
         super().__init__()
@@ -84,7 +84,7 @@ class ValidatorMock(Validator):
 
         return energy_eV
 
-class ExporterMock(Exporter):
+class ExporterMock(ExporterBase):
 
     def __init__(self):
         super().__init__()
@@ -118,7 +118,7 @@ class ExporterMock(Exporter):
     def _export_analysis_photonintensity(self, analysis, options, errors, outdict):
         outdict.setdefault('analyses', []).append('photon intensity')
 
-class WorkerMock(Worker):
+class WorkerMock(WorkerBase):
 
     def run(self, token, simulation, outputdir):
         options = simulation.options
@@ -135,12 +135,12 @@ class WorkerMock(Worker):
 
         token.update(1.0, 'Done')
 
-class ImporterMock(Importer):
+class ImporterMock(ImporterBase):
 
     def _import(self, options, dirpath, errors):
         return []
 
-class ProgramMock(Program):
+class ProgramMock(ProgramBase):
 
     def __init__(self,
                  foo=None,
@@ -169,7 +169,7 @@ class ProgramMock(Program):
     def create_worker(self):
         return WorkerMock()
 
-class ProgramBuilderMock(ProgramBuilder):
+class ProgramBuilderMock(ProgramBuilderBase):
 
     def __init__(self):
         self.foos = set()

@@ -7,11 +7,11 @@ Mass absorption coefficient models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class MassAbsorptionCoefficientModel(Model):
+class MassAbsorptionCoefficientModel(ModelBase):
 
     NONE = ('No MAC')
     RUSTE1979 = ('Ruste 1979', 'J. Ruste, J. Microsc. Spectrosc. Electron. 4, 123 (1979)')

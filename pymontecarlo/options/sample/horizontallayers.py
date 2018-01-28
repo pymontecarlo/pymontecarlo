@@ -8,12 +8,12 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import LayeredSample, LayeredSampleBuilder
+from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
 from pymontecarlo.options.material import VACUUM
 
 # Globals and constants variables.
 
-class HorizontalLayerSample(LayeredSample):
+class HorizontalLayerSample(LayeredSampleBase):
 
     def __init__(self, substrate_material=None, layers=None,
                  tilt_rad=0.0, azimuth_rad=0.0):
@@ -70,7 +70,7 @@ class HorizontalLayerSample(LayeredSample):
 
         return zpositions
 
-class HorizontalLayerSampleBuilder(LayeredSampleBuilder):
+class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):
         super().__init__()

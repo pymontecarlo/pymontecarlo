@@ -11,11 +11,11 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import Sample, SampleBuilder
+from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
 
 # Globals and constants variables.
 
-class InclusionSample(Sample):
+class InclusionSample(SampleBase):
 
     INCLUSION_DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -48,7 +48,7 @@ class InclusionSample(Sample):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
-class InclusionSampleBuilder(SampleBuilder):
+class InclusionSampleBuilder(SampleBuilderBase):
 
     def __init__(self):
         super().__init__()

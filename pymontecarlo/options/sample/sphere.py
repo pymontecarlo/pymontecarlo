@@ -11,11 +11,11 @@ import math
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.sample.base import Sample, SampleBuilder
+from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
 
 # Globals and constants variables.
 
-class SphereSample(Sample):
+class SphereSample(SampleBase):
 
     DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -45,7 +45,7 @@ class SphereSample(Sample):
     def materials(self):
         return self._cleanup_materials(self.material)
 
-class SphereSampleBuilder(SampleBuilder):
+class SphereSampleBuilder(SampleBuilderBase):
 
     def __init__(self):
         super().__init__()

@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.formats.document.handler import DocumentHandler
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
@@ -32,4 +32,4 @@ class ModelDocumentHandler(DocumentHandler):
 
     @property
     def CLASS(self):
-        return Model
+        return ModelBase

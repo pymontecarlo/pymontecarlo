@@ -7,11 +7,11 @@ Direction cosine models.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import Model
+from pymontecarlo.options.model.base import ModelBase
 
 # Globals and constants variables.
 
-class DirectionCosineModel(Model):
+class DirectionCosineModel(ModelBase):
 
     SOUM1979 = ('Soum et al.', 'Soum et al. (1979)')
     DROUIN1996 = ('Drouin', 'Drouin (1996)')

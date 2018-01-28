@@ -10,12 +10,12 @@ import itertools
 import numpy as np
 
 # Local modules.
-from pymontecarlo.options.beam.base import Beam, BeamBuilder
+from pymontecarlo.options.beam.base import BeamBase, BeamBuilderBase
 from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
 
-class CylindricalBeam(Beam):
+class CylindricalBeam(BeamBase):
 
     DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
     POSITION_TOLERANCE_m = 1e-12 # 1 pm
@@ -60,7 +60,7 @@ class CylindricalBeam(Beam):
             math.isclose(self.x0_m, other.x0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
             math.isclose(self.y0_m, other.y0_m, abs_tol=self.POSITION_TOLERANCE_m)
 
-class CylindricalBeamBuilder(BeamBuilder):
+class CylindricalBeamBuilder(BeamBuilderBase):
 
     def __init__(self):
         super().__init__()

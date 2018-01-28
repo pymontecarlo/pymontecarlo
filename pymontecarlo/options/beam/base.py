@@ -12,11 +12,11 @@ import math
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.options.base import Option, OptionBuilder
+from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
 
-class Beam(Option):
+class BeamBase(OptionBase):
     """
     Base beam.
     """
@@ -43,7 +43,7 @@ class Beam(Option):
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
-class BeamBuilder(OptionBuilder):
+class BeamBuilderBase(OptionBuilderBase):
 
     def __init__(self):
         self.energies_eV = set()
