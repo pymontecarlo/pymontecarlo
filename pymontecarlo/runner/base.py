@@ -16,7 +16,7 @@ from pymontecarlo.formats.series.identifier import create_identifiers
 
 # Globals and constants variables.
 
-class SimulationRunner(FutureExecutor, metaclass=abc.ABCMeta):
+class SimulationRunnerBase(FutureExecutor, metaclass=abc.ABCMeta):
 
     def __init__(self, project=None, max_workers=1):
         super().__init__(max_workers)

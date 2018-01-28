@@ -10,11 +10,11 @@ import shutil
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.runner.base import SimulationRunner
+from pymontecarlo.runner.base import SimulationRunnerBase
 
 # Globals and constants variables.
 
-class LocalSimulationRunner(SimulationRunner):
+class LocalSimulationRunner(SimulationRunnerBase):
 
     def _prepare_target(self):
         # Create output directory
