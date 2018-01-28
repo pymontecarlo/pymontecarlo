@@ -17,7 +17,7 @@ class ResultBase:
     @classmethod
     def getname(cls):
         name = cls.__name__
-        if name.endswith('ResultBase'):
+        if name.endswith('Result'):
             name = name[:-6]
         name = camelcase_to_words(name)
         return name.capitalize()
