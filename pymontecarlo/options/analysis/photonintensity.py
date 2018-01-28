@@ -10,7 +10,7 @@ import pyxray
 # Local modules.
 from pymontecarlo.options.analysis.photon import \
     PhotonAnalysisBase, PhotonAnalysisBuilderBase, COMMON_XRAY_TRANSITION_SETS
-from pymontecarlo.results.photonintensity import PhotonIntensityResult
+from pymontecarlo.results.photonintensity import PhotonIntensityResultBase
 
 # Globals and constants variables.
 
@@ -28,7 +28,7 @@ class PhotonIntensityAnalysis(PhotonAnalysisBase):
         """
         newresult = super().calculate(simulation, simulations)
 
-        for result in simulation.find_result(PhotonIntensityResult):
+        for result in simulation.find_result(PhotonIntensityResultBase):
             zs = set(xrayline.element.atomic_number for xrayline in result)
 
             for z in zs:

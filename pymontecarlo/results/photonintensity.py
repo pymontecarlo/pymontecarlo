@@ -10,17 +10,17 @@ from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuil
 
 # Globals and constants variables.
 
-class PhotonIntensityResult(PhotonSingleResultBase):
+class PhotonIntensityResultBase(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and photon intensities, expressed in
     ``1/(sr.electron)``.
     """
     pass
 
-class EmittedPhotonIntensityResult(PhotonIntensityResult):
+class EmittedPhotonIntensityResult(PhotonIntensityResultBase):
     pass
 
-class GeneratedPhotonIntensityResult(PhotonIntensityResult):
+class GeneratedPhotonIntensityResult(PhotonIntensityResultBase):
     pass
 
 class PhotonIntensityResultBuilder(PhotonResultBuilderBase):
