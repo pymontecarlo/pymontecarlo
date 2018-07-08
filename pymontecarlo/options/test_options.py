@@ -4,6 +4,8 @@
 # Standard library modules.
 import unittest
 import logging
+import pickle
+import copy
 
 # Third party modules.
 
@@ -46,6 +48,15 @@ class TestOptions(TestCase):
 
         analyses = self.options.find_analyses(DetectorBase)
         self.assertEqual(0, len(analyses))
+
+    def testpickle(self):
+        s = pickle.dumps(self.options)
+        options = pickle.loads(s)
+        self.assertEqual(self.options, options)
+
+    def testdeepcopy(self):
+        options = copy.deepcopy(self.options)
+        self.assertEqual(self.options, options)
 
 class TestOptionsBuilder(TestCase):
 

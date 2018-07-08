@@ -4,6 +4,7 @@
 # Standard library modules.
 import unittest
 import logging
+import pickle
 
 # Third party modules.
 
@@ -36,6 +37,11 @@ class TestModel(unittest.TestCase):
 
     def test__in__(self):
         self.assertIn(ModelMock.A, [ModelMock.A, ModelMock.B])
+
+    def testpickle(self):
+        s = pickle.dumps(ModelMock.A)
+        model = pickle.loads(s)
+        self.assertEqual(ModelMock.A, model)
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
