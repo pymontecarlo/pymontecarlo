@@ -24,7 +24,7 @@ class Testhelper(TestCase):
         handler.convert(options, builder)
 
         s = publish_html(builder)
-        self.assertEqual(16689, len(s))
+        self.assertEqual(16724, len(s))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

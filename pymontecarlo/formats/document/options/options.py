@@ -44,7 +44,9 @@ class OptionsDocumentHandler(DocumentHandlerBase):
 
         builder.add_title('Tags')
         if options.tags:
-            builder.add_text(', '.join(options.tags))
+            bullet_builder = builder.require_bullet('tags')
+            for tag in options.tags:
+                bullet_builder.add_item(tag)
         else:
             builder.add_text('No tags')
 
