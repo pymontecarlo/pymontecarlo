@@ -19,6 +19,7 @@ from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
 from pymontecarlo.util.cbook import are_mapping_equal
 
 # Globals and constants variables.
+TAG_STANDARD = 'standard'
 
 class KRatioAnalysis(PhotonAnalysisBase):
 
@@ -54,7 +55,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
         return Material.pure(z)
 
     def _create_standard_options(self, options):
-        builder = OptionsBuilder()
+        builder = OptionsBuilder(tags=[TAG_STANDARD])
 
         program = copy.copy(options.program)
         builder.add_program(program)

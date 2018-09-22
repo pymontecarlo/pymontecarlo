@@ -42,6 +42,14 @@ class OptionsDocumentHandler(DocumentHandlerBase):
             section = builder.add_section()
             section.add_object(analysis)
 
+        builder.add_title('Tags')
+        if options.tags:
+            bullet_builder = builder.require_bullet('tags')
+            for tag in options.tags:
+                bullet_builder.add_item(tag)
+        else:
+            builder.add_text('No tags')
+
     @property
     def CLASS(self):
         return Options

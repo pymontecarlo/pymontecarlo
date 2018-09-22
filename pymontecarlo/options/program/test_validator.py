@@ -195,7 +195,7 @@ class TestValidator(TestCase):
         self.v._validate_analysis(analysis, self.options, errors)
         self.assertEqual(4, len(errors))
 
-    def test_validate_model(self):
+    def testvalidate_model(self):
         model = ElasticCrossSectionModel.RUTHERFORD
         errors = set()
         model2 = self.v._validate_model(model, self.options, errors)
@@ -203,16 +203,30 @@ class TestValidator(TestCase):
         self.assertIs(model2, model)
         self.assertEqual(0, len(errors))
 
-    def test_validate_model_exception(self):
+    def testvalidate_model_exception(self):
         model = ElasticCrossSectionModel.ELSEPA2005
         errors = set()
         self.v._validate_model(model, self.options, errors)
         self.assertEqual(1, len(errors))
 
-    def test_validate_model_exception2(self):
+    def testvalidate_model_exception2(self):
         model = MassAbsorptionCoefficientModel.POUCHOU_PICHOIR1991
         errors = set()
         self.v._validate_model(model, self.options, errors)
+        self.assertEqual(1, len(errors))
+
+    def testvalidate_tags(self):
+        tags = ['test', 'test2']
+        tags2 = self.v.validate_tags(tags, self.options)
+        self.assertEqual(tags2, tags)
+        self.assertIsNot(tags2, tags)
+
+    def testvalidate_tags_exception(self):
+        tags = ['test', 12345]
+        self.assertRaises(ValidationError, self.v.validate_tags, tags, self.options)
+
+        errors = set()
+        self.v._validate_tags(tags, self.options, errors)
         self.assertEqual(1, len(errors))
 
 if __name__ == '__main__': #pragma: no cover

@@ -11,7 +11,7 @@ import math
 # Local modules.
 from pymontecarlo.testcase import TestCase
 from pymontecarlo.mock import ProgramMock
-from pymontecarlo.options.analysis.kratio import KRatioAnalysis
+from pymontecarlo.options.analysis.kratio import KRatioAnalysis, TAG_STANDARD
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import SubstrateSample
@@ -45,17 +45,18 @@ class TestKRatioAnalysis(TestCase):
         self.assertSequenceEqual(self.options.detectors, options.detectors)
         self.assertEqual(1, len(options.analyses))
         self.assertIsInstance(options.analyses[0], PhotonIntensityAnalysis)
+        self.assertIn(TAG_STANDARD, options.tags)
 
     def testapply2(self):
         self.options.sample.material = Material.from_formula('Al2O3')
         list_options = self.a.apply(self.options)
         self.assertEqual(2, len(list_options))
 
-#    def testcalculate_nothing(self):
-#        simulation = self.create_basic_simulation()
-#        simulations = [simulation]
-#        newresult = self.a.calculate(simulation, simulations)
-#        self.assertFalse(newresult)
+    def testcalculate_nothing(self):
+        simulation = self.create_basic_simulation()
+        simulations = [simulation]
+        newresult = self.a.calculate(simulation, simulations)
+        self.assertFalse(newresult)
 
     def testcalculate(self):
         # Create options

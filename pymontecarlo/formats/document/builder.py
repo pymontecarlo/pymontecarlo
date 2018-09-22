@@ -36,6 +36,7 @@ class DocumentBuilder(DocutilsFormatBuilderBase):
         super().__init__(settings, abbreviate_name=False, format_number=True)
         self.nodes = []
         self.description_builders = {}
+        self.bullet_builders = {}
         self.table_builders = {}
 
     def add_title(self, title):
@@ -65,6 +66,15 @@ class DocumentBuilder(DocutilsFormatBuilderBase):
 
         builder = DescriptionBuilder(self.settings)
         self.description_builders[identifier] = builder
+        self.nodes.append(builder)
+        return builder
+
+    def require_bullet(self, identifier):
+        if identifier in self.bullet_builders:
+            return self.bullet_builders[identifier]
+
+        builder = BulletBuilder(self.settings)
+        self.bullet_builders[identifier] = builder
         self.nodes.append(builder)
         return builder
 
@@ -118,6 +128,28 @@ class DescriptionBuilder(DocutilsFormatBuilderBase):
 
         document = docutils.utils.new_document('')
         document += definition_list
+        return document
+
+class BulletBuilder(DocutilsFormatBuilderBase):
+
+    def __init__(self, settings):
+        super().__init__(settings, abbreviate_name=False, format_number=True)
+        self.data = []
+
+    def add_item(self, value, unit=None, tolerance=None):
+        datum = self._create_datum('untitled', 'untitled', value, unit, tolerance)
+        self.data.append(datum)
+
+    def build(self):
+        bullet_list = docutils.nodes.bullet_list()
+
+        for datum in self.data:
+            item = docutils.nodes.list_item()
+            item += self._format_value_node(datum)
+            bullet_list += item
+
+        document = docutils.utils.new_document('')
+        document += bullet_list
         return document
 
 class TableBuilder(DocutilsFormatBuilderBase):

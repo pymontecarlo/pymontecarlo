@@ -109,7 +109,8 @@ class TestCase(unittest.TestCase):
         beam = self.create_basic_beam()
         sample = self.create_basic_sample()
         analyses = [PhotonIntensityAnalysis(self.create_basic_photondetector())]
-        return Options(program, beam, sample, analyses)
+        tags = ['test']
+        return Options(program, beam, sample, analyses, tags)
 
     def create_basic_photonintensityresult(self):
         analysis = PhotonIntensityAnalysis(self.create_basic_photondetector())

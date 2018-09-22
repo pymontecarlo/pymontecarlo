@@ -26,6 +26,7 @@ class TestOptionsHDF5Handler(TestCase):
 #        print(options.analyses, options2.analyses)
 #        print(options.limits, options2.limits)
 #        print(options.models, options2.models)
+#        print(options.tags, options2.tags)
         self.assertEqual(options2, options)
 
 #        import h5py

@@ -36,7 +36,7 @@ class TestOptionsDocumentHandler(TestCase):
         options.analyses.append(analysis)
 
         document = self.convert_documenthandler(handler, options)
-        self.assertEqual(13, self.count_document_nodes(document))
+        self.assertEqual(15, self.count_document_nodes(document))
 
 #        import docutils.core
 #        with open('/tmp/test.html', 'wb') as fp:
