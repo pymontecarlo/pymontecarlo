@@ -61,8 +61,10 @@ class ValidatorBase(metaclass=abc.ABCMeta):
             self._validate_sample(options.sample, options, errors)
         analyses = \
             self._validate_analyses(options.analyses, options, errors)
+        tags = \
+            self._validate_tags(options.tags, options, errors)
 
-        return Options(program, beam, sample, analyses)
+        return Options(program, beam, sample, analyses, tags)
 
     def validate_program(self, program, options):
         errors = set()
@@ -560,3 +562,24 @@ class ValidatorBase(metaclass=abc.ABCMeta):
             outmaterials[z] = outmaterial
 
         return outmaterials
+
+    def validate_tags(self, tags, options):
+        errors = set()
+        tags = self._validate_tags(tags, options, errors)
+
+        if errors:
+            raise ValidationError(*errors)
+
+        return tags
+
+    def _validate_tags(self, tags, options, errors):
+        outtags = []
+
+        for tag in tags:
+            if not isinstance(tag, str):
+                exc = TypeError('Tag must be a string')
+                errors.add(exc)
+                continue
+            outtags.append(tag)
+
+        return outtags

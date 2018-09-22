@@ -15,7 +15,7 @@ from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 class Options(OptionBase):
 
-    def __init__(self, program, beam, sample, analyses=None):
+    def __init__(self, program, beam, sample, analyses=None, tags=None):
         """
         Options for a simulation.
         """
@@ -24,10 +24,8 @@ class Options(OptionBase):
         self.program = program
         self.beam = beam
         self.sample = sample
-
-        if analyses is None:
-            analyses = []
-        self.analyses = list(analyses)
+        self.analyses = list(analyses) if analyses is not None else []
+        self.tags = list(tags) if tags is not None else []
 
     def __repr__(self):
         return '<{classname}()>' \
@@ -38,7 +36,8 @@ class Options(OptionBase):
             self.program == other.program and \
             self.beam == other.beam and \
             self.sample == other.sample and \
-            are_sequence_similar(self.analyses, other.analyses)
+            are_sequence_similar(self.analyses, other.analyses) and \
+            are_sequence_similar(self.tags, other.tags)
 
     def find_analyses(self, analysis_class, detector=None):
         """
@@ -67,11 +66,12 @@ class Options(OptionBase):
 
 class OptionsBuilder(OptionBuilderBase):
 
-    def __init__(self):
+    def __init__(self, tags=None):
         self.programs = []
         self.beams = []
         self.samples = []
         self.analyses = []
+        self.tags = list(tags) if tags is not None else []
 
     def __len__(self):
         return len(self.build())
@@ -105,7 +105,7 @@ class OptionsBuilder(OptionBuilderBase):
                                         self.samples,
                                         analysis_combinations)
             for beam, sample, analyses in product:
-                options = Options(program, beam, sample, analyses)
+                options = Options(program, beam, sample, analyses, self.tags)
 
                 if options in list_options:
                     continue

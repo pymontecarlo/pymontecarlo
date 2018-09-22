@@ -25,6 +25,9 @@ class OptionsSeriesHandler(SeriesHandlerBase):
         for analysis in options.analyses:
             builder.add_object(analysis)
 
+        for tag in options.tags:
+            builder.add_column(tag, tag, True)
+
     @property
     def CLASS(self):
         return Options

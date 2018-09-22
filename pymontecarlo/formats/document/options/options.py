@@ -42,6 +42,12 @@ class OptionsDocumentHandler(DocumentHandlerBase):
             section = builder.add_section()
             section.add_object(analysis)
 
+        builder.add_title('Tags')
+        if options.tags:
+            builder.add_text(', '.join(options.tags))
+        else:
+            builder.add_text('No tags')
+
     @property
     def CLASS(self):
         return Options
