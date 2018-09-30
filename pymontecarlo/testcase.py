@@ -24,9 +24,10 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.model import ElasticCrossSectionModel
-from pymontecarlo.options.analysis import PhotonIntensityAnalysis
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResultBuilder, GeneratedPhotonIntensityResultBuilder
+from pymontecarlo.results.kratio import KRatioResultBuilder
 from pymontecarlo.mock import ProgramMock
 from pymontecarlo.util.entrypoint import \
     (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
@@ -122,6 +123,18 @@ class TestCase(unittest.TestCase):
         b.add_intensity((29, 'Kb5I'), 1.0, 0.1)
         b.add_intensity((29, 'Kb5II'), 0.5, 0.1)
         b.add_intensity((29, 'Ll'), 3.0, 0.1)
+        return b.build()
+
+    def create_basic_kratioresult(self):
+        analysis = KRatioAnalysis(self.create_basic_photondetector())
+        b = KRatioResultBuilder(analysis)
+        b.add_kratio((29, 'Ka1'), 1.0, 1.0)
+        b.add_kratio((29, 'Ka2'), 2.0, 1.0)
+        b.add_kratio((29, 'Kb1'), 0.5, 1.0)
+        b.add_kratio((29, 'Kb3'), 1.5, 1.0)
+        b.add_kratio((29, 'Kb5I'), 1.0, 1.0)
+        b.add_kratio((29, 'Kb5II'), 0.5, 1.0)
+        b.add_kratio((29, 'Ll'), 2.0, 1.0)
         return b.build()
 
     def create_basic_simulation(self):
