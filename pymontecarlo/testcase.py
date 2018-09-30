@@ -142,6 +142,8 @@ class TestCase(unittest.TestCase):
 
         results = []
         results.append(self.create_basic_photonintensityresult())
+        results.append(self.create_basic_kratioresult())
+        results.append(self.create_basic_kratioresult())
 
         return Simulation(options, results)
 
@@ -149,9 +151,11 @@ class TestCase(unittest.TestCase):
         project = Project()
 
         sim1 = self.create_basic_simulation()
+        sim1.options.tags.append('sim1')
         project.add_simulation(sim1)
 
         sim2 = self.create_basic_simulation()
+        sim2.options.tags.append('sim2')
         sim2.options.beam.energy_eV = 20e3
         project.add_simulation(sim2)
 
