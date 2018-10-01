@@ -25,7 +25,7 @@ class TestProject(TestCase):
 
     def testskeleton(self):
         self.assertEqual(3, len(self.p.simulations))
-        self.assertEqual(2, len(self.p.result_classes))
+        self.assertEqual(3, len(self.p.result_classes))
 
     def testcreate_options_dataframe(self):
         df = self.p.create_options_dataframe(self.settings, only_different_columns=False)
@@ -35,21 +35,21 @@ class TestProject(TestCase):
         df = self.p.create_options_dataframe(self.settings, only_different_columns=True)
         self.assertEqual(3, len(df))
 
-        self.assertEqual(2, len(df.loc[0]))
-        self.assertEqual(2, len(df.loc[1]))
-        self.assertEqual(2, len(df.loc[2]))
+        self.assertEqual(4, len(df.loc[0]))
+        self.assertEqual(4, len(df.loc[1]))
+        self.assertEqual(4, len(df.loc[2]))
 
     def testcreate_results_dataframe(self):
         df = self.p.create_results_dataframe(self.settings)
         self.assertEqual(3, len(df))
 
-        self.assertEqual(20, len(df.loc[0]))
-        self.assertEqual(20, len(df.loc[1]))
-        self.assertEqual(20, len(df.loc[2]))
+        self.assertEqual(34, len(df.loc[0]))
+        self.assertEqual(34, len(df.loc[1]))
+        self.assertEqual(34, len(df.loc[2]))
 
-        self.assertEqual(14, len(df.loc[0].dropna()))
-        self.assertEqual(14, len(df.loc[1].dropna()))
-        self.assertEqual(20, len(df.loc[2].dropna()))
+        self.assertEqual(28, len(df.loc[0].dropna()))
+        self.assertEqual(28, len(df.loc[1].dropna()))
+        self.assertEqual(34, len(df.loc[2].dropna()))
 
     def testcreate_results_dataframe_with_results(self):
         result_classes = [EmittedPhotonIntensityResult]
@@ -91,7 +91,7 @@ class TestProject(TestCase):
         self.p.write(filepath)
         p = Project.read(filepath)
         self.assertEqual(3, len(p.simulations))
-        self.assertEqual(2, len(p.result_classes))
+        self.assertEqual(3, len(p.result_classes))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)
