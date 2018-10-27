@@ -3,6 +3,7 @@ Some useful color sets
 """
 
 # Standard library modules.
+import colorsys
 
 # Third party modules.
 
@@ -47,3 +48,12 @@ COLOR_SET_COLORFUL = ('#FFB300',  # Vivid Yellow
                       '#93AA00',  # Vivid Yellowish Green
                       '#F13A13',  # Vivid Reddish Orange
                       '#232C16')
+
+def complementary(r, g, b):
+   """
+   Returns RGB components of complementary color
+
+   From https://stackoverflow.com/questions/40233986/python-is-there-a-function-or-formula-to-find-the-complementary-colour-of-a-rgb
+   """
+   hsv = colorsys.rgb_to_hsv(r, g, b)
+   return colorsys.hsv_to_rgb((hsv[0] + 0.5) % 1, hsv[1], hsv[2])

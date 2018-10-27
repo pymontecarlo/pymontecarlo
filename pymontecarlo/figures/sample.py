@@ -9,15 +9,20 @@ from math import tan
 import enum
 
 # Third party modules.
-from matplotlib.collections import PatchCollection
+from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib.patches import Wedge, Rectangle, Circle
 from matplotlib.transforms import Affine2D
+from matplotlib.colors import to_rgb
+
+import numpy as np
 
 # Local modules.
 from pymontecarlo.figures.base import Figure
 from pymontecarlo.options.beam import GaussianBeam
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
+from pymontecarlo.util.color import complementary
+from pymontecarlo.results.trajectory import Trajectory
 
 # Globals and constant variables.
 
@@ -65,6 +70,7 @@ class SampleFigure(Figure):
         self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
         self.view_size_methods[GaussianBeam] = self._calculate_view_size_gaussian_beam
+        self.view_size_methods[Trajectory] = self._calculate_view_size_trajectory
 
     def _recalculate_view_size(self, perspective):
         SCALE_FACTOR = 5
@@ -99,6 +105,14 @@ class SampleFigure(Figure):
         elif perspective is Perspective.YZ:
             return view_size + beam.y0_m
 
+    def _calculate_view_size_trajectory(self, trajectory, perspective):
+        if perspective is Perspective.XY:
+            return max(max(trajectory.xs_m), max(trajectory.ys_m))
+        elif perspective is Perspective.XZ:
+            return max(max(trajectory.xs_m), max(trajectory.zs_m))
+        elif perspective is Perspective.YZ:
+            return max(max(trajectory.ys_m), max(trajectory.zs_m))
+
     def draw(self, ax):
         """
         :param ax: an instance of matplotlib.axes.Axes
@@ -111,8 +125,7 @@ class SampleFigure(Figure):
         for beam in self.beams:
             self._draw_beam(ax, beam, self.perspective, view_size)
 
-        for trajectory in self.trajectories:
-            self._draw_trajectory(ax, trajectory, self.perspective, view_size)
+        self._draw_trajectories(ax, self.trajectories, self.perspective, view_size)
 
         half_view_size = view_size / 2
         ax.set_xlim((-half_view_size, half_view_size))
@@ -288,5 +301,32 @@ class SampleFigure(Figure):
                               color=color)]
 
     # DRAW TRAJECTORIES
-    def _draw_trajectory(self, ax, trajectory, perspective):
-        raise NotImplementedError
+    def _draw_trajectories(self, ax, trajectories, perspective, view_size):
+        # Create path for each trajectory depending on particle and exit flag
+        paths = {}
+        for trajectory in trajectories:
+            key = (trajectory.particle, trajectory.exited)
+            path = self._compose_trajectory(trajectory, perspective, view_size)
+            paths.setdefault(key, []).append(path)
+
+        # Draw each collection
+        for particle, exited in paths:
+            color = 'w'
+            
+            # # Find complementary color if particle exited the sample
+            # if exited:
+            #     color = complementary(*to_rgb(color))
+
+            col = LineCollection(paths[(particle, exited)], colors=color, alpha=0.05)
+            ax.add_collection(col)
+
+    def _compose_trajectory(self, trajectory, perspective, view_size):
+        vertices = []
+        if perspective is Perspective.XY:
+            vertices = [[x, y] for x, y in zip(trajectory.xs_m, trajectory.ys_m)]
+        elif perspective is Perspective.XZ:
+            vertices = [[x, z] for x, z in zip(trajectory.xs_m, trajectory.zs_m)]
+        elif perspective is Perspective.YZ:
+            vertices = [[y, z] for y, z in zip(trajectory.ys_m, trajectory.zs_m)]
+
+        return np.array(vertices)
