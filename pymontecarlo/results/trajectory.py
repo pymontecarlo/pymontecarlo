@@ -4,28 +4,34 @@ Trajectory results.
 
 # Standard library modules.
 import collections
-import dataclasses
-import typing
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.results.base import Result, ResultBuilder
-from pymontecarlo.options.particle import Particle
 
 # Globals and constants variables.
 
-@dataclasses.dataclass
 class Trajectory:
-    id: int
-    parent_id: int
-    particle: Particle
-    exited: bool
-    xs_m: typing.List[float]
-    ys_m: typing.List[float]
-    zs_m: typing.List[float]
-    energies_eV: typing.List[float]
-    events: typing.List[int]
+
+    def __init__(self, particle, exited, xs_m, ys_m, zs_m, energies_eV, parent=None):
+        if len(ys_m) != len(xs_m):
+            raise ValueError('Number of y-coordinates ({}) is different than number of x-coordinates ({})' \
+                             .format(len(ys_m), len(xs_m)))
+        if len(zs_m) != len(xs_m):
+            raise ValueError('Number of z-coordinates ({}) is different than number of x-coordinates ({})' \
+                             .format(len(zs_m), len(xs_m)))
+        if len(energies_eV) != len(xs_m):
+            raise ValueError('Number of energies ({}) is different than number of x-coordinates ({})' \
+                             .format(len(energies_eV), len(xs_m)))
+
+        self.particle = particle
+        self.exited = exited
+        self.xs_m = tuple(xs_m)
+        self.ys_m = tuple(ys_m)
+        self.zs_m = tuple(zs_m)
+        self.energies_eV = tuple(energies_eV)
+        self.parent = parent
 
 class TrajectoryResult(Result, collections.Iterable, collections.Sized):
     """
