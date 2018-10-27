@@ -96,17 +96,17 @@ class TestSampleFigure(unittest.TestCase):
             self.assertEqual(len(c), 1)
 
     def test_compose_trajectory(self):
-        trajectory = Trajectory(1, 0, Particle.ELECTRON, False, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1])
+        trajectory = Trajectory(Particle.ELECTRON, False, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1])
         sf = SampleFigure()
 
         for perspective in self.perspectives:
-            path = sf._compose_trajectory(trajectory, perspective, 2.0)
-            self.assertEqual(len(path.vertices), 3)
+            segment = sf._compose_trajectory(trajectory, perspective, 2.0)
+            self.assertEqual(len(segment), 3)
 
     def test_draw_trajectories(self):
-        trajectories = [Trajectory(1, 0, Particle.ELECTRON, False, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1]),
-                        Trajectory(2, 0, Particle.ELECTRON, False, [0.0, 2.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1]),
-                        Trajectory(3, 0, Particle.ELECTRON, True, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1])]
+        trajectories = [Trajectory(Particle.ELECTRON, False, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1]),
+                        Trajectory(Particle.ELECTRON, False, [0.0, 2.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1]),
+                        Trajectory(Particle.ELECTRON, True, [0.0, 1.0, 2.0], [0.0, 2.0, 1.0], [0.0, -1.0, -4.0], [20e3, 19e3, 5e3], [0, 1, 1])]
         sf = SampleFigure()
 
         sf._draw_trajectories(self.ax, trajectories, Perspective.XZ, 2.0)

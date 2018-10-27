@@ -303,30 +303,30 @@ class SampleFigure(Figure):
     # DRAW TRAJECTORIES
     def _draw_trajectories(self, ax, trajectories, perspective, view_size):
         # Create path for each trajectory depending on particle and exit flag
-        paths = {}
+        segments = {}
         for trajectory in trajectories:
             key = (trajectory.particle, trajectory.exited)
-            path = self._compose_trajectory(trajectory, perspective, view_size)
-            paths.setdefault(key, []).append(path)
+            segment = self._compose_trajectory(trajectory, perspective, view_size)
+            segments.setdefault(key, []).append(segment)
 
         # Draw each collection
-        for particle, exited in paths:
+        for particle, exited in segments:
             color = 'w'
-            
+
             # # Find complementary color if particle exited the sample
             # if exited:
             #     color = complementary(*to_rgb(color))
 
-            col = LineCollection(paths[(particle, exited)], colors=color, alpha=0.05)
+            col = LineCollection(segments[(particle, exited)], colors=color, alpha=0.05)
             ax.add_collection(col)
 
     def _compose_trajectory(self, trajectory, perspective, view_size):
-        vertices = []
+        segment = []
         if perspective is Perspective.XY:
-            vertices = [[x, y] for x, y in zip(trajectory.xs_m, trajectory.ys_m)]
+            segment = [[x, y] for x, y in zip(trajectory.xs_m, trajectory.ys_m)]
         elif perspective is Perspective.XZ:
-            vertices = [[x, z] for x, z in zip(trajectory.xs_m, trajectory.zs_m)]
+            segment = [[x, z] for x, z in zip(trajectory.xs_m, trajectory.zs_m)]
         elif perspective is Perspective.YZ:
-            vertices = [[y, z] for y, z in zip(trajectory.ys_m, trajectory.zs_m)]
+            segment = [[y, z] for y, z in zip(trajectory.ys_m, trajectory.zs_m)]
 
-        return np.array(vertices)
+        return np.array(segment)
