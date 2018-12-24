@@ -22,6 +22,12 @@ class TestMaterialHDF5Handler(TestCase):
         material2 = self.convert_parse_hdf5handler(handler, material)
         self.assertEqual(material2, material)
 
+    def testconvert_parse_nodensity(self):
+        handler = MaterialHDF5Handler()
+        material = Material('Brass', {29: 0.5, 30: 0.5})
+        material2 = self.convert_parse_hdf5handler(handler, material)
+        self.assertEqual(material2, material)
+
     def testconvert_parse_vacuum(self):
         handler = VacuumHDF5Handler()
         material = VACUUM

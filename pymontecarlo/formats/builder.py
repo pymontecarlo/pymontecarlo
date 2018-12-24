@@ -48,6 +48,9 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
         unit = datum['unit']
         tolerance = datum['tolerance']
 
+        if value is None:
+            return 'None'
+
         value = self._convert_value(value, unit)
 
         if not self.format_number:

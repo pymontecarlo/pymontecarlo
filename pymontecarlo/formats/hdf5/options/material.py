@@ -54,7 +54,10 @@ class MaterialHDF5Handler(HDF5HandlerBase):
         return dict((int(z), float(wf)) for z, wf in zip(zs, wfs))
 
     def _parse_density_kg_per_m3(self, group):
-        return float(group.attrs[self.ATTR_DENSITY])
+        density_kg_per_m3 = group.attrs[self.ATTR_DENSITY]
+        if np.isnan(density_kg_per_m3):
+            density_kg_per_m3 = None
+        return density_kg_per_m3
 
     def _parse_color(self, group):
         return tuple(group.attrs[self.ATTR_COLOR])
@@ -87,7 +90,10 @@ class MaterialHDF5Handler(HDF5HandlerBase):
         ds_wf.dims[0].attach_scale(ds_z)
 
     def _convert_density_kg_per_m3(self, material, group):
-        group.attrs[self.ATTR_DENSITY] = material.density_kg_per_m3
+        density_kg_per_m3 = material.density_kg_per_m3
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = np.nan
+        group.attrs[self.ATTR_DENSITY] = density_kg_per_m3
 
     def _convert_color(self, material, group):
         rgba = matplotlib.colors.to_rgba(material.color)

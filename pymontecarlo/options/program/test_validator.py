@@ -42,6 +42,16 @@ class TestValidator(TestCase):
         self.assertEqual(material2, material)
         self.assertIsNot(material2, material)
 
+    def testvalidate_materal_nodensity(self):
+        material = Material('Pure Cu', {29: 1.0})
+
+        errors = set()
+        warnings = set()
+        material2 = self.v._validate_material(material, self.options, errors, warnings)
+        self.assertIsNot(material2, material)
+        self.assertEqual(0, len(errors))
+        self.assertEqual(1, len(warnings))
+
     def testvalidate_material_exception(self):
         material = Material(' ', {120: 0.5}, -1.0, 'blah')
         self.assertRaises(ValidationError, self.v.validate_material, material, self.options)

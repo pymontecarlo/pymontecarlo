@@ -3,7 +3,6 @@ Material definition
 """
 
 # Standard library modules.
-import math
 from operator import itemgetter
 import itertools
 
@@ -16,7 +15,7 @@ import numpy as np
 import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
-    calculate_density_kg_per_m3, generate_name, from_formula, to_repr
+    generate_name, from_formula, to_repr
 from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 
 # Globals and constants variables.
@@ -41,7 +40,8 @@ class Material(OptionBase):
         :arg name: name of the material
         :type name: :class:`str`
 
-        :arg density_kg_per_m3: material's density in kg/m3.
+        :arg density_kg_per_m3: material's density in kg/m3. If ``None``, the
+            density will be calculated by the validator.
         :type density_kg_per_m3: :class:`float`
         
         :arg color: color representing a material. If ``None``, a color is
@@ -52,8 +52,6 @@ class Material(OptionBase):
 
         self.name = name
         self.composition = composition.copy()
-        if density_kg_per_m3 is None:
-            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
         self.density_kg_per_m3 = density_kg_per_m3
 
         if color is None:
@@ -92,10 +90,6 @@ class Material(OptionBase):
         :type formula: :class:`str`
         """
         composition = from_formula(formula)
-
-        if density_kg_per_m3 is None:
-            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
-
         return cls(formula, composition, density_kg_per_m3, color=color)
 
     def __repr__(self):
@@ -113,7 +107,7 @@ class Material(OptionBase):
         return super().__eq__(other) and \
             self.name == other.name and \
             cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_TOLERANCE) and \
-            math.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
+            cbook.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
 
     density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
@@ -192,7 +186,7 @@ class MaterialBuilder(OptionBuilderBase):
             composition[self.balance_z] = remainder
 
             name = generate_name(composition)
-            density_kg_per_m3 = calculate_density_kg_per_m3(composition)
+            density_kg_per_m3 = None
 
             material = Material(name, composition, density_kg_per_m3)
             materials.append(material)

@@ -72,6 +72,20 @@ def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
 
     return True
 
+def isclose(value0, value1, rel_tol=1e-9, abs_tol=0.0):
+    """
+    Same as :func:`math.isclose`, except that function checks for ``None``.
+    """
+    if value0 is None:
+        if value1 is None:
+            return True
+        else:
+            return False
+    elif value1 is None:
+        return False
+    else:
+        return math.isclose(value0, value1, rel_tol=rel_tol, abs_tol=abs_tol)
+
 def unique(seq):
     return list(more_itertools.unique_everseen(seq))
 

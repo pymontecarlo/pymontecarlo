@@ -26,6 +26,7 @@ from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.options.particle import Particle
+from pymontecarlo.options.composition import calculate_density_kg_per_m3
 
 # Globals and constants variables.
 
@@ -233,7 +234,7 @@ class ValidatorBase(metaclass=abc.ABCMeta):
         composition = \
             self._validate_material_base_composition(material.composition, options, errors, warnings)
         density_kg_per_m3 = \
-            self._validate_material_base_density_kg_per_m3(material.density_kg_per_m3, options, errors, warnings)
+            self._validate_material_base_density_kg_per_m3(material.density_kg_per_m3, material, options, errors, warnings)
         color = \
             self._validate_material_base_color(material.color, options, errors, warnings)
 
@@ -272,7 +273,13 @@ class ValidatorBase(metaclass=abc.ABCMeta):
 
         return outcomposition
 
-    def _validate_material_base_density_kg_per_m3(self, density_kg_per_m3, options, errors, warnings):
+    def _validate_material_base_density_kg_per_m3(self, density_kg_per_m3, material, options, errors, warnings):
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = calculate_density_kg_per_m3(material.composition)
+            warning = RuntimeWarning('Density for {} was calculated as {:g}kg/m3'
+                                     .format(material.name, density_kg_per_m3))
+            warnings.add(warning)
+
         if density_kg_per_m3 <= 0:
             exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0.'
                              .format(density_kg_per_m3))
