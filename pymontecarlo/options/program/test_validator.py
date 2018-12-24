@@ -47,8 +47,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_material, material, self.options)
 
         errors = set()
-        self.v._validate_material(material, self.options, errors)
+        warnings = set()
+        self.v._validate_material(material, self.options, errors, warnings)
         self.assertEqual(5, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_beam_cylindrical(self):
         beam = CylindricalBeam(10e3, 0.123)
@@ -62,8 +64,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_beam, beam, self.options)
 
         errors = set()
-        self.v._validate_beam(beam, self.options, errors)
+        warnings = set()
+        self.v._validate_beam(beam, self.options, errors, warnings)
         self.assertEqual(6, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_beam_gaussian(self):
         beam = GaussianBeam(10e3, 0.123)
@@ -77,8 +81,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_beam, beam, self.options)
 
         errors = set()
-        self.v._validate_beam(beam, self.options, errors)
+        warnings = set()
+        self.v._validate_beam(beam, self.options, errors, warnings)
         self.assertEqual(6, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_sample_substrate(self):
         sample = SubstrateSample(COPPER)
@@ -91,8 +97,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, self.options, errors)
+        warnings = set()
+        self.v._validate_sample(sample, self.options, errors, warnings)
         self.assertEqual(3, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_sample_inclusion(self):
         sample = InclusionSample(COPPER, ZINC, 1.0)
@@ -105,8 +113,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, self.options, errors)
+        warnings = set()
+        self.v._validate_sample(sample, self.options, errors, warnings)
         self.assertEqual(1, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_sample_horizontallayers(self):
         sample = HorizontalLayerSample(COPPER)
@@ -128,8 +138,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, self.options, errors)
+        warnings = set()
+        self.v._validate_sample(sample, self.options, errors, warnings)
         self.assertEqual(1, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_sample_verticallayers(self):
         sample = VerticalLayerSample(COPPER, ZINC)
@@ -144,8 +156,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, self.options, errors)
+        warnings = set()
+        self.v._validate_sample(sample, self.options, errors, warnings)
         self.assertEqual(3, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_sample_sphere(self):
         sample = SphereSample(COPPER, 1.0)
@@ -158,8 +172,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_sample, sample, self.options)
 
         errors = set()
-        self.v._validate_sample(sample, self.options, errors)
+        warnings = set()
+        self.v._validate_sample(sample, self.options, errors, warnings)
         self.assertEqual(2, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_analysis_photonintensity(self):
         detector = PhotonDetector('det', 1.1, 2.2)
@@ -174,8 +190,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
-        self.v._validate_analysis(analysis, self.options, errors)
+        warnings = set()
+        self.v._validate_analysis(analysis, self.options, errors, warnings)
         self.assertEqual(3, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_analysis_kratio(self):
         detector = PhotonDetector('det', 1.1, 2.2)
@@ -192,28 +210,36 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_analysis, analysis, self.options)
 
         errors = set()
-        self.v._validate_analysis(analysis, self.options, errors)
+        warnings = set()
+        self.v._validate_analysis(analysis, self.options, errors, warnings)
         self.assertEqual(4, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_model(self):
         model = ElasticCrossSectionModel.RUTHERFORD
         errors = set()
-        model2 = self.v._validate_model(model, self.options, errors)
+        warnings = set()
+        model2 = self.v._validate_model(model, self.options, errors, warnings)
         self.assertEqual(model2, model)
         self.assertIs(model2, model)
         self.assertEqual(0, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_model_exception(self):
         model = ElasticCrossSectionModel.ELSEPA2005
         errors = set()
-        self.v._validate_model(model, self.options, errors)
+        warnings = set()
+        self.v._validate_model(model, self.options, errors, warnings)
         self.assertEqual(1, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_model_exception2(self):
         model = MassAbsorptionCoefficientModel.POUCHOU_PICHOIR1991
         errors = set()
-        self.v._validate_model(model, self.options, errors)
+        warnings = set()
+        self.v._validate_model(model, self.options, errors, warnings)
         self.assertEqual(1, len(errors))
+        self.assertEqual(0, len(warnings))
 
     def testvalidate_tags(self):
         tags = ['test', 'test2']
@@ -226,8 +252,10 @@ class TestValidator(TestCase):
         self.assertRaises(ValidationError, self.v.validate_tags, tags, self.options)
 
         errors = set()
-        self.v._validate_tags(tags, self.options, errors)
+        warnings = set()
+        self.v._validate_tags(tags, self.options, errors, warnings)
         self.assertEqual(1, len(errors))
+        self.assertEqual(0, len(warnings))
 
 if __name__ == '__main__': #pragma: no cover
     logging.getLogger().setLevel(logging.DEBUG)

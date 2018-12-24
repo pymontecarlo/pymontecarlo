@@ -71,12 +71,12 @@ class ValidatorMock(ValidatorBase):
 
         self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
 
-    def _validate_program(self, program, options, errors):
-        elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors)
+    def _validate_program(self, program, options, errors, warnings):
+        elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors, warnings)
         return ProgramMock(program.foo, elastic_cross_section_model)
 
-    def _validate_beam_base_energy_eV(self, energy_eV, options, errors):
-        energy_eV = super()._validate_beam_base_energy_eV(energy_eV, options, errors)
+    def _validate_beam_base_energy_eV(self, energy_eV, options, errors, warnings):
+        energy_eV = super()._validate_beam_base_energy_eV(energy_eV, options, errors, warnings)
 
         if energy_eV < 5e2:
             exc = ValueError('Beam energy must be greater or equal to 1000eV.')
@@ -137,7 +137,7 @@ class WorkerMock(WorkerBase):
 
 class ImporterMock(ImporterBase):
 
-    def _import(self, options, dirpath, errors):
+    def _import(self, options, dirpath, errors, warnings):
         return []
 
 class ProgramMock(ProgramBase):

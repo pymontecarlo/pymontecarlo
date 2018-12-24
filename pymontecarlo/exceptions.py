@@ -33,8 +33,23 @@ class AccumulatedError(PymontecarloError):
         super().__init__(message)
         self.causes = tuple(causes)
 
+class AccumulatedWarning(PymontecarloWarning):
+
+    _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
+                                        subsequent_indent=' ' * 4)
+
+    def __init__(self, *causes):
+        message = 'The following warnings occurred during the validation:\n'
+        message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
+                             for cause in causes)
+        super().__init__(message)
+        self.causes = tuple(causes)
+
 class ValidationError(AccumulatedError):
     """Exception raised by validators"""
+
+class ValidationWarning(AccumulatedWarning):
+    """Warning raised by validators"""
 
 class ExportError(AccumulatedError):
     pass
