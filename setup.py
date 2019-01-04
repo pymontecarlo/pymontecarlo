@@ -21,7 +21,7 @@ PACKAGES = find_packages()
 INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'more_itertools', 'pint', 'uncertainties',
                     'matplotlib', 'tabulate', 'psutil', 'pandas',
-                    'docutils']
+                    'docutils', 'tqdm']
 EXTRAS_REQUIRE = {'develop': ['pytest', 'pytest-cov', 'pytest-asyncio',
                               'nose', 'coverage', 'docutils', 'jinja2',
                               'sphinx', 'pybtex', 'sphinx_rtd_theme']}
