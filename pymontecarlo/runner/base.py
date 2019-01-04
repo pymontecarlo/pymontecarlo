@@ -4,50 +4,91 @@ Base runner.
 
 # Standard library modules.
 import abc
+import logging
+logger = logging.getLogger(__name__)
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
-from pymontecarlo.util.future import FutureExecutor, Token, FutureAdapter
 from pymontecarlo.util.cbook import unique
 from pymontecarlo.formats.series.identifier import create_identifiers
 
+from pymontecarlo.util.token import Token
+
 # Globals and constants variables.
 
-class SimulationRunnerBase(FutureExecutor, metaclass=abc.ABCMeta):
+class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
-    def __init__(self, project=None, max_workers=1):
-        super().__init__(max_workers)
-        self.submitted_options = []
-
+    def __init__(self, project=None, token=None, max_workers=1):
         if project is None:
             project = Project()
-        self.project = project
+        self._project = project
 
-    def _on_done(self, future):
-        simulation = super()._on_done(future)
+        if token is None:
+            token = Token('simulation runner')
+        self._token = token
 
-        if simulation:
-            self.project.add_simulation(simulation)
+        self._submitted_options = []
 
-        else:
-            try:
-                options = future.args[0].options
-                self.submitted_options.remove(options)
-            except:
-                pass
+    async def __aenter__(self):
+        await self.start()
+        return self
 
-        # Recalculate if all other futures are done and recalculation is required
-        if not self.executor._shutdown and self.done() and self.project.recalculate_required:
-            target = self.project.recalculate
-            token = Token()
-            future = self.executor.submit(target, token)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.shutdown()
+        return False
 
-            future2 = FutureAdapter(future, token, (), {})
-            self.futures.add(future2)
-            self.submitted.send(future2)
+    @abc.abstractmethod
+    async def start(self):
+        """
+        Starts this runner.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def cancel(self):
+        """
+        Cancels all running simulations of this runner.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def shutdown(self):
+        """
+        Properly shutdowns this runner by waiting for all simulations to finish.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _submit(self, simulation):
+        """
+        Actual implementation to submit a simulation in the queue.
+        """
+        raise NotImplementedError
+
+    def submit(self, *list_options):
+        """
+        Submits the options in the queue.
+        
+        If the options are not valid, a :exc:`ValidationError` is raised.
+        
+        If additional simulations are required based on the analyses of the
+        submitted options, they will also be submitted.
+        
+        If a simulation with the same options already exists in the project,
+        the simulation is skipped.
+        """
+        simulations = self.prepare_simulations(*list_options)
+        logger.debug('Prepared {} simulations'.format(len(simulations)))
+
+        for simulation in simulations:
+            self._submitted_options.append(simulation.options)
+            self._submit(simulation)
+            logger.debug('Simulation "{}" submitted'.format(simulation.identifier))
+
+        return simulations
 
     def _expand_options(self, list_options):
         final_list_options = []
@@ -76,7 +117,7 @@ class SimulationRunnerBase(FutureExecutor, metaclass=abc.ABCMeta):
 
         for options in list_options:
             # Exclude already submitted options
-            if options in self.submitted_options:
+            if options in self._submitted_options:
                 continue
 
             # Exclude if simulation with same options already exists in project
@@ -104,7 +145,22 @@ class SimulationRunnerBase(FutureExecutor, metaclass=abc.ABCMeta):
 
         return simulations
 
-    def _prepare_simulations(self, list_options):
+    def prepare_simulations(self, *list_options):
+        """
+        Performs the following operations on the provided list of options and
+        returns a list of simulations.
+            
+            * Expand options to deal with additional simulations required by the
+              analyses.
+            * Validate all the options. Raises :exc:`ValidationError` for the
+              first error found. May also create warning messages.
+            * Exclude already simulated options. In other words, if an 
+              :class:`Options` was already submitted with this runner and 
+              contains results, it is excluded.
+            * Exclude options already in the project of this runner.
+            * Create simulations where the identifier of each simulation is
+              created based on the parameters varied in the list of options.
+        """
         list_options = self._expand_options(list_options)
         list_options = self._validate_options(list_options)
         list_options = self._exclude_simulated_options(list_options)
@@ -115,36 +171,17 @@ class SimulationRunnerBase(FutureExecutor, metaclass=abc.ABCMeta):
 
         return simulations
 
-    @abc.abstractmethod
-    def _prepare_target(self):
-        raise NotImplementedError
-
-    def submit(self, *list_options):
+    @property
+    def project(self):
         """
-        Submits the options in the queue.
-        
-        If the options are not valid, a :exc:`ValidationError` is raised.
-        
-        If additional simulations are required based on the analyses of the
-        submitted options, they will also be submitted.
-        
-        If a simulation with the same options already exists in the project,
-        the simulation is skipped.
-        
-        :return: a list of :class:`Future` object, one for each launched 
-            simulation
+        Either project giving to this runner or project created by this runner.
         """
-        simulations = self._prepare_simulations(list_options)
-        target = self._prepare_target()
+        return self._project
 
-        futures = []
-        for simulation in simulations:
-            self.submitted_options.append(simulation.options)
-            future = self._submit(target, simulation)
-            futures.append(future)
+    @property
+    def token(self):
+        """
+        Token of this runner to track state, progress and status of simulations.
+        """
+        return self._token
 
-        return futures
-
-    def shutdown(self):
-        super().shutdown()
-        self.submitted_options.clear()

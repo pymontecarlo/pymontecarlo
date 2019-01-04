@@ -57,9 +57,6 @@ class ExportError(AccumulatedError):
 class WorkerError(PymontecarloError):
     pass
 
-class WorkerCancelledError(PymontecarloError):
-    pass
-
 class ImportError_(AccumulatedError):
     pass
 

@@ -2,38 +2,65 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
+import asyncio
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.mock import WorkerMock
 from pymontecarlo.simulation import Simulation
-from pymontecarlo.util.future import Token
+from pymontecarlo.util.token import Token, TokenState
+from pymontecarlo.exceptions import WorkerError
 
 # Globals and constants variables.
 
-class TestWorker(TestCase):
+@pytest.mark.asyncio
+async def testrun(options, tmpdir):
+    worker = WorkerMock()
+    token = Token('test')
+    simulation = Simulation(options)
 
-    def setUp(self):
-        super().setUp()
+    await worker.run(token, simulation, tmpdir)
 
-        self.w = WorkerMock()
+    assert token.state == TokenState.DONE
+    assert token.progress == 1.0
+    assert token.status == 'Done'
+    assert len(simulation.results) == 1
 
-        self.outputdir = self.create_temp_dir()
+@pytest.mark.asyncio
+async def testrun_cancel(options, tmpdir):
+    worker = WorkerMock()
+    token = Token('test')
+    simulation = Simulation(options)
 
-    def testrun(self):
-        token = Token()
-        options = self.create_basic_options()
-        simulation = Simulation(options)
-        self.w.run(token, simulation, self.outputdir)
+    task = asyncio.create_task(worker.run(token, simulation, tmpdir))
 
-        self.assertAlmostEqual(1.0, token.progress)
-        self.assertEqual('Done', token.status)
-        self.assertFalse(token.cancelled())
+    await asyncio.sleep(0.5)
+    task.cancel()
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    try:
+        await task
+    except asyncio.CancelledError:
+        assert True, 'Task was cancelled properly'
+    else:
+        assert False
+
+    assert token.state == TokenState.CANCELLED
+
+@pytest.mark.asyncio
+async def testrun_error(options, tmpdir):
+    options.beam.energy_eV = 0.0 # To cause erroWorkerErrorr
+
+    worker = WorkerMock()
+    token = Token('test')
+    simulation = Simulation(options)
+
+    try:
+        await worker.run(token, simulation, tmpdir)
+    except WorkerError:
+        assert True
+    else:
+        assert False
+
+    assert token.state == TokenState.ERROR

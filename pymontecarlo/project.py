@@ -47,14 +47,12 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             self.recalculate_required = True
             self.simulation_added.send(simulation)
 
-    def recalculate(self, token=None):
+    async def recalculate(self, token=None):
         with self.lock:
+            if token: token.start()
             count = len(self.simulations)
 
             for i, simulation in enumerate(self.simulations):
-                if token and token.cancelled():
-                    break
-
                 progress = i / count
                 status = 'Calculating simulation {}'.format(simulation.identifier)
                 if token: token.update(progress, status)
@@ -62,7 +60,7 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
                 for analysis in simulation.options.analyses:
                     analysis.calculate(simulation, tuple(self.simulations))
 
-            if token: token.update(1.0, 'Done')
+            if token: token.done()
 
             self.recalculate_required = False
             self.recalculated.send()

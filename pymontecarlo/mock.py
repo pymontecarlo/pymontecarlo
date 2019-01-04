@@ -2,15 +2,17 @@
 
 # Standard library modules.
 import os
+import sys
 import json
-import time
 import itertools
 import operator
 import functools
+import asyncio
 
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.exceptions import WorkerError
 from pymontecarlo.options.beam.gaussian import GaussianBeam
 from pymontecarlo.options.beam.cylindrical import CylindricalBeam
 from pymontecarlo.options.sample.base import SampleBase
@@ -29,6 +31,7 @@ from pymontecarlo.options.program.validator import ValidatorBase
 from pymontecarlo.options.program.exporter import ExporterBase
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
+from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5HandlerBase
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandlerBase
 from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
@@ -120,20 +123,43 @@ class ExporterMock(ExporterBase):
 
 class WorkerMock(WorkerBase):
 
-    def run(self, token, simulation, outputdir):
+    async def _run(self, token, simulation, outputdir):
+        # Export
+        token.update(0.1, 'Exporting options')
         options = simulation.options
+
+        if options.beam.energy_eV < 100:
+            raise WorkerError
+
         program = options.program
         exporter = program.create_exporter()
-
         exporter.export(options, outputdir)
 
-        token.update(0.0, 'Started')
-        for _ in range(10):
-            if token.cancelled():
-                break
-            time.sleep(0.01)
+        # Run
+        token.update(0.2, 'Started')
+        for i in range(10):
 
-        token.update(1.0, 'Done')
+            args = [sys.executable, '-c', 'import os; print(os.name)']
+            proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+            await proc.wait()
+
+            await asyncio.sleep(0.01)
+
+            token.update(0.2 + i * 6 / 100, 'Running iteration {} / 10'.format(i))
+
+        # Import
+        token.update(0.9, 'Importing results')
+
+        for analysis in options.find_analyses(PhotonIntensityAnalysis):
+            builder = EmittedPhotonIntensityResultBuilder(analysis)
+            builder.add_intensity((29, 'Ka1'), 1.0, 0.1)
+            builder.add_intensity((29, 'Ka2'), 2.0, 0.2)
+            builder.add_intensity((29, 'Kb1'), 4.0, 0.5)
+            builder.add_intensity((29, 'Kb3'), 5.0, 0.7)
+            builder.add_intensity((29, 'Kb5I'), 1.0, 0.1)
+            builder.add_intensity((29, 'Kb5II'), 0.5, 0.1)
+            builder.add_intensity((29, 'Ll'), 3.0, 0.1)
+            simulation.results.append(builder.build())
 
 class ImporterMock(ImporterBase):
 

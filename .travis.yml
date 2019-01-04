@@ -5,13 +5,13 @@ cache:
   - $HOME/.pip-cache/
 matrix:
   include:
-  - python: '3.6'
+  - python: '3.7'
     os: linux
 install:
 - pip install --cache-dir $HOME/.pip-cache --upgrade pip codecov
 - pip install --cache-dir $HOME/.pip-cache --upgrade -e .[develop]
 script:
-- nosetests
+- pytest
 after_success:
 - codecov
 notifications:
