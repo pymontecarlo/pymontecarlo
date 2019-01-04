@@ -1,2 +1,2 @@
 [run]
-omit=pymontecarlo/_version.py
+omit=pymontecarlo/_version.py,old/

@@ -2,83 +2,65 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
+import asyncio
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.runner.local import LocalSimulationRunner
+from pymontecarlo.util.token import TokenState
 
 # Globals and constants variables.
 
-class TestLocalSimulationRunner(TestCase):
+@pytest.fixture
+def runner():
+    return LocalSimulationRunner(max_workers=3)
 
-    def setUp(self):
-        super().setUp()
+@pytest.mark.asyncio
+async def test_local_runner_single_simulation(runner, options):
+    assert len(runner.project.simulations) == 0
+    assert runner.token.state == TokenState.NOTSTARTED
 
-        self.r = LocalSimulationRunner(max_workers=1)
+    async with runner:
+        runner.submit(options)
 
-    def tearDown(self):
-        super().tearDown()
-        self.r.shutdown()
+#        task = asyncio.create_task(runner.shutdown())
+#        while not task.done():
+#            await asyncio.sleep(0.5)
+#            print(runner.token.progress)
 
-    def testrun1(self):
-        options = self.create_basic_options()
+    assert len(runner.project.simulations) == 1
+    assert runner.token.state == TokenState.DONE
 
-        with self.r:
-            futures = self.r.submit(options)
+@pytest.mark.asyncio
+async def test_local_runner_multiple_simulations(runner, options):
+    async with runner:
+        runner.submit(options)
 
-        self.assertEqual(1, len(futures))
+        options.beam.energy_eV += 1000
+        runner.submit(options)
 
-        future = futures[0]
-        self.assertEqual(future.result().options, options)
-        self.assertAlmostEqual(1.0, future.progress, 4)
-        self.assertEqual('Done', future.status)
-        self.assertEqual(1, self.r.submitted_count)
-        self.assertEqual(0, self.r.failed_count)
-        self.assertEqual(0, self.r.cancelled_count)
-        self.assertEqual(1, self.r.done_count)
-        self.assertAlmostEqual(1.0, self.r.progress, 4)
+        options.beam.energy_eV += 1000
+        runner.submit(options)
 
-        project = self.r.project
-        self.assertEqual(1, len(project.simulations))
+    assert len(runner.project.simulations) == 3
+    assert runner.token.state == TokenState.DONE
 
-    def testrun2(self):
-        options1 = self.create_basic_options()
-        options2 = self.create_basic_options()
+@pytest.mark.asyncio
+async def test_local_runner_cancel_immediately(runner, options):
+    async with runner:
+        runner.submit(options)
+        await runner.cancel()
 
-        with self.r:
-            self.r.submit(options1)
-            self.r.submit(options2)
+    assert len(runner.project.simulations) == 0
 
-        self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(1, self.r.submitted_count)
-        self.assertEqual(0, self.r.failed_count)
-        self.assertEqual(0, self.r.cancelled_count)
-        self.assertEqual(1, self.r.done_count)
+@pytest.mark.asyncio
+async def test_local_runner_cancel(runner, options):
+    async with runner:
+        runner.submit(options)
+        await asyncio.sleep(0.5)
+        await runner.cancel()
 
-        project = self.r.project
-        self.assertEqual(1, len(project.simulations)) # Because options1 == options2
-
-    def testrun3(self):
-        options = self.create_basic_options()
-
-        with self.r:
-            futures = self.r.submit(options)
-            for future in futures:
-                future.cancel()
-
-        self.assertAlmostEqual(1.0, self.r.progress, 4)
-        self.assertEqual(1, self.r.submitted_count)
-        self.assertEqual(0, self.r.failed_count)
-        self.assertEqual(1, self.r.cancelled_count)
-        self.assertEqual(0, self.r.done_count)
-
-        project = self.r.project
-        self.assertEqual(0, len(project.simulations))
-
-if __name__ == '__main__': # pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    assert len(runner.project.simulations) == 0
+    assert runner.token.state == TokenState.CANCELLED
