@@ -35,6 +35,7 @@ from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBui
 from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5HandlerBase
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandlerBase
 from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
+from pymontecarlo.util.process import create_startupinfo
 
 # Globals and constants variables.
 
@@ -140,7 +141,13 @@ class WorkerMock(WorkerBase):
         for i in range(10):
 
             args = [sys.executable, '-c', 'import os; print(os.name)']
-            proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+
+            kwargs = {}
+            kwargs['stdout'] = asyncio.subprocess.DEVNULL
+            kwargs['stderr'] = asyncio.subprocess.DEVNULL
+            kwargs['startupinfo'] = create_startupinfo()
+
+            proc = await asyncio.create_subprocess_exec(*args, **kwargs)
             await proc.wait()
 
             await asyncio.sleep(0.01)

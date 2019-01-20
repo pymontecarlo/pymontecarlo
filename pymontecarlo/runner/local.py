@@ -87,7 +87,7 @@ class LocalWorkerDispatcher:
                     logger.debug('Removed temporary output directory: {}'
                                  .format(outputdir))
 
-            # Add to project
+            # Simulation succeeded, so add to project
             self.project.add_simulation(simulation)
             logger.debug('Simulation "{}" added to project'
                          .format(simulation.identifier))

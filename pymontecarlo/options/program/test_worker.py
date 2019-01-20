@@ -16,7 +16,7 @@ from pymontecarlo.exceptions import WorkerError
 # Globals and constants variables.
 
 @pytest.mark.asyncio
-async def testrun(options, tmpdir):
+async def testrun(event_loop, options, tmpdir):
     worker = WorkerMock()
     token = Token('test')
     simulation = Simulation(options)
@@ -29,7 +29,7 @@ async def testrun(options, tmpdir):
     assert len(simulation.results) == 1
 
 @pytest.mark.asyncio
-async def testrun_cancel(options, tmpdir):
+async def testrun_cancel(event_loop, options, tmpdir):
     worker = WorkerMock()
     token = Token('test')
     simulation = Simulation(options)
@@ -49,7 +49,7 @@ async def testrun_cancel(options, tmpdir):
     assert token.state == TokenState.CANCELLED
 
 @pytest.mark.asyncio
-async def testrun_error(options, tmpdir):
+async def testrun_error(event_loop, options, tmpdir):
     options.beam.energy_eV = 0.0 # To cause erroWorkerErrorr
 
     worker = WorkerMock()

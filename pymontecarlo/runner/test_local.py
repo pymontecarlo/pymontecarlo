@@ -18,7 +18,7 @@ def runner():
     return LocalSimulationRunner(max_workers=3)
 
 @pytest.mark.asyncio
-async def test_local_runner_single_simulation(runner, options):
+async def test_local_runner_single_simulation(event_loop, runner, options):
     assert len(runner.project.simulations) == 0
     assert runner.token.state == TokenState.NOTSTARTED
 
@@ -34,7 +34,7 @@ async def test_local_runner_single_simulation(runner, options):
     assert runner.token.state == TokenState.DONE
 
 @pytest.mark.asyncio
-async def test_local_runner_multiple_simulations(runner, options):
+async def test_local_runner_multiple_simulations(event_loop, runner, options):
     async with runner:
         runner.submit(options)
 
@@ -48,7 +48,7 @@ async def test_local_runner_multiple_simulations(runner, options):
     assert runner.token.state == TokenState.DONE
 
 @pytest.mark.asyncio
-async def test_local_runner_cancel_immediately(runner, options):
+async def test_local_runner_cancel_immediately(event_loop, runner, options):
     async with runner:
         runner.submit(options)
         await runner.cancel()
@@ -56,7 +56,7 @@ async def test_local_runner_cancel_immediately(runner, options):
     assert len(runner.project.simulations) == 0
 
 @pytest.mark.asyncio
-async def test_local_runner_cancel(runner, options):
+async def test_local_runner_cancel(event_loop, runner, options):
     async with runner:
         runner.submit(options)
         await asyncio.sleep(0.5)
