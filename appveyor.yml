@@ -11,6 +11,3 @@ build: off
 
 test_script:
   - "%PYTHON%\\Scripts\\nosetests.exe"
-
-after_test:
-  - "%PYTHON%\\Scripts\\codecov.exe"
