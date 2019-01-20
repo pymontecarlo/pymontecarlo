@@ -13,4 +13,4 @@ test_script:
   - "%PYTHON%\\python.exe setup.py nosetests"
 
 after_test:
-  - codecov
+  - "%PYTHON%\\Scripts\\codecov.exe"
