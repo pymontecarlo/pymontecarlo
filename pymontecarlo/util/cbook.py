@@ -109,8 +109,8 @@ def slugify(value):
     and converts spaces to hyphens.
     """
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = re.sub('[^\w\s-]', '', value).strip().lower()
-    value = re.sub('[-\s]+', '-', value)
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    value = re.sub(r'[-\s]+', '-', value)
     return value
 
 def get_valid_filename(s):
