@@ -24,7 +24,8 @@ INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
                     'docutils', 'tqdm']
 EXTRAS_REQUIRE = {'develop': ['pytest', 'pytest-cov', 'pytest-asyncio',
                               'nose', 'coverage', 'docutils', 'jinja2',
-                              'sphinx', 'pybtex', 'sphinx_rtd_theme']}
+                              'sphinx', 'pybtex', 'sphinx_rtd_theme',
+                              'nbsphinx', 'ipykernel']}
 
 CMDCLASS = versioneer.get_cmdclass()
 
