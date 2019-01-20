@@ -10,7 +10,7 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\python.exe setup.py nosetests"
+  - "%PYTHON%\\Scripts\\nosetests.exe"
 
 after_test:
   - "%PYTHON%\\Scripts\\codecov.exe"
