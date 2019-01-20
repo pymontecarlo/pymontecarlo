@@ -133,7 +133,7 @@ class ValidatorBase(metaclass=abc.ABCMeta):
         return energy_eV
 
     def _validate_beam_base_particle(self, particle, options, errors, warnings):
-        if particle not in Particle:
+        if not isinstance(particle, Particle):
             exc = ValueError('Unknown particle: {0}.'.format(particle))
             errors.add(exc)
 
