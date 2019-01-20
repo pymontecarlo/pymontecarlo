@@ -2,6 +2,8 @@
 Main class containing all options of a simulation
 """
 
+__all__ = ['Options', 'OptionsBuilder']
+
 # Standard library modules.
 import itertools
 

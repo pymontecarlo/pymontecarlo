@@ -2,6 +2,8 @@
 Inclusion sample.
 """
 
+__all__ = ['InclusionSample', 'InclusionSampleBuilder']
+
 # Standard library modules.
 import functools
 import itertools

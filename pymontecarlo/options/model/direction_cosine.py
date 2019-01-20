@@ -2,6 +2,8 @@
 Direction cosine models.
 """
 
+__all__ = ['DirectionCosineModel']
+
 # Standard library modules.
 
 # Third party modules.

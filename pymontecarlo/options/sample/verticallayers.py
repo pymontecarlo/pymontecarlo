@@ -2,6 +2,8 @@
 Vertical layers sample
 """
 
+__all__ = ['VerticalLayerSample', 'VerticalLayerSampleBuilder']
+
 # Standard library modules.
 import math
 import functools

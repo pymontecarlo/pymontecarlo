@@ -2,6 +2,8 @@
 Substrate sample.
 """
 
+__all__ = ['SubstrateSample', 'SubstrateSampleBuilder']
+
 # Standard library modules.
 import functools
 import itertools

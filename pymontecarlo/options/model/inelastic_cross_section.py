@@ -2,6 +2,8 @@
 Inelastic cross section models.
 """
 
+__all__ = ['InelasticCrossSectionModel']
+
 # Standard library modules.
 
 # Third party modules.

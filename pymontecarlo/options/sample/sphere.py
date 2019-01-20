@@ -2,6 +2,8 @@
 Sphere sample.
 """
 
+__all__ = ['SphereSample', 'SphereSampleBuilder']
+
 # Standard library modules.
 import functools
 import itertools

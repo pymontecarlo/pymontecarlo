@@ -2,6 +2,8 @@
 Base classes for samples.
 """
 
+__all__ = ['LayerBuilder', 'Layer']
+
 # Standard library modules.
 import abc
 import math

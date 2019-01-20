@@ -2,6 +2,8 @@
 Analysis to record photon intensity emitted towards a detector.
 """
 
+__all__ = ['PhotonIntensityAnalysis', 'PhotonIntensityAnalysisBuilder']
+
 # Standard library modules.
 
 # Third party modules.

@@ -2,6 +2,8 @@
 Photon (X-ray) detector.
 """
 
+__all__ = ['PhotonDetector', 'PhotonDetectorBuilder']
+
 # Standard library modules.
 import math
 import itertools

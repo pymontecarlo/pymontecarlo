@@ -2,6 +2,8 @@
 Material definition
 """
 
+__all__ = ['Material' , 'MaterialBuilder']
+
 # Standard library modules.
 from operator import itemgetter
 import itertools

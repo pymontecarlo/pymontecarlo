@@ -2,6 +2,8 @@
 Ionization cross section models.
 """
 
+__all__ = ['IonizationCrossSectionModel']
+
 # Standard library modules.
 
 # Third party modules.

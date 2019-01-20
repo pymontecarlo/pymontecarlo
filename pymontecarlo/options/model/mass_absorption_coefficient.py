@@ -2,6 +2,8 @@
 Mass absorption coefficient models.
 """
 
+__all__ = ['MassAbsorptionCoefficientModel']
+
 # Standard library modules.
 
 # Third party modules.

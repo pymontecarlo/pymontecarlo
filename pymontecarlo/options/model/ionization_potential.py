@@ -2,6 +2,8 @@
 Ionization potential models.
 """
 
+__all__ = ['IonizationPotentialModel']
+
 # Standard library modules.
 
 # Third party modules.

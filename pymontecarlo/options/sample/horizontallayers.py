@@ -2,6 +2,8 @@
 Horizontal layers sample.
 """
 
+__all__ = ['HorizontalLayerSample', 'HorizontalLayerSampleBuilder']
+
 # Standard library modules.
 import itertools
 
