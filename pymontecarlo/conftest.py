@@ -73,7 +73,6 @@ def event_loop(request):
     asyncio.set_event_loop(loop)
     yield loop
     loop.close()
-    asyncio.set_event_loop(None)
 
 @pytest.fixture
 def options():
