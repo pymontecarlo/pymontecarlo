@@ -25,13 +25,13 @@ def exporter():
     return ExporterMock()
 
 @pytest.mark.asyncio
-async def test_export(exporter, options, tmp_path):
+async def test_export(event_loop, exporter, options, tmp_path):
     await exporter.export(options, tmp_path)
 
     assert tmp_path.joinpath('sim.json').exists()
 
 @pytest.mark.asyncio
-async def test_export_dry_run(exporter, options, tmp_path):
+async def test_export_dry_run(event_loop, exporter, options, tmp_path):
     await exporter.export(options, tmp_path, dry_run=True)
 
     assert not tmp_path.joinpath('sim.json').exists()
