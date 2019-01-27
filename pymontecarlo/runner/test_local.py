@@ -3,6 +3,7 @@
 
 # Standard library modules.
 import asyncio
+import copy
 
 # Third party modules.
 import pytest
@@ -35,14 +36,14 @@ async def test_local_runner_single_simulation(event_loop, runner, options):
 
 @pytest.mark.asyncio
 async def test_local_runner_multiple_simulations(event_loop, runner, options):
+    options2 = copy.deepcopy(options)
+    options2.beam.energy_eV = 2000
+
+    options3 = copy.deepcopy(options)
+    options3.beam.energy_eV = 3000
+
     async with runner:
-        runner.submit(options)
-
-        options.beam.energy_eV += 1000
-        runner.submit(options)
-
-        options.beam.energy_eV += 1000
-        runner.submit(options)
+        runner.submit(options, options2, options3)
 
     assert len(runner.project.simulations) == 3
     assert runner.token.state == TokenState.DONE

@@ -101,17 +101,6 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
         return unique(final_list_options)
 
-    def _validate_options(self, list_options):
-        valid_list_options = []
-
-        for options in list_options:
-            program = options.program
-            validator = program.create_validator()
-            valid_options = validator.validate_options(options)
-            valid_list_options.append(valid_options)
-
-        return valid_list_options
-
     def _exclude_simulated_options(self, list_options):
         final_list_options = []
 
@@ -162,7 +151,6 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
               created based on the parameters varied in the list of options.
         """
         list_options = self._expand_options(list_options)
-        list_options = self._validate_options(list_options)
         list_options = self._exclude_simulated_options(list_options)
 
         identifiers = self._create_identifiers(list_options)

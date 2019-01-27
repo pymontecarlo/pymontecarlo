@@ -13,21 +13,14 @@ import asyncio
 
 # Local modules.
 from pymontecarlo.exceptions import WorkerError
-from pymontecarlo.options.beam.gaussian import GaussianBeam
-from pymontecarlo.options.beam.cylindrical import CylindricalBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
 from pymontecarlo.options.sample.base import SampleBase
-from pymontecarlo.options.sample.substrate import SubstrateSample
-from pymontecarlo.options.sample.inclusion import InclusionSample
-from pymontecarlo.options.sample.horizontallayers import HorizontalLayerSample
-from pymontecarlo.options.sample.verticallayers import VerticalLayerSample
-from pymontecarlo.options.sample.sphere import SphereSample
-from pymontecarlo.options.model.elastic_cross_section import ElasticCrossSectionModel
-from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
-from pymontecarlo.options.analysis.kratio import KRatioAnalysis
-from pymontecarlo.options.detector.photon import PhotonDetector
+from pymontecarlo.options.sample import SubstrateSample, InclusionSample, SphereSample, HorizontalLayerSample, VerticalLayerSample
+from pymontecarlo.options.model import ElasticCrossSectionModel
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
+from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.program.base import ProgramBase, ProgramBuilderBase
 from pymontecarlo.options.program.expander import ExpanderBase, expand_to_single, expand_analyses_to_single_detector
-from pymontecarlo.options.program.validator import ValidatorBase
 from pymontecarlo.options.program.exporter import ExporterBase
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
@@ -56,71 +49,101 @@ class ExpanderMock(ExpanderBase):
     def expand_models(self, models):
         return expand_to_single(models)
 
-class ValidatorMock(ValidatorBase):
-
-    def __init__(self):
-        super().__init__()
-
-        self.beam_validate_methods[CylindricalBeam] = self._validate_beam_cylindrical
-        self.beam_validate_methods[GaussianBeam] = self._validate_beam_gaussian
-
-        self.sample_validate_methods[SubstrateSample] = self._validate_sample_substrate
-        self.sample_validate_methods[InclusionSample] = self._validate_sample_inclusion
-        self.sample_validate_methods[HorizontalLayerSample] = self._validate_sample_horizontallayers
-        self.sample_validate_methods[VerticalLayerSample] = self._validate_sample_verticallayers
-        self.sample_validate_methods[SphereSample] = self._validate_sample_sphere
-
-        self.analysis_validate_methods[PhotonIntensityAnalysis] = self._validate_analysis_photonintensity
-        self.analysis_validate_methods[KRatioAnalysis] = self._validate_analysis_kratio
-
-        self.valid_models[ElasticCrossSectionModel] = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
-
-    def _validate_program(self, program, options, errors, warnings):
-        elastic_cross_section_model = self._validate_model(program.elastic_cross_section_model, options, errors, warnings)
-        return ProgramMock(program.foo, elastic_cross_section_model)
-
-    def _validate_beam_base_energy_eV(self, energy_eV, options, errors, warnings):
-        energy_eV = super()._validate_beam_base_energy_eV(energy_eV, options, errors, warnings)
-
-        if energy_eV < 5e2:
-            exc = ValueError('Beam energy must be greater or equal to 1000eV.')
-            errors.add(exc)
-
-        return energy_eV
-
 class ExporterMock(ExporterBase):
 
     def __init__(self):
         super().__init__()
         self.beam_export_methods[GaussianBeam] = self._export_beam_gaussian
+        self.beam_export_methods[CylindricalBeam] = self._export_beam_cylindrical
         self.sample_export_methods[SubstrateSample] = self._export_sample_substrate
+        self.sample_export_methods[InclusionSample] = self._export_sample_inclusion
+        self.sample_export_methods[SphereSample] = self._export_sample_sphere
+        self.sample_export_methods[HorizontalLayerSample] = self._export_sample_horizontallayers
+        self.sample_export_methods[VerticalLayerSample] = self._export_sample_verticallayers
         self.detector_export_methods[PhotonDetector] = self._export_detector_photon
         self.analysis_export_methods[PhotonIntensityAnalysis] = self._export_analysis_photonintensity
+        self.analysis_export_methods[KRatioAnalysis] = self._export_analysis_kratio
 
-    def _export(self, options, dirpath, errors):
+    async def _export(self, options, dirpath, erracc, dry_run=False):
         outdict = {}
-        self._run_exporters(options, errors, outdict)
+        self._run_exporters(options, erracc, outdict)
 
-        filepath = os.path.join(dirpath, 'sim.json')
-        with open(filepath, 'w') as fp:
-            json.dump(outdict, fp)
+        if not dry_run:
+            filepath = os.path.join(dirpath, 'sim.json')
+            with open(filepath, 'w') as fp:
+                json.dump(outdict, fp)
 
-    def _export_program(self, program, options, errors, outdict):
+    def _export_program(self, program, options, erracc, outdict):
+        valid_models = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
+        self._export_model(program.elastic_cross_section_model, valid_models, erracc)
+
         outdict.setdefault('program', {})
         outdict['program']['foo'] = program.foo
         outdict['program']['elastic_cross_section_model'] = str(program.elastic_cross_section_model)
 
-    def _export_beam_gaussian(self, beam, options, errors, outdict):
+    def _export_beam_cylindrical(self, beam, options, erracc, outdict):
+        super()._export_beam_cylindrical(beam, options, erracc)
+
+        if beam.energy_eV < 5e2:
+            exc = ValueError('Beam energy must be greater or equal to 500eV.')
+            erracc.add_exception(exc)
+
+        outdict['beam'] = 'cylindrical'
+
+    def _export_beam_gaussian(self, beam, options, erracc, outdict):
+        super()._export_beam_gaussian(beam, options, erracc)
+
+        if beam.energy_eV < 5e2:
+            exc = ValueError('Beam energy must be greater or equal to 500eV.')
+            erracc.add_exception(exc)
+
         outdict['beam'] = 'gaussian'
 
-    def _export_sample_substrate(self, sample, options, errors, outdict):
+    def _export_sample_substrate(self, sample, options, erracc, outdict):
+        super()._export_sample_substrate(sample, options, erracc)
+
         outdict['sample'] = 'substrate'
 
-    def _export_detector_photon(self, detect, options, errors, outdict):
-        outdict.setdefault('photon', []).append('photon')
+    def _export_sample_inclusion(self, sample, options, erracc, outdict):
+        super()._export_sample_inclusion(sample, options, erracc, outdict)
 
-    def _export_analysis_photonintensity(self, analysis, options, errors, outdict):
+        outdict['sample'] = 'inclusion'
+
+    def _export_sample_sphere(self, sample, options, erracc, outdict):
+        super()._export_sample_sphere(sample, options, erracc, outdict)
+
+        outdict['sample'] = 'sphere'
+
+    def _export_sample_horizontallayers(self, sample, options, erracc, outdict):
+        super()._export_sample_horizontallayers(sample, options, erracc, outdict)
+
+        for layer in sample.layers:
+            self._export_layer(layer, options, erracc, outdict)
+
+        outdict['sample'] = 'horizontallayers'
+
+    def _export_sample_verticallayers(self, sample, options, erracc, outdict):
+        super()._export_sample_verticallayers(sample, options, erracc, outdict)
+
+        for layer in sample.layers:
+            self._export_layer(layer, options, erracc, outdict)
+
+        outdict['sample'] = 'verticallayers'
+
+    def _export_detector_photon(self, detector, options, erracc, outdict):
+        super()._export_detector_photon(detector, options, erracc)
+
+        outdict.setdefault('detectors', []).append('photon')
+
+    def _export_analysis_photonintensity(self, analysis, options, erracc, outdict):
+        super()._export_analysis_photonintensity(analysis, options, erracc)
+
         outdict.setdefault('analyses', []).append('photon intensity')
+
+    def _export_analysis_kratio(self, analysis, options, erracc, outdict):
+        super()._export_analysis_kratio(analysis, options, erracc)
+
+        outdict.setdefault('analyses', []).append('kratio')
 
 class WorkerMock(WorkerBase):
 
@@ -129,12 +152,9 @@ class WorkerMock(WorkerBase):
         token.update(0.1, 'Exporting options')
         options = simulation.options
 
-        if options.beam.energy_eV < 100:
-            raise WorkerError
-
         program = options.program
         exporter = program.create_exporter()
-        exporter.export(options, outputdir)
+        await exporter.export(options, outputdir)
 
         # Run
         token.update(0.2, 'Started')
@@ -189,9 +209,6 @@ class ProgramMock(ProgramBase):
 
     def create_expander(self):
         return ExpanderMock()
-
-    def create_validator(self):
-        return ValidatorMock()
 
     def create_exporter(self):
         return ExporterMock()

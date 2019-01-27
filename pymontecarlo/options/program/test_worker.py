@@ -11,7 +11,7 @@ import pytest
 from pymontecarlo.mock import WorkerMock
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.token import Token, TokenState
-from pymontecarlo.exceptions import WorkerError
+from pymontecarlo.exceptions import ExportError
 
 # Globals and constants variables.
 
@@ -50,7 +50,7 @@ async def testrun_cancel(event_loop, options, tmpdir):
 
 @pytest.mark.asyncio
 async def testrun_error(event_loop, options, tmpdir):
-    options.beam.energy_eV = 0.0 # To cause erroWorkerErrorr
+    options.beam.energy_eV = 0.0 # To cause WorkerErrorr
 
     worker = WorkerMock()
     token = Token('test')
@@ -58,7 +58,7 @@ async def testrun_error(event_loop, options, tmpdir):
 
     try:
         await worker.run(token, simulation, tmpdir)
-    except WorkerError:
+    except ExportError:
         assert True
     else:
         assert False

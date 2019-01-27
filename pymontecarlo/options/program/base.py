@@ -30,10 +30,6 @@ class ProgramBase(OptionBase):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_validator(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def create_exporter(self):
         raise NotImplementedError
 

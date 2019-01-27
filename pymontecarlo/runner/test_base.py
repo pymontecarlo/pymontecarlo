@@ -49,6 +49,4 @@ def test_prepare_simulations_already_in_project(runner, options):
 
 def test_prepare_simulations_invalid(runner, options):
     options.beam.energy_eV = -1e3
-    with pytest.raises(ValidationError) as exc:
-        runner.prepare_simulations(options)
-        assert len(exc.causes) == 1
+    runner.prepare_simulations(options)

@@ -2,7 +2,7 @@
 Material definition
 """
 
-__all__ = ['Material' , 'MaterialBuilder']
+__all__ = ['Material' , 'MaterialBuilder', 'VACUUM']
 
 # Standard library modules.
 from operator import itemgetter

@@ -15,35 +15,29 @@ import textwrap
 
 # Globals and constants variables.
 
+class AccumulatedMixin:
+
+    _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
+                                        subsequent_indent=' ' * 4)
+
+    def __init__(self, *causes):
+        message = 'The following causes were given:\n'
+        message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
+                             for cause in causes)
+        super().__init__(message)
+        self.causes = tuple(causes)
+
 class PymontecarloError(Exception):
     """Base exception of pymontecarlo."""
 
 class PymontecarloWarning(Warning):
     pass
 
-class AccumulatedError(PymontecarloError):
+class AccumulatedError(PymontecarloError, AccumulatedMixin):
+    pass
 
-    _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
-                                        subsequent_indent=' ' * 4)
-
-    def __init__(self, *causes):
-        message = 'Validation failed for the following reasons:\n'
-        message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
-                             for cause in causes)
-        super().__init__(message)
-        self.causes = tuple(causes)
-
-class AccumulatedWarning(PymontecarloWarning):
-
-    _textwrapper = textwrap.TextWrapper(initial_indent='  - ',
-                                        subsequent_indent=' ' * 4)
-
-    def __init__(self, *causes):
-        message = 'The following warnings occurred during the validation:\n'
-        message += '\n'.join('\n'.join(self._textwrapper.wrap(str(cause)))
-                             for cause in causes)
-        super().__init__(message)
-        self.causes = tuple(causes)
+class AccumulatedWarning(PymontecarloWarning, AccumulatedMixin):
+    pass
 
 class ValidationError(AccumulatedError):
     """Exception raised by validators"""
@@ -52,6 +46,9 @@ class ValidationWarning(AccumulatedWarning):
     """Warning raised by validators"""
 
 class ExportError(AccumulatedError):
+    pass
+
+class ExportWarning(AccumulatedWarning):
     pass
 
 class WorkerError(PymontecarloError):
