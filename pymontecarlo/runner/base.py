@@ -62,13 +62,13 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _submit(self, simulation):
+    async def _submit(self, simulation):
         """
         Actual implementation to submit a simulation in the queue.
         """
         raise NotImplementedError
 
-    def submit(self, *list_options):
+    async def submit(self, *list_options):
         """
         Submits the options in the queue.
         
@@ -85,7 +85,7 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
         for simulation in simulations:
             self._submitted_options.append(simulation.options)
-            self._submit(simulation)
+            await self._submit(simulation)
             logger.debug('Simulation "{}" submitted'.format(simulation.identifier))
 
         return simulations
