@@ -3,7 +3,7 @@ Photon based results.
 """
 
 # Standard library modules.
-import collections
+import collections.abc
 
 # Third party modules.
 import pyxray
@@ -23,7 +23,7 @@ def _convert_xrayline(xrayline):
     except:
         raise ValueError('"{}" is not an XrayLine'.format(xrayline))
 
-class PhotonResultBase(ResultBase, collections.Mapping):
+class PhotonResultBase(ResultBase, collections.abc.Mapping):
     """
     Base class for photon based results.
     It consists of a :class:`Mapping` where keys are :class:`XrayLine` and

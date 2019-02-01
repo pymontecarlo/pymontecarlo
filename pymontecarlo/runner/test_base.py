@@ -7,7 +7,6 @@ import pytest
 
 # Local modules.
 from pymontecarlo.runner.base import SimulationRunnerBase
-from pymontecarlo.exceptions import ValidationError
 from pymontecarlo.simulation import Simulation
 
 # Globals and constants variables.

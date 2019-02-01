@@ -12,7 +12,6 @@ import asyncio
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.exceptions import WorkerError
 from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
 from pymontecarlo.options.sample.base import SampleBase
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, SphereSample, HorizontalLayerSample, VerticalLayerSample
