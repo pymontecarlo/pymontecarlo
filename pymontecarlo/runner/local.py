@@ -94,11 +94,11 @@ class LocalWorkerDispatcher:
 
 class LocalSimulationRunner(SimulationRunnerBase):
 
-    def __init__(self, project=None, token=None, max_workers=1, loop=None):
+    def __init__(self, project=None, token=None, max_workers=1):
         super().__init__(project, token, max_workers)
 
         # Create queues
-        self._queue = asyncio.Queue(loop=loop)
+        self._queue = asyncio.Queue()
 
         # Create dispatchers
         self._dispatchers = []
