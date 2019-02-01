@@ -22,7 +22,7 @@ class SimulationRunnerMock(SimulationRunnerBase):
     async def shutdown(self):
         pass
 
-    def _submit(self, *list_options):
+    async def _submit(self, *list_options):
         pass
 
 @pytest.fixture
@@ -33,8 +33,9 @@ def test_prepare_simulations(runner, options):
     simulations = runner.prepare_simulations(options)
     assert len(simulations) == 1
 
-def test_prepare_simulations_already_submitted(runner, options):
-    runner.submit(options)
+@pytest.mark.asyncio
+async def test_prepare_simulations_already_submitted(event_loop, runner, options):
+    await runner.submit(options)
     simulations = runner.prepare_simulations(options)
     assert len(simulations) == 0
 

@@ -51,7 +51,7 @@ async def run_async(list_options, project=None, max_workers=None, runner_class=N
     async with runner_class(project=project, token=token, max_workers=max_workers) as runner:
         runner.token.start()
 
-        runner.submit(*list_options)
+        await runner.submit(*list_options)
 
         runner.token.done()
         return runner.project

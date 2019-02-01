@@ -24,7 +24,7 @@ async def test_local_runner_single_simulation(event_loop, runner, options):
     assert runner.token.state == TokenState.NOTSTARTED
 
     async with runner:
-        runner.submit(options)
+        await runner.submit(options)
 
 #        task = asyncio.create_task(runner.shutdown())
 #        while not task.done():
@@ -43,7 +43,7 @@ async def test_local_runner_multiple_simulations(event_loop, runner, options):
     options3.beam.energy_eV = 3000
 
     async with runner:
-        runner.submit(options, options2, options3)
+        await runner.submit(options, options2, options3)
 
     assert len(runner.project.simulations) == 3
     assert runner.token.state == TokenState.DONE
@@ -51,7 +51,7 @@ async def test_local_runner_multiple_simulations(event_loop, runner, options):
 @pytest.mark.asyncio
 async def test_local_runner_cancel_immediately(event_loop, runner, options):
     async with runner:
-        runner.submit(options)
+        await runner.submit(options)
         await runner.cancel()
 
     assert len(runner.project.simulations) == 0
@@ -59,7 +59,7 @@ async def test_local_runner_cancel_immediately(event_loop, runner, options):
 @pytest.mark.asyncio
 async def test_local_runner_cancel(event_loop, runner, options):
     async with runner:
-        runner.submit(options)
+        await runner.submit(options)
         await asyncio.sleep(0.5)
         await runner.cancel()
 
