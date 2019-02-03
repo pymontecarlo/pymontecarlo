@@ -15,7 +15,7 @@ from pymontecarlo.options.base import OptionBase, OptionBuilderBase
 class ProgramBase(OptionBase):
 
     def __init__(self, name):
-        self.name = name
+        self._name = name
 
     def __repr__(self):
         return '<{classname}({name})>' \
@@ -25,20 +25,24 @@ class ProgramBase(OptionBase):
         return super().__eq__(other) and \
             self.name == other.name
 
-    @abc.abstractmethod
-    def create_expander(self):
+    @property
+    def name(self):
+        return self._name
+
+    @abc.abstractproperty
+    def expander(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_exporter(self):
+    @abc.abstractproperty
+    def exporter(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_worker(self):
+    @abc.abstractproperty
+    def worker(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_importer(self):
+    @abc.abstractproperty
+    def importer(self):
         raise NotImplementedError
 
 class ProgramBuilderBase(OptionBuilderBase):

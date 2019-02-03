@@ -36,24 +36,4 @@ class ProgramHDF5HandlerMixin:
 
 class ProgramHDF5HandlerBase(HDF5HandlerBase,
                              ModelHDF5HandlerMixin):
-
-    ATTR_NAME = 'name'
-
-    def _parse_name(self, group):
-        return group.attrs[self.ATTR_NAME]
-
-    def parse(self, group):
-        program = super().parse(group)
-        program.name = self._parse_name(group)
-        return program
-
-    def can_parse(self, group):
-        return super().can_parse(group) and \
-            self.ATTR_NAME in group.attrs
-
-    def _convert_name(self, name, group):
-        group.attrs[self.ATTR_NAME] = name
-
-    def convert(self, program, group):
-        super().convert(program, group)
-        self._convert_name(program.name, group)
+    pass

@@ -151,9 +151,7 @@ class WorkerMock(WorkerBase):
         token.update(0.1, 'Exporting options')
         options = simulation.options
 
-        program = options.program
-        exporter = program.create_exporter()
-        await exporter.export(options, outputdir)
+        await options.program.exporter.export(options, outputdir)
 
         # Run
         token.update(0.2, 'Started')
@@ -198,6 +196,12 @@ class ProgramMock(ProgramBase):
                  foo=None,
                  elastic_cross_section_model=ElasticCrossSectionModel.RUTHERFORD):
         super().__init__('mock')
+
+        self._expander = ExpanderMock()
+        self._exporter = ExporterMock()
+        self._importer = ImporterMock()
+        self._worker = WorkerMock()
+
         self.foo = foo
         self.elastic_cross_section_model = elastic_cross_section_model
 
@@ -206,17 +210,21 @@ class ProgramMock(ProgramBase):
             self.foo == other.foo and \
             self.elastic_cross_section_model == other.elastic_cross_section_model
 
-    def create_expander(self):
-        return ExpanderMock()
+    @property
+    def expander(self):
+        return self._expander
 
-    def create_exporter(self):
-        return ExporterMock()
+    @property
+    def exporter(self):
+        return self._exporter
 
-    def create_importer(self):
-        return ImporterMock()
+    @property
+    def importer(self):
+        return self._importer
 
-    def create_worker(self):
-        return WorkerMock()
+    @property
+    def worker(self):
+        return self._worker
 
 class ProgramBuilderMock(ProgramBuilderBase):
 

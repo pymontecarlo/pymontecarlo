@@ -63,8 +63,7 @@ class LocalWorkerDispatcher:
             # Run
             try:
                 # Create worker
-                program = simulation.options.program
-                worker = program.create_worker()
+                worker = simulation.options.program.worker
 
                 # Create token
                 token = self.token.create_subtoken(simulation.identifier)

@@ -98,10 +98,8 @@ class OptionsBuilder(OptionBuilderBase):
         list_options = []
 
         for program in self.programs:
-            expander = program.create_expander()
-
             analyses = self.analyses
-            analysis_combinations = expander.expand_analyses(analyses) or [None]
+            analysis_combinations = program.expander.expand_analyses(analyses) or [None]
 
             product = itertools.product(self.beams,
                                         self.samples,
