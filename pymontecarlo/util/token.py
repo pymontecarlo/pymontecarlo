@@ -4,6 +4,8 @@
 import time
 import threading
 import enum
+import logging
+logger = logging.getLogger(__name__)
 
 # Third party modules.
 import tqdm
@@ -64,6 +66,9 @@ class Token:
             self._progress = progress
             self._status = status
             self._latest_update = time.monotonic()
+
+            logger.debug('Token "{}" updated: progress={:.1f}%, status="{}", state={}'
+                         .format(self._name, progress * 100, status, state.name))
 
     def start(self, status=None):
         self.update(0.01, status or 'Started', TokenState.RUNNING)
