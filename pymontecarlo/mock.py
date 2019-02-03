@@ -52,14 +52,18 @@ class ExporterMock(ExporterBase):
 
     def __init__(self):
         super().__init__()
+
         self.beam_export_methods[GaussianBeam] = self._export_beam_gaussian
         self.beam_export_methods[CylindricalBeam] = self._export_beam_cylindrical
+
         self.sample_export_methods[SubstrateSample] = self._export_sample_substrate
         self.sample_export_methods[InclusionSample] = self._export_sample_inclusion
         self.sample_export_methods[SphereSample] = self._export_sample_sphere
         self.sample_export_methods[HorizontalLayerSample] = self._export_sample_horizontallayers
         self.sample_export_methods[VerticalLayerSample] = self._export_sample_verticallayers
+
         self.detector_export_methods[PhotonDetector] = self._export_detector_photon
+
         self.analysis_export_methods[PhotonIntensityAnalysis] = self._export_analysis_photonintensity
         self.analysis_export_methods[KRatioAnalysis] = self._export_analysis_kratio
 
@@ -174,20 +178,34 @@ class WorkerMock(WorkerBase):
         # Import
         token.update(0.9, 'Importing results')
 
-        for analysis in options.find_analyses(PhotonIntensityAnalysis):
-            builder = EmittedPhotonIntensityResultBuilder(analysis)
-            builder.add_intensity((29, 'Ka1'), 1.0, 0.1)
-            builder.add_intensity((29, 'Ka2'), 2.0, 0.2)
-            builder.add_intensity((29, 'Kb1'), 4.0, 0.5)
-            builder.add_intensity((29, 'Kb3'), 5.0, 0.7)
-            builder.add_intensity((29, 'Kb5I'), 1.0, 0.1)
-            builder.add_intensity((29, 'Kb5II'), 0.5, 0.1)
-            builder.add_intensity((29, 'Ll'), 3.0, 0.1)
-            simulation.results.append(builder.build())
+        simulation.results += await options.program.importer.import_(options, outputdir)
 
 class ImporterMock(ImporterBase):
 
-    def _import(self, options, dirpath, errors, warnings):
+    def __init__(self):
+        super().__init__()
+
+        self.import_analysis_methods[PhotonIntensityAnalysis] = self._import_analysis_photonintensity
+        self.import_analysis_methods[KRatioAnalysis] = self._import_analysis_kratio
+
+    async def _import(self, options, dirpath, erracc):
+        return self._run_importers(options, dirpath, erracc)
+
+    def _import_analysis_photonintensity(self, analysis, dirpath, erracc):
+        builder = EmittedPhotonIntensityResultBuilder(analysis)
+
+        builder.add_intensity((29, 'Ka1'), 1.0, 0.1)
+        builder.add_intensity((29, 'Ka2'), 2.0, 0.2)
+        builder.add_intensity((29, 'Kb1'), 4.0, 0.5)
+        builder.add_intensity((29, 'Kb3'), 5.0, 0.7)
+        builder.add_intensity((29, 'Kb5I'), 1.0, 0.1)
+        builder.add_intensity((29, 'Kb5II'), 0.5, 0.1)
+        builder.add_intensity((29, 'Ll'), 3.0, 0.1)
+
+        return [builder.build()]
+
+    def _import_analysis_kratio(self, analysis, dirpath, erracc):
+        # Do nothing
         return []
 
 class ProgramMock(ProgramBase):

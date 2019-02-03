@@ -1,37 +1,23 @@
 #!/usr/bin/env python
 """ """
 
-# Script information for the file.
-__author__ = "Philippe T. Pinard"
-__email__ = "philippe.pinard@gmail.com"
-__version__ = "0.1"
-__copyright__ = "Copyright (c) 2011 Philippe T. Pinard"
-__license__ = "GPL v3"
-
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
-
-from pymontecarlo.options.program.importer import ImporterBase # @UnusedImport
+from pymontecarlo.mock import ImporterMock
 
 # Globals and constants variables.
 
-class TestImporter(TestCase):
+@pytest.fixture
+def importer():
+    return ImporterMock()
 
-    def setUp(self):
-        TestCase.setUp(self)
+@pytest.mark.asyncio
+async def test_import_(event_loop, importer, options, tmp_path):
+    results = await importer.import_(options, tmp_path)
 
-    def tearDown(self):
-        TestCase.tearDown(self)
+    assert len(results) == 1
 
-    def testskeleton(self):
-        self.assertTrue(True)
-
-if __name__ == '__main__': # pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

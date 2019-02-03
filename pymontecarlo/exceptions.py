@@ -54,7 +54,10 @@ class ExportWarning(AccumulatedWarning):
 class WorkerError(PymontecarloError):
     pass
 
-class ImportError_(AccumulatedError):
+class ImportError(AccumulatedError):
+    pass
+
+class ImportWarning(AccumulatedWarning):
     pass
 
 class ProgramNotFound(PymontecarloError):
