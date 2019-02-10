@@ -1,16 +1,14 @@
 sudo: false
 dist: xenial
 language: python
-cache:
-  directories:
-  - $HOME/.pip-cache/
+cache: pip
 matrix:
   include:
   - python: '3.7'
     os: linux
 install:
-- pip install --cache-dir $HOME/.pip-cache --upgrade pip codecov
-- pip install --cache-dir $HOME/.pip-cache --upgrade -e .[develop]
+- pip install --upgrade pip codecov
+- pip install --upgrade -e .[develop]
 script:
 - pytest
 after_success:
