@@ -191,7 +191,7 @@ class ImporterMock(ImporterBase):
     async def _import(self, options, dirpath, erracc):
         return self._run_importers(options, dirpath, erracc)
 
-    def _import_analysis_photonintensity(self, analysis, dirpath, erracc):
+    def _import_analysis_photonintensity(self, options, analysis, dirpath, erracc):
         builder = EmittedPhotonIntensityResultBuilder(analysis)
 
         builder.add_intensity((29, 'Ka1'), 1.0, 0.1)
@@ -204,7 +204,7 @@ class ImporterMock(ImporterBase):
 
         return [builder.build()]
 
-    def _import_analysis_kratio(self, analysis, dirpath, erracc):
+    def _import_analysis_kratio(self, options, analysis, dirpath, erracc):
         # Do nothing
         return []
 

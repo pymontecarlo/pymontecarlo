@@ -47,11 +47,11 @@ class ImporterBase(metaclass=abc.ABCMeta):
         results = []
 
         for analysis in options.analyses:
-            results += self._import_analysis(analysis, dirpath, erracc, *args, **kwargs)
+            results += self._import_analysis(options, analysis, dirpath, erracc, *args, **kwargs)
 
         return results
 
-    def _import_analysis(self, analysis, dirpath, erracc, *args, **kwargs):
+    def _import_analysis(self, options, analysis, dirpath, erracc, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.import_analysis_methods:
             exc = ValueError('Analysis ({0}) is not supported.'
@@ -60,4 +60,4 @@ class ImporterBase(metaclass=abc.ABCMeta):
             return
 
         method = self.import_analysis_methods[analysis_class]
-        return method(analysis, dirpath, erracc, *args, **kwargs)
+        return method(options, analysis, dirpath, erracc, *args, **kwargs)
