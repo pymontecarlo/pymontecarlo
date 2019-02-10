@@ -10,6 +10,12 @@ from pymontecarlo.util.tolerance import tolerance_to_decimals
 
 # Globals and constants variables.
 
+class LazyFormat:
+
+    @abc.abstractmethod
+    def format(self, settings):
+        raise NotImplementedError
+
 class FormatBuilderBase(metaclass=abc.ABCMeta):
 
     def __init__(self, settings, abbreviate_name=False, format_number=False):
@@ -23,8 +29,8 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
         error = datum['error']
         prefix = datum['prefix_abbrev'] if self.abbreviate_name else datum['prefix_name']
 
-        if callable(name):
-            name = name(self.settings)
+        if isinstance(name, LazyFormat):
+            name = name.format(self.settings)
 
         unitname = ''
         if unit is not None:
@@ -50,6 +56,9 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
 
         if value is None:
             return 'None'
+
+        if isinstance(value, LazyFormat):
+            value = value.format(self.settings)
 
         value = self._convert_value(value, unit)
 

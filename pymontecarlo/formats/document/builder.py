@@ -167,6 +167,13 @@ class TableBuilder(DocutilsFormatBuilderBase):
         self.columns[name] = datum
 
     def add_row(self, row):
+        """
+        Add a row.
+        
+        Args:
+            row (dict): a dictionary where the keys are the column names,
+                and the values are the values for each cell
+        """
         self.rows.append(row)
 
     def build(self):

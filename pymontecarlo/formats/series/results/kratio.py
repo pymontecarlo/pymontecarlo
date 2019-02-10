@@ -5,8 +5,8 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.results.photon import \
-    PhotonResultSeriesHandlerBase, xrayline_name_func
+from pymontecarlo.formats.helper import LazyXrayLineFormat
+from pymontecarlo.formats.series.results.photon import PhotonResultSeriesHandlerBase
 from pymontecarlo.results.kratio import KRatioResult
 
 # Globals and constants variables.
@@ -17,7 +17,7 @@ class KRatioResultSeriesHandler(PhotonResultSeriesHandlerBase):
         super().convert(result, builder)
 
         for xrayline, q in result.items():
-            name = abbrev = xrayline_name_func(xrayline)
+            name = abbrev = LazyXrayLineFormat(xrayline)
             builder.add_column(name, abbrev, q.n)
             builder.add_column(name, abbrev, q.s, error=True)
 

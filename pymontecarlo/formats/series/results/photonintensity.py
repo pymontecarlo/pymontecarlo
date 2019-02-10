@@ -5,8 +5,8 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.series.results.photon import \
-    PhotonResultSeriesHandlerBase, xrayline_name_func
+from pymontecarlo.formats.helper import LazyXrayLineFormat
+from pymontecarlo.formats.series.results.photon import PhotonResultSeriesHandlerBase
 from pymontecarlo.results.photonintensity import \
     EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult
 
@@ -18,7 +18,7 @@ class PhotonIntensityResultSeriesHandlerBase(PhotonResultSeriesHandlerBase):
         super().convert(result, builder)
 
         for xrayline, q in result.items():
-            name = abbrev = xrayline_name_func(xrayline)
+            name = abbrev = LazyXrayLineFormat(xrayline)
             builder.add_column(name, abbrev, q.n, '1/(sr.electron)')
             builder.add_column(name, abbrev, q.s, '1/(sr.electron)', error=True)
 

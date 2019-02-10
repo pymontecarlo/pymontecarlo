@@ -21,6 +21,7 @@ from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis
+from pymontecarlo.settings import Settings, XrayNotation
 
 # Globals and constants variables.
 
@@ -86,3 +87,9 @@ def options():
     analyses = [PhotonIntensityAnalysis(detector)]
     tags = ['basic', 'test']
     return Options(program, beam, sample, analyses, tags)
+
+@pytest.fixture
+def settings():
+    settings = Settings()
+    settings.preferred_xray_notation = XrayNotation.IUPAC
+    return settings

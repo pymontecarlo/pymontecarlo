@@ -2,30 +2,29 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
-from pymontecarlo.formats.document.helper import publish_html
+from pymontecarlo.formats.document.helper import publish_html, count_document_nodes
 from pymontecarlo.formats.document.options.options import OptionsDocumentHandler
 from pymontecarlo.formats.document.builder import DocumentBuilder
 
 # Globals and constants variables.
 
-class Testhelper(TestCase):
+def test_publish_html(options, settings):
+    handler = OptionsDocumentHandler()
+    builder = DocumentBuilder(settings)
+    handler.convert(options, builder)
 
-    def testpublish_html(self):
-        handler = OptionsDocumentHandler()
-        options = self.create_basic_options()
-        builder = DocumentBuilder(self.settings)
-        handler.convert(options, builder)
+    s = publish_html(builder)
+    assert len(s) == 16708
 
-        s = publish_html(builder)
-        self.assertEqual(16724, len(s))
+def test_count_document_nodes(options, settings):
+    handler = OptionsDocumentHandler()
+    builder = DocumentBuilder(settings)
+    handler.convert(options, builder)
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    document = builder.build()
+
+    assert count_document_nodes(document) == 14
