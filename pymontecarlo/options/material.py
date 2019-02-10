@@ -17,19 +17,27 @@ import numpy as np
 import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
-    generate_name, from_formula, to_repr
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+    generate_name, from_formula, to_repr, calculate_density_kg_per_m3
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class Material(OptionBase):
+class LazyDensity(base.LazyOptionValueBase):
+
+    def apply(self, material, options):
+        composition = base.apply_lazy(material.composition, material, options)
+        return calculate_density_kg_per_m3(composition)
+
+LAZY_DENSITY = LazyDensity()
+
+class Material(base.OptionBase):
 
     WEIGHT_FRACTION_TOLERANCE = 1e-7 # 0.1 ppm
     DENSITY_TOLERANCE_kg_per_m3 = 1e-5
 
     COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
 
-    def __init__(self, name, composition, density_kg_per_m3=None, color=None):
+    def __init__(self, name, composition, density_kg_per_m3=LAZY_DENSITY, color=None):
         """
         Creates a new material.
 
@@ -107,9 +115,9 @@ class Material(OptionBase):
     def __eq__(self, other):
         # NOTE: color is not tested in equality
         return super().__eq__(other) and \
-            self.name == other.name and \
-            cbook.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_TOLERANCE) and \
-            cbook.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
+            base.isclose(self.name, other.name) and \
+            base.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_TOLERANCE) and \
+            base.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
 
     density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
@@ -147,7 +155,7 @@ class _Vacuum(Material):
 
 VACUUM = _Vacuum()
 
-class MaterialBuilder(OptionBuilderBase):
+class MaterialBuilder(base.OptionBuilderBase):
 
     def __init__(self, balance_z):
         self.balance_z = balance_z

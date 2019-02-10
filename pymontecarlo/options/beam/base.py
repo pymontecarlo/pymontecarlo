@@ -5,18 +5,17 @@ Base classes for beams.
 # Standard library modules.
 import functools
 import operator
-import math
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.util.cbook import MultiplierAttribute
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class BeamBase(OptionBase):
+class BeamBase(base.OptionBase):
     """
     Base beam.
     """
@@ -38,12 +37,12 @@ class BeamBase(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
-            self.particle == other.particle
+            base.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
+            base.isclose(self.particle, other.particle)
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
-class BeamBuilderBase(OptionBuilderBase):
+class BeamBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):
         self.energies_eV = set()

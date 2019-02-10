@@ -12,6 +12,7 @@ import itertools
 # Local modules.
 from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
 from pymontecarlo.options.material import VACUUM
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -47,7 +48,7 @@ class HorizontalLayerSample(LayeredSampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.substrate_material == other.substrate_material
+            base.isclose(self.substrate_material, other.substrate_material)
 
     def has_substrate(self):
         """

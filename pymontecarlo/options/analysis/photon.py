@@ -8,6 +8,7 @@ Photon related analysis.
 
 # Local modules.
 from pymontecarlo.options.analysis.base import AnalysisBase, AnalysisBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -20,7 +21,7 @@ class PhotonAnalysisBase(AnalysisBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.photon_detector == other.photon_detector
+            base.isclose(self.photon_detector, other.photon_detector)
 
     def __repr__(self):
         return '<{classname}(detector={photon_detector})>' \

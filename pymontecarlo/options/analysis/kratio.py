@@ -18,7 +18,7 @@ from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnaly
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
-from pymontecarlo.util.cbook import are_mapping_equal
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 TAG_STANDARD = 'standard'
@@ -42,7 +42,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            are_mapping_equal(self.standard_materials, other.standard_materials)
+            base.are_mapping_equal(self.standard_materials, other.standard_materials)
 
     def add_standard_material(self, z, material):
         self.standard_materials[z] = material

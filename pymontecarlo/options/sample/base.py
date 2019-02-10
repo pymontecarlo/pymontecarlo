@@ -13,13 +13,12 @@ import itertools
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.util.cbook import \
-    DegreesAttribute, are_sequence_equal, unique
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+from pymontecarlo.util.cbook import unique, DegreesAttribute
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class SampleBase(OptionBase):
+class SampleBase(base.OptionBase):
     """
     Base class for all sample representations.
     """
@@ -44,8 +43,8 @@ class SampleBase(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
-            math.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
+            base.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
+            base.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -66,7 +65,7 @@ class SampleBase(OptionBase):
     tilt_deg = DegreesAttribute('tilt_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
-class SampleBuilderBase(OptionBuilderBase):
+class SampleBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):
         self.tilts_rad = set()
@@ -105,7 +104,7 @@ class SampleBuilderBase(OptionBuilderBase):
     def add_azimuth_deg(self, azimuth_deg):
         self.add_azimuth_rad(math.radians(azimuth_deg))
 
-class Layer(OptionBase):
+class Layer(base.OptionBase):
 
     THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
 
@@ -128,10 +127,11 @@ class Layer(OptionBase):
             .format(self.__class__.__name__, self.material, self.thickness_m)
 
     def __eq__(self, other):
-        return self.material == other.material and \
-            math.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
+        return super().__eq__(other) and \
+            base.isclose(self.material, other.material) and \
+            base.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
 
-class LayerBuilder(OptionBuilderBase):
+class LayerBuilder(base.OptionBuilderBase):
 
     def __init__(self):
         self.materials = []
@@ -168,7 +168,7 @@ class LayeredSampleBase(SampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            are_sequence_equal(self.layers, other.layers)
+            base.are_sequence_equal(self.layers, other.layers)
 
     def add_layer(self, material, thickness_m):
         """

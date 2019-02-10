@@ -8,11 +8,11 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class ProgramBase(OptionBase):
+class ProgramBase(base.OptionBase):
 
     def __init__(self, name):
         self._name = name
@@ -23,7 +23,7 @@ class ProgramBase(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.name == other.name
+            base.isclose(self.name, other.name)
 
     @property
     def name(self):
@@ -45,5 +45,5 @@ class ProgramBase(OptionBase):
     def importer(self):
         raise NotImplementedError
 
-class ProgramBuilderBase(OptionBuilderBase):
+class ProgramBuilderBase(base.OptionBuilderBase):
     pass

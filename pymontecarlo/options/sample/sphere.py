@@ -8,12 +8,12 @@ __all__ = ['SphereSample', 'SphereSampleBuilder']
 import functools
 import itertools
 import operator
-import math
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -40,8 +40,8 @@ class SphereSample(SampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.material == other.material and \
-            math.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
+            base.isclose(self.material, other.material) and \
+            base.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
 
     @property
     def materials(self):

@@ -13,6 +13,7 @@ import pickle
 from pymontecarlo.testcase import TestCase
 
 from pymontecarlo.options.material import Material, VACUUM, MaterialBuilder
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -106,6 +107,15 @@ class TestMaterial(TestCase):
 
         m = Material.pure(15)
         self.assertEqual('#00FF00', m.color)
+
+    def testno_density(self):
+        m = Material('test', {29: 1.0})
+
+        self.assertNotEqual(m, self.m)
+        self.assertEqual(m, m)
+
+        density_kg_per_m3 = base.apply_lazy(m.density_kg_per_m3, m, None)
+        self.assertAlmostEqual(8960.0, density_kg_per_m3, 4)
 
 class TestMaterialBuilder(TestCase):
 

@@ -36,150 +36,136 @@ async def test_export_dry_run(event_loop, exporter, options, tmp_path):
 
     assert not tmp_path.joinpath('sim.json').exists()
 
-def test_export_material_invalid(exporter, options):
+def test_validate_material_invalid(exporter, options):
     material = Material(' ', {120: 1.1}, -1.0, 'blah')
 
     erracc = ErrorAccumulator()
-    exporter._export_material(material, options, erracc)
+    exporter._validate_material(material, options, erracc)
 
     assert len(erracc.exceptions) == 6
     assert len(erracc.warnings) == 0
 
-def test_export_material_nodensity(exporter, options):
+def test_validate_material_nodensity(exporter, options):
     material = Material('Pure Cu', {29: 1.0})
 
-    assert material.density_kg_per_m3 is None
-
     erracc = ErrorAccumulator()
-    exporter._export_material(material, options, erracc)
+    exporter._validate_material(material, options, erracc)
 
     assert material.density_kg_per_m3 is not None
     assert len(erracc.exceptions) == 0
-    assert len(erracc.warnings) == 1
+    assert len(erracc.warnings) == 0
 
-def test_export_program_invalid(exporter, options):
+def test_validate_program_invalid(exporter, options):
     program = ProgramMock('bar', ElasticCrossSectionModel.ELSEPA2005)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_program(program, options, erracc, outdict)
+    exporter._validate_program(program, options, erracc)
 
     assert len(erracc.exceptions) == 1
     assert len(erracc.warnings) == 0
 
-def test_export_program_invalid2(exporter, options):
+def test_validate_program_invalid2(exporter, options):
     program = ProgramMock('bar', MassAbsorptionCoefficientModel.POUCHOU_PICHOIR1991)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_program(program, options, erracc, outdict)
+    exporter._validate_program(program, options, erracc)
 
     assert len(erracc.exceptions) == 1
     assert len(erracc.warnings) == 0
 
-def test_export_beam_cylindrical_invalid(exporter, options):
+def test_validate_beam_cylindrical_invalid(exporter, options):
     beam = CylindricalBeam(0.0, -1.0, 'particle',
                            float('inf'), float('nan'))
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_beam(beam, options, erracc, outdict)
+    exporter._validate_beam(beam, options, erracc)
 
     assert len(erracc.exceptions) == 6
     assert len(erracc.warnings) == 0
 
-def test_export_beam_gaussian_invalid(exporter, options):
+def test_validate_beam_gaussian_invalid(exporter, options):
     beam = GaussianBeam(0.0, -1.0, 'particle',
                         float('inf'), float('nan'))
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_beam(beam, options, erracc, outdict)
+    exporter._validate_beam(beam, options, erracc)
 
     assert len(erracc.exceptions) == 6
     assert len(erracc.warnings) == 0
 
-def test_export_sample_substrate_invalid(exporter, options):
+def test_validate_sample_substrate_invalid(exporter, options):
     sample = SubstrateSample(VACUUM, float('inf'), float('nan'))
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_sample(sample, options, erracc, outdict)
+    exporter._validate_sample_substrate(sample, options, erracc)
 
     assert len(erracc.exceptions) == 3
     assert len(erracc.warnings) == 0
 
-def test_export_sample_inclusion_invalid(exporter, options):
+def test_validate_sample_inclusion_invalid(exporter, options):
     sample = InclusionSample(VACUUM, VACUUM, 0.0)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_sample(sample, options, erracc, outdict)
+    exporter._validate_sample_inclusion(sample, options, erracc)
 
     assert len(erracc.exceptions) == 3
     assert len(erracc.warnings) == 0
 
-def test_export_sample_sphere_invalid(exporter, options):
+def test_validate_sample_sphere_invalid(exporter, options):
     sample = SphereSample(VACUUM, -1.0)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_sample(sample, options, erracc, outdict)
+    exporter._validate_sample_sphere(sample, options, erracc)
 
     assert len(erracc.exceptions) == 2
     assert len(erracc.warnings) == 0
 
-def test_export_sample_horizontallayers_invalid(exporter, options):
+def test_validate_sample_horizontallayers_invalid(exporter, options):
     sample = HorizontalLayerSample(COPPER)
     sample.add_layer(ZINC, -1.0)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_sample(sample, options, erracc, outdict)
+    exporter._validate_sample_horizontallayers(sample, options, erracc)
 
     assert len(erracc.exceptions) == 1
     assert len(erracc.warnings) == 0
 
-def test_export_sample_verticallayers_invalid(exporter, options):
+def test_validate_sample_verticallayers_invalid(exporter, options):
     sample = VerticalLayerSample(VACUUM, VACUUM)
     sample.add_layer(ZINC, -1.0)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_sample(sample, options, erracc, outdict)
+    exporter._validate_sample_verticallayers(sample, options, erracc)
 
     assert len(erracc.exceptions) == 3
     assert len(erracc.warnings) == 0
 
-def test_export_detector_photon_invalid(exporter, options):
+def test_validate_detector_photon_invalid(exporter, options):
     detector = PhotonDetector('', 2.0, -1.0)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_detector(detector, options, erracc, outdict)
+    exporter._validate_detector_photon(detector, options, erracc)
 
     assert len(erracc.exceptions) == 3
     assert len(erracc.warnings) == 0
 
-def test_export_analysis_photonintensity(exporter, options):
+def test_validate_analysis_photonintensity(exporter, options):
     detector = PhotonDetector('test', 1.0, 1.0)
     analysis = PhotonIntensityAnalysis(detector)
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_analysis(analysis, options, erracc, outdict)
+    exporter._validate_analysis_photonintensity(analysis, options, erracc)
 
     assert len(erracc.exceptions) == 0
     assert len(erracc.warnings) == 0
 
-def test_export_analysis_kratio_invalid(exporter, options):
+def test_validate_analysis_kratio_invalid(exporter, options):
     detector = PhotonDetector('test', 1.0, 1.0)
     analysis = KRatioAnalysis(detector)
     analysis.add_standard_material(14, Material.pure(13))
 
     erracc = ErrorAccumulator()
-    outdict = {}
-    exporter._export_analysis(analysis, options, erracc, outdict)
+    exporter._validate_analysis_kratio(analysis, options, erracc)
 
     assert len(erracc.exceptions) == 1
     assert len(erracc.warnings) == 0

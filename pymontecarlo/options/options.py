@@ -10,12 +10,12 @@ import itertools
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import are_sequence_similar, unique, find_by_type
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+from pymontecarlo.util.cbook import unique, find_by_type
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class Options(OptionBase):
+class Options(base.OptionBase):
 
     def __init__(self, program, beam, sample, analyses=None, tags=None):
         """
@@ -35,11 +35,11 @@ class Options(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.program == other.program and \
-            self.beam == other.beam and \
-            self.sample == other.sample and \
-            are_sequence_similar(self.analyses, other.analyses) and \
-            are_sequence_similar(self.tags, other.tags)
+            base.isclose(self.program, other.program) and \
+            base.isclose(self.beam, other.beam) and \
+            base.isclose(self.sample, other.sample) and \
+            base.are_sequence_similar(self.analyses, other.analyses) and \
+            base.are_sequence_similar(self.tags, other.tags)
 
     def find_analyses(self, analysis_class, detector=None):
         """
@@ -66,7 +66,7 @@ class Options(OptionBase):
         """
         return tuple(unique(analysis.detector for analysis in self.analyses))
 
-class OptionsBuilder(OptionBuilderBase):
+class OptionsBuilder(base.OptionBuilderBase):
 
     def __init__(self, tags=None):
         self.programs = []

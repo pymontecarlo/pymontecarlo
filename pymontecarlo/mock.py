@@ -20,7 +20,7 @@ from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysi
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.program.base import ProgramBase, ProgramBuilderBase
 from pymontecarlo.options.program.expander import ExpanderBase, expand_to_single, expand_analyses_to_single_detector
-from pymontecarlo.options.program.exporter import ExporterBase
+from pymontecarlo.options.program.exporter import ExporterBase, apply_lazy
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
@@ -77,74 +77,74 @@ class ExporterMock(ExporterBase):
                 json.dump(outdict, fp)
 
     def _export_program(self, program, options, erracc, outdict):
-        valid_models = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
-        self._export_model(program.elastic_cross_section_model, valid_models, erracc)
+        self._validate_program(program, options, erracc)
 
         outdict.setdefault('program', {})
         outdict['program']['foo'] = program.foo
         outdict['program']['elastic_cross_section_model'] = str(program.elastic_cross_section_model)
 
-    def _export_beam_cylindrical(self, beam, options, erracc, outdict):
-        super()._export_beam_cylindrical(beam, options, erracc)
+    def _validate_program(self, program, options, erracc):
+        super()._validate_program(program, options, erracc)
 
-        if beam.energy_eV < 5e2:
+        valid_models = [ElasticCrossSectionModel.RUTHERFORD, ElasticCrossSectionModel.MOTT_CZYZEWSKI1990]
+        self._validate_model(program.elastic_cross_section_model, valid_models, erracc)
+
+    def _validate_beam(self, beam, options, erracc):
+        super()._validate_beam(beam, options, erracc)
+
+        energy_eV = apply_lazy(beam.energy_eV, beam, options)
+
+        if energy_eV < 5e2:
             exc = ValueError('Beam energy must be greater or equal to 500eV.')
             erracc.add_exception(exc)
+
+    def _export_beam_cylindrical(self, beam, options, erracc, outdict):
+        self._validate_beam(beam, options, erracc)
 
         outdict['beam'] = 'cylindrical'
 
     def _export_beam_gaussian(self, beam, options, erracc, outdict):
-        super()._export_beam_gaussian(beam, options, erracc)
-
-        if beam.energy_eV < 5e2:
-            exc = ValueError('Beam energy must be greater or equal to 500eV.')
-            erracc.add_exception(exc)
+        self._validate_beam(beam, options, erracc)
 
         outdict['beam'] = 'gaussian'
 
     def _export_sample_substrate(self, sample, options, erracc, outdict):
-        super()._export_sample_substrate(sample, options, erracc)
+        super()._validate_sample_substrate(sample, options, erracc)
 
         outdict['sample'] = 'substrate'
 
     def _export_sample_inclusion(self, sample, options, erracc, outdict):
-        super()._export_sample_inclusion(sample, options, erracc, outdict)
+        super()._validate_sample_inclusion(sample, options, erracc, outdict)
 
         outdict['sample'] = 'inclusion'
 
     def _export_sample_sphere(self, sample, options, erracc, outdict):
-        super()._export_sample_sphere(sample, options, erracc, outdict)
+        super()._validate_sample_sphere(sample, options, erracc, outdict)
 
         outdict['sample'] = 'sphere'
 
     def _export_sample_horizontallayers(self, sample, options, erracc, outdict):
-        super()._export_sample_horizontallayers(sample, options, erracc, outdict)
-
-        for layer in sample.layers:
-            self._export_layer(layer, options, erracc, outdict)
+        super()._validate_sample_horizontallayers(sample, options, erracc, outdict)
 
         outdict['sample'] = 'horizontallayers'
 
     def _export_sample_verticallayers(self, sample, options, erracc, outdict):
-        super()._export_sample_verticallayers(sample, options, erracc, outdict)
-
-        for layer in sample.layers:
-            self._export_layer(layer, options, erracc, outdict)
+        super()._validate_sample_verticallayers(sample, options, erracc)
 
         outdict['sample'] = 'verticallayers'
 
     def _export_detector_photon(self, detector, options, erracc, outdict):
-        super()._export_detector_photon(detector, options, erracc)
+        super()._validate_detector_photon(detector, options, erracc)
 
         outdict.setdefault('detectors', []).append('photon')
 
     def _export_analysis_photonintensity(self, analysis, options, erracc, outdict):
-        super()._export_analysis_photonintensity(analysis, options, erracc)
+        super()._validate_analysis_photonintensity(analysis, options, erracc)
 
         outdict.setdefault('analyses', []).append('photon intensity')
 
     def _export_analysis_kratio(self, analysis, options, erracc, outdict):
-        super()._export_analysis_kratio(analysis, options, erracc)
+        super()._validate_analysis_kratio(analysis, options, erracc)
 
         outdict.setdefault('analyses', []).append('kratio')
 

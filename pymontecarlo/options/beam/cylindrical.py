@@ -3,7 +3,6 @@
 __all__ = ['CylindricalBeam', 'CylindricalBeamBuilder']
 
 # Standard library modules.
-import math
 import functools
 import operator
 import itertools
@@ -14,6 +13,7 @@ import numpy as np
 # Local modules.
 from pymontecarlo.options.beam.base import BeamBase, BeamBuilderBase
 from pymontecarlo.options.particle import Particle
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -58,9 +58,9 @@ class CylindricalBeam(BeamBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m) and \
-            math.isclose(self.x0_m, other.x0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
-            math.isclose(self.y0_m, other.y0_m, abs_tol=self.POSITION_TOLERANCE_m)
+            base.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m) and \
+            base.isclose(self.x0_m, other.x0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
+            base.isclose(self.y0_m, other.y0_m, abs_tol=self.POSITION_TOLERANCE_m)
 
 class CylindricalBeamBuilder(BeamBuilderBase):
 

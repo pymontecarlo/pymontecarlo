@@ -8,12 +8,12 @@ __all__ = ['InclusionSample', 'InclusionSampleBuilder']
 import functools
 import itertools
 import operator
-import math
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -41,9 +41,9 @@ class InclusionSample(SampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.substrate_material == other.substrate_material and \
-            self.inclusion_material == other.inclusion_material and \
-            math.isclose(self.inclusion_diameter_m, other.inclusion_diameter_m, abs_tol=self.INCLUSION_DIAMETER_TOLERANCE_m)
+            base.isclose(self.substrate_material, other.substrate_material) and \
+            base.isclose(self.inclusion_material, other.inclusion_material) and \
+            base.isclose(self.inclusion_diameter_m, other.inclusion_diameter_m, abs_tol=self.INCLUSION_DIAMETER_TOLERANCE_m)
 
     @property
     def materials(self):

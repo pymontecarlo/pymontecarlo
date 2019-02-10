@@ -5,7 +5,6 @@ Vertical layers sample
 __all__ = ['VerticalLayerSample', 'VerticalLayerSampleBuilder']
 
 # Standard library modules.
-import math
 import functools
 import operator
 import itertools
@@ -14,6 +13,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -47,9 +47,9 @@ class VerticalLayerSample(LayeredSampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.left_material == other.left_material and \
-            self.right_material == other.right_material and \
-            math.isclose(self.depth_m, other.depth_m, abs_tol=self.DEPTH_TOLERANCE_m)
+            base.isclose(self.left_material, other.left_material) and \
+            base.isclose(self.right_material, other.right_material) and \
+            base.isclose(self.depth_m, other.depth_m, abs_tol=self.DEPTH_TOLERANCE_m)
 
     @property
     def materials(self):

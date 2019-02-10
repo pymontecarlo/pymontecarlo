@@ -13,6 +13,7 @@ import operator
 
 # Local modules.
 from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -32,7 +33,8 @@ class SubstrateSample(SampleBase):
             .format(self.__class__.__name__, str(self.material))
 
     def __eq__(self, other):
-        return super().__eq__(other) and self.material == other.material
+        return super().__eq__(other) and \
+            base.isclose(self.material, other.material)
 
     @property
     def materials(self):
