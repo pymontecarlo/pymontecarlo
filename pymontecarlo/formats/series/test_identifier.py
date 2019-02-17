@@ -18,7 +18,7 @@ class Testidentifier(TestCase):
     def testcreate_identifier(self):
         options = self.create_basic_options()
         identifier = create_identifier(options)
-        self.assertEqual(237, len(identifier))
+        self.assertEqual(239, len(identifier))
 
     def testcreate_identifiers(self):
         options = self.create_basic_options()

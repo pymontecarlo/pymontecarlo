@@ -2,119 +2,103 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.cylindrical import \
     CylindricalBeam, CylindricalBeamBuilder
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.options.beam.base import BeamBase
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestCylindricalBeam(TestCase):
+@pytest.fixture
+def beam():
+    return CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return CylindricalBeamBuilder()
 
-        self.beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
+def test_cylindricalbeam(beam):
+    assert beam.particle == Particle.POSITRON
 
-    def testskeleton(self):
-        self.assertEqual(Particle.POSITRON, self.beam.particle)
+    assert beam.energy_eV == pytest.approx(15e3, abs=1e-4)
+    assert beam.energy_keV == pytest.approx(15.0, abs=1e-4)
+    assert beam.diameter_m == pytest.approx(123.456, abs=1e-4)
+    assert beam.x0_m == pytest.approx(1.0, abs=1e-4)
+    assert beam.y0_m == pytest.approx(2.0, abs=1e-4)
 
-        self.assertAlmostEqual(15e3, self.beam.energy_eV, 4)
-        self.assertAlmostEqual(15.0, self.beam.energy_keV, 4)
+def test_cylindricalbeam_repr(beam):
+    assert repr(beam) == '<CylindricalBeam(POSITRON, 15000 eV, 123.456 m, (1, 2) m)>'
 
-        self.assertAlmostEqual(123.456, self.beam.diameter_m, 4)
+def test_cylindricalbeam_eq(beam):
+    assert beam == CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
 
-        self.assertAlmostEqual(1.0, self.beam.x0_m, 4)
-        self.assertAlmostEqual(2.0, self.beam.y0_m, 4)
+def test_cylindricalbeam_ne(beam):
+    assert not beam == CylindricalBeam(14e3, 123.456, Particle.POSITRON, 1.0, 2.0)
+    assert not beam == CylindricalBeam(15e3, 124.456, Particle.POSITRON, 1.0, 2.0)
+    assert not beam == CylindricalBeam(15e3, 123.456, Particle.ELECTRON, 1.0, 2.0)
+    assert not beam == CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.1, 2.0)
+    assert not beam == CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.1)
+    assert not beam == object()
 
-    def test__repr__(self):
-        expected = '<CylindricalBeam(POSITRON, 15000 eV, 123.456 m, (1, 2) m)>'
-        self.assertEqual(expected, repr(self.beam))
+def test_cylindricalbeam_hdf5(beam, tmp_path):
+    testutil.assert_convert_parse_hdf5(beam, tmp_path)
 
-    def test__eq__(self):
-        beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.0)
-        self.assertEqual(beam, self.beam)
+def test_cylindricalbeam_copy(beam):
+    testutil.assert_copy(beam)
 
-    def test__ne__(self):
-        beam = CylindricalBeam(14e3, 123.456, Particle.POSITRON, 1.0, 2.0)
-        self.assertNotEqual(beam, self.beam)
+def test_cylindricalbeam_pickle(beam):
+    testutil.assert_pickle(beam)
 
-        beam = CylindricalBeam(15e3, 124.456, Particle.POSITRON, 1.0, 2.0)
-        self.assertNotEqual(beam, self.beam)
+def test_cylindricalbeambuilder(builder):
+    builder.add_energy_eV(10e3)
+    builder.add_energy_keV(10) # Not added
+    builder.add_diameter_m(0.0)
+    builder.add_diameter_m(0.1)
+    builder.add_position(0.0, 0.0)
+    builder.add_position(0.0, 0.1)
 
-        beam = CylindricalBeam(15e3, 123.456, Particle.ELECTRON, 1.0, 2.0)
-        self.assertNotEqual(beam, self.beam)
+    beams = builder.build()
+    assert len(beams) == 4
+    assert len(builder) == 4
 
-        beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.1, 2.0)
-        self.assertNotEqual(beam, self.beam)
+    for beam in beams:
+        assert beam.particle == Particle.ELECTRON
 
-        beam = CylindricalBeam(15e3, 123.456, Particle.POSITRON, 1.0, 2.1)
-        self.assertNotEqual(beam, self.beam)
+def test_cylindricalbeambuilder_nodiameter(builder):
+    builder.add_energy_eV(10e3)
+    builder.add_position(0.0, 0.0)
+    builder.add_position(0.0, 0.1)
+    builder.add_particle(Particle.ELECTRON)
 
-        beam = BeamBase(15e3, Particle.POSITRON)
-        self.assertNotEqual(beam, self.beam)
+    beams = builder.build()
+    assert len(beams) == 0
+    assert len(builder) == 0
 
-class TestCylindricalBeamBuilder(TestCase):
+def test_cylindricalbeambuilder_noposition(builder):
+    builder.add_energy_eV(10e3)
+    builder.add_diameter_m(0.1)
+    builder.add_particle(Particle.ELECTRON)
 
-    def testbuild(self):
-        b = CylindricalBeamBuilder()
-        b.add_energy_eV(10e3)
-        b.add_energy_keV(10) # Not added
-        b.add_diameter_m(0.0)
-        b.add_diameter_m(0.1)
-        b.add_position(0.0, 0.0)
-        b.add_position(0.0, 0.1)
+    beams = builder.build()
+    assert len(beams) == 0
+    assert len(builder) == 0
 
-        beams = b.build()
-        self.assertEqual(4, len(beams))
-        self.assertEqual(4, len(b))
+def test_cylindricalbeambuilder_linescan(builder):
+    builder.add_energy_eV(10e3)
+    builder.add_diameter_m(0.123)
+    builder.add_linescan_x(0.0, 5.0, 1.0, y0_m=0.456)
 
-        for beam in beams:
-            self.assertEqual(Particle.ELECTRON, beam.particle)
+    beams = builder.build()
+    assert len(beams) == 5
+    assert len(builder) == 5
 
-    def testbuild_nodiameter(self):
-        b = CylindricalBeamBuilder()
-        b.add_energy_eV(10e3)
-        b.add_position(0.0, 0.0)
-        b.add_position(0.0, 0.1)
-        b.add_particle(Particle.ELECTRON)
+    for beam in beams:
+        assert beam.particle == Particle.ELECTRON
+        assert beam.diameter_m == pytest.approx(0.123, abs=1e-4)
+        assert beam.y0_m == pytest.approx(0.456, abs=1e-4)
 
-        beams = b.build()
-        self.assertEqual(0, len(beams))
-        self.assertEqual(0, len(b))
-
-    def testbuild_linescan(self):
-        b = CylindricalBeamBuilder()
-        b.add_energy_eV(10e3)
-        b.add_diameter_m(0.123)
-        b.add_linescan_x(0.0, 5.0, 1.0, y0_m=0.456)
-
-        beams = b.build()
-        self.assertEqual(5, len(beams))
-        self.assertEqual(5, len(b))
-
-        for beam in beams:
-            self.assertEqual(Particle.ELECTRON, beam.particle)
-            self.assertAlmostEqual(0.123, beam.diameter_m, 4)
-            self.assertAlmostEqual(0.456, beam.y0_m, 4)
-
-    def testbuild_noposition(self):
-        b = CylindricalBeamBuilder()
-        b.add_energy_eV(10e3)
-        b.add_diameter_m(0.1)
-        b.add_particle(Particle.ELECTRON)
-
-        beams = b.build()
-        self.assertEqual(0, len(beams))
-        self.assertEqual(0, len(b))
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

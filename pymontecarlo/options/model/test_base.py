@@ -2,14 +2,13 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
-import pickle
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.options.model.base import ModelBase
+from pymontecarlo.options.base import OptionBase
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
@@ -18,31 +17,49 @@ class ModelMock(ModelBase):
     A = ('model A', 'doe2017')
     B = ('model B', 'adams1990')
 
-class TestModel(unittest.TestCase):
+class OptionMock(OptionBase):
 
-    def testskeleton(self):
-        self.assertEqual('model A', ModelMock.A.fullname)
-        self.assertEqual('doe2017', ModelMock.A.reference)
+    ATTR_MODEL = 'model'
 
-        self.assertEqual('model B', ModelMock.B.fullname)
-        self.assertEqual('adams1990', ModelMock.B.reference)
+    def __init__(self, model):
+        self.model = model
 
-    def test__str__(self):
-        self.assertEqual('model A', str(ModelMock.A))
-        self.assertEqual('model B', str(ModelMock.B))
+    def __eq__(self, other):
+        return super().__eq__(other) and self.model == other.model
 
-    def test__eq__(self):
-        self.assertTrue(ModelMock.A == ModelMock.A)
-        self.assertTrue(ModelMock.A != ModelMock.B)
+    @classmethod
+    def parse_hdf5(cls, group):
+        model = cls._parse_hdf5(group, cls.ATTR_MODEL, ModelMock)
+        return cls(model)
 
-    def test__in__(self):
-        self.assertIn(ModelMock.A, [ModelMock.A, ModelMock.B])
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MODEL, self.model)
 
-    def testpickle(self):
-        s = pickle.dumps(ModelMock.A)
-        model = pickle.loads(s)
-        self.assertEqual(ModelMock.A, model)
+def test_model():
+    assert ModelMock.A.fullname == 'model A'
+    assert ModelMock.A.reference == 'doe2017'
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    assert ModelMock.B.fullname == 'model B'
+    assert ModelMock.B.reference == 'adams1990'
+
+def test_model_str():
+    assert str(ModelMock.A) == 'model A'
+    assert str(ModelMock.B) == 'model B'
+
+def test_model_eq():
+    assert ModelMock.A == ModelMock.A
+    assert ModelMock.A != ModelMock.B
+
+def test_model_in():
+    assert ModelMock.A in [ModelMock.A, ModelMock.B]
+
+def test_model_hdf5(tmp_path):
+    option = OptionMock(ModelMock.A)
+    testutil.assert_convert_parse_hdf5(option, tmp_path)
+
+def test_model_copy():
+    testutil.assert_copy(ModelMock.A)
+
+def test_model_pickle():
+    testutil.assert_pickle(ModelMock.A)

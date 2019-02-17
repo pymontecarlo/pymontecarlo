@@ -8,6 +8,7 @@ __all__ = ['Options', 'OptionsBuilder']
 import itertools
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.util.cbook import unique, find_by_type
@@ -66,6 +67,42 @@ class Options(base.OptionBase):
         """
         return tuple(unique(analysis.detector for analysis in self.analyses))
 
+#region HDF5
+
+    ATTR_PROGRAM = 'program'
+    ATTR_BEAM = 'beam'
+    ATTR_SAMPLE = 'sample'
+    DATASET_ANALYSES = 'analyses'
+    DATASET_TAGS = 'tags'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        program = cls._parse_hdf5(group, cls.ATTR_PROGRAM)
+        beam = cls._parse_hdf5(group, cls.ATTR_BEAM)
+        sample = cls._parse_hdf5(group, cls.ATTR_SAMPLE)
+        analyses = [cls._parse_hdf5_reference(group, reference)
+                    for reference in group[cls.DATASET_ANALYSES]]
+        tags = [str(tag) for tag in group[cls.DATASET_TAGS]]
+        return cls(program, beam, sample, analyses, tags)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_PROGRAM, self.program)
+        self._convert_hdf5(group, self.ATTR_BEAM, self.beam)
+        self._convert_hdf5(group, self.ATTR_SAMPLE, self.sample)
+
+        shape = (len(self.analyses),)
+        dtype = h5py.special_dtype(ref=h5py.Reference)
+        data = [self._convert_hdf5_reference(group, analysis) for analysis in self.analyses]
+        group.create_dataset(self.DATASET_ANALYSES, shape, dtype, data)
+
+        shape = (len(self.tags),)
+        dtype = h5py.special_dtype(vlen=str)
+        dataset = group.create_dataset(self.DATASET_TAGS, shape, dtype)
+        dataset[:] = self.tags
+
+#endregion
+
 class OptionsBuilder(base.OptionBuilderBase):
 
     def __init__(self, tags=None):
@@ -117,15 +154,3 @@ class OptionsBuilder(base.OptionBuilderBase):
                             list_options.append(extra_options)
 
         return list_options
-
-
-
-
-
-
-
-
-
-
-
-

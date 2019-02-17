@@ -50,6 +50,30 @@ class InclusionSample(SampleBase):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
+#region HDF5
+
+    ATTR_SUBSTRATE = 'substrate'
+    ATTR_INCLUSION = 'inclusion'
+    ATTR_DIAMETER = 'diameter (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        substrate_material = cls._parse_hdf5(group, cls.ATTR_SUBSTRATE)
+        inclusion_material = cls._parse_hdf5(group, cls.ATTR_INCLUSION)
+        inclusion_diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(substrate_material, inclusion_material, inclusion_diameter_m,
+                   tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_SUBSTRATE, self.substrate_material)
+        self._convert_hdf5(group, self.ATTR_INCLUSION, self.inclusion_material)
+        self._convert_hdf5(group, self.ATTR_DIAMETER, self.inclusion_diameter_m)
+
+#endregion
+
 class InclusionSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

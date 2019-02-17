@@ -10,31 +10,44 @@ import numbers
 # Third party modules.
 
 # Local modules.
+from pymontecarlo.entity import EntityBase
 
 # Globals and constants variables.
 
-class OptionBase(metaclass=abc.ABCMeta):
+class OptionBase(EntityBase):
     """
     Base class of all the options.
     All derived classes should implement
-    
+
         - method :meth:`__eq__`
     """
 
     @abc.abstractmethod
     def __eq__(self, other):
         """
-        Returns whether two options are equal. 
+        Returns whether two options are equal.
         Each option should implement some tolerance for the comparison of
         float values.
         """
         return type(other) == type(self)
 
+class LazyOptionBase(OptionBase):
+
+    def __eq__(self, other):
+        """
+        Returns whether two lazy options are equal.
+        """
+        return type(other) == type(self)
+
+    @abc.abstractmethod
+    def apply(self, parent_option, options):
+        raise NotImplementedError
+
 class OptionBuilderBase(metaclass=abc.ABCMeta):
     """
     Base class of all option builders.
     All derived classes should implement
-    
+
         - method :meth:`__len__`
         - method :meth:`build()`
     """
@@ -53,29 +66,19 @@ class OptionBuilderBase(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-class LazyOptionValueBase(metaclass=abc.ABCMeta):
 
-    def __eq__(self, other):
-        """
-        Returns whether two lazy options are equal. 
-        """
-        return type(other) == type(self)
 
-    @abc.abstractmethod
-    def apply(self, option, options):
-        raise NotImplementedError
-
-def apply_lazy(value, option, options):
-    if isinstance(value, LazyOptionValueBase):
-        return value.apply(option, options)
+def apply_lazy(option, parent_option, options):
+    if isinstance(option, LazyOptionBase):
+        return option.apply(parent_option, options)
     else:
-        return value
+        return option
 
 def isclose(value0, value1, rel_tol=1e-9, abs_tol=0.0):
     """
     Same as :func:`math.isclose`, except that function checks for lazy option values.
     """
-    if isinstance(value0, LazyOptionValueBase):
+    if isinstance(value0, LazyOptionBase):
         return value0 == value1
     elif isinstance(value0, numbers.Number) and isinstance(value1, numbers.Number):
         return math.isclose(value0, value1, rel_tol=rel_tol, abs_tol=abs_tol)
@@ -83,7 +86,7 @@ def isclose(value0, value1, rel_tol=1e-9, abs_tol=0.0):
         return value0 == value1
 
 def are_sequence_equal(list0, list1):
-    if isinstance(list0, LazyOptionValueBase) and list0 != list1:
+    if isinstance(list0, LazyOptionBase) and list0 != list1:
         return False
 
     if len(list0) != len(list1):
@@ -96,7 +99,7 @@ def are_sequence_equal(list0, list1):
     return True
 
 def are_sequence_similar(list0, list1):
-    if isinstance(list0, LazyOptionValueBase) and list0 != list1:
+    if isinstance(list0, LazyOptionBase) and list0 != list1:
         return False
 
     if len(list0) != len(list1):
@@ -110,7 +113,7 @@ def are_sequence_similar(list0, list1):
     return True
 
 def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
-    if isinstance(list0, LazyOptionValueBase) and list0 != list1:
+    if isinstance(list0, LazyOptionBase) and list0 != list1:
         return False
 
     if len(list0) != len(list1):
@@ -123,7 +126,7 @@ def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
     return True
 
 def are_mapping_equal(map0, map1):
-    if isinstance(map0, LazyOptionValueBase) and map0 != map1:
+    if isinstance(map0, LazyOptionBase) and map0 != map1:
         return False
 
     if len(map0) != len(map1):
@@ -139,7 +142,7 @@ def are_mapping_equal(map0, map1):
     return True
 
 def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
-    if isinstance(map0, LazyOptionValueBase) and map0 != map1:
+    if isinstance(map0, LazyOptionBase) and map0 != map1:
         return False
 
     if len(map0) != len(map1):

@@ -42,6 +42,18 @@ class BeamBase(base.OptionBase):
 
     energy_keV = MultiplierAttribute('energy_eV', 1e-3)
 
+#region HDF5
+
+    ATTR_ENERGY = 'energy (eV)'
+    ATTR_PARTICLE = 'particle'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_ENERGY, self.energy_eV)
+        self._convert_hdf5(group, self.ATTR_PARTICLE, self.particle)
+
+#endregion
+
 class BeamBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):

@@ -47,6 +47,26 @@ class SphereSample(SampleBase):
     def materials(self):
         return self._cleanup_materials(self.material)
 
+#region HDF5
+
+    ATTR_MATERIAL = 'material'
+    ATTR_DIAMETER = 'diameter (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        material = cls._parse_hdf5(group, cls.ATTR_MATERIAL)
+        diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(material, diameter_m, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
+        self._convert_hdf5(group, self.ATTR_DIAMETER, self.diameter_m)
+
+#endregion
+
 class SphereSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

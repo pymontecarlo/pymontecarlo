@@ -15,7 +15,8 @@ class PhotonIntensityResultBase(PhotonSingleResultBase):
     Mapping of :class:`XrayLine` and photon intensities, expressed in
     ``1/(sr.electron)``.
     """
-    pass
+
+    DATASET_VALUES = 'intensities'
 
 class EmittedPhotonIntensityResult(PhotonIntensityResultBase):
     pass

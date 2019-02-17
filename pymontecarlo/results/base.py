@@ -9,10 +9,11 @@ import abc
 
 # Local modules.
 from pymontecarlo.util.human import camelcase_to_words
+from pymontecarlo.entity import EntityBase
 
 # Globals and constants variables.
 
-class ResultBase:
+class ResultBase(EntityBase):
 
     @classmethod
     def getname(cls):
@@ -24,6 +25,16 @@ class ResultBase:
 
     def __init__(self, analysis):
         self.analysis = analysis
+
+#region HDF5
+
+    ATTR_ANALYSIS = 'analysis'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_ANALYSIS, self.analysis)
+
+#endregion
 
 class ResultBuilderBase(metaclass=abc.ABCMeta):
 

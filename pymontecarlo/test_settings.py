@@ -2,87 +2,72 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
-import os
 import math
 
 # Third party modules.
+import pytest
 
 # Local modules.
 from pymontecarlo import unit_registry
-from pymontecarlo.settings import Settings, XrayNotation
-from pymontecarlo.testcase import TestCase
+from pymontecarlo.settings import XrayNotation
 import pymontecarlo.util.physics as physics
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestSettings(TestCase):
+def test_settings_hdf5(settings, tmp_path):
+    settings.preferred_xray_notation = XrayNotation.SIEGBAHN
+    settings.set_preferred_unit('nm')
 
-    def setUp(self):
-        super().setUp()
+    settings2 = testutil.assert_convert_parse_hdf5(settings, tmp_path, assert_equality=False)
 
-        self.settings = Settings()
+    assert settings2.preferred_xray_notation == XrayNotation.SIEGBAHN
+    assert settings2.to_preferred_unit(1.0, unit_registry.meter).units == unit_registry.nanometer
 
-    def testread_write(self):
-        self.settings.preferred_xray_notation = XrayNotation.SIEGBAHN
-        self.settings.set_preferred_unit('nm')
+def test_settings_set_preferred_unit(settings):
+    settings.set_preferred_unit(unit_registry.lb)
 
-        filepath = os.path.join(self.create_temp_dir(), 'settings.h5')
-        self.settings.write(filepath)
+    q = settings.to_preferred_unit(1.2, unit_registry.kilogram)
+    assert q.magnitude == pytest.approx(2.645547, abs=1e-4)
+    assert q.units == unit_registry.lb
 
-        settings = Settings.read(filepath)
-        self.assertEqual(XrayNotation.SIEGBAHN, settings.preferred_xray_notation)
-        self.assertEqual(unit_registry.nanometer, settings.to_preferred_unit(1.0, unit_registry.meter).units)
+def test_settings_set_preferred_unit_length(settings):
+    settings.set_preferred_unit(unit_registry.nanometer)
 
-    def testset_preferred_unit(self):
-        self.settings.set_preferred_unit(unit_registry.lb)
+    q = settings.to_preferred_unit(1.2, unit_registry.meter)
+    assert q.magnitude == pytest.approx(1.2e9, abs=1e-4)
+    assert q.units == unit_registry.nanometer
 
-        q = self.settings.to_preferred_unit(1.2, unit_registry.kilogram)
-        self.assertAlmostEqual(2.645547, q.magnitude, 4)
-        self.assertEqual(unit_registry.lb, q.units)
+def test_settings_set_preferred_unit_energy(settings):
+    settings.set_preferred_unit(unit_registry.joule)
 
-    def testset_preferred_unit_length(self):
-        self.settings.set_preferred_unit(unit_registry.nanometer)
+    q = settings.to_preferred_unit(1.2, unit_registry.electron_volt)
+    assert q.magnitude == pytest.approx(1.2 * physics.e, abs=1e-4)
+    assert q.units == unit_registry.joule
 
-        q = self.settings.to_preferred_unit(1.2, unit_registry.meter)
-        self.assertAlmostEqual(1.2e9, q.magnitude, 4)
-        self.assertEqual(unit_registry.nanometer, q.units)
+def test_settings_set_preferred_unit_angle(settings):
+    settings.set_preferred_unit(unit_registry.radian)
 
-    def testset_preferred_unit_energy(self):
-        self.settings.set_preferred_unit(unit_registry.joule)
+    q = settings.to_preferred_unit(1.2, unit_registry.degree)
+    assert q.magnitude == pytest.approx(math.radians(1.2), abs=1e-4)
+    assert q.units == unit_registry.radian
 
-        q = self.settings.to_preferred_unit(1.2, unit_registry.electron_volt)
-        self.assertAlmostEqual(1.2 * physics.e, q.magnitude, 4)
-        self.assertEqual(unit_registry.joule, q.units)
+def test_settings_set_preferred_unit_density(settings):
+    settings.set_preferred_unit(unit_registry.kilogram / unit_registry.meter ** 3)
 
-    def testset_preferred_unit_angle(self):
-        self.settings.set_preferred_unit(unit_registry.radian)
+    q = settings.to_preferred_unit(1.2, unit_registry.gram / unit_registry.centimeter ** 3)
+    assert q.magnitude == pytest.approx(1.2e3, abs=1e-4)
+    assert q.units == unit_registry.kilogram / unit_registry.meter ** 3
 
-        q = self.settings.to_preferred_unit(1.2, unit_registry.degree)
-        self.assertAlmostEqual(math.radians(1.2), q.magnitude, 4)
-        self.assertEqual(unit_registry.radian, q.units)
+def test_settings_clear_preferred_units(settings):
+    settings.set_preferred_unit(unit_registry.nanometer)
 
-    def testset_preferred_unit_density(self):
-        self.settings.set_preferred_unit(unit_registry.kilogram / unit_registry.meter ** 3)
+    q = settings.to_preferred_unit(1.2, unit_registry.meter)
+    assert q.magnitude == pytest.approx(1.2e9, abs=1e-4)
+    assert q.units == unit_registry.nanometer
 
-        q = self.settings.to_preferred_unit(1.2, unit_registry.gram / unit_registry.centimeter ** 3)
-        self.assertAlmostEqual(1.2e3, q.magnitude, 4)
-        self.assertEqual(unit_registry.kilogram / unit_registry.meter ** 3, q.units)
+    settings.clear_preferred_units()
 
-    def testclear_preferred_units(self):
-        self.settings.set_preferred_unit(unit_registry.nanometer)
-
-        q = self.settings.to_preferred_unit(1.2, unit_registry.meter)
-        self.assertAlmostEqual(1.2e9, q.magnitude, 4)
-        self.assertEqual(unit_registry.nanometer, q.units)
-
-        self.settings.clear_preferred_units()
-
-        q = self.settings.to_preferred_unit(q)
-        self.assertAlmostEqual(1.2, q.magnitude, 4)
-        self.assertEqual(unit_registry.meter, q.units)
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    q = settings.to_preferred_unit(q)
+    assert q.magnitude == pytest.approx(1.2, abs=1e-4)
+    assert q.units == unit_registry.meter

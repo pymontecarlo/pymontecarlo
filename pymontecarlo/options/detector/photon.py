@@ -43,6 +43,25 @@ class PhotonDetector(DetectorBase):
     elevation_deg = DegreesAttribute('elevation_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
 
+#region HDF5
+
+    ATTR_ELEVATION = 'elevation (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        name = cls._parse_hdf5(group, cls.ATTR_NAME, str)
+        elevation_rad = cls._parse_hdf5(group, cls.ATTR_ELEVATION, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(name, elevation_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_ELEVATION, self.elevation_rad)
+        self._convert_hdf5(group, self.ATTR_AZIMUTH, self.azimuth_rad)
+
+#endregion
+
 class PhotonDetectorBuilder(DetectorBuilderBase):
 
     def __init__(self):

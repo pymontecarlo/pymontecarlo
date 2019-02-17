@@ -10,6 +10,7 @@ import math
 import itertools
 
 # Third party modules.
+import h5py
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
@@ -64,6 +65,18 @@ class SampleBase(base.OptionBase):
 
     tilt_deg = DegreesAttribute('tilt_rad')
     azimuth_deg = DegreesAttribute('azimuth_rad')
+
+#region HDF5
+
+    ATTR_TILT = 'tilt (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_TILT, self.tilt_rad)
+        self._convert_hdf5(group, self.ATTR_AZIMUTH, self.azimuth_rad)
+
+#endregion
 
 class SampleBuilderBase(base.OptionBuilderBase):
 
@@ -131,6 +144,24 @@ class Layer(base.OptionBase):
             base.isclose(self.material, other.material) and \
             base.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
 
+    #region HDF5
+
+    ATTR_MATERIAL = 'material'
+    ATTR_THICKNESS = 'thickness (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        material = cls._parse_hdf5(group, cls.ATTR_MATERIAL)
+        thickness_m = cls._parse_hdf5(group, cls.ATTR_THICKNESS, float)
+        return cls(material, thickness_m)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
+        self._convert_hdf5(group, self.ATTR_THICKNESS, self.thickness_m)
+
+#endregion
+
 class LayerBuilder(base.OptionBuilderBase):
 
     def __init__(self):
@@ -188,6 +219,30 @@ class LayeredSampleBase(SampleBase):
     def materials(self):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
+
+#region HDF5
+
+    DATASET_LAYERS = 'layers'
+
+    @classmethod
+    def _parse_hdf5_layers(cls, group):
+        dataset = group[cls.DATASET_LAYERS]
+        return [cls._parse_hdf5_reference(group, reference)
+                for reference in dataset]
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5_layers(group, self.layers)
+
+    def _convert_hdf5_layers(self, group, layers):
+        shape = (len(layers),)
+        ref_dtype = h5py.special_dtype(ref=h5py.Reference)
+        dataset = group.create_dataset(self.DATASET_LAYERS, shape=shape, dtype=ref_dtype)
+
+        for i, layer in enumerate(layers):
+            dataset[i] = self._convert_hdf5_reference(group, layer)
+
+#endregion
 
 class LayeredSampleBuilderBase(SampleBuilderBase):
 

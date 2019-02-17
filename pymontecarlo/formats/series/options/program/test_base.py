@@ -21,7 +21,7 @@ class TestProgramSeriesHandler(TestCase):
         s = self.convert_serieshandler(handler, program)
         self.assertEqual(3, len(s))
         self.assertEqual('mock', s['program'])
-        self.assertEqual(123, s['foo'])
+        self.assertEqual(100, s['number trajectories'])
         self.assertEqual('MOTT_CZYZEWSKI1990', s['elastic cross section model'])
 
 if __name__ == '__main__': #pragma: no cover

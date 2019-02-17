@@ -69,6 +69,31 @@ class VerticalLayerSample(LayeredSampleBase):
 
         return xpositions_m
 
+#region HDF5
+
+    ATTR_LEFT_MATERIAL = 'left material'
+    ATTR_RIGHT_MATERIAL = 'right material'
+    ATTR_DEPTH = 'depth (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        left_material = cls._parse_hdf5(group, cls.ATTR_LEFT_MATERIAL)
+        right_material = cls._parse_hdf5(group, cls.ATTR_RIGHT_MATERIAL)
+        layers = cls._parse_hdf5_layers(group)
+        depth_m = cls._parse_hdf5(group, cls.ATTR_DEPTH, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(left_material, right_material, layers, depth_m,
+                   tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_LEFT_MATERIAL, self.left_material)
+        self._convert_hdf5(group, self.ATTR_RIGHT_MATERIAL, self.right_material)
+        self._convert_hdf5(group, self.ATTR_DEPTH, self.depth_m)
+
+#endregion
+
 class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):
@@ -79,9 +104,9 @@ class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __len__(self):
         it = [super().__len__(),
-              self.left_materials,
-              self.right_materials,
-              self._calculate_depth_m()]
+              len(self.left_materials),
+              len(self.right_materials),
+              len(self._calculate_depth_m())]
         return functools.reduce(operator.mul, it)
 
     def _calculate_depth_m(self):

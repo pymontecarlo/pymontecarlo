@@ -14,7 +14,8 @@ class KRatioResult(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and k-ratios.
     """
-    pass
+
+    DATASET_VALUES = 'k-ratios'
 
 class KRatioResultBuilder(PhotonResultBuilderBase):
 

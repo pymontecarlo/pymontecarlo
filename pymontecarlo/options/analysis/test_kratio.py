@@ -2,14 +2,14 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 import math
 
 # Third party modules.
+import pytest
+
+from uncertainties import ufloat
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.mock import ProgramMock
 from pymontecarlo.options.analysis.kratio import KRatioAnalysis, TAG_STANDARD
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
@@ -20,93 +20,91 @@ from pymontecarlo.options.options import Options
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
 from pymontecarlo.results.kratio import KRatioResult
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestKRatioAnalysis(TestCase):
+@pytest.fixture
+def detector(options):
+    return options.detectors[0]
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def analysis(detector):
+    analysis = KRatioAnalysis(detector)
+    analysis.add_standard_material(8, Material.from_formula('Al2O3'))
+    return analysis
 
-        photon_detector = self.create_basic_photondetector()
-        self.a = KRatioAnalysis(photon_detector)
+def test_kratioanalysis_hdf5(analysis, tmp_path):
+    testutil.assert_convert_parse_hdf5(analysis, tmp_path)
 
-        self.options = self.create_basic_options()
+def test_kratioanalysis_copy(analysis):
+    testutil.assert_copy(analysis)
 
-    def testapply(self):
-        list_options = self.a.apply(self.options)
-        self.assertEqual(1, len(list_options))
+def test_kratioanalysis_pickle(analysis):
+    testutil.assert_pickle(analysis)
 
-        options = list_options[0]
-        self.assertAlmostEqual(self.options.beam.energy_eV, options.beam.energy_eV, 4)
-        self.assertAlmostEqual(self.options.beam.particle, options.beam.particle, 4)
-        self.assertIsInstance(options.sample, SubstrateSample)
-        self.assertEqual(Material.pure(29), options.sample.material)
-        self.assertSequenceEqual(self.options.detectors, options.detectors)
-        self.assertEqual(1, len(options.analyses))
-        self.assertIsInstance(options.analyses[0], PhotonIntensityAnalysis)
-        self.assertIn(TAG_STANDARD, options.tags)
+def test_kratioanalysis_apply(analysis, options):
+    list_options = analysis.apply(options)
+    assert len(list_options) == 1
 
-    def testapply2(self):
-        self.options.sample.material = Material.from_formula('Al2O3')
-        list_options = self.a.apply(self.options)
-        self.assertEqual(2, len(list_options))
+    newoptions = list_options[0]
+    assert newoptions.beam.energy_eV == pytest.approx(options.beam.energy_eV, abs=1e-4)
+    assert newoptions.beam.particle == options.beam.particle
+    assert isinstance(newoptions.sample, SubstrateSample)
+    assert newoptions.sample.material == Material.pure(29)
+    assert newoptions.detectors == options.detectors
+    assert len(newoptions.analyses) == 1
+    assert isinstance(newoptions.analyses[0], PhotonIntensityAnalysis)
+    assert TAG_STANDARD in newoptions.tags
 
-    def testcalculate_nothing(self):
-        simulation = self.create_basic_simulation()
-        simulations = [simulation]
-        newresult = self.a.calculate(simulation, simulations)
-        self.assertFalse(newresult)
+def test_kratioanalysis_apply_al2o3(analysis, options):
+    options.sample.material = Material.from_formula('Al2O3')
 
-    def testcalculate(self):
-        # Create options
-        program = ProgramMock()
-        beam = GaussianBeam(20e3, 10.e-9)
-        sample = SubstrateSample(Material.from_formula('CaSiO4'))
-        unkoptions = Options(program, beam, sample)
+    list_options = analysis.apply(options)
+    assert len(list_options) == 2
 
-        list_standard_options = self.a.apply(unkoptions)
-        self.assertEqual(3, len(list_standard_options))
+def test_kratioanalysis_calculate_nothing(analysis, simulation):
+    simulations = [simulation]
+    newresult = analysis.calculate(simulation, simulations)
+    assert not newresult
 
-        # Create simulations
-        def create_simulation(options):
-            builder = EmittedPhotonIntensityResultBuilder(self.a)
-            for z, wf in options.sample.material.composition.items():
-                builder.add_intensity((z, 'Ka'), wf * 1e3, math.sqrt(wf * 1e3))
-            result = builder.build()
-            return Simulation(options, [result])
+def test_kratioanalysis_calculate(analysis):
+    # Create options
+    program = ProgramMock()
+    beam = GaussianBeam(20e3, 10.e-9)
+    sample = SubstrateSample(Material.from_formula('CaSiO4'))
+    unkoptions = Options(program, beam, sample)
 
-        unksim = create_simulation(unkoptions)
-        stdsims = [create_simulation(options) for options in list_standard_options]
-        sims = stdsims + [unksim]
+    list_standard_options = analysis.apply(unkoptions)
+    assert len(list_standard_options) == 3
 
-        # Calculate
-        newresult = self.a.calculate(unksim, sims)
-        self.assertTrue(newresult)
+    # Create simulations
+    def create_simulation(options):
+        builder = EmittedPhotonIntensityResultBuilder(analysis)
+        for z, wf in options.sample.material.composition.items():
+            builder.add_intensity((z, 'Ka'), wf * 1e3, math.sqrt(wf * 1e3))
+        result = builder.build()
+        return Simulation(options, [result], 'sim')
 
-        newresult = self.a.calculate(unksim, sims)
-        self.assertFalse(newresult)
+    unksim = create_simulation(unkoptions)
+    stdsims = [create_simulation(options) for options in list_standard_options]
+    sims = stdsims + [unksim]
 
-        # Test
-        results = unksim.find_result(KRatioResult)
-        self.assertEqual(1, len(results))
+    # Calculate
+    newresult = analysis.calculate(unksim, sims)
+    assert newresult
 
-        result = results[0]
-        self.assertEqual(3, len(result))
+    newresult = analysis.calculate(unksim, sims)
+    assert not newresult
 
-        q = result[('Ca', 'Ka')]
-        self.assertAlmostEqual(0.303262, q.n, 4)
-        self.assertAlmostEqual(0.019880, q.s, 4)
+    # Test
+    results = unksim.find_result(KRatioResult)
+    assert len(results) == 1
 
-        q = result[('Si', 'Ka')]
-        self.assertAlmostEqual(0.212506, q.n, 4)
-        self.assertAlmostEqual(0.016052, q.s, 4)
+    result = results[0]
+    assert len(result) == 3
 
-        q = result[('O', 'Ka')]
-        self.assertAlmostEqual(0.484232 / 0.470749, q.n, 4)
-        self.assertAlmostEqual(0.066579, q.s, 4)
+    testutil.assert_ufloats(result[('Ca', 'Ka')], ufloat(0.303262, 0.019880), abs=1e-4)
+    testutil.assert_ufloats(result[('Si', 'Ka')], ufloat(0.212506, 0.016052), abs=1e-4)
+    testutil.assert_ufloats(result[('O', 'Ka')], ufloat(0.484232 / 0.470749, 0.066579), abs=1e-4)
 
-if __name__ == '__main__': #pragma: no cover
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

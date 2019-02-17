@@ -24,7 +24,6 @@ from pymontecarlo.options.program.exporter import ExporterBase, apply_lazy
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
-from pymontecarlo.formats.hdf5.options.program.base import ProgramHDF5HandlerBase
 from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandlerBase
 from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
 from pymontecarlo.util.process import create_startupinfo
@@ -80,7 +79,7 @@ class ExporterMock(ExporterBase):
         self._validate_program(program, options, erracc)
 
         outdict.setdefault('program', {})
-        outdict['program']['foo'] = program.foo
+        outdict['program']['number_trajectories'] = program.number_trajectories
         outdict['program']['elastic_cross_section_model'] = str(program.elastic_cross_section_model)
 
     def _validate_program(self, program, options, erracc):
@@ -211,7 +210,7 @@ class ImporterMock(ImporterBase):
 class ProgramMock(ProgramBase):
 
     def __init__(self,
-                 foo=None,
+                 number_trajectories=100,
                  elastic_cross_section_model=ElasticCrossSectionModel.RUTHERFORD):
         super().__init__('mock')
 
@@ -220,12 +219,12 @@ class ProgramMock(ProgramBase):
         self._importer = ImporterMock()
         self._worker = WorkerMock()
 
-        self.foo = foo
+        self.number_trajectories = number_trajectories
         self.elastic_cross_section_model = elastic_cross_section_model
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.foo == other.foo and \
+            self.number_trajectories == other.number_trajectories and \
             self.elastic_cross_section_model == other.elastic_cross_section_model
 
     @property
@@ -244,77 +243,57 @@ class ProgramMock(ProgramBase):
     def worker(self):
         return self._worker
 
+#region HDF5
+
+    ATTR_NUMBER_TRAJECTORIES = 'number trajectories'
+    ATTR_ELASTIC_CROSS_SECTION_MODEL = 'elastic cross section model'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        number_trajectories = cls._parse_hdf5(group, cls.ATTR_NUMBER_TRAJECTORIES, int)
+        elastic_cross_section_model = cls._parse_hdf5(group, cls.ATTR_ELASTIC_CROSS_SECTION_MODEL, ElasticCrossSectionModel)
+        return cls(number_trajectories, elastic_cross_section_model)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_NUMBER_TRAJECTORIES, self.number_trajectories)
+        self._convert_hdf5(group, self.ATTR_ELASTIC_CROSS_SECTION_MODEL, self.elastic_cross_section_model)
+
+#endregion HDF5
+
 class ProgramBuilderMock(ProgramBuilderBase):
 
     def __init__(self):
-        self.foos = set()
+        self.set_number_trajectories = set()
         self.elastic_cross_section_models = set()
 
     def __len__(self):
         it = [super().__len__(),
-              len(self.foos),
+              len(self.set_number_trajectories),
               len(self.elastic_cross_section_models)]
         return functools.reduce(operator.mul, it)
 
-    def add_foo(self, foo):
-        self.foos.add(foo)
+    def add_number_trajectories(self, number_trajectories):
+        self.set_number_trajectories.add(number_trajectories)
 
     def add_elastic_cross_section_model(self, model):
         self.elastic_cross_section_models.add(model)
 
     def build(self):
-        product = itertools.product(self.foos, self.elastic_cross_section_models)
+        product = itertools.product(self.set_number_trajectories, self.elastic_cross_section_models)
 
         programs = []
-        for foo, elastic_cross_section_model in product:
-            program = ProgramMock(foo, elastic_cross_section_model)
+        for number_trajectories, elastic_cross_section_model in product:
+            program = ProgramMock(number_trajectories, elastic_cross_section_model)
             programs.append(program)
 
         return programs
-
-class ProgramHDF5HandlerMock(ProgramHDF5HandlerBase):
-
-    ATTR_FOO = 'foo'
-    ATTR_ELASTIC_CROSS_SECTION_MODEL = 'elastic_cross_section_model'
-
-    def _parse_foo(self, group):
-        return group.attrs[self.ATTR_FOO]
-
-    def _parse_elastic_cross_section_model(self, group):
-        ref_model = group.attrs[self.ATTR_ELASTIC_CROSS_SECTION_MODEL]
-        return self._parse_model_internal(group, ref_model)
-
-    def parse(self, group):
-        program = super().parse(group)
-        program.foo = self._parse_foo(group)
-        program.elastic_cross_section_model = self._parse_elastic_cross_section_model(group)
-        return program
-
-    def can_parse(self, group):
-        return super().can_parse(group) and \
-            self.ATTR_FOO in group.attrs
-
-    def _convert_foo(self, foo, group):
-        group.attrs[self.ATTR_FOO] = foo
-
-    def _convert_elastic_cross_section_model(self, model, group):
-        group_model = self._convert_model_internal(model, group)
-        group.attrs[self.ATTR_ELASTIC_CROSS_SECTION_MODEL] = group_model.ref
-
-    def convert(self, program, group):
-        super().convert(program, group)
-        self._convert_foo(program.foo, group)
-        self._convert_elastic_cross_section_model(program.elastic_cross_section_model, group)
-
-    @property
-    def CLASS(self):
-        return ProgramMock
 
 class ProgramSeriesHandlerMock(ProgramSeriesHandlerBase):
 
     def convert(self, program, builder):
         super().convert(program, builder)
-        builder.add_column('foo', 'foo', program.foo)
+        builder.add_column('number trajectories', 'ntraj', program.number_trajectories)
         builder.add_object(program.elastic_cross_section_model)
 
     @property
@@ -327,7 +306,7 @@ class ProgramDocumentHandlerMock(ProgramDocumentHandlerBase):
         super().convert(program, builder)
 
         description = builder.require_description('program')
-        description.add_item('Foo', program.foo)
+        description.add_item('Number trajectories', program.number_trajectories)
 
         section = builder.add_section()
         section.add_title('Models')

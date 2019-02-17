@@ -18,7 +18,7 @@ def test_publish_html(options, settings):
     handler.convert(options, builder)
 
     s = publish_html(builder)
-    assert len(s) == 16708
+    assert len(s) == 16723
 
 def test_count_document_nodes(options, settings):
     handler = OptionsDocumentHandler()

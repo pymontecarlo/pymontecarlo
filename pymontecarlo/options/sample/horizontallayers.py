@@ -73,6 +73,24 @@ class HorizontalLayerSample(LayeredSampleBase):
 
         return zpositions
 
+#region HDF5
+
+    ATTR_SUBSTRATE = 'substrate'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        substrate_material = cls._parse_hdf5(group, cls.ATTR_SUBSTRATE)
+        layers = cls._parse_hdf5_layers(group)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(substrate_material, layers, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_SUBSTRATE, self.substrate_material)
+
+#endregion
+
 class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):
