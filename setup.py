@@ -28,57 +28,7 @@ EXTRAS_REQUIRE = {'develop': ['pytest', 'pytest-cov', 'pytest-asyncio',
 
 CMDCLASS = versioneer.get_cmdclass()
 
-ENTRY_POINTS = {'pymontecarlo.formats.series':
-                [
-                 'OptionsSeriesHandler = pymontecarlo.formats.series.options.options:OptionsSeriesHandler',
-
-                 'CylindricalBeamSeriesHandler = pymontecarlo.formats.series.options.beam.cylindrical:CylindricalBeamSeriesHandler',
-                 'GaussianBeamSeriesHandler = pymontecarlo.formats.series.options.beam.gaussian:GaussianBeamSeriesHandler',
-
-                 'MaterialSeriesHandler = pymontecarlo.formats.series.options.material:MaterialSeriesHandler',
-                 'VacuumSeriesHandler = pymontecarlo.formats.series.options.material:VacuumSeriesHandler',
-                 'LayerSeriesHandler = pymontecarlo.formats.series.options.sample.base:LayerSeriesHandler',
-                 'SubstrateSampleSeriesHandler = pymontecarlo.formats.series.options.sample.substrate:SubstrateSampleSeriesHandler',
-                 'InclusionSampleSeriesHandler = pymontecarlo.formats.series.options.sample.inclusion:InclusionSampleSeriesHandler',
-                 'HorizontalLayerSampleSeriesHandler = pymontecarlo.formats.series.options.sample.horizontallayers:HorizontalLayerSampleSeriesHandler',
-                 'VerticalLayerSampleSeriesHandler = pymontecarlo.formats.series.options.sample.verticallayers:VerticalLayerSampleSeriesHandler',
-                 'SphereSampleSeriesHandler = pymontecarlo.formats.series.options.sample.sphere:SphereSampleSeriesHandler',
-
-                 'PhotonDetectorSeriesHandler = pymontecarlo.formats.series.options.detector.photon:PhotonDetectorSeriesHandler',
-
-                 'PhotonIntensityAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.photonintensity:PhotonIntensityAnalysisSeriesHandler',
-                 'KRatioAnalysisSeriesHandler = pymontecarlo.formats.series.options.analysis.kratio:KRatioAnalysisSeriesHandler',
-
-                 'ModelSeriesHandler = pymontecarlo.formats.series.options.model.base:ModelSeriesHandler',
-
-                 'EmittedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:EmittedPhotonIntensityResultSeriesHandler',
-                 'GeneratedPhotonIntensityResultSeriesHandler = pymontecarlo.formats.series.results.photonintensity:GeneratedPhotonIntensityResultSeriesHandler',
-                 'KRatioResultSeriesHandler = pymontecarlo.formats.series.results.kratio:KRatioResultSeriesHandler',
-                 ],
-
-                'pymontecarlo.formats.document':
-                [
-                 'OptionsDocumentHandler = pymontecarlo.formats.document.options.options:OptionsDocumentHandler',
-
-                 'GaussianBeamDocumentHandler = pymontecarlo.formats.document.options.beam.gaussian:GaussianBeamDocumentHandler',
-                 'CylindricalBeamDocumentHandler = pymontecarlo.formats.document.options.beam.cylindrical:CylindricalBeamDocumentHandler',
-
-                 'MaterialDocumentHandler = pymontecarlo.formats.document.options.material:MaterialDocumentHandler',
-                 'VacuumDocumentHandler = pymontecarlo.formats.document.options.material:VacuumDocumentHandler',
-                 'LayerDocumentHandler = pymontecarlo.formats.document.options.sample.base:LayerDocumentHandler',
-                 'SubstrateSampleDocumentHandler = pymontecarlo.formats.document.options.sample.substrate:SubstrateSampleDocumentHandler',
-                 'InclusionSampleDocumentHandler = pymontecarlo.formats.document.options.sample.inclusion:InclusionSampleDocumentHandler',
-                 'HorizontalLayerSampleDocumentHandler = pymontecarlo.formats.document.options.sample.horizontallayers:HorizontalLayerSampleDocumentHandler',
-                 'VerticalLayerSampleDocumentHandler = pymontecarlo.formats.document.options.sample.verticallayers:VerticalLayerSampleDocumentHandler',
-                 'SphereSampleDocumentHandler = pymontecarlo.formats.document.options.sample.sphere:SphereSampleDocumentHandler',
-
-                 'PhotonDetectorDocumentHandler = pymontecarlo.formats.document.options.detector.photon:PhotonDetectorDocumentHandler',
-
-                 'PhotonIntensityAnalysisDocumentHandler = pymontecarlo.formats.document.options.analysis.photonintensity:PhotonIntensityAnalysisDocumentHandler',
-                 'KRatioAnalysisDocumentHandler = pymontecarlo.formats.document.options.analysis.kratio:KRatioAnalysisDocumentHandler',
-
-                 'ModelDocumentHandler = pymontecarlo.formats.document.options.model.base:ModelDocumentHandler',
-                 ]}
+ENTRY_POINTS = {}
 
 setup(name="pyMonteCarlo",
       version=versioneer.get_version(),
