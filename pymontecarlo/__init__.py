@@ -16,6 +16,13 @@ import pkgutil
 import pint
 
 # Local modules.
+import pymontecarlo.options
+import pymontecarlo.options.analysis
+import pymontecarlo.options.detector
+import pymontecarlo.options.model
+import pymontecarlo.options.program
+import pymontecarlo.options.sample
+import pymontecarlo.results
 
 # Globals and constants variables.
 
