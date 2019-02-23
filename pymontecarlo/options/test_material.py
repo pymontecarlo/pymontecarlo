@@ -2,147 +2,156 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 import copy
 import pickle
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
-
 from pymontecarlo.options.material import Material, VACUUM, MaterialBuilder
 import pymontecarlo.options.base as base
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestVACUUM(TestCase):
+@pytest.fixture
+def material():
+    return Material('Pure Cu', {29: 1.0}, 8960.0, '#FF0000')
 
-    def testskeleton(self):
-        self.assertEqual('Vacuum', str(VACUUM))
-        self.assertEqual({}, VACUUM.composition)
-        self.assertAlmostEqual(0.0, VACUUM.density_kg_per_m3, 4)
-        self.assertTupleEqual((0.0, 0.0, 0.0, 0.0), VACUUM.color)
+@pytest.fixture
+def lazy_material():
+    return Material('test', {29: 1.0})
 
-    def testcopy(self):
-        self.assertIs(VACUUM, copy.copy(VACUUM))
-        self.assertIs(VACUUM, copy.deepcopy(VACUUM))
+@pytest.fixture
+def builder():
+    builder = MaterialBuilder(26)
+    builder.add_element(29, 0.05)
+    builder.add_element_range(28, 0.1, 0.2, 0.02)
+    builder.add_element(24, (0.01, 0.05, 0.07))
+    builder.add_element_interval(6, 0.0, 1.0, 5)
+    return builder
 
-    def testpickle(self):
-        self.assertIs(VACUUM, pickle.loads(pickle.dumps(VACUUM)))
+def test_material(material):
+    assert str(material) == 'Pure Cu'
+    assert material.name == 'Pure Cu'
 
-    def test__repr__(self):
-        expected = '<Vacuum()>'
-        self.assertEqual(expected, repr(VACUUM))
+    assert 29 in material.composition
+    assert material.composition[29] == pytest.approx(1.0, abs=1e-9)
 
-class TestMaterial(TestCase):
+    assert material.density_kg_per_m3 == pytest.approx(8960.0, abs=1e-4)
+    assert material.density_g_per_cm3 == pytest.approx(8.960, abs=1e-4)
 
-    def setUp(self):
-        super().setUp()
+    assert material.color == '#FF0000'
 
-        self.m = Material('Pure Cu', {29: 1.0}, 8960.0, '#FF0000')
+def test_material_repr(material):
+    assert repr(material) == '<Material(Pure Cu, 100%Cu, 8960 kg/m3)>'
 
-    def testskeleton(self):
-        self.assertTrue(True)
+def test_material_eq(material):
+    assert material == Material('Pure Cu', {29: 1.0}, 8960.0)
 
-        self.assertEqual('Pure Cu', str(self.m))
-        self.assertEqual('Pure Cu', self.m.name)
+    assert not material == Material('Pure Cu', {29: 1.0}, 8961.0)
+    assert not material == Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
 
-        self.assertTrue(29 in self.m.composition)
-        self.assertAlmostEqual(1.0, self.m.composition[29])
+def test_material_hdf5(material, tmp_path):
+    testutil.assert_convert_parse_hdf5(material, tmp_path)
 
-        self.assertAlmostEqual(8960.0, self.m.density_kg_per_m3, 4)
-        self.assertAlmostEqual(8.960, self.m.density_g_per_cm3, 4)
+def test_material_copy(material):
+    testutil.assert_copy(material)
 
-        self.assertEqual('#FF0000', self.m.color)
+def test_material_pickle(material):
+    testutil.assert_pickle(material)
 
-    def testpure(self):
-        m = Material.pure(29)
+def test_material_series(material, seriesbuilder):
+    material.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
 
-        self.assertEqual('Copper', str(m))
+def test_material_document(material, documentbuilder):
+    material.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 9
 
-        self.assertIn(29, m.composition)
-        self.assertAlmostEqual(1.0, m.composition[29], 4)
+def test_material_pure():
+    material = Material.pure(29)
 
-        self.assertAlmostEqual(8.96, m.density_kg_per_m3 / 1000.0, 4)
-        self.assertAlmostEqual(8.96, m.density_g_per_cm3, 4)
+    assert str(material) == 'Copper'
+    assert material.name == 'Copper'
 
-    def testfrom_formula(self):
-        m = Material.from_formula('SiO2', 1250.0)
+    assert 29 in material.composition
+    assert material.composition[29] == pytest.approx(1.0, abs=1e-9)
 
-        self.assertEqual('SiO2', str(m))
+    assert material.density_kg_per_m3 == pytest.approx(8960.0, abs=1e-4)
+    assert material.density_g_per_cm3 == pytest.approx(8.960, abs=1e-4)
 
-        self.assertIn(14, m.composition)
-        self.assertAlmostEqual(0.4674, m.composition[14], 4)
+def test_material_from_formula():
+    material = Material.from_formula('SiO2', 1250.0)
 
-        self.assertIn(8, m.composition)
-        self.assertAlmostEqual(0.5326, m.composition[8], 4)
+    assert str(material) == 'SiO2'
+    assert material.name == 'SiO2'
 
-        self.assertAlmostEqual(1.25, m.density_kg_per_m3 / 1000.0, 4)
-        self.assertAlmostEqual(1.25, m.density_g_per_cm3, 4)
+    assert 14 in material.composition
+    assert material.composition[14] == pytest.approx(0.4674, abs=1e-4)
 
-    def test__repr__(self):
-        expected = '<Material(Pure Cu, 100%Cu, 8960 kg/m3)>'
-        self.assertEqual(expected, repr(self.m))
+    assert 8 in material.composition
+    assert material.composition[8] == pytest.approx(0.5326, abs=1e-4)
 
-    def test__eq__(self):
-        m2 = Material('Pure Cu', {29: 1.0}, 8960.0)
-        self.assertEqual(m2, self.m)
+    assert material.density_kg_per_m3 == pytest.approx(1250.0, abs=1e-4)
+    assert material.density_g_per_cm3 == pytest.approx(1.25, abs=1e-4)
 
-        m2 = Material('Pure Cu', {29: 1.0}, 8961.0)
-        self.assertNotEqual(m2, self.m)
+def test_material_setcolorset():
+    Material.set_color_set(['#00FF00', '#0000FF'])
 
-        m2 = Material('Pure Cu', {29: 0.5, 30: 0.5}, 8960.0)
-        self.assertNotEqual(m2, self.m)
+    assert Material.pure(13).color == '#00FF00'
+    assert Material.pure(14).color == '#0000FF'
+    assert Material.pure(15).color == '#00FF00'
 
-    def testset_color_set(self):
-        Material.set_color_set(['#00FF00', '#0000FF'])
+def test_lazymaterial(material, lazy_material):
+    assert lazy_material == lazy_material
+    assert material != lazy_material
 
-        m = Material.pure(13)
-        self.assertEqual('#00FF00', m.color)
+    density_kg_per_m3 = base.apply_lazy(lazy_material.density_kg_per_m3, lazy_material, None)
+    assert density_kg_per_m3 == pytest.approx(8960.0, abs=1e-4)
 
-        m = Material.pure(14)
-        self.assertEqual('#0000FF', m.color)
+def test_lazymaterial_hdf5(lazy_material, tmp_path):
+    testutil.assert_convert_parse_hdf5(lazy_material, tmp_path)
 
-        m = Material.pure(15)
-        self.assertEqual('#00FF00', m.color)
+def test_lazymaterial_copy(lazy_material):
+    testutil.assert_copy(lazy_material)
 
-    def testno_density(self):
-        m = Material('test', {29: 1.0})
+def test_lazymaterial_pickle(lazy_material):
+    testutil.assert_pickle(lazy_material)
 
-        self.assertNotEqual(m, self.m)
-        self.assertEqual(m, m)
+def test_lazymaterial_series(lazy_material, seriesbuilder):
+    lazy_material.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
 
-        density_kg_per_m3 = base.apply_lazy(m.density_kg_per_m3, m, None)
-        self.assertAlmostEqual(8960.0, density_kg_per_m3, 4)
+def test_lazymaterial_document(lazy_material, documentbuilder):
+    lazy_material.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 9
 
-class TestMaterialBuilder(TestCase):
+def test_vacuum():
+    assert str(VACUUM) == 'Vacuum'
+    assert VACUUM.composition == {}
+    assert VACUUM.density_kg_per_m3 == pytest.approx(0.0, abs=1e-4)
+    assert VACUUM.color == '#00000000'
 
-    def setUp(self):
-        TestCase.setUp(self)
+def test_vacuum_copy():
+    assert copy.copy(VACUUM) is VACUUM
+    assert copy.deepcopy(VACUUM) is VACUUM
 
-        self.b = MaterialBuilder(26)
-        self.b.add_element(29, 0.05)
-        self.b.add_element_range(28, 0.1, 0.2, 0.02)
-        self.b.add_element(24, (0.01, 0.05, 0.07))
-        self.b.add_element_interval(6, 0.0, 1.0, 5)
+def test_vacuum_pickle():
+    assert pickle.loads(pickle.dumps(VACUUM)) is VACUUM
 
-    def tearDown(self):
-        TestCase.tearDown(self)
+def test_vacuum_repr():
+    assert repr(VACUUM) == '<Vacuum()>'
 
-    def test__len__(self):
-        self.assertEqual(5 * 3 * 5, len(self.b))
+def test_materialbuilder(builder):
+    assert len(builder) == 5 * 3 * 5
+    assert len(builder.build()) == 5 * 3 * 5
 
-    def testbuild(self):
-        compositions = self.b.build()
-        self.assertEqual(5 * 3 * 5, len(compositions))
+def test_materialbuilder_noelement():
+    builder = MaterialBuilder(26)
+    assert len(builder) == 1
+    assert len(builder.build()) == 1
 
-    def testno_element(self):
-        b = MaterialBuilder(26)
-        self.assertEqual(1, len(b))
-        self.assertEqual(1, len(b.build()))
-
-if __name__ == '__main__': # pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

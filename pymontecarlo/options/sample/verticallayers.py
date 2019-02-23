@@ -69,6 +69,58 @@ class VerticalLayerSample(LayeredSampleBase):
 
         return xpositions_m
 
+#region HDF5
+
+    ATTR_LEFT_MATERIAL = 'left material'
+    ATTR_RIGHT_MATERIAL = 'right material'
+    ATTR_DEPTH = 'depth (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        left_material = cls._parse_hdf5(group, cls.ATTR_LEFT_MATERIAL)
+        right_material = cls._parse_hdf5(group, cls.ATTR_RIGHT_MATERIAL)
+        layers = cls._parse_hdf5_layers(group)
+        depth_m = cls._parse_hdf5(group, cls.ATTR_DEPTH, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(left_material, right_material, layers, depth_m,
+                   tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_LEFT_MATERIAL, self.left_material)
+        self._convert_hdf5(group, self.ATTR_RIGHT_MATERIAL, self.right_material)
+        self._convert_hdf5(group, self.ATTR_DEPTH, self.depth_m)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.left_material, 'left substrate ', 'left ')
+        builder.add_entity(self.right_material, 'right substrate ', 'right ')
+        builder.add_column('vertical layers depth', 'zmax', self.depth_m, 'm', self.DEPTH_TOLERANCE_m)
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_VERTICAL_LAYER = 'vertical layer'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrates')
+
+        description = section.require_description(self.DESCRIPTION_VERTICAL_LAYER)
+        description.add_item('Left material', self.left_material.name)
+        description.add_item('Right material', self.right_material.name)
+        description.add_item('Depth', self.depth_m, 'm', self.DEPTH_TOLERANCE_m)
+
+#endregion
+
 class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):
@@ -79,9 +131,9 @@ class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __len__(self):
         it = [super().__len__(),
-              self.left_materials,
-              self.right_materials,
-              self._calculate_depth_m()]
+              len(self.left_materials),
+              len(self.right_materials),
+              len(self._calculate_depth_m())]
         return functools.reduce(operator.mul, it)
 
     def _calculate_depth_m(self):

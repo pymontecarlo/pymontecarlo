@@ -13,6 +13,8 @@ import pyxray
 
 import numpy as np
 
+import matplotlib.colors
+
 # Local modules.
 import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
@@ -22,13 +24,15 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class LazyDensity(base.LazyOptionValueBase):
+class LazyDensity(base.LazyOptionBase):
 
     def apply(self, material, options):
         composition = base.apply_lazy(material.composition, material, options)
         return calculate_density_kg_per_m3(composition)
 
-LAZY_DENSITY = LazyDensity()
+    @classmethod
+    def parse_hdf5(cls, group):
+        return LazyDensity()
 
 class Material(base.OptionBase):
 
@@ -37,7 +41,7 @@ class Material(base.OptionBase):
 
     COLOR_CYCLER = itertools.cycle(COLOR_SET_BROWN)
 
-    def __init__(self, name, composition, density_kg_per_m3=LAZY_DENSITY, color=None):
+    def __init__(self, name, composition, density_kg_per_m3=None, color=None):
         """
         Creates a new material.
 
@@ -62,6 +66,9 @@ class Material(base.OptionBase):
 
         self.name = name
         self.composition = composition.copy()
+
+        if density_kg_per_m3 is None:
+            density_kg_per_m3 = LazyDensity()
         self.density_kg_per_m3 = density_kg_per_m3
 
         if color is None:
@@ -121,6 +128,87 @@ class Material(base.OptionBase):
 
     density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
+#region HDF5
+
+    ATTR_NAME = 'name'
+    DATASET_ATOMIC_NUMBER = 'atomic number'
+    DATASET_WEIGHT_FRACTION = 'weight fraction'
+    ATTR_DENSITY = 'density (kg/m3)'
+    ATTR_COLOR = 'color'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        name = cls._parse_hdf5(group, cls.ATTR_NAME, str)
+        composition = cls._parse_hdf5_composition(group)
+        density_kg_per_m3 = cls._parse_hdf5(group, cls.ATTR_DENSITY, float)
+        color = cls._parse_hdf5(group, cls.ATTR_COLOR, str)
+        return cls(name, composition, density_kg_per_m3, color)
+
+    @classmethod
+    def _parse_hdf5_composition(cls, group):
+        zs = group[cls.DATASET_ATOMIC_NUMBER]
+        wfs = group[cls.DATASET_WEIGHT_FRACTION]
+        return dict((int(z), float(wf)) for z, wf in zip(zs, wfs))
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_NAME, self.name)
+        self._convert_hdf5_composition(group, self.composition)
+        self._convert_hdf5(group, self.ATTR_DENSITY, self.density_kg_per_m3)
+        self._convert_hdf5(group, self.ATTR_COLOR, matplotlib.colors.to_hex(self.color))
+
+    def _convert_hdf5_composition(self, group, composition):
+        zs = sorted(composition.keys())
+        dataset_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, data=zs, dtype=np.int)
+
+        wfs = [composition[z] for z in zs]
+        dataset_wf = group.create_dataset(self.DATASET_WEIGHT_FRACTION, data=wfs)
+
+        dataset_wf.dims.create_scale(dataset_z)
+        dataset_wf.dims[0].attach_scale(dataset_z)
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        for z, wf in self.composition.items():
+            symbol = pyxray.element_symbol(z)
+            name = '{} weight fraction'.format(symbol)
+            abbrev = 'wt{}'.format(symbol)
+            tolerance = Material.WEIGHT_FRACTION_TOLERANCE
+            builder.add_column(name, abbrev, wf, tolerance=tolerance)
+
+        builder.add_column('density', 'rho', self.density_kg_per_m3, 'kg/m^3', Material.DENSITY_TOLERANCE_kg_per_m3)
+
+        return builder
+
+#endregion
+
+#region Document
+
+    TABLE_MATERIAL = 'material'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table(self.TABLE_MATERIAL)
+
+        table.add_column('Name')
+        table.add_column('Color')
+        table.add_column('Density', 'kg/m^3', self.DENSITY_TOLERANCE_kg_per_m3)
+        for z in sorted(self.composition):
+            name = pyxray.element_symbol(z)
+            table.add_column(name, tolerance=self.WEIGHT_FRACTION_TOLERANCE)
+
+        row = {'Name': self.name,
+               'Color': matplotlib.colors.to_hex(self.color),
+               'Density': self.density_kg_per_m3}
+        for z, wf in self.composition.items():
+            symbol = pyxray.element_symbol(z)
+            row[symbol] = wf
+        table.add_row(row)
+
+#endregion
+
 class _Vacuum(Material):
 
     _instance = None
@@ -131,7 +219,7 @@ class _Vacuum(Material):
             inst.name = 'Vacuum'
             inst.composition = {}
             inst.density_kg_per_m3 = 0.0
-            inst.color = (0.0, 0.0, 0.0, 0.0) # invisible
+            inst.color = '#00000000' # invisible
             cls._instance = inst
         return cls._instance
 
@@ -152,6 +240,16 @@ class _Vacuum(Material):
 
     def __reduce__(self):
         return (self.__class__, ())
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        return VACUUM
+
+    def convert_hdf5(self, group):
+        base.OptionBase.convert_hdf5(self, group)
+
+    def convert_series(self, builder):
+        pass
 
 VACUUM = _Vacuum()
 

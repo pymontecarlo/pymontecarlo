@@ -2,70 +2,71 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.inclusion import InclusionSample, InclusionSampleBuilder
 from pymontecarlo.options.material import Material
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 
-class TestInclusionSample(TestCase):
+@pytest.fixture
+def sample():
+    return InclusionSample(COPPER, ZINC, 123.456)
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return InclusionSampleBuilder()
 
-        self.s = InclusionSample(COPPER, ZINC, 123.456)
+def test_inclusionsample(sample):
+    assert sample.substrate_material == COPPER
+    assert sample.inclusion_material == ZINC
+    assert sample.inclusion_diameter_m == pytest.approx(123.456, abs=1e-4)
 
-    def testskeleton(self):
-        self.assertEqual(COPPER, self.s.substrate_material)
-        self.assertEqual(ZINC, self.s.inclusion_material)
-        self.assertAlmostEqual(123.456, self.s.inclusion_diameter_m, 4)
+    assert len(sample.materials) == 2
 
-    def testmaterials(self):
-        materials = self.s.materials
-        self.assertEqual(2, len(materials))
+def test_inclusionsample_eq(sample):
+    assert sample == InclusionSample(COPPER, ZINC, 123.456)
+    assert sample != InclusionSample(COPPER, GALLIUM, 123.456)
+    assert sample != InclusionSample(GALLIUM, ZINC, 123.456)
+    assert sample != InclusionSample(COPPER, ZINC, 124.456)
 
-    def test__eq__(self):
-        s = InclusionSample(COPPER, ZINC, 123.456)
-        self.assertEqual(s, self.s)
+def test_inclusionsample_hdf5(sample, tmp_path):
+    testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-    def test__ne__(self):
-        s = InclusionSample(COPPER, GALLIUM, 123.456)
-        self.assertNotEqual(s, self.s)
+def test_inclusionsample_copy(sample):
+    testutil.assert_copy(sample)
 
-        s = InclusionSample(GALLIUM, ZINC, 123.456)
-        self.assertNotEqual(s, self.s)
+def test_inclusionample_pickle(sample):
+    testutil.assert_pickle(sample)
 
-        s = InclusionSample(COPPER, ZINC, 124.456)
-        self.assertNotEqual(s, self.s)
+def test_inclusionample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 7
 
-class TestInclusionSampleBuilder(TestCase):
+def test_inclusionample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 7
 
-    def testbuild(self):
-        b = InclusionSampleBuilder()
-        b.add_substrate_material(COPPER)
-        b.add_substrate_material(ZINC)
-        b.add_inclusion_material(GALLIUM)
-        b.add_inclusion_diameter_m(1.0)
-        b.add_inclusion_diameter_m(2.0)
+def test_inclusionsamplebuilder(builder):
+    builder.add_substrate_material(COPPER)
+    builder.add_substrate_material(ZINC)
+    builder.add_inclusion_material(GALLIUM)
+    builder.add_inclusion_diameter_m(1.0)
+    builder.add_inclusion_diameter_m(2.0)
 
-        samples = b.build()
-        self.assertEqual(4, len(samples))
-        self.assertEqual(4, len(b))
+    samples = builder.build()
+    assert len(builder) == 4
+    assert len(samples) == 4
 
-        for sample in samples:
-            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
+    for sample in samples:
+        assert sample.tilt_rad == pytest.approx(0.0, abs=1e-4)
+        assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
 
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

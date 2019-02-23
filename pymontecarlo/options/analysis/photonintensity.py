@@ -67,6 +67,15 @@ class PhotonIntensityAnalysis(PhotonAnalysisBase):
 
         return newresult
 
+#region HDF5
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        detector = cls._parse_hdf5(group, cls.ATTR_DETECTOR)
+        return cls(detector)
+
+#endregion
+
 class PhotonIntensityAnalysisBuilder(PhotonAnalysisBuilderBase):
 
     def build(self):

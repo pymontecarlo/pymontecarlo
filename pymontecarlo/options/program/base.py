@@ -45,5 +45,22 @@ class ProgramBase(base.OptionBase):
     def importer(self):
         raise NotImplementedError
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('program', 'prog', self.name)
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(self.name)
+
+#endregion
+
 class ProgramBuilderBase(base.OptionBuilderBase):
     pass

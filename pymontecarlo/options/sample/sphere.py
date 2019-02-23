@@ -47,6 +47,51 @@ class SphereSample(SampleBase):
     def materials(self):
         return self._cleanup_materials(self.material)
 
+#region HDF5
+
+    ATTR_MATERIAL = 'material'
+    ATTR_DIAMETER = 'diameter (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        material = cls._parse_hdf5(group, cls.ATTR_MATERIAL)
+        diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(material, diameter_m, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
+        self._convert_hdf5(group, self.ATTR_DIAMETER, self.diameter_m)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material, 'sphere ', 'sphere ')
+        builder.add_column('sphere diameter', 'd', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_SPHERE = 'sphere'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Sphere')
+
+        description = section.require_description(self.DESCRIPTION_SPHERE)
+        description.add_item('Material', self.material.name)
+        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+
+#endregion
+
 class SphereSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

@@ -2,111 +2,111 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.substrate import SubstrateSample, SubstrateSampleBuilder
 from pymontecarlo.options.material import Material
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 
-class TestSubstrateSample(TestCase):
+@pytest.fixture
+def sample():
+    return SubstrateSample(COPPER)
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return SubstrateSampleBuilder()
 
-        self.s = SubstrateSample(COPPER)
+def test_substratesample(sample):
+    assert sample.material == COPPER
 
-    def testskeleton(self):
-        self.assertEqual(COPPER, self.s.material)
+    assert len(sample.materials) == 1
 
-    def testmaterials(self):
-        materials = self.s.materials
-        self.assertEqual(1, len(materials))
+def test_substratesample_eq(sample):
+    assert sample == SubstrateSample(COPPER)
+    assert sample != SubstrateSample(ZINC)
+    assert sample != SubstrateSample(COPPER, 1.1)
 
-    def test__eq__(self):
-        s = SubstrateSample(COPPER)
-        self.assertEqual(s, self.s)
+def test_substratesample_hdf5(sample, tmp_path):
+    testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-    def test__ne__(self):
-        s = SubstrateSample(ZINC)
-        self.assertNotEqual(s, self.s)
+def test_substratesample_copy(sample):
+    testutil.assert_copy(sample)
 
-        s = SubstrateSample(COPPER, 1.1)
-        self.assertNotEqual(s, self.s)
+def test_substratesample_pickle(sample):
+    testutil.assert_pickle(sample)
 
-class TestSubstrateSampleBuilder(TestCase):
+def test_substratesample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 4
 
-    def testbuild(self):
-        b = SubstrateSampleBuilder()
-        b.add_material(COPPER)
-        b.add_material(ZINC)
+def test_substratesample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 5
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
-        self.assertEqual(2, len(b))
+def test_substratesamplebuilder_twomaterials(builder):
+    builder.add_material(COPPER)
+    builder.add_material(ZINC)
 
-        for sample in samples:
-            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-    def testbuild2(self):
-        b = SubstrateSampleBuilder()
-        b.add_material(COPPER)
-        b.add_material(ZINC)
-        b.add_tilt_rad(0.0)
+    for sample in samples:
+        assert sample.tilt_rad == pytest.approx(0.0, abs=1e-4)
+        assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
-        self.assertEqual(2, len(b))
+def test_substratesamplebuilder_twomaterials_with_tilt(builder):
+    builder.add_material(COPPER)
+    builder.add_material(ZINC)
+    builder.add_tilt_rad(1.1)
 
-        for sample in samples:
-            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-    def testbuild3(self):
-        b = SubstrateSampleBuilder()
-        b.add_material(COPPER)
-        b.add_material(ZINC)
-        b.add_tilt_rad(1.1)
-        b.add_azimuth_rad(2.2)
+    for sample in samples:
+        assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
+        assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
-        self.assertEqual(2, len(b))
+def test_substratesamplebuilder_twomaterials_with_tilt_and_azimuth(builder):
+    builder.add_material(COPPER)
+    builder.add_material(ZINC)
+    builder.add_tilt_rad(1.1)
+    builder.add_azimuth_rad(2.2)
 
-        for sample in samples:
-            self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
-            self.assertAlmostEqual(2.2, sample.azimuth_rad, 4)
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-    def testbuild4(self):
-        b = SubstrateSampleBuilder()
-        b.add_material(COPPER)
-        b.add_material(ZINC)
-        b.add_tilt_rad(1.1)
-        b.add_azimuth_rad(2.2)
-        b.add_azimuth_rad(2.3)
+    for sample in samples:
+        assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
+        assert sample.azimuth_rad == pytest.approx(2.2, abs=1e-4)
 
-        samples = b.build()
-        self.assertEqual(4, len(samples))
-        self.assertEqual(4, len(b))
+def test_substratesamplebuilder_twomaterials_twoazimuths(builder):
+    builder.add_material(COPPER)
+    builder.add_material(ZINC)
+    builder.add_tilt_rad(1.1)
+    builder.add_azimuth_rad(2.2)
+    builder.add_azimuth_rad(2.3)
 
-    def testbuild5(self):
-        b = SubstrateSampleBuilder()
-        b.add_tilt_rad(1.1)
-        b.add_azimuth_rad(2.2)
-        b.add_azimuth_rad(2.3)
+    samples = builder.build()
+    assert len(builder) == 4
+    assert len(samples) == 4
 
-        samples = b.build()
-        self.assertEqual(0, len(samples))
-        self.assertEqual(0, len(b))
+def test_substratesamplebuilder_nomaterial(builder):
+    builder.add_tilt_rad(1.1)
+    builder.add_azimuth_rad(2.2)
+    builder.add_azimuth_rad(2.3)
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    samples = builder.build()
+    assert len(builder) == 0
+    assert len(samples) == 0
+

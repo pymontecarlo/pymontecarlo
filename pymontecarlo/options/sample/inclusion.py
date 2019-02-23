@@ -50,6 +50,63 @@ class InclusionSample(SampleBase):
         return self._cleanup_materials(self.substrate_material,
                                        self.inclusion_material)
 
+#region HDF5
+
+    ATTR_SUBSTRATE = 'substrate'
+    ATTR_INCLUSION = 'inclusion'
+    ATTR_DIAMETER = 'diameter (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        substrate_material = cls._parse_hdf5(group, cls.ATTR_SUBSTRATE)
+        inclusion_material = cls._parse_hdf5(group, cls.ATTR_INCLUSION)
+        inclusion_diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(substrate_material, inclusion_material, inclusion_diameter_m,
+                   tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_SUBSTRATE, self.substrate_material)
+        self._convert_hdf5(group, self.ATTR_INCLUSION, self.inclusion_material)
+        self._convert_hdf5(group, self.ATTR_DIAMETER, self.inclusion_diameter_m)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
+        builder.add_entity(self.inclusion_material, 'inclusion ', 'incl ')
+        builder.add_column('inclusion diameter', 'd', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_SUBTRATE = 'substrate'
+    DESCRIPTION_INCLUSION = 'inclusion'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrate')
+
+        description = section.require_description(self.DESCRIPTION_SUBTRATE)
+        description.add_item('Material', self.substrate_material.name)
+
+        section = builder.add_section()
+        section.add_title('Inclusion')
+
+        description = section.require_description(self.DESCRIPTION_INCLUSION)
+        description.add_item('Material', self.inclusion_material.name)
+        description.add_item('Diameter', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+
+#endregion
+
 class InclusionSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

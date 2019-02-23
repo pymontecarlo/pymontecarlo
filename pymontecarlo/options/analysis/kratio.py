@@ -8,6 +8,11 @@ logger = logging.getLogger(__name__)
 import copy
 
 # Third party modules.
+import h5py
+
+import numpy as np
+
+import pyxray
 
 # Local modules.
 from pymontecarlo.options.options import OptionsBuilder
@@ -38,7 +43,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
 
         if standard_materials is None:
             standard_materials = {}
-        self.standard_materials = standard_materials
+        self.standard_materials = standard_materials.copy()
 
     def __eq__(self, other):
         return super().__eq__(other) and \
@@ -159,13 +164,77 @@ class KRatioAnalysis(PhotonAnalysisBase):
 
         return newresult
 
+#region HDF5
+
+    DATASET_ATOMIC_NUMBER = 'atomic number'
+    DATASET_STANDARDS = 'standards'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        detector = cls._parse_hdf5(group, cls.ATTR_DETECTOR)
+        standard_materials = cls._parse_hdf5_standard_materials(group)
+        return cls(detector, standard_materials)
+
+    @classmethod
+    def _parse_hdf5_standard_materials(cls, group):
+        ds_z = group[cls.DATASET_ATOMIC_NUMBER]
+        ds_standard = group[cls.DATASET_STANDARDS]
+        return dict((z, cls._parse_hdf5_reference(group, reference))
+                    for z, reference in zip(ds_z, ds_standard))
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5_standard_materials(group, self.standard_materials)
+
+    def _convert_hdf5_standard_materials(self, group, standard_materials):
+        shape = (len(standard_materials),)
+        ref_dtype = h5py.special_dtype(ref=h5py.Reference)
+        ds_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, shape=shape, dtype=np.byte)
+        ds_standard = group.create_dataset(self.DATASET_STANDARDS, shape=shape, dtype=ref_dtype)
+
+        ds_standard.dims.create_scale(ds_z)
+        ds_standard.dims[0].attach_scale(ds_z)
+
+        for i, (z, material) in enumerate(standard_materials.items()):
+            ds_z[i] = z
+            ds_standard[i] = self._convert_hdf5_reference(group, material)
+
+#endregion
+
+#region Document
+
+    TABLE_STANDARD = 'standard'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        # Standards
+        section = builder.add_section()
+        section.add_title('Standard(s)')
+
+        if self.standard_materials:
+            table = section.require_table(self.TABLE_STANDARD)
+
+            table.add_column('Element')
+            table.add_column('Material')
+
+            for z, material in self.standard_materials.items():
+                row = {'Element': pyxray.element_symbol(z),
+                       'Material': material.name}
+                table.add_row(row)
+
+            section = builder.add_section()
+            section.add_title('Materials')
+
+            for material in self.standard_materials.values():
+                section.add_entity(material)
+
+        else:
+            section.add_text('No standard defined')
+
+#endregion
+
 class KRatioAnalysisBuilder(PhotonAnalysisBuilderBase):
 
     def build(self):
         return [KRatioAnalysis(d) for d in self.photon_detectors]
-
-
-
-
-
-

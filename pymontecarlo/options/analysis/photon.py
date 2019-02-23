@@ -31,6 +31,33 @@ class PhotonAnalysisBase(AnalysisBase):
     def detector(self):
         return self.photon_detector
 
+#region HDF5
+
+    ATTR_DETECTOR = 'detector'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_DETECTOR, self.photon_detector)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description(self.DESCRIPTION_DETECTOR)
+        description.add_item('Detector', self.photon_detector.name)
+
+#endregion
+
 class PhotonAnalysisBuilderBase(AnalysisBuilderBase):
 
     def __init__(self):

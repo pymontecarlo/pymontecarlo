@@ -2,123 +2,114 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
-import pickle
-import copy
+import math
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.detector.base import DetectorBase
 from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.analysis.base import AnalysisBase
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestOptions(TestCase):
+@pytest.fixture
+def builder():
+    return OptionsBuilder()
 
-    def setUp(self):
-        super().setUp()
+def test_options(options):
+    assert options.beam.energy_eV == pytest.approx(15e3, abs=1e-4)
 
-        self.options = self.create_basic_options()
+    assert len(options.find_detectors(PhotonDetector)) == 1
+    assert len(options.find_detectors(DetectorBase)) == 1
 
-    def testskeleton(self):
-        self.assertAlmostEqual(15e3, self.options.beam.energy_eV, 4)
+    assert len(options.find_analyses(PhotonIntensityAnalysis)) == 1
+    assert len(options.find_analyses(AnalysisBase)) == 1
 
-    def testfind_detectors(self):
-        detectors = self.options.find_detectors(PhotonDetector)
-        self.assertEqual(1, len(detectors))
+    detector = options.detectors[0]
+    assert len(options.find_analyses(PhotonIntensityAnalysis, detector)) == 1
 
-        detectors = self.options.find_detectors(DetectorBase)
-        self.assertEqual(1, len(detectors))
+    assert len(options.find_analyses(DetectorBase)) == 0
 
-    def testfind_analyses(self):
-        analyses = self.options.find_analyses(PhotonIntensityAnalysis)
-        self.assertEqual(1, len(analyses))
+def test_options_hdf5(options, tmp_path):
+    testutil.assert_convert_parse_hdf5(options, tmp_path)
 
-        analyses = self.options.find_analyses(AnalysisBase)
-        self.assertEqual(1, len(analyses))
+def test_options_copy(options):
+    testutil.assert_copy(options)
 
-        analyses = self.options.find_analyses(PhotonIntensityAnalysis, self.options.detectors[0])
-        self.assertEqual(1, len(analyses))
+def test_options_pickle(options):
+    testutil.assert_pickle(options)
 
-        analyses = self.options.find_analyses(DetectorBase)
-        self.assertEqual(0, len(analyses))
+def test_options_series(options, seriesbuilder):
+    options.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 16
 
-    def testpickle(self):
-        s = pickle.dumps(self.options)
-        options = pickle.loads(s)
-        self.assertEqual(self.options, options)
+def test_options_document(options, documentbuilder):
+    options.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 14
 
-    def testdeepcopy(self):
-        options = copy.deepcopy(self.options)
-        self.assertEqual(self.options, options)
+#    from pymontecarlo.formats.document import publish_html
+#    with open('/tmp/options.html', 'wb') as fp:
+#        fp.write(publish_html(documentbuilder))
 
-class TestOptionsBuilder(TestCase):
+def test_optionsbuilder_single(builder, options):
+    builder.add_program(options.program)
+    builder.add_beam(options.beam)
+    builder.add_sample(options.sample)
 
-    def testbuild(self):
-        b = OptionsBuilder()
-        b.add_program(self.create_basic_program())
-        b.add_beam(self.create_basic_beam())
-        b.add_sample(self.create_basic_sample())
-        self.assertEqual(1, len(b))
-        self.assertEqual(1, len(b.build()))
+    assert len(builder) == 1
+    assert len(builder.build()) == 1
 
-    def testbuild2(self):
-        b = OptionsBuilder()
-        b.add_program(self.create_basic_program())
-        b.add_program(self.create_basic_program())
-        b.add_beam(self.create_basic_beam())
-        b.add_beam(self.create_basic_beam())
-        b.add_sample(self.create_basic_sample())
-        b.add_sample(self.create_basic_sample())
-        self.assertEqual(1, len(b))
-        self.assertEqual(1, len(b.build()))
+def test_optionsbuilder_sameoption(builder, options):
+    builder.add_program(options.program)
+    builder.add_program(options.program)
+    builder.add_beam(options.beam)
+    builder.add_beam(options.beam)
+    builder.add_sample(options.sample)
+    builder.add_sample(options.sample)
 
-    def testbuild3(self):
-        b = OptionsBuilder()
-        b.add_program(self.create_basic_program())
-        b.add_beam(self.create_basic_beam())
-        b.add_sample(self.create_basic_sample())
+    assert len(builder) == 1
+    assert len(builder.build()) == 1
 
-        det = self.create_basic_photondetector()
-        b.add_analysis(KRatioAnalysis(det))
+def test_optionsbuilder_kratioanalysis(builder, options):
+    builder.add_program(options.program)
+    builder.add_beam(options.beam)
+    builder.add_sample(options.sample)
 
-        self.assertEqual(2, len(b))
-        self.assertEqual(2, len(b.build()))
+    det = PhotonDetector('det', math.radians(50))
+    builder.add_analysis(KRatioAnalysis(det))
 
-    def testbuild4(self):
-        b = OptionsBuilder()
-        b.add_program(self.create_basic_program())
-        b.add_beam(self.create_basic_beam())
-        b.add_sample(self.create_basic_sample())
+    assert len(builder) == 2
+    assert len(builder.build()) == 2
 
-        det = self.create_basic_photondetector()
-        b.add_analysis(KRatioAnalysis(det))
-        b.add_analysis(PhotonIntensityAnalysis(det))
+def test_optionsbuilder_kratioanalysis_with_photonintensityanalysis(builder, options):
+    builder.add_program(options.program)
+    builder.add_beam(options.beam)
+    builder.add_sample(options.sample)
 
-        self.assertEqual(2, len(b))
-        self.assertEqual(2, len(b.build()))
+    det = PhotonDetector('det', math.radians(50))
+    builder.add_analysis(KRatioAnalysis(det))
+    builder.add_analysis(PhotonIntensityAnalysis(det))
 
-    def testbuild5(self):
-        b = OptionsBuilder()
-        b.add_program(self.create_basic_program())
-        b.add_beam(self.create_basic_beam())
-        b.add_sample(self.create_basic_sample())
+    assert len(builder) == 2
+    assert len(builder.build()) == 2
 
-        det = self.create_basic_photondetector()
-        b.add_analysis(KRatioAnalysis(det))
+def test_optionsbuilder_twokratioanalysis(builder, options):
+    builder.add_program(options.program)
+    builder.add_beam(options.beam)
+    builder.add_sample(options.sample)
 
-        det = PhotonDetector(3.3, 4.4)
-        b.add_analysis(KRatioAnalysis(det))
+    det = PhotonDetector('det', math.radians(50))
+    builder.add_analysis(KRatioAnalysis(det))
 
-        self.assertEqual(4, len(b))
-        self.assertEqual(4, len(b.build()))
+    det = PhotonDetector('det2', math.radians(55))
+    builder.add_analysis(KRatioAnalysis(det))
 
-if __name__ == '__main__': # pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    assert len(builder) == 4
+    assert len(builder.build()) == 4
+

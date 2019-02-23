@@ -9,14 +9,13 @@ import threading
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
-from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.formats.series.helper import create_options_dataframe, create_results_dataframe
+from pymontecarlo.entity import EntityBase, EntityHDF5Mixin
+from pymontecarlo.formats.dataframe import create_options_dataframe, create_results_dataframe
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
-class Project(HDF5ReaderMixin, HDF5WriterMixin):
+class Project(EntityBase, EntityHDF5Mixin):
 
     simulation_added = Signal()
     recalculated = Signal()
@@ -26,6 +25,17 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
         self.simulations = []
         self.lock = threading.Lock()
         self.recalculate_required = False
+
+    def __getstate__(self):
+        with self.lock:
+            return (self.filepath, self.simulations)
+
+    def __setstate__(self, state):
+        filepath, simulations = state
+
+        self.filepath = filepath
+        self.simulations = simulations
+        self.recalculate_required = True
 
     def add_simulation(self, simulation):
         with self.lock:
@@ -108,3 +118,32 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             classes.update(type(result) for result in simulation.results)
 
         return classes
+
+#region HDF5
+
+    GROUP_SIMULATIONS = 'simulations'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        filepath = group.file.filename
+        project = cls(filepath)
+
+        simulations = [cls._parse_hdf5_object(group_simulation)
+                       for group_simulation in group[cls.GROUP_SIMULATIONS].values()]
+        with project.lock:
+            project.simulations.extend(simulations)
+
+        return project
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+
+        group_simulations = group.create_group(self.GROUP_SIMULATIONS)
+
+        with self.lock:
+            for simulation in self.simulations:
+                name = simulation.identifier
+                group_simulation = group_simulations.create_group(name)
+                simulation.convert_hdf5(group_simulation)
+
+#endregion

@@ -2,18 +2,17 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 import itertools
 import math
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.base import \
     SampleBase, SampleBuilderBase, LayeredSampleBase, LayeredSampleBuilderBase
 from pymontecarlo.options.material import Material
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
@@ -26,6 +25,16 @@ class SampleMock(SampleBase):
     def materials(self):
         return []
 
+#region HDF5
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(tilt_rad, azimuth_rad)
+
+#endregion
+
 class SampleBuilderMock(SampleBuilderBase):
 
     def build(self):
@@ -36,6 +45,15 @@ class SampleBuilderMock(SampleBuilderBase):
         for tilt_rad, azimuth_rad in itertools.product(tilts_rad, rotations_rad):
             samples.append(SampleMock(tilt_rad, azimuth_rad))
         return samples
+
+class LayeredSampleMock(LayeredSampleBase):
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        layers = cls._parse_hdf5_layers(group)
+        return cls(layers, tilt_rad, azimuth_rad)
 
 class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
 
@@ -48,112 +66,121 @@ class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
 
         samples = []
         for layers, tilt_rad, azimuth_rad in product:
-            samples.append(LayeredSampleBase(layers, tilt_rad, azimuth_rad))
+            samples.append(LayeredSampleMock(layers, tilt_rad, azimuth_rad))
 
         return samples
 
-class TestSample(TestCase):
+@pytest.fixture
+def sample():
+    return SampleMock(1.1, 2.2)
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return SampleBuilderMock()
 
-        self.s = SampleMock(1.1, 2.2)
+@pytest.fixture
+def layeredbuilder():
+    return LayeredSampleBuilderMock()
 
-    def testskeleton(self):
-        self.assertAlmostEqual(1.1, self.s.tilt_rad, 4)
-        self.assertAlmostEqual(2.2, self.s.azimuth_rad, 4)
-        self.assertAlmostEqual(math.degrees(1.1), self.s.tilt_deg, 4)
-        self.assertAlmostEqual(math.degrees(2.2), self.s.azimuth_deg, 4)
+def test_samplebase(sample):
+    assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
+    assert sample.tilt_deg == pytest.approx(math.degrees(1.1), abs=1e-4)
 
-    def testmaterials(self):
-        materials = self.s.materials
-        self.assertEqual(0, len(materials))
+    assert sample.azimuth_rad == pytest.approx(2.2, abs=1e-4)
+    assert sample.azimuth_deg == pytest.approx(math.degrees(2.2), abs=1e-4)
 
-    def test__eq__(self):
-        s = SampleMock(1.1, 2.2)
-        self.assertEqual(s, self.s)
+    assert len(sample.materials) == 0
 
-    def test__ne__(self):
-        s = SampleMock(1.2, 2.2)
-        self.assertNotEqual(s, self.s)
+def test_samplebase_eq(sample):
+    assert sample == SampleMock(1.1, 2.2)
+    assert sample != SampleMock(1.2, 2.2)
+    assert sample != SampleMock(1.1, 2.3)
 
-        s = SampleMock(1.1, 2.3)
-        self.assertNotEqual(s, self.s)
+def test_samplebase_hdf5(sample, tmp_path):
+    testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-class TestSampleBuilder(TestCase):
+def test_samplebase_copy(sample):
+    testutil.assert_copy(sample)
 
-    def testbuild(self):
-        b = SampleBuilderMock()
-        samples = b.build()
-        self.assertEqual(1, len(samples))
-        self.assertEqual(1, len(b))
+def test_samplebase_pickle(sample):
+    testutil.assert_pickle(sample)
 
-        sample = samples[0]
-        self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-        self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
+def test_samplebase_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
 
-    def testbuild2(self):
-        b = SampleBuilderMock()
-        b.add_tilt_rad(1.1)
-        b.add_azimuth_rad(2.2)
+def test_samplebase_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 5
 
-        samples = b.build()
-        self.assertEqual(1, len(samples))
+def test_samplebuilderbase(builder):
+    samples = builder.build()
+    assert len(builder) == 1
+    assert len(samples) == 1
 
-        sample = samples[0]
-        self.assertAlmostEqual(1.1, sample.tilt_rad, 4)
-        self.assertAlmostEqual(2.2, sample.azimuth_rad, 4)
+    sample = samples[0]
+    assert sample.tilt_rad == pytest.approx(0.0, abs=1e-4)
+    assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
 
-    def testbuild3(self):
-        b = SampleBuilderMock()
-        b.add_tilt_rad(1.1)
-        b.add_tilt_rad(1.1)
-        b.add_azimuth_rad(2.2)
-        b.add_azimuth_rad(2.3)
+def test_samplebuilderbase_onetilt(builder):
+    builder.add_tilt_rad(1.1)
+    builder.add_azimuth_rad(2.2)
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
+    samples = builder.build()
+    assert len(builder) == 1
+    assert len(samples) == 1
 
-class TestLayeredSampleBuilder(TestCase):
+    sample = samples[0]
+    assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
+    assert sample.azimuth_rad == pytest.approx(2.2, abs=1e-4)
 
-    def testbuild(self):
-        b = LayeredSampleBuilderMock()
-        b.add_layer(Material.pure(29), 10)
-        b.add_layer(Material.pure(30), 20)
+def test_samplebuilderbase_twotilt(builder):
+    builder.add_tilt_rad(1.1)
+    builder.add_tilt_rad(1.1)
+    builder.add_azimuth_rad(2.2)
+    builder.add_azimuth_rad(2.3)
 
-        samples = b.build()
-        self.assertEqual(1, len(samples))
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-        sample = samples[0]
-        self.assertEqual(2, len(sample.layers))
+def test_layeredsamplebuilderbase(layeredbuilder):
+    layeredbuilder = LayeredSampleBuilderMock()
+    layeredbuilder.add_layer(Material.pure(29), 10)
+    layeredbuilder.add_layer(Material.pure(30), 20)
 
-    def testbuild2(self):
-        b = LayeredSampleBuilderMock()
-        bl = b.add_layer(Material.pure(29), 10)
-        bl.add_material(Material.pure(30))
+    samples = layeredbuilder.build()
+    assert len(layeredbuilder) == 1
+    assert len(samples) == 1
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
+    sample = samples[0]
+    assert len(sample.layers) == 2
 
-        sample = samples[0]
-        self.assertEqual(1, len(sample.layers))
-        self.assertAlmostEqual(10, sample.layers[0].thickness_m, 4)
+def test_layeredsamplebuilderbase_twomaterials(layeredbuilder):
+    layerbuilder = layeredbuilder.add_layer(Material.pure(29), 10)
+    layerbuilder.add_material(Material.pure(30))
 
-    def testbuild3(self):
-        b = LayeredSampleBuilderMock()
-        bl = b.add_layer(Material.pure(29), 10)
-        bl.add_material(Material.pure(30))
-        bl = b.add_layer(Material.pure(29), 20)
-        bl.add_material(Material.pure(30))
+    samples = layeredbuilder.build()
+    assert len(layeredbuilder) == 2
+    assert len(samples) == 2
 
-        samples = b.build()
-        self.assertEqual(4, len(samples))
+    sample = samples[0]
+    assert len(sample.layers) == 1
+    assert sample.layers[0].thickness_m == pytest.approx(10.0, abs=1e-4)
 
-        sample = samples[0]
-        self.assertEqual(2, len(sample.layers))
-        self.assertAlmostEqual(10, sample.layers[0].thickness_m, 4)
-        self.assertAlmostEqual(20, sample.layers[1].thickness_m, 4)
+def test_layeredsamplebuilderbase_twolayers(layeredbuilder):
+    layerbuilder = layeredbuilder.add_layer(Material.pure(29), 10)
+    layerbuilder.add_material(Material.pure(30))
+    layerbuilder = layeredbuilder.add_layer(Material.pure(29), 20)
+    layerbuilder.add_material(Material.pure(30))
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    samples = layeredbuilder.build()
+    assert len(layeredbuilder) == 4
+    assert len(samples) == 4
+
+    sample = samples[0]
+    assert len(sample.layers) == 2
+    assert sample.layers[0].thickness_m == pytest.approx(10.0, abs=1e-4)
+    assert sample.layers[1].thickness_m == pytest.approx(20.0, abs=1e-4)
+

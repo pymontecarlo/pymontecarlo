@@ -2,87 +2,88 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 import math
 
 # Third party modules.
+import pytest
+
+from uncertainties import ufloat
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analysis.photonintensity import \
     PhotonIntensityAnalysis, PhotonIntensityAnalysisBuilder
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestPhotonIntensityAnalysis(TestCase):
+@pytest.fixture
+def detector():
+    return PhotonDetector('det', math.radians(40.0))
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def analysis(detector):
+    return PhotonIntensityAnalysis(detector)
 
-        det = PhotonDetector('det', math.radians(40.0))
-        self.a = PhotonIntensityAnalysis(det)
+@pytest.fixture
+def builder():
+    return PhotonIntensityAnalysisBuilder()
 
-        self.options = self.create_basic_options()
+def test_photonintensityanalysis_hdf5(analysis, tmp_path):
+    testutil.assert_convert_parse_hdf5(analysis, tmp_path)
 
-    def testapply(self):
-        list_options = self.a.apply(self.options)
-        self.assertEqual(0, len(list_options))
+def test_photonintensityanalysis_copy(analysis):
+    testutil.assert_copy(analysis)
 
-    def testcalculate(self):
-        simulation = self.create_basic_simulation()
-        result = simulation.find_result(EmittedPhotonIntensityResult)[0]
-        self.assertEqual(7, len(result))
+def test_photonintensityanalysis_pickle(analysis):
+    testutil.assert_pickle(analysis)
 
-        newresult = self.a.calculate(simulation, [simulation])
+def test_photonintensityanalysis_series(analysis, seriesbuilder):
+    analysis.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 0
 
-        self.assertTrue(newresult)
-        self.assertEqual(10, len(result))
+def test_photonintensityanalysis_document(analysis, documentbuilder):
+    analysis.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 4
 
-        q = result[(29, 'Ka')]
-        self.assertAlmostEqual(3.0, q.n, 4)
-        self.assertAlmostEqual(0.2236, q.s, 4)
+def test_photonintensityanalyis_apply(analysis, options):
+    list_options = analysis.apply(options)
+    assert len(list_options) == 0
 
-        q = result[(29, 'Kb')]
-        self.assertAlmostEqual(10.5, q.n, 4)
-        self.assertAlmostEqual(0.8718, q.s, 4)
+def test_photonintensityanalyis_options(analysis, simulation):
+    result = simulation.find_result(EmittedPhotonIntensityResult)[0]
+    assert len(result) == 7
 
-        q = result[(29, 'K')]
-        self.assertAlmostEqual(13.5, q.n, 4)
-        self.assertAlmostEqual(0.9, q.s, 4)
+    newresult = analysis.calculate(simulation, [simulation])
 
-        newresult = self.a.calculate(simulation, [simulation])
-        self.assertFalse(newresult)
+    assert newresult
+    assert len(result) == 10
 
-        # Just to make sure
-        newresult = self.a.calculate(simulation, [simulation])
-        self.assertFalse(newresult)
+    testutil.assert_ufloats(result[(29, 'Ka')], ufloat(3.0, 0.2236), abs=1e-4)
+    testutil.assert_ufloats(result[(29, 'Kb')], ufloat(10.5, 0.8718), abs=1e-4)
+    testutil.assert_ufloats(result[(29, 'K')], ufloat(13.5, 0.9), abs=1e-4)
 
-class TestPhotonIntensityAnalysisBuilder(TestCase):
+    newresult = analysis.calculate(simulation, [simulation])
+    assert not newresult
 
-    def testbuild(self):
-        b = PhotonIntensityAnalysisBuilder()
-        self.assertEqual(0, len(b))
-        self.assertEqual(0, len(b.build()))
+    # Just to make sure
+    newresult = analysis.calculate(simulation, [simulation])
+    assert not newresult
 
-    def testbuild2(self):
-        b = PhotonIntensityAnalysisBuilder()
-        b.add_photon_detector(self.create_basic_photondetector())
-        b.add_photon_detector(self.create_basic_photondetector())
-        self.assertEqual(1, len(b))
-        self.assertEqual(1, len(b.build()))
+def test_photonintensityanalyisbuilder(builder):
+    assert len(builder) == 0
+    assert len(builder.build()) == 0
 
-    def testbuild3(self):
-        b = PhotonIntensityAnalysisBuilder()
-        b.add_photon_detector(self.create_basic_photondetector())
-        d2 = self.create_basic_photondetector()
-        d2.elevation_deg = 0.1
-        b.add_photon_detector(d2)
-        self.assertEqual(2, len(b))
-        self.assertEqual(2, len(b.build()))
+def test_photonintensityanalyisbuilder_samedetector(builder, detector):
+    builder.add_photon_detector(detector)
+    builder.add_photon_detector(PhotonDetector('det', math.radians(40.0)))
+    assert len(builder) == 1
+    assert len(builder.build()) == 1
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+def test_photonintensityanalyisbuilder_differentdetector(builder, detector):
+    builder.add_photon_detector(detector)
+    builder.add_photon_detector(PhotonDetector('det2', math.radians(41.0)))
+    assert len(builder) == 2
+    assert len(builder.build()) == 2

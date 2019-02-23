@@ -21,5 +21,15 @@ class DetectorBase(base.OptionBase):
         return super().__eq__(other) and \
             base.isclose(self.name, other.name)
 
+#region HDF5
+
+    ATTR_NAME = 'name'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_NAME, self.name)
+
+#endregion
+
 class DetectorBuilderBase(base.OptionBuilderBase):
     pass

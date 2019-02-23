@@ -40,6 +40,38 @@ class SubstrateSample(SampleBase):
     def materials(self):
         return self._cleanup_materials(self.material)
 
+#region HDF5
+
+    ATTR_MATERIAL = 'material'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        material = cls._parse_hdf5(group, cls.ATTR_MATERIAL)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(material, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material, 'substrate ', 'subs ')
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+#endregion
+
 class SubstrateSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

@@ -62,6 +62,51 @@ class CylindricalBeam(BeamBase):
             base.isclose(self.x0_m, other.x0_m, abs_tol=self.POSITION_TOLERANCE_m) and \
             base.isclose(self.y0_m, other.y0_m, abs_tol=self.POSITION_TOLERANCE_m)
 
+#region HDF5
+
+    ATTR_DIAMETER = 'diameter (m)'
+    ATTR_X0 = 'x0 (m)'
+    ATTR_Y0 = 'y0 (m)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        energy_eV = cls._parse_hdf5(group, cls.ATTR_ENERGY, float)
+        diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
+        particle = cls._parse_hdf5(group, cls.ATTR_PARTICLE, Particle)
+        x0_m = cls._parse_hdf5(group, cls.ATTR_X0, float)
+        y0_m = cls._parse_hdf5(group, cls.ATTR_Y0, float)
+        return cls(energy_eV, diameter_m, particle, x0_m, y0_m)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_DIAMETER, self.diameter_m)
+        self._convert_hdf5(group, self.ATTR_X0, self.x0_m)
+        self._convert_hdf5(group, self.ATTR_Y0, self.y0_m)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('beam diameter', 'd0', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        builder.add_column('beam initial x position', 'x0', self.x0_m, 'm', self.POSITION_TOLERANCE_m)
+        builder.add_column('beam initial y position', 'y0', self.y0_m, 'm', self.POSITION_TOLERANCE_m)
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description(self.DESCRIPTION_BEAM)
+        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        description.add_item('Initial x position', self.x0_m, 'm', self.POSITION_TOLERANCE_m)
+        description.add_item('Initial y position', self.y0_m, 'm', self.POSITION_TOLERANCE_m)
+
+#endregion
+
 class CylindricalBeamBuilder(BeamBuilderBase):
 
     def __init__(self):

@@ -28,50 +28,7 @@ EXTRAS_REQUIRE = {'develop': ['pytest', 'pytest-cov', 'pytest-asyncio',
 
 CMDCLASS = versioneer.get_cmdclass()
 
-ENTRY_POINTS = {'pymontecarlo.formats.hdf5':
-                ['SettingsHDF5Handler = pymontecarlo.formats.hdf5.settings:SettingsHDF5Handler',
-                 'SimulationHDF5Handler = pymontecarlo.formats.hdf5.simulation:SimulationHDF5Handler',
-                 'ProjectHDF5Handler = pymontecarlo.formats.hdf5.project:ProjectHDF5Handler',
-
-                 'XrayLineHDF5Handler = pymontecarlo.formats.hdf5.util.xrayline:XrayLineHDF5Handler',
-
-                 'OptionsHDF5Handler = pymontecarlo.formats.hdf5.options.options:OptionsHDF5Handler',
-
-                 'CylindricalBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.cylindrical:CylindricalBeamHDF5Handler',
-                 'GaussianBeamHDF5Handler = pymontecarlo.formats.hdf5.options.beam.gaussian:GaussianBeamHDF5Handler',
-
-                 'MaterialHDF5Handler = pymontecarlo.formats.hdf5.options.material:MaterialHDF5Handler',
-                 'VacuumHDF5Handler = pymontecarlo.formats.hdf5.options.material:VacuumHDF5Handler',
-                 'LayerHDF5Handler = pymontecarlo.formats.hdf5.options.sample.base:LayerHDF5Handler',
-                 'SubstrateSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.substrate:SubstrateSampleHDF5Handler',
-                 'InclusionSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.inclusion:InclusionSampleHDF5Handler',
-                 'HorizontalLayerSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.horizontallayers:HorizontalLayerSampleHDF5Handler',
-                 'VerticalLayerSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.verticallayers:VerticalLayerSampleHDF5Handler',
-                 'SphereSampleHDF5Handler = pymontecarlo.formats.hdf5.options.sample.sphere:SphereSampleHDF5Handler',
-
-                 'PhotonDetectorHDF5Handler = pymontecarlo.formats.hdf5.options.detector.photon:PhotonDetectorHDF5Handler',
-
-                 'PhotonIntensityAnalysisHDF5Handler = pymontecarlo.formats.hdf5.options.analysis.photonintensity:PhotonIntensityAnalysisHDF5Handler',
-                 'KRatioAnalysisHDF5Handler = pymontecarlo.formats.hdf5.options.analysis.kratio:KRatioAnalysisHDF5Handler',
-
-                 'BremsstrahlungEmissionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.bremsstrahlung_emission:BremsstrahlungEmissionModelHDF5Handler',
-                 'DirectionCosineModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.direction_cosine:DirectionCosineModelHDF5Handler',
-                 'ElasticCrossSectionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.elastic_cross_section:ElasticCrossSectionModelHDF5Handler',
-                 'EnergyLossModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.energy_loss:EnergyLossModelHDF5Handler',
-                 'FluorescenceModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.fluorescence:FluorescenceModelHDF5Handler',
-                 'InelasticCrossSectionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.inelastic_cross_section:InelasticCrossSectionModelHDF5Handler',
-                 'IonizationCrossSectionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.ionization_cross_section:IonizationCrossSectionModelHDF5Handler',
-                 'IonizationPotentialModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.ionization_potential:IonizationPotentialModelHDF5Handler',
-                 'MassAbsorptionCoefficientModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.mass_absorption_coefficient:MassAbsorptionCoefficientModelHDF5Handler',
-                 'PhotonScatteringCrossSectionModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.photon_scattering_cross_section:PhotonScatteringCrossSectionModelHDF5Handler',
-                 'RandomNumberGeneratorModelHDF5Handler = pymontecarlo.formats.hdf5.options.model.random_number_generator:RandomNumberGeneratorModelHDF5Handler',
-
-                 'EmittedPhotonIntensityResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:EmittedPhotonIntensityResultHDF5Handler',
-                 'GeneratedPhotonIntensityResultHDF5Handler = pymontecarlo.formats.hdf5.results.photonintensity:GeneratedPhotonIntensityResultHDF5Handler',
-                 'KRatioResultHDF5Handler = pymontecarlo.formats.hdf5.results.kratio:KRatioResultHDF5Handler',
-                 ],
-
-                'pymontecarlo.formats.series':
+ENTRY_POINTS = {'pymontecarlo.formats.series':
                 [
                  'OptionsSeriesHandler = pymontecarlo.formats.series.options.options:OptionsSeriesHandler',
 
