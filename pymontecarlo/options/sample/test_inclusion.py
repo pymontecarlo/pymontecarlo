@@ -50,6 +50,11 @@ def test_inclusionample_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 7
 
+def test_inclusionample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 7
+
 def test_inclusionsamplebuilder(builder):
     builder.add_substrate_material(COPPER)
     builder.add_substrate_material(ZINC)

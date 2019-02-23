@@ -47,6 +47,11 @@ def test_kratioanalysis_series(analysis, seriesbuilder):
     analysis.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 0
 
+def test_kratioanalysis_document(analysis, documentbuilder):
+    analysis.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 6
+
 def test_kratioanalysis_apply(analysis, options):
     list_options = analysis.apply(options)
     assert len(list_options) == 1

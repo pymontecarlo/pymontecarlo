@@ -51,3 +51,16 @@ def assert_convert_parse_hdf5(entity, tmp_path, assert_equality=True):
 def assert_ufloats(x, y, abs=1e-6):
     assert x.n == pytest.approx(y.n, abs=abs)
     assert x.s == pytest.approx(y.s, abs=abs)
+
+def count_document_nodes(document):
+    def recursive(node, total=0):
+        if not hasattr(node, 'children'):
+            return total
+
+        total += len(node.children)
+        for childnode in node:
+            return recursive(childnode, total)
+
+        return total
+
+    return recursive(document)

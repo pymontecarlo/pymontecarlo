@@ -183,6 +183,32 @@ class Material(base.OptionBase):
 
 #endregion
 
+#region Document
+
+    TABLE_MATERIAL = 'material'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table(self.TABLE_MATERIAL)
+
+        table.add_column('Name')
+        table.add_column('Color')
+        table.add_column('Density', 'kg/m^3', self.DENSITY_TOLERANCE_kg_per_m3)
+        for z in sorted(self.composition):
+            name = pyxray.element_symbol(z)
+            table.add_column(name, tolerance=self.WEIGHT_FRACTION_TOLERANCE)
+
+        row = {'Name': self.name,
+               'Color': matplotlib.colors.to_hex(self.color),
+               'Density': self.density_kg_per_m3}
+        for z, wf in self.composition.items():
+            symbol = pyxray.element_symbol(z)
+            row[symbol] = wf
+        table.add_row(row)
+
+#endregion
+
 class _Vacuum(Material):
 
     _instance = None
@@ -221,6 +247,9 @@ class _Vacuum(Material):
 
     def convert_hdf5(self, group):
         base.OptionBase.convert_hdf5(self, group)
+
+    def convert_series(self, builder):
+        pass
 
 VACUUM = _Vacuum()
 

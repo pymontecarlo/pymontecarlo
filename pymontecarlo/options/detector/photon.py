@@ -76,6 +76,26 @@ class PhotonDetector(DetectorBase):
 
 #endregion
 
+#region Document
+
+    TABLE_PHOTON_DETECTOR = 'photon detector'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table(self.TABLE_PHOTON_DETECTOR)
+
+        table.add_column('Name')
+        table.add_column('Elevation', 'rad', self.ELEVATION_TOLERANCE_rad)
+        table.add_column('Azimuth', 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+        row = {'Name': self.name,
+               'Elevation': self.elevation_rad,
+               'Azimuth': self.azimuth_rad}
+        table.add_row(row)
+
+#endregion
+
 class PhotonDetectorBuilder(DetectorBuilderBase):
 
     def __init__(self):

@@ -109,6 +109,11 @@ def test_samplebase_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 2
 
+def test_samplebase_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 5
+
 def test_samplebuilderbase(builder):
     samples = builder.build()
     assert len(builder) == 1

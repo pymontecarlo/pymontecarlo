@@ -47,6 +47,11 @@ def test_spheresample_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 5
 
+def test_spheresample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 6
+
 def test_substratesamplebuilder(builder):
     builder.add_material(COPPER)
     builder.add_material(ZINC)

@@ -118,3 +118,9 @@ class EntitySeriesMixin(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def convert_series(self, builder):
         pass
+
+class EntityDocumentMixin(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def convert_document(self, builder):
+        pass

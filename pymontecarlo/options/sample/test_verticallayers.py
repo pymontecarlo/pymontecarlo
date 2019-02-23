@@ -85,6 +85,11 @@ def test_verticallayerssample_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 13
 
+def test_verticallayerssample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 7
+
 def test_verticallayerssamplebuilder(builder):
     builder.add_left_material(COPPER)
     builder.add_right_material(COPPER)

@@ -104,6 +104,23 @@ class VerticalLayerSample(LayeredSampleBase):
 
 #endregion
 
+#region Document
+
+    DESCRIPTION_VERTICAL_LAYER = 'vertical layer'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrates')
+
+        description = section.require_description(self.DESCRIPTION_VERTICAL_LAYER)
+        description.add_item('Left material', self.left_material.name)
+        description.add_item('Right material', self.right_material.name)
+        description.add_item('Depth', self.depth_m, 'm', self.DEPTH_TOLERANCE_m)
+
+#endregion
+
 class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):

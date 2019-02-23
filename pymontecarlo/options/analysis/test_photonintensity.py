@@ -39,9 +39,14 @@ def test_photonintensityanalysis_copy(analysis):
 def test_photonintensityanalysis_pickle(analysis):
     testutil.assert_pickle(analysis)
 
-def test_kratioanalysis_series(analysis, seriesbuilder):
+def test_photonintensityanalysis_series(analysis, seriesbuilder):
     analysis.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 0
+
+def test_photonintensityanalysis_document(analysis, documentbuilder):
+    analysis.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 4
 
 def test_photonintensityanalyis_apply(analysis, options):
     list_options = analysis.apply(options)

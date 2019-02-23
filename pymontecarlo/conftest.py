@@ -29,6 +29,7 @@ from pymontecarlo.simulation import Simulation
 from pymontecarlo.project import Project
 from pymontecarlo.settings import Settings, XrayNotation
 from pymontecarlo.formats.series import SeriesBuilder
+from pymontecarlo.formats.document import DocumentBuilder
 
 # Globals and constants variables.
 
@@ -163,3 +164,7 @@ def settings():
 @pytest.fixture
 def seriesbuilder(settings):
     return SeriesBuilder(settings)
+
+@pytest.fixture
+def documentbuilder(settings):
+    return DocumentBuilder(settings)

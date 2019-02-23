@@ -48,6 +48,16 @@ class PhotonAnalysisBase(AnalysisBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description(self.DESCRIPTION_DETECTOR)
+        description.add_item('Detector', self.photon_detector.name)
+
+#endregion
+
 class PhotonAnalysisBuilderBase(AnalysisBuilderBase):
 
     def __init__(self):

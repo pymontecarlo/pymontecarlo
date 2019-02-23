@@ -48,6 +48,15 @@ def test_options_series(options, seriesbuilder):
     options.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 16
 
+def test_options_document(options, documentbuilder):
+    options.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 14
+
+#    from pymontecarlo.formats.document import publish_html
+#    with open('/tmp/options.html', 'wb') as fp:
+#        fp.write(publish_html(documentbuilder))
+
 def test_optionsbuilder_single(builder, options):
     builder.add_program(options.program)
     builder.add_beam(options.beam)

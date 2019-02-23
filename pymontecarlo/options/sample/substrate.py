@@ -65,6 +65,12 @@ class SubstrateSample(SampleBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+#endregion
 
 class SubstrateSampleBuilder(SampleBuilderBase):
 

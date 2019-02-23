@@ -76,6 +76,22 @@ class SphereSample(SampleBase):
 
 #endregion
 
+#region Document
+
+    DESCRIPTION_SPHERE = 'sphere'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Sphere')
+
+        description = section.require_description(self.DESCRIPTION_SPHERE)
+        description.add_item('Material', self.material.name)
+        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+
+#endregion
+
 class SphereSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

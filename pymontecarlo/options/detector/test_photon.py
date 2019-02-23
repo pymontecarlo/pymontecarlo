@@ -52,6 +52,11 @@ def test_photondetector_series(detector, seriesbuilder):
     detector.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 2
 
+def test_photondetector_document(detector, documentbuilder):
+    detector.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 8
+
 def test_photondetectorbuild(builder):
     builder.add_elevation_deg(1.1)
     builder.add_elevation_deg(2.2)

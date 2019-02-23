@@ -11,7 +11,8 @@ import itertools
 import h5py
 
 # Local modules.
-from pymontecarlo.util.cbook import unique, find_by_type
+from pymontecarlo.util.cbook import unique, find_by_type, organize_by_type
+from pymontecarlo.util.human import camelcase_to_words
 import pymontecarlo.options.base as base
 
 # Globals and constants variables.
@@ -123,6 +124,45 @@ class Options(base.OptionBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title('Program')
+        section = builder.add_section()
+        section.add_entity(self.program)
+
+        builder.add_title('Beam')
+        section = builder.add_section()
+        section.add_entity(self.beam)
+
+        builder.add_title('Sample')
+        section = builder.add_section()
+        section.add_entity(self.sample)
+
+        builder.add_title('Detector' if len(self.detectors) < 2 else 'Detectors')
+        for clasz, detectors in organize_by_type(self.detectors).items():
+            section = builder.add_section()
+            section.add_title(camelcase_to_words(clasz.__name__))
+
+            for detector in detectors:
+                section.add_entity(detector)
+
+        builder.add_title('Analysis' if len(self.analyses) < 2 else 'Analyses')
+        for analysis in self.analyses:
+            section = builder.add_section()
+            section.add_entity(analysis)
+
+        builder.add_title('Tags')
+        if self.tags:
+            bullet_builder = builder.require_bullet('tags')
+            for tag in self.tags:
+                bullet_builder.add_item(tag)
+        else:
+            builder.add_text('No tags')
+
+#endregion
 
 class OptionsBuilder(base.OptionBuilderBase):
 

@@ -9,9 +9,10 @@ import operator
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute
-from pymontecarlo.options.particle import Particle
 import pymontecarlo.options.base as base
+from pymontecarlo.options.particle import Particle
+from pymontecarlo.util.cbook import MultiplierAttribute
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
@@ -60,6 +61,21 @@ class BeamBase(base.OptionBase):
         super().convert_series(builder)
         builder.add_column('beam energy', 'E0', self.energy_eV, 'eV', self.ENERGY_TOLERANCE_eV)
         builder.add_column('beam particle', 'par', str(self.particle))
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_BEAM = 'beam'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(camelcase_to_words(self.__class__.__name__))
+
+        description = builder.require_description(self.DESCRIPTION_BEAM)
+        description.add_item('Energy', self.energy_eV, 'eV', self.ENERGY_TOLERANCE_eV)
+        description.add_item('Particle', self.particle)
 
 #endregion
 

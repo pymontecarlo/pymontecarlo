@@ -95,6 +95,18 @@ class CylindricalBeam(BeamBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description(self.DESCRIPTION_BEAM)
+        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        description.add_item('Initial x position', self.x0_m, 'm', self.POSITION_TOLERANCE_m)
+        description.add_item('Initial y position', self.y0_m, 'm', self.POSITION_TOLERANCE_m)
+
+#endregion
+
 class CylindricalBeamBuilder(BeamBuilderBase):
 
     def __init__(self):

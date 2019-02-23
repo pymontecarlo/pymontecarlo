@@ -99,6 +99,21 @@ class HorizontalLayerSample(LayeredSampleBase):
 
 #endregion
 
+#region Document
+
+    DESCRIPTION_SUBSTRATE = 'substrate'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrate')
+
+        description = section.require_description(self.DESCRIPTION_SUBSTRATE)
+        description.add_item('Material', self.substrate_material.name)
+
+#endregion
+
 class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):

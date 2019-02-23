@@ -10,12 +10,12 @@ import numbers
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.entity import EntityBase, EntityHDF5Mixin, EntitySeriesMixin
+from pymontecarlo.entity import EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentMixin
 from pymontecarlo.formats.base import LazyFormat
 
 # Globals and constants variables.
 
-class OptionBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin):
+class OptionBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentMixin):
     """
     Base class of all the options.
     All derived classes should implement
@@ -52,6 +52,9 @@ class LazyOptionBase(OptionBase, LazyFormat):
 
     def convert_series(self, builder):
         super().convert_series(builder)
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
 
 class OptionBuilderBase(metaclass=abc.ABCMeta):
     """

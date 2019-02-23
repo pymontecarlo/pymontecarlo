@@ -57,6 +57,11 @@ def test_gaussianbeam_series(beam, seriesbuilder):
     beam.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 5
 
+def test_gaussianbeam_document(beam, documentbuilder):
+    beam.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 4
+
 def test_gaussianbeambuilder(builder):
     builder.add_energy_eV(10e3)
     builder.add_energy_keV(10) # Not added

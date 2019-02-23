@@ -53,5 +53,14 @@ class ProgramBase(base.OptionBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(self.name)
+
+#endregion
+
 class ProgramBuilderBase(base.OptionBuilderBase):
     pass

@@ -32,7 +32,6 @@ from pymontecarlo.mock import ProgramMock
 from pymontecarlo.util.entrypoint import \
     (reset_entrypoints, ENTRYPOINT_HDF5HANDLER, ENTRYPOINT_SERIESHANDLER,
      ENTRYPOINT_DOCUMENTHANDLER)
-from pymontecarlo.formats.document.builder import DocumentBuilder
 
 # Globals and constants variables.
 
@@ -175,34 +174,4 @@ class TestCase(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         self.tmpdirs.append(tmpdir)
         return tmpdir
-
-    def convert_parse_hdf5handler(self, handler, obj):
-        filepath = os.path.join(self.create_temp_dir(), 'object.h5')
-        with h5py.File(filepath) as f:
-            self.assertTrue(handler.can_convert(obj, f))
-            handler.convert(obj, f)
-
-        with h5py.File(filepath) as f:
-            self.assertTrue(handler.can_parse(f))
-            obj2 = handler.parse(f)
-
-        return obj2
-
-    def convert_documenthandler(self, handler, obj):
-        builder = DocumentBuilder(self.settings)
-        handler.convert(obj, builder)
-        return builder.build()
-
-    def count_document_nodes(self, document):
-        def recursive(node, total=0):
-            if not hasattr(node, 'children'):
-                return total
-
-            total += len(node.children)
-            for childnode in node:
-                return recursive(childnode, total)
-
-            return total
-
-        return recursive(document)
 

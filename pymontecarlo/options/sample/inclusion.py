@@ -84,6 +84,28 @@ class InclusionSample(SampleBase):
 
 #endregion
 
+#region Document
+
+    DESCRIPTION_SUBTRATE = 'substrate'
+    DESCRIPTION_INCLUSION = 'inclusion'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrate')
+
+        description = section.require_description(self.DESCRIPTION_SUBTRATE)
+        description.add_item('Material', self.substrate_material.name)
+
+        section = builder.add_section()
+        section.add_title('Inclusion')
+
+        description = section.require_description(self.DESCRIPTION_INCLUSION)
+        description.add_item('Material', self.inclusion_material.name)
+        description.add_item('Diameter', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+
+#endregion
 
 class InclusionSampleBuilder(SampleBuilderBase):
 

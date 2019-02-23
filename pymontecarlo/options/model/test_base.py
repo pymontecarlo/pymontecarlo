@@ -9,6 +9,7 @@
 from pymontecarlo.options.model.base import ModelBase
 from pymontecarlo.options.base import OptionBase
 import pymontecarlo.util.testutil as testutil
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
@@ -39,6 +40,20 @@ class OptionMock(OptionBase):
     def convert_series(self, builder):
         super().convert_series(builder)
         builder.add_column('model', 'model', self.model)
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table('models')
+
+        table.add_column('Category')
+        table.add_column('Model')
+        table.add_column('Reference')
+
+        row = {'Category': camelcase_to_words(self.model.__class__.__name__[:-5]),
+               'Model': self.model.fullname,
+               'Reference': self.model.reference}
+        table.add_row(row)
 
 def test_model():
     assert ModelMock.A.fullname == 'model A'
@@ -72,3 +87,9 @@ def test_model_series(seriesbuilder):
     option = OptionMock(ModelMock.A)
     option.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 1
+
+def test_model_document(documentbuilder):
+    option = OptionMock(ModelMock.A)
+    option.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 8

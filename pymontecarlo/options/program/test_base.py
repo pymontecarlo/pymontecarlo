@@ -27,3 +27,8 @@ def test_program_pickle(program):
 def test_program_series(program, seriesbuilder):
     program.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 3
+
+def test_program_document(program, documentbuilder):
+    program.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 5

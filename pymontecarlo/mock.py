@@ -24,7 +24,6 @@ from pymontecarlo.options.program.exporter import ExporterBase, apply_lazy
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
-from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
 from pymontecarlo.util.process import create_startupinfo
 
 # Globals and constants variables.
@@ -258,12 +257,32 @@ class ProgramMock(ProgramBase):
         self._convert_hdf5(group, self.ATTR_NUMBER_TRAJECTORIES, self.number_trajectories)
         self._convert_hdf5(group, self.ATTR_ELASTIC_CROSS_SECTION_MODEL, self.elastic_cross_section_model)
 
+#endregion HDF5
+
+#region Series
+
     def convert_series(self, builder):
         super().convert_series(builder)
         builder.add_column('number trajectories', 'ntraj', self.number_trajectories)
         builder.add_column('elastic cross section model', 'elastic', self.elastic_cross_section_model)
 
-#endregion HDF5
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description('program')
+        description.add_item('Number trajectories', self.number_trajectories)
+
+        section = builder.add_section()
+        section.add_title('Models')
+
+        description = section.require_description('models')
+        description.add_item('elastic cross section', self.elastic_cross_section_model)
+
+#endregion
 
 class ProgramBuilderMock(ProgramBuilderBase):
 
@@ -292,19 +311,3 @@ class ProgramBuilderMock(ProgramBuilderBase):
             programs.append(program)
 
         return programs
-
-class ProgramDocumentHandlerMock(ProgramDocumentHandlerBase):
-
-    def convert(self, program, builder):
-        super().convert(program, builder)
-
-        description = builder.require_description('program')
-        description.add_item('Number trajectories', program.number_trajectories)
-
-        section = builder.add_section()
-        section.add_title('Models')
-        section.add_object(program.elastic_cross_section_model)
-
-    @property
-    def CLASS(self):
-        return ProgramMock

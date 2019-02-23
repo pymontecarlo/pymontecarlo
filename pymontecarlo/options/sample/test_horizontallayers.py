@@ -96,6 +96,11 @@ def test_horizontallayerssample_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 10 if sample.has_substrate() else 9
 
+def test_horizontallayerssample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 7
+
 def test_horizontallayerssamplebuilder(builder):
     builder.add_substrate_material(COPPER)
     layerbuilder = builder.add_layer(ZINC, 10)

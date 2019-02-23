@@ -15,6 +15,7 @@ import h5py
 # Local modules.
 from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import unique, DegreesAttribute
+from pymontecarlo.util.human import camelcase_to_words
 import pymontecarlo.options.base as base
 
 # Globals and constants variables.
@@ -86,6 +87,27 @@ class SampleBase(base.OptionBase):
         builder.add_column('sample azimuth', 'phi0', self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
 
 #endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(camelcase_to_words(self.__class__.__name__))
+
+        section = builder.add_section()
+        section.add_title('Orientation')
+        description = section.require_description('angles')
+        description.add_item('Tilt angle', self.tilt_rad, 'rad', self.TILT_TOLERANCE_rad)
+        description.add_item('Azimuth rotation', self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+        section = builder.add_section()
+        section.add_title('Material' if len(self.materials) < 2 else 'Materials')
+        for material in self.materials:
+            section.add_entity(material)
+
+#endregion
+
 
 class SampleBuilderBase(base.OptionBuilderBase):
 
@@ -180,6 +202,23 @@ class Layer(base.OptionBase):
 
 #endregion
 
+#region Document
+
+    TABLE_LAYER = 'layer'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table(self.TABLE_LAYER)
+
+        table.add_column('Material')
+        table.add_column('Thickness', 'm', self.THICKNESS_TOLERANCE_m)
+
+        row = {'Material': self.material.name,
+               'Thickness': self.thickness_m}
+        table.add_row(row)
+
+#endregion
 
 class LayerBuilder(base.OptionBuilderBase):
 
@@ -275,6 +314,17 @@ class LayeredSampleBase(SampleBase):
 
 #endregion
 
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Layer' if len(self.layers) < 2 else 'Layers')
+        for layer in self.layers:
+            section.add_entity(layer)
+
+#endregion
 
 class LayeredSampleBuilderBase(SampleBuilderBase):
 

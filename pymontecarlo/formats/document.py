@@ -1,15 +1,15 @@
 """"""
 
 # Standard library modules.
-from collections import OrderedDict
+from collections import OrderedDict #@UnresolvedImport
 
 # Third party modules.
+import docutils.core
 import docutils.nodes
 import docutils.utils
 
 # Local modules.
 from pymontecarlo.formats.base import FormatBuilderBase
-from pymontecarlo.formats.document.entrypoint import find_convert_documenthandler
 
 # Globals and constants variables.
 
@@ -47,9 +47,8 @@ class DocumentBuilder(DocutilsFormatBuilderBase):
         node = docutils.nodes.subtitle(text=subtitle)
         self.nodes.append(node)
 
-    def add_object(self, obj):
-        handler = find_convert_documenthandler(obj)
-        handler.convert(obj, self)
+    def add_entity(self, entity):
+        entity.convert_document(self)
 
     def add_section(self):
         builder = self.__class__(self.settings)
@@ -226,3 +225,7 @@ class TableBuilder(DocutilsFormatBuilderBase):
         document = docutils.utils.new_document('')
         document += table
         return document
+
+def publish_html(builder):
+    document = builder.build()
+    return docutils.core.publish_from_doctree(document, writer_name='html5')

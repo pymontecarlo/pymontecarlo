@@ -12,6 +12,8 @@ import h5py
 
 import numpy as np
 
+import pyxray
+
 # Local modules.
 from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import GaussianBeam
@@ -196,6 +198,39 @@ class KRatioAnalysis(PhotonAnalysisBase):
         for i, (z, material) in enumerate(standard_materials.items()):
             ds_z[i] = z
             ds_standard[i] = self._convert_hdf5_reference(group, material)
+
+#endregion
+
+#region Document
+
+    TABLE_STANDARD = 'standard'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        # Standards
+        section = builder.add_section()
+        section.add_title('Standard(s)')
+
+        if self.standard_materials:
+            table = section.require_table(self.TABLE_STANDARD)
+
+            table.add_column('Element')
+            table.add_column('Material')
+
+            for z, material in self.standard_materials.items():
+                row = {'Element': pyxray.element_symbol(z),
+                       'Material': material.name}
+                table.add_row(row)
+
+            section = builder.add_section()
+            section.add_title('Materials')
+
+            for material in self.standard_materials.values():
+                section.add_entity(material)
+
+        else:
+            section.add_text('No standard defined')
 
 #endregion
 
