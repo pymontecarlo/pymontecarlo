@@ -43,6 +43,10 @@ def test_kratioanalysis_copy(analysis):
 def test_kratioanalysis_pickle(analysis):
     testutil.assert_pickle(analysis)
 
+def test_kratioanalysis_series(analysis, seriesbuilder):
+    analysis.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 0
+
 def test_kratioanalysis_apply(analysis, options):
     list_options = analysis.apply(options)
     assert len(list_options) == 1

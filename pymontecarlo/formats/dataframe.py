@@ -7,9 +7,7 @@ import math
 import pandas as pd
 
 # Local modules.
-from pymontecarlo.formats.series.options.options import OptionsSeriesHandler
-from pymontecarlo.formats.series.builder import SeriesBuilder
-from pymontecarlo.exceptions import ConvertError
+from pymontecarlo.formats.series import SeriesBuilder
 
 # Globals and constants variables.
 
@@ -47,12 +45,9 @@ def create_options_dataframe(list_options, settings,
     """
     list_series = []
 
-    handler = OptionsSeriesHandler()
-
     for options in list_options:
         builder = SeriesBuilder(settings, abbreviate_name, format_number)
-
-        handler.convert(options, builder)
+        options.convert_series(builder)
 
         s = builder.build()
         list_series.append(s)
@@ -85,17 +80,14 @@ def create_results_dataframe(list_results, settings,
         for result in results:
             prefix = result.getname().lower() + ' '
 
-            try:
-                if result_classes is None: # Include all results
-                    builder.add_object(result, prefix)
+            if result_classes is None: # Include all results
+                builder.add_entity(result, prefix)
 
-                elif type(result) in result_classes:
-                    if len(result_classes) == 1:
-                        builder.add_object(result)
-                    else:
-                        builder.add_object(result, prefix)
-            except ConvertError:
-                continue
+            elif type(result) in result_classes:
+                if len(result_classes) == 1:
+                    builder.add_entity(result)
+                else:
+                    builder.add_entity(result, prefix)
 
         list_series.append(builder.build())
 

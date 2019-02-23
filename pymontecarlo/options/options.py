@@ -103,6 +103,27 @@ class Options(base.OptionBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        builder.add_entity(self.program)
+        builder.add_entity(self.beam)
+        builder.add_entity(self.sample)
+
+        for detector in self.detectors:
+            builder.add_entity(detector)
+
+        for analysis in self.analyses:
+            builder.add_entity(analysis)
+
+        for tag in self.tags:
+            builder.add_column(tag, tag, True)
+
+#endregion
+
+
 class OptionsBuilder(base.OptionBuilderBase):
 
     def __init__(self, tags=None):

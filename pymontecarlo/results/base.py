@@ -9,11 +9,11 @@ import abc
 
 # Local modules.
 from pymontecarlo.util.human import camelcase_to_words
-from pymontecarlo.entity import EntityBase
+from pymontecarlo.entity import EntityBase, EntityHDF5Mixin, EntitySeriesMixin
 
 # Globals and constants variables.
 
-class ResultBase(EntityBase):
+class ResultBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin):
 
     @classmethod
     def getname(cls):

@@ -41,6 +41,13 @@ class PhotonAnalysisBase(AnalysisBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+#endregion
+
 class PhotonAnalysisBuilderBase(AnalysisBuilderBase):
 
     def __init__(self):

@@ -24,7 +24,6 @@ from pymontecarlo.options.program.exporter import ExporterBase, apply_lazy
 from pymontecarlo.options.program.worker import WorkerBase
 from pymontecarlo.options.program.importer import ImporterBase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
-from pymontecarlo.formats.series.options.program.base import ProgramSeriesHandlerBase
 from pymontecarlo.formats.document.options.program.base import ProgramDocumentHandlerBase
 from pymontecarlo.util.process import create_startupinfo
 
@@ -259,6 +258,11 @@ class ProgramMock(ProgramBase):
         self._convert_hdf5(group, self.ATTR_NUMBER_TRAJECTORIES, self.number_trajectories)
         self._convert_hdf5(group, self.ATTR_ELASTIC_CROSS_SECTION_MODEL, self.elastic_cross_section_model)
 
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('number trajectories', 'ntraj', self.number_trajectories)
+        builder.add_column('elastic cross section model', 'elastic', self.elastic_cross_section_model)
+
 #endregion HDF5
 
 class ProgramBuilderMock(ProgramBuilderBase):
@@ -288,17 +292,6 @@ class ProgramBuilderMock(ProgramBuilderBase):
             programs.append(program)
 
         return programs
-
-class ProgramSeriesHandlerMock(ProgramSeriesHandlerBase):
-
-    def convert(self, program, builder):
-        super().convert(program, builder)
-        builder.add_column('number trajectories', 'ntraj', program.number_trajectories)
-        builder.add_object(program.elastic_cross_section_model)
-
-    @property
-    def CLASS(self):
-        return ProgramMock
 
 class ProgramDocumentHandlerMock(ProgramDocumentHandlerBase):
 

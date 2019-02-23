@@ -53,6 +53,10 @@ def test_gaussianbeam_copy(beam):
 def test_gaussianbeam_pickle(beam):
     testutil.assert_pickle(beam)
 
+def test_gaussianbeam_series(beam, seriesbuilder):
+    beam.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 5
+
 def test_gaussianbeambuilder(builder):
     builder.add_energy_eV(10e3)
     builder.add_energy_keV(10) # Not added

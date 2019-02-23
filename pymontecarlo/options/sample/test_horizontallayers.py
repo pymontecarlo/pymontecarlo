@@ -92,6 +92,10 @@ def test_horizontallayerssample_copy(sample):
 def test_horizontallayerssample_pickle(sample):
     testutil.assert_pickle(sample)
 
+def test_horizontallayerssample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 10 if sample.has_substrate() else 9
+
 def test_horizontallayerssamplebuilder(builder):
     builder.add_substrate_material(COPPER)
     layerbuilder = builder.add_layer(ZINC, 10)

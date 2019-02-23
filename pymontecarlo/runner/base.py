@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 from pymontecarlo.project import Project
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.util.cbook import unique
-from pymontecarlo.formats.series.identifier import create_identifiers
+from pymontecarlo.formats.identifier import create_identifiers
 
 from pymontecarlo.util.token import Token
 

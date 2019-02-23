@@ -105,6 +105,10 @@ def test_samplebase_copy(sample):
 def test_samplebase_pickle(sample):
     testutil.assert_pickle(sample)
 
+def test_samplebase_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
+
 def test_samplebuilderbase(builder):
     samples = builder.build()
     assert len(builder) == 1

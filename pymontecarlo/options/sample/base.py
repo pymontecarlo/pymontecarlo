@@ -78,6 +78,15 @@ class SampleBase(base.OptionBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('sample tilt', 'theta0', self.tilt_rad, 'rad', self.TILT_TOLERANCE_rad)
+        builder.add_column('sample azimuth', 'phi0', self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+#endregion
+
 class SampleBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):
@@ -162,6 +171,16 @@ class Layer(base.OptionBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material)
+        builder.add_column('thickness', 't', self.thickness_m, 'm', self.THICKNESS_TOLERANCE_m)
+
+#endregion
+
+
 class LayerBuilder(base.OptionBuilderBase):
 
     def __init__(self):
@@ -243,6 +262,19 @@ class LayeredSampleBase(SampleBase):
             dataset[i] = self._convert_hdf5_reference(group, layer)
 
 #endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        for i, layer in enumerate(self.layers):
+            prefix = "layer #{0:d} ".format(i)
+            prefix_abbrev = "L{0:d} ".format(i)
+            builder.add_entity(layer, prefix, prefix_abbrev)
+
+#endregion
+
 
 class LayeredSampleBuilderBase(SampleBuilderBase):
 

@@ -36,6 +36,10 @@ class OptionMock(OptionBase):
         super().convert_hdf5(group)
         self._convert_hdf5(group, self.ATTR_MODEL, self.model)
 
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('model', 'model', self.model)
+
 def test_model():
     assert ModelMock.A.fullname == 'model A'
     assert ModelMock.A.reference == 'doe2017'
@@ -63,3 +67,8 @@ def test_model_copy():
 
 def test_model_pickle():
     testutil.assert_pickle(ModelMock.A)
+
+def test_model_series(seriesbuilder):
+    option = OptionMock(ModelMock.A)
+    option.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 1

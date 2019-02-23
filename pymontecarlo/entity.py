@@ -23,7 +23,8 @@ class EntityBase(metaclass=abc.ABCMeta):
         super().__init_subclass__(**kwargs)
         cls._subclasses.append(cls)
 
-#region HDF5
+class EntityHDF5Mixin(metaclass=abc.ABCMeta):
+
     ATTR_CLASS = '_class'
     ATTR_VERSION = '_version'
 
@@ -112,4 +113,8 @@ class EntityBase(metaclass=abc.ABCMeta):
 
         return group_obj.ref
 
-#endregion
+class EntitySeriesMixin(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def convert_series(self, builder):
+        pass

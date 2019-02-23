@@ -7,13 +7,13 @@ Simulation.
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.entity import EntityBase
+from pymontecarlo.entity import EntityBase, EntityHDF5Mixin
 from pymontecarlo.util.cbook import find_by_type
-from pymontecarlo.formats.series.identifier import create_identifier
+from pymontecarlo.formats.identifier import create_identifier
 
 # Globals and constants variables.
 
-class Simulation(EntityBase):
+class Simulation(EntityBase, EntityHDF5Mixin):
 
     def __init__(self, options, results=None, identifier=None):
         self.options = options

@@ -57,6 +57,15 @@ class SubstrateSample(SampleBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material, 'substrate ', 'subs ')
+
+#endregion
+
+
 class SubstrateSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

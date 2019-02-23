@@ -46,6 +46,10 @@ def test_inclusionsample_copy(sample):
 def test_inclusionample_pickle(sample):
     testutil.assert_pickle(sample)
 
+def test_inclusionample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 7
+
 def test_inclusionsamplebuilder(builder):
     builder.add_substrate_material(COPPER)
     builder.add_substrate_material(ZINC)

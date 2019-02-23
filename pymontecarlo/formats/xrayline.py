@@ -6,7 +6,7 @@
 
 # Local modules.
 from pymontecarlo.settings import XrayNotation
-from pymontecarlo.formats.builder import LazyFormat
+from pymontecarlo.formats.base import LazyFormat
 
 # Globals and constants variables.
 

@@ -62,6 +62,20 @@ class PhotonDetector(DetectorBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        name = '{} elevation angle'.format(self.name)
+        abbrev = '{} theta'.format(self.name)
+        builder.add_column(name, abbrev, self.elevation_rad, 'rad', self.ELEVATION_TOLERANCE_rad)
+
+        name = '{} azimuth angle'.format(self.name)
+        abbrev = '{} phi'.format(self.name)
+        builder.add_column(name, abbrev, self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+#endregion
+
 class PhotonDetectorBuilder(DetectorBuilderBase):
 
     def __init__(self):

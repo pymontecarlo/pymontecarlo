@@ -48,6 +48,10 @@ def test_photondetector_copy(detector):
 def test_photondetector_pickle(detector):
     testutil.assert_pickle(detector)
 
+def test_photondetector_series(detector, seriesbuilder):
+    detector.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
+
 def test_photondetectorbuild(builder):
     builder.add_elevation_deg(1.1)
     builder.add_elevation_deg(2.2)

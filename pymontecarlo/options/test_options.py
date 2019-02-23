@@ -44,6 +44,10 @@ def test_options_copy(options):
 def test_options_pickle(options):
     testutil.assert_pickle(options)
 
+def test_options_series(options, seriesbuilder):
+    options.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 16
+
 def test_optionsbuilder_single(builder, options):
     builder.add_program(options.program)
     builder.add_beam(options.beam)

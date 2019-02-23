@@ -8,7 +8,7 @@ import docutils.nodes
 import docutils.utils
 
 # Local modules.
-from pymontecarlo.formats.builder import FormatBuilderBase
+from pymontecarlo.formats.base import FormatBuilderBase
 from pymontecarlo.formats.document.entrypoint import find_convert_documenthandler
 
 # Globals and constants variables.

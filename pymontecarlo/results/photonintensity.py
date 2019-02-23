@@ -7,6 +7,7 @@ import uncertainties
 
 # Local modules.
 from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuilderBase
+from pymontecarlo.formats.xrayline import LazyXrayLineFormat
 
 # Globals and constants variables.
 
@@ -17,6 +18,18 @@ class PhotonIntensityResultBase(PhotonSingleResultBase):
     """
 
     DATASET_VALUES = 'intensities'
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        for xrayline, q in self.items():
+            name = abbrev = LazyXrayLineFormat(xrayline)
+            builder.add_column(name, abbrev, q.n, '1/(sr.electron)')
+            builder.add_column(name, abbrev, q.s, '1/(sr.electron)', error=True)
+
+#endregion
 
 class EmittedPhotonIntensityResult(PhotonIntensityResultBase):
     pass

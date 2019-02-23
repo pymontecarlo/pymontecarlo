@@ -91,6 +91,14 @@ class HorizontalLayerSample(LayeredSampleBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
+
+#endregion
+
 class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):

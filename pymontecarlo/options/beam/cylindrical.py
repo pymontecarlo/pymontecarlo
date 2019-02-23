@@ -85,6 +85,16 @@ class CylindricalBeam(BeamBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('beam diameter', 'd0', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        builder.add_column('beam initial x position', 'x0', self.x0_m, 'm', self.POSITION_TOLERANCE_m)
+        builder.add_column('beam initial y position', 'y0', self.y0_m, 'm', self.POSITION_TOLERANCE_m)
+
+#endregion
+
 class CylindricalBeamBuilder(BeamBuilderBase):
 
     def __init__(self):

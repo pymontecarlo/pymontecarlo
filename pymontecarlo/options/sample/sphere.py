@@ -67,6 +67,15 @@ class SphereSample(SampleBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material, 'sphere ', 'sphere ')
+        builder.add_column('sphere diameter', 'd', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+
+#endregion
+
 class SphereSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

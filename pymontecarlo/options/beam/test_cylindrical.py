@@ -54,6 +54,10 @@ def test_cylindricalbeam_copy(beam):
 def test_cylindricalbeam_pickle(beam):
     testutil.assert_pickle(beam)
 
+def test_cylidricalbeam_series(beam, seriesbuilder):
+    beam.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 5
+
 def test_cylindricalbeambuilder(builder):
     builder.add_energy_eV(10e3)
     builder.add_energy_keV(10) # Not added

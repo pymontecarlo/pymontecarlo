@@ -74,6 +74,17 @@ class InclusionSample(SampleBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
+        builder.add_entity(self.inclusion_material, 'inclusion ', 'incl ')
+        builder.add_column('inclusion diameter', 'd', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+
+#endregion
+
+
 class InclusionSampleBuilder(SampleBuilderBase):
 
     def __init__(self):

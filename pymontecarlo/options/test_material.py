@@ -62,6 +62,10 @@ def test_material_copy(material):
 def test_material_pickle(material):
     testutil.assert_pickle(material)
 
+def test_material_series(material, seriesbuilder):
+    material.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
+
 def test_material_pure():
     material = Material.pure(29)
 
@@ -111,6 +115,10 @@ def test_lazymaterial_copy(lazy_material):
 
 def test_lazymaterial_pickle(lazy_material):
     testutil.assert_pickle(lazy_material)
+
+def test_lazymaterial_series(lazy_material, seriesbuilder):
+    lazy_material.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
 
 def test_vacuum():
     assert str(VACUUM) == 'Vacuum'

@@ -45,5 +45,9 @@ def test_photonintensityresult_hdf5(result, tmp_path):
     result2 = testutil.assert_convert_parse_hdf5(result, tmp_path, assert_equality=False)
     _test_photonintensityresult(result2)
 
+def test_photonintensityresult_series(result, seriesbuilder):
+    result.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 10
+
 def test_photonintensityresultbuilder(builder):
     assert len(builder.build()) == 5

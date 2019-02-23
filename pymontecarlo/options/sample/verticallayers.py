@@ -94,6 +94,16 @@ class VerticalLayerSample(LayeredSampleBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.left_material, 'left substrate ', 'left ')
+        builder.add_entity(self.right_material, 'right substrate ', 'right ')
+        builder.add_column('vertical layers depth', 'zmax', self.depth_m, 'm', self.DEPTH_TOLERANCE_m)
+
+#endregion
+
 class VerticalLayerSampleBuilder(LayeredSampleBuilderBase):
 
     def __init__(self):

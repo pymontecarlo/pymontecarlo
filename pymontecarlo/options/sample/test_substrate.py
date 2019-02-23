@@ -42,6 +42,10 @@ def test_substratesample_copy(sample):
 def test_substratesample_pickle(sample):
     testutil.assert_pickle(sample)
 
+def test_substratesample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 4
+
 def test_substratesamplebuilder_twomaterials(builder):
     builder.add_material(COPPER)
     builder.add_material(ZINC)

@@ -34,14 +34,18 @@ def test_spheresample_eq(sample):
     assert sample != SphereSample(ZINC, 123.456)
     assert sample != SphereSample(COPPER, 124.456)
 
-def test_substratesample_hdf5(sample, tmp_path):
+def test_spheresample_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-def test_substratesample_copy(sample):
+def test_spheresample_copy(sample):
     testutil.assert_copy(sample)
 
-def test_substratesample_pickle(sample):
+def test_spheresample_pickle(sample):
     testutil.assert_pickle(sample)
+
+def test_spheresample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 5
 
 def test_substratesamplebuilder(builder):
     builder.add_material(COPPER)

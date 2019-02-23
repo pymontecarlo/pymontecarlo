@@ -11,7 +11,7 @@ import h5py
 import pymontecarlo
 from pymontecarlo.util.path import get_config_dir
 from pymontecarlo.util.signal import Signal
-from pymontecarlo.entity import EntityBase
+from pymontecarlo.entity import EntityBase, EntityHDF5Mixin
 
 # Globals and constants variables.
 
@@ -19,7 +19,7 @@ class XrayNotation(enum.Enum):
     IUPAC = 'iupac'
     SIEGBAHN = 'siegbahn'
 
-class Settings(EntityBase):
+class Settings(EntityBase, EntityHDF5Mixin):
 
     DEFAULT_FILENAME = 'settings.h5'
 

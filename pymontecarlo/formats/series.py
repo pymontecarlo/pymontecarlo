@@ -6,8 +6,7 @@
 import pandas as pd
 
 # Local modules.
-from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
-from pymontecarlo.formats.builder import FormatBuilderBase
+from pymontecarlo.formats.base import FormatBuilderBase
 
 # Globals and constants variables.
 
@@ -21,10 +20,9 @@ class SeriesBuilder(FormatBuilderBase):
         datum = self._create_datum(name, abbrev, value, unit, tolerance, error)
         self.data.append(datum)
 
-    def add_object(self, obj, prefix_name='', prefix_abbrev=''):
-        handler = find_convert_serieshandler(obj)
+    def add_entity(self, entity, prefix_name='', prefix_abbrev=''):
         builder = self.__class__(self.settings)
-        handler.convert(obj, builder)
+        entity.convert_series(builder)
 
         prefix_abbrev = prefix_abbrev or prefix_name
 

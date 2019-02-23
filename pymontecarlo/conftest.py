@@ -28,6 +28,7 @@ from pymontecarlo.results.kratio import KRatioResultBuilder
 from pymontecarlo.simulation import Simulation
 from pymontecarlo.project import Project
 from pymontecarlo.settings import Settings, XrayNotation
+from pymontecarlo.formats.series import SeriesBuilder
 
 # Globals and constants variables.
 
@@ -158,3 +159,7 @@ def settings():
     settings = Settings()
     settings.preferred_xray_notation = XrayNotation.IUPAC
     return settings
+
+@pytest.fixture
+def seriesbuilder(settings):
+    return SeriesBuilder(settings)

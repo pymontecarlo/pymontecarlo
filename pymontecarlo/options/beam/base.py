@@ -54,6 +54,15 @@ class BeamBase(base.OptionBase):
 
 #endregion
 
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('beam energy', 'E0', self.energy_eV, 'eV', self.ENERGY_TOLERANCE_eV)
+        builder.add_column('beam particle', 'par', str(self.particle))
+
+#endregion
+
 class BeamBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):

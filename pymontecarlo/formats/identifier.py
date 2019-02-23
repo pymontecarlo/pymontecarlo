@@ -8,13 +8,12 @@ import pandas as pd
 # Local modules.
 from pymontecarlo.settings import Settings
 from pymontecarlo.util.cbook import get_valid_filename
-from pymontecarlo.formats.series.helper import ensure_distinct_columns
-from pymontecarlo.formats.series.entrypoint import find_convert_serieshandler
-from pymontecarlo.formats.series.builder import SeriesBuilder
+from pymontecarlo.formats.dataframe import ensure_distinct_columns
+from pymontecarlo.formats.series import SeriesBuilder
 
 # Globals and constants variables.
 
-def create_identifiers(objs):
+def create_identifiers(entities):
     settings = Settings()
     settings.set_preferred_unit('nm')
     settings.set_preferred_unit('deg')
@@ -23,11 +22,9 @@ def create_identifiers(objs):
 
     list_series = []
 
-    for obj in objs:
-        handler = find_convert_serieshandler(obj)
-
+    for entity in entities:
         builder = SeriesBuilder(settings, abbreviate_name=True, format_number=True)
-        handler.convert(obj, builder)
+        entity.convert_series(builder)
 
         s = builder.build()
         list_series.append(s)
