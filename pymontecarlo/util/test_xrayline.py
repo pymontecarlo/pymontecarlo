@@ -2,30 +2,22 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
 import pyxray
 
+import pytest
+
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.util.xrayline import find_lowest_energy_known_xrayline
 
 # Globals and constants variables.
 
-class TestXrayLineModule(TestCase):
+@pytest.mark.parametrize('z,minimum_energy_eV,expected',
+    [(6, 0.0, pyxray.xray_line(6, 'Ka1')),
+     (13, 0.0, pyxray.xray_line(13, 'Ll')),
+     (13, 1e3, pyxray.xray_line(13, 'Ka1'))
+     ])
+def testfind_lowest_energy_known_xrayline(z, minimum_energy_eV, expected):
+    assert find_lowest_energy_known_xrayline([z], minimum_energy_eV) == expected
 
-    def testfind_lowest_energy_known_xrayline(self):
-        xrayline = find_lowest_energy_known_xrayline([6])
-        self.assertEqual(xrayline, pyxray.xray_line(6, 'Ka1'))
-
-        xrayline = find_lowest_energy_known_xrayline([13])
-        self.assertEqual(xrayline, pyxray.xray_line(13, 'Ll'))
-
-        xrayline = find_lowest_energy_known_xrayline([13], minimum_energy_eV=1e3)
-        self.assertEqual(xrayline, pyxray.xray_line(13, 'Ka1'))
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

@@ -15,7 +15,7 @@ from matplotlib.transforms import Affine2D
 
 # Local modules.
 from pymontecarlo.figures.base import FigureBase
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
 
@@ -57,6 +57,7 @@ class SampleFigure(FigureBase):
         self.sample_draw_methods[SphereSample] = self._compose_sample_sphere
 
         self.beam_draw_methods = {}
+        self.beam_draw_methods[CylindricalBeam] = self._compose_beam_cylindrical
         self.beam_draw_methods[GaussianBeam] = self._compose_beam_gaussian
 
         self.view_size_methods = {}
@@ -270,7 +271,7 @@ class SampleFigure(FigureBase):
 
         ax.add_collection(col)
 
-    def _compose_beam_gaussian(self, beam, perspective, view_size):
+    def _compose_beam_cylindrical(self, beam, perspective, view_size):
         x0_m = beam.x0_m
         y0_m = beam.y0_m
         radius_m = beam.diameter_m / 2
@@ -286,6 +287,9 @@ class SampleFigure(FigureBase):
             return [Rectangle((-radius_m - y0_m, 0),
                               beam.diameter_m, (view_size / 2) * 1.5,
                               color=color)]
+
+    def _compose_beam_gaussian(self, beam, perspective, view_size):
+        return self._compose_beam_cylindrical(beam, perspective, view_size)
 
     # DRAW TRAJECTORIES
     def _draw_trajectory(self, ax, trajectory, perspective):

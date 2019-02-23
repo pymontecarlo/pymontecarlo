@@ -2,49 +2,27 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
 from pymontecarlo.options.composition import from_formula
 
 # Globals and constants variables.
 
-class Testcomposition(unittest.TestCase):
+@pytest.mark.parametrize('formula',
+    ['Al2Na3B12', 'Al 2 Na 3 B 12', 'Al2 Na3 B12'])
+def test_composition_from_formula(formula):
+    comp = from_formula(formula)
+    assert comp[13] == pytest.approx(0.21358626371988801, abs=1e-4)
+    assert comp[11] == pytest.approx(0.27298103136883051, abs=1e-4)
+    assert comp[5] == pytest.approx(0.51343270491128157, abs=1e-4)
 
-    def setUp(self):
-        unittest.TestCase.setUp(self)
+def test_composition_from_formula_invalid_atomicnumber():
+    with pytest.raises(Exception):
+        from_formula('Aq2 Na3 B12')
 
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    def testfrom_formula(self):
-        weightFractionAl = 0.21358626371988801
-        weightFractionNa = 0.27298103136883051
-        weightFractionB = 0.51343270491128157
-
-        comp = from_formula('Al2Na3B12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        comp = from_formula('Al 2 Na 3 B 12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        comp = from_formula('Al2 Na3 B12')
-        self.assertAlmostEqual(weightFractionAl, comp[13], 4)
-        self.assertAlmostEqual(weightFractionNa, comp[11], 4)
-        self.assertAlmostEqual(weightFractionB, comp[5], 4)
-
-        self.assertRaises(Exception, from_formula, 'Aq2 Na3 B12')
-
-        comp = from_formula('Al2')
-        self.assertAlmostEqual(1.0, comp[13], 4)
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+def test_composition_from_formula_normalize():
+    comp = from_formula('Al2')
+    assert comp[13] == pytest.approx(1.0, abs=1e-4)
