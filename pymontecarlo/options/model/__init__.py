@@ -2,6 +2,7 @@
 Models.
 """
 
+from pymontecarlo.options.model.base import *
 from pymontecarlo.options.model.bremsstrahlung_emission import *
 from pymontecarlo.options.model.direction_cosine import *
 from pymontecarlo.options.model.elastic_cross_section import *

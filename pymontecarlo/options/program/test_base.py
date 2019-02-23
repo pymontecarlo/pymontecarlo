@@ -31,4 +31,4 @@ def test_program_series(program, seriesbuilder):
 def test_program_document(program, documentbuilder):
     program.convert_document(documentbuilder)
     document = documentbuilder.build()
-    assert testutil.count_document_nodes(document) == 5
+    assert testutil.count_document_nodes(document) == 6

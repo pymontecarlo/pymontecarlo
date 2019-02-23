@@ -15,7 +15,7 @@ import asyncio
 from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
 from pymontecarlo.options.sample.base import SampleBase
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, SphereSample, HorizontalLayerSample, VerticalLayerSample
-from pymontecarlo.options.model import ElasticCrossSectionModel
+from pymontecarlo.options.model import convert_models_document, ElasticCrossSectionModel
 from pymontecarlo.options.analysis import PhotonIntensityAnalysis, KRatioAnalysis
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.program.base import ProgramBase, ProgramBuilderBase
@@ -273,14 +273,13 @@ class ProgramMock(ProgramBase):
     def convert_document(self, builder):
         super().convert_document(builder)
 
-        description = builder.require_description('program')
+        description = builder.require_description(self.DESCRIPTION_PROGRAM)
         description.add_item('Number trajectories', self.number_trajectories)
 
         section = builder.add_section()
         section.add_title('Models')
 
-        description = section.require_description('models')
-        description.add_item('elastic cross section', self.elastic_cross_section_model)
+        convert_models_document(builder, self.elastic_cross_section_model)
 
 #endregion
 

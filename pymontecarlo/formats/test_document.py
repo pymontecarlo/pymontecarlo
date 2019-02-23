@@ -6,7 +6,7 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.document import DocumentBuilder, publish_html
+from pymontecarlo.formats.document import publish_html
 
 # Globals and constants variables.
 
@@ -14,4 +14,4 @@ def test_publish_html(options, documentbuilder):
     options.convert_document(documentbuilder)
 
     s = publish_html(documentbuilder)
-    assert len(s) == 16439
+    assert len(s) == 16723

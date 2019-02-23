@@ -6,10 +6,9 @@
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.model.base import ModelBase
+from pymontecarlo.options.model.base import ModelBase, convert_models_document
 from pymontecarlo.options.base import OptionBase
 import pymontecarlo.util.testutil as testutil
-from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
@@ -43,17 +42,7 @@ class OptionMock(OptionBase):
 
     def convert_document(self, builder):
         super().convert_document(builder)
-
-        table = builder.require_table('models')
-
-        table.add_column('Category')
-        table.add_column('Model')
-        table.add_column('Reference')
-
-        row = {'Category': camelcase_to_words(self.model.__class__.__name__[:-5]),
-               'Model': self.model.fullname,
-               'Reference': self.model.reference}
-        table.add_row(row)
+        convert_models_document(builder, self.model)
 
 def test_model():
     assert ModelMock.A.fullname == 'model A'

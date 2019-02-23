@@ -55,6 +55,8 @@ class ProgramBase(base.OptionBase):
 
 #region Document
 
+    DESCRIPTION_PROGRAM = 'program'
+
     def convert_document(self, builder):
         super().convert_document(builder)
 
