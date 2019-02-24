@@ -30,10 +30,6 @@ class LazyDensity(base.LazyOptionBase):
         composition = base.apply_lazy(material.composition, material, options)
         return calculate_density_kg_per_m3(composition)
 
-    @classmethod
-    def parse_hdf5(cls, group):
-        return LazyDensity()
-
 class Material(base.OptionBase):
 
     WEIGHT_FRACTION_TOLERANCE = 1e-7 # 0.1 ppm
@@ -174,10 +170,10 @@ class Material(base.OptionBase):
             symbol = pyxray.element_symbol(z)
             name = '{} weight fraction'.format(symbol)
             abbrev = 'wt{}'.format(symbol)
-            tolerance = Material.WEIGHT_FRACTION_TOLERANCE
+            tolerance = self.WEIGHT_FRACTION_TOLERANCE
             builder.add_column(name, abbrev, wf, tolerance=tolerance)
 
-        builder.add_column('density', 'rho', self.density_kg_per_m3, 'kg/m^3', Material.DENSITY_TOLERANCE_kg_per_m3)
+        builder.add_column('density', 'rho', self.density_kg_per_m3, 'kg/m^3', self.DENSITY_TOLERANCE_kg_per_m3)
 
         return builder
 

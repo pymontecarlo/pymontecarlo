@@ -47,6 +47,10 @@ class LazyOptionBase(OptionBase, LazyFormat):
     def format(self, settings):
         return 'auto'
 
+    @classmethod
+    def parse_hdf5(cls, group):
+        return cls()
+
     def convert_hdf5(self, group):
         super().convert_hdf5(group)
 
