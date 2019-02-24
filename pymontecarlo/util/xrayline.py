@@ -18,6 +18,15 @@ KNOWN_XRAYTRANSITIONS = [pyxray.xray_transition('Ka1'),
                          pyxray.xray_transition('M4-N2') # Mz
                          ]
 
+def convert_xrayline(xrayline):
+    if isinstance(xrayline, pyxray.XrayLine):
+        return xrayline
+
+    try:
+        return pyxray.xray_line(*xrayline)
+    except:
+        raise ValueError('"{}" is not an XrayLine'.format(xrayline))
+
 def find_lowest_energy_known_xrayline(zs, minimum_energy_eV=0.0):
     lowest_energy_eV = float('inf')
     lowest_xrayline = None
@@ -33,3 +42,10 @@ def find_lowest_energy_known_xrayline(zs, minimum_energy_eV=0.0):
                 lowest_energy_eV = energy_eV
 
     return lowest_xrayline
+
+def find_reference_xrayline(options):
+    zs = set()
+    for material in options.sample.materials:
+        zs |= set(material.composition.keys())
+
+    return find_lowest_energy_known_xrayline(zs, minimum_energy_eV=100.0)

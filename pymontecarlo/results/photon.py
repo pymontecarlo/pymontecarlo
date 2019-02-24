@@ -6,8 +6,6 @@ Photon based results.
 import collections.abc
 
 # Third party modules.
-import pyxray
-
 import uncertainties
 
 import h5py
@@ -16,17 +14,9 @@ import numpy as np
 
 # Local modules.
 from pymontecarlo.results.base import ResultBase, ResultBuilderBase
+from pymontecarlo.util.xrayline import convert_xrayline
 
 # Globals and constants variables.
-
-def _convert_xrayline(xrayline):
-    if isinstance(xrayline, pyxray.XrayLine):
-        return xrayline
-
-    try:
-        return pyxray.xray_line(*xrayline)
-    except:
-        raise ValueError('"{}" is not an XrayLine'.format(xrayline))
 
 class PhotonResultBase(ResultBase, collections.abc.Mapping):
     """
@@ -46,7 +36,7 @@ class PhotonResultBase(ResultBase, collections.abc.Mapping):
         return iter(self.data)
 
     def __getitem__(self, xrayline):
-        xrayline = _convert_xrayline(xrayline)
+        xrayline = convert_xrayline(xrayline)
         return self.data[xrayline]
 
     def __repr__(self):
@@ -81,7 +71,7 @@ class PhotonSingleResultBase(PhotonResultBase):
     def parse_hdf5(cls, group):
         analysis = cls._parse_hdf5(group, cls.ATTR_ANALYSIS)
 
-        keys = [_convert_xrayline(iupac.split(' ', 1))
+        keys = [convert_xrayline(iupac.split(' ', 1))
                 for iupac in group[cls.DATASET_XRAYLINES]]
         values = [uncertainties.ufloat(n, s)
                   for n, s in group[cls.DATASET_VALUES]]
@@ -122,7 +112,7 @@ class PhotonResultBuilderBase(ResultBuilderBase):
         self.result_class = result_class
 
     def _add(self, xrayline, datum):
-        xrayline = _convert_xrayline(xrayline)
+        xrayline = convert_xrayline(xrayline)
         self.data[xrayline] = datum
 
     def build(self):
