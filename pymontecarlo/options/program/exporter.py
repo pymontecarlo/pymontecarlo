@@ -141,7 +141,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
 
         for z, wf in composition.items():
             try:
-                pyxray.descriptor.Element.validate(z)
+                pyxray.descriptor.Element(z)
             except (ValueError, TypeError) as exc:
                 erracc.add_exception(exc)
 
