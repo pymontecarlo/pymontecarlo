@@ -10,7 +10,7 @@ Estimate of electron range
 
 # Globals and constants variables.
 
-def photon_range(e0, material, xrayline, reference=None):
+def photon_range(e0, material, xrayline):
     """
     This function returns the generated photon range in *material* at
     incident electron energy *e0* for a characteristic x ray line *transition*.
