@@ -32,7 +32,7 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
 
     @classmethod
     def can_parse_hdf5(cls, group):
-        return group.attrs.get(cls.ATTR_CLASS) == np.string_(cls.__name__) and \
+        return group.attrs.get(cls.ATTR_CLASS) == cls.__name__ and \
             group.attrs.get(cls.ATTR_VERSION) == cls.VERSION
 
     @classmethod
@@ -50,14 +50,13 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
             return cls._parse_hdf5_reference(group, attr_value)
 
         elif issubclass(type_, enum.Enum):
-            attr_value = attr_value.decode('ascii')
             if attr_value not in type_.__members__:
                 raise ParseError('Value for attribute {} ({}) does not exist in enum {}'
                                  .format(attr_name, attr_value, type_))
             return type_.__members__[attr_value]
 
         elif type_ == str:
-            return attr_value.decode('ascii')
+            return attr_value
 
         elif type_ is not None:
             return type_(attr_value)
@@ -88,10 +87,10 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
             attr_value = obj
 
         elif isinstance(obj, str):
-            attr_value = np.string_(obj)
+            attr_value = str(obj)
 
         elif isinstance(obj, enum.Enum):
-            attr_value = np.string_(obj.name)
+            attr_value = str(obj.name)
 
         elif issubclass(obj.__class__, tuple(self._subclasses)):
             attr_value = self._convert_hdf5_reference(group, obj)
