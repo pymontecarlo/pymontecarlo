@@ -14,7 +14,7 @@ import h5py
 
 # Local modules.
 from pymontecarlo.options.material import VACUUM
-from pymontecarlo.util.cbook import unique, DegreesAttribute
+from pymontecarlo.util.cbook import unique
 from pymontecarlo.util.human import camelcase_to_words
 import pymontecarlo.options.base as base
 
@@ -64,8 +64,8 @@ class SampleBase(base.OptionBase):
         """
         raise NotImplementedError
 
-    tilt_deg = DegreesAttribute('tilt_rad')
-    azimuth_deg = DegreesAttribute('azimuth_rad')
+    tilt_deg = base.DegreesAttribute('tilt_rad')
+    azimuth_deg = base.DegreesAttribute('azimuth_rad')
 
 #region HDF5
 

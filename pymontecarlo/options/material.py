@@ -16,7 +16,6 @@ import numpy as np
 import matplotlib.colors
 
 # Local modules.
-import pymontecarlo.util.cbook as cbook
 from pymontecarlo.util.color import COLOR_SET_BROWN
 from pymontecarlo.options.composition import \
     generate_name, from_formula, to_repr, calculate_density_kg_per_m3
@@ -122,7 +121,7 @@ class Material(base.OptionBase):
             base.are_mapping_value_close(self.composition, other.composition, abs_tol=self.WEIGHT_FRACTION_TOLERANCE) and \
             base.isclose(self.density_kg_per_m3, other.density_kg_per_m3, abs_tol=self.DENSITY_TOLERANCE_kg_per_m3)
 
-    density_g_per_cm3 = cbook.MultiplierAttribute('density_kg_per_m3', 1e-3)
+    density_g_per_cm3 = base.MultiplierAttribute('density_kg_per_m3', 1e-3)
 
 #region HDF5
 

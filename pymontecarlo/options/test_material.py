@@ -112,6 +112,9 @@ def test_lazymaterial(material, lazy_material):
     density_kg_per_m3 = base.apply_lazy(lazy_material.density_kg_per_m3, lazy_material, None)
     assert density_kg_per_m3 == pytest.approx(8960.0, abs=1e-4)
 
+    density_g_per_cm3 = base.apply_lazy(lazy_material.density_g_per_cm3, lazy_material, None)
+    assert density_g_per_cm3 == pytest.approx(8.9600, abs=1e-4)
+
 def test_lazymaterial_hdf5(lazy_material, tmp_path):
     testutil.assert_convert_parse_hdf5(lazy_material, tmp_path)
 

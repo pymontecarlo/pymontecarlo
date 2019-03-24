@@ -11,7 +11,6 @@ import operator
 # Local modules.
 import pymontecarlo.options.base as base
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.util.cbook import MultiplierAttribute
 from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
@@ -41,7 +40,7 @@ class BeamBase(base.OptionBase):
             base.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
             base.isclose(self.particle, other.particle)
 
-    energy_keV = MultiplierAttribute('energy_eV', 1e-3)
+    energy_keV = base.MultiplierAttribute('energy_eV', 1e-3)
 
 #region HDF5
 

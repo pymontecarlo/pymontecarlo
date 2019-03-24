@@ -83,6 +83,64 @@ class OptionBuilderBase(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+class LazyMultiplierDecorator(LazyOptionBase):
+
+    def __init__(self, lazyoption, multiplier):
+        self.lazyoption = lazyoption
+        self.multiplier = multiplier
+
+    def __eq__(self, other):
+        """
+        Returns whether two lazy options are equal.
+        """
+        return super().__eq__(other) and \
+            self.lazyoption == other.lazyoption and \
+            self.multiplier == other.multiplier
+
+    def apply(self, parent_option, options):
+        return self.lazyoption.apply(parent_option, options) * self.multiplier
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        raise NotImplementedError
+
+    def convert_hdf5(self, group):
+        raise NotImplementedError
+
+    def convert_series(self, builder):
+        return self.lazyoption.convert_series(builder)
+
+    def convert_document(self, builder):
+        return self.lazyoption.convert_document(builder)
+
+class MultiplierAttribute(object):
+
+    def __init__(self, attrname, multiplier):
+        self.attrname = attrname
+        self.multiplier = multiplier
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+
+        value = getattr(instance, self.attrname)
+
+        if isinstance(value, LazyOptionBase):
+            return LazyMultiplierDecorator(value, self.multiplier)
+
+        return value * self.multiplier
+
+    def __set__(self, instance, value):
+        setattr(instance, self.attrname, value / self.multiplier)
+
+    def __delete__(self, instance):
+        delattr(instance, self.attrname)
+
+class DegreesAttribute(MultiplierAttribute):
+
+    def __init__(self, attrname_rad):
+        super().__init__(attrname_rad, 180.0 / math.pi)
+
 def apply_lazy(option, parent_option, options):
     if isinstance(option, LazyOptionBase):
         return option.apply(parent_option, options)

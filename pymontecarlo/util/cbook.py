@@ -67,28 +67,6 @@ def normalize_angle(angle_rad):
 
     return angle_rad
 
-class MultiplierAttribute(object):
-
-    def __init__(self, attrname, multiplier):
-        self.attrname = attrname
-        self.multiplier = multiplier
-
-    def __get__(self, instance, owner=None):
-        if instance is None:
-            return self
-        return getattr(instance, self.attrname) * self.multiplier
-
-    def __set__(self, instance, value):
-        setattr(instance, self.attrname, value / self.multiplier)
-
-    def __delete__(self, instance):
-        delattr(instance, self.attrname)
-
-class DegreesAttribute(MultiplierAttribute):
-
-    def __init__(self, attrname_rad):
-        super().__init__(attrname_rad, 180.0 / math.pi)
-
 class Monitorable(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
