@@ -34,9 +34,6 @@ unit_registry = pint.UnitRegistry()
 unit_registry.define('electron = mol')
 pint.set_application_registry(unit_registry)
 
-#-- pyxray
-pyxray.set_default_reference('xray_transition_energy_eV', 'jeol')
-
 #--- Plug-ins
 
 pymontecarlo_plugins = {
