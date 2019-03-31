@@ -18,13 +18,12 @@ with open(os.path.join(BASEDIR, 'README.rst'), 'r') as fp:
 
 PACKAGES = find_packages()
 
-INSTALL_REQUIRES = ['pyparsing', 'numpy', 'h5py', 'pyxray',
-                    'more_itertools', 'pint', 'uncertainties',
-                    'matplotlib', 'tabulate', 'psutil', 'pandas',
-                    'docutils', 'tqdm']
-EXTRAS_REQUIRE = {'develop': ['pytest', 'pytest-cov', 'pytest-asyncio',
-                              'nose', 'coverage', 'docutils', 'jinja2',
-                              'sphinx', 'pybtex', 'sphinx_rtd_theme']}
+with open(os.path.join(BASEDIR, 'requirements.txt'), 'r') as fp:
+    INSTALL_REQUIRES = fp.read().splitlines()
+
+EXTRAS_REQUIRE = {}
+with open(os.path.join(BASEDIR, 'requirements_dev.txt'), 'r') as fp:
+    EXTRAS_REQUIRE['develop'] = fp.read().splitlines()
 
 CMDCLASS = versioneer.get_cmdclass()
 
@@ -34,6 +33,8 @@ setup(name="pyMonteCarlo",
       version=versioneer.get_version(),
       url='https://github.com/pymontecarlo',
       description="Python interface for Monte Carlo simulation programs",
+      long_description=LONG_DESCRIPTION,
+      long_description_content_type='text/x-rst',
       author="Philippe T. Pinard, Hendrix Demers, Raynald Gauvin and Silvia Richter",
       author_email="philippe.pinard@gmail.com",
       maintainer="Philippe T. Pinard",
