@@ -11,6 +11,8 @@ import os
 import sys
 import importlib
 import pkgutil
+import logging
+logger = logging.getLogger(__name__)
 
 # Third party modules.
 import pint
@@ -42,3 +44,5 @@ pymontecarlo_plugins = {
     in pkgutil.iter_modules()
     if name.startswith('pymontecarlo_')
 }
+
+logger.debug('Plug-ins: {}'.format(', '.join(pymontecarlo_plugins)))
