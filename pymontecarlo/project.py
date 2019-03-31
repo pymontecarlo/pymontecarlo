@@ -9,13 +9,13 @@ import threading
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.entity import EntityBase, EntityHDF5Mixin
+from pymontecarlo.entity import EntityBase, EntryHDF5IOMixin
 from pymontecarlo.formats.dataframe import create_options_dataframe, create_results_dataframe
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
-class Project(EntityBase, EntityHDF5Mixin):
+class Project(EntityBase, EntryHDF5IOMixin):
 
     simulation_added = Signal()
     recalculated = Signal()

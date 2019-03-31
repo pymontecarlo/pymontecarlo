@@ -9,7 +9,7 @@ import pytest
 
 # Local modules.
 from pymontecarlo import unit_registry
-from pymontecarlo.settings import XrayNotation
+from pymontecarlo.settings import XrayNotation, Settings
 import pymontecarlo.util.physics as physics
 import pymontecarlo.util.testutil as testutil
 
@@ -20,6 +20,17 @@ def test_settings_hdf5(settings, tmp_path):
     settings.set_preferred_unit('nm')
 
     settings2 = testutil.assert_convert_parse_hdf5(settings, tmp_path, assert_equality=False)
+
+    assert settings2.preferred_xray_notation == XrayNotation.SIEGBAHN
+    assert settings2.to_preferred_unit(1.0, unit_registry.meter).units == unit_registry.nanometer
+
+def test_settings_hdf5io(settings, tmp_path):
+    settings.preferred_xray_notation = XrayNotation.SIEGBAHN
+    settings.set_preferred_unit('nm')
+
+    filepath = tmp_path.joinpath('settings.h5')
+    settings.write(filepath)
+    settings2 = Settings.read(filepath)
 
     assert settings2.preferred_xray_notation == XrayNotation.SIEGBAHN
     assert settings2.to_preferred_unit(1.0, unit_registry.meter).units == unit_registry.nanometer

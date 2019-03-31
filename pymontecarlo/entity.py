@@ -5,8 +5,6 @@ import abc
 import enum
 
 # Third party modules.
-import numpy as np
-
 import h5py
 
 # Local modules.
@@ -111,6 +109,19 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
             obj.convert_hdf5(group_obj)
 
         return group_obj.ref
+
+class EntryHDF5IOMixin(EntityHDF5Mixin):
+
+    @classmethod
+    def read(cls, filepath):
+        with h5py.File(filepath, 'r') as f:
+            if not cls.can_parse_hdf5(f):
+                raise IOError('Cannot open file')
+            return cls.parse_hdf5(f)
+#
+    def write(self, filepath):
+        with h5py.File(filepath, 'w') as f:
+            self.convert_hdf5(f)
 
 class EntitySeriesMixin(metaclass=abc.ABCMeta):
 
