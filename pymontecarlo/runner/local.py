@@ -66,7 +66,7 @@ class LocalWorkerDispatcher:
                 worker = simulation.options.program.worker
 
                 # Create token
-                token = self.token.create_subtoken(simulation.identifier)
+                token = self.token.create_subtoken(simulation.identifier, category='simulation')
 
                 logger.debug('Launching worker "{!r}" of simulation "{}"'
                              .format(worker, simulation.identifier))

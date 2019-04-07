@@ -109,9 +109,28 @@ def test_token_subtokens():
     subtoken1 = token.create_subtoken('subtest1')
     subtoken2 = token.create_subtoken('subtest2')
 
-    assert len(token.subtokens) == 2
-    assert subtoken1 in token.subtokens
-    assert subtoken2 in token.subtokens
+    subtokens = token.get_subtokens()
+    assert len(subtokens) == 2
+    assert subtoken1 in subtokens
+    assert subtoken2 in subtokens
+
+def test_token_subtokens_with_category():
+    token = Token('test')
+    subtoken1 = token.create_subtoken('subtest1', 'cat1')
+    subtoken2 = token.create_subtoken('subtest2', 'cat2')
+
+    subtokens = token.get_subtokens()
+    assert len(subtokens) == 2
+    assert subtoken1 in subtokens
+    assert subtoken2 in subtokens
+
+    subtokens = token.get_subtokens('cat1')
+    assert len(subtokens) == 1
+    assert subtoken1 in subtokens
+
+    subtokens = token.get_subtokens('cat2')
+    assert len(subtokens) == 1
+    assert subtoken2 in subtokens
 
 def test_tqdm_token(capsys):
     token = TqdmToken('test')

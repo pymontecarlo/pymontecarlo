@@ -33,17 +33,20 @@ class Token:
         self._progress = 0.0
         self._status = 'Not started'
         self._latest_update = None
+        self._category = None
         self._lock = threading.Lock()
         self._subtokens = []
 
-    def _create_subtoken(self, name):
-        return self.__class__(name)
+    def _create_subtoken(self, name, category):
+        subtoken = self.__class__(name)
+        subtoken._category = category
+        return subtoken
 
-    def create_subtoken(self, name):
+    def create_subtoken(self, name, category=None):
         """
         Creates a new sub-token, with the specified name (thread-safe).
         """
-        subtoken = self._create_subtoken(name)
+        subtoken = self._create_subtoken(name, category)
         with self._lock:
             self._subtokens.append(subtoken)
         return subtoken
@@ -51,7 +54,7 @@ class Token:
     def update(self, progress, status, state=None):
         """
         Updates the progress and status of this token (thread-safe).
-        
+
         Args:
             progress (float): progress between 0.0 and 1.0
             status (str): status message
@@ -81,6 +84,13 @@ class Token:
 
     def error(self, status=None):
         self.update(1.0, status or 'Error', TokenState.ERROR)
+
+    def get_subtokens(self, category=None):
+        with self._lock:
+            if category is None:
+                return tuple(self._subtokens)
+            else:
+                return tuple(subtoken for subtoken in self._subtokens if subtoken._category == category)
 
     @property
     def name(self):
@@ -146,11 +156,6 @@ class Token:
             statuses.sort()
             return statuses[-1][1]
 
-    @property
-    def subtokens(self):
-        with self._lock:
-            return tuple(self._subtokens)
-
 class TqdmToken(Token):
 
     def __init__(self, name, tqdm_class=None):
@@ -161,11 +166,13 @@ class TqdmToken(Token):
         self._tqdm_class = tqdm_class
         self._tqdm = None
 
-    def _create_subtoken(self, name):
+    def _create_subtoken(self, name, category):
         """
         Creates a new sub-token, with the specified name (thread-safe).
         """
-        return self.__class__(name, self._tqdm_class)
+        subtoken = self.__class__(name, self._tqdm_class)
+        subtoken._category = category
+        return subtoken
 
     def update(self, progress, status, state=None):
         super().update(progress, status, state=state)
