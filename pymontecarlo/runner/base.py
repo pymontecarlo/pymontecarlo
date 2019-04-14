@@ -71,12 +71,12 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
     async def submit(self, *list_options):
         """
         Submits the options in the queue.
-        
+
         If the options are not valid, a :exc:`ValidationError` is raised.
-        
+
         If additional simulations are required based on the analyses of the
         submitted options, they will also be submitted.
-        
+
         If a simulation with the same options already exists in the project,
         the simulation is skipped.
         """
@@ -138,13 +138,13 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         """
         Performs the following operations on the provided list of options and
         returns a list of simulations.
-            
+
             * Expand options to deal with additional simulations required by the
               analyses.
             * Validate all the options. Raises :exc:`ValidationError` for the
               first error found. May also create warning messages.
-            * Exclude already simulated options. In other words, if an 
-              :class:`Options` was already submitted with this runner and 
+            * Exclude already simulated options. In other words, if an
+              :class:`Options` was already submitted with this runner and
               contains results, it is excluded.
             * Exclude options already in the project of this runner.
             * Create simulations where the identifier of each simulation is
@@ -158,6 +158,15 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         simulations = self._create_simulations(list_options, identifiers)
 
         return simulations
+
+    async def set_project(self, project):
+        """
+        If the runner is running, all the tasks will be cancelled.
+        """
+        await self.cancel()
+        self._project = project
+        self._submitted_options.clear()
+        self._token.reset()
 
     @property
     def project(self):

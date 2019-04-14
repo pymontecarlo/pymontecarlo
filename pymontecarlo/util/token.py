@@ -21,9 +21,9 @@ class TokenState(enum.IntEnum):
     """
     DONE = 0
     NOTSTARTED = 1
-    RUNNING = 2
-    CANCELLED = 3
-    ERROR = 4
+    CANCELLED = 2
+    ERROR = 3
+    RUNNING = 4
 
 class Token:
 
@@ -84,6 +84,13 @@ class Token:
 
     def error(self, status=None):
         self.update(1.0, status or 'Error', TokenState.ERROR)
+
+    def reset(self):
+        self._state = TokenState.NOTSTARTED
+        self._progress = 0.0
+        self._status = 'Not started'
+        self._latest_update = None
+        self._subtokens.clear()
 
     def get_subtokens(self, category=None):
         with self._lock:

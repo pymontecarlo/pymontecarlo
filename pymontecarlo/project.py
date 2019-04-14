@@ -79,7 +79,7 @@ class Project(EntityBase, EntryHDF5IOMixin):
                                  abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
-        
+
         If *only_different_columns*, the data rows will only contain the columns
         that are different between the options.
         """
@@ -91,9 +91,9 @@ class Project(EntityBase, EntryHDF5IOMixin):
                                  abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
-        
+
         If *result_classes* is a list of :class:`Result`, only the columns from
-        this result classes will be returned. If ``None``, the columns from 
+        this result classes will be returned. If ``None``, the columns from
         all results will be returned.
         """
         list_results = [simulation.results for simulation in self.simulations]

@@ -158,3 +158,10 @@ class LocalSimulationRunner(SimulationRunnerBase):
             self._queue.task_done()
 
         logging.debug('Queue was emptied')
+
+    async def set_project(self, project):
+        await super().set_project(project)
+
+        # Update dispatcher
+        for dispatcher in self._dispatchers:
+            dispatcher.project = project
