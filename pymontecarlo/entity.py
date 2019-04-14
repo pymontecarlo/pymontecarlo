@@ -118,7 +118,7 @@ class EntryHDF5IOMixin(EntityHDF5Mixin):
             if not cls.can_parse_hdf5(f):
                 raise IOError('Cannot open file')
             return cls.parse_hdf5(f)
-#
+
     def write(self, filepath):
         with h5py.File(filepath, 'w') as f:
             self.convert_hdf5(f)
