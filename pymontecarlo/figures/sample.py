@@ -58,14 +58,15 @@ class SampleFigure(FigureBase):
 
         self.beam_draw_methods = {}
         self.beam_draw_methods[CylindricalBeam] = self._compose_beam_cylindrical
-        self.beam_draw_methods[GaussianBeam] = self._compose_beam_gaussian
+        self.beam_draw_methods[GaussianBeam] = self._compose_beam_cylindrical
 
         self.view_size_methods = {}
         self.view_size_methods[InclusionSample] = self._calculate_view_size_inclusion_sample
         self.view_size_methods[HorizontalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
-        self.view_size_methods[GaussianBeam] = self._calculate_view_size_gaussian_beam
+        self.view_size_methods[CylindricalBeam] = self._calculate_view_size_cylindrical_beam
+        self.view_size_methods[GaussianBeam] = self._calculate_view_size_cylindrical_beam
 
     def _recalculate_view_size(self, perspective):
         SCALE_FACTOR = 5
@@ -90,7 +91,7 @@ class SampleFigure(FigureBase):
     def _calculate_view_size_sphere_sample(self, sample, perspective):
         return sample.diameter_m
 
-    def _calculate_view_size_gaussian_beam(self, beam, perspective):
+    def _calculate_view_size_cylindrical_beam(self, beam, perspective):
         view_size = beam.diameter_m * 2
 
         if perspective is Perspective.XY:
@@ -287,9 +288,6 @@ class SampleFigure(FigureBase):
             return [Rectangle((-radius_m - y0_m, 0),
                               beam.diameter_m, (view_size / 2) * 1.5,
                               color=color)]
-
-    def _compose_beam_gaussian(self, beam, perspective, view_size):
-        return self._compose_beam_cylindrical(beam, perspective, view_size)
 
     # DRAW TRAJECTORIES
     def _draw_trajectory(self, ax, trajectory, perspective):
