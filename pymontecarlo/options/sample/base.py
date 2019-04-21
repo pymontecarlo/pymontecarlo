@@ -31,10 +31,10 @@ class SampleBase(base.OptionBase):
     def __init__(self, tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a new sample.
-        
+
         :arg tilt_rad: tilt around the x-axis
         :type tilt_rad: :class:`float`
-        
+
         :arg azimuth_rad: rotation around the z-axis of the tilted sample
         :type azimuth_rad: :class:`float`
         """
@@ -63,6 +63,16 @@ class SampleBase(base.OptionBase):
         :obj:`VACUUM` should not be included in the materials.
         """
         raise NotImplementedError
+
+    @property
+    def atomic_numbers(self):
+        """
+        Returns a :class:`frozenset` of all atomic numbers inside this geometry.
+        """
+        zs = set()
+        for material in self.materials:
+            zs |= set(material.composition.keys())
+        return zs
 
     tilt_deg = base.DegreesAttribute('tilt_rad')
     azimuth_deg = base.DegreesAttribute('azimuth_rad')
