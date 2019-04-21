@@ -27,6 +27,20 @@ def convert_xrayline(xrayline):
     except:
         raise ValueError('"{}" is not an XrayLine'.format(xrayline))
 
+def find_known_xray_lines(zs, minimum_energy_eV=0.0, maximum_energy_eV=float('inf')):
+    xray_lines = []
+
+    for z in zs:
+        for xraytransition in pyxray.element_xray_transitions(z):
+            if xraytransition not in KNOWN_XRAYTRANSITIONS:
+                continue
+
+            xray_line = pyxray.xray_line(z, xraytransition)
+            if minimum_energy_eV <= xray_line.energy_eV <= maximum_energy_eV:
+                xray_lines.append(xray_line)
+
+    return xray_lines
+
 def find_lowest_energy_known_xrayline(zs, minimum_energy_eV=0.0):
     lowest_energy_eV = float('inf')
     lowest_xrayline = None
