@@ -40,7 +40,7 @@ class Settings(EntityBase, EntryHDF5IOMixin):
                 return cls()
 
         return super().read(filepath)
-#
+
     def write(self, filepath=None):
         if filepath is None:
             filepath = os.path.join(get_config_dir(), self.DEFAULT_FILENAME)
