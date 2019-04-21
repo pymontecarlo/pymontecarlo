@@ -54,11 +54,11 @@ def test_cylindricalbeam_copy(beam):
 def test_cylindricalbeam_pickle(beam):
     testutil.assert_pickle(beam)
 
-def test_cylidricalbeam_series(beam, seriesbuilder):
+def test_cylindricalbeam_series(beam, seriesbuilder):
     beam.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 5
 
-def test_cylidricalbeam_document(beam, documentbuilder):
+def test_cylindricalbeam_document(beam, documentbuilder):
     beam.convert_document(documentbuilder)
     document = documentbuilder.build()
     assert testutil.count_document_nodes(document) == 4
