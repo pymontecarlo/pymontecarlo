@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 # Local modules.
 from pymontecarlo.figures.sample import SampleFigure, Perspective
-from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import \
     (SubstrateSample, InclusionSample, HorizontalLayerSample,
@@ -75,6 +75,9 @@ def test_samplefigure_draw_sample(samplefigure, ax, sample, perspective, expecte
      (CylindricalBeam(1, 1), Perspective.XY, 1),
      (CylindricalBeam(1, 1), Perspective.XZ, 1),
      (CylindricalBeam(1, 1), Perspective.YZ, 1),
+     (PencilBeam(1), Perspective.XY, 1),
+     (PencilBeam(1), Perspective.XZ, 1),
+     (PencilBeam(1), Perspective.YZ, 1),
      ])
 def test_samplefigure_draw_beam(samplefigure, ax, beam, perspective, expected_path_count):
     samplefigure.beams.append(beam)

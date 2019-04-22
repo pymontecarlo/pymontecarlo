@@ -10,12 +10,13 @@ import enum
 
 # Third party modules.
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Wedge, Rectangle, Circle
+from matplotlib.path import Path
+from matplotlib.patches import Wedge, Rectangle, Circle, PathPatch, RegularPolygon
 from matplotlib.transforms import Affine2D
 
 # Local modules.
 from pymontecarlo.figures.base import FigureBase
-from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
 
@@ -57,6 +58,7 @@ class SampleFigure(FigureBase):
         self.sample_draw_methods[SphereSample] = self._compose_sample_sphere
 
         self.beam_draw_methods = {}
+        self.beam_draw_methods[PencilBeam] = self._compose_beam_pencil
         self.beam_draw_methods[CylindricalBeam] = self._compose_beam_cylindrical
         self.beam_draw_methods[GaussianBeam] = self._compose_beam_cylindrical
 
@@ -271,6 +273,26 @@ class SampleFigure(FigureBase):
             pass
 
         ax.add_collection(col)
+
+    def _compose_beam_pencil(self, beam, perspective, view_size):
+        x0_m = beam.x0_m
+        y0_m = beam.y0_m
+        color = beam.particle.color
+
+        if perspective is Perspective.XY:
+            return [RegularPolygon((x0_m, y0_m), numVertices=3, radius=view_size/100, color=color)]
+
+        elif perspective is Perspective.XZ:
+            vertices = [(x0_m, 0), (x0_m, view_size / 2 * 1.5)]
+            codes = [Path.MOVETO, Path.LINETO]
+            path = Path(vertices, codes)
+            return [PathPatch(path, lw=2, color=color)]
+
+        elif perspective is Perspective.YZ:
+            vertices = [(y0_m, 0), (y0_m, view_size / 2 * 1.5)]
+            codes = [Path.MOVETO, Path.LINETO]
+            path = Path(vertices, codes)
+            return [PathPatch(path, lw=2, color=color)]
 
     def _compose_beam_cylindrical(self, beam, perspective, view_size):
         x0_m = beam.x0_m
