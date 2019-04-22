@@ -16,7 +16,7 @@ import pyxray
 
 # Local modules.
 from pymontecarlo.options.options import OptionsBuilder
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam import PencilBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
 from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
@@ -67,9 +67,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
         program = copy.copy(options.program)
         builder.add_program(program)
 
-        beam = GaussianBeam(energy_eV=options.beam.energy_eV,
-                            diameter_m=0.0,
-                            particle=options.beam.particle)
+        beam = PencilBeam(energy_eV=options.beam.energy_eV, particle=options.beam.particle)
         builder.add_beam(beam)
 
         for material in options.sample.materials:
