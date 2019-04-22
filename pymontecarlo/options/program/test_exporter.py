@@ -78,7 +78,7 @@ def test_validate_beam_cylindrical_invalid(exporter, options):
                            float('inf'), float('nan'))
 
     erracc = ErrorAccumulator()
-    exporter._validate_beam(beam, options, erracc)
+    exporter._validate_beam_cylindrical(beam, options, erracc)
 
     assert len(erracc.exceptions) == 6
     assert len(erracc.warnings) == 0
@@ -88,7 +88,7 @@ def test_validate_beam_gaussian_invalid(exporter, options):
                         float('inf'), float('nan'))
 
     erracc = ErrorAccumulator()
-    exporter._validate_beam(beam, options, erracc)
+    exporter._validate_beam_gaussian(beam, options, erracc)
 
     assert len(erracc.exceptions) == 6
     assert len(erracc.warnings) == 0

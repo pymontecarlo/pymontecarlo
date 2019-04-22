@@ -32,7 +32,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
     async def export(self, options, dirpath, dry_run=False):
         """
         Exports options to the specified output directory.
-        
+
         Args:
             options (Options): options to export
             dirpath (str): full path to output directory
@@ -45,7 +45,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
     async def _export(self, options, dirpath, erracc, dry_run=False):
         """
         Performs the actual export.
-        
+
         :arg options: options to export
         :arg dirpath: full path to output directory
         :arg erracc: error accumulator
@@ -54,7 +54,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
 
     def _run_exporters(self, options, erracc, *args, **kwargs):
         """
-        Internal command to call the register export functions. 
+        Internal command to call the register export functions.
         All optional arguments passed to this method are transferred to the
         export methods.
         """
@@ -103,13 +103,8 @@ class ExporterBase(metaclass=abc.ABCMeta):
             exc = ValueError('Unknown particle: {0}.'.format(particle))
             erracc.add_exception(exc)
 
-        # Diameter
-        diameter_m = apply_lazy(beam.diameter_m, beam, options)
-
-        if diameter_m < 0.0:
-            exc = ValueError('Diameter ({0:g} m) must be greater or equal to 0.0.'
-                             .format(diameter_m))
-            erracc.add_exception(exc)
+    def _validate_beam_pencil(self, beam, options, erracc):
+        self._validate_beam(beam, options, erracc)
 
         # Position
         x0_m = apply_lazy(beam.x0_m, beam, options)
@@ -123,6 +118,20 @@ class ExporterBase(metaclass=abc.ABCMeta):
         if not math.isfinite(y0_m):
             exc = ValueError('Initial y position must be a finite number.')
             erracc.add_exception(exc)
+
+    def _validate_beam_cylindrical(self, beam, options, erracc):
+        self._validate_beam_pencil(beam, options, erracc)
+
+        # Diameter
+        diameter_m = apply_lazy(beam.diameter_m, beam, options)
+
+        if diameter_m < 0.0:
+            exc = ValueError('Diameter ({0:g} m) must be greater or equal to 0.0.'
+                             .format(diameter_m))
+            erracc.add_exception(exc)
+
+    def _validate_beam_gaussian(self, beam, options, erracc):
+        self._validate_beam_cylindrical(beam, options, erracc)
 
     def _validate_material(self, material, options, erracc):
         if material is VACUUM:
