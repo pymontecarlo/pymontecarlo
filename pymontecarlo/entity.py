@@ -56,7 +56,7 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
             return type_.__members__[attr_value]
 
         elif type_ == pyxray.XrayLine:
-            return convert_xrayline(attr_value)
+            return convert_xrayline(attr_value.split(maxsplit=1))
 
         elif type_ == str:
             return attr_value
