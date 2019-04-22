@@ -6,9 +6,11 @@ import enum
 
 # Third party modules.
 import h5py
+import pyxray
 
 # Local modules.
 from pymontecarlo.exceptions import ParseError, ConvertError
+from pymontecarlo.util.xrayline import convert_xrayline
 
 # Globals and constants variables.
 
@@ -53,6 +55,9 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
                                  .format(attr_name, attr_value, type_))
             return type_.__members__[attr_value]
 
+        elif type_ == pyxray.XrayLine:
+            return convert_xrayline(attr_value)
+
         elif type_ == str:
             return attr_value
 
@@ -92,6 +97,9 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
 
         elif issubclass(obj.__class__, tuple(self._subclasses)):
             attr_value = self._convert_hdf5_reference(group, obj)
+
+        elif isinstance(obj, pyxray.XrayLine):
+            attr_value = obj.iupac
 
         else:
             raise ConvertError("No handler found for object {!r} and group {!r}"

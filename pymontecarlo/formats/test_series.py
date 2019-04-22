@@ -7,6 +7,7 @@
 import pytest
 
 # Local modules.
+import pyxray
 
 # Globals and constants variables.
 
@@ -46,3 +47,15 @@ def test_seriesbuilder_format_number(seriesbuilder):
     assert s['a'] == 'foo'
     assert s['c [m]'] == '0.20'
     assert s['\u03C3(c) [m]'] == '6'
+
+def test_seriesbuilder_format_xrayline(seriesbuilder):
+    xrayline = pyxray.xray_line(13, 'Ka1')
+
+    seriesbuilder.add_column(xrayline, xrayline, 0.5)
+    seriesbuilder.add_column('e', 'e', xrayline)
+
+    s = seriesbuilder.build()
+
+    assert xrayline.iupac in s
+    assert s[xrayline.iupac] == pytest.approx(0.5, abs=1e-4)
+    assert s['e'] == xrayline.iupac

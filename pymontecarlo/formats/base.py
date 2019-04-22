@@ -4,9 +4,11 @@
 import abc
 
 # Third party modules.
+import pyxray
 
 # Local modules.
 from pymontecarlo.util.tolerance import tolerance_to_decimals
+from pymontecarlo.settings import XrayNotation
 
 # Globals and constants variables.
 
@@ -23,6 +25,12 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
         self.abbreviate_name = abbreviate_name
         self.format_number = format_number
 
+    def _format_xrayline(self, xrayline):
+        if self.settings.preferred_xray_notation == XrayNotation.SIEGBAHN:
+            return xrayline.siegbahn
+        else:
+            return xrayline.iupac
+
     def _format_label(self, datum):
         name = datum['abbrev'] if self.abbreviate_name else datum['name']
         unit = datum['unit']
@@ -31,6 +39,8 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
 
         if isinstance(name, LazyFormat):
             name = name.format(self.settings)
+        elif isinstance(name, pyxray.XrayLine):
+            name = self._format_xrayline(name)
 
         unitname = ''
         if unit is not None:
@@ -59,6 +69,8 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
 
         if isinstance(value, LazyFormat):
             value = value.format(self.settings)
+        elif isinstance(value, pyxray.XrayLine):
+            value = self._format_xrayline(value)
 
         value = self._convert_value(value, unit)
 

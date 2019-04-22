@@ -10,7 +10,6 @@ import uncertainties
 
 # Local modules.
 from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuilderBase
-from pymontecarlo.formats.xrayline import LazyXrayLineFormat
 
 # Globals and constants variables.
 
@@ -28,9 +27,8 @@ class PhotonIntensityResultBase(PhotonSingleResultBase):
         super().convert_series(builder)
 
         for xrayline, q in self.items():
-            name = abbrev = LazyXrayLineFormat(xrayline)
-            builder.add_column(name, abbrev, q.n, '1/(sr.electron)')
-            builder.add_column(name, abbrev, q.s, '1/(sr.electron)', error=True)
+            builder.add_column(xrayline, xrayline, q.n, '1/(sr.electron)')
+            builder.add_column(xrayline, xrayline, q.s, '1/(sr.electron)', error=True)
 
 #endregion
 
@@ -45,7 +43,7 @@ class PhotonIntensityResultBuilder(PhotonResultBuilderBase):
     def add_intensity(self, xrayline, value, error):
         """
         :arg value: intensity in ``1/(sr.electron)``
-        
+
         :arg error: error on the intensity in ``1/(sr.electron)``
         """
         q = uncertainties.ufloat(value, error)
