@@ -32,6 +32,10 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         # X-ray line
         self.preferred_xray_notation = XrayNotation.IUPAC
 
+        # Paths
+        self._opendir = None
+        self._savedir = None
+
     @classmethod
     def read(cls, filepath=None):
         if filepath is None:
@@ -68,10 +72,28 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         except KeyError:
             return q.to(base_unit)
 
+    @property
+    def opendir(self):
+        return self._opendir or self._savedir or os.getcwd()
+
+    @opendir.setter
+    def opendir(self, dirpath):
+        self._opendir = dirpath
+
+    @property
+    def savedir(self):
+        return self._savedir or self._opendir or os.getcwd()
+
+    @savedir.setter
+    def savedir(self, dirpath):
+        self._savedir = dirpath
+
 #region HDF5
 
     DATASET_PREFERRED_UNITS = 'preferred units'
     ATTR_PREFERRED_XRAY_NOTATION = 'preferred x-ray notation'
+    ATTR_OPENDIR = 'opendir'
+    ATTR_SAVEDIR = 'savedir'
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -82,6 +104,8 @@ class Settings(EntityBase, EntryHDF5IOMixin):
             obj.set_preferred_unit(unit)
 
         obj.preferred_xray_notation = cls._parse_hdf5(group, cls.ATTR_PREFERRED_XRAY_NOTATION, XrayNotation)
+        obj.opendir = cls._parse_hdf5(group, cls.ATTR_OPENDIR, str)
+        obj.savedir = cls._parse_hdf5(group, cls.ATTR_SAVEDIR, str)
 
         return obj
 
@@ -94,5 +118,7 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         dataset[:] = list(map(str, self.preferred_units.values()))
 
         self._convert_hdf5(group, self.ATTR_PREFERRED_XRAY_NOTATION, self.preferred_xray_notation)
+        self._convert_hdf5(group, self.ATTR_OPENDIR, self.opendir)
+        self._convert_hdf5(group, self.ATTR_SAVEDIR, self.savedir)
 
 #endregion
