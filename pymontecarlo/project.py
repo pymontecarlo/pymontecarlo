@@ -5,6 +5,8 @@ Project.
 # Standard library modules.
 import re
 import threading
+import logging
+logger = logging.getLogger(__name__)
 
 # Third party modules.
 
@@ -18,7 +20,7 @@ from pymontecarlo.util.signal import Signal
 class Project(EntityBase, EntryHDF5IOMixin):
 
     simulation_added = Signal()
-    recalculated = Signal()
+    simulation_recalculated = Signal()
 
     def __init__(self, filepath=None):
         self.filepath = filepath
@@ -67,13 +69,16 @@ class Project(EntityBase, EntryHDF5IOMixin):
                 status = 'Calculating simulation {}'.format(simulation.identifier)
                 if token: token.update(progress, status)
 
+                newresult = False
                 for analysis in simulation.options.analyses:
-                    analysis.calculate(simulation, tuple(self.simulations))
+                    newresult |= analysis.calculate(simulation, tuple(self.simulations))
+
+                if newresult:
+                    self.simulation_recalculated.send(simulation)
 
             if token: token.done()
 
             self.recalculate_required = False
-            self.recalculated.send()
 
     def create_options_dataframe(self, settings, only_different_columns=False,
                                  abbreviate_name=False, format_number=False):
