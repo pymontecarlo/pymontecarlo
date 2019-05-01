@@ -140,7 +140,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
                 stdresult_cache[z] = stdresult
 
             # Calculate k-ratios
-            builder = KRatioResultBuilder(unkresult.analysis)
+            builder = KRatioResultBuilder(self)
 
             for xrayline, unkintensity in unkresult.items():
                 z = xrayline.atomic_number
