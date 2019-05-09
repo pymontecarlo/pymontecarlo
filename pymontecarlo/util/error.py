@@ -2,6 +2,7 @@
 
 # Standard library modules.
 import warnings as warnings_module
+import asyncio
 
 # Third party modules.
 
@@ -28,6 +29,9 @@ class ErrorAccumulator:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is asyncio.CancelledError:
+            raise
+
         if exc_type is not None:
             self.add_exception(exc_type(exc_value))
 
