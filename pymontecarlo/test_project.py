@@ -47,48 +47,48 @@ def test_project_create_results_dataframe(project, settings):
     df = project.create_results_dataframe(settings)
     assert len(df) == 3
 
-    assert len(df.loc[0]) == 34
-    assert len(df.loc[1]) == 34
-    assert len(df.loc[2]) == 34
+    assert len(df.loc[0]) == 64
+    assert len(df.loc[1]) == 64
+    assert len(df.loc[2]) == 64
 
-    assert len(df.loc[0].dropna()) == 28
-    assert len(df.loc[1].dropna()) == 28
-    assert len(df.loc[2].dropna()) == 34
+    assert len(df.loc[0].dropna()) == 52
+    assert len(df.loc[1].dropna()) == 52
+    assert len(df.loc[2].dropna()) == 64
 
 def test_project_create_results_dataframe_with_results(project, settings):
     result_classes = [EmittedPhotonIntensityResult]
     df = project.create_results_dataframe(settings, result_classes)
     assert len(df) == 3
 
-    assert len(df.loc[0]) == 14
-    assert len(df.loc[1]) == 14
-    assert len(df.loc[2]) == 14
+    assert len(df.loc[0]) == 26
+    assert len(df.loc[1]) == 26
+    assert len(df.loc[2]) == 26
 
 def test_project_create_results_dataframe_with_missing_results(project, settings):
     result_classes = [GeneratedPhotonIntensityResult]
     df = project.create_results_dataframe(settings, result_classes)
     assert len(df) == 3
 
-    assert len(df.loc[0]) == 6
-    assert len(df.loc[1]) == 6
-    assert len(df.loc[2]) == 6
+    assert len(df.loc[0]) == 12
+    assert len(df.loc[1]) == 12
+    assert len(df.loc[2]) == 12
 
     assert len(df.loc[0].dropna()) == 0
     assert len(df.loc[1].dropna()) == 0
-    assert len(df.loc[2].dropna()) == 6
+    assert len(df.loc[2].dropna()) == 12
 
 def test_project_create_results_dataframe_with_two_results(project, settings):
     result_classes = [EmittedPhotonIntensityResult, GeneratedPhotonIntensityResult]
     df = project.create_results_dataframe(settings, result_classes)
     assert len(df) == 3
 
-    assert len(df.loc[0]) == 20
-    assert len(df.loc[1]) == 20
-    assert len(df.loc[2]) == 20
+    assert len(df.loc[0]) == 38
+    assert len(df.loc[1]) == 38
+    assert len(df.loc[2]) == 38
 
-    assert len(df.loc[0].dropna()) == 14
-    assert len(df.loc[1].dropna()) == 14
-    assert len(df.loc[2].dropna()) == 20
+    assert len(df.loc[0].dropna()) == 26
+    assert len(df.loc[1].dropna()) == 26
+    assert len(df.loc[2].dropna()) == 38
 
 #def testread_write(self):
 #    filepath = os.path.join(self.create_temp_dir(), 'project.h5')

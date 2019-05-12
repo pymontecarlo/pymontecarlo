@@ -54,21 +54,8 @@ def test_photonintensityanalyis_apply(analysis, options):
 
 def test_photonintensityanalyis_options(analysis, simulation):
     result = simulation.find_result(EmittedPhotonIntensityResult)[0]
-    assert len(result) == 7
+    assert len(result) == 13
 
-    newresult = analysis.calculate(simulation, [simulation])
-
-    assert newresult
-    assert len(result) == 10
-
-    testutil.assert_ufloats(result[(29, 'Ka')], ufloat(3.0, 0.2236), abs=1e-4)
-    testutil.assert_ufloats(result[(29, 'Kb')], ufloat(10.5, 0.8718), abs=1e-4)
-    testutil.assert_ufloats(result[(29, 'K')], ufloat(13.5, 0.9), abs=1e-4)
-
-    newresult = analysis.calculate(simulation, [simulation])
-    assert not newresult
-
-    # Just to make sure
     newresult = analysis.calculate(simulation, [simulation])
     assert not newresult
 

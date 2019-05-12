@@ -40,3 +40,6 @@ class KRatioResultBuilder(PhotonResultBuilderBase):
         if not hasattr(kratio, 's'):
             kratio = uncertainties.ufloat(kratio, 0.0)
         self._add(xrayline, kratio)
+
+    def _sum_results(self, results):
+        return sum(results)

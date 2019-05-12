@@ -54,9 +54,16 @@ def options():
     tags = ['basic', 'test']
     return Options(program, beam, sample, analyses, tags)
 
-@pytest.fixture
-def simulation(options):
-    detector = options.detectors[0]
+@pytest.fixture(scope='session')
+def simulation():
+    program = ProgramMock()
+    beam = GaussianBeam(15e3, 10e-9)
+    sample = SubstrateSample(Material.pure(29))
+    detector = PhotonDetector('xray', math.radians(40.0))
+    analyses = [PhotonIntensityAnalysis(detector)]
+    tags = ['basic', 'test']
+    options = Options(program, beam, sample, analyses, tags)
+
     results = []
 
     analysis = PhotonIntensityAnalysis(detector)
@@ -83,7 +90,7 @@ def simulation(options):
 
     return Simulation(options, results)
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def project(simulation):
     project = Project()
 

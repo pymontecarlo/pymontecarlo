@@ -47,7 +47,7 @@ def test_kratioresult_hdf5(result, tmp_path):
 
 def test_kratioresult_series(result, seriesbuilder):
     result.convert_series(seriesbuilder)
-    assert len(seriesbuilder.build()) == 10
+    assert len(seriesbuilder.build()) == 20
 
 def test_kratiobuilder(builder):
-    assert len(builder.build()) == 5
+    assert len(builder.build()) == 10

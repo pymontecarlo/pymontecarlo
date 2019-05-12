@@ -5,7 +5,7 @@
 
 # Third party modules.
 import pytest
-
+import pyxray
 from uncertainties import ufloat
 
 # Local modules.
@@ -47,7 +47,14 @@ def test_photonintensityresult_hdf5(result, tmp_path):
 
 def test_photonintensityresult_series(result, seriesbuilder):
     result.convert_series(seriesbuilder)
-    assert len(seriesbuilder.build()) == 10
+    assert len(seriesbuilder.build()) == 20
 
 def test_photonintensityresultbuilder(builder):
-    assert len(builder.build()) == 5
+    data = builder.build()
+
+    assert len(data) == 10
+    assert pyxray.xray_line(13, 'K') in data
+    assert pyxray.xray_line(13, 'Ka') in data
+    assert pyxray.xray_line(13, 'Kb1,3') in data
+    assert pyxray.xray_line(13, 'L') in data
+    assert pyxray.xray_line(13, 'Ll,n') in data

@@ -4,13 +4,13 @@ Photon based results.
 
 # Standard library modules.
 import collections.abc
+import abc
 
 # Third party modules.
 import uncertainties
-
 import h5py
-
 import numpy as np
+import pyxray
 
 # Local modules.
 from pymontecarlo.results.base import ResultBase, ResultBuilderBase
@@ -22,7 +22,7 @@ class PhotonResultBase(ResultBase, collections.abc.Mapping):
     """
     Base class for photon based results.
     It consists of a :class:`Mapping` where keys are :class:`XrayLine` and
-    values are the photon result (intensity, distribution, etc.). 
+    values are the photon result (intensity, distribution, etc.).
     """
 
     def __init__(self, analysis, data):
@@ -106,14 +106,71 @@ class PhotonSingleResultBase(PhotonResultBase):
 
 class PhotonResultBuilderBase(ResultBuilderBase):
 
+    _EXTRA_TRANSITIONS = (pyxray.xray_transition('K'),
+                          pyxray.xray_transition('L'),
+                          pyxray.xray_transition('M'),
+                          pyxray.xray_transition('N'),
+                          pyxray.xray_transition('Ka'),
+                          pyxray.xray_transition('Kb1,3'),
+                          pyxray.xray_transition('Kb5'),
+                          pyxray.xray_transition('La'),
+                          pyxray.xray_transition('Lb2,15'),
+                          pyxray.xray_transition('Ll,n'),
+                          pyxray.xray_transition('Ma'),
+                          pyxray.xray_transition('Mz'),
+                          )
+
     def __init__(self, analysis, result_class):
         super().__init__(analysis)
         self.data = {}
         self.result_class = result_class
 
-    def _add(self, xrayline, datum):
+    def _add(self, xrayline, result):
         xrayline = convert_xrayline(xrayline)
-        self.data[xrayline] = datum
+        self.data[xrayline] = result
+
+    @abc.abstractmethod
+    def _sum_results(self, results):
+        raise NotImplementedError
+
+    def _create_extra_transitions(self):
+        # Expand data
+        element_transition_results = {}
+        for xrayline, result in self.data.items():
+            element_transition_results.setdefault(xrayline.element, {})[xrayline.transition] = result
+
+        newdata = {}
+        for element in element_transition_results:
+            for extra_transition in self._EXTRA_TRANSITIONS:
+                # If the transition already exists, we skip
+                if extra_transition in element_transition_results[element]:
+                    continue
+
+                # Search for the possible transitions (i.e. expand the extra transition)
+                try:
+                    possible_transitions = pyxray.element_xray_transitions(element, extra_transition)
+                except pyxray.NotFound:
+                    continue
+
+                # Find the results
+                results = [result for transition, result in element_transition_results[element].items()
+                           if transition in possible_transitions]
+
+                # If no results, do nothing
+                if not results:
+                    continue
+
+                # Add new entry
+                try:
+                    xrayline = pyxray.xray_line(element, extra_transition)
+                except pyxray.NotFound:
+                    continue
+
+                newdata[xrayline] = self._sum_results(results)
+
+        return newdata
 
     def build(self):
-        return self.result_class(self.analysis, self.data.copy())
+        data = self.data.copy()
+        data.update(self._create_extra_transitions())
+        return self.result_class(self.analysis, data)

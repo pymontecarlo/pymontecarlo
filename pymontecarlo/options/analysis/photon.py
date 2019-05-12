@@ -12,8 +12,6 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-COMMON_XRAY_TRANSITION_SETS = ('K', 'L', 'M', 'Ka', 'Kb', 'La', 'Ma', 'Mz')
-
 class PhotonAnalysisBase(AnalysisBase):
 
     def __init__(self, photon_detector):

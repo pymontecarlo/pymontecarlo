@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 # Third party modules.
 import pint
 
-import pyxray
-
 # Local modules.
 import pymontecarlo.options
 import pymontecarlo.options.analysis

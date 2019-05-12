@@ -49,6 +49,9 @@ class PhotonIntensityResultBuilder(PhotonResultBuilderBase):
         q = uncertainties.ufloat(value, error)
         self._add(xrayline, q)
 
+    def _sum_results(self, results):
+        return sum(results)
+
 class EmittedPhotonIntensityResultBuilder(PhotonIntensityResultBuilder):
 
     def __init__(self, analysis):
