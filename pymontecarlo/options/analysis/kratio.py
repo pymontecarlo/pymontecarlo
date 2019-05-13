@@ -4,15 +4,13 @@ __all__ = ['KRatioAnalysis', 'KRatioAnalysisBuilder']
 
 # Standard library modules.
 import logging
-logger = logging.getLogger(__name__)
 import copy
 
 # Third party modules.
 import h5py
-
 import numpy as np
-
 import pyxray
+import more_itertools
 
 # Local modules.
 from pymontecarlo.options.options import OptionsBuilder
@@ -26,6 +24,8 @@ from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
 import pymontecarlo.options.base as base
 
 # Globals and constants variables.
+logger = logging.getLogger(__name__)
+
 TAG_STANDARD = 'standard'
 
 class KRatioAnalysis(PhotonAnalysisBase):
@@ -93,72 +93,74 @@ class KRatioAnalysis(PhotonAnalysisBase):
         return super().apply(options) + standard_options
 
     def calculate(self, simulation, simulations):
+        # If k-ratio result exists, return False, no new result
+        for kratioresult in simulation.find_result(KRatioResult):
+            if kratioresult.analysis == self:
+                logger.debug('KRatioResult already calculated')
+                return False
+
+        # Find emitted photon intensity result(s)
+        it = (r for r in simulation.find_result(EmittedPhotonIntensityResult)
+              if r.analysis.photon_detector == self.photon_detector)
+        unkresult = more_itertools.first(it, None)
+
+        # If no result, return False, no new result
+        if unkresult is None:
+            return False
+
+        # Find standard simulations
         stdoptions = self._create_standard_options(simulation.options)
         stdsimulations = [s for s in simulations if s.options in stdoptions]
 
-        newresult = super().calculate(simulation, simulations)
+        # Build cache of standard result
+        stdresult_cache = {}
+        for xrayline in unkresult:
+            z = xrayline.atomic_number
 
-        for unkresult in simulation.find_result(EmittedPhotonIntensityResult):
-            if unkresult.analysis.photon_detector != self.photon_detector:
+            if z in stdresult_cache:
                 continue
 
-            # Check if KRatioResult already exists
-            kratioresult = next((r for r in simulation.find_result(KRatioResult)
-                                if r.analysis == self), None)
-            if kratioresult is not None:
-                if kratioresult.keys() == unkresult.keys():
-                    logger.debug('KRatioResult already calculated')
-                    continue
+            stdmaterial = self.get_standard_material(z)
+            it = (s for s in stdsimulations if s.options.sample.material == stdmaterial)
+            stdsimulation = more_itertools.first(it, None)
+            if stdsimulation is None:
+                logger.debug('No standard simulation found for Z={}'.format(z))
+                stdresult_cache[z] = None
+                continue
 
-                simulation.results.remove(kratioresult)
+            it = (r for r in stdsimulation.find_result(EmittedPhotonIntensityResult)
+                  if r.analysis.photon_detector == self.photon_detector)
+            stdresult = more_itertools.first(it, None)
+            if stdresult is None:
+                logger.debug('No standard result found for Z={}'.format(z))
+                stdresult_cache[z] = None
+                continue
 
-            # Build cache of standard result
-            stdresult_cache = {}
-            for xrayline in unkresult:
-                z = xrayline.atomic_number
+            stdresult_cache[z] = stdresult
 
-                if z in stdresult_cache:
-                    continue
+        # Calculate k-ratios
+        builder = KRatioResultBuilder(self)
 
-                stdmaterial = self.get_standard_material(z)
-                stdsimulation = \
-                    next((s for s in stdsimulations
-                          if s.options.sample.material == stdmaterial), None)
-                if stdsimulation is None:
-                    logger.debug('No standard simulation found for Z={}'.format(z))
-                    stdresult_cache[z] = None
-                    continue
+        for xrayline, unkintensity in unkresult.items():
+            z = xrayline.atomic_number
 
-                stdresult = \
-                    next((r for r in stdsimulation.find_result(EmittedPhotonIntensityResult)
-                         if r.analysis.photon_detector == self.photon_detector), None)
-                if stdresult is None:
-                    logger.debug('No standard result found for Z={}'.format(z))
-                    stdresult_cache[z] = None
-                    continue
+            stdresult = stdresult_cache.get(z)
+            if stdresult is None:
+                continue
 
-                stdresult_cache[z] = stdresult
+            stdintensity = stdresult.get(xrayline, None)
+            if stdintensity is None:
+                logger.debug('No standard intensity for {}'.format(xrayline))
+                continue
 
-            # Calculate k-ratios
-            builder = KRatioResultBuilder(self)
+            builder.add_kratio(xrayline, unkintensity, stdintensity)
 
-            for xrayline, unkintensity in unkresult.items():
-                z = xrayline.atomic_number
+        # Create result
+        newresult = super().calculate(simulation, simulations)
 
-                stdresult = stdresult_cache.get(z)
-                if stdresult is None:
-                    continue
-
-                stdintensity = stdresult.get(xrayline, None)
-                if stdintensity is None:
-                    logger.debug('No standard intensity for {}'.format(xrayline))
-                    continue
-
-                builder.add_kratio(xrayline, unkintensity, stdintensity)
-
-            if builder.data:
-                simulation.results.append(builder.build())
-                newresult = True
+        if builder.data:
+            simulation.results.append(builder.build())
+            newresult = True
 
         return newresult
 
