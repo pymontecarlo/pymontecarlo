@@ -54,7 +54,7 @@ def test_photonintensityanalyis_apply(analysis, options):
 
 def test_photonintensityanalyis_options(analysis, simulation):
     result = simulation.find_result(EmittedPhotonIntensityResult)[0]
-    assert len(result) == 13
+    assert len(result) == 11
 
     newresult = analysis.calculate(simulation, [simulation])
     assert not newresult
