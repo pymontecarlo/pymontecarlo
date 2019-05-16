@@ -123,6 +123,8 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         return final_list_options
 
     def _create_identifiers(self, list_options):
+        if len(list_options) == 1:
+            return ['simulation1']
         return create_identifiers(list_options)
 
     def _create_simulations(self, list_options, identifiers):
