@@ -7,8 +7,8 @@ import os
 import tempfile
 import shutil
 import asyncio
+import shutil
 import logging
-logger = logging.getLogger(__name__)
 
 # Third party modules.
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 from pymontecarlo.runner.base import SimulationRunnerBase
 
 # Globals and constants variables.
+logger = logging.getLogger(__name__)
 
 class LocalWorkerDispatcher:
 
@@ -52,6 +53,11 @@ class LocalWorkerDispatcher:
                 head, tail = os.path.split(self.project.filepath)
                 dirname = os.path.splitext(tail)[0] + '_simulations'
                 outputdir = os.path.join(head, dirname, simulation.identifier)
+
+                if os.path.exists(outputdir) and os.listdir(outputdir):
+                    logger.debug('Removing content in {}'.format(outputdir))
+                    shutil.rmtree(outputdir, ignore_errors=True)
+
                 temporary = False
             else:
                 outputdir = tempfile.mkdtemp()
