@@ -48,7 +48,7 @@ class Options(base.OptionBase):
         Finds all analyses matching the specified class.
         If *detector* is not ``None``, the analysis detector must also be
         equal to the specified detector.
-        
+
         :return: :class:`list` of analysis objects
         """
         analyses = find_by_type(self.analyses, analysis_class)
@@ -174,7 +174,13 @@ class OptionsBuilder(base.OptionBuilderBase):
         self.tags = list(tags) if tags is not None else []
 
     def __len__(self):
-        return len(self.build())
+        count = len(self.programs) * len(self.beams) * len(self.samples)
+
+        for program in self.programs:
+            analysis_combinations = program.expander.expand_analyses(self.analyses) or [None]
+            count *= len(analysis_combinations)
+
+        return count
 
     def add_program(self, program):
         if program not in self.programs:
@@ -192,7 +198,7 @@ class OptionsBuilder(base.OptionBuilderBase):
         if analysis not in self.analyses:
             self.analyses.append(analysis)
 
-    def build(self):
+    def iterbuild(self):
         list_options = []
 
         for program in self.programs:
@@ -208,10 +214,13 @@ class OptionsBuilder(base.OptionBuilderBase):
                 if options in list_options:
                     continue
                 list_options.append(options)
+                yield options
 
                 for analysis in options.analyses:
                     for extra_options in analysis.apply(options):
                         if extra_options not in list_options:
                             list_options.append(extra_options)
+                            yield extra_options
 
-        return list_options
+    def build(self):
+        return list(self.iterbuild())

@@ -84,7 +84,7 @@ def test_optionsbuilder_kratioanalysis(builder, options):
     det = PhotonDetector('det', math.radians(50))
     builder.add_analysis(KRatioAnalysis(det))
 
-    assert len(builder) == 2
+    assert len(builder) == 1
     assert len(builder.build()) == 2
 
 def test_optionsbuilder_kratioanalysis_with_photonintensityanalysis(builder, options):
@@ -96,7 +96,7 @@ def test_optionsbuilder_kratioanalysis_with_photonintensityanalysis(builder, opt
     builder.add_analysis(KRatioAnalysis(det))
     builder.add_analysis(PhotonIntensityAnalysis(det))
 
-    assert len(builder) == 2
+    assert len(builder) == 1
     assert len(builder.build()) == 2
 
 def test_optionsbuilder_twokratioanalysis(builder, options):
@@ -110,6 +110,6 @@ def test_optionsbuilder_twokratioanalysis(builder, options):
     det = PhotonDetector('det2', math.radians(55))
     builder.add_analysis(KRatioAnalysis(det))
 
-    assert len(builder) == 4
+    assert len(builder) == 2
     assert len(builder.build()) == 4
 
