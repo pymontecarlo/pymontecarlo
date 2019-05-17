@@ -67,6 +67,7 @@ class SampleFigure(FigureBase):
         self.view_size_methods[HorizontalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
+        self.view_size_methods[PencilBeam] = self._calculate_view_size_pencil_beam
         self.view_size_methods[CylindricalBeam] = self._calculate_view_size_cylindrical_beam
         self.view_size_methods[GaussianBeam] = self._calculate_view_size_cylindrical_beam
 
@@ -93,15 +94,16 @@ class SampleFigure(FigureBase):
     def _calculate_view_size_sphere_sample(self, sample, perspective):
         return sample.diameter_m
 
-    def _calculate_view_size_cylindrical_beam(self, beam, perspective):
-        view_size = beam.diameter_m * 2
-
+    def _calculate_view_size_pencil_beam(self, beam, perspective):
         if perspective is Perspective.XY:
-            return view_size + max(beam.x0_m, beam.y0_m)
+            return max(beam.x0_m, beam.y0_m)
         elif perspective is Perspective.XZ:
-            return view_size + beam.x0_m
+            return beam.x0_m
         elif perspective is Perspective.YZ:
-            return view_size + beam.y0_m
+            return beam.y0_m
+
+    def _calculate_view_size_cylindrical_beam(self, beam, perspective):
+        return self._calculate_view_size_pencil_beam(beam, perspective) + beam.diameter_m * 2
 
     def draw(self, ax):
         """
