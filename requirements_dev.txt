@@ -1,8 +1,5 @@
-nose
-coverage
-docutils
-jinja2
+pytest
+pytest-cov
+pytest-asyncio
 sphinx
-pybtex
 sphinx_rtd_theme
-pymontecarlo-casino2

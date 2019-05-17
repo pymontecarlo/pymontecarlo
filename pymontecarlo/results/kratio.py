@@ -1,5 +1,7 @@
 """"""
 
+__all__ = ['KRatioResult', 'KRatioResultBuilder']
+
 # Standard library modules.
 
 # Third party modules.
@@ -14,7 +16,19 @@ class KRatioResult(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and k-ratios.
     """
-    pass
+
+    DATASET_VALUES = 'k-ratios'
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        for xrayline, q in self.items():
+            builder.add_column(xrayline, xrayline, q.n)
+            builder.add_column(xrayline, xrayline, q.s, error=True)
+
+#endregion
 
 class KRatioResultBuilder(PhotonResultBuilderBase):
 
@@ -26,3 +40,6 @@ class KRatioResultBuilder(PhotonResultBuilderBase):
         if not hasattr(kratio, 's'):
             kratio = uncertainties.ufloat(kratio, 0.0)
         self._add(xrayline, kratio)
+
+    def _sum_results(self, results):
+        return sum(results)

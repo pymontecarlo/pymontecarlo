@@ -10,7 +10,7 @@ Estimate of electron range
 
 # Globals and constants variables.
 
-def photon_range(e0, material, xrayline, reference=None):
+def photon_range(e0, material, z, energy_eV):
     """
     This function returns the generated photon range in *material* at
     incident electron energy *e0* for a characteristic x ray line *transition*.
@@ -20,18 +20,16 @@ def photon_range(e0, material, xrayline, reference=None):
     Parameterization of the range of electrons at low energy using
     the CASINO Monte Carlo program. Microsc Microanal 3(suppl.2),
     885–886.
-    
+
     :arg e0: incident electron energy (in eV)
     :arg material: material
     :arg xrayline: x-ray line
-    
+
     :return: photon range (in meters)
     """
-    z = xrayline.atomic_number
     if z not in material.composition:
-        raise ValueError('{} is not in material'.format(xrayline))
+        raise ValueError('{} is not in material'.format(z))
 
-    energy_eV = xrayline.energy_eV
     if energy_eV > e0:
         return 0.0
 

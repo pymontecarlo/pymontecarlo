@@ -2,6 +2,8 @@
 Substrate sample.
 """
 
+__all__ = ['SubstrateSample', 'SubstrateSampleBuilder']
+
 # Standard library modules.
 import functools
 import itertools
@@ -11,6 +13,7 @@ import operator
 
 # Local modules.
 from pymontecarlo.options.sample.base import SampleBase, SampleBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -30,11 +33,44 @@ class SubstrateSample(SampleBase):
             .format(self.__class__.__name__, str(self.material))
 
     def __eq__(self, other):
-        return super().__eq__(other) and self.material == other.material
+        return super().__eq__(other) and \
+            base.isclose(self.material, other.material)
 
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
+
+#region HDF5
+
+    ATTR_MATERIAL = 'material'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        material = cls._parse_hdf5(group, cls.ATTR_MATERIAL)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(material, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.material, 'substrate ', 'subs ')
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+#endregion
 
 class SubstrateSampleBuilder(SampleBuilderBase):
 

@@ -2,61 +2,66 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.sphere import SphereSample, SphereSampleBuilder
 from pymontecarlo.options.material import Material
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 
-class TestSphereSample(TestCase):
+@pytest.fixture
+def sample():
+    return SphereSample(COPPER, 123.456)
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return SphereSampleBuilder()
 
-        self.s = SphereSample(COPPER, 123.456)
+def test_spheresample(sample):
+    assert sample.material == COPPER
+    assert sample.diameter_m == pytest.approx(123.456, abs=1e-4)
 
-    def testskeleton(self):
-        self.assertEqual(COPPER, self.s.material)
-        self.assertAlmostEqual(123.456, self.s.diameter_m, 4)
+    assert len(sample.materials) == 1
 
-    def testmaterials(self):
-        self.assertEqual(1, len(self.s.materials))
+def test_spheresample_eq(sample):
+    assert sample == SphereSample(COPPER, 123.456)
+    assert sample != SphereSample(ZINC, 123.456)
+    assert sample != SphereSample(COPPER, 124.456)
 
-    def test__eq__(self):
-        s = SphereSample(COPPER, 123.456)
-        self.assertEqual(s, self.s)
+def test_spheresample_hdf5(sample, tmp_path):
+    testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-    def test__ne__(self):
-        s = SphereSample(ZINC, 123.456)
-        self.assertNotEqual(s, self.s)
+def test_spheresample_copy(sample):
+    testutil.assert_copy(sample)
 
-        s = SphereSample(COPPER, 124.456)
-        self.assertNotEqual(s, self.s)
+def test_spheresample_pickle(sample):
+    testutil.assert_pickle(sample)
 
-class TestSphereSampleBuilder(TestCase):
+def test_spheresample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 5
 
-    def testbuild(self):
-        b = SphereSampleBuilder()
-        b.add_material(COPPER)
-        b.add_material(ZINC)
-        b.add_diameter_m(1.0)
+def test_spheresample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 6
 
-        samples = b.build()
-        self.assertEqual(2, len(samples))
-        self.assertEqual(2, len(b))
+def test_substratesamplebuilder(builder):
+    builder.add_material(COPPER)
+    builder.add_material(ZINC)
+    builder.add_diameter_m(1.0)
 
-        for sample in samples:
-            self.assertAlmostEqual(0.0, sample.tilt_rad, 4)
-            self.assertAlmostEqual(0.0, sample.azimuth_rad, 4)
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    for sample in samples:
+        assert sample.tilt_rad == pytest.approx(0.0, abs=1e-4)
+        assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
+

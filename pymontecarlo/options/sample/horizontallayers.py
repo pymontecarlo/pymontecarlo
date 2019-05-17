@@ -2,6 +2,8 @@
 Horizontal layers sample.
 """
 
+__all__ = ['HorizontalLayerSample', 'HorizontalLayerSampleBuilder']
+
 # Standard library modules.
 import itertools
 
@@ -10,6 +12,7 @@ import itertools
 # Local modules.
 from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
 from pymontecarlo.options.material import VACUUM
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -45,7 +48,7 @@ class HorizontalLayerSample(LayeredSampleBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.substrate_material == other.substrate_material
+            base.isclose(self.substrate_material, other.substrate_material)
 
     def has_substrate(self):
         """
@@ -69,6 +72,47 @@ class HorizontalLayerSample(LayeredSampleBase):
             zpositions.append((zmin_m, zmax_m))
 
         return zpositions
+
+#region HDF5
+
+    ATTR_SUBSTRATE = 'substrate'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        substrate_material = cls._parse_hdf5(group, cls.ATTR_SUBSTRATE)
+        layers = cls._parse_hdf5_layers(group)
+        tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(substrate_material, layers, tilt_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_SUBSTRATE, self.substrate_material)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_SUBSTRATE = 'substrate'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        section = builder.add_section()
+        section.add_title('Substrate')
+
+        description = section.require_description(self.DESCRIPTION_SUBSTRATE)
+        description.add_item('Material', self.substrate_material.name)
+
+#endregion
 
 class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
 

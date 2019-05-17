@@ -2,28 +2,24 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestSimulation(TestCase):
+def test_simulation_find_result(simulation):
+    results = simulation.find_result(EmittedPhotonIntensityResult)
+    assert len(results) == 1
 
-    def setUp(self):
-        super().setUp()
+def test_simulation_hdf5(simulation, tmp_path):
+    testutil.assert_convert_parse_hdf5(simulation, tmp_path)
 
-        self.sim = self.create_basic_simulation()
+def test_simulation_copy(simulation):
+    testutil.assert_copy(simulation)
 
-    def testfind_result(self):
-        results = self.sim.find_result(EmittedPhotonIntensityResult)
-        self.assertEqual(1, len(results))
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+def test_simulation_pickle(simulation):
+    testutil.assert_pickle(simulation)

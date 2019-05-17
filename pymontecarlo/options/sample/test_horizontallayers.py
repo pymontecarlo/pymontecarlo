@@ -2,155 +2,111 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.sample.horizontallayers import \
     HorizontalLayerSample, HorizontalLayerSampleBuilder
 from pymontecarlo.options.material import Material, VACUUM
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 COPPER = Material.pure(29)
 ZINC = Material.pure(30)
 GALLIUM = Material.pure(31)
 
-class TestHorizontalLayerSample(TestCase):
+@pytest.fixture(params=[COPPER, None])
+def sample(request):
+    sample = HorizontalLayerSample(request.param)
+    sample.add_layer(ZINC, 123.456)
+    sample.add_layer(GALLIUM, 456.789)
+    return sample
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return HorizontalLayerSampleBuilder()
 
-        self.s1 = HorizontalLayerSample(COPPER)
-        self.s2 = HorizontalLayerSample(None) # No substrate
-        self.s3 = HorizontalLayerSample(COPPER) # Empty layer
+def test_horizontallayerssample(sample):
+    if sample.has_substrate():
+        assert sample.substrate_material == COPPER
+        assert len(sample.materials) == 3
 
-        self.s1.add_layer(ZINC, 123.456)
-        self.s1.add_layer(GALLIUM, 456.789)
+    else:
+        assert sample.substrate_material == VACUUM
+        assert len(sample.materials) == 2
 
-        self.s2.add_layer(ZINC, 123.456)
-        self.s2.add_layer(GALLIUM, 456.789)
+    assert len(sample.layers) == 2
+    assert sample.layers[0].material == ZINC
+    assert sample.layers[0].thickness_m == pytest.approx(123.456, abs=1e-4)
+    assert sample.layers[1].material == GALLIUM
+    assert sample.layers[1].thickness_m == pytest.approx(456.789, abs=1e-4)
 
-        self.s3.add_layer(ZINC, 123.456)
-        self.s3.add_layer(GALLIUM, 456.789)
-        self.s3.add_layer(COPPER, 456.123)
+def test_horizontallayerssample_layers_zpositions_m(sample):
+    zpositions_m = sample.layers_zpositions_m
+    assert len(zpositions_m) == len(sample.layers)
 
-    def testskeleton(self):
-        # Horizontal layers 1
-        self.assertTrue(self.s1.has_substrate())
-        self.assertEqual(COPPER, self.s1.substrate_material)
+    zmin_m, zmax_m = zpositions_m[0]
+    assert zmin_m == pytest.approx(-123.456, abs=1e-4)
+    assert zmax_m == pytest.approx(0.0, abs=1e-4)
 
-        self.assertEqual(2, len(self.s1.layers))
-        self.assertEqual(ZINC, self.s1.layers[0].material)
-        self.assertAlmostEqual(123.456, self.s1.layers[0].thickness_m, 4)
-        self.assertEqual(GALLIUM, self.s1.layers[1].material)
-        self.assertAlmostEqual(456.789, self.s1.layers[1].thickness_m, 4)
+    zmin_m, zmax_m = zpositions_m[1]
+    assert zmin_m == pytest.approx(-123.456 - 456.789, abs=1e-4)
+    assert zmax_m == pytest.approx(-123.456, abs=1e-4)
 
-        # Horizontal layers 2
-        self.assertFalse(self.s2.has_substrate())
+def test_horizontallayerssample_eq(sample):
+    if sample.has_substrate():
+        other = HorizontalLayerSample(COPPER)
+        other.add_layer(ZINC, 123.456)
+        other.add_layer(GALLIUM, 456.789)
+        assert sample == other
 
-        self.assertEqual(2, len(self.s2.layers))
-        self.assertEqual(ZINC, self.s2.layers[0].material)
-        self.assertAlmostEqual(123.456, self.s2.layers[0].thickness_m, 4)
-        self.assertEqual(GALLIUM, self.s2.layers[1].material)
-        self.assertAlmostEqual(456.789, self.s2.layers[1].thickness_m, 4)
+    else:
+        other = HorizontalLayerSample(None)
+        other.add_layer(ZINC, 123.456)
+        other.add_layer(GALLIUM, 456.789)
+        assert sample == other
 
-        # Horizontal layers 3
-        self.assertTrue(self.s3.has_substrate())
-        self.assertEqual(COPPER, self.s3.substrate_material)
+def test_horizontallayerssample_ne(sample):
+    other = HorizontalLayerSample(ZINC)
+    other.add_layer(ZINC, 123.456)
+    other.add_layer(GALLIUM, 456.789)
+    assert sample != other
 
-        self.assertEqual(3, len(self.s3.layers))
-        self.assertEqual(ZINC, self.s3.layers[0].material)
-        self.assertAlmostEqual(123.456, self.s3.layers[0].thickness_m, 4)
-        self.assertEqual(GALLIUM, self.s3.layers[1].material)
-        self.assertAlmostEqual(456.789, self.s3.layers[1].thickness_m, 4)
-        self.assertEqual(COPPER, self.s3.layers[2].material)
-        self.assertAlmostEqual(456.123, self.s3.layers[2].thickness_m, 4)
+    other = HorizontalLayerSample(COPPER)
+    other.add_layer(GALLIUM, 456.789)
+    assert sample != other
 
-    def testsubstrate(self):
-        self.s1.substrate_material = VACUUM
-        self.assertFalse(self.s1.has_substrate())
+    other = HorizontalLayerSample(COPPER)
+    other.add_layer(ZINC, 9999)
+    other.add_layer(GALLIUM, 456.789)
+    assert sample != other
 
-    def testmaterials(self):
-        self.assertEqual(3, len(self.s1.materials))
-        self.assertEqual(2, len(self.s2.materials))
-        self.assertEqual(3, len(self.s3.materials))
+def test_horizontallayerssample_hdf5(sample, tmp_path):
+    testutil.assert_convert_parse_hdf5(sample, tmp_path)
 
-    def testlayers_zpositions_m(self):
-        # Horizontal layers 1
-        zpositions_m = self.s1.layers_zpositions_m
-        self.assertEqual(len(self.s1.layers), len(zpositions_m))
+def test_horizontallayerssample_copy(sample):
+    testutil.assert_copy(sample)
 
-        zmin_m, zmax_m = zpositions_m[0]
-        self.assertAlmostEqual(-123.456, zmin_m, 4)
-        self.assertAlmostEqual(0.0, zmax_m, 4)
+def test_horizontallayerssample_pickle(sample):
+    testutil.assert_pickle(sample)
 
-        zmin_m, zmax_m = zpositions_m[1]
-        self.assertAlmostEqual(-123.456 - 456.789, zmin_m, 4)
-        self.assertAlmostEqual(-123.456, zmax_m, 4)
+def test_horizontallayerssample_series(sample, seriesbuilder):
+    sample.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 10 if sample.has_substrate() else 9
 
-        # Horizontal layers 2
-        zpositions_m = self.s2.layers_zpositions_m
-        self.assertEqual(len(self.s2.layers), len(zpositions_m))
+def test_horizontallayerssample_document(sample, documentbuilder):
+    sample.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 7
 
-        zmin_m, zmax_m = zpositions_m[0]
-        self.assertAlmostEqual(-123.456, zmin_m, 4)
-        self.assertAlmostEqual(0.0, zmax_m, 4)
+def test_horizontallayerssamplebuilder(builder):
+    builder.add_substrate_material(COPPER)
+    layerbuilder = builder.add_layer(ZINC, 10)
+    layerbuilder.add_material(GALLIUM)
 
-        zmin_m, zmax_m = zpositions_m[1]
-        self.assertAlmostEqual(-123.456 - 456.789, zmin_m, 4)
-        self.assertAlmostEqual(-123.456, zmax_m, 4)
+    samples = builder.build()
+    assert len(builder) == 2
+    assert len(samples) == 2
 
-        # Horizontal layers 3
-        zpositions_m = self.s3.layers_zpositions_m
-        self.assertEqual(len(self.s3.layers), len(zpositions_m))
-
-        zmin_m, zmax_m = zpositions_m[0]
-        self.assertAlmostEqual(-123.456, zmin_m, 4)
-        self.assertAlmostEqual(0.0, zmax_m, 4)
-
-        zmin_m, zmax_m = zpositions_m[1]
-        self.assertAlmostEqual(-123.456 - 456.789, zmin_m, 4)
-        self.assertAlmostEqual(-123.456, zmax_m, 4)
-
-        zmin_m, zmax_m = zpositions_m[2]
-        self.assertAlmostEqual(-123.456 - 456.789 - 456.123, zmin_m, 4)
-        self.assertAlmostEqual(-123.456 - 456.789, zmax_m, 4)
-
-    def test__eq__(self):
-        s1 = HorizontalLayerSample(COPPER)
-        s1.add_layer(ZINC, 123.456)
-        s1.add_layer(GALLIUM, 456.789)
-        self.assertEqual(s1, self.s1)
-
-    def test__ne__(self):
-        s1 = HorizontalLayerSample(ZINC)
-        s1.add_layer(ZINC, 123.456)
-        s1.add_layer(GALLIUM, 456.789)
-        self.assertNotEqual(s1, self.s1)
-
-        s1 = HorizontalLayerSample(COPPER)
-        s1.add_layer(GALLIUM, 456.789)
-        self.assertNotEqual(s1, self.s1)
-
-        s1 = HorizontalLayerSample(COPPER)
-        s1.add_layer(ZINC, 124.456)
-        s1.add_layer(GALLIUM, 456.789)
-        self.assertNotEqual(s1, self.s1)
-
-class TestHorizontalLayerSampleBuilder(TestCase):
-
-    def testbuild(self):
-        b = HorizontalLayerSampleBuilder()
-        b.add_substrate_material(COPPER)
-        bl = b.add_layer(ZINC, 10)
-        bl.add_material(GALLIUM)
-
-        samples = b.build()
-        self.assertEqual(2, len(samples))
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

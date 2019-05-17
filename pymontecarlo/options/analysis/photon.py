@@ -8,10 +8,9 @@ Photon related analysis.
 
 # Local modules.
 from pymontecarlo.options.analysis.base import AnalysisBase, AnalysisBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
-
-COMMON_XRAY_TRANSITION_SETS = ('K', 'L', 'M', 'Ka', 'Kb', 'La', 'Ma', 'Mz')
 
 class PhotonAnalysisBase(AnalysisBase):
 
@@ -20,7 +19,7 @@ class PhotonAnalysisBase(AnalysisBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.photon_detector == other.photon_detector
+            base.isclose(self.photon_detector, other.photon_detector)
 
     def __repr__(self):
         return '<{classname}(detector={photon_detector})>' \
@@ -29,6 +28,33 @@ class PhotonAnalysisBase(AnalysisBase):
     @property
     def detector(self):
         return self.photon_detector
+
+#region HDF5
+
+    ATTR_DETECTOR = 'detector'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_DETECTOR, self.photon_detector)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        description = builder.require_description(self.DESCRIPTION_DETECTOR)
+        description.add_item('Detector', self.photon_detector.name)
+
+#endregion
 
 class PhotonAnalysisBuilderBase(AnalysisBuilderBase):
 

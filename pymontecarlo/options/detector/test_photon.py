@@ -2,73 +2,80 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 import math
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.detector.photon import PhotonDetector, PhotonDetectorBuilder
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestPhotonDetector(TestCase):
+@pytest.fixture
+def detector():
+    return PhotonDetector('det', math.radians(35), math.radians(90))
 
-    def setUp(self):
-        super().setUp()
+@pytest.fixture
+def builder():
+    return PhotonDetectorBuilder()
 
-        self.d = PhotonDetector('det', math.radians(35), math.radians(90))
+def test_photondetector(detector):
+    assert detector.elevation_rad == pytest.approx(math.radians(35), abs=1e-4)
+    assert detector.elevation_deg == pytest.approx(35, abs=1e-4)
 
-    def testskeleton(self):
-        self.assertAlmostEqual(math.radians(35), self.d.elevation_rad, 4)
-        self.assertAlmostEqual(35.0, self.d.elevation_deg, 4)
+    assert detector.azimuth_rad == pytest.approx(math.radians(90), abs=1e-4)
+    assert detector.azimuth_deg == pytest.approx(90, abs=1e-4)
 
-        self.assertAlmostEqual(math.radians(90), self.d.azimuth_rad, 4)
-        self.assertAlmostEqual(90.0, self.d.azimuth_deg, 4)
+def test_photondetector_repr(detector):
+    assert repr(detector) == '<PhotonDetector(det, elevation=35.0°, azimuth=90.0°)>'
 
-    def test__repr__(self):
-        expected = '<PhotonDetector(det, elevation=35.0°, azimuth=90.0°)>'
-        self.assertEqual(expected, repr(self.d))
+def test_photondetector_eq(detector):
+    assert detector == PhotonDetector('det', math.radians(35), math.radians(90))
 
-    def test__eq__(self):
-        d = PhotonDetector('det', math.radians(35), math.radians(90))
-        self.assertEqual(d, self.d)
+def test_photondetector_ne(detector):
+    assert not detector == PhotonDetector('det2', math.radians(35), math.radians(90))
+    assert not detector == PhotonDetector(math.radians(36), math.radians(90))
+    assert not detector == PhotonDetector(math.radians(35), math.radians(91))
 
-    def test__ne__(self):
-        d = PhotonDetector('det2', math.radians(35), math.radians(90))
-        self.assertNotEqual(d, self.d)
+def test_photondetector_hdf5(detector, tmp_path):
+    testutil.assert_convert_parse_hdf5(detector, tmp_path)
 
-        d = PhotonDetector(math.radians(36), math.radians(90))
-        self.assertNotEqual(d, self.d)
+def test_photondetector_copy(detector):
+    testutil.assert_copy(detector)
 
-        d = PhotonDetector(math.radians(35), math.radians(91))
-        self.assertNotEqual(d, self.d)
+def test_photondetector_pickle(detector):
+    testutil.assert_pickle(detector)
 
-class TestPhotonDetectorBuilder(TestCase):
+def test_photondetector_series(detector, seriesbuilder):
+    detector.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 2
 
-    def testbuild(self):
-        b = PhotonDetectorBuilder()
-        b.add_azimuth_deg(0.0)
-        self.assertEqual(0, len(b))
-        self.assertEqual(0, len(b.build()))
+def test_photondetector_document(detector, documentbuilder):
+    detector.convert_document(documentbuilder)
+    document = documentbuilder.build()
+    assert testutil.count_document_nodes(document) == 8
 
-    def testbuild2(self):
-        b = PhotonDetectorBuilder()
-        b.add_elevation_deg(1.1)
-        self.assertEqual(1, len(b))
-        self.assertEqual(1, len(b.build()))
+def test_photondetectorbuild(builder):
+    builder.add_elevation_deg(1.1)
+    builder.add_elevation_deg(2.2)
+    builder.add_azimuth_deg(3.3)
+    builder.add_azimuth_deg(4.4)
 
-    def testbuild3(self):
-        b = PhotonDetectorBuilder()
-        b.add_elevation_deg(1.1)
-        b.add_elevation_deg(2.2)
-        b.add_azimuth_deg(3.3)
-        b.add_azimuth_deg(4.4)
-        self.assertEqual(4, len(b))
-        self.assertEqual(4, len(b.build()))
+    assert len(builder) == 4
+    assert len(builder.build()) == 4
 
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+def test_photondetectorbuild_noelevation(builder):
+    builder.add_azimuth_deg(0.0)
+
+    assert len(builder) == 0
+    assert len(builder.build()) == 0
+
+def test_photondetectorbuild_noazimuth(builder):
+    builder.add_elevation_deg(1.1)
+
+    assert len(builder) == 1
+    assert len(builder.build()) == 1
+
+

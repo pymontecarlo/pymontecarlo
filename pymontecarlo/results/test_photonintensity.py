@@ -2,65 +2,58 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
+import pyxray
+from uncertainties import ufloat
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder
-from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
-from pymontecarlo.options.detector.photon import PhotonDetector
+from pymontecarlo.options.analysis import PhotonIntensityAnalysis
+from pymontecarlo.options.detector import PhotonDetector
+import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class TestEmittedPhotonIntensityResult(TestCase):
+@pytest.fixture
+def builder():
+    detector = PhotonDetector('det', 1.1, 2.2)
+    analysis = PhotonIntensityAnalysis(detector)
 
-    def setUp(self):
-        super().setUp()
+    builder = EmittedPhotonIntensityResultBuilder(analysis)
+    builder.add_intensity((13, 'Ka1'), 1.0, 0.1)
+    builder.add_intensity((13, 'Ka2'), 2.0, 0.2)
+    builder.add_intensity((13, 'Kb1'), 4.0, 0.5)
+    builder.add_intensity((13, 'Kb3'), 5.0, 0.7)
+    builder.add_intensity((13, 'Ll'), 3.0, 0.1)
+    return builder
 
-        detector = PhotonDetector(1.1, 2.2)
-        analysis = PhotonIntensityAnalysis(detector)
-        b = EmittedPhotonIntensityResultBuilder(analysis)
-        b.add_intensity((13, 'Ka1'), 1.0, 0.1)
-        b.add_intensity((13, 'Ka2'), 2.0, 0.2)
-        b.add_intensity((13, 'Kb1'), 4.0, 0.5)
-        b.add_intensity((13, 'Kb3'), 5.0, 0.7)
-        b.add_intensity((13, 'Ll'), 3.0, 0.1)
-        self.r = b.build()
+@pytest.fixture
+def result(builder):
+    return builder.build()
 
-    def testget(self):
-        q = self.r.get((13, 'Ka1'))
-        self.assertAlmostEqual(1.0, q.n, 4)
-        self.assertAlmostEqual(0.1, q.s, 4)
+def _test_photonintensityresult(result):
+    testutil.assert_ufloats(result.get((13, 'Ka1')), ufloat(1.0, 0.1), abs=1e-4)
+    testutil.assert_ufloats(result.get((14, 'Ka1')), ufloat(0.0, 0.0), abs=1e-4)
+    assert result.get((14, 'Ka1'), None) is None
 
-        q = self.r.get((14, 'Ka1'))
-        self.assertAlmostEqual(0.0, q.n, 4)
-        self.assertAlmostEqual(0.0, q.s, 4)
+def test_photonintensityresult(result):
+    _test_photonintensityresult(result)
 
-        q = self.r.get((14, 'Ka1'), None)
-        self.assertIsNone(q)
+def test_photonintensityresult_hdf5(result, tmp_path):
+    result2 = testutil.assert_convert_parse_hdf5(result, tmp_path, assert_equality=False)
+    _test_photonintensityresult(result2)
 
-class TestEmittedPhotonIntensityResultBuilder(TestCase):
+def test_photonintensityresult_series(result, seriesbuilder):
+    result.convert_series(seriesbuilder)
+    assert len(seriesbuilder.build()) == 18
 
-    def setUp(self):
-        super().setUp()
+def test_photonintensityresultbuilder(builder):
+    data = builder.build()
 
-        detector = PhotonDetector(1.1, 2.2)
-        analysis = PhotonIntensityAnalysis(detector)
-        self.b = EmittedPhotonIntensityResultBuilder(analysis)
-
-    def testbuild(self):
-        self.b.add_intensity((13, 'Ka1'), 1.0, 0.1)
-        self.b.add_intensity((13, 'Ka2'), 2.0, 0.2)
-        self.b.add_intensity((13, 'Kb1'), 4.0, 0.5)
-        self.b.add_intensity((13, 'Kb3'), 5.0, 0.7)
-        self.b.add_intensity((13, 'Ll'), 3.0, 0.1)
-        result = self.b.build()
-
-        self.assertEqual(5, len(result))
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    assert len(data) == 9
+    assert pyxray.xray_line(13, 'K') in data
+    assert pyxray.xray_line(13, 'Ka') in data
+    assert pyxray.xray_line(13, 'L') in data
+    assert pyxray.xray_line(13, 'Ll,n') in data

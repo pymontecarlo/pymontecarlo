@@ -2,53 +2,19 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
+import pytest
 
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.options.beam.base import \
-    BeamBase, convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm
-from pymontecarlo.options.particle import Particle
+    convert_diameter_fwhm_to_sigma, convert_diameter_sigma_to_fwhm
 
 # Globals and constants variables.
 
-class Testbase(TestCase):
+def test_convert_diameter_fwhm_to_sigma():
+    assert convert_diameter_fwhm_to_sigma(1.0) == pytest.approx(0.849321, abs=1e-4)
 
-    def testconvert_diameter_fwhm_to_sigma(self):
-        self.assertAlmostEqual(0.849321, convert_diameter_fwhm_to_sigma(1.0), 4)
+def test_convert_diameter_sigma_to_fwhm():
+    assert convert_diameter_sigma_to_fwhm(0.849321) == pytest.approx(1.0, abs=1e-4)
 
-    def testconvert_diameter_sigma_to_fwhm(self):
-        self.assertAlmostEqual(1.0, convert_diameter_sigma_to_fwhm(0.849321), 4)
-
-class TestBase(TestCase):
-
-    def setUp(self):
-        super().setUp()
-
-        self.b = BeamBase(15e3, Particle.POSITRON)
-
-    def testskeleton(self):
-        self.assertAlmostEqual(15e3, self.b.energy_eV, 4)
-        self.assertAlmostEqual(15.0, self.b.energy_keV, 4)
-        self.assertEqual(Particle.POSITRON, self.b.particle)
-
-    def test__eq__(self):
-        b = BeamBase(15e3, Particle.POSITRON)
-        self.assertEqual(b, self.b)
-
-        b = BeamBase(15000.009, Particle.POSITRON)
-        self.assertEqual(b, self.b)
-
-    def test__ne__(self):
-        b = BeamBase(14e3, Particle.POSITRON)
-        self.assertNotEqual(b, self.b)
-
-        b = BeamBase(15e3, Particle.ELECTRON)
-        self.assertNotEqual(b, self.b)
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()

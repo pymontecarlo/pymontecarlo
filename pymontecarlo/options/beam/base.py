@@ -5,18 +5,17 @@ Base classes for beams.
 # Standard library modules.
 import functools
 import operator
-import math
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.util.cbook import MultiplierAttribute
+import pymontecarlo.options.base as base
 from pymontecarlo.options.particle import Particle
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class BeamBase(OptionBase):
+class BeamBase(base.OptionBase):
     """
     Base beam.
     """
@@ -38,12 +37,48 @@ class BeamBase(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
-            self.particle == other.particle
+            base.isclose(self.energy_eV, other.energy_eV, abs_tol=self.ENERGY_TOLERANCE_eV) and \
+            base.isclose(self.particle, other.particle)
 
-    energy_keV = MultiplierAttribute('energy_eV', 1e-3)
+    energy_keV = base.MultiplierAttribute('energy_eV', 1e-3)
 
-class BeamBuilderBase(OptionBuilderBase):
+#region HDF5
+
+    ATTR_ENERGY = 'energy (eV)'
+    ATTR_PARTICLE = 'particle'
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_ENERGY, self.energy_eV)
+        self._convert_hdf5(group, self.ATTR_PARTICLE, self.particle)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('beam energy', 'E0', self.energy_eV, 'eV', self.ENERGY_TOLERANCE_eV)
+        builder.add_column('beam particle', 'par', str(self.particle))
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_BEAM = 'beam'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(camelcase_to_words(self.__class__.__name__))
+
+        description = builder.require_description(self.DESCRIPTION_BEAM)
+        description.add_item('Energy', self.energy_eV, 'eV', self.ENERGY_TOLERANCE_eV)
+        description.add_item('Particle', self.particle)
+
+#endregion
+
+class BeamBuilderBase(base.OptionBuilderBase):
 
     def __init__(self):
         self.energies_eV = set()

@@ -2,6 +2,8 @@
 Elastic cross section models.
 """
 
+__all__ = ['ElasticCrossSectionModel']
+
 # Standard library modules.
 
 # Third party modules.

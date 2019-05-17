@@ -8,14 +8,14 @@ import abc
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class ProgramBase(OptionBase):
+class ProgramBase(base.OptionBase):
 
     def __init__(self, name):
-        self.name = name
+        self._name = name
 
     def __repr__(self):
         return '<{classname}({name})>' \
@@ -23,27 +23,46 @@ class ProgramBase(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.name == other.name
+            base.isclose(self.name, other.name)
 
-    @abc.abstractmethod
-    def create_expander(self):
+    @property
+    def name(self):
+        return self._name
+
+    @abc.abstractproperty
+    def expander(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_validator(self):
+    @abc.abstractproperty
+    def exporter(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_exporter(self):
+    @abc.abstractproperty
+    def worker(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_worker(self):
+    @abc.abstractproperty
+    def importer(self):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def create_importer(self):
-        raise NotImplementedError
+#region Series
 
-class ProgramBuilderBase(OptionBuilderBase):
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        builder.add_column('program', 'prog', self.name)
+
+#endregion
+
+#region Document
+
+    DESCRIPTION_PROGRAM = 'program'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(self.name)
+
+#endregion
+
+class ProgramBuilderBase(base.OptionBuilderBase):
     pass

@@ -2,6 +2,8 @@
 Bremsstrahlung emission models.
 """
 
+__all__ = ['BremsstrahlungEmissionModel']
+
 # Standard library modules.
 
 # Third party modules.

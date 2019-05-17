@@ -2,28 +2,21 @@
 """ """
 
 # Standard library modules.
-import unittest
-import logging
 
 # Third party modules.
 import pyxray
 
+import pytest
+
 # Local modules.
-from pymontecarlo.testcase import TestCase
 from pymontecarlo.util.photon_range import photon_range
 from pymontecarlo.options.material import Material
 
 # Globals and constants variables.
 
-class TestModule(TestCase):
+def test_photon_range():
+    material = Material.pure(29)
+    energy_eV = pyxray.xray_transition_energy_eV(29, 'Ka1', reference='jeol')
 
-    def testphoton_range(self):
-        material = Material.pure(29)
-        xrayline = pyxray.xray_line(29, 'Ka1')
-
-        actual = photon_range(20e3, material, xrayline, reference='perkins1991')
-        self.assertAlmostEqual(8.4063e-7, actual, 10)
-
-if __name__ == '__main__': #pragma: no cover
-    logging.getLogger().setLevel(logging.DEBUG)
-    unittest.main()
+    actual = photon_range(20e3, material, 29, energy_eV)
+    assert actual == pytest.approx(8.4063e-7, abs=1e-10)

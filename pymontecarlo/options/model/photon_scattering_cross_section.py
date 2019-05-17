@@ -2,6 +2,8 @@
 Photon scattering cross section models.
 """
 
+__all__ = ['PhotonScatteringCrossSectionModel']
+
 # Standard library modules.
 
 # Third party modules.

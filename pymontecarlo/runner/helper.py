@@ -1,61 +1,60 @@
 """"""
 
 # Standard library modules.
+import asyncio
 import multiprocessing
 
 # Third party modules.
-import progressbar
+from tqdm.autonotebook import tqdm
 
 # Local modules.
 from pymontecarlo.runner.local import LocalSimulationRunner
+from pymontecarlo.util.token import TqdmToken
 
 # Globals and constants variables.
 
-def run(list_options, project=None, max_workers=None, runner_class=None, progress=None):
+async def run_async(list_options, project=None, max_workers=None, runner_class=None, progress=True):
     """
     Helper function to run simulations.
     The function returns a :class:`Project <pymontecarlo.project.Project>` 
     containing the simulations after they all have been simulated.
     
-    :param list_options: List of options to simulate.
+    Args:
+        list_options (list): List of options to simulate.
     
-    :param project: project where to save the simulations. 
-        If ``None``, a new project is created.
-    :type project: :class:`Project <pymontecarlo.project.Project>`
+        project (:class:`Project <pymontecarlo.project.Project>`): 
+            project where to save the simulations. 
+            If ``None``, a new project is created.
+
+        max_workers (int): number of worker/CPU to use.
+            If ``None``, the number of CPUs on the computer will be used.
     
-    :param max_workers: number of worker/CPU to use.
-        If ``None``, the number of CPUs on the computer will be used.
-    :type max_workers: :class:`int`
+        runner_class: runner class to use.
+            If ``None``, the default is :class:`LocalSimulationRunner <pymontecarlo.runner.local.LocalSimulationRunner>`
     
-    :param runner_class: runner class to use.
-        If ``None``, the default is :class:`LocalSimulationRunner <pymontecarlo.runner.local.LocalSimulationRunner>`
+        progress (bool): whether to show a progress bar
     
-    :param progress: an instance of a progressbar2 object
-        If ``None``, a progressbar2 object is created.
-        
-    :return: project
-    :rtype: :class:`Project <pymontecarlo.project.Project>`
+    Returns:
+        :class:`Project <pymontecarlo.project.Project>`: project
     """
     if max_workers is None:
         max_workers = multiprocessing.cpu_count()
+
     if runner_class is None:
         runner_class = LocalSimulationRunner
-    if progress is None:
-        progress = progressbar.ProgressBar()
 
-    with runner_class(max_workers=max_workers) as runner:
-        runner.submit(*list_options)
-        progress.start(max_value=1.0)
+    if progress:
+        token = TqdmToken('Simulations', tqdm_class=tqdm)
+    else:
+        token = None
 
-        while not runner.wait(1):
-            progress.update(runner.progress)
+    async with runner_class(project=project, token=token, max_workers=max_workers) as runner:
+        runner.token.start()
 
-        for future in runner.failed_futures:
-            print(future.exception())
+        await runner.submit(*list_options)
 
-        print('{} simulations succeeded, {} failed'.format(runner.done_count,
-                                                           runner.failed_count))
-
-        runner.project.recalculate()
-
+        runner.token.done()
         return runner.project
+
+def run(list_options, project=None, max_workers=None, runner_class=None, progress=True):
+    return asyncio.run(run_async(list_options, project, max_workers, runner_class, progress))

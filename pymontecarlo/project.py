@@ -5,27 +5,39 @@ Project.
 # Standard library modules.
 import re
 import threading
+import logging
+logger = logging.getLogger(__name__)
 
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.formats.hdf5.reader import HDF5ReaderMixin
-from pymontecarlo.formats.hdf5.writer import HDF5WriterMixin
-from pymontecarlo.formats.series.helper import create_options_dataframe, create_results_dataframe
+from pymontecarlo.entity import EntityBase, EntryHDF5IOMixin
+from pymontecarlo.formats.dataframe import create_options_dataframe, create_results_dataframe
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
-class Project(HDF5ReaderMixin, HDF5WriterMixin):
+class Project(EntityBase, EntryHDF5IOMixin):
 
     simulation_added = Signal()
-    recalculated = Signal()
+    simulation_recalculated = Signal()
 
     def __init__(self, filepath=None):
         self.filepath = filepath
         self.simulations = []
         self.lock = threading.Lock()
         self.recalculate_required = False
+
+    def __getstate__(self):
+        with self.lock:
+            return (self.filepath, self.simulations)
+
+    def __setstate__(self, state):
+        filepath, simulations = state
+
+        self.filepath = filepath
+        self.simulations = simulations
+        self.recalculate_required = True
 
     def add_simulation(self, simulation):
         with self.lock:
@@ -47,31 +59,32 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             self.recalculate_required = True
             self.simulation_added.send(simulation)
 
-    def recalculate(self, token=None):
+    async def recalculate(self, token=None):
         with self.lock:
+            if token: token.start()
             count = len(self.simulations)
 
             for i, simulation in enumerate(self.simulations):
-                if token and token.cancelled():
-                    break
-
                 progress = i / count
                 status = 'Calculating simulation {}'.format(simulation.identifier)
                 if token: token.update(progress, status)
 
+                newresult = False
                 for analysis in simulation.options.analyses:
-                    analysis.calculate(simulation, tuple(self.simulations))
+                    newresult |= analysis.calculate(simulation, tuple(self.simulations))
 
-            if token: token.update(1.0, 'Done')
+                if newresult:
+                    self.simulation_recalculated.send(simulation)
+
+            if token: token.done()
 
             self.recalculate_required = False
-            self.recalculated.send()
 
     def create_options_dataframe(self, settings, only_different_columns=False,
                                  abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
-        
+
         If *only_different_columns*, the data rows will only contain the columns
         that are different between the options.
         """
@@ -83,9 +96,9 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
                                  abbreviate_name=False, format_number=False):
         """
         Returns a :class:`pandas.DataFrame`.
-        
+
         If *result_classes* is a list of :class:`Result`, only the columns from
-        this result classes will be returned. If ``None``, the columns from 
+        this result classes will be returned. If ``None``, the columns from
         all results will be returned.
         """
         list_results = [simulation.results for simulation in self.simulations]
@@ -110,3 +123,32 @@ class Project(HDF5ReaderMixin, HDF5WriterMixin):
             classes.update(type(result) for result in simulation.results)
 
         return classes
+
+#region HDF5
+
+    GROUP_SIMULATIONS = 'simulations'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        filepath = group.file.filename
+        project = cls(filepath)
+
+        simulations = [cls._parse_hdf5_object(group_simulation)
+                       for group_simulation in group[cls.GROUP_SIMULATIONS].values()]
+        with project.lock:
+            project.simulations.extend(simulations)
+
+        return project
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+
+        group_simulations = group.create_group(self.GROUP_SIMULATIONS)
+
+        with self.lock:
+            for simulation in self.simulations:
+                name = simulation.identifier
+                group_simulation = group_simulations.create_group(name)
+                simulation.convert_hdf5(group_simulation)
+
+#endregion
