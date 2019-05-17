@@ -11,7 +11,6 @@ import pyxray
 
 # Local modules.
 from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
-from pymontecarlo.results.photonintensity import PhotonIntensityResultBase
 
 # Globals and constants variables.
 
