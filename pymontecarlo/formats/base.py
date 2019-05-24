@@ -72,12 +72,12 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
         elif isinstance(value, pyxray.XrayLine):
             value = self._format_xrayline(value)
 
-        value = self._convert_value(value, unit)
-
         if not self.format_number:
             return value
 
         if isinstance(value, float):
+            value = self._convert_value(value, unit)
+
             if tolerance is not None:
                 if unit is not None:
                     tolerance = self._convert_value(tolerance, unit)
