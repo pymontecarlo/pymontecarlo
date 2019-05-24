@@ -12,7 +12,7 @@ import asyncio
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
 from pymontecarlo.options.sample.base import SampleBase
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, SphereSample, HorizontalLayerSample, VerticalLayerSample
 from pymontecarlo.options.model import convert_models_document, ElasticCrossSectionModel
@@ -52,6 +52,7 @@ class ExporterMock(ExporterBase):
 
         self.beam_export_methods[GaussianBeam] = self._export_beam_gaussian
         self.beam_export_methods[CylindricalBeam] = self._export_beam_cylindrical
+        self.beam_export_methods[PencilBeam] = self._export_beam_pencil
 
         self.sample_export_methods[SubstrateSample] = self._export_sample_substrate
         self.sample_export_methods[InclusionSample] = self._export_sample_inclusion
@@ -96,14 +97,19 @@ class ExporterMock(ExporterBase):
             erracc.add_exception(exc)
 
     def _export_beam_cylindrical(self, beam, options, erracc, outdict):
-        self._validate_beam(beam, options, erracc)
+        self._validate_beam_cylindrical(beam, options, erracc)
 
         outdict['beam'] = 'cylindrical'
 
     def _export_beam_gaussian(self, beam, options, erracc, outdict):
-        self._validate_beam(beam, options, erracc)
+        self._validate_beam_gaussian(beam, options, erracc)
 
         outdict['beam'] = 'gaussian'
+
+    def _export_beam_pencil(self, beam, options, erracc, outdict):
+        self._validate_beam_pencil(beam, options, erracc)
+
+        outdict['beam'] = 'pencil'
 
     def _export_sample_substrate(self, sample, options, erracc, outdict):
         super()._validate_sample_substrate(sample, options, erracc)
