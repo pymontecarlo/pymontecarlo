@@ -117,17 +117,17 @@ class ExporterMock(ExporterBase):
         outdict['sample'] = 'substrate'
 
     def _export_sample_inclusion(self, sample, options, erracc, outdict):
-        super()._validate_sample_inclusion(sample, options, erracc, outdict)
+        super()._validate_sample_inclusion(sample, options, erracc)
 
         outdict['sample'] = 'inclusion'
 
     def _export_sample_sphere(self, sample, options, erracc, outdict):
-        super()._validate_sample_sphere(sample, options, erracc, outdict)
+        super()._validate_sample_sphere(sample, options, erracc)
 
         outdict['sample'] = 'sphere'
 
     def _export_sample_horizontallayers(self, sample, options, erracc, outdict):
-        super()._validate_sample_horizontallayers(sample, options, erracc, outdict)
+        super()._validate_sample_horizontallayers(sample, options, erracc)
 
         outdict['sample'] = 'horizontallayers'
 
