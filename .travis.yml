@@ -8,7 +8,7 @@ matrix:
     os: linux
 install:
 - pip install --upgrade pip codecov
-- pip install --upgrade -e .[develop]
+- pip install --upgrade -e .[dev]
 script:
 - pytest
 after_success:
