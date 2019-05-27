@@ -36,7 +36,7 @@ class EntityHDF5Mixin(metaclass=abc.ABCMeta):
             group.attrs.get(cls.ATTR_VERSION) == cls.VERSION
 
     @classmethod
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def parse_hdf5(cls, group):
         raise NotImplementedError
 
