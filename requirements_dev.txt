@@ -1,7 +1,3 @@
 pytest
 pytest-cov
 pytest-asyncio
-sphinx
-sphinx_rtd_theme
-nbsphinx
-ipykernel
