@@ -40,6 +40,11 @@ class WorkerBase(metaclass=abc.ABCMeta):
             
         Returns:
             :class:`Simulation`: simulation
+            
+        Raises:
+            ExportError: if the export fails
+            WorkerError: if the worker fails
+            ImportError: if the import fails
         """
         token.start()
 

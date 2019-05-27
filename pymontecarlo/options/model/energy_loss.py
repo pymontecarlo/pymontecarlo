@@ -2,6 +2,8 @@
 Energy loss models.
 """
 
+__all__ = ['EnergyLossModel']
+
 # Standard library modules.
 
 # Third party modules.

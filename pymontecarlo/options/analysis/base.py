@@ -9,6 +9,7 @@ import abc
 
 # Local modules.
 from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
@@ -48,6 +49,17 @@ class AnalysisBase(OptionBase):
         is necessary.
         """
         return None
+
+#region Document
+
+    DESCRIPTION_DETECTOR = 'detector'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title(camelcase_to_words(self.__class__.__name__))
+
+#endregion
 
 class AnalysisBuilderBase(OptionBuilderBase):
     pass

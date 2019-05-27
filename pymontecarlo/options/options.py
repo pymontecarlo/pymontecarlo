@@ -2,18 +2,22 @@
 Main class containing all options of a simulation
 """
 
+__all__ = ['Options', 'OptionsBuilder']
+
 # Standard library modules.
 import itertools
 
 # Third party modules.
+import h5py
 
 # Local modules.
-from pymontecarlo.util.cbook import are_sequence_similar, unique, find_by_type
-from pymontecarlo.options.base import OptionBase, OptionBuilderBase
+from pymontecarlo.util.cbook import unique, find_by_type, organize_by_type
+from pymontecarlo.util.human import camelcase_to_words
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class Options(OptionBase):
+class Options(base.OptionBase):
 
     def __init__(self, program, beam, sample, analyses=None, tags=None):
         """
@@ -33,18 +37,18 @@ class Options(OptionBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            self.program == other.program and \
-            self.beam == other.beam and \
-            self.sample == other.sample and \
-            are_sequence_similar(self.analyses, other.analyses) and \
-            are_sequence_similar(self.tags, other.tags)
+            base.isclose(self.program, other.program) and \
+            base.isclose(self.beam, other.beam) and \
+            base.isclose(self.sample, other.sample) and \
+            base.are_sequence_similar(self.analyses, other.analyses) and \
+            base.are_sequence_similar(self.tags, other.tags)
 
     def find_analyses(self, analysis_class, detector=None):
         """
         Finds all analyses matching the specified class.
         If *detector* is not ``None``, the analysis detector must also be
         equal to the specified detector.
-        
+
         :return: :class:`list` of analysis objects
         """
         analyses = find_by_type(self.analyses, analysis_class)
@@ -64,7 +68,103 @@ class Options(OptionBase):
         """
         return tuple(unique(analysis.detector for analysis in self.analyses))
 
-class OptionsBuilder(OptionBuilderBase):
+#region HDF5
+
+    ATTR_PROGRAM = 'program'
+    ATTR_BEAM = 'beam'
+    ATTR_SAMPLE = 'sample'
+    DATASET_ANALYSES = 'analyses'
+    DATASET_TAGS = 'tags'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        program = cls._parse_hdf5(group, cls.ATTR_PROGRAM)
+        beam = cls._parse_hdf5(group, cls.ATTR_BEAM)
+        sample = cls._parse_hdf5(group, cls.ATTR_SAMPLE)
+        analyses = [cls._parse_hdf5_reference(group, reference)
+                    for reference in group[cls.DATASET_ANALYSES]]
+        tags = [str(tag) for tag in group[cls.DATASET_TAGS]]
+        return cls(program, beam, sample, analyses, tags)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_PROGRAM, self.program)
+        self._convert_hdf5(group, self.ATTR_BEAM, self.beam)
+        self._convert_hdf5(group, self.ATTR_SAMPLE, self.sample)
+
+        shape = (len(self.analyses),)
+        dtype = h5py.special_dtype(ref=h5py.Reference)
+        data = [self._convert_hdf5_reference(group, analysis) for analysis in self.analyses]
+        group.create_dataset(self.DATASET_ANALYSES, shape, dtype, data)
+
+        shape = (len(self.tags),)
+        dtype = h5py.special_dtype(vlen=str)
+        dataset = group.create_dataset(self.DATASET_TAGS, shape, dtype)
+        dataset[:] = self.tags
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+
+        builder.add_entity(self.program)
+        builder.add_entity(self.beam)
+        builder.add_entity(self.sample)
+
+        for detector in self.detectors:
+            builder.add_entity(detector)
+
+        for analysis in self.analyses:
+            builder.add_entity(analysis)
+
+        for tag in self.tags:
+            builder.add_column(tag, tag, True)
+
+#endregion
+
+#region Document
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        builder.add_title('Program')
+        section = builder.add_section()
+        section.add_entity(self.program)
+
+        builder.add_title('Beam')
+        section = builder.add_section()
+        section.add_entity(self.beam)
+
+        builder.add_title('Sample')
+        section = builder.add_section()
+        section.add_entity(self.sample)
+
+        builder.add_title('Detector' if len(self.detectors) < 2 else 'Detectors')
+        for clasz, detectors in organize_by_type(self.detectors).items():
+            section = builder.add_section()
+            section.add_title(camelcase_to_words(clasz.__name__))
+
+            for detector in detectors:
+                section.add_entity(detector)
+
+        builder.add_title('Analysis' if len(self.analyses) < 2 else 'Analyses')
+        for analysis in self.analyses:
+            section = builder.add_section()
+            section.add_entity(analysis)
+
+        builder.add_title('Tags')
+        if self.tags:
+            bullet_builder = builder.require_bullet('tags')
+            for tag in self.tags:
+                bullet_builder.add_item(tag)
+        else:
+            builder.add_text('No tags')
+
+#endregion
+
+class OptionsBuilder(base.OptionBuilderBase):
 
     def __init__(self, tags=None):
         self.programs = []
@@ -74,7 +174,13 @@ class OptionsBuilder(OptionBuilderBase):
         self.tags = list(tags) if tags is not None else []
 
     def __len__(self):
-        return len(self.build())
+        count = len(self.programs) * len(self.beams) * len(self.samples)
+
+        for program in self.programs:
+            analysis_combinations = program.expander.expand_analyses(self.analyses) or [None]
+            count *= len(analysis_combinations)
+
+        return count
 
     def add_program(self, program):
         if program not in self.programs:
@@ -92,14 +198,12 @@ class OptionsBuilder(OptionBuilderBase):
         if analysis not in self.analyses:
             self.analyses.append(analysis)
 
-    def build(self):
+    def iterbuild(self):
         list_options = []
 
         for program in self.programs:
-            expander = program.create_expander()
-
             analyses = self.analyses
-            analysis_combinations = expander.expand_analyses(analyses) or [None]
+            analysis_combinations = program.expander.expand_analyses(analyses) or [None]
 
             product = itertools.product(self.beams,
                                         self.samples,
@@ -110,22 +214,13 @@ class OptionsBuilder(OptionBuilderBase):
                 if options in list_options:
                     continue
                 list_options.append(options)
+                yield options
 
                 for analysis in options.analyses:
                     for extra_options in analysis.apply(options):
                         if extra_options not in list_options:
                             list_options.append(extra_options)
+                            yield extra_options
 
-        return list_options
-
-
-
-
-
-
-
-
-
-
-
-
+    def build(self):
+        return list(self.iterbuild())

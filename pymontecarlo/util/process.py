@@ -20,8 +20,8 @@ def create_startupinfo():
 
     return startupinfo
 
-def kill_process(process):
-    psprocess = psutil.Process(process.pid)
+def kill_process(pid):
+    psprocess = psutil.Process(pid)
     for subpsprocess in psprocess.children(recursive=True):
         subpsprocess.kill()
     psprocess.kill()

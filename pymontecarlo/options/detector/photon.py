@@ -2,6 +2,8 @@
 Photon (X-ray) detector.
 """
 
+__all__ = ['PhotonDetector', 'PhotonDetectorBuilder']
+
 # Standard library modules.
 import math
 import itertools
@@ -10,7 +12,7 @@ import itertools
 
 # Local modules.
 from pymontecarlo.options.detector.base import DetectorBase, DetectorBuilderBase
-from pymontecarlo.util.cbook import DegreesAttribute
+import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
@@ -34,11 +36,64 @@ class PhotonDetector(DetectorBase):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-            math.isclose(self.elevation_rad, other.elevation_rad, abs_tol=self.ELEVATION_TOLERANCE_rad) and \
-            math.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
+            base.isclose(self.elevation_rad, other.elevation_rad, abs_tol=self.ELEVATION_TOLERANCE_rad) and \
+            base.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
 
-    elevation_deg = DegreesAttribute('elevation_rad')
-    azimuth_deg = DegreesAttribute('azimuth_rad')
+    elevation_deg = base.DegreesAttribute('elevation_rad')
+    azimuth_deg = base.DegreesAttribute('azimuth_rad')
+
+#region HDF5
+
+    ATTR_ELEVATION = 'elevation (rad)'
+    ATTR_AZIMUTH = 'azimuth (rad)'
+
+    @classmethod
+    def parse_hdf5(cls, group):
+        name = cls._parse_hdf5(group, cls.ATTR_NAME, str)
+        elevation_rad = cls._parse_hdf5(group, cls.ATTR_ELEVATION, float)
+        azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
+        return cls(name, elevation_rad, azimuth_rad)
+
+    def convert_hdf5(self, group):
+        super().convert_hdf5(group)
+        self._convert_hdf5(group, self.ATTR_ELEVATION, self.elevation_rad)
+        self._convert_hdf5(group, self.ATTR_AZIMUTH, self.azimuth_rad)
+
+#endregion
+
+#region Series
+
+    def convert_series(self, builder):
+        super().convert_series(builder)
+        name = '{} elevation angle'.format(self.name)
+        abbrev = '{} theta'.format(self.name)
+        builder.add_column(name, abbrev, self.elevation_rad, 'rad', self.ELEVATION_TOLERANCE_rad)
+
+        name = '{} azimuth angle'.format(self.name)
+        abbrev = '{} phi'.format(self.name)
+        builder.add_column(name, abbrev, self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+#endregion
+
+#region Document
+
+    TABLE_PHOTON_DETECTOR = 'photon detector'
+
+    def convert_document(self, builder):
+        super().convert_document(builder)
+
+        table = builder.require_table(self.TABLE_PHOTON_DETECTOR)
+
+        table.add_column('Name')
+        table.add_column('Elevation', 'rad', self.ELEVATION_TOLERANCE_rad)
+        table.add_column('Azimuth', 'rad', self.AZIMUTH_TOLERANCE_rad)
+
+        row = {'Name': self.name,
+               'Elevation': self.elevation_rad,
+               'Azimuth': self.azimuth_rad}
+        table.add_row(row)
+
+#endregion
 
 class PhotonDetectorBuilder(DetectorBuilderBase):
 

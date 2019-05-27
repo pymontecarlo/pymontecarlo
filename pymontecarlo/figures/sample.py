@@ -10,12 +10,13 @@ import enum
 
 # Third party modules.
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Wedge, Rectangle, Circle
+from matplotlib.path import Path
+from matplotlib.patches import Wedge, Rectangle, Circle, PathPatch, RegularPolygon
 from matplotlib.transforms import Affine2D
 
 # Local modules.
 from pymontecarlo.figures.base import FigureBase
-from pymontecarlo.options.beam import GaussianBeam
+from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
 from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
     VerticalLayerSample, SphereSample
 
@@ -57,14 +58,18 @@ class SampleFigure(FigureBase):
         self.sample_draw_methods[SphereSample] = self._compose_sample_sphere
 
         self.beam_draw_methods = {}
-        self.beam_draw_methods[GaussianBeam] = self._compose_beam_gaussian
+        self.beam_draw_methods[PencilBeam] = self._compose_beam_pencil
+        self.beam_draw_methods[CylindricalBeam] = self._compose_beam_cylindrical
+        self.beam_draw_methods[GaussianBeam] = self._compose_beam_cylindrical
 
         self.view_size_methods = {}
         self.view_size_methods[InclusionSample] = self._calculate_view_size_inclusion_sample
         self.view_size_methods[HorizontalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
-        self.view_size_methods[GaussianBeam] = self._calculate_view_size_gaussian_beam
+        self.view_size_methods[PencilBeam] = self._calculate_view_size_pencil_beam
+        self.view_size_methods[CylindricalBeam] = self._calculate_view_size_cylindrical_beam
+        self.view_size_methods[GaussianBeam] = self._calculate_view_size_cylindrical_beam
 
     def _recalculate_view_size(self, perspective):
         SCALE_FACTOR = 5
@@ -89,15 +94,16 @@ class SampleFigure(FigureBase):
     def _calculate_view_size_sphere_sample(self, sample, perspective):
         return sample.diameter_m
 
-    def _calculate_view_size_gaussian_beam(self, beam, perspective):
-        view_size = beam.diameter_m * 2
-
+    def _calculate_view_size_pencil_beam(self, beam, perspective):
         if perspective is Perspective.XY:
-            return view_size + max(beam.x0_m, beam.y0_m)
+            return max(beam.x0_m, beam.y0_m)
         elif perspective is Perspective.XZ:
-            return view_size + beam.x0_m
+            return beam.x0_m
         elif perspective is Perspective.YZ:
-            return view_size + beam.y0_m
+            return beam.y0_m
+
+    def _calculate_view_size_cylindrical_beam(self, beam, perspective):
+        return self._calculate_view_size_pencil_beam(beam, perspective) + beam.diameter_m * 2
 
     def draw(self, ax):
         """
@@ -270,7 +276,27 @@ class SampleFigure(FigureBase):
 
         ax.add_collection(col)
 
-    def _compose_beam_gaussian(self, beam, perspective, view_size):
+    def _compose_beam_pencil(self, beam, perspective, view_size):
+        x0_m = beam.x0_m
+        y0_m = beam.y0_m
+        color = beam.particle.color
+
+        if perspective is Perspective.XY:
+            return [RegularPolygon((x0_m, y0_m), numVertices=3, radius=view_size/100, color=color)]
+
+        elif perspective is Perspective.XZ:
+            vertices = [(x0_m, 0), (x0_m, view_size / 2 * 1.5)]
+            codes = [Path.MOVETO, Path.LINETO]
+            path = Path(vertices, codes)
+            return [PathPatch(path, lw=2, color=color)]
+
+        elif perspective is Perspective.YZ:
+            vertices = [(y0_m, 0), (y0_m, view_size / 2 * 1.5)]
+            codes = [Path.MOVETO, Path.LINETO]
+            path = Path(vertices, codes)
+            return [PathPatch(path, lw=2, color=color)]
+
+    def _compose_beam_cylindrical(self, beam, perspective, view_size):
         x0_m = beam.x0_m
         y0_m = beam.y0_m
         radius_m = beam.diameter_m / 2

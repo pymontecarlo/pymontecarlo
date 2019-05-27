@@ -2,15 +2,15 @@
 Analysis to record photon intensity emitted towards a detector.
 """
 
+__all__ = ['PhotonIntensityAnalysis', 'PhotonIntensityAnalysisBuilder']
+
 # Standard library modules.
 
 # Third party modules.
 import pyxray
 
 # Local modules.
-from pymontecarlo.options.analysis.photon import \
-    PhotonAnalysisBase, PhotonAnalysisBuilderBase, COMMON_XRAY_TRANSITION_SETS
-from pymontecarlo.results.photonintensity import PhotonIntensityResultBase
+from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
 
 # Globals and constants variables.
 
@@ -23,47 +23,16 @@ class PhotonIntensityAnalysis(PhotonAnalysisBase):
         return []
 
     def calculate(self, simulation, simulations):
-        """
-        Calculate additional photon intensities for common X-ray transition sets.
-        """
-        newresult = super().calculate(simulation, simulations)
+        return super().calculate(simulation, simulations)
 
-        for result in simulation.find_result(PhotonIntensityResultBase):
-            zs = set(xrayline.element.atomic_number for xrayline in result)
+#region HDF5
 
-            for z in zs:
-                for transitionset in COMMON_XRAY_TRANSITION_SETS:
-                    # Check if transition set exists for element
-                    try:
-                        xrayline = pyxray.xray_line(z, transitionset)
-                    except pyxray.NotFound:
-                        continue
+    @classmethod
+    def parse_hdf5(cls, group):
+        detector = cls._parse_hdf5(group, cls.ATTR_DETECTOR)
+        return cls(detector)
 
-                    # Check if it already exists
-                    if xrayline in result:
-                        continue
-
-                    # Add counts
-                    subxraylines = []
-                    total = 0.0
-                    for transition in xrayline.transitions:
-                        subxrayline = pyxray.xray_line(z, transition)
-                        q = result.get(subxrayline, None)
-                        if q is None:
-                            break
-
-                        subxraylines.append(subxrayline)
-                        total += q
-
-                    # Check if all transitions were found
-                    if len(subxraylines) != len(xrayline.transitions):
-                        continue
-
-                    # Add result
-                    result.data[xrayline] = total
-                    newresult = True
-
-        return newresult
+#endregion
 
 class PhotonIntensityAnalysisBuilder(PhotonAnalysisBuilderBase):
 

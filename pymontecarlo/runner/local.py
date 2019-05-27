@@ -7,8 +7,8 @@ import os
 import tempfile
 import shutil
 import asyncio
+import shutil
 import logging
-logger = logging.getLogger(__name__)
 
 # Third party modules.
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 from pymontecarlo.runner.base import SimulationRunnerBase
 
 # Globals and constants variables.
+logger = logging.getLogger(__name__)
 
 class LocalWorkerDispatcher:
 
@@ -52,6 +53,11 @@ class LocalWorkerDispatcher:
                 head, tail = os.path.split(self.project.filepath)
                 dirname = os.path.splitext(tail)[0] + '_simulations'
                 outputdir = os.path.join(head, dirname, simulation.identifier)
+
+                if os.path.exists(outputdir) and os.listdir(outputdir):
+                    logger.debug('Removing content in {}'.format(outputdir))
+                    shutil.rmtree(outputdir, ignore_errors=True)
+
                 temporary = False
             else:
                 outputdir = tempfile.mkdtemp()
@@ -63,11 +69,10 @@ class LocalWorkerDispatcher:
             # Run
             try:
                 # Create worker
-                program = simulation.options.program
-                worker = program.create_worker()
+                worker = simulation.options.program.worker
 
                 # Create token
-                token = self.token.create_subtoken(simulation.identifier)
+                token = self.token.create_subtoken(simulation.identifier, category='simulation')
 
                 logger.debug('Launching worker "{!r}" of simulation "{}"'
                              .format(worker, simulation.identifier))
@@ -87,7 +92,7 @@ class LocalWorkerDispatcher:
                     logger.debug('Removed temporary output directory: {}'
                                  .format(outputdir))
 
-            # Add to project
+            # Simulation succeeded, so add to project
             self.project.add_simulation(simulation)
             logger.debug('Simulation "{}" added to project'
                          .format(simulation.identifier))
@@ -109,8 +114,8 @@ class LocalSimulationRunner(SimulationRunnerBase):
 
         self._tasks = []
 
-    def _submit(self, simulation):
-        self._queue.put_nowait(simulation)
+    async def _submit(self, simulation):
+        await self._queue.put(simulation)
 
     async def start(self):
         # Check if already running
@@ -120,7 +125,9 @@ class LocalSimulationRunner(SimulationRunnerBase):
 
         # Create task for dispatchers
         for dispatcher in self._dispatchers:
-            task = asyncio.create_task(dispatcher.run())
+            # Use ensure_future instead of create_task, because the latter does not work with asyncqt.
+            # It does not seem to have any influence on the normal operation of the runner.
+            task = asyncio.ensure_future(dispatcher.run())
             self._tasks.append(task)
 
         logger.debug('Runner started')
@@ -157,3 +164,10 @@ class LocalSimulationRunner(SimulationRunnerBase):
             self._queue.task_done()
 
         logging.debug('Queue was emptied')
+
+    async def set_project(self, project):
+        await super().set_project(project)
+
+        # Update dispatcher
+        for dispatcher in self._dispatchers:
+            dispatcher.project = project

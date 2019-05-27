@@ -2,6 +2,8 @@
 Gaussian beam.
 """
 
+__all__ = ['GaussianBeam', 'GaussianBeamBuilder']
+
 # Standard library modules.
 
 # Third party modules.

@@ -1,0 +1,12 @@
+pyparsing
+numpy
+h5py
+pyxray
+more_itertools
+pint
+uncertainties
+matplotlib
+psutil
+pandas
+docutils
+tqdm
