@@ -57,7 +57,5 @@ setup(name="pyMonteCarlo",
       cmdclass=CMDCLASS,
 
       entry_points=ENTRY_POINTS,
-
-      test_suite='nose.collector',
 )
 
