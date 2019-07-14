@@ -3,7 +3,7 @@
 ===========================
 
 .. |pymontecarlo| image:: https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/logo_64x64.png
-   :alt: 
+   :alt:
 
 .. image:: https://img.shields.io/pypi/v/pymontecarlo.svg
    :target: https://pypi.org/project/pyMonteCarlo/
@@ -17,12 +17,12 @@
    :target: https://codecov.io/gh/pymontecarlo/pymontecarlo
    :alt: Codecov status
 
-**pyMonteCarlo** is a programming interface to run identical simulations using 
-different Monte Carlo programs. The interface was designed to have common input 
-and output that are independent of any Monte Carlo code. This allows users to 
-combine the advantages of different codes and to compare the effect of different 
-physical models without manually creating and running new simulations for each 
-Monte Carlo program. The analysis of the results is also simplified by the 
+**pyMonteCarlo** is a programming interface to run identical simulations using
+different Monte Carlo programs. The interface was designed to have common input
+and output that are independent of any Monte Carlo code. This allows users to
+combine the advantages of different codes and to compare the effect of different
+physical models without manually creating and running new simulations for each
+Monte Carlo program. The analysis of the results is also simplified by the
 common output format where results are expressed in the same units.
 
 **pyMonteCarlo** is currently under development.
@@ -42,13 +42,13 @@ Contributors
 ------------
 
 - `Philippe T. Pinard <https://github.com/ppinard>`_ (High Wycombe, United Kingdom)
-- `Hendrix Demers <https://github.com/drix00>`_ (McGill University, Montreal, Canada)
+- `Hendrix Demers <https://github.com/drix00>`_ (Montreal, Canada)
 - `Raynald Gauvin <http://www.memrg.com>`_ (McGill University, Montreal, Canada)
 - `Silvia Richter <https://github.com/silrichter>`_ (`RWTH Aachen University <http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm>`_, Aachen, Germany)
 
 .. image:: https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg
    :height: 70px
-   
+
 .. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
    :height: 40px
 

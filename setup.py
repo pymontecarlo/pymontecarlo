@@ -23,7 +23,7 @@ with open(os.path.join(BASEDIR, 'requirements.txt'), 'r') as fp:
 
 EXTRAS_REQUIRE = {}
 with open(os.path.join(BASEDIR, 'requirements_dev.txt'), 'r') as fp:
-    EXTRAS_REQUIRE['develop'] = fp.read().splitlines()
+    EXTRAS_REQUIRE['dev'] = fp.read().splitlines()
 
 CMDCLASS = versioneer.get_cmdclass()
 
@@ -57,7 +57,5 @@ setup(name="pyMonteCarlo",
       cmdclass=CMDCLASS,
 
       entry_points=ENTRY_POINTS,
-
-      test_suite='nose.collector',
 )
 
