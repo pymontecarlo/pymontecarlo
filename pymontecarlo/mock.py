@@ -8,8 +8,10 @@ import itertools
 import operator
 import functools
 import asyncio
+import math
 
 # Third party modules.
+import pyxray
 
 # Local modules.
 from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
@@ -185,6 +187,10 @@ class WorkerMock(WorkerBase):
 
 class ImporterMock(ImporterBase):
 
+    TRANSITIONS = (pyxray.xray_transition('Ka1'),
+                   pyxray.xray_transition('La1'),
+                   pyxray.xray_transition('Ma1'))
+
     def __init__(self):
         super().__init__()
 
@@ -197,13 +203,33 @@ class ImporterMock(ImporterBase):
     def _import_analysis_photonintensity(self, options, analysis, dirpath, erracc):
         builder = EmittedPhotonIntensityResultBuilder(analysis)
 
-        builder.add_intensity((29, 'Ka1'), 1.0, 0.1)
-        builder.add_intensity((29, 'Ka2'), 2.0, 0.2)
-        builder.add_intensity((29, 'Kb1'), 4.0, 0.5)
-        builder.add_intensity((29, 'Kb3'), 5.0, 0.7)
-        builder.add_intensity((29, 'Kb5I'), 1.0, 0.1)
-        builder.add_intensity((29, 'Kb5II'), 0.5, 0.1)
-        builder.add_intensity((29, 'Ll'), 3.0, 0.1)
+        number_trajectories = options.program.number_trajectories
+        beam_energy_eV = options.beam.energy_eV
+
+        overall_composition = {}
+        for material in options.sample.materials:
+            for z, wf in material.composition.items():
+                overall_composition.setdefault(z, 0.0)
+                overall_composition[z] += wf
+
+        total_wf = sum(overall_composition.values())
+
+        for z, wf in overall_composition.items():
+            for transition in self.TRANSITIONS:
+                try:
+                    energy_eV = pyxray.xray_transition_energy_eV(z, transition)
+                    relative_weight = pyxray.xray_transition_relative_weight(z, transition)
+                except pyxray.NotFound:
+                    continue
+
+                if energy_eV >= beam_energy_eV:
+                    continue
+                if relative_weight <= 0.01:
+                    continue
+
+                intensity = number_trajectories * (wf / total_wf) * relative_weight
+                error = math.sqrt(intensity)
+                builder.add_intensity((z, transition), intensity, error)
 
         return [builder.build()]
 
