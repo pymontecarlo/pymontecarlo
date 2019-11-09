@@ -2,7 +2,7 @@
 Sphere sample.
 """
 
-__all__ = ['SphereSample', 'SphereSampleBuilder']
+__all__ = ["SphereSample", "SphereSampleBuilder"]
 
 # Standard library modules.
 import functools
@@ -17,9 +17,10 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
+
 class SphereSample(SampleBase):
 
-    DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
+    DIAMETER_TOLERANCE_m = 1e-12  # 1 fm
 
     def __init__(self, material, diameter_m, tilt_rad=0.0, azimuth_rad=0.0):
         """
@@ -34,23 +35,27 @@ class SphereSample(SampleBase):
         self.diameter_m = diameter_m
 
     def __repr__(self):
-        return '<{0:s}(material={1:s}, diameter={2:g} m)>' \
-                    .format(self.__class__.__name__, str(self.material),
-                            self.diameter_m)
+        return "<{0:s}(material={1:s}, diameter={2:g} m)>".format(
+            self.__class__.__name__, str(self.material), self.diameter_m
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.material, other.material) and \
-            base.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
+        return (
+            super().__eq__(other)
+            and base.isclose(self.material, other.material)
+            and base.isclose(
+                self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m
+            )
+        )
 
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
 
-#region HDF5
+    # region HDF5
 
-    ATTR_MATERIAL = 'material'
-    ATTR_DIAMETER = 'diameter (m)'
+    ATTR_MATERIAL = "material"
+    ATTR_DIAMETER = "diameter (m)"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -65,35 +70,40 @@ class SphereSample(SampleBase):
         self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
         self._convert_hdf5(group, self.ATTR_DIAMETER, self.diameter_m)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_entity(self.material, 'sphere ', 'sphere ')
-        builder.add_column('sphere diameter', 'd', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        builder.add_entity(self.material, "sphere ", "sphere ")
+        builder.add_column(
+            "sphere diameter", "d", self.diameter_m, "m", self.DIAMETER_TOLERANCE_m
+        )
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    DESCRIPTION_SPHERE = 'sphere'
+    DESCRIPTION_SPHERE = "sphere"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         section = builder.add_section()
-        section.add_title('Sphere')
+        section.add_title("Sphere")
 
         description = section.require_description(self.DESCRIPTION_SPHERE)
-        description.add_item('Material', self.material.name)
-        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        description.add_item("Material", self.material.name)
+        description.add_item(
+            "Diameter", self.diameter_m, "m", self.DIAMETER_TOLERANCE_m
+        )
 
-#endregion
+
+# endregion
+
 
 class SphereSampleBuilder(SampleBuilderBase):
-
     def __init__(self):
         super().__init__()
         self.materials = []
@@ -113,8 +123,7 @@ class SphereSampleBuilder(SampleBuilderBase):
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
-        product = itertools.product(self.materials,
-                                    self.diameters_m,
-                                    tilts_rad,
-                                    rotations_rad)
+        product = itertools.product(
+            self.materials, self.diameters_m, tilts_rad, rotations_rad
+        )
         return [SphereSample(*args) for args in product]

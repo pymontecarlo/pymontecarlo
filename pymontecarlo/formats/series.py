@@ -10,8 +10,8 @@ from pymontecarlo.formats.base import FormatBuilderBase
 
 # Globals and constants variables.
 
-class SeriesBuilder(FormatBuilderBase):
 
+class SeriesBuilder(FormatBuilderBase):
     def __init__(self, settings, abbreviate_name=False, format_number=False):
         super().__init__(settings, abbreviate_name, format_number)
         self.data = []
@@ -20,7 +20,7 @@ class SeriesBuilder(FormatBuilderBase):
         datum = self._create_datum(name, abbrev, value, unit, tolerance, error)
         self.data.append(datum)
 
-    def add_entity(self, entity, prefix_name='', prefix_abbrev=''):
+    def add_entity(self, entity, prefix_name="", prefix_abbrev=""):
         builder = self.__class__(self.settings)
         entity.convert_series(builder)
 
@@ -28,8 +28,8 @@ class SeriesBuilder(FormatBuilderBase):
 
         for datum in builder.data:
             datum = datum.copy()
-            datum['prefix_name'] = datum['prefix_name'] + prefix_name
-            datum['prefix_abbrev'] = datum['prefix_abbrev'] + prefix_abbrev
+            datum["prefix_name"] = datum["prefix_name"] + prefix_name
+            datum["prefix_abbrev"] = datum["prefix_abbrev"] + prefix_abbrev
             self.data.append(datum)
 
     def build(self):
@@ -48,8 +48,8 @@ class SeriesBuilder(FormatBuilderBase):
         for datum in self.data:
             label = self._format_label(datum)
 
-            unit = datum['unit']
-            tolerance = datum['tolerance']
+            unit = datum["unit"]
+            tolerance = datum["tolerance"]
 
             if tolerance is not None:
                 tolerances[label] = self._convert_value(tolerance, unit)

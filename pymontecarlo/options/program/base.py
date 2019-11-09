@@ -12,18 +12,18 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class ProgramBase(base.OptionBase):
 
+class ProgramBase(base.OptionBase):
     def __init__(self, name):
         self._name = name
 
     def __repr__(self):
-        return '<{classname}({name})>' \
-            .format(classname=self.__class__.__name__, name=self.name)
+        return "<{classname}({name})>".format(
+            classname=self.__class__.__name__, name=self.name
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.name, other.name)
+        return super().__eq__(other) and base.isclose(self.name, other.name)
 
     @property
     def name(self):
@@ -45,24 +45,26 @@ class ProgramBase(base.OptionBase):
     def importer(self):
         raise NotImplementedError
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_column('program', 'prog', self.name)
+        builder.add_column("program", "prog", self.name)
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    DESCRIPTION_PROGRAM = 'program'
+    DESCRIPTION_PROGRAM = "program"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         builder.add_title(self.name)
 
-#endregion
+
+# endregion
+
 
 class ProgramBuilderBase(base.OptionBuilderBase):
     pass

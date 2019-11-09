@@ -11,6 +11,7 @@ import psutil
 
 # Globals and constants variables.
 
+
 def create_startupinfo():
     if sys.platform == "win32":
         startupinfo = subprocess.STARTUPINFO()
@@ -19,6 +20,7 @@ def create_startupinfo():
         startupinfo = None
 
     return startupinfo
+
 
 def kill_process(pid):
     psprocess = psutil.Process(pid)

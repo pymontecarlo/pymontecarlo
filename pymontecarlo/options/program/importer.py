@@ -13,8 +13,8 @@ from pymontecarlo.util.error import ErrorAccumulator
 
 # Globals and constants variables.
 
-class ImporterBase(metaclass=abc.ABCMeta):
 
+class ImporterBase(metaclass=abc.ABCMeta):
     def __init__(self):
         self.import_analysis_methods = {}
 
@@ -47,15 +47,18 @@ class ImporterBase(metaclass=abc.ABCMeta):
         results = []
 
         for analysis in options.analyses:
-            results += self._import_analysis(options, analysis, dirpath, erracc, *args, **kwargs)
+            results += self._import_analysis(
+                options, analysis, dirpath, erracc, *args, **kwargs
+            )
 
         return results
 
     def _import_analysis(self, options, analysis, dirpath, erracc, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.import_analysis_methods:
-            exc = ValueError('Analysis ({0}) is not supported.'
-                             .format(analysis_class.__name__))
+            exc = ValueError(
+                "Analysis ({0}) is not supported.".format(analysis_class.__name__)
+            )
             erracc.add_exception(exc)
             return
 

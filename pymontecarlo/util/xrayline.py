@@ -9,6 +9,7 @@ import pyxray
 
 # Globals and constants variables.
 
+
 def convert_xrayline(xrayline):
     if isinstance(xrayline, pyxray.XrayLine):
         return xrayline

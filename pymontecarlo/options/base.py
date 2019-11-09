@@ -10,10 +10,16 @@ import numbers
 # Third party modules.
 
 # Local modules.
-from pymontecarlo.entity import EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentMixin
+from pymontecarlo.entity import (
+    EntityBase,
+    EntityHDF5Mixin,
+    EntitySeriesMixin,
+    EntityDocumentMixin,
+)
 from pymontecarlo.formats.base import LazyFormat
 
 # Globals and constants variables.
+
 
 class OptionBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentMixin):
     """
@@ -32,8 +38,8 @@ class OptionBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentM
         """
         return type(other) == type(self)
 
-class LazyOptionBase(OptionBase, LazyFormat):
 
+class LazyOptionBase(OptionBase, LazyFormat):
     def __eq__(self, other):
         """
         Returns whether two lazy options are equal.
@@ -45,7 +51,7 @@ class LazyOptionBase(OptionBase, LazyFormat):
         raise NotImplementedError
 
     def format(self, settings):
-        return 'auto'
+        return "auto"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -59,6 +65,7 @@ class LazyOptionBase(OptionBase, LazyFormat):
 
     def convert_document(self, builder):
         super().convert_document(builder)
+
 
 class OptionBuilderBase(metaclass=abc.ABCMeta):
     """
@@ -83,8 +90,8 @@ class OptionBuilderBase(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-class LazyMultiplierDecorator(LazyOptionBase):
 
+class LazyMultiplierDecorator(LazyOptionBase):
     def __init__(self, lazyoption, multiplier):
         self.lazyoption = lazyoption
         self.multiplier = multiplier
@@ -93,9 +100,11 @@ class LazyMultiplierDecorator(LazyOptionBase):
         """
         Returns whether two lazy options are equal.
         """
-        return super().__eq__(other) and \
-            self.lazyoption == other.lazyoption and \
-            self.multiplier == other.multiplier
+        return (
+            super().__eq__(other)
+            and self.lazyoption == other.lazyoption
+            and self.multiplier == other.multiplier
+        )
 
     def apply(self, parent_option, options):
         return self.lazyoption.apply(parent_option, options) * self.multiplier
@@ -113,8 +122,8 @@ class LazyMultiplierDecorator(LazyOptionBase):
     def convert_document(self, builder):
         return self.lazyoption.convert_document(builder)
 
-class MultiplierAttribute(object):
 
+class MultiplierAttribute(object):
     def __init__(self, attrname, multiplier):
         self.attrname = attrname
         self.multiplier = multiplier
@@ -136,16 +145,18 @@ class MultiplierAttribute(object):
     def __delete__(self, instance):
         delattr(instance, self.attrname)
 
-class DegreesAttribute(MultiplierAttribute):
 
+class DegreesAttribute(MultiplierAttribute):
     def __init__(self, attrname_rad):
         super().__init__(attrname_rad, 180.0 / math.pi)
+
 
 def apply_lazy(option, parent_option, options):
     if isinstance(option, LazyOptionBase):
         return option.apply(parent_option, options)
     else:
         return option
+
 
 def isclose(value0, value1, rel_tol=1e-9, abs_tol=0.0):
     """
@@ -157,6 +168,7 @@ def isclose(value0, value1, rel_tol=1e-9, abs_tol=0.0):
         return math.isclose(value0, value1, rel_tol=rel_tol, abs_tol=abs_tol)
     else:
         return value0 == value1
+
 
 def are_sequence_equal(list0, list1):
     if isinstance(list0, LazyOptionBase) and list0 != list1:
@@ -170,6 +182,7 @@ def are_sequence_equal(list0, list1):
             return False
 
     return True
+
 
 def are_sequence_similar(list0, list1):
     if isinstance(list0, LazyOptionBase) and list0 != list1:
@@ -185,6 +198,7 @@ def are_sequence_similar(list0, list1):
 
     return True
 
+
 def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
     if isinstance(list0, LazyOptionBase) and list0 != list1:
         return False
@@ -197,6 +211,7 @@ def are_sequence_close(list0, list1, rel_tol=1e-9, abs_tol=0.0):
             return False
 
     return True
+
 
 def are_mapping_equal(map0, map1):
     if isinstance(map0, LazyOptionBase) and map0 != map1:
@@ -213,6 +228,7 @@ def are_mapping_equal(map0, map1):
             return False
 
     return True
+
 
 def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
     if isinstance(map0, LazyOptionBase) and map0 != map1:
@@ -232,4 +248,3 @@ def are_mapping_value_close(map0, map1, rel_tol=1e-9, abs_tol=0.0):
             return False
 
     return True
-

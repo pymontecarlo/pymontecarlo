@@ -10,6 +10,7 @@ Estimate of electron range
 
 # Globals and constants variables.
 
+
 def photon_range(e0, material, z, energy_eV):
     """
     This function returns the generated photon range in *material* at
@@ -28,7 +29,7 @@ def photon_range(e0, material, z, energy_eV):
     :return: photon range (in meters)
     """
     if z not in material.composition:
-        raise ValueError('{} is not in material'.format(z))
+        raise ValueError("{} is not in material".format(z))
 
     if energy_eV > e0:
         return 0.0

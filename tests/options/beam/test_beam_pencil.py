@@ -13,13 +13,16 @@ import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
+
 @pytest.fixture
 def beam():
     return PencilBeam(15e3, Particle.POSITRON, 1.0, 2.0)
 
+
 @pytest.fixture
 def builder():
     return PencilBeamBuilder()
+
 
 def test_pencilbeam(beam):
     assert beam.particle == Particle.POSITRON
@@ -29,11 +32,14 @@ def test_pencilbeam(beam):
     assert beam.x0_m == pytest.approx(1.0, abs=1e-4)
     assert beam.y0_m == pytest.approx(2.0, abs=1e-4)
 
+
 def test_pencilbeam_repr(beam):
-    assert repr(beam) == '<PencilBeam(POSITRON, 15000 eV, (1, 2) m)>'
+    assert repr(beam) == "<PencilBeam(POSITRON, 15000 eV, (1, 2) m)>"
+
 
 def test_pencilbeam_eq(beam):
     assert beam == PencilBeam(15e3, Particle.POSITRON, 1.0, 2.0)
+
 
 def test_pencilbeam_ne(beam):
     assert not beam == PencilBeam(14e3, Particle.POSITRON, 1.0, 2.0)
@@ -42,27 +48,33 @@ def test_pencilbeam_ne(beam):
     assert not beam == PencilBeam(15e3, Particle.POSITRON, 1.0, 2.1)
     assert not beam == object()
 
+
 def test_pencilbeam_hdf5(beam, tmp_path):
     testutil.assert_convert_parse_hdf5(beam, tmp_path)
+
 
 def test_pencilbeam_copy(beam):
     testutil.assert_copy(beam)
 
+
 def test_pencilbeam_pickle(beam):
     testutil.assert_pickle(beam)
+
 
 def test_pencilbeam_series(beam, seriesbuilder):
     beam.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 4
+
 
 def test_pencilbeam_document(beam, documentbuilder):
     beam.convert_document(documentbuilder)
     document = documentbuilder.build()
     assert testutil.count_document_nodes(document) == 4
 
+
 def test_pencilbeambuilder(builder):
     builder.add_energy_eV(10e3)
-    builder.add_energy_keV(10) # Not added
+    builder.add_energy_keV(10)  # Not added
     builder.add_position(0.0, 0.0)
     builder.add_position(0.0, 0.1)
 
@@ -73,6 +85,7 @@ def test_pencilbeambuilder(builder):
     for beam in beams:
         assert beam.particle == Particle.ELECTRON
 
+
 def test_pencilbeambuilder_noposition(builder):
     builder.add_energy_eV(10e3)
     builder.add_particle(Particle.ELECTRON)
@@ -80,6 +93,7 @@ def test_pencilbeambuilder_noposition(builder):
     beams = builder.build()
     assert len(beams) == 0
     assert len(builder) == 0
+
 
 def test_pencilbeambuilder_linescan(builder):
     builder.add_energy_eV(10e3)
@@ -92,4 +106,3 @@ def test_pencilbeambuilder_linescan(builder):
     for beam in beams:
         assert beam.particle == Particle.ELECTRON
         assert beam.y0_m == pytest.approx(0.456, abs=1e-4)
-

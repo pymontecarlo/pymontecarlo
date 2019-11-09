@@ -11,16 +11,16 @@ from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
 
-class Token:
 
+class Token:
     def __init__(self):
         self._progress = 0.0
-        self._status = 'Not started'
+        self._status = "Not started"
         self._cancelled = False
 
     def cancel(self):
         self._cancelled = True
-        self.update(1.0, 'Cancelled')
+        self.update(1.0, "Cancelled")
 
     def cancelled(self):
         return self._cancelled
@@ -37,8 +37,8 @@ class Token:
     def status(self):
         return self._status
 
-class FutureAdapter(Monitorable):
 
+class FutureAdapter(Monitorable):
     def __init__(self, future, token, args, kwargs):
         self.future = future
         self.token = token
@@ -79,6 +79,7 @@ class FutureAdapter(Monitorable):
     def status(self):
         return self.token.status
 
+
 class FutureExecutor(Monitorable):
 
     submitted = Signal()
@@ -104,17 +105,17 @@ class FutureExecutor(Monitorable):
 
     def _on_done(self, future):
         if future.cancelled():
-            future.token.update(1.0, 'Cancelled')
+            future.token.update(1.0, "Cancelled")
             self.cancelled_count += 1
             return
 
         if future.exception():
-            future.token.update(1.0, 'Error')
+            future.token.update(1.0, "Error")
             self.failed_futures.add(future)
             self.failed_count += 1
             return
 
-        future.token.update(1.0, 'Done')
+        future.token.update(1.0, "Done")
         self.done_count += 1
         return future.result()
 
@@ -144,8 +145,9 @@ class FutureExecutor(Monitorable):
         were executed, ``False`` otherwise.
         """
         fs = [future.future for future in self.futures]
-        _done, notdone = \
-            concurrent.futures.wait(fs, timeout, concurrent.futures.ALL_COMPLETED)
+        _done, notdone = concurrent.futures.wait(
+            fs, timeout, concurrent.futures.ALL_COMPLETED
+        )
         return not notdone
 
     def _submit(self, target, *args, **kwargs):
@@ -168,7 +170,7 @@ class FutureExecutor(Monitorable):
         :return: a :class:`Future` object
         """
         if self.executor is None:
-            raise RuntimeError('Executor is not started')
+            raise RuntimeError("Executor is not started")
 
         token = Token()
         future = self.executor.submit(target, token, *args, **kwargs)
@@ -198,8 +200,10 @@ class FutureExecutor(Monitorable):
     def progress(self):
         if self.submitted_count == 0:
             return 0
-        return (self.done_count + self.failed_count + self.cancelled_count) / self.submitted_count
+        return (
+            self.done_count + self.failed_count + self.cancelled_count
+        ) / self.submitted_count
 
     @property
     def status(self):
-        return ''
+        return ""

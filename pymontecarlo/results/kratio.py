@@ -1,6 +1,6 @@
 """"""
 
-__all__ = ['KRatioResult', 'KRatioResultBuilder']
+__all__ = ["KRatioResult", "KRatioResultBuilder"]
 
 # Standard library modules.
 
@@ -12,14 +12,15 @@ from pymontecarlo.results.photon import PhotonSingleResultBase, PhotonResultBuil
 
 # Globals and constants variables.
 
+
 class KRatioResult(PhotonSingleResultBase):
     """
     Mapping of :class:`XrayLine` and k-ratios.
     """
 
-    DATASET_VALUES = 'k-ratios'
+    DATASET_VALUES = "k-ratios"
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
@@ -28,16 +29,17 @@ class KRatioResult(PhotonSingleResultBase):
             builder.add_column(xrayline, xrayline, q.n)
             builder.add_column(xrayline, xrayline, q.s, error=True)
 
-#endregion
+
+# endregion
+
 
 class KRatioResultBuilder(PhotonResultBuilderBase):
-
     def __init__(self, analysis):
         super().__init__(analysis, KRatioResult)
 
     def add_kratio(self, xrayline, unkintensity, stdintensity):
         kratio = unkintensity / stdintensity
-        if not hasattr(kratio, 's'):
+        if not hasattr(kratio, "s"):
             kratio = uncertainties.ufloat(kratio, 0.0)
         self._add(xrayline, kratio)
 

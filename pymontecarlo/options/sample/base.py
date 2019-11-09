@@ -2,7 +2,7 @@
 Base classes for samples.
 """
 
-__all__ = ['LayerBuilder', 'Layer']
+__all__ = ["LayerBuilder", "Layer"]
 
 # Standard library modules.
 import abc
@@ -20,13 +20,14 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
+
 class SampleBase(base.OptionBase):
     """
     Base class for all sample representations.
     """
 
-    TILT_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
-    AZIMUTH_TOLERANCE_rad = math.radians(1e-3) # 0.001 deg
+    TILT_TOLERANCE_rad = math.radians(1e-3)  # 0.001 deg
+    AZIMUTH_TOLERANCE_rad = math.radians(1e-3)  # 0.001 deg
 
     def __init__(self, tilt_rad=0.0, azimuth_rad=0.0):
         """
@@ -44,9 +45,15 @@ class SampleBase(base.OptionBase):
         self.azimuth_rad = azimuth_rad
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad) and \
-            base.isclose(self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad)
+        return (
+            super().__eq__(other)
+            and base.isclose(
+                self.tilt_rad, other.tilt_rad, abs_tol=self.TILT_TOLERANCE_rad
+            )
+            and base.isclose(
+                self.azimuth_rad, other.azimuth_rad, abs_tol=self.AZIMUTH_TOLERANCE_rad
+            )
+        )
 
     def _cleanup_materials(self, *materials):
         materials = list(materials)
@@ -57,7 +64,7 @@ class SampleBase(base.OptionBase):
         return tuple(unique(materials))
 
     @abc.abstractproperty
-    def materials(self): #pragma: no cover
+    def materials(self):  # pragma: no cover
         """
         Returns a :class:`tuple` of all materials inside this geometry.
         :obj:`VACUUM` should not be included in the materials.
@@ -74,31 +81,39 @@ class SampleBase(base.OptionBase):
             zs |= set(material.composition.keys())
         return zs
 
-    tilt_deg = base.DegreesAttribute('tilt_rad')
-    azimuth_deg = base.DegreesAttribute('azimuth_rad')
+    tilt_deg = base.DegreesAttribute("tilt_rad")
+    azimuth_deg = base.DegreesAttribute("azimuth_rad")
 
-#region HDF5
+    # region HDF5
 
-    ATTR_TILT = 'tilt (rad)'
-    ATTR_AZIMUTH = 'azimuth (rad)'
+    ATTR_TILT = "tilt (rad)"
+    ATTR_AZIMUTH = "azimuth (rad)"
 
     def convert_hdf5(self, group):
         super().convert_hdf5(group)
         self._convert_hdf5(group, self.ATTR_TILT, self.tilt_rad)
         self._convert_hdf5(group, self.ATTR_AZIMUTH, self.azimuth_rad)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_column('sample tilt', 'theta0', self.tilt_rad, 'rad', self.TILT_TOLERANCE_rad)
-        builder.add_column('sample azimuth', 'phi0', self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+        builder.add_column(
+            "sample tilt", "theta0", self.tilt_rad, "rad", self.TILT_TOLERANCE_rad
+        )
+        builder.add_column(
+            "sample azimuth",
+            "phi0",
+            self.azimuth_rad,
+            "rad",
+            self.AZIMUTH_TOLERANCE_rad,
+        )
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
     def convert_document(self, builder):
         super().convert_document(builder)
@@ -106,21 +121,25 @@ class SampleBase(base.OptionBase):
         builder.add_title(camelcase_to_words(self.__class__.__name__))
 
         section = builder.add_section()
-        section.add_title('Orientation')
-        description = section.require_description('angles')
-        description.add_item('Tilt angle', self.tilt_rad, 'rad', self.TILT_TOLERANCE_rad)
-        description.add_item('Azimuth rotation', self.azimuth_rad, 'rad', self.AZIMUTH_TOLERANCE_rad)
+        section.add_title("Orientation")
+        description = section.require_description("angles")
+        description.add_item(
+            "Tilt angle", self.tilt_rad, "rad", self.TILT_TOLERANCE_rad
+        )
+        description.add_item(
+            "Azimuth rotation", self.azimuth_rad, "rad", self.AZIMUTH_TOLERANCE_rad
+        )
 
         section = builder.add_section()
-        section.add_title('Material' if len(self.materials) < 2 else 'Materials')
+        section.add_title("Material" if len(self.materials) < 2 else "Materials")
         for material in self.materials:
             section.add_entity(material)
 
-#endregion
+
+# endregion
 
 
 class SampleBuilderBase(base.OptionBuilderBase):
-
     def __init__(self):
         self.tilts_rad = set()
         self.azimuths_rad = set()
@@ -158,9 +177,10 @@ class SampleBuilderBase(base.OptionBuilderBase):
     def add_azimuth_deg(self, azimuth_deg):
         self.add_azimuth_rad(math.radians(azimuth_deg))
 
+
 class Layer(base.OptionBase):
 
-    THICKNESS_TOLERANCE_m = 1e-12 # 1 fm
+    THICKNESS_TOLERANCE_m = 1e-12  # 1 fm
 
     def __init__(self, material, thickness_m):
         """
@@ -177,18 +197,23 @@ class Layer(base.OptionBase):
         self.thickness_m = thickness_m
 
     def __repr__(self):
-        return '<{0}(material={1}, thickness={2:g} m)>' \
-            .format(self.__class__.__name__, self.material, self.thickness_m)
+        return "<{0}(material={1}, thickness={2:g} m)>".format(
+            self.__class__.__name__, self.material, self.thickness_m
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.material, other.material) and \
-            base.isclose(self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m)
+        return (
+            super().__eq__(other)
+            and base.isclose(self.material, other.material)
+            and base.isclose(
+                self.thickness_m, other.thickness_m, abs_tol=self.THICKNESS_TOLERANCE_m
+            )
+        )
 
-    #region HDF5
+    # region HDF5
 
-    ATTR_MATERIAL = 'material'
-    ATTR_THICKNESS = 'thickness (m)'
+    ATTR_MATERIAL = "material"
+    ATTR_THICKNESS = "thickness (m)"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -201,37 +226,39 @@ class Layer(base.OptionBase):
         self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
         self._convert_hdf5(group, self.ATTR_THICKNESS, self.thickness_m)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
         builder.add_entity(self.material)
-        builder.add_column('thickness', 't', self.thickness_m, 'm', self.THICKNESS_TOLERANCE_m)
+        builder.add_column(
+            "thickness", "t", self.thickness_m, "m", self.THICKNESS_TOLERANCE_m
+        )
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    TABLE_LAYER = 'layer'
+    TABLE_LAYER = "layer"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         table = builder.require_table(self.TABLE_LAYER)
 
-        table.add_column('Material')
-        table.add_column('Thickness', 'm', self.THICKNESS_TOLERANCE_m)
+        table.add_column("Material")
+        table.add_column("Thickness", "m", self.THICKNESS_TOLERANCE_m)
 
-        row = {'Material': self.material.name,
-               'Thickness': self.thickness_m}
+        row = {"Material": self.material.name, "Thickness": self.thickness_m}
         table.add_row(row)
 
-#endregion
+
+# endregion
+
 
 class LayerBuilder(base.OptionBuilderBase):
-
     def __init__(self):
         self.materials = []
         self.thicknesses_m = set()
@@ -247,8 +274,7 @@ class LayerBuilder(base.OptionBuilderBase):
         self.thicknesses_m.add(thickness_m)
 
     def build(self):
-        product = itertools.product(self.materials,
-                                    self.thicknesses_m)
+        product = itertools.product(self.materials, self.thicknesses_m)
 
         layers = []
         for material, thickness_m in product:
@@ -256,8 +282,8 @@ class LayerBuilder(base.OptionBuilderBase):
 
         return layers
 
-class LayeredSampleBase(SampleBase):
 
+class LayeredSampleBase(SampleBase):
     def __init__(self, layers=None, tilt_rad=0.0, azimuth_rad=0.0):
         super().__init__(tilt_rad, azimuth_rad)
 
@@ -266,8 +292,9 @@ class LayeredSampleBase(SampleBase):
         self.layers = list(layers)
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.are_sequence_equal(self.layers, other.layers)
+        return super().__eq__(other) and base.are_sequence_equal(
+            self.layers, other.layers
+        )
 
     def add_layer(self, material, thickness_m):
         """
@@ -288,15 +315,14 @@ class LayeredSampleBase(SampleBase):
         materials = [layer.material for layer in self.layers]
         return self._cleanup_materials(*materials)
 
-#region HDF5
+    # region HDF5
 
-    DATASET_LAYERS = 'layers'
+    DATASET_LAYERS = "layers"
 
     @classmethod
     def _parse_hdf5_layers(cls, group):
         dataset = group[cls.DATASET_LAYERS]
-        return [cls._parse_hdf5_reference(group, reference)
-                for reference in dataset]
+        return [cls._parse_hdf5_reference(group, reference) for reference in dataset]
 
     def convert_hdf5(self, group):
         super().convert_hdf5(group)
@@ -305,14 +331,16 @@ class LayeredSampleBase(SampleBase):
     def _convert_hdf5_layers(self, group, layers):
         shape = (len(layers),)
         ref_dtype = h5py.special_dtype(ref=h5py.Reference)
-        dataset = group.create_dataset(self.DATASET_LAYERS, shape=shape, dtype=ref_dtype)
+        dataset = group.create_dataset(
+            self.DATASET_LAYERS, shape=shape, dtype=ref_dtype
+        )
 
         for i, layer in enumerate(layers):
             dataset[i] = self._convert_hdf5_reference(group, layer)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
@@ -322,22 +350,23 @@ class LayeredSampleBase(SampleBase):
             prefix_abbrev = "L{0:d} ".format(i)
             builder.add_entity(layer, prefix, prefix_abbrev)
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         section = builder.add_section()
-        section.add_title('Layer' if len(self.layers) < 2 else 'Layers')
+        section.add_title("Layer" if len(self.layers) < 2 else "Layers")
         for layer in self.layers:
             section.add_entity(layer)
 
-#endregion
+
+# endregion
+
 
 class LayeredSampleBuilderBase(SampleBuilderBase):
-
     def __init__(self):
         super().__init__()
         self.layer_builders = []
@@ -359,5 +388,3 @@ class LayeredSampleBuilderBase(SampleBuilderBase):
         builder.add_thickness_m(thickness_m)
         self.add_layer_builder(builder)
         return builder
-
-

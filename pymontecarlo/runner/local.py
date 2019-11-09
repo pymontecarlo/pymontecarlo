@@ -18,44 +18,48 @@ from pymontecarlo.runner.base import SimulationRunnerBase
 # Globals and constants variables.
 logger = logging.getLogger(__name__)
 
-class LocalWorkerDispatcher:
 
+class LocalWorkerDispatcher:
     def __init__(self, project, token, queue):
         self.project = project
         self.token = token
         self.queue = queue
 
     async def run(self):
-        logger.debug('Dispatcher running')
+        logger.debug("Dispatcher running")
 
         while True:
             # Check for recalculation
-            if self.project.recalculate_required and \
-                    self.queue.empty() and self.queue._finished.is_set():
+            if (
+                self.project.recalculate_required
+                and self.queue.empty()
+                and self.queue._finished.is_set()
+            ):
                 # Create new token
-                token = self.token.create_subtoken('Recalculate')
+                token = self.token.create_subtoken("Recalculate")
 
                 # Recalculate
-                logger.debug('Starting recalculation of project')
+                logger.debug("Starting recalculation of project")
                 await self.project.recalculate(token)
-                logger.debug('Recalculation done')
+                logger.debug("Recalculation done")
 
             # Get simulation or wait until the next one is available
-            logger.debug('Awaiting for simulation')
+            logger.debug("Awaiting for simulation")
 
             simulation = await self.queue.get()
 
-            logger.debug('Simulation "{}" retrieved from in queue'
-                         .format(simulation.identifier))
+            logger.debug(
+                'Simulation "{}" retrieved from in queue'.format(simulation.identifier)
+            )
 
             # Create output directory
             if self.project.filepath is not None:
                 head, tail = os.path.split(self.project.filepath)
-                dirname = os.path.splitext(tail)[0] + '_simulations'
+                dirname = os.path.splitext(tail)[0] + "_simulations"
                 outputdir = os.path.join(head, dirname, simulation.identifier)
 
                 if os.path.exists(outputdir) and os.listdir(outputdir):
-                    logger.debug('Removing content in {}'.format(outputdir))
+                    logger.debug("Removing content in {}".format(outputdir))
                     shutil.rmtree(outputdir, ignore_errors=True)
 
                 temporary = False
@@ -64,7 +68,7 @@ class LocalWorkerDispatcher:
                 temporary = True
 
             os.makedirs(outputdir, exist_ok=True)
-            logger.debug('Created output directory: {}'.format(outputdir))
+            logger.debug("Created output directory: {}".format(outputdir))
 
             # Run
             try:
@@ -72,15 +76,19 @@ class LocalWorkerDispatcher:
                 worker = simulation.options.program.worker
 
                 # Create token
-                token = self.token.create_subtoken(simulation.identifier, category='simulation')
+                token = self.token.create_subtoken(
+                    simulation.identifier, category="simulation"
+                )
 
-                logger.debug('Launching worker "{!r}" of simulation "{}"'
-                             .format(worker, simulation.identifier))
+                logger.debug(
+                    'Launching worker "{!r}" of simulation "{}"'.format(
+                        worker, simulation.identifier
+                    )
+                )
 
                 await worker.run(token, simulation, outputdir)
 
-                logger.debug('Worker "{!r}" successfully terminated'
-                             .format(worker))
+                logger.debug('Worker "{!r}" successfully terminated'.format(worker))
 
             finally:
                 # Set "task done" flag
@@ -89,16 +97,18 @@ class LocalWorkerDispatcher:
                 # Remove temporary folder
                 if temporary:
                     shutil.rmtree(outputdir, ignore_errors=True)
-                    logger.debug('Removed temporary output directory: {}'
-                                 .format(outputdir))
+                    logger.debug(
+                        "Removed temporary output directory: {}".format(outputdir)
+                    )
 
             # Simulation succeeded, so add to project
             self.project.add_simulation(simulation)
-            logger.debug('Simulation "{}" added to project'
-                         .format(simulation.identifier))
+            logger.debug(
+                'Simulation "{}" added to project'.format(simulation.identifier)
+            )
+
 
 class LocalSimulationRunner(SimulationRunnerBase):
-
     def __init__(self, project=None, token=None, max_workers=1):
         super().__init__(project, token, max_workers)
 
@@ -120,7 +130,7 @@ class LocalSimulationRunner(SimulationRunnerBase):
     async def start(self):
         # Check if already running
         if self._tasks:
-            logger.debug('Already started')
+            logger.debug("Already started")
             return
 
         # Create task for dispatchers
@@ -130,40 +140,40 @@ class LocalSimulationRunner(SimulationRunnerBase):
             task = asyncio.ensure_future(dispatcher.run())
             self._tasks.append(task)
 
-        logger.debug('Runner started')
+        logger.debug("Runner started")
 
     async def shutdown(self):
-        logger.debug('Starting shutdown')
+        logger.debug("Starting shutdown")
 
         await self._queue.join()
 
         await self.cancel()
 
-        logger.debug('Runner is shutdown')
+        logger.debug("Runner is shutdown")
 
     async def cancel(self):
-        logger.debug('Starting cancellation')
+        logger.debug("Starting cancellation")
 
         for task in self._tasks:
             task.cancel()
 
         # Wait until all dispatchers are cancelled.
-        logger.debug('Waiting for dispatchers to cancel')
+        logger.debug("Waiting for dispatchers to cancel")
 
         await asyncio.gather(*self._tasks, return_exceptions=True)
 
         self._tasks.clear()
 
-        logger.debug('All dispatchers are cancelled')
+        logger.debug("All dispatchers are cancelled")
 
         # Empty queue
-        logging.debug('Emptying queue')
+        logging.debug("Emptying queue")
 
         while not self._queue.empty():
             await self._queue.get()
             self._queue.task_done()
 
-        logging.debug('Queue was emptied')
+        logging.debug("Queue was emptied")
 
     async def set_project(self, project):
         await super().set_project(project)

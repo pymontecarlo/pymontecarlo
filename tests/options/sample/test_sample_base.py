@@ -9,15 +9,19 @@ import math
 import pytest
 
 # Local modules.
-from pymontecarlo.options.sample.base import \
-    SampleBase, SampleBuilderBase, LayeredSampleBase, LayeredSampleBuilderBase
+from pymontecarlo.options.sample.base import (
+    SampleBase,
+    SampleBuilderBase,
+    LayeredSampleBase,
+    LayeredSampleBuilderBase,
+)
 from pymontecarlo.options.material import Material
 import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
 
-class SampleMock(SampleBase):
 
+class SampleMock(SampleBase):
     def __init__(self, tilt_rad, azimuth_rad):
         super().__init__(tilt_rad, azimuth_rad)
 
@@ -25,7 +29,7 @@ class SampleMock(SampleBase):
     def materials(self):
         return []
 
-#region HDF5
+    # region HDF5
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -33,10 +37,11 @@ class SampleMock(SampleBase):
         azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
         return cls(tilt_rad, azimuth_rad)
 
-#endregion
+
+# endregion
+
 
 class SampleBuilderMock(SampleBuilderBase):
-
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
@@ -46,8 +51,8 @@ class SampleBuilderMock(SampleBuilderBase):
             samples.append(SampleMock(tilt_rad, azimuth_rad))
         return samples
 
-class LayeredSampleMock(LayeredSampleBase):
 
+class LayeredSampleMock(LayeredSampleBase):
     @classmethod
     def parse_hdf5(cls, group):
         tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
@@ -55,8 +60,8 @@ class LayeredSampleMock(LayeredSampleBase):
         layers = cls._parse_hdf5_layers(group)
         return cls(layers, tilt_rad, azimuth_rad)
 
-class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
 
+class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
     def build(self):
         layers_list = self._calculate_layer_combinations()
         tilts_rad = self._calculate_tilt_combinations()
@@ -70,17 +75,21 @@ class LayeredSampleBuilderMock(LayeredSampleBuilderBase):
 
         return samples
 
+
 @pytest.fixture
 def sample():
     return SampleMock(1.1, 2.2)
+
 
 @pytest.fixture
 def builder():
     return SampleBuilderMock()
 
+
 @pytest.fixture
 def layeredbuilder():
     return LayeredSampleBuilderMock()
+
 
 def test_samplebase(sample):
     assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
@@ -91,28 +100,35 @@ def test_samplebase(sample):
 
     assert len(sample.materials) == 0
 
+
 def test_samplebase_eq(sample):
     assert sample == SampleMock(1.1, 2.2)
     assert sample != SampleMock(1.2, 2.2)
     assert sample != SampleMock(1.1, 2.3)
 
+
 def test_samplebase_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
+
 
 def test_samplebase_copy(sample):
     testutil.assert_copy(sample)
 
+
 def test_samplebase_pickle(sample):
     testutil.assert_pickle(sample)
+
 
 def test_samplebase_series(sample, seriesbuilder):
     sample.convert_series(seriesbuilder)
     assert len(seriesbuilder.build()) == 2
 
+
 def test_samplebase_document(sample, documentbuilder):
     sample.convert_document(documentbuilder)
     document = documentbuilder.build()
     assert testutil.count_document_nodes(document) == 5
+
 
 def test_samplebuilderbase(builder):
     samples = builder.build()
@@ -122,6 +138,7 @@ def test_samplebuilderbase(builder):
     sample = samples[0]
     assert sample.tilt_rad == pytest.approx(0.0, abs=1e-4)
     assert sample.azimuth_rad == pytest.approx(0.0, abs=1e-4)
+
 
 def test_samplebuilderbase_onetilt(builder):
     builder.add_tilt_rad(1.1)
@@ -135,6 +152,7 @@ def test_samplebuilderbase_onetilt(builder):
     assert sample.tilt_rad == pytest.approx(1.1, abs=1e-4)
     assert sample.azimuth_rad == pytest.approx(2.2, abs=1e-4)
 
+
 def test_samplebuilderbase_twotilt(builder):
     builder.add_tilt_rad(1.1)
     builder.add_tilt_rad(1.1)
@@ -144,6 +162,7 @@ def test_samplebuilderbase_twotilt(builder):
     samples = builder.build()
     assert len(builder) == 2
     assert len(samples) == 2
+
 
 def test_layeredsamplebuilderbase(layeredbuilder):
     layeredbuilder = LayeredSampleBuilderMock()
@@ -157,6 +176,7 @@ def test_layeredsamplebuilderbase(layeredbuilder):
     sample = samples[0]
     assert len(sample.layers) == 2
 
+
 def test_layeredsamplebuilderbase_twomaterials(layeredbuilder):
     layerbuilder = layeredbuilder.add_layer(Material.pure(29), 10)
     layerbuilder.add_material(Material.pure(30))
@@ -168,6 +188,7 @@ def test_layeredsamplebuilderbase_twomaterials(layeredbuilder):
     sample = samples[0]
     assert len(sample.layers) == 1
     assert sample.layers[0].thickness_m == pytest.approx(10.0, abs=1e-4)
+
 
 def test_layeredsamplebuilderbase_twolayers(layeredbuilder):
     layerbuilder = layeredbuilder.add_layer(Material.pure(29), 10)
@@ -183,4 +204,3 @@ def test_layeredsamplebuilderbase_twolayers(layeredbuilder):
     assert len(sample.layers) == 2
     assert sample.layers[0].thickness_m == pytest.approx(10.0, abs=1e-4)
     assert sample.layers[1].thickness_m == pytest.approx(20.0, abs=1e-4)
-
