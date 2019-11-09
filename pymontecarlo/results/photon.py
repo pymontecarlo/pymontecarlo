@@ -94,7 +94,9 @@ class PhotonSingleResultBase(PhotonResultBase):
         # Scale of values
         data = np.string_(['nominal', 'standard deviation'])
         dataset_scale = group.create_dataset(self.DATASET_SCALE, data=data)
-        dataset_values.dims.create_scale(dataset_scale)
+
+        dataset_scale.make_scale()
+        dataset_values.dims[1].label = self.DATASET_SCALE
         dataset_values.dims[1].attach_scale(dataset_scale)
 
         # Store values

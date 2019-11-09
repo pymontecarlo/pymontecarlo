@@ -42,7 +42,7 @@ class Material(base.OptionBase):
 
         :arg composition: composition in weight fraction.
             The composition is specified by a dictionary.
-            The keys are atomic numbers and the values are weight fraction 
+            The keys are atomic numbers and the values are weight fraction
             between ]0.0, 1.0].
         :type composition: :class:`dict`
 
@@ -52,7 +52,7 @@ class Material(base.OptionBase):
         :arg density_kg_per_m3: material's density in kg/m3. If ``None``, the
             density will be calculated by the validator.
         :type density_kg_per_m3: :class:`float`
-        
+
         :arg color: color representing a material. If ``None``, a color is
             automatically selected from the provided color set. See
             :meth:`set_color_set`.
@@ -74,7 +74,7 @@ class Material(base.OptionBase):
     def set_color_set(cls, color_set):
         """
         Sets the set of colors used to assign a color to a material.
-        
+
         :arg color_set: iterable of colors
         """
         cls.COLOR_CYCLER = itertools.cycle(color_set)
@@ -97,7 +97,7 @@ class Material(base.OptionBase):
     def from_formula(cls, formula, density_kg_per_m3=None, color=None):
         """
         Returns the material for the specified formula.
-        
+
         :arg formula: formula of a molecule (e.g. ``Al2O3``)
         :type formula: :class:`str`
         """
@@ -159,8 +159,11 @@ class Material(base.OptionBase):
         wfs = [composition[z] for z in zs]
         dataset_wf = group.create_dataset(self.DATASET_WEIGHT_FRACTION, data=wfs)
 
-        dataset_wf.dims.create_scale(dataset_z)
+        dataset_z.make_scale()
+        dataset_wf.dims[0].label = self.DATASET_ATOMIC_NUMBER
         dataset_wf.dims[0].attach_scale(dataset_z)
+
+        print([dim.label for dim in dataset_wf.dims])
 
     def convert_series(self, builder):
         super().convert_series(builder)

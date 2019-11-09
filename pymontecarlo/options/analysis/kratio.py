@@ -192,7 +192,8 @@ class KRatioAnalysis(PhotonAnalysisBase):
         ds_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, shape=shape, dtype=np.byte)
         ds_standard = group.create_dataset(self.DATASET_STANDARDS, shape=shape, dtype=ref_dtype)
 
-        ds_standard.dims.create_scale(ds_z)
+        ds_z.make_scale()
+        ds_standard.dims[0].label = self.DATASET_ATOMIC_NUMBER
         ds_standard.dims[0].attach_scale(ds_z)
 
         for i, (z, material) in enumerate(standard_materials.items()):
