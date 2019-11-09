@@ -2,7 +2,7 @@
 Analysis to record photon intensity emitted towards a detector.
 """
 
-__all__ = ['PhotonIntensityAnalysis', 'PhotonIntensityAnalysisBuilder']
+__all__ = ["PhotonIntensityAnalysis", "PhotonIntensityAnalysisBuilder"]
 
 # Standard library modules.
 
@@ -10,12 +10,15 @@ __all__ = ['PhotonIntensityAnalysis', 'PhotonIntensityAnalysisBuilder']
 import pyxray
 
 # Local modules.
-from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
+from pymontecarlo.options.analysis.photon import (
+    PhotonAnalysisBase,
+    PhotonAnalysisBuilderBase,
+)
 
 # Globals and constants variables.
 
-class PhotonIntensityAnalysis(PhotonAnalysisBase):
 
+class PhotonIntensityAnalysis(PhotonAnalysisBase):
     def __init__(self, photon_detector):
         super().__init__(photon_detector)
 
@@ -25,16 +28,17 @@ class PhotonIntensityAnalysis(PhotonAnalysisBase):
     def calculate(self, simulation, simulations):
         return super().calculate(simulation, simulations)
 
-#region HDF5
+    # region HDF5
 
     @classmethod
     def parse_hdf5(cls, group):
         detector = cls._parse_hdf5(group, cls.ATTR_DETECTOR)
         return cls(detector)
 
-#endregion
+
+# endregion
+
 
 class PhotonIntensityAnalysisBuilder(PhotonAnalysisBuilderBase):
-
     def build(self):
         return [PhotonIntensityAnalysis(d) for d in self.photon_detectors]

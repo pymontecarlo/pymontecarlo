@@ -13,8 +13,8 @@ from pymontecarlo.formats.identifier import create_identifier
 
 # Globals and constants variables.
 
-class Simulation(EntityBase, EntityHDF5Mixin):
 
+class Simulation(EntityBase, EntityHDF5Mixin):
     def __init__(self, options, results=None, identifier=None):
         self.options = options
 
@@ -34,17 +34,19 @@ class Simulation(EntityBase, EntityHDF5Mixin):
     def find_result(self, result_class):
         return find_by_type(self.results, result_class)
 
-#region HDF5
+    # region HDF5
 
-    ATTR_IDENTIFIER = 'identifier'
-    GROUP_OPTIONS = 'options'
-    GROUP_RESULTS = 'results'
+    ATTR_IDENTIFIER = "identifier"
+    GROUP_OPTIONS = "options"
+    GROUP_RESULTS = "results"
 
     @classmethod
     def parse_hdf5(cls, group):
         options = cls._parse_hdf5_object(group[cls.GROUP_OPTIONS])
-        results = [cls._parse_hdf5_object(group_result)
-                   for group_result in group[cls.GROUP_RESULTS].values()]
+        results = [
+            cls._parse_hdf5_object(group_result)
+            for group_result in group[cls.GROUP_RESULTS].values()
+        ]
         identifier = cls._parse_hdf5(group, cls.ATTR_IDENTIFIER, str)
         return cls(options, results, identifier)
 
@@ -57,8 +59,9 @@ class Simulation(EntityBase, EntityHDF5Mixin):
 
         group_results = group.create_group(self.GROUP_RESULTS)
         for result in self.results:
-            name = '{} [{:d}]'.format(result.__class__.__name__, id(result))
+            name = "{} [{:d}]".format(result.__class__.__name__, id(result))
             group_result = group_results.create_group(name)
             result.convert_hdf5(group_result)
 
-#endregion
+
+# endregion

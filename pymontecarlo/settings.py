@@ -15,13 +15,15 @@ from pymontecarlo.entity import EntityBase, EntryHDF5IOMixin
 
 # Globals and constants variables.
 
+
 class XrayNotation(enum.Enum):
-    IUPAC = 'iupac'
-    SIEGBAHN = 'siegbahn'
+    IUPAC = "iupac"
+    SIEGBAHN = "siegbahn"
+
 
 class Settings(EntityBase, EntryHDF5IOMixin):
 
-    DEFAULT_FILENAME = 'settings.h5'
+    DEFAULT_FILENAME = "settings.h5"
 
     settings_changed = Signal()
 
@@ -61,7 +63,7 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         self.preferred_units.clear()
 
     def to_preferred_unit(self, q, units=None):
-        if not hasattr(q, 'units'):
+        if not hasattr(q, "units"):
             q = pymontecarlo.unit_registry.Quantity(q, units)
 
         _, base_unit = pymontecarlo.unit_registry._get_base_units(q.units)
@@ -88,12 +90,12 @@ class Settings(EntityBase, EntryHDF5IOMixin):
     def savedir(self, dirpath):
         self._savedir = dirpath
 
-#region HDF5
+    # region HDF5
 
-    DATASET_PREFERRED_UNITS = 'preferred units'
-    ATTR_PREFERRED_XRAY_NOTATION = 'preferred x-ray notation'
-    ATTR_OPENDIR = 'opendir'
-    ATTR_SAVEDIR = 'savedir'
+    DATASET_PREFERRED_UNITS = "preferred units"
+    ATTR_PREFERRED_XRAY_NOTATION = "preferred x-ray notation"
+    ATTR_OPENDIR = "opendir"
+    ATTR_SAVEDIR = "savedir"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -103,7 +105,9 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         for unit in units:
             obj.set_preferred_unit(unit)
 
-        obj.preferred_xray_notation = cls._parse_hdf5(group, cls.ATTR_PREFERRED_XRAY_NOTATION, XrayNotation)
+        obj.preferred_xray_notation = cls._parse_hdf5(
+            group, cls.ATTR_PREFERRED_XRAY_NOTATION, XrayNotation
+        )
         obj.opendir = cls._parse_hdf5(group, cls.ATTR_OPENDIR, str)
         obj.savedir = cls._parse_hdf5(group, cls.ATTR_SAVEDIR, str)
 
@@ -117,8 +121,11 @@ class Settings(EntityBase, EntryHDF5IOMixin):
         dataset = group.create_dataset(self.DATASET_PREFERRED_UNITS, shape, dtype)
         dataset[:] = list(map(str, self.preferred_units.values()))
 
-        self._convert_hdf5(group, self.ATTR_PREFERRED_XRAY_NOTATION, self.preferred_xray_notation)
+        self._convert_hdf5(
+            group, self.ATTR_PREFERRED_XRAY_NOTATION, self.preferred_xray_notation
+        )
         self._convert_hdf5(group, self.ATTR_OPENDIR, self.opendir)
         self._convert_hdf5(group, self.ATTR_SAVEDIR, self.savedir)
 
-#endregion
+
+# endregion

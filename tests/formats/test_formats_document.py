@@ -10,6 +10,7 @@ from pymontecarlo.formats.document import publish_html
 
 # Globals and constants variables.
 
+
 def test_publish_html(options, documentbuilder):
     options.convert_document(documentbuilder)
 

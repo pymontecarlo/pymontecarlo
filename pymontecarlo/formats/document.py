@@ -1,7 +1,7 @@
 """"""
 
 # Standard library modules.
-from collections import OrderedDict #@UnresolvedImport
+from collections import OrderedDict  # @UnresolvedImport
 
 # Third party modules.
 import docutils.core
@@ -13,13 +13,13 @@ from pymontecarlo.formats.base import FormatBuilderBase
 
 # Globals and constants variables.
 
-class DocutilsFormatBuilderBase(FormatBuilderBase):
 
+class DocutilsFormatBuilderBase(FormatBuilderBase):
     def _format_value_node(self, datum, node_class=None):
         if node_class is None:
             node_class = docutils.nodes.paragraph
 
-        value = datum['value']
+        value = datum["value"]
         if isinstance(value, docutils.nodes.Node):
             if type(value) is node_class:
                 return value
@@ -30,8 +30,8 @@ class DocutilsFormatBuilderBase(FormatBuilderBase):
 
         return node_class(text=super()._format_value(datum))
 
-class DocumentBuilder(DocutilsFormatBuilderBase):
 
+class DocumentBuilder(DocutilsFormatBuilderBase):
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
         self.nodes = []
@@ -87,7 +87,7 @@ class DocumentBuilder(DocutilsFormatBuilderBase):
         return builder
 
     def build(self):
-        document = docutils.utils.new_document('')
+        document = docutils.utils.new_document("")
 
         section = docutils.nodes.section()
         document += section
@@ -100,8 +100,8 @@ class DocumentBuilder(DocutilsFormatBuilderBase):
 
         return document
 
-class DescriptionBuilder(DocutilsFormatBuilderBase):
 
+class DescriptionBuilder(DocutilsFormatBuilderBase):
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
         self.data = []
@@ -125,18 +125,18 @@ class DescriptionBuilder(DocutilsFormatBuilderBase):
 
             definition_list += definition_item
 
-        document = docutils.utils.new_document('')
+        document = docutils.utils.new_document("")
         document += definition_list
         return document
 
-class BulletBuilder(DocutilsFormatBuilderBase):
 
+class BulletBuilder(DocutilsFormatBuilderBase):
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
         self.data = []
 
     def add_item(self, value, unit=None, tolerance=None):
-        datum = self._create_datum('untitled', 'untitled', value, unit, tolerance)
+        datum = self._create_datum("untitled", "untitled", value, unit, tolerance)
         self.data.append(datum)
 
     def build(self):
@@ -147,12 +147,12 @@ class BulletBuilder(DocutilsFormatBuilderBase):
             item += self._format_value_node(datum)
             bullet_list += item
 
-        document = docutils.utils.new_document('')
+        document = docutils.utils.new_document("")
         document += bullet_list
         return document
 
-class TableBuilder(DocutilsFormatBuilderBase):
 
+class TableBuilder(DocutilsFormatBuilderBase):
     def __init__(self, settings):
         super().__init__(settings, abbreviate_name=False, format_number=True)
         self.columns = OrderedDict()
@@ -214,7 +214,7 @@ class TableBuilder(DocutilsFormatBuilderBase):
 
             for name, datum in self.columns.items():
                 datum = datum.copy()
-                datum['value'] = row.get(name, '')
+                datum["value"] = row.get(name, "")
                 paragraph = self._format_value_node(datum)
 
                 entry = docutils.nodes.entry()
@@ -222,10 +222,11 @@ class TableBuilder(DocutilsFormatBuilderBase):
                 trow += entry
 
         # Document
-        document = docutils.utils.new_document('')
+        document = docutils.utils.new_document("")
         document += table
         return document
 
+
 def publish_html(builder):
     document = builder.build()
-    return docutils.core.publish_from_doctree(document, writer_name='html5')
+    return docutils.core.publish_from_doctree(document, writer_name="html5")

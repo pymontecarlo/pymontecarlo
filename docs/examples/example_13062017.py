@@ -10,20 +10,27 @@ import matplotlib.pyplot as plt
 # Local modules
 # Create options
 from pymontecarlo.options.material import Material
-from pymontecarlo.options.sample import HorizontalLayerSample, SubstrateSample, VerticalLayerSample
+from pymontecarlo.options.sample import (
+    HorizontalLayerSample,
+    SubstrateSample,
+    VerticalLayerSample,
+)
 from pymontecarlo.options.detector import PhotonDetector
 from pymontecarlo.options.analysis import KRatioAnalysis, PhotonIntensityAnalysis
 from pymontecarlo.options.options import OptionsBuilder
 
 from pymontecarlo.options.beam.gaussian import GaussianBeamBuilder
 
-from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResultBuilder, \
-    EmittedPhotonIntensityResult
+from pymontecarlo.results.photonintensity import (
+    EmittedPhotonIntensityResultBuilder,
+    EmittedPhotonIntensityResult,
+)
 
 from pymontecarlo.runner.local import LocalSimulationRunner
 from pymontecarlo.project import Project
 
 from pymontecarlo_casino2.program import Casino2Program
+
 
 def main(argv=None):
     options_builder = OptionsBuilder()
@@ -37,7 +44,7 @@ def main(argv=None):
     beam_builder.add_diameter_m(10e-9)
     beam_builder.add_linescan_x(-1e-07, 1e-07, 5e-08)
     beams = beam_builder.build()
-    print('beams', beams)
+    print("beams", beams)
     options_builder.beams.extend(beams)
 
     mat1 = Material.pure(26)
@@ -45,7 +52,7 @@ def main(argv=None):
     sample = VerticalLayerSample(mat1, mat2)
     options_builder.add_sample(sample)
 
-    photon_detector = PhotonDetector('xray', math.radians(35.0))
+    photon_detector = PhotonDetector("xray", math.radians(35.0))
     # analysis = KRatioAnalysis(photon_detector)
     analysis = PhotonIntensityAnalysis(photon_detector)
     options_builder.add_analysis(analysis)
@@ -60,19 +67,19 @@ def main(argv=None):
     with LocalSimulationRunner(project, max_workers=3) as runner:
         futures = runner.submit(*list_options)
 
-        print('{} simulations launched'.format(len(futures)))
+        print("{} simulations launched".format(len(futures)))
 
         while not runner.wait(1):
             print(runner.progress)
 
-            print('{} simulations succeeded'.format(runner.done_count))
-            print('{} simulations failed'.format(runner.failed_count))
+            print("{} simulations succeeded".format(runner.done_count))
+            print("{} simulations failed".format(runner.failed_count))
             for future in runner.failed_futures:
                 print(future.exception())
 
     # Results
     project.recalculate()
-    print('{} were simulated'.format(len(project.simulations)))
+    print("{} were simulated".format(len(project.simulations)))
 
     ################################################################################################
     ###                           Ab hier wird es relevant                                       ###
@@ -104,7 +111,7 @@ def main(argv=None):
     sorted_results = []
     for k, v in results.items():
         v.sort(key=lambda t: t[0])
-        print('{}\t{}'.format(k, v))
+        print("{}\t{}".format(k, v))
         print(v)
         plot_results(k, v)
         sorted_results.append((k, v))
@@ -112,18 +119,20 @@ def main(argv=None):
     return sorted_results
     print(sorted_results)
 
+
 def plot_results(label, listoftuples):
-    #ylabels = {'kratio': 'k-ratio', 'mass': 'Mass (%)', 'atom': 'Atom (%)'}
+    # ylabels = {'kratio': 'k-ratio', 'mass': 'Mass (%)', 'atom': 'Atom (%)'}
 
     fig = plt.figure()
     ax = fig.add_subplot("111")
 
-    ax.set_xlabel('Distance (nm)')
-    ax.set_ylabel('Intensity')
+    ax.set_xlabel("Distance (nm)")
+    ax.set_ylabel("Intensity")
     plt.plot((*zip(*listoftuples)), label=label)
     plt.legend()
     plt.show()
     print(label)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main(sys.argv))

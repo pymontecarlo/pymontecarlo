@@ -11,6 +11,7 @@ from pymontecarlo.formats.series import SeriesBuilder
 
 # Globals and constants variables.
 
+
 def ensure_distinct_columns(dataframe, tolerances=None):
     if len(dataframe) < 2:
         return dataframe
@@ -26,17 +27,23 @@ def ensure_distinct_columns(dataframe, tolerances=None):
         if tolerance is None:
             allequal = all(values[0] == v for v in values)
         else:
-            allequal = all(math.isclose(values[0], v, abs_tol=tolerance) for v in values)
+            allequal = all(
+                math.isclose(values[0], v, abs_tol=tolerance) for v in values
+            )
 
         if allequal:
             drop_columns.append(column)
 
     return dataframe.drop(drop_columns, axis=1)
 
-def create_options_dataframe(list_options, settings,
-                             only_different_columns=False,
-                             abbreviate_name=False,
-                             format_number=False):
+
+def create_options_dataframe(
+    list_options,
+    settings,
+    only_different_columns=False,
+    abbreviate_name=False,
+    format_number=False,
+):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -61,10 +68,14 @@ def create_options_dataframe(list_options, settings,
 
     return ensure_distinct_columns(df, tolerances)
 
-def create_results_dataframe(list_results, settings,
-                             result_classes=None,
-                             abbreviate_name=False,
-                             format_number=False):
+
+def create_results_dataframe(
+    list_results,
+    settings,
+    result_classes=None,
+    abbreviate_name=False,
+    format_number=False,
+):
     """
     Returns a :class:`pandas.DataFrame`.
     
@@ -78,9 +89,9 @@ def create_results_dataframe(list_results, settings,
         builder = SeriesBuilder(settings, abbreviate_name, format_number)
 
         for result in results:
-            prefix = result.getname().lower() + ' '
+            prefix = result.getname().lower() + " "
 
-            if result_classes is None: # Include all results
+            if result_classes is None:  # Include all results
                 builder.add_entity(result, prefix)
 
             elif type(result) in result_classes:

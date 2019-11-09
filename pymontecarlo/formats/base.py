@@ -12,14 +12,14 @@ from pymontecarlo.settings import XrayNotation
 
 # Globals and constants variables.
 
-class LazyFormat:
 
+class LazyFormat:
     @abc.abstractmethod
     def format(self, settings):
         raise NotImplementedError
 
-class FormatBuilderBase(metaclass=abc.ABCMeta):
 
+class FormatBuilderBase(metaclass=abc.ABCMeta):
     def __init__(self, settings, abbreviate_name=False, format_number=False):
         self.settings = settings
         self.abbreviate_name = abbreviate_name
@@ -32,40 +32,42 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
             return xrayline.iupac
 
     def _format_label(self, datum):
-        name = datum['abbrev'] if self.abbreviate_name else datum['name']
-        unit = datum['unit']
-        error = datum['error']
-        prefix = datum['prefix_abbrev'] if self.abbreviate_name else datum['prefix_name']
+        name = datum["abbrev"] if self.abbreviate_name else datum["name"]
+        unit = datum["unit"]
+        error = datum["error"]
+        prefix = (
+            datum["prefix_abbrev"] if self.abbreviate_name else datum["prefix_name"]
+        )
 
         if isinstance(name, LazyFormat):
             name = name.format(self.settings)
         elif isinstance(name, pyxray.XrayLine):
             name = self._format_xrayline(name)
 
-        unitname = ''
+        unitname = ""
         if unit is not None:
             q = self.settings.to_preferred_unit(1.0, unit)
-            unitname = '{0:~P}'.format(q.units)
-            if not unitname: # required for radian and degree
-                unitname = '{0:P}'.format(q.units)
+            unitname = "{0:~P}".format(q.units)
+            if not unitname:  # required for radian and degree
+                unitname = "{0:P}".format(q.units)
 
         if error:
-            fmt = '\u03C3({prefix}{name})'
+            fmt = "\u03C3({prefix}{name})"
         else:
-            fmt = '{prefix}{name}'
+            fmt = "{prefix}{name}"
 
         if unit is not None:
-            fmt += ' [{unitname}]'
+            fmt += " [{unitname}]"
 
         return fmt.format(prefix=prefix, name=name, unitname=unitname)
 
     def _format_value(self, datum):
-        value = datum['value']
-        unit = datum['unit']
-        tolerance = datum['tolerance']
+        value = datum["value"]
+        unit = datum["unit"]
+        tolerance = datum["tolerance"]
 
         if value is None:
-            return 'None'
+            return "None"
 
         if isinstance(value, LazyFormat):
             value = value.format(self.settings)
@@ -83,11 +85,11 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
                     tolerance = self._convert_value(tolerance, unit)
 
                 precision = tolerance_to_decimals(tolerance)
-                return '{0:.{precision}f}'.format(value, precision=precision)
+                return "{0:.{precision}f}".format(value, precision=precision)
             else:
-                return '{:g}'.format(value)
+                return "{:g}".format(value)
         else:
-            return '{}'.format(value)
+            return "{}".format(value)
 
     def _convert_value(self, value, unit):
         if unit is not None:
@@ -95,19 +97,29 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
             value = q.magnitude
         return value
 
-    def _create_datum(self, name, abbrev, value, unit=None, tolerance=None, error=False,
-                      prefix_name='', prefix_abbrev=''):
-        datum = {'name': name,
-                 'abbrev': abbrev,
-                 'value': value,
-                 'unit': unit,
-                 'tolerance': tolerance,
-                 'error': error,
-                 'prefix_name': prefix_name,
-                 'prefix_abbrev': prefix_abbrev}
+    def _create_datum(
+        self,
+        name,
+        abbrev,
+        value,
+        unit=None,
+        tolerance=None,
+        error=False,
+        prefix_name="",
+        prefix_abbrev="",
+    ):
+        datum = {
+            "name": name,
+            "abbrev": abbrev,
+            "value": value,
+            "unit": unit,
+            "tolerance": tolerance,
+            "error": error,
+            "prefix_name": prefix_name,
+            "prefix_abbrev": prefix_abbrev,
+        }
         return datum
 
     @abc.abstractmethod
     def build(self):
         raise NotImplementedError
-

@@ -13,12 +13,13 @@ from pymontecarlo.formats.series import SeriesBuilder
 
 # Globals and constants variables.
 
+
 def create_identifiers(entities):
     settings = Settings()
-    settings.set_preferred_unit('nm')
-    settings.set_preferred_unit('deg')
-    settings.set_preferred_unit('keV')
-    settings.set_preferred_unit('g/cm^3')
+    settings.set_preferred_unit("nm")
+    settings.set_preferred_unit("deg")
+    settings.set_preferred_unit("keV")
+    settings.set_preferred_unit("g/cm^3")
 
     list_series = []
 
@@ -34,11 +35,12 @@ def create_identifiers(entities):
 
     identifiers = []
     for _, s in df.iterrows():
-        items = ['{}={}'.format(key, value) for key, value in s.iteritems()]
-        identifier = get_valid_filename('_'.join(items))
+        items = ["{}={}".format(key, value) for key, value in s.iteritems()]
+        identifier = get_valid_filename("_".join(items))
         identifiers.append(identifier)
 
     return identifiers
+
 
 def create_identifier(obj):
     return create_identifiers([obj])[0]

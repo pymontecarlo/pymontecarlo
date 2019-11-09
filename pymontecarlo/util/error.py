@@ -11,8 +11,8 @@ from pymontecarlo.exceptions import AccumulatedWarning, AccumulatedError
 
 # Globals and constants variables.
 
-class ErrorAccumulator:
 
+class ErrorAccumulator:
     def __init__(self, warning_class=None, exception_class=None):
         if warning_class is None:
             warning_class = AccumulatedWarning

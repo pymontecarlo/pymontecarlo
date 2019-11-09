@@ -2,7 +2,7 @@
 Type of particles
 """
 
-__all__ = ['Particle']
+__all__ = ["Particle"]
 
 # Standard library modules.
 import enum
@@ -15,9 +15,9 @@ import enum
 
 
 class Particle(enum.Enum):
-    ELECTRON = (-1, '#00549F')
-    PHOTON = (0, '#FFD700')
-    POSITRON = (1, '#FFAB60')  # opposite color of ELECTRON
+    ELECTRON = (-1, "#00549F")
+    PHOTON = (0, "#FFD700")
+    POSITRON = (1, "#FFAB60")  # opposite color of ELECTRON
 
     def __init__(self, charge, color):
         self.charge = charge
@@ -25,4 +25,3 @@ class Particle(enum.Enum):
 
     def __str__(self):
         return self.name
-

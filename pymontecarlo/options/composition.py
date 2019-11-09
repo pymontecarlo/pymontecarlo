@@ -19,6 +19,7 @@ _digit = Word(string.digits + ".")
 _elementRef = Group(_symbol + Optional(_digit, default="1"))
 CHEMICAL_FORMULA_PARSER = OneOrMore(_elementRef)
 
+
 def from_formula(formula):
     # Parse chemical formula
     formulaData = CHEMICAL_FORMULA_PARSER.parseString(formula)
@@ -45,6 +46,7 @@ def from_formula(formula):
 
     return composition
 
+
 def to_atomic(composition):
     """
     Returns a composition :class:`dict` where the values are atomic fractions.
@@ -70,6 +72,7 @@ def to_atomic(composition):
 
     return defaultdict(float, composition2)
 
+
 def process_wildcard(composition):
     """
     Processes element with a wildcard ``?`` weight fraction and returns
@@ -80,7 +83,7 @@ def process_wildcard(composition):
     wildcard_zs = set()
     total_wf = 0.0
     for z, wf in composition.items():
-        if wf == '?':
+        if wf == "?":
             wildcard_zs.add(z)
         else:
             total_wf += wf
@@ -93,6 +96,7 @@ def process_wildcard(composition):
         composition2[z] = balance_wf
 
     return composition2
+
 
 def calculate_density_kg_per_m3(composition):
     """
@@ -118,6 +122,7 @@ def calculate_density_kg_per_m3(composition):
         density += fraction / pyxray.element_mass_density_kg_per_m3(z)
 
     return 1.0 / density
+
 
 def generate_name(composition):
     """
@@ -150,7 +155,7 @@ def generate_name(composition):
         smallest_gcd = 100.0
 
     # Write formula
-    name = ''
+    name = ""
     for symbol, fraction in zip(symbols, fractions):
         fraction /= smallest_gcd
         if fraction == 0:
@@ -158,16 +163,19 @@ def generate_name(composition):
         elif fraction == 1:
             name += "%s" % symbol
         else:
-            name += '%s%i' % (symbol, fraction)
+            name += "%s%i" % (symbol, fraction)
 
     if not name:
-        name = 'Untitled'
+        name = "Untitled"
 
     return name
+
 
 def to_repr(composition):
     """
     Returns a repr string from a composition :class:`dict`.
     """
-    return ' '.join('{1:g}%{0}'.format(pyxray.element_symbol(z), wf * 100.0)
-                    for z, wf in composition.items())
+    return " ".join(
+        "{1:g}%{0}".format(pyxray.element_symbol(z), wf * 100.0)
+        for z, wf in composition.items()
+    )

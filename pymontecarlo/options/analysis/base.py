@@ -13,8 +13,8 @@ from pymontecarlo.util.human import camelcase_to_words
 
 # Globals and constants variables.
 
-class AnalysisBase(OptionBase):
 
+class AnalysisBase(OptionBase):
     @abc.abstractmethod
     def apply(self, options):
         """
@@ -50,16 +50,18 @@ class AnalysisBase(OptionBase):
         """
         return None
 
-#region Document
+    # region Document
 
-    DESCRIPTION_DETECTOR = 'detector'
+    DESCRIPTION_DETECTOR = "detector"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         builder.add_title(camelcase_to_words(self.__class__.__name__))
 
-#endregion
+
+# endregion
+
 
 class AnalysisBuilderBase(OptionBuilderBase):
     pass
