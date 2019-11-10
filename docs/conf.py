@@ -110,7 +110,7 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+html_static_path = []
 
 html_logo = os.path.join("..", "logo", "logo_64x64.png")
 html_favicon = os.path.join("..", "logo", "logo.ico")
@@ -216,6 +216,6 @@ nbsphinx_epilog = ""
 
 # -- Options for pymontecarlo
 
-pymontecarlo_program_validators = {
-    "Casino 2": "pymontecarlo_casino2.validator:Casino2Validator"
-}
+pymontecarlo_programs = [
+    "pymontecarlo_casino2.program:Casino2Program",
+]
