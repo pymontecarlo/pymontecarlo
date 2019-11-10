@@ -13,7 +13,10 @@ from pymontecarlo.util.token import TqdmToken
 
 # Globals and constants variables.
 
-async def run_async(list_options, project=None, max_workers=None, runner_class=None, progress=True):
+
+async def run_async(
+    list_options, project=None, max_workers=None, runner_class=None, progress=True
+):
     """
     Helper function to run simulations.
     The function returns a :class:`Project <pymontecarlo.project.Project>` 
@@ -44,11 +47,13 @@ async def run_async(list_options, project=None, max_workers=None, runner_class=N
         runner_class = LocalSimulationRunner
 
     if progress:
-        token = TqdmToken('Simulations', tqdm_class=tqdm)
+        token = TqdmToken("Simulations", tqdm_class=tqdm)
     else:
         token = None
 
-    async with runner_class(project=project, token=token, max_workers=max_workers) as runner:
+    async with runner_class(
+        project=project, token=token, max_workers=max_workers
+    ) as runner:
         runner.token.start()
 
         await runner.submit(*list_options)
@@ -56,5 +61,8 @@ async def run_async(list_options, project=None, max_workers=None, runner_class=N
         runner.token.done()
         return runner.project
 
+
 def run(list_options, project=None, max_workers=None, runner_class=None, progress=True):
-    return asyncio.run(run_async(list_options, project, max_workers, runner_class, progress))
+    return asyncio.run(
+        run_async(list_options, project, max_workers, runner_class, progress)
+    )

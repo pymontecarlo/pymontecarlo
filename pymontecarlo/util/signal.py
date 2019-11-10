@@ -9,8 +9,8 @@ import weakref
 
 # Globals and constants variables.
 
-class _BoundSignal:
 
+class _BoundSignal:
     def __init__(self):
         self._handlers = []
 
@@ -34,8 +34,8 @@ class _BoundSignal:
         for _ref, func in self._iter_handlers():
             func(*args, **kwargs)
 
-class Signal:
 
+class Signal:
     def __init__(self):
         self._bounds = weakref.WeakKeyDictionary()
 

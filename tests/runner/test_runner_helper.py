@@ -10,6 +10,7 @@ from pymontecarlo.runner.helper import run_async
 
 # Globals and constants variables.
 
+
 @pytest.mark.asyncio
 async def test_run_async(event_loop, options):
     project = await run_async([options], progress=True)

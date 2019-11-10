@@ -18,6 +18,7 @@ from pymontecarlo.options.base import apply_lazy
 
 # Globals and constants variables.
 
+
 class ExporterBase(metaclass=abc.ABCMeta):
     """
     Base class for all exporters.
@@ -73,14 +74,13 @@ class ExporterBase(metaclass=abc.ABCMeta):
 
     def _validate_model(self, model, valid_models, erracc):
         if model not in valid_models:
-            exc = ValueError('Model ({0}) is not supported.'.format(model))
+            exc = ValueError("Model ({0}) is not supported.".format(model))
             erracc.add_exception(exc)
 
     def _export_beam(self, beam, options, erracc, *args, **kwargs):
         beam_class = beam.__class__
         if beam_class not in self.beam_export_methods:
-            exc = ValueError('Beam ({0}) is not supported.'
-                             .format(beam_class.__name__))
+            exc = ValueError("Beam ({0}) is not supported.".format(beam_class.__name__))
             erracc.add_exception(exc)
             return
 
@@ -92,15 +92,16 @@ class ExporterBase(metaclass=abc.ABCMeta):
         energy_eV = apply_lazy(beam.energy_eV, beam, options)
 
         if energy_eV <= 0.0:
-            exc = ValueError('Energy ({0:g} eV) must be greater than 0.0.'
-                             .format(energy_eV))
+            exc = ValueError(
+                "Energy ({0:g} eV) must be greater than 0.0.".format(energy_eV)
+            )
             erracc.add_exception(exc)
 
         # Particle
         particle = apply_lazy(beam.particle, beam, options)
 
         if not isinstance(particle, Particle):
-            exc = ValueError('Unknown particle: {0}.'.format(particle))
+            exc = ValueError("Unknown particle: {0}.".format(particle))
             erracc.add_exception(exc)
 
     def _validate_beam_pencil(self, beam, options, erracc):
@@ -110,13 +111,13 @@ class ExporterBase(metaclass=abc.ABCMeta):
         x0_m = apply_lazy(beam.x0_m, beam, options)
 
         if not math.isfinite(x0_m):
-            exc = ValueError('Initial x position must be a finite number.')
+            exc = ValueError("Initial x position must be a finite number.")
             erracc.add_exception(exc)
 
         y0_m = apply_lazy(beam.y0_m, beam, options)
 
         if not math.isfinite(y0_m):
-            exc = ValueError('Initial y position must be a finite number.')
+            exc = ValueError("Initial y position must be a finite number.")
             erracc.add_exception(exc)
 
     def _validate_beam_cylindrical(self, beam, options, erracc):
@@ -126,8 +127,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
         diameter_m = apply_lazy(beam.diameter_m, beam, options)
 
         if diameter_m < 0.0:
-            exc = ValueError('Diameter ({0:g} m) must be greater or equal to 0.0.'
-                             .format(diameter_m))
+            exc = ValueError(
+                "Diameter ({0:g} m) must be greater or equal to 0.0.".format(diameter_m)
+            )
             erracc.add_exception(exc)
 
     def _validate_beam_gaussian(self, beam, options, erracc):
@@ -141,8 +143,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
         name = apply_lazy(material.name, material, options).strip()
 
         if not name:
-            exc = ValueError('Name ({0:s}) must be at least one character.'
-                             .format(name))
+            exc = ValueError(
+                "Name ({0:s}) must be at least one character.".format(name)
+            )
             erracc.add_exception(exc)
 
         # Composition
@@ -155,29 +158,32 @@ class ExporterBase(metaclass=abc.ABCMeta):
                 erracc.add_exception(exc)
 
             if wf <= 0.0 or wf > 1.0:
-                exc = ValueError('Weight fraction ({0:g}) must be between ]0.0, 1.0]')
+                exc = ValueError("Weight fraction ({0:g}) must be between ]0.0, 1.0]")
                 erracc.add_exception(exc)
 
         total = sum(composition.values())
         if not math.isclose(total, 1.0, abs_tol=Material.WEIGHT_FRACTION_TOLERANCE):
-            exc = ValueError('Total weight fraction ({0:g}) does not equal 1.0.'
-                             .format(total))
+            exc = ValueError(
+                "Total weight fraction ({0:g}) does not equal 1.0.".format(total)
+            )
             erracc.add_exception(exc)
 
         # Density
         density_kg_per_m3 = apply_lazy(material.density_kg_per_m3, material, options)
 
         if density_kg_per_m3 <= 0:
-            exc = ValueError('Density ({0:g}kg/m3) must be greater or equal to 0.'
-                             .format(density_kg_per_m3))
+            exc = ValueError(
+                "Density ({0:g}kg/m3) must be greater or equal to 0.".format(
+                    density_kg_per_m3
+                )
+            )
             erracc.add_exception(exc)
 
         # Color
         color = apply_lazy(material.color, material, options)
 
         if not matplotlib.colors.is_color_like(color):
-            exc = ValueError('Color ({}) is not a valid color.'
-                             .format(color))
+            exc = ValueError("Color ({}) is not a valid color.".format(color))
             erracc.add_exception(exc)
 
     def _validate_layer(self, layer, options, erracc):
@@ -190,15 +196,17 @@ class ExporterBase(metaclass=abc.ABCMeta):
         thickness_m = apply_lazy(layer.thickness_m, layer, options)
 
         if thickness_m <= 0:
-            exc = ValueError('Thickness ({0:g} m) must be greater than 0.'
-                             .format(thickness_m))
+            exc = ValueError(
+                "Thickness ({0:g} m) must be greater than 0.".format(thickness_m)
+            )
             erracc.add_exception(exc)
 
     def _export_sample(self, sample, options, erracc, *args, **kwargs):
         sample_class = sample.__class__
         if sample_class not in self.sample_export_methods:
-            exc = ValueError('Sample ({0}) is not supported.'
-                             .format(sample_class.__name__))
+            exc = ValueError(
+                "Sample ({0}) is not supported.".format(sample_class.__name__)
+            )
             erracc.add_exception(exc)
             return
 
@@ -210,14 +218,14 @@ class ExporterBase(metaclass=abc.ABCMeta):
         tilt_rad = apply_lazy(sample.tilt_rad, sample, options)
 
         if not math.isfinite(tilt_rad):
-            exc = ValueError('Sample tilt must be a finite number.')
+            exc = ValueError("Sample tilt must be a finite number.")
             erracc.add_exception(exc)
 
         # Azimuth
         azimuth_rad = apply_lazy(sample.azimuth_rad, sample, options)
 
         if not math.isfinite(azimuth_rad):
-            exc = ValueError('Sample azimuth must be a finite number.')
+            exc = ValueError("Sample azimuth must be a finite number.")
             erracc.add_exception(exc)
 
     def _validate_sample_substrate(self, sample, options, erracc):
@@ -227,7 +235,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         material = apply_lazy(sample.material, sample, options)
 
         if material is VACUUM:
-            exc = ValueError('Material cannot be VACUUM.')
+            exc = ValueError("Material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(material, options, erracc)
@@ -239,7 +247,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         substrate_material = apply_lazy(sample.substrate_material, sample, options)
 
         if substrate_material is VACUUM:
-            exc = ValueError('Substrate material cannot be VACUUM.')
+            exc = ValueError("Substrate material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(substrate_material, options, erracc)
@@ -248,7 +256,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         inclusion_material = apply_lazy(sample.inclusion_material, sample, options)
 
         if inclusion_material is VACUUM:
-            exc = ValueError('Substrate material cannot be VACUUM.')
+            exc = ValueError("Substrate material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(inclusion_material, options, erracc)
@@ -257,8 +265,11 @@ class ExporterBase(metaclass=abc.ABCMeta):
         inclusion_diameter_m = apply_lazy(sample.inclusion_diameter_m, sample, options)
 
         if inclusion_diameter_m <= 0:
-            exc = ValueError('Diameter ({0:g} m) must be greater than 0.'
-                             .format(inclusion_diameter_m))
+            exc = ValueError(
+                "Diameter ({0:g} m) must be greater than 0.".format(
+                    inclusion_diameter_m
+                )
+            )
             erracc.add_exception(exc)
 
     def _validate_sample_horizontallayers(self, sample, options, erracc):
@@ -282,7 +293,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         left_material = apply_lazy(sample.left_material, sample, options)
 
         if left_material is VACUUM:
-            exc = ValueError('Left material cannot be VACUUM.')
+            exc = ValueError("Left material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(left_material, options, erracc)
@@ -297,7 +308,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         right_material = apply_lazy(sample.right_material, sample, options)
 
         if right_material is VACUUM:
-            exc = ValueError('Right material cannot be VACUUM.')
+            exc = ValueError("Right material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(right_material, options, erracc)
@@ -309,7 +320,7 @@ class ExporterBase(metaclass=abc.ABCMeta):
         material = apply_lazy(sample.material, sample, options)
 
         if material is VACUUM:
-            exc = ValueError('Material cannot be VACUUM.')
+            exc = ValueError("Material cannot be VACUUM.")
             erracc.add_exception(exc)
 
         self._validate_material(material, options, erracc)
@@ -318,8 +329,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
         diameter_m = apply_lazy(sample.diameter_m, sample, options)
 
         if diameter_m <= 0:
-            exc = ValueError('Diameter ({0:g} m) must be greater than 0.'
-                             .format(diameter_m))
+            exc = ValueError(
+                "Diameter ({0:g} m) must be greater than 0.".format(diameter_m)
+            )
             erracc.add_exception(exc)
 
     def _export_detectors(self, detectors, options, erracc, *args, **kwargs):
@@ -329,8 +341,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
     def _export_detector(self, detector, options, erracc, *args, **kwargs):
         detector_class = detector.__class__
         if detector_class not in self.detector_export_methods:
-            exc = ValueError('Detector ({0}) is not supported.'
-                             .format(detector_class.__name__))
+            exc = ValueError(
+                "Detector ({0}) is not supported.".format(detector_class.__name__)
+            )
             erracc.add_exception(exc)
             return
 
@@ -342,8 +355,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
         name = apply_lazy(detector.name, detector, options).strip()
 
         if not name:
-            exc = ValueError('Detector name ({0:s}) must be at least one character.'
-                             .format(name))
+            exc = ValueError(
+                "Detector name ({0:s}) must be at least one character.".format(name)
+            )
             erracc.add_exception(exc)
 
     def _validate_detector_photon(self, detector, options, erracc):
@@ -353,16 +367,20 @@ class ExporterBase(metaclass=abc.ABCMeta):
         elevation_rad = apply_lazy(detector.elevation_rad, detector, options)
 
         if elevation_rad < -math.pi / 2 or elevation_rad > math.pi / 2:
-            exc = ValueError('Elevation ({0:g} rad) must be between [-pi/2,pi/2].'
-                             .format(elevation_rad))
+            exc = ValueError(
+                "Elevation ({0:g} rad) must be between [-pi/2,pi/2].".format(
+                    elevation_rad
+                )
+            )
             erracc.add_exception(exc)
 
         # Azimuth
         azimuth_rad = apply_lazy(detector.azimuth_rad, detector, options)
 
         if azimuth_rad < 0 or azimuth_rad >= 2 * math.pi:
-            exc = ValueError('Azimuth ({0:g} rad) must be between [0, 2pi[.'
-                             .format(azimuth_rad))
+            exc = ValueError(
+                "Azimuth ({0:g} rad) must be between [0, 2pi[.".format(azimuth_rad)
+            )
             erracc.add_exception(exc)
 
     def _export_analyses(self, analyses, options, erracc, *args, **kwargs):
@@ -372,8 +390,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
     def _export_analysis(self, analysis, options, erracc, *args, **kwargs):
         analysis_class = analysis.__class__
         if analysis_class not in self.analysis_export_methods:
-            exc = ValueError('Analysis ({0}) is not supported.'
-                             .format(analysis_class.__name__))
+            exc = ValueError(
+                "Analysis ({0}) is not supported.".format(analysis_class.__name__)
+            )
             erracc.add_exception(exc)
             return
 
@@ -390,6 +409,9 @@ class ExporterBase(metaclass=abc.ABCMeta):
             self._validate_material(material, options, erracc)
 
             if z not in material.composition:
-                exc = ValueError('Standard for element {0} does not have this element in its composition'
-                                 .format(pyxray.element_symbol(z)))
+                exc = ValueError(
+                    "Standard for element {0} does not have this element in its composition".format(
+                        pyxray.element_symbol(z)
+                    )
+                )
                 erracc.add_exception(exc)

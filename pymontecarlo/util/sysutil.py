@@ -9,5 +9,6 @@ import sys
 
 # Globals and constants variables.
 
+
 def is_64bits():
     return sys.maxsize > 2 ** 32

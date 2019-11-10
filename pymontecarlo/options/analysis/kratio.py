@@ -1,6 +1,6 @@
 """"""
 
-__all__ = ['KRatioAnalysis', 'KRatioAnalysisBuilder']
+__all__ = ["KRatioAnalysis", "KRatioAnalysisBuilder"]
 
 # Standard library modules.
 import logging
@@ -17,7 +17,10 @@ from pymontecarlo.options.options import OptionsBuilder
 from pymontecarlo.options.beam import PencilBeam
 from pymontecarlo.options.material import Material
 from pymontecarlo.options.sample import SubstrateSample
-from pymontecarlo.options.analysis.photon import PhotonAnalysisBase, PhotonAnalysisBuilderBase
+from pymontecarlo.options.analysis.photon import (
+    PhotonAnalysisBase,
+    PhotonAnalysisBuilderBase,
+)
 from pymontecarlo.options.analysis.photonintensity import PhotonIntensityAnalysis
 from pymontecarlo.results.photonintensity import EmittedPhotonIntensityResult
 from pymontecarlo.results.kratio import KRatioResult, KRatioResultBuilder
@@ -26,17 +29,19 @@ import pymontecarlo.options.base as base
 # Globals and constants variables.
 logger = logging.getLogger(__name__)
 
-TAG_STANDARD = 'standard'
+TAG_STANDARD = "standard"
+
 
 class KRatioAnalysis(PhotonAnalysisBase):
 
-    DEFAULT_NONPURE_STANDARD_MATERIALS = \
-        {7: Material.from_formula('BN', 2.1e3),
-         8: Material.from_formula('Al2O3', 3.95e3),
-         9: Material.from_formula('BaF2', 4.89e3),
-         17: Material.from_formula('KCl', 1.98e3),
-         36: Material.from_formula('KBr', 2.75e3),
-         80: Material.from_formula('HgTe', 8.1e3)}
+    DEFAULT_NONPURE_STANDARD_MATERIALS = {
+        7: Material.from_formula("BN", 2.1e3),
+        8: Material.from_formula("Al2O3", 3.95e3),
+        9: Material.from_formula("BaF2", 4.89e3),
+        17: Material.from_formula("KCl", 1.98e3),
+        36: Material.from_formula("KBr", 2.75e3),
+        80: Material.from_formula("HgTe", 8.1e3),
+    }
 
     def __init__(self, photon_detector, standard_materials=None):
         super().__init__(photon_detector)
@@ -46,8 +51,9 @@ class KRatioAnalysis(PhotonAnalysisBase):
         self.standard_materials = standard_materials.copy()
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.are_mapping_equal(self.standard_materials, other.standard_materials)
+        return super().__eq__(other) and base.are_mapping_equal(
+            self.standard_materials, other.standard_materials
+        )
 
     def add_standard_material(self, z, material):
         self.standard_materials[z] = material
@@ -67,7 +73,9 @@ class KRatioAnalysis(PhotonAnalysisBase):
         program = copy.copy(options.program)
         builder.add_program(program)
 
-        beam = PencilBeam(energy_eV=options.beam.energy_eV, particle=options.beam.particle)
+        beam = PencilBeam(
+            energy_eV=options.beam.energy_eV, particle=options.beam.particle
+        )
         builder.add_beam(beam)
 
         for material in options.sample.materials:
@@ -96,12 +104,15 @@ class KRatioAnalysis(PhotonAnalysisBase):
         # If k-ratio result exists, return False, no new result
         for kratioresult in simulation.find_result(KRatioResult):
             if kratioresult.analysis == self:
-                logger.debug('KRatioResult already calculated')
+                logger.debug("KRatioResult already calculated")
                 return False
 
         # Find emitted photon intensity result(s)
-        it = (r for r in simulation.find_result(EmittedPhotonIntensityResult)
-              if r.analysis.photon_detector == self.photon_detector)
+        it = (
+            r
+            for r in simulation.find_result(EmittedPhotonIntensityResult)
+            if r.analysis.photon_detector == self.photon_detector
+        )
         unkresult = more_itertools.first(it, None)
 
         # If no result, return False, no new result
@@ -124,15 +135,18 @@ class KRatioAnalysis(PhotonAnalysisBase):
             it = (s for s in stdsimulations if s.options.sample.material == stdmaterial)
             stdsimulation = more_itertools.first(it, None)
             if stdsimulation is None:
-                logger.debug('No standard simulation found for Z={}'.format(z))
+                logger.debug("No standard simulation found for Z={}".format(z))
                 stdresult_cache[z] = None
                 continue
 
-            it = (r for r in stdsimulation.find_result(EmittedPhotonIntensityResult)
-                  if r.analysis.photon_detector == self.photon_detector)
+            it = (
+                r
+                for r in stdsimulation.find_result(EmittedPhotonIntensityResult)
+                if r.analysis.photon_detector == self.photon_detector
+            )
             stdresult = more_itertools.first(it, None)
             if stdresult is None:
-                logger.debug('No standard result found for Z={}'.format(z))
+                logger.debug("No standard result found for Z={}".format(z))
                 stdresult_cache[z] = None
                 continue
 
@@ -150,7 +164,7 @@ class KRatioAnalysis(PhotonAnalysisBase):
 
             stdintensity = stdresult.get(xrayline, None)
             if stdintensity is None:
-                logger.debug('No standard intensity for {}'.format(xrayline))
+                logger.debug("No standard intensity for {}".format(xrayline))
                 continue
 
             builder.add_kratio(xrayline, unkintensity, stdintensity)
@@ -164,10 +178,10 @@ class KRatioAnalysis(PhotonAnalysisBase):
 
         return newresult
 
-#region HDF5
+    # region HDF5
 
-    DATASET_ATOMIC_NUMBER = 'atomic number'
-    DATASET_STANDARDS = 'standards'
+    DATASET_ATOMIC_NUMBER = "atomic number"
+    DATASET_STANDARDS = "standards"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -179,8 +193,10 @@ class KRatioAnalysis(PhotonAnalysisBase):
     def _parse_hdf5_standard_materials(cls, group):
         ds_z = group[cls.DATASET_ATOMIC_NUMBER]
         ds_standard = group[cls.DATASET_STANDARDS]
-        return dict((z, cls._parse_hdf5_reference(group, reference))
-                    for z, reference in zip(ds_z, ds_standard))
+        return dict(
+            (z, cls._parse_hdf5_reference(group, reference))
+            for z, reference in zip(ds_z, ds_standard)
+        )
 
     def convert_hdf5(self, group):
         super().convert_hdf5(group)
@@ -189,52 +205,57 @@ class KRatioAnalysis(PhotonAnalysisBase):
     def _convert_hdf5_standard_materials(self, group, standard_materials):
         shape = (len(standard_materials),)
         ref_dtype = h5py.special_dtype(ref=h5py.Reference)
-        ds_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, shape=shape, dtype=np.byte)
-        ds_standard = group.create_dataset(self.DATASET_STANDARDS, shape=shape, dtype=ref_dtype)
+        ds_z = group.create_dataset(
+            self.DATASET_ATOMIC_NUMBER, shape=shape, dtype=np.byte
+        )
+        ds_standard = group.create_dataset(
+            self.DATASET_STANDARDS, shape=shape, dtype=ref_dtype
+        )
 
-        ds_standard.dims.create_scale(ds_z)
+        ds_z.make_scale()
+        ds_standard.dims[0].label = self.DATASET_ATOMIC_NUMBER
         ds_standard.dims[0].attach_scale(ds_z)
 
         for i, (z, material) in enumerate(standard_materials.items()):
             ds_z[i] = z
             ds_standard[i] = self._convert_hdf5_reference(group, material)
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    TABLE_STANDARD = 'standard'
+    TABLE_STANDARD = "standard"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         # Standards
         section = builder.add_section()
-        section.add_title('Standard(s)')
+        section.add_title("Standard(s)")
 
         if self.standard_materials:
             table = section.require_table(self.TABLE_STANDARD)
 
-            table.add_column('Element')
-            table.add_column('Material')
+            table.add_column("Element")
+            table.add_column("Material")
 
             for z, material in self.standard_materials.items():
-                row = {'Element': pyxray.element_symbol(z),
-                       'Material': material.name}
+                row = {"Element": pyxray.element_symbol(z), "Material": material.name}
                 table.add_row(row)
 
             section = builder.add_section()
-            section.add_title('Materials')
+            section.add_title("Materials")
 
             for material in self.standard_materials.values():
                 section.add_entity(material)
 
         else:
-            section.add_text('No standard defined')
+            section.add_text("No standard defined")
 
-#endregion
+
+# endregion
+
 
 class KRatioAnalysisBuilder(PhotonAnalysisBuilderBase):
-
     def build(self):
         return [KRatioAnalysis(d) for d in self.photon_detectors]

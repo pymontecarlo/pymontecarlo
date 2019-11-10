@@ -6,16 +6,21 @@ Project.
 import re
 import threading
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Third party modules.
 
 # Local modules.
 from pymontecarlo.entity import EntityBase, EntryHDF5IOMixin
-from pymontecarlo.formats.dataframe import create_options_dataframe, create_results_dataframe
+from pymontecarlo.formats.dataframe import (
+    create_options_dataframe,
+    create_results_dataframe,
+)
 from pymontecarlo.util.signal import Signal
 
 # Globals and constants variables.
+
 
 class Project(EntityBase, EntryHDF5IOMixin):
 
@@ -44,16 +49,19 @@ class Project(EntityBase, EntryHDF5IOMixin):
             if simulation in self.simulations:
                 return
 
-            identifiers = [s.identifier for s in self.simulations
-                           if s.identifier.startswith(simulation.identifier)]
+            identifiers = [
+                s.identifier
+                for s in self.simulations
+                if s.identifier.startswith(simulation.identifier)
+            ]
             if identifiers:
                 last = -1
                 for identifier in identifiers:
-                    m = re.search(r'-(\d+)$', identifier)
+                    m = re.search(r"-(\d+)$", identifier)
                     if m is not None:
                         last = max(last, int(m.group(1)))
 
-                simulation.identifier += '-{:d}'.format(last + 1)
+                simulation.identifier += "-{:d}".format(last + 1)
 
             self.simulations.append(simulation)
             self.recalculate_required = True
@@ -61,13 +69,15 @@ class Project(EntityBase, EntryHDF5IOMixin):
 
     async def recalculate(self, token=None):
         with self.lock:
-            if token: token.start()
+            if token:
+                token.start()
             count = len(self.simulations)
 
             for i, simulation in enumerate(self.simulations):
                 progress = i / count
-                status = 'Calculating simulation {}'.format(simulation.identifier)
-                if token: token.update(progress, status)
+                status = "Calculating simulation {}".format(simulation.identifier)
+                if token:
+                    token.update(progress, status)
 
                 newresult = False
                 for analysis in simulation.options.analyses:
@@ -76,12 +86,18 @@ class Project(EntityBase, EntryHDF5IOMixin):
                 if newresult:
                     self.simulation_recalculated.send(simulation)
 
-            if token: token.done()
+            if token:
+                token.done()
 
             self.recalculate_required = False
 
-    def create_options_dataframe(self, settings, only_different_columns=False,
-                                 abbreviate_name=False, format_number=False):
+    def create_options_dataframe(
+        self,
+        settings,
+        only_different_columns=False,
+        abbreviate_name=False,
+        format_number=False,
+    ):
         """
         Returns a :class:`pandas.DataFrame`.
 
@@ -89,11 +105,17 @@ class Project(EntityBase, EntryHDF5IOMixin):
         that are different between the options.
         """
         list_options = [simulation.options for simulation in self.simulations]
-        return create_options_dataframe(list_options, settings, only_different_columns,
-                                        abbreviate_name, format_number)
+        return create_options_dataframe(
+            list_options,
+            settings,
+            only_different_columns,
+            abbreviate_name,
+            format_number,
+        )
 
-    def create_results_dataframe(self, settings, result_classes=None,
-                                 abbreviate_name=False, format_number=False):
+    def create_results_dataframe(
+        self, settings, result_classes=None, abbreviate_name=False, format_number=False
+    ):
         """
         Returns a :class:`pandas.DataFrame`.
 
@@ -102,14 +124,15 @@ class Project(EntityBase, EntryHDF5IOMixin):
         all results will be returned.
         """
         list_results = [simulation.results for simulation in self.simulations]
-        return create_results_dataframe(list_results, settings, result_classes,
-                                        abbreviate_name, format_number)
+        return create_results_dataframe(
+            list_results, settings, result_classes, abbreviate_name, format_number
+        )
 
     def write(self, filepath=None):
         if filepath is None:
             filepath = self.filepath
         if filepath is None:
-            raise RuntimeError('No file path given')
+            raise RuntimeError("No file path given")
         super().write(filepath)
 
     @property
@@ -124,17 +147,19 @@ class Project(EntityBase, EntryHDF5IOMixin):
 
         return classes
 
-#region HDF5
+    # region HDF5
 
-    GROUP_SIMULATIONS = 'simulations'
+    GROUP_SIMULATIONS = "simulations"
 
     @classmethod
     def parse_hdf5(cls, group):
         filepath = group.file.filename
         project = cls(filepath)
 
-        simulations = [cls._parse_hdf5_object(group_simulation)
-                       for group_simulation in group[cls.GROUP_SIMULATIONS].values()]
+        simulations = [
+            cls._parse_hdf5_object(group_simulation)
+            for group_simulation in group[cls.GROUP_SIMULATIONS].values()
+        ]
         with project.lock:
             project.simulations.extend(simulations)
 
@@ -151,4 +176,5 @@ class Project(EntityBase, EntryHDF5IOMixin):
                 group_simulation = group_simulations.create_group(name)
                 simulation.convert_hdf5(group_simulation)
 
-#endregion
+
+# endregion

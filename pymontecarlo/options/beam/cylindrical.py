@@ -1,6 +1,6 @@
 """"""
 
-__all__ = ['CylindricalBeam', 'CylindricalBeamBuilder']
+__all__ = ["CylindricalBeam", "CylindricalBeamBuilder"]
 
 # Standard library modules.
 import functools
@@ -17,11 +17,14 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
+
 class CylindricalBeam(PencilBeam):
 
-    DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
+    DIAMETER_TOLERANCE_m = 1e-12  # 1 fm
 
-    def __init__(self, energy_eV, diameter_m, particle=Particle.ELECTRON, x0_m=0.0, y0_m=0.0):
+    def __init__(
+        self, energy_eV, diameter_m, particle=Particle.ELECTRON, x0_m=0.0, y0_m=0.0
+    ):
         """
         Creates a new cylindrical beam.
 
@@ -49,16 +52,18 @@ class CylindricalBeam(PencilBeam):
         self.diameter_m = diameter_m
 
     def __repr__(self):
-        return '<{classname}({particle}, {energy_eV:g} eV, {diameter_m:g} m, ({x0_m:g}, {y0_m:g}) m)>' \
-            .format(classname=self.__class__.__name__, **self.__dict__)
+        return "<{classname}({particle}, {energy_eV:g} eV, {diameter_m:g} m, ({x0_m:g}, {y0_m:g}) m)>".format(
+            classname=self.__class__.__name__, **self.__dict__
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m)
+        return super().__eq__(other) and base.isclose(
+            self.diameter_m, other.diameter_m, abs_tol=self.DIAMETER_TOLERANCE_m
+        )
 
-#region HDF5
+    # region HDF5
 
-    ATTR_DIAMETER = 'diameter (m)'
+    ATTR_DIAMETER = "diameter (m)"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -73,35 +78,39 @@ class CylindricalBeam(PencilBeam):
         super().convert_hdf5(group)
         self._convert_hdf5(group, self.ATTR_DIAMETER, self.diameter_m)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_column('beam diameter', 'd0', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        builder.add_column(
+            "beam diameter", "d0", self.diameter_m, "m", self.DIAMETER_TOLERANCE_m
+        )
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         description = builder.require_description(self.DESCRIPTION_BEAM)
-        description.add_item('Diameter', self.diameter_m, 'm', self.DIAMETER_TOLERANCE_m)
+        description.add_item(
+            "Diameter", self.diameter_m, "m", self.DIAMETER_TOLERANCE_m
+        )
 
-#endregion
+
+# endregion
+
 
 class CylindricalBeamBuilder(PencilBeamBuilder):
-
     def __init__(self):
         super().__init__()
         self.diameters_m = set()
 
     def __len__(self):
-        it = [super().__len__(),
-              len(self.diameters_m)]
+        it = [super().__len__(), len(self.diameters_m)]
         return functools.reduce(operator.mul, it)
 
     def add_diameter_m(self, diameter_m):
@@ -115,10 +124,9 @@ class CylindricalBeamBuilder(PencilBeamBuilder):
         if not particles:
             particles = [Particle.ELECTRON]
 
-        product = itertools.product(self.energies_eV,
-                                    self.diameters_m,
-                                    particles,
-                                    self.positions)
+        product = itertools.product(
+            self.energies_eV, self.diameters_m, particles, self.positions
+        )
 
         beams = []
         for energy_eV, diameter_m, particle, (x0_m, y0_m) in product:

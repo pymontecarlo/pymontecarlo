@@ -2,7 +2,7 @@
 Substrate sample.
 """
 
-__all__ = ['SubstrateSample', 'SubstrateSampleBuilder']
+__all__ = ["SubstrateSample", "SubstrateSampleBuilder"]
 
 # Standard library modules.
 import functools
@@ -17,8 +17,8 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class SubstrateSample(SampleBase):
 
+class SubstrateSample(SampleBase):
     def __init__(self, material, tilt_rad=0.0, azimuth_rad=0.0):
         """
         Creates a substrate sample. 
@@ -29,20 +29,20 @@ class SubstrateSample(SampleBase):
         self.material = material
 
     def __repr__(self):
-        return '<{0:s}(material={1:s})>' \
-            .format(self.__class__.__name__, str(self.material))
+        return "<{0:s}(material={1:s})>".format(
+            self.__class__.__name__, str(self.material)
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.material, other.material)
+        return super().__eq__(other) and base.isclose(self.material, other.material)
 
     @property
     def materials(self):
         return self._cleanup_materials(self.material)
 
-#region HDF5
+    # region HDF5
 
-    ATTR_MATERIAL = 'material'
+    ATTR_MATERIAL = "material"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -55,25 +55,26 @@ class SubstrateSample(SampleBase):
         super().convert_hdf5(group)
         self._convert_hdf5(group, self.ATTR_MATERIAL, self.material)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_entity(self.material, 'substrate ', 'subs ')
+        builder.add_entity(self.material, "substrate ", "subs ")
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
-#endregion
+
+# endregion
+
 
 class SubstrateSampleBuilder(SampleBuilderBase):
-
     def __init__(self):
         super().__init__()
         self.materials = []
@@ -89,7 +90,5 @@ class SubstrateSampleBuilder(SampleBuilderBase):
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
-        product = itertools.product(self.materials,
-                                    tilts_rad,
-                                    rotations_rad)
+        product = itertools.product(self.materials, tilts_rad, rotations_rad)
         return [SubstrateSample(*args) for args in product]

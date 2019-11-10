@@ -18,6 +18,7 @@ from pymontecarlo.util.xrayline import convert_xrayline
 
 # Globals and constants variables.
 
+
 class PhotonResultBase(ResultBase, collections.abc.Mapping):
     """
     Base class for photon based results.
@@ -40,18 +41,19 @@ class PhotonResultBase(ResultBase, collections.abc.Mapping):
         return self.data[xrayline]
 
     def __repr__(self):
-        return '<{}({})>'.format(self.__class__.__name__,
-                                 ', '.join(map(str, self)))
+        return "<{}({})>".format(self.__class__.__name__, ", ".join(map(str, self)))
 
     @property
     def atomic_numbers(self):
         return frozenset(xrayline.z for xrayline in self.keys())
 
-#region HDF5
+    # region HDF5
 
-    DATASET_XRAYLINES = 'x-ray lines'
+    DATASET_XRAYLINES = "x-ray lines"
 
-#endregion
+
+# endregion
+
 
 class PhotonSingleResultBase(PhotonResultBase):
 
@@ -62,19 +64,20 @@ class PhotonSingleResultBase(PhotonResultBase):
             default = uncertainties.ufloat(0.0, 0.0)
         return super().get(key, default)
 
-#region HDF5
+    # region HDF5
 
-    DATASET_VALUES = 'values'
-    DATASET_SCALE = 'scale'
+    DATASET_VALUES = "values"
+    DATASET_SCALE = "scale"
 
     @classmethod
     def parse_hdf5(cls, group):
         analysis = cls._parse_hdf5(group, cls.ATTR_ANALYSIS)
 
-        keys = [convert_xrayline(iupac.split(' ', 1))
-                for iupac in group[cls.DATASET_XRAYLINES]]
-        values = [uncertainties.ufloat(n, s)
-                  for n, s in group[cls.DATASET_VALUES]]
+        keys = [
+            convert_xrayline(iupac.split(" ", 1))
+            for iupac in group[cls.DATASET_XRAYLINES]
+        ]
+        values = [uncertainties.ufloat(n, s) for n, s in group[cls.DATASET_VALUES]]
         data = dict(zip(keys, values))
 
         return cls(analysis, data)
@@ -92,9 +95,11 @@ class PhotonSingleResultBase(PhotonResultBase):
         dataset_values = group.create_dataset(self.DATASET_VALUES, shape, dtype)
 
         # Scale of values
-        data = np.string_(['nominal', 'standard deviation'])
+        data = np.string_(["nominal", "standard deviation"])
         dataset_scale = group.create_dataset(self.DATASET_SCALE, data=data)
-        dataset_values.dims.create_scale(dataset_scale)
+
+        dataset_scale.make_scale()
+        dataset_values.dims[1].label = self.DATASET_SCALE
         dataset_values.dims[1].attach_scale(dataset_scale)
 
         # Store values
@@ -102,20 +107,23 @@ class PhotonSingleResultBase(PhotonResultBase):
             dataset_keys[i] = xrayline.iupac
             dataset_values[i] = [value.n, value.s]
 
-#endregion
+
+# endregion
+
 
 class PhotonResultBuilderBase(ResultBuilderBase):
 
-    _EXTRA_TRANSITIONS = (pyxray.xray_transition('K'),
-                          pyxray.xray_transition('L'),
-                          pyxray.xray_transition('M'),
-                          pyxray.xray_transition('N'),
-                          pyxray.xray_transition('Ka'),
-                          pyxray.xray_transition('La'),
-                          pyxray.xray_transition('Ll,n'),
-                          pyxray.xray_transition('Ma'),
-                          pyxray.xray_transition('Mz'),
-                          )
+    _EXTRA_TRANSITIONS = (
+        pyxray.xray_transition("K"),
+        pyxray.xray_transition("L"),
+        pyxray.xray_transition("M"),
+        pyxray.xray_transition("N"),
+        pyxray.xray_transition("Ka"),
+        pyxray.xray_transition("La"),
+        pyxray.xray_transition("Ll,n"),
+        pyxray.xray_transition("Ma"),
+        pyxray.xray_transition("Mz"),
+    )
 
     def __init__(self, analysis, result_class):
         super().__init__(analysis)
@@ -134,7 +142,9 @@ class PhotonResultBuilderBase(ResultBuilderBase):
         # Expand data
         element_transition_results = {}
         for xrayline, result in self.data.items():
-            element_transition_results.setdefault(xrayline.element, {})[xrayline.transition] = result
+            element_transition_results.setdefault(xrayline.element, {})[
+                xrayline.transition
+            ] = result
 
         newdata = {}
         for element in element_transition_results:
@@ -145,13 +155,20 @@ class PhotonResultBuilderBase(ResultBuilderBase):
 
                 # Search for the possible transitions (i.e. expand the extra transition)
                 try:
-                    possible_transitions = pyxray.element_xray_transitions(element, extra_transition)
+                    possible_transitions = pyxray.element_xray_transitions(
+                        element, extra_transition
+                    )
                 except pyxray.NotFound:
                     continue
 
                 # Find the results
-                results = [result for transition, result in element_transition_results[element].items()
-                           if transition in possible_transitions]
+                results = [
+                    result
+                    for transition, result in element_transition_results[
+                        element
+                    ].items()
+                    if transition in possible_transitions
+                ]
 
                 # If no results, do nothing
                 if not results:

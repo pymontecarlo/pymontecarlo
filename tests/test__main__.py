@@ -11,8 +11,9 @@ import subprocess
 
 # Globals and constants variables.
 
+
 def test__main__():
-    args = [sys.executable, '-m', 'pymontecarlo']
+    args = [sys.executable, "-m", "pymontecarlo"]
     process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out = process.stdout.decode('ascii')
-    assert out.startswith('usage: pymontecarlo')
+    out = process.stdout.decode("ascii")
+    assert out.startswith("usage: pymontecarlo")

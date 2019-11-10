@@ -17,19 +17,25 @@ from matplotlib.transforms import Affine2D
 # Local modules.
 from pymontecarlo.figures.base import FigureBase
 from pymontecarlo.options.beam import GaussianBeam, CylindricalBeam, PencilBeam
-from pymontecarlo.options.sample import SubstrateSample, InclusionSample, HorizontalLayerSample, \
-    VerticalLayerSample, SphereSample
+from pymontecarlo.options.sample import (
+    SubstrateSample,
+    InclusionSample,
+    HorizontalLayerSample,
+    VerticalLayerSample,
+    SphereSample,
+)
 
 # Globals and constant variables.
 
+
 @enum.unique
 class Perspective(enum.Enum):
-    XZ = 'xz'
-    YZ = 'yz'
-    XY = 'xy'
+    XZ = "xz"
+    YZ = "yz"
+    XY = "xy"
+
 
 class SampleFigure(FigureBase):
-
     def __init__(self, sample=None, beams=None, trajectories=None):
         """
         :param sample: an instance of Sample(Option)
@@ -63,13 +69,23 @@ class SampleFigure(FigureBase):
         self.beam_draw_methods[GaussianBeam] = self._compose_beam_cylindrical
 
         self.view_size_methods = {}
-        self.view_size_methods[InclusionSample] = self._calculate_view_size_inclusion_sample
-        self.view_size_methods[HorizontalLayerSample] = self._calculate_view_size_layered_sample
-        self.view_size_methods[VerticalLayerSample] = self._calculate_view_size_layered_sample
+        self.view_size_methods[
+            InclusionSample
+        ] = self._calculate_view_size_inclusion_sample
+        self.view_size_methods[
+            HorizontalLayerSample
+        ] = self._calculate_view_size_layered_sample
+        self.view_size_methods[
+            VerticalLayerSample
+        ] = self._calculate_view_size_layered_sample
         self.view_size_methods[SphereSample] = self._calculate_view_size_sphere_sample
         self.view_size_methods[PencilBeam] = self._calculate_view_size_pencil_beam
-        self.view_size_methods[CylindricalBeam] = self._calculate_view_size_cylindrical_beam
-        self.view_size_methods[GaussianBeam] = self._calculate_view_size_cylindrical_beam
+        self.view_size_methods[
+            CylindricalBeam
+        ] = self._calculate_view_size_cylindrical_beam
+        self.view_size_methods[
+            GaussianBeam
+        ] = self._calculate_view_size_cylindrical_beam
 
     def _recalculate_view_size(self, perspective):
         SCALE_FACTOR = 5
@@ -103,7 +119,10 @@ class SampleFigure(FigureBase):
             return beam.y0_m
 
     def _calculate_view_size_cylindrical_beam(self, beam, perspective):
-        return self._calculate_view_size_pencil_beam(beam, perspective) + beam.diameter_m * 2
+        return (
+            self._calculate_view_size_pencil_beam(beam, perspective)
+            + beam.diameter_m * 2
+        )
 
     def draw(self, ax):
         """
@@ -123,7 +142,7 @@ class SampleFigure(FigureBase):
         half_view_size = view_size / 2
         ax.set_xlim((-half_view_size, half_view_size))
         ax.set_ylim((-half_view_size, half_view_size))
-        ax.set_aspect('equal')
+        ax.set_aspect("equal")
 
     # DRAW SAMPLES
     def _draw_sample(self, ax, sample, perspective, view_size):
@@ -152,12 +171,18 @@ class SampleFigure(FigureBase):
         color = material.color
 
         if perspective is Perspective.XY:
-            return [Rectangle((-half_view_size, half_view_size),
-                              view_size, -view_size,
-                              color=color)]
+            return [
+                Rectangle(
+                    (-half_view_size, half_view_size),
+                    view_size,
+                    -view_size,
+                    color=color,
+                )
+            ]
         else:
-            return [Rectangle((-half_view_size, 0), view_size, -half_view_size,
-                              color=color)]
+            return [
+                Rectangle((-half_view_size, 0), view_size, -half_view_size, color=color)
+            ]
 
     def _compose_sample_substrate(self, sample, perspective, view_size):
         return self._compose_substrate(sample.material, perspective, view_size)
@@ -165,8 +190,9 @@ class SampleFigure(FigureBase):
     def _compose_sample_inclusion(self, sample, perspective, view_size):
         patches = []
 
-        patches += self._compose_substrate(sample.substrate_material,
-                                           perspective, view_size)
+        patches += self._compose_substrate(
+            sample.substrate_material, perspective, view_size
+        )
 
         diameter_m = sample.inclusion_diameter_m
         color = sample.inclusion_material.color
@@ -185,20 +211,31 @@ class SampleFigure(FigureBase):
 
         if perspective is Perspective.XY:
             if len(sample.layers) > 0:
-                patches.append(Rectangle((-half_view_size, half_view_size),
-                                         view_size, -view_size,
-                                         color=sample.layers[0].material.color))
+                patches.append(
+                    Rectangle(
+                        (-half_view_size, half_view_size),
+                        view_size,
+                        -view_size,
+                        color=sample.layers[0].material.color,
+                    )
+                )
 
         else:
-            patches += self._compose_substrate(sample.substrate_material,
-                                               perspective, view_size)
+            patches += self._compose_substrate(
+                sample.substrate_material, perspective, view_size
+            )
 
             depth_m = 0
 
             for layer in sample.layers:
-                patches.append(Rectangle((-half_view_size, depth_m),
-                                         view_size, -layer.thickness_m,
-                                         color=layer.material.color))
+                patches.append(
+                    Rectangle(
+                        (-half_view_size, depth_m),
+                        view_size,
+                        -layer.thickness_m,
+                        color=layer.material.color,
+                    )
+                )
                 depth_m -= layer.thickness_m
 
         return patches
@@ -209,40 +246,83 @@ class SampleFigure(FigureBase):
         half_view_size = view_size / 2
 
         if perspective is Perspective.XZ:
-            patches.append(Rectangle((0, 0), -half_view_size, -half_view_size,
-                                     color=sample.left_material.color))
-            patches.append(Rectangle((0, 0), half_view_size, -half_view_size,
-                                     color=sample.right_material.color))
+            patches.append(
+                Rectangle(
+                    (0, 0),
+                    -half_view_size,
+                    -half_view_size,
+                    color=sample.left_material.color,
+                )
+            )
+            patches.append(
+                Rectangle(
+                    (0, 0),
+                    half_view_size,
+                    -half_view_size,
+                    color=sample.right_material.color,
+                )
+            )
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
-                patches.append(Rectangle((pos[0], 0), layer.thickness_m, -half_view_size,
-                                         color=layer.material.color))
+                patches.append(
+                    Rectangle(
+                        (pos[0], 0),
+                        layer.thickness_m,
+                        -half_view_size,
+                        color=layer.material.color,
+                    )
+                )
 
         elif perspective is Perspective.YZ:
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
                 if pos[1] >= 0.0:
-                    patches.append(Rectangle((-half_view_size, 0),
-                                             view_size, -half_view_size,
-                                             color=layer.material.color))
+                    patches.append(
+                        Rectangle(
+                            (-half_view_size, 0),
+                            view_size,
+                            -half_view_size,
+                            color=layer.material.color,
+                        )
+                    )
                     break
 
             if len(patches) == 0:
-                patches.append(Rectangle((half_view_size, 0),
-                                         view_size, -half_view_size,
-                                         color=sample.left_material.color))
+                patches.append(
+                    Rectangle(
+                        (half_view_size, 0),
+                        view_size,
+                        -half_view_size,
+                        color=sample.left_material.color,
+                    )
+                )
 
         elif perspective is Perspective.XY:
-            patches.append(Rectangle((0, half_view_size),
-                                     - half_view_size, -view_size,
-                                     color=sample.left_material.color))
-            patches.append(Rectangle((0, half_view_size),
-                                     half_view_size, -view_size,
-                                     color=sample.right_material.color))
+            patches.append(
+                Rectangle(
+                    (0, half_view_size),
+                    -half_view_size,
+                    -view_size,
+                    color=sample.left_material.color,
+                )
+            )
+            patches.append(
+                Rectangle(
+                    (0, half_view_size),
+                    half_view_size,
+                    -view_size,
+                    color=sample.right_material.color,
+                )
+            )
 
             for layer, pos in zip(sample.layers, sample.layers_xpositions_m):
-                patches.append(Rectangle((pos[0], half_view_size),
-                                         layer.thickness_m, -view_size,
-                                         color=layer.material.color))
+                patches.append(
+                    Rectangle(
+                        (pos[0], half_view_size),
+                        layer.thickness_m,
+                        -view_size,
+                        color=layer.material.color,
+                    )
+                )
 
         return patches
 
@@ -282,7 +362,11 @@ class SampleFigure(FigureBase):
         color = beam.particle.color
 
         if perspective is Perspective.XY:
-            return [RegularPolygon((x0_m, y0_m), numVertices=3, radius=view_size/100, color=color)]
+            return [
+                RegularPolygon(
+                    (x0_m, y0_m), numVertices=3, radius=view_size / 100, color=color
+                )
+            ]
 
         elif perspective is Perspective.XZ:
             vertices = [(x0_m, 0), (x0_m, view_size / 2 * 1.5)]
@@ -305,13 +389,23 @@ class SampleFigure(FigureBase):
         if perspective is Perspective.XY:
             return [Circle((x0_m, y0_m), radius=radius_m, color=color)]
         elif perspective is Perspective.XZ:
-            return [Rectangle((-radius_m - x0_m, 0),
-                              beam.diameter_m, (view_size / 2) * 1.5,
-                              color=color)]
+            return [
+                Rectangle(
+                    (-radius_m - x0_m, 0),
+                    beam.diameter_m,
+                    (view_size / 2) * 1.5,
+                    color=color,
+                )
+            ]
         elif perspective is Perspective.YZ:
-            return [Rectangle((-radius_m - y0_m, 0),
-                              beam.diameter_m, (view_size / 2) * 1.5,
-                              color=color)]
+            return [
+                Rectangle(
+                    (-radius_m - y0_m, 0),
+                    beam.diameter_m,
+                    (view_size / 2) * 1.5,
+                    color=color,
+                )
+            ]
 
     # DRAW TRAJECTORIES
     def _draw_trajectory(self, ax, trajectory, perspective):

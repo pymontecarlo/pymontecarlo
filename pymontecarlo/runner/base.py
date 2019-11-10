@@ -5,6 +5,7 @@ Base runner.
 # Standard library modules.
 import abc
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Third party modules.
@@ -19,15 +20,15 @@ from pymontecarlo.util.token import Token
 
 # Globals and constants variables.
 
-class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
+class SimulationRunnerBase(metaclass=abc.ABCMeta):
     def __init__(self, project=None, token=None, max_workers=1):
         if project is None:
             project = Project()
         self._project = project
 
         if token is None:
-            token = Token('simulation runner')
+            token = Token("simulation runner")
         self._token = token
 
         self._submitted_options = []
@@ -81,7 +82,7 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         the simulation is skipped.
         """
         simulations = self.prepare_simulations(*list_options)
-        logger.debug('Prepared {} simulations'.format(len(simulations)))
+        logger.debug("Prepared {} simulations".format(len(simulations)))
 
         for simulation in simulations:
             self._submitted_options.append(simulation.options)
@@ -111,7 +112,7 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
             # Exclude if simulation with same options already exists in project
             # and has results
-            dummy_simulation = Simulation(options, identifier='dummy')
+            dummy_simulation = Simulation(options, identifier="dummy")
             if dummy_simulation in self.project.simulations:
                 index = self.project.simulations.index(dummy_simulation)
                 real_simulation = self.project.simulations[index]
@@ -124,7 +125,7 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
 
     def _create_identifiers(self, list_options):
         if len(list_options) == 1:
-            return ['simulation1']
+            return ["simulation1"]
         return create_identifiers(list_options)
 
     def _create_simulations(self, list_options, identifiers):
@@ -183,4 +184,3 @@ class SimulationRunnerBase(metaclass=abc.ABCMeta):
         Token of this runner to track state, progress and status of simulations.
         """
         return self._token
-

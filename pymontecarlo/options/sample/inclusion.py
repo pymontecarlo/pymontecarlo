@@ -2,7 +2,7 @@
 Inclusion sample.
 """
 
-__all__ = ['InclusionSample', 'InclusionSampleBuilder']
+__all__ = ["InclusionSample", "InclusionSampleBuilder"]
 
 # Standard library modules.
 import functools
@@ -17,13 +17,19 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
+
 class InclusionSample(SampleBase):
 
-    INCLUSION_DIAMETER_TOLERANCE_m = 1e-12 # 1 fm
+    INCLUSION_DIAMETER_TOLERANCE_m = 1e-12  # 1 fm
 
-    def __init__(self, substrate_material,
-                 inclusion_material, inclusion_diameter_m,
-                 tilt_rad=0.0, azimuth_rad=0.0):
+    def __init__(
+        self,
+        substrate_material,
+        inclusion_material,
+        inclusion_diameter_m,
+        tilt_rad=0.0,
+        azimuth_rad=0.0,
+    ):
         """
         Creates an inclusion sample.
         The sample consists of a hemisphere inclusion inside a substrate.
@@ -35,26 +41,34 @@ class InclusionSample(SampleBase):
         self.inclusion_diameter_m = inclusion_diameter_m
 
     def __repr__(self):
-        return '<{0:s}(substrate_material={1:s}, inclusion_material={2:s}, inclusion_diameter={3:g} m)>' \
-            .format(self.__class__.__name__, str(self.substrate_material),
-                    str(self.inclusion_material), self.inclusion_diameter_m)
+        return "<{0:s}(substrate_material={1:s}, inclusion_material={2:s}, inclusion_diameter={3:g} m)>".format(
+            self.__class__.__name__,
+            str(self.substrate_material),
+            str(self.inclusion_material),
+            self.inclusion_diameter_m,
+        )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.substrate_material, other.substrate_material) and \
-            base.isclose(self.inclusion_material, other.inclusion_material) and \
-            base.isclose(self.inclusion_diameter_m, other.inclusion_diameter_m, abs_tol=self.INCLUSION_DIAMETER_TOLERANCE_m)
+        return (
+            super().__eq__(other)
+            and base.isclose(self.substrate_material, other.substrate_material)
+            and base.isclose(self.inclusion_material, other.inclusion_material)
+            and base.isclose(
+                self.inclusion_diameter_m,
+                other.inclusion_diameter_m,
+                abs_tol=self.INCLUSION_DIAMETER_TOLERANCE_m,
+            )
+        )
 
     @property
     def materials(self):
-        return self._cleanup_materials(self.substrate_material,
-                                       self.inclusion_material)
+        return self._cleanup_materials(self.substrate_material, self.inclusion_material)
 
-#region HDF5
+    # region HDF5
 
-    ATTR_SUBSTRATE = 'substrate'
-    ATTR_INCLUSION = 'inclusion'
-    ATTR_DIAMETER = 'diameter (m)'
+    ATTR_SUBSTRATE = "substrate"
+    ATTR_INCLUSION = "inclusion"
+    ATTR_DIAMETER = "diameter (m)"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -63,8 +77,13 @@ class InclusionSample(SampleBase):
         inclusion_diameter_m = cls._parse_hdf5(group, cls.ATTR_DIAMETER, float)
         tilt_rad = cls._parse_hdf5(group, cls.ATTR_TILT, float)
         azimuth_rad = cls._parse_hdf5(group, cls.ATTR_AZIMUTH, float)
-        return cls(substrate_material, inclusion_material, inclusion_diameter_m,
-                   tilt_rad, azimuth_rad)
+        return cls(
+            substrate_material,
+            inclusion_material,
+            inclusion_diameter_m,
+            tilt_rad,
+            azimuth_rad,
+        )
 
     def convert_hdf5(self, group):
         super().convert_hdf5(group)
@@ -72,43 +91,55 @@ class InclusionSample(SampleBase):
         self._convert_hdf5(group, self.ATTR_INCLUSION, self.inclusion_material)
         self._convert_hdf5(group, self.ATTR_DIAMETER, self.inclusion_diameter_m)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
-        builder.add_entity(self.inclusion_material, 'inclusion ', 'incl ')
-        builder.add_column('inclusion diameter', 'd', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+        builder.add_entity(self.substrate_material, "substrate ", "subs ")
+        builder.add_entity(self.inclusion_material, "inclusion ", "incl ")
+        builder.add_column(
+            "inclusion diameter",
+            "d",
+            self.inclusion_diameter_m,
+            "m",
+            self.INCLUSION_DIAMETER_TOLERANCE_m,
+        )
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    DESCRIPTION_SUBTRATE = 'substrate'
-    DESCRIPTION_INCLUSION = 'inclusion'
+    DESCRIPTION_SUBTRATE = "substrate"
+    DESCRIPTION_INCLUSION = "inclusion"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         section = builder.add_section()
-        section.add_title('Substrate')
+        section.add_title("Substrate")
 
         description = section.require_description(self.DESCRIPTION_SUBTRATE)
-        description.add_item('Material', self.substrate_material.name)
+        description.add_item("Material", self.substrate_material.name)
 
         section = builder.add_section()
-        section.add_title('Inclusion')
+        section.add_title("Inclusion")
 
         description = section.require_description(self.DESCRIPTION_INCLUSION)
-        description.add_item('Material', self.inclusion_material.name)
-        description.add_item('Diameter', self.inclusion_diameter_m, 'm', self.INCLUSION_DIAMETER_TOLERANCE_m)
+        description.add_item("Material", self.inclusion_material.name)
+        description.add_item(
+            "Diameter",
+            self.inclusion_diameter_m,
+            "m",
+            self.INCLUSION_DIAMETER_TOLERANCE_m,
+        )
 
-#endregion
+
+# endregion
+
 
 class InclusionSampleBuilder(SampleBuilderBase):
-
     def __init__(self):
         super().__init__()
         self.substrate_materials = []
@@ -116,9 +147,12 @@ class InclusionSampleBuilder(SampleBuilderBase):
         self.inclusion_diameters_m = set()
 
     def __len__(self):
-        it = [super().__len__(),
-              len(self.substrate_materials), len(self.inclusion_materials),
-              len(self.inclusion_diameters_m)]
+        it = [
+            super().__len__(),
+            len(self.substrate_materials),
+            len(self.inclusion_materials),
+            len(self.inclusion_diameters_m),
+        ]
         return functools.reduce(operator.mul, it)
 
     def add_substrate_material(self, material):
@@ -135,9 +169,11 @@ class InclusionSampleBuilder(SampleBuilderBase):
     def build(self):
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
-        product = itertools.product(self.substrate_materials,
-                                    self.inclusion_materials,
-                                    self.inclusion_diameters_m,
-                                    tilts_rad,
-                                    rotations_rad)
+        product = itertools.product(
+            self.substrate_materials,
+            self.inclusion_materials,
+            self.inclusion_diameters_m,
+            tilts_rad,
+            rotations_rad,
+        )
         return [InclusionSample(*args) for args in product]

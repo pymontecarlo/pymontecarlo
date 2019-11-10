@@ -11,8 +11,8 @@ import abc
 
 # Globals and constants variables.
 
-class FigureBase(metaclass=abc.ABCMeta):
 
+class FigureBase(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def draw(self, ax):
         """

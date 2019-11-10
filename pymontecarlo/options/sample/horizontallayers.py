@@ -2,7 +2,7 @@
 Horizontal layers sample.
 """
 
-__all__ = ['HorizontalLayerSample', 'HorizontalLayerSampleBuilder']
+__all__ = ["HorizontalLayerSample", "HorizontalLayerSampleBuilder"]
 
 # Standard library modules.
 import itertools
@@ -16,10 +16,11 @@ import pymontecarlo.options.base as base
 
 # Globals and constants variables.
 
-class HorizontalLayerSample(LayeredSampleBase):
 
-    def __init__(self, substrate_material=None, layers=None,
-                 tilt_rad=0.0, azimuth_rad=0.0):
+class HorizontalLayerSample(LayeredSampleBase):
+    def __init__(
+        self, substrate_material=None, layers=None, tilt_rad=0.0, azimuth_rad=0.0
+    ):
         """
         Creates a multi-layers geometry.
         The layers are assumed to be in the x-y plane (normal parallel to z) at
@@ -39,16 +40,18 @@ class HorizontalLayerSample(LayeredSampleBase):
 
     def __repr__(self):
         if self.has_substrate():
-            return '<{0:s}(substrate_material={1:s}, {2:d} layers)>' \
-                .format(self.__class__.__name__, str(self.substrate_material),
-                        len(self.layers))
+            return "<{0:s}(substrate_material={1:s}, {2:d} layers)>".format(
+                self.__class__.__name__, str(self.substrate_material), len(self.layers)
+            )
         else:
-            return '<{0:s}(No substrate, {1:d} layers)>' \
-                .format(self.__class__.__name__, len(self.layers))
+            return "<{0:s}(No substrate, {1:d} layers)>".format(
+                self.__class__.__name__, len(self.layers)
+            )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
-            base.isclose(self.substrate_material, other.substrate_material)
+        return super().__eq__(other) and base.isclose(
+            self.substrate_material, other.substrate_material
+        )
 
     def has_substrate(self):
         """
@@ -58,8 +61,7 @@ class HorizontalLayerSample(LayeredSampleBase):
 
     @property
     def materials(self):
-        return self._cleanup_materials(self.substrate_material,
-                                       *super().materials)
+        return self._cleanup_materials(self.substrate_material, *super().materials)
 
     @property
     def layers_zpositions_m(self):
@@ -73,9 +75,9 @@ class HorizontalLayerSample(LayeredSampleBase):
 
         return zpositions
 
-#region HDF5
+    # region HDF5
 
-    ATTR_SUBSTRATE = 'substrate'
+    ATTR_SUBSTRATE = "substrate"
 
     @classmethod
     def parse_hdf5(cls, group):
@@ -89,33 +91,34 @@ class HorizontalLayerSample(LayeredSampleBase):
         super().convert_hdf5(group)
         self._convert_hdf5(group, self.ATTR_SUBSTRATE, self.substrate_material)
 
-#endregion
+    # endregion
 
-#region Series
+    # region Series
 
     def convert_series(self, builder):
         super().convert_series(builder)
-        builder.add_entity(self.substrate_material, 'substrate ', 'subs ')
+        builder.add_entity(self.substrate_material, "substrate ", "subs ")
 
-#endregion
+    # endregion
 
-#region Document
+    # region Document
 
-    DESCRIPTION_SUBSTRATE = 'substrate'
+    DESCRIPTION_SUBSTRATE = "substrate"
 
     def convert_document(self, builder):
         super().convert_document(builder)
 
         section = builder.add_section()
-        section.add_title('Substrate')
+        section.add_title("Substrate")
 
         description = section.require_description(self.DESCRIPTION_SUBSTRATE)
-        description.add_item('Material', self.substrate_material.name)
+        description.add_item("Material", self.substrate_material.name)
 
-#endregion
+
+# endregion
+
 
 class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
-
     def __init__(self):
         super().__init__()
         self.substrate_materials = []
@@ -142,8 +145,7 @@ class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
 
-        product = itertools.product(substrate_materials,
-                                    layers_list,
-                                    tilts_rad,
-                                    rotations_rad)
+        product = itertools.product(
+            substrate_materials, layers_list, tilts_rad, rotations_rad
+        )
         return [HorizontalLayerSample(*args) for args in product]

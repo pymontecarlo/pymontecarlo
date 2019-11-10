@@ -5,6 +5,7 @@ import time
 import threading
 import enum
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Third party modules.
@@ -14,24 +15,26 @@ import tqdm
 
 # Globals and constants variables.
 
+
 class TokenState(enum.IntEnum):
     """
     The states are ordered so that the maximum of a set of states indicates
     the overall state.
     """
+
     DONE = 0
     NOTSTARTED = 1
     CANCELLED = 2
     ERROR = 3
     RUNNING = 4
 
-class Token:
 
+class Token:
     def __init__(self, name):
         self._name = name
         self._state = TokenState.NOTSTARTED
         self._progress = 0.0
-        self._status = 'Not started'
+        self._status = "Not started"
         self._latest_update = None
         self._category = None
         self._lock = threading.Lock()
@@ -70,25 +73,28 @@ class Token:
             self._status = status
             self._latest_update = time.monotonic()
 
-            logger.debug('Token "{}" updated: progress={:.1f}%, status="{}", state={}'
-                         .format(self._name, progress * 100, status, state.name))
+            logger.debug(
+                'Token "{}" updated: progress={:.1f}%, status="{}", state={}'.format(
+                    self._name, progress * 100, status, state.name
+                )
+            )
 
     def start(self, status=None):
-        self.update(0.01, status or 'Started', TokenState.RUNNING)
+        self.update(0.01, status or "Started", TokenState.RUNNING)
 
     def done(self, status=None):
-        self.update(1.0, status or 'Done', TokenState.DONE)
+        self.update(1.0, status or "Done", TokenState.DONE)
 
     def cancel(self, status=None):
-        self.update(1.0, status or 'Cancelled', TokenState.CANCELLED)
+        self.update(1.0, status or "Cancelled", TokenState.CANCELLED)
 
     def error(self, status=None):
-        self.update(1.0, status or 'Error', TokenState.ERROR)
+        self.update(1.0, status or "Error", TokenState.ERROR)
 
     def reset(self):
         self._state = TokenState.NOTSTARTED
         self._progress = 0.0
-        self._status = 'Not started'
+        self._status = "Not started"
         self._latest_update = None
         self._subtokens.clear()
 
@@ -97,7 +103,11 @@ class Token:
             if category is None:
                 return tuple(self._subtokens)
             else:
-                return tuple(subtoken for subtoken in self._subtokens if subtoken._category == category)
+                return tuple(
+                    subtoken
+                    for subtoken in self._subtokens
+                    if subtoken._category == category
+                )
 
     @property
     def name(self):
@@ -127,8 +137,11 @@ class Token:
         """
         # Get progress of all sub-tokens, if it was updated
         with self._lock:
-            progresses = [subtoken.progress for subtoken in self._subtokens
-                          if subtoken._latest_update is not None]
+            progresses = [
+                subtoken.progress
+                for subtoken in self._subtokens
+                if subtoken._latest_update is not None
+            ]
 
         # Add progress of current token, if it was updated
         if self._latest_update is not None:
@@ -147,9 +160,11 @@ class Token:
         """
         # Get status and latest update time of all sub-tokens, if it was updated
         with self._lock:
-            statuses = [(subtoken._latest_update, subtoken.status)
-                        for subtoken in self._subtokens
-                        if subtoken._latest_update is not None]
+            statuses = [
+                (subtoken._latest_update, subtoken.status)
+                for subtoken in self._subtokens
+                if subtoken._latest_update is not None
+            ]
 
         # Add status of current token, if it was updated
         if self._latest_update is not None:
@@ -163,8 +178,8 @@ class Token:
             statuses.sort()
             return statuses[-1][1]
 
-class TqdmToken(Token):
 
+class TqdmToken(Token):
     def __init__(self, name, tqdm_class=None):
         super().__init__(name)
 
@@ -193,4 +208,3 @@ class TqdmToken(Token):
         if self._progress == 1.0:
             self._tqdm.close()
             self._tqdm = None
-

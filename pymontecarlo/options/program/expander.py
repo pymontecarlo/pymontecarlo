@@ -13,6 +13,7 @@ from pymontecarlo.util.cbook import unique
 
 # Globals and constants variables.
 
+
 def expand_to_single(objects):
     combinations = {}
 
@@ -21,6 +22,7 @@ def expand_to_single(objects):
         combinations.setdefault(object_class, []).append(object)
 
     return list(itertools.product(*combinations.values()))
+
 
 def expand_analyses_to_single_detector(analyses):
     unique_detectors = unique(analysis.detector for analysis in analyses)
@@ -33,6 +35,7 @@ def expand_analyses_to_single_detector(analyses):
         combinations[index].append(analysis)
 
     return combinations
+
 
 class ExpanderBase(metaclass=abc.ABCMeta):
     """
@@ -48,4 +51,3 @@ class ExpanderBase(metaclass=abc.ABCMeta):
         single :class:`Options`.
         """
         raise NotImplementedError
-
