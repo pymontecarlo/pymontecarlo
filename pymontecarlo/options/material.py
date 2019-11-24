@@ -181,8 +181,6 @@ class Material(base.OptionBase):
         dataset_wf.dims[0].label = self.DATASET_ATOMIC_NUMBER
         dataset_wf.dims[0].attach_scale(dataset_z)
 
-        print([dim.label for dim in dataset_wf.dims])
-
     def convert_series(self, builder):
         super().convert_series(builder)
 
