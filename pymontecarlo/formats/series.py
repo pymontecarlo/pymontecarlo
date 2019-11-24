@@ -52,6 +52,6 @@ class SeriesBuilder(FormatBuilderBase):
             tolerance = datum["tolerance"]
 
             if tolerance is not None:
-                tolerances[label] = self._convert_value(tolerance, unit)
+                tolerances[label] = self._change_unit(tolerance, unit)
 
         return tolerances

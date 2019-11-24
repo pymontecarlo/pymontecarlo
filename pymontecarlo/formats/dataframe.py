@@ -5,6 +5,7 @@ import math
 
 # Third party modules.
 import pandas as pd
+import numpy as np
 
 # Local modules.
 from pymontecarlo.formats.series import SeriesBuilder
@@ -21,15 +22,13 @@ def ensure_distinct_columns(dataframe, tolerances=None):
 
     drop_columns = []
     for column in dataframe.columns:
-        values = dataframe[column].values
+        values = dataframe[column].to_numpy()
         tolerance = tolerances.get(column)
 
-        if tolerance is None:
+        if tolerance is None or not pd.api.types.is_numeric_dtype(values):
             allequal = all(values[0] == v for v in values)
         else:
-            allequal = all(
-                math.isclose(values[0], v, abs_tol=tolerance) for v in values
-            )
+            allequal = np.allclose(values, values[0], atol=tolerance)
 
         if allequal:
             drop_columns.append(column)
@@ -46,7 +45,7 @@ def create_options_dataframe(
 ):
     """
     Returns a :class:`pandas.DataFrame`.
-    
+
     If *only_different_columns*, the data rows will only contain the columns
     that are different between the options.
     """
@@ -78,9 +77,9 @@ def create_results_dataframe(
 ):
     """
     Returns a :class:`pandas.DataFrame`.
-    
+
     If *result_classes* is a list of :class:`Result`, only the columns from
-    this result classes will be returned. If ``None``, the columns from 
+    this result classes will be returned. If ``None``, the columns from
     all results will be returned.
     """
     list_series = []
