@@ -5,7 +5,6 @@ import asyncio
 import multiprocessing
 
 # Third party modules.
-from tqdm import tqdm
 
 # Local modules.
 from pymontecarlo.runner.local import LocalSimulationRunner
@@ -47,7 +46,7 @@ async def run_async(
         runner_class = LocalSimulationRunner
 
     if progress:
-        token = TqdmToken("Simulations", tqdm_class=tqdm)
+        token = TqdmToken("Simulations")
     else:
         token = None
 
@@ -57,6 +56,7 @@ async def run_async(
         runner.token.start()
 
         await runner.submit(*list_options)
+        await runner.shutdown()
 
         runner.token.done()
         return runner.project

@@ -160,3 +160,5 @@ def test_tqdm_subtoken(capsys):
 
     subtoken.start()
     assert capsys.readouterr().err.strip().startswith("subtest:")
+
+    subtoken.done()
