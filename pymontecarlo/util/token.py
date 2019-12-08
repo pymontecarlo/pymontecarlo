@@ -199,7 +199,11 @@ class TqdmToken(Token):
     def start(self, status=None):
         super().start(status)
 
-        desc = self._name if len(self._name) < self.NAME_MAX_LENGTH else self._name[:self.NAME_MAX_LENGTH] + "..."
+        desc = (
+            self._name
+            if len(self._name) < self.NAME_MAX_LENGTH
+            else self._name[: self.NAME_MAX_LENGTH] + "..."
+        )
         leave = self._category is None
         self._tqdm = tqdm(total=100, desc=desc, leave=leave)
 
@@ -218,4 +222,3 @@ class TqdmToken(Token):
         if self._tqdm is not None:
             self._tqdm.close()
             self._tqdm = None
-

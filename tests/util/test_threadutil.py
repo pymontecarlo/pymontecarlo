@@ -10,6 +10,7 @@ from pymontecarlo.util.threadutil import RepeatTimer
 
 # Globals and constants variables.
 
+
 class _Counter:
     def __init__(self):
         self.n = 0
@@ -19,6 +20,7 @@ class _Counter:
 
     def get(self):
         return self.n
+
 
 def test_repeattimer():
     counter = _Counter()

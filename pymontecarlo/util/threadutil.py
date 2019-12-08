@@ -11,6 +11,7 @@ import atexit
 
 # Globals and constants variables.
 
+
 class RepeatTimer(threading.Thread):
     """
     Call a function repeatedly after a specified number of seconds:
