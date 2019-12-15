@@ -1,5 +1,6 @@
 ipykernel
 ipywidgets
 nbsphinx
+pymontecarlo_casino2
 sphinx
 sphinx_rtd_theme
