@@ -213,6 +213,7 @@ nbsphinx_prolog = r"""
 )
 
 nbsphinx_epilog = ""
+nbsphinx_execute = "never"
 
 # -- Options for pymontecarlo
 
