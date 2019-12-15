@@ -14,3 +14,5 @@ python:
   install:
     - requirements: requirements.txt
     - requirements: requirements_docs.txt
+    - method: pip
+      path: .
