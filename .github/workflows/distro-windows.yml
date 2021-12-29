@@ -31,7 +31,6 @@ jobs:
           python-version: 3.x
       - name: Install dependencies
         run: |
-          cd pymontecarlo
           python -m pip install --upgrade pip codecov setuptools wheel
           pip install --upgrade -r pymontecarlo/distros/windows/requirements.txt
       - name: Create distro
