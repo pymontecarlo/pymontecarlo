@@ -40,6 +40,7 @@ class _WindowsDistribution:
 
     def create(self, dist_dir):
         dist_dir = Path(dist_dir)
+        dist_dir.mkdir(parents=True, exist_ok=True)
 
         requirements = [
             "pymontecarlo",
@@ -51,7 +52,6 @@ class _WindowsDistribution:
         embed = self._create_embed(requirements)
 
         logger.info("create distribution")
-        dist_dir.mkdir(parents=True, exist_ok=True)
         embed.run(dist_dir, clean=True, zip_dist=True)
 
 

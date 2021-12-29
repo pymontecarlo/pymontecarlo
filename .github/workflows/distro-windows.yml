@@ -10,26 +10,36 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: pymontecarlo
+          fetch-depth: 0
+          lfs: true
       - name: Checkout pymontecarlo-gui
         uses: actions/checkout@v2
         with:
           repository: pymontecarlo/pymontecarlo-gui
           path: pymontecarlo-gui
+          fetch-depth: 0
+          lfs: true
       - name: Checkout pymontecarlo-casino2
         uses: actions/checkout@v2
         with:
           repository: pymontecarlo/pymontecarlo-casino2
           path: pymontecarlo-casino2
+          fetch-depth: 0
+          lfs: true
       - name: Checkout pymontecarlo-penepma
         uses: actions/checkout@v2
         with:
           repository: pymontecarlo/pymontecarlo-penepma
           path: pymontecarlo-penepma
+          fetch-depth: 0
+          lfs: true
       - name: Checkout pypenelopetools
         uses: actions/checkout@v2
         with:
           repository: pymontecarlo/pypenelopetools
           path: pypenelopetools
+          fetch-depth: 0
+          lfs: true
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
