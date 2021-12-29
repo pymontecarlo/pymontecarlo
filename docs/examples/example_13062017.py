@@ -124,11 +124,11 @@ def plot_results(label, listoftuples):
     # ylabels = {'kratio': 'k-ratio', 'mass': 'Mass (%)', 'atom': 'Atom (%)'}
 
     fig = plt.figure()
-    ax = fig.add_subplot("111")
+    ax = fig.add_subplot(111)
 
     ax.set_xlabel("Distance (nm)")
     ax.set_ylabel("Intensity")
-    plt.plot((*zip(*listoftuples)), label=label)
+    plt.plot(*zip(*listoftuples), label=label)
     plt.legend()
     plt.show()
     print(label)

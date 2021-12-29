@@ -135,7 +135,7 @@ class LocalSimulationRunner(SimulationRunnerBase):
 
         # Create task for dispatchers
         for dispatcher in self._dispatchers:
-            # Use ensure_future instead of create_task, because the latter does not work with asyncqt.
+            # Use ensure_future instead of create_task, because the latter does not work with qasync.
             # It does not seem to have any influence on the normal operation of the runner.
             task = asyncio.ensure_future(dispatcher.run())
             self._tasks.append(task)
