@@ -33,7 +33,7 @@ setup(
     url="https://github.com/pymontecarlo",
     description="Python interface for Monte Carlo simulation programs",
     long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     author="Philippe T. Pinard, Hendrix Demers, Raynald Gauvin and Silvia Richter",
     author_email="philippe.pinard@gmail.com",
     maintainer="Philippe T. Pinard",
