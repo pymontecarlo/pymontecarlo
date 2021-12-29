@@ -36,6 +36,8 @@ jobs:
           dir
       - name: Install dependencies
         run: |
+          dir
+          cd pymontecarlo
           python -m pip install --upgrade pip codecov setuptools wheel
           pip install --upgrade -r distros/windows/requirements.txt
       - name: Create distro
