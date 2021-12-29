@@ -131,6 +131,8 @@ class DebugWindowsDistribution(_WindowsDistribution):
             logger.debug(f"running {' '.join(args)}")
             subprocess.run(args, cwd=projectdir, check=True)
 
+        logger.info(f"created wheels: {', '.join(self.tempdir.iterdir())}")
+
         # Add wheel
         logger.info("adding wheel")
         for filepath in self.tempdir.glob("*.whl"):

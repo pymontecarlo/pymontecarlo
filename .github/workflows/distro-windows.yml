@@ -25,6 +25,11 @@ jobs:
         with:
           repository: pymontecarlo/pymontecarlo-penepma
           path: pymontecarlo-penepma
+      - name: Checkout pypenelopetools
+        uses: actions/checkout@v2
+        with:
+          repository: pymontecarlo/pypenelopetools
+          path: pypenelopetools
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
