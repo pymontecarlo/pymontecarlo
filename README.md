@@ -22,6 +22,24 @@ installation instructions, tutorials, supported Monte Carlo programs and API.
 
 **pyMonteCarlo** is licensed under Apache Software License 2.0.
 
+## Citation
+
+Pinard, P., Demers, H., Gauvin, R., & Richter, S. (2013). pyMonteCarlo: A Common Programming Interface for Running Identical Simulations using Different Monte Carlo Programs. Microscopy and Microanalysis, 19(S2), 822-823. doi:[10.1017/S1431927613006107](http://dx.doi.org/10.1017/S1431927613006107)
+
+```bibtex
+@article{pinard2013,
+    author={Pinard, P.T. and Demers, H. and Gauvin, R. and Richter, S.},
+    title={pyMonteCarlo: A Common Programming Interface for Running Identical Simulations using Different Monte Carlo Programs},
+    journal={Microscopy and Microanalysis},
+    volume={19},
+    number={S2},
+    publisher={Cambridge University Press},
+    year={2013},
+    pages={822–823},
+    DOI={10.1017/S1431927613006107}
+}
+```
+
 ## Build status
 
 Package | CI build | Code coverage
