@@ -13,7 +13,7 @@ import versioneer
 # Globals and constants variables.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(BASEDIR, "README.rst"), "r") as fp:
+with open(os.path.join(BASEDIR, "README.md"), "r") as fp:
     LONG_DESCRIPTION = fp.read()
 
 PACKAGES = find_packages()
