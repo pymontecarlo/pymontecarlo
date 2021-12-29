@@ -75,7 +75,7 @@ class PhotonSingleResultBase(PhotonResultBase):
 
         keys = [
             convert_xrayline(iupac.split(" ", 1))
-            for iupac in group[cls.DATASET_XRAYLINES]
+            for iupac in group[cls.DATASET_XRAYLINES].asstr()
         ]
         values = [uncertainties.ufloat(n, s) for n, s in group[cls.DATASET_VALUES]]
         data = dict(zip(keys, values))
