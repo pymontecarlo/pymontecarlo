@@ -1,4 +1,4 @@
-name: CI
+name: Distro windows
 
 on: workflow_dispatch
 
