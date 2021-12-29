@@ -10,6 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Third party modules.
+import pandas as pd
 
 # Local modules.
 from pymontecarlo.entity import EntityBase, EntryHDF5IOMixin
@@ -127,6 +128,27 @@ class Project(EntityBase, EntryHDF5IOMixin):
         return create_results_dataframe(
             list_results, settings, result_classes, abbreviate_name, format_number
         )
+
+    def create_dataframe(
+        self,
+        settings,
+        only_different_columns=False,
+        abbreviate_name=False,
+        format_number=False,
+        result_classes=None,
+    ):
+        """
+        Returns a :class:`pandas.DataFrame`, combining the :class:`pandas.DataFrame` created
+        by :meth:`.create_options_dataframe` and :meth:`.create_results_dataframe`.
+        """
+        df_options = self.create_options_dataframe(
+            settings, only_different_columns, abbreviate_name, format_number
+        )
+        df_results = self.create_results_dataframe(
+            settings, result_classes, abbreviate_name, format_number
+        )
+
+        return pd.concat([df_options, df_results], axis=1)
 
     def write(self, filepath=None):
         if filepath is None:

@@ -1,0 +1,6 @@
+git+git://github.com/pymontecarlo/pymontecarlo-casino2.git
+ipykernel
+ipywidgets
+nbsphinx
+sphinx
+sphinx_rtd_theme

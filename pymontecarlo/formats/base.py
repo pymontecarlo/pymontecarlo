@@ -5,6 +5,7 @@ import abc
 
 # Third party modules.
 import pyxray
+import numpy as np
 
 # Local modules.
 from pymontecarlo.util.tolerance import tolerance_to_decimals
@@ -62,36 +63,51 @@ class FormatBuilderBase(metaclass=abc.ABCMeta):
         return fmt.format(prefix=prefix, name=name, unitname=unitname)
 
     def _format_value(self, datum):
-        value = datum["value"]
-        unit = datum["unit"]
-        tolerance = datum["tolerance"]
-
-        if value is None:
-            return "None"
-
-        if isinstance(value, LazyFormat):
-            value = value.format(self.settings)
-        elif isinstance(value, pyxray.XrayLine):
-            value = self._format_xrayline(value)
+        value = self._convert_value(datum)
 
         if not self.format_number:
             return value
 
+        if isinstance(value, (str, int, bool)):
+            return str(value)
+
         if isinstance(value, float):
-            value = self._convert_value(value, unit)
+            if np.isnan(value):
+                return "none"
+
+            unit = datum["unit"]
+            tolerance = datum["tolerance"]
 
             if tolerance is not None:
                 if unit is not None:
-                    tolerance = self._convert_value(tolerance, unit)
+                    tolerance = self._change_unit(tolerance, unit)
 
                 precision = tolerance_to_decimals(tolerance)
                 return "{0:.{precision}f}".format(value, precision=precision)
             else:
                 return "{:g}".format(value)
-        else:
-            return "{}".format(value)
 
-    def _convert_value(self, value, unit):
+        return "{}".format(value)
+
+    def _convert_value(self, datum):
+        value = datum["value"]
+
+        if isinstance(value, LazyFormat):
+            value = value.format(self.settings)
+
+        if value is None:
+            return np.nan
+
+        if isinstance(value, pyxray.XrayLine):
+            return self._format_xrayline(value)
+
+        if isinstance(value, float):
+            unit = datum["unit"]
+            return self._change_unit(value, unit)
+
+        return value
+
+    def _change_unit(self, value, unit):
         if unit is not None:
             q = self.settings.to_preferred_unit(value, unit)
             value = q.magnitude

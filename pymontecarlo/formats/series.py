@@ -33,7 +33,7 @@ class SeriesBuilder(FormatBuilderBase):
             self.data.append(datum)
 
     def build(self):
-        s = pd.Series()
+        s = pd.Series(dtype=float)
 
         for datum in self.data:
             label = self._format_label(datum)
@@ -52,6 +52,6 @@ class SeriesBuilder(FormatBuilderBase):
             tolerance = datum["tolerance"]
 
             if tolerance is not None:
-                tolerances[label] = self._convert_value(tolerance, unit)
+                tolerances[label] = self._change_unit(tolerance, unit)
 
         return tolerances

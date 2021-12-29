@@ -1,6 +1,6 @@
-pymontecarlo/testdata/settings.cfg
 sketch/*.png
 cover/
+.ipynb_checkpoints
 
 #### joe made this: https://goel.io/joe
 

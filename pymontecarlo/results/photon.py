@@ -75,7 +75,7 @@ class PhotonSingleResultBase(PhotonResultBase):
 
         keys = [
             convert_xrayline(iupac.split(" ", 1))
-            for iupac in group[cls.DATASET_XRAYLINES]
+            for iupac in group[cls.DATASET_XRAYLINES].asstr()
         ]
         values = [uncertainties.ufloat(n, s) for n, s in group[cls.DATASET_VALUES]]
         data = dict(zip(keys, values))
@@ -91,7 +91,7 @@ class PhotonSingleResultBase(PhotonResultBase):
         dataset_keys = group.create_dataset(self.DATASET_XRAYLINES, shape, dtype)
 
         shape = (len(self.data), 2)
-        dtype = np.float
+        dtype = float
         dataset_values = group.create_dataset(self.DATASET_VALUES, shape, dtype)
 
         # Scale of values

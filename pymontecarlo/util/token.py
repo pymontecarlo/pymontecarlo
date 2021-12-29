@@ -9,9 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Third party modules.
-import tqdm
+from tqdm.auto import tqdm
 
 # Local modules.
+from pymontecarlo.util.threadutil import RepeatTimer
 
 # Globals and constants variables.
 
@@ -180,31 +181,44 @@ class Token:
 
 
 class TqdmToken(Token):
-    def __init__(self, name, tqdm_class=None):
+    NAME_MAX_LENGTH = 30
+
+    def __init__(self, name):
         super().__init__(name)
-
-        if tqdm_class is None:
-            tqdm_class = tqdm.tqdm
-        self._tqdm_class = tqdm_class
         self._tqdm = None
+        self._thread = None
 
-    def _create_subtoken(self, name, category):
-        """
-        Creates a new sub-token, with the specified name (thread-safe).
-        """
-        subtoken = self.__class__(name, self._tqdm_class)
-        subtoken._category = category
-        return subtoken
-
-    def update(self, progress, status, state=None):
-        super().update(progress, status, state=state)
-
+    def _update_tqdm(self):
         if self._tqdm is None:
-            self._tqdm = self._tqdm_class(total=100, desc=self.name)
+            return
 
-        self._tqdm.n = int(self._progress * 100)
+        progress = int(self.progress * 100)
+        self._tqdm.n = progress
         self._tqdm.refresh()
 
-        if self._progress == 1.0:
+    def start(self, status=None):
+        super().start(status)
+
+        desc = (
+            self._name
+            if len(self._name) < self.NAME_MAX_LENGTH
+            else self._name[: self.NAME_MAX_LENGTH] + "..."
+        )
+        leave = self._category is None
+        self._tqdm = tqdm(total=100, desc=desc, leave=leave)
+
+        self._thread = RepeatTimer(1, self._update_tqdm)
+        self._thread.start()
+
+    def done(self, status=None):
+        super().done(status)
+
+        if self._thread is not None:
+            self._thread.cancel()
+            self._thread.join()
+            self._thread = None
+            self._update_tqdm()
+
+        if self._tqdm is not None:
             self._tqdm.close()
             self._tqdm = None

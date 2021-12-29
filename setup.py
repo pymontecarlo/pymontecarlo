@@ -22,8 +22,6 @@ with open(os.path.join(BASEDIR, "requirements.txt"), "r") as fp:
     INSTALL_REQUIRES = fp.read().splitlines()
 
 EXTRAS_REQUIRE = {}
-with open(os.path.join(BASEDIR, "requirements_dev.txt"), "r") as fp:
-    EXTRAS_REQUIRE["dev"] = fp.read().splitlines()
 
 CMDCLASS = versioneer.get_cmdclass()
 

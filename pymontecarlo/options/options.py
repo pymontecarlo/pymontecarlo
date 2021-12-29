@@ -88,7 +88,7 @@ class Options(base.OptionBase):
             cls._parse_hdf5_reference(group, reference)
             for reference in group[cls.DATASET_ANALYSES]
         ]
-        tags = [str(tag) for tag in group[cls.DATASET_TAGS]]
+        tags = [str(tag) for tag in group[cls.DATASET_TAGS].asstr()]
         return cls(program, beam, sample, analyses, tags)
 
     def convert_hdf5(self, group):

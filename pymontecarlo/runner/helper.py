@@ -5,7 +5,6 @@ import asyncio
 import multiprocessing
 
 # Third party modules.
-from tqdm.autonotebook import tqdm
 
 # Local modules.
 from pymontecarlo.runner.local import LocalSimulationRunner
@@ -19,24 +18,24 @@ async def run_async(
 ):
     """
     Helper function to run simulations.
-    The function returns a :class:`Project <pymontecarlo.project.Project>` 
+    The function returns a :class:`Project <pymontecarlo.project.Project>`
     containing the simulations after they all have been simulated.
-    
+
     Args:
         list_options (list): List of options to simulate.
-    
-        project (:class:`Project <pymontecarlo.project.Project>`): 
-            project where to save the simulations. 
+
+        project (:class:`Project <pymontecarlo.project.Project>`):
+            project where to save the simulations.
             If ``None``, a new project is created.
 
         max_workers (int): number of worker/CPU to use.
             If ``None``, the number of CPUs on the computer will be used.
-    
+
         runner_class: runner class to use.
             If ``None``, the default is :class:`LocalSimulationRunner <pymontecarlo.runner.local.LocalSimulationRunner>`
-    
+
         progress (bool): whether to show a progress bar
-    
+
     Returns:
         :class:`Project <pymontecarlo.project.Project>`: project
     """
@@ -47,7 +46,7 @@ async def run_async(
         runner_class = LocalSimulationRunner
 
     if progress:
-        token = TqdmToken("Simulations", tqdm_class=tqdm)
+        token = TqdmToken("Simulations")
     else:
         token = None
 
@@ -57,6 +56,7 @@ async def run_async(
         runner.token.start()
 
         await runner.submit(*list_options)
+        await runner.shutdown()
 
         runner.token.done()
         return runner.project

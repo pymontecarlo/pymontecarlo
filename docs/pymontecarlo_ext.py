@@ -25,37 +25,41 @@ class SupportedOptionsDirective(Directive):
 
     required_arguments = 1
 
-    def _parse_validators(self):
+    def _parse_programs(self):
         env = self.state.document.settings.env
-        entrypoints = env.config.pymontecarlo_program_validators
+        entrypoints = env.config.pymontecarlo_programs
 
-        validators = {}
-        for program_name, entrypoint in entrypoints.items():
+        programs = []
+        for entrypoint in entrypoints:
             package, classname = entrypoint.split(":")
             module = importlib.import_module(package)
             clasz = getattr(module, classname)
-            validators[program_name] = clasz()
+            programs.append(clasz())
 
         # Add mock validator
         module = importlib.import_module("pymontecarlo.mock")
-        clasz = getattr(module, "ValidatorMock")
-        validators["_mock"] = clasz()
+        clasz = getattr(module, "ProgramMock")
+        programs.append(clasz())
 
-        return validators
+        return programs
 
-    def _collect_options(self, validators, option_type):
+    def _collect_options(self, programs, option_type):
+        if option_type == "beam":
+            method_name = "beam_export_methods"
+        elif option_type == "sample":
+            method_name = "sample_export_methods"
+        elif option_type == "analysis":
+            method_name = "analysis_export_methods"
+        else:
+            return {}
+
         options = {}
-        for program_name, validator in validators.items():
-            if option_type == "beam":
-                method_name = "beam_validate_methods"
-            elif option_type == "sample":
-                method_name = "sample_validate_methods"
-            elif option_type == "analysis":
-                method_name = "analysis_validate_methods"
-            else:
-                continue
+        for program in programs:
+            program_name = program.name
 
-            for clasz in getattr(validator, method_name):
+            exporter = program.exporter
+
+            for clasz in getattr(exporter, method_name):
                 class_name = " ".join(split_camelcase(clasz.__name__)[:-1])
                 class_name = class_name.capitalize()
                 options.setdefault(program_name, []).append(class_name)
@@ -63,11 +67,11 @@ class SupportedOptionsDirective(Directive):
         return options
 
     def run(self):
-        validators = self._parse_validators()
+        programs = self._parse_programs()
         option_type = self.arguments[0].lower()
 
         # Collection options
-        options = self._collect_options(validators, option_type)
+        options = self._collect_options(programs, option_type)
 
         # Define columns
         all_options = set()
@@ -109,7 +113,7 @@ class SupportedOptionsDirective(Directive):
         tgroup += tbody
 
         for program_name in sorted(options):
-            if program_name == "_mock":
+            if program_name == "mock":
                 continue
 
             trow = docutils.nodes.row()
@@ -131,7 +135,7 @@ class SupportedOptionsDirective(Directive):
 
 
 def setup(app):
-    app.add_config_value("pymontecarlo_program_validators", {}, "env")
+    app.add_config_value("pymontecarlo_programs", [], "env")
 
     app.add_directive("supported-options", SupportedOptionsDirective)
 
