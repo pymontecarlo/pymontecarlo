@@ -29,9 +29,14 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.x
+      - name: Print cwd
+        run: |
+          dir
+          cd $GITHUB_WORKSPACE/pymontecarlo
+          dir
       - name: Install dependencies
         run: |
-          cd $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE/pymontecarlo
           python -m pip install --upgrade pip codecov setuptools wheel
           pip install --upgrade -r distros/windows/requirements.txt
       - name: Create distro
