@@ -31,7 +31,7 @@ from pymontecarlo.formats.document import DocumentBuilder
 # Globals and constants variables.
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def event_loop(request):
     """
     Run all tests using the default event loop and never closes it.
