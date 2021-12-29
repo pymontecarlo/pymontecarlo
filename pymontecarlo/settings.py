@@ -101,7 +101,7 @@ class Settings(EntityBase, EntryHDF5IOMixin):
     def parse_hdf5(cls, group):
         obj = cls()
 
-        units = [str(value) for value in group[cls.DATASET_PREFERRED_UNITS]]
+        units = [str(value) for value in group[cls.DATASET_PREFERRED_UNITS].asstr()]
         for unit in units:
             obj.set_preferred_unit(unit)
 
