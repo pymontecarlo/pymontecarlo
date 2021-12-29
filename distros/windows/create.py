@@ -1,7 +1,6 @@
 """"""
 
 # Standard library modules.
-import os
 import sys
 import json
 import glob
@@ -10,6 +9,7 @@ import subprocess
 import tempfile
 import argparse
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,8 @@ class _WindowsDistribution:
         return embed
 
     def create(self, dist_dir):
+        dist_dir = Path(dist_dir)
+
         requirements = [
             "pymontecarlo",
             "pymontecarlo-gui",
@@ -49,7 +51,7 @@ class _WindowsDistribution:
         embed = self._create_embed(requirements)
 
         logger.info("create distribution")
-        os.makedirs(dist_dir, exist_ok=True)
+        dist_dir.mkdir(parents=True, exist_ok=True)
         embed.run(dist_dir, clean=True, zip_dist=True)
 
 
@@ -79,7 +81,7 @@ class PyPIWindowsDistribution(_WindowsDistribution):
         embed = super()._create_embed(requirements)
 
         for requirement in requirements:
-            logger.info("adding requirement {}".format(requirement))
+            logger.info(f"adding requirement {requirement}")
             embed.add_requirement(requirement)
 
         return embed
@@ -91,12 +93,17 @@ class DebugWindowsDistribution(_WindowsDistribution):
         self.tempdir = None
 
     def _find_local_project_directory(self, requirement):
-        dist = pkg_resources.get_distribution(requirement)
+        try:
+            dist = pkg_resources.get_distribution(requirement)
+        except pkg_resources.DistributionNotFound:
+            logger.info(f"Distribution not found for {requirement}")
+            projectdir = Path.cwd().joinpath(requirement)
+        else:
+            projectdir = Path(dist.location)
 
-        projectdir = dist.location
-        setup_filepath = os.path.join(projectdir, "setup.py")
-        if not os.path.exists(setup_filepath):
-            raise ValueError("Cannot find setup.py in project {}".format(projectdir))
+        setup_filepath = projectdir.joinpath("setup.py")
+        if not setup_filepath.exists():
+            raise ValueError(f"Cannot find setup.py in project {projectdir}")
 
         return projectdir
 
@@ -112,21 +119,21 @@ class DebugWindowsDistribution(_WindowsDistribution):
         embed = super()._create_embed(requirements)
 
         # Create temporary folder to save wheels
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = Path(tempfile.mkdtemp())
 
         # Run bdist_wheel
         logger.info("running bdist_wheel on requirements")
         for requirement in requirements:
             projectdir = self._find_local_project_directory(requirement)
-            logger.debug('found "{0}" for "{1}"'.format(projectdir, requirement))
+            logger.debug(f'found "{projectdir}" for "{requirement}"')
 
-            args = [sys.executable, "setup.py", "bdist_wheel", "-d", self.tempdir]
-            logger.debug("running {}".format(" ".join(args)))
+            args = [sys.executable, "setup.py", "bdist_wheel", "-d", str(self.tempdir)]
+            logger.debug(f"running {' '.join(args)}")
             subprocess.run(args, cwd=projectdir, check=True)
 
         # Add wheel
         logger.info("adding wheel")
-        for filepath in glob.glob(os.path.join(self.tempdir, "*.whl")):
+        for filepath in self.tempdir.glob("*.whl"):
             embed.add_wheel(filepath)
 
         return embed
@@ -148,13 +155,13 @@ def main():
     group.add_argument("--debug", action="store_true", help="Using local projects")
     group.add_argument("--pypi", action="store_true", help="Using PyPI")
 
-    basedir = os.path.dirname(__file__)
-    dist_dir = os.path.join(basedir, "dist")
+    dist_dir = Path(__file__).parent.joinpath("dist").resolve()
     parser.add_argument(
         "-d",
         "--dist",
+        type=Path,
         default=dist_dir,
-        help="Destination directory (default: {})".format(dist_dir),
+        help=f"Destination directory (default: {dist_dir})",
     )
 
     args = parser.parse_args()

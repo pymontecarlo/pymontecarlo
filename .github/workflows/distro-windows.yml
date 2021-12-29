@@ -3,11 +3,28 @@ name: Distro windows
 on: workflow_dispatch
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
     steps:
-      - name: Checkout code
+      - name: Checkout pymontecarlo
         uses: actions/checkout@v2
+        with:
+          path: pymontecarlo
+      - name: Checkout pymontecarlo-gui
+        uses: actions/checkout@v2
+        with:
+          repository: pymontecarlo/pymontecarlo-gui
+          path: pymontecarlo-gui
+      - name: Checkout pymontecarlo-casino2
+        uses: actions/checkout@v2
+        with:
+          repository: pymontecarlo/pymontecarlo-casino2
+          path: pymontecarlo-casino2
+      - name: Checkout pymontecarlo-penepma
+        uses: actions/checkout@v2
+        with:
+          repository: pymontecarlo/pymontecarlo-penepma
+          path: pymontecarlo-penepma
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
