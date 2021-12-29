@@ -2,8 +2,6 @@
 # ![Logo](https://raw.githubusercontent.com/pymontecarlo/pymontecarlo/master/logo/logo_64x64.png) pyMonteCarlo
 
 [![PyPI](https://img.shields.io/pypi/v/pymontecarlo)](https://pypi.org/project/pyMonteCarlo)
-[![CI](https://github.com/pymontecarlo/pymontecarlo/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo/actions/workflows/ci.yml)
-[![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo)](https://codecov.io/gh/pymontecarlo/pymontecarlo)
 
 **pyMonteCarlo** is a programming interface to run identical simulations using
 different Monte Carlo programs. The interface was designed to have common input
@@ -23,6 +21,15 @@ installation instructions, tutorials, supported Monte Carlo programs and API.
 ## License
 
 **pyMonteCarlo** is licensed under Apache Software License 2.0.
+
+## Build status
+
+Package | CI build | Code coverage
+--- | --- | ---
+pymontecarlo | [![CI](https://github.com/pymontecarlo/pymontecarlo/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo)](https://codecov.io/gh/pymontecarlo/pymontecarlo)
+pymontecarlo-gui | [![CI](https://github.com/pymontecarlo/pymontecarlo-gui/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-gui/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-gui)](https://codecov.io/gh/pymontecarlo/pymontecarlo-gui)
+pymontecarlo-casino2 | [![CI](https://github.com/pymontecarlo/pymontecarlo-casino2/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-casino2/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-casino2)](https://codecov.io/gh/pymontecarlo/pymontecarlo-casino2)
+pymontecarlo-penepma | [![CI](https://github.com/pymontecarlo/pymontecarlo-penepma/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-penepma/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-penepma)](https://codecov.io/gh/pymontecarlo/pymontecarlo-penepma)
 
 ## Contributors
 
