@@ -25,9 +25,9 @@ async def test_import_(event_loop, importer, options, tmp_path):
 
     result = results[0]
     assert len(result) == 6
-    assert result[(29, "Ka1")] == pytest.approx(100.0, abs=1e-4)
-    assert result[(29, "Ka")] == pytest.approx(100.0, abs=1e-4)
-    assert result[(29, "K")] == pytest.approx(100.0, abs=1e-4)
-    assert result[(29, "La1")] == pytest.approx(100.0, abs=1e-4)
-    assert result[(29, "La")] == pytest.approx(100.0, abs=1e-4)
-    assert result[(29, "L")] == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "Ka1")].n == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "Ka")].n == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "K")].n == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "La1")].n == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "La")].n == pytest.approx(100.0, abs=1e-4)
+    assert result[(29, "L")].n == pytest.approx(100.0, abs=1e-4)
