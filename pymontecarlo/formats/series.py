@@ -33,7 +33,7 @@ class SeriesBuilder(FormatBuilderBase):
             self.data.append(datum)
 
     def build(self):
-        s = pd.Series()
+        s = pd.Series(dtype=float)
 
         for datum in self.data:
             label = self._format_label(datum)

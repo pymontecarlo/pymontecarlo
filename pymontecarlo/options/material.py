@@ -170,9 +170,7 @@ class Material(base.OptionBase):
 
     def _convert_hdf5_composition(self, group, composition):
         zs = sorted(composition.keys())
-        dataset_z = group.create_dataset(
-            self.DATASET_ATOMIC_NUMBER, data=zs, dtype=np.int
-        )
+        dataset_z = group.create_dataset(self.DATASET_ATOMIC_NUMBER, data=zs, dtype=int)
 
         wfs = [composition[z] for z in zs]
         dataset_wf = group.create_dataset(self.DATASET_WEIGHT_FRACTION, data=wfs)

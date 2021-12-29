@@ -91,7 +91,7 @@ class PhotonSingleResultBase(PhotonResultBase):
         dataset_keys = group.create_dataset(self.DATASET_XRAYLINES, shape, dtype)
 
         shape = (len(self.data), 2)
-        dtype = np.float
+        dtype = float
         dataset_values = group.create_dataset(self.DATASET_VALUES, shape, dtype)
 
         # Scale of values
