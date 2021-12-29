@@ -33,9 +33,8 @@ jobs:
         run: |
           cd pymontecarlo
           python -m pip install --upgrade pip codecov setuptools wheel
-          pip install --upgrade -r distros/windows/requirements.txt
+          pip install --upgrade -r pymontecarlo/distros/windows/requirements.txt
       - name: Create distro
         run: |
-          cd pymontecarlo
-          python distros/windows/create.py --debug
+          python pymontecarlo/distros/windows/create.py --debug
           dir dist
