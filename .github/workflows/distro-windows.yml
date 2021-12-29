@@ -32,11 +32,10 @@ jobs:
       - name: Print cwd
         run: |
           dir
-          cd $GITHUB_WORKSPACE/pymontecarlo
+          cd pymontecarlo
           dir
       - name: Install dependencies
         run: |
-          cd $GITHUB_WORKSPACE/pymontecarlo
           python -m pip install --upgrade pip codecov setuptools wheel
           pip install --upgrade -r distros/windows/requirements.txt
       - name: Create distro
