@@ -31,8 +31,8 @@ installation instructions, tutorials, supported Monte Carlo programs and API.
 - [Raynald Gauvin](http://www.memrg.com) (McGill University, Montreal, Canada)
 - [Silvia Richter](https://github.com/silrichter) ([RWTH Aachen University](http://www.gfe.rwth-aachen.de/seiteninhalte_english/esma.htm), Aachen, Germany)
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg" align="left" height="70">
-<img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/McGill_Athletics_wordmark.png" align="left" height="40">
+<img src="https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg" height="70">
+<img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/McGill_Athletics_wordmark.png" height="40">
 
 ## Copyrights
 
