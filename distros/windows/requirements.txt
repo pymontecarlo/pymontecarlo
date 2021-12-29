@@ -1,0 +1,4 @@
+packaging
+py2win
+requests
+setuptools

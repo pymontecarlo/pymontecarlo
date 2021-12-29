@@ -1,0 +1,22 @@
+name: CI
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.x
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip codecov setuptools wheel
+          pip install --upgrade -r distros/windows/requirements.txt
+      - name: Create distro
+        run: |
+          python distros/windows/create.py --debug
+          dir dist
