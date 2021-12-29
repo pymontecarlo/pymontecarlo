@@ -49,7 +49,7 @@ Contributors
 .. image:: https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg
    :height: 70px
 
-.. image:: https://upload.wikimedia.org/wikipedia/en/2/2e/McGill_Wordmark.svg
+.. image:: https://upload.wikimedia.org/wikipedia/commons/e/e4/McGill_Athletics_wordmark.png
    :height: 40px
 
 Copyrights
