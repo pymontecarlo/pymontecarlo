@@ -6,49 +6,53 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout pymontecarlo
-        uses: actions/checkout@v2
-        with:
-          path: pymontecarlo
-          fetch-depth: 0
-          lfs: true
-      - name: Checkout pymontecarlo-gui
-        uses: actions/checkout@v2
-        with:
-          repository: pymontecarlo/pymontecarlo-gui
-          path: pymontecarlo-gui
-          fetch-depth: 0
-          lfs: true
-      - name: Checkout pymontecarlo-casino2
-        uses: actions/checkout@v2
-        with:
-          repository: pymontecarlo/pymontecarlo-casino2
-          path: pymontecarlo-casino2
-          fetch-depth: 0
-          lfs: true
-      - name: Checkout pymontecarlo-penepma
-        uses: actions/checkout@v2
-        with:
-          repository: pymontecarlo/pymontecarlo-penepma
-          path: pymontecarlo-penepma
-          fetch-depth: 0
-          lfs: true
-      - name: Checkout pypenelopetools
-        uses: actions/checkout@v2
-        with:
-          repository: pymontecarlo/pypenelopetools
-          path: pypenelopetools
-          fetch-depth: 0
-          lfs: true
+      # - name: Checkout pymontecarlo
+      #   uses: actions/checkout@v2
+      #   with:
+      #     path: pymontecarlo
+      #     fetch-depth: 0
+      #     lfs: true
+      # - name: Checkout pymontecarlo-gui
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: pymontecarlo/pymontecarlo-gui
+      #     path: pymontecarlo-gui
+      #     fetch-depth: 0
+      #     lfs: true
+      # - name: Checkout pymontecarlo-casino2
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: pymontecarlo/pymontecarlo-casino2
+      #     path: pymontecarlo-casino2
+      #     fetch-depth: 0
+      #     lfs: true
+      # - name: Checkout pymontecarlo-penepma
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: pymontecarlo/pymontecarlo-penepma
+      #     path: pymontecarlo-penepma
+      #     fetch-depth: 0
+      #     lfs: true
+      # - name: Checkout pypenelopetools
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: pymontecarlo/pypenelopetools
+      #     path: pypenelopetools
+      #     fetch-depth: 0
+      #     lfs: true
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
           python-version: 3.x
-      - name: Install dependencies
+      - name: Investigate Python
         run: |
-          python -m pip install --upgrade pip codecov setuptools wheel
-          pip install --upgrade -r pymontecarlo/distros/windows/requirements.txt
-      - name: Create distro
-        run: |
-          python pymontecarlo/distros/windows/create.py --debug
-          dir dist
+          python -c "import sys; print(sys.exec_prefix)"
+          python -c "import distutils.ccompiler; distutils.ccompiler.show_compilers()"
+      # - name: Install dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip codecov setuptools wheel
+      #     pip install --upgrade -r pymontecarlo/distros/windows/requirements.txt
+      # - name: Create distro
+      #   run: |
+      #     python pymontecarlo/distros/windows/create.py --debug
+      #     dir dist
