@@ -48,6 +48,7 @@ pymontecarlo | [![CI](https://github.com/pymontecarlo/pymontecarlo/actions/workf
 pymontecarlo-gui | [![CI](https://github.com/pymontecarlo/pymontecarlo-gui/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-gui/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-gui)](https://codecov.io/gh/pymontecarlo/pymontecarlo-gui)
 pymontecarlo-casino2 | [![CI](https://github.com/pymontecarlo/pymontecarlo-casino2/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-casino2/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-casino2)](https://codecov.io/gh/pymontecarlo/pymontecarlo-casino2)
 pymontecarlo-penepma | [![CI](https://github.com/pymontecarlo/pymontecarlo-penepma/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pymontecarlo-penepma/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pymontecarlo-penepma)](https://codecov.io/gh/pymontecarlo/pymontecarlo-penepma)
+pypenelopetools | [![CI](https://github.com/pymontecarlo/pypenelopetools/actions/workflows/ci.yml/badge.svg)](https://github.com/pymontecarlo/pypenelopetools/actions) | [![Codecov](https://img.shields.io/codecov/c/github/pymontecarlo/pypenelopetools)](https://codecov.io/gh/pymontecarlo/pypenelopetools)
 
 ## Contributors
 
