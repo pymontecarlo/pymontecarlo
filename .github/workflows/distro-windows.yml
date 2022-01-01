@@ -50,5 +50,11 @@ jobs:
           pip install --upgrade -r pymontecarlo/distros/windows/requirements.txt
       - name: Create distro
         run: |
-          python pymontecarlo/distros/windows/create.py --debug
+          mkdir dist
+          python pymontecarlo/distros/windows/create.py --debug -d dist
           dir dist
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pymontecarlo-distro-windows
+          path: dist/*.zip
