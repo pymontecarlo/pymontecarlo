@@ -60,6 +60,12 @@ pypenelopetools | [![CI](https://github.com/pymontecarlo/pypenelopetools/actions
 <img src="https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg" height="70">
 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/McGill_Athletics_wordmark.png" height="40">
 
+## Release notes
+
+### 1.1.0
+
+- Fix issues with newer releases of dependencies
+
 ## Copyrights
 
 Copyright (c) 2011 - 2016/06, Silvia Richter and Philippe Pinard
