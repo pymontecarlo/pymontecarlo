@@ -31,7 +31,7 @@ Windows
 '''''''
 
 For Windows, **pyMonteCarlo** is packaged as a stand-alone distribution.
-It can be downloaded `here <https://www.dropbox.com/s/8n4x8t5eidtpt7r/pymontecarlo-1.0.0%2B14.ga2a4121.zip?dl=0>`_.
+The latest release can be downloaded `here <https://github.com/pymontecarlo/pymontecarlo/releases>`_.
 To install, simply extract the content of the *zip* file and run *pymontecarlo.exe*.
 This distribution is bundled with all :ref:`supported Monte Carlo programs <supported-monte-carlo-programs>`.
 
