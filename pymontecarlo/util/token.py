@@ -100,15 +100,21 @@ class Token:
         self._subtokens.clear()
 
     def get_subtokens(self, category=None):
+        # Get subtokens
         with self._lock:
             if category is None:
-                return tuple(self._subtokens)
+                subtokens = tuple(self._subtokens)
             else:
-                return tuple(
+                subtokens = tuple(
                     subtoken
                     for subtoken in self._subtokens
                     if subtoken._category == category
                 )
+
+        # Sort
+        return sorted(
+            subtokens, key=lambda x: (x.state, x._latest_update), reverse=True
+        )
 
     @property
     def name(self):
