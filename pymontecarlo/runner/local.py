@@ -9,6 +9,7 @@ import shutil
 import asyncio
 import shutil
 import logging
+import multiprocessing
 
 # Third party modules.
 
@@ -118,6 +119,7 @@ class LocalSimulationRunner(SimulationRunnerBase):
         # Create dispatchers
         self._dispatchers = []
 
+        max_workers = max(1, min(multiprocessing.cpu_count() - 1, max_workers))
         for _ in range(max_workers):
             dispatcher = LocalWorkerDispatcher(self.project, self.token, self._queue)
             self._dispatchers.append(dispatcher)
