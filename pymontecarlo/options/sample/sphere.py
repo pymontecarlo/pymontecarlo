@@ -34,6 +34,9 @@ class SphereSample(SampleBase):
         self.material = material
         self.diameter_m = diameter_m
 
+    def __str__(self):
+        return "sphere"
+
     def __repr__(self):
         return "<{0:s}(material={1:s}, diameter={2:g} m)>".format(
             self.__class__.__name__, str(self.material), self.diameter_m

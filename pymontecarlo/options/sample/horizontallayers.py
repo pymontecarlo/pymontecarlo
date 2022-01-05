@@ -38,6 +38,9 @@ class HorizontalLayerSample(LayeredSampleBase):
             substrate_material = VACUUM
         self.substrate_material = substrate_material
 
+    def __str__(self):
+        return "horizontal layers"
+
     def __repr__(self):
         if self.has_substrate():
             return "<{0:s}(substrate_material={1:s}, {2:d} layers)>".format(

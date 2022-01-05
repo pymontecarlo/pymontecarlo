@@ -21,12 +21,15 @@ import pymontecarlo.options.base as base
 class SubstrateSample(SampleBase):
     def __init__(self, material, tilt_rad=0.0, azimuth_rad=0.0):
         """
-        Creates a substrate sample. 
-        At tilt of 0.0\u00b0, the sample is entirely made of the specified 
+        Creates a substrate sample.
+        At tilt of 0.0\u00b0, the sample is entirely made of the specified
         material below ``z = 0``.
         """
         super().__init__(tilt_rad, azimuth_rad)
         self.material = material
+
+    def __str__(self):
+        return "substrate"
 
     def __repr__(self):
         return "<{0:s}(material={1:s})>".format(

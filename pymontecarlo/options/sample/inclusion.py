@@ -40,6 +40,9 @@ class InclusionSample(SampleBase):
         self.inclusion_material = inclusion_material
         self.inclusion_diameter_m = inclusion_diameter_m
 
+    def __str__(self):
+        return "inclusion"
+
     def __repr__(self):
         return "<{0:s}(substrate_material={1:s}, inclusion_material={2:s}, inclusion_diameter={3:g} m)>".format(
             self.__class__.__name__,

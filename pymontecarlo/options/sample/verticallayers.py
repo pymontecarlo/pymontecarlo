@@ -48,12 +48,17 @@ class VerticalLayerSample(LayeredSampleBase):
 
         self.depth_m = depth_m
 
+    def __str__(self):
+        return "vertical layers"
+
     def __repr__(self):
-        return "<{0:s}(left_material={1:s}, right_materials={2:s}, {3:d} layers)>".format(
-            self.__class__.__name__,
-            str(self.left_material),
-            str(self.right_material),
-            len(self.layers),
+        return (
+            "<{0:s}(left_material={1:s}, right_materials={2:s}, {3:d} layers)>".format(
+                self.__class__.__name__,
+                str(self.left_material),
+                str(self.right_material),
+                len(self.layers),
+            )
         )
 
     def __eq__(self, other):
