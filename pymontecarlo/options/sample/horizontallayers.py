@@ -139,6 +139,9 @@ class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
         return substrate_materials
 
     def add_substrate_material(self, material):
+        if material is VACUUM:
+            return
+
         if material not in self.substrate_materials:
             self.substrate_materials.append(material)
 
@@ -147,6 +150,10 @@ class HorizontalLayerSampleBuilder(LayeredSampleBuilderBase):
         layers_list = self._calculate_layer_combinations()
         tilts_rad = self._calculate_tilt_combinations()
         rotations_rad = self._calculate_azimuth_combinations()
+
+        # Check for no substrate and no layers
+        if substrate_materials == [None] and layers_list == [()]:
+            return []
 
         product = itertools.product(
             substrate_materials, layers_list, tilts_rad, rotations_rad
