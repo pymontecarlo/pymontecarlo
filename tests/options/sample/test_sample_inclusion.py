@@ -45,6 +45,15 @@ def test_inclusionsample_eq(sample):
     assert sample != InclusionSample(COPPER, ZINC, 124.456)
 
 
+def test_inclusionsample_getparameters(sample):
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 2
+
+    sample.substrate_material = Material.from_formula("CaSiO3")
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 5
+
+
 def test_inclusionsample_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
 

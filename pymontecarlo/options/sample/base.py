@@ -17,6 +17,7 @@ from pymontecarlo.options.material import VACUUM
 from pymontecarlo.util.cbook import unique
 from pymontecarlo.util.human import camelcase_to_words
 import pymontecarlo.options.base as base
+from pymontecarlo.options.parameter import SimpleParameter
 
 # Globals and constants variables.
 
@@ -62,6 +63,28 @@ class SampleBase(base.OptionBase):
             materials.remove(VACUUM)
 
         return tuple(unique(materials))
+
+    def get_parameters(self, parent_getter):
+        parameters = super().get_parameters(parent_getter)
+
+        parameter = SimpleParameter(
+            name="Sample tilt",
+            getter=lambda options: parent_getter(options).tilt_rad,
+            setter=lambda options, value: setattr(
+                parent_getter(options), "tilt_rad", value
+            ),
+            minimum_value=-math.pi / 2,
+            maximum_value=math.pi / 2,
+        )
+        parameters.append(parameter)
+
+        # Materials
+        for index, material in enumerate(self.materials):
+            parameters += material.get_parameters(
+                lambda options: parent_getter(options).materials[index]
+            )
+
+        return parameters
 
     @abc.abstractproperty
     def materials(self):  # pragma: no cover
@@ -309,6 +332,22 @@ class LayeredSampleBase(SampleBase):
         layer = Layer(material, thickness_m)
         self.layers.append(layer)
         return layer
+
+    def get_parameters(self, parent_getter):
+        parameters = super().get_parameters(parent_getter)
+
+        for index in range(len(self.layers)):
+            parameter = SimpleParameter(
+                name=f"Layer #{index+1} thickness",
+                getter=lambda options: parent_getter(options).layers[index].thickness_m,
+                setter=lambda options, value: setattr(
+                    parent_getter(options).layers[index], "thickness_m", value
+                ),
+                minimum_value=1e-16,
+            )
+            parameters.append(parameter)
+
+        return parameters
 
     @property
     def materials(self):

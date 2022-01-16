@@ -38,6 +38,9 @@ class OptionBase(EntityBase, EntityHDF5Mixin, EntitySeriesMixin, EntityDocumentM
         """
         return type(other) == type(self)
 
+    def get_parameters(self, option_getter):
+        return []
+
 
 class LazyOptionBase(OptionBase, LazyFormat):
     def __eq__(self, other):

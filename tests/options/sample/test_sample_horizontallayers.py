@@ -76,6 +76,11 @@ def test_horizontallayerssample_eq(sample):
         assert sample == other
 
 
+def test_horizontallayerssample_getparameters(sample):
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 3
+
+
 def test_horizontallayerssample_ne(sample):
     other = HorizontalLayerSample(ZINC)
     other.add_layer(ZINC, 123.456)

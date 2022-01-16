@@ -89,3 +89,7 @@ class ParseError(PymontecarloError):
 
 class ConvertError(PymontecarloError):
     pass
+
+
+class ParameterError(PymontecarloError):
+    pass

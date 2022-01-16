@@ -41,6 +41,15 @@ def test_substratesample_eq(sample):
     assert sample != SubstrateSample(COPPER, 1.1)
 
 
+def test_substratesample_getparameters(sample):
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 1
+
+    sample.material = Material.from_formula("CaSiO3")
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 4
+
+
 def test_substratesample_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
 

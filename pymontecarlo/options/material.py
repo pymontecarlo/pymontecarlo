@@ -24,6 +24,10 @@ from pymontecarlo.options.composition import (
     calculate_density_kg_per_m3,
 )
 import pymontecarlo.options.base as base
+from pymontecarlo.options.parameter import (
+    MaterialParameterGroup,
+    ConcentrationParameter,
+)
 
 # Globals and constants variables.
 
@@ -136,6 +140,22 @@ class Material(base.OptionBase):
                 abs_tol=self.DENSITY_TOLERANCE_kg_per_m3,
             )
         )
+
+    def get_parameters(self, parent_getter):
+        parameters = super().get_parameters(parent_getter)
+
+        # Cannot parameterize pure material
+        if len(self.composition) <= 1:
+            return parameters
+
+        # Create parameter for each element
+        parameter_group = MaterialParameterGroup()
+        for z in self.composition:
+            parameters.append(
+                ConcentrationParameter(parameter_group, parent_getter, self.name, z)
+            )
+
+        return parameters
 
     density_g_per_cm3 = base.MultiplierAttribute("density_kg_per_m3", 1e-3)
 
@@ -262,6 +282,9 @@ class _Vacuum(Material):
 
     def __reduce__(self):
         return (self.__class__, ())
+
+    def get_parameters(self, parent_getter):
+        return []
 
     @classmethod
     def parse_hdf5(cls, group):

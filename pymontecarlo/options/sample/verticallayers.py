@@ -14,6 +14,7 @@ import itertools
 # Local modules.
 from pymontecarlo.options.sample.base import LayeredSampleBase, LayeredSampleBuilderBase
 import pymontecarlo.options.base as base
+from pymontecarlo.options.parameter import SimpleParameter
 
 # Globals and constants variables.
 
@@ -70,6 +71,21 @@ class VerticalLayerSample(LayeredSampleBase):
                 self.depth_m, other.depth_m, abs_tol=self.DEPTH_TOLERANCE_m
             )
         )
+
+    def get_parameters(self, parent_getter):
+        parameters = super().get_parameters(parent_getter)
+
+        parameter = SimpleParameter(
+            name="Sample depth",
+            getter=lambda options: parent_getter(options).depth_m,
+            setter=lambda options, value: setattr(
+                parent_getter(options), "depth_m", value
+            ),
+            minimum_value=1e-16,
+        )
+        parameters.append(parameter)
+
+        return parameters
 
     @property
     def materials(self):

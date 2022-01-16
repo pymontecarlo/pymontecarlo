@@ -4,6 +4,7 @@
 # Standard library modules.
 import copy
 import pickle
+import itertools
 
 # Third party modules.
 import pytest
@@ -11,6 +12,7 @@ import pytest
 # Local modules.
 from pymontecarlo.options.material import Material, VACUUM, MaterialBuilder
 import pymontecarlo.options.base as base
+from pymontecarlo.options.parameter import ParameterType
 import pymontecarlo.util.testutil as testutil
 
 # Globals and constants variables.
@@ -58,6 +60,117 @@ def test_material_eq(material):
 
     assert not material == Material("Pure Cu", {29: 1.0}, 8961.0)
     assert not material == Material("Pure Cu", {29: 0.5, 30: 0.5}, 8960.0)
+
+
+def test_material_getparameters_pure(material):
+    assert len(material.get_parameters(lambda options: material)) == 0
+
+
+def test_material_getparameters_compound():
+    material = Material.from_formula("CaSiO3")
+    parameters = material.get_parameters(lambda options: material)
+
+    assert len(parameters) == 3
+    assert parameters[0].get_value(None) == pytest.approx(
+        material.composition[20], abs=1e-6
+    )
+    assert parameters[1].get_value(None) == pytest.approx(
+        material.composition[14], abs=1e-6
+    )
+    assert parameters[2].get_value(None) == pytest.approx(
+        material.composition[8], abs=1e-6
+    )
+
+    parameters[0].type_ = ParameterType.UNKNOWN
+    parameters[0].set_value(None, 0.5)
+    assert parameters[0].get_value(None) == pytest.approx(0.5, abs=1e-6)
+    assert material.composition[20] == pytest.approx(0.5, abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    "parameter_types,expected_composition",
+    [
+        (
+            [ParameterType.UNKNOWN, ParameterType.FIXED, ParameterType.DIFFERENCE],
+            {22: 0.5, 24: 0.2, 29: 0.3},
+        ),
+        (
+            [ParameterType.UNKNOWN, ParameterType.DIFFERENCE, ParameterType.DIFFERENCE],
+            {22: 0.5, 24: 0.25, 29: 0.25},
+        ),
+        (
+            [ParameterType.UNKNOWN, ParameterType.UNKNOWN, ParameterType.DIFFERENCE],
+            {22: 0.5, 24: 0.2, 29: 0.3},
+        ),
+    ],
+)
+def test_material_getparameters_parametertype(parameter_types, expected_composition):
+    material = Material("TiCrCu", {22: 0.2, 24: 0.2, 29: 0.6})
+    parameters = material.get_parameters(lambda options: material)
+
+    # Set parameter types
+    for parameter, parameter_type in zip(parameters, parameter_types):
+        parameter.type_ = parameter_type
+
+    # Set titanium concentration
+    parameters[0].set_value(None, 0.5)
+
+    # Test
+    for z, expected_wf in expected_composition.items():
+        assert material.composition[z] == pytest.approx(expected_wf, abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    "parameter_types,error_count",
+    [
+        (
+            [ParameterType.FIXED] * 3,
+            0,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.FIXED, ParameterType.UNKNOWN],
+            1,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.FIXED, ParameterType.DIFFERENCE],
+            1,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.UNKNOWN, ParameterType.FIXED],
+            1,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.UNKNOWN, ParameterType.UNKNOWN],
+            1,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.UNKNOWN, ParameterType.DIFFERENCE],
+            0,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.DIFFERENCE, ParameterType.FIXED],
+            1,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.DIFFERENCE, ParameterType.UNKNOWN],
+            0,
+        ),
+        (
+            [ParameterType.FIXED, ParameterType.DIFFERENCE, ParameterType.DIFFERENCE],
+            1,
+        ),
+    ],
+)
+def test_material_getparameters_validate(parameter_types, error_count):
+    material = Material("TiCrCu", {22: 0.2, 24: 0.2, 29: 0.6})
+    parameters = material.get_parameters(lambda options: material)
+
+    # Set parameter types
+    for parameter, parameter_type in zip(parameters, parameter_types):
+        parameter.type_ = parameter_type
+
+    errors = parameters[0].validate(None)
+    assert len(errors) == error_count
 
 
 def test_material_hdf5(material, tmp_path):

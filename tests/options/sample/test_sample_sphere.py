@@ -39,6 +39,15 @@ def test_spheresample_eq(sample):
     assert sample != SphereSample(COPPER, 124.456)
 
 
+def test_spheresample_getparameters(sample):
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 2
+
+    sample.material = Material.from_formula("CaSiO3")
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 5
+
+
 def test_spheresample_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
 

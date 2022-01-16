@@ -80,6 +80,11 @@ def test_verticallayerssample_eq(sample):
     assert sample != other
 
 
+def verticallayerssample_getparameters(sample):
+    parameters = sample.get_parameters(lambda options: sample)
+    assert len(parameters) == 4
+
+
 def test_verticallayerssample_hdf5(sample, tmp_path):
     testutil.assert_convert_parse_hdf5(sample, tmp_path)
 

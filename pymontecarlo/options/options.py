@@ -64,6 +64,17 @@ class Options(base.OptionBase):
     def find_detectors(self, detector_class):
         return find_by_type(self.detectors, detector_class)
 
+    def get_parameters(self, parent_getter=None):
+        if parent_getter is None:
+            parent_getter = lambda options: options
+
+        parameters = super().get_parameters(parent_getter)
+        parameters += self.sample.get_parameters(
+            lambda options: parent_getter(options).sample
+        )
+
+        return parameters
+
     @property
     def detectors(self):
         """
